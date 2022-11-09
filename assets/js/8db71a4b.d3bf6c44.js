@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[9616],{1567:l=>{l.exports=JSON.parse('{"label":"virtualclient","permalink":"/blog/tags/virtualclient","allTagsPath":"/blog/tags","count":1}')}}]);

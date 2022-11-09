@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://virtualclient.microsoft.com/blog</id>
+    <id>https://microsoft.github.io/VirtualClient/blog</id>
     <title>Virtual Client Blog</title>
     <updated>2022-10-12T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://virtualclient.microsoft.com/blog"/>
+    <link rel="alternate" href="https://microsoft.github.io/VirtualClient/blog"/>
     <subtitle>Virtual Client Blog</subtitle>
-    <icon>https://virtualclient.microsoft.com/img/favicon.ico</icon>
+    <icon>https://microsoft.github.io/VirtualClient/img/favicon.ico</icon>
     <entry>
         <title type="html"><![CDATA[Releasing VirtualClient v0.0.1]]></title>
         <id>release-0-0-1</id>
-        <link href="https://virtualclient.microsoft.com/blog/release-0-0-1"/>
+        <link href="https://microsoft.github.io/VirtualClient/blog/release-0-0-1"/>
         <updated>2022-10-12T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[Release Note]]></summary>
         <content type="html"><![CDATA[<p>Release Note</p>]]></content>

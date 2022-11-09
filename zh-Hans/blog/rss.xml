@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Virtual Client Blog</title>
+        <link>https://microsoft.github.io/VirtualClient/zh-Hans/blog</link>
+        <description>Virtual Client Blog</description>
+        <lastBuildDate>Wed, 12 Oct 2022 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>zh-Hans</language>
+        <item>
+            <title><![CDATA[Releasing VirtualClient v0.0.1]]></title>
+            <link>https://microsoft.github.io/VirtualClient/zh-Hans/blog/release-0-0-1</link>
+            <guid>release-0-0-1</guid>
+            <pubDate>Wed, 12 Oct 2022 00:00:00 GMT</pubDate>
+            <description><![CDATA[Release Note]]></description>
+            <content:encoded><![CDATA[<p>Release Note</p>]]></content:encoded>
+            <category>virtualclient</category>
+        </item>
+    </channel>
+</rss>

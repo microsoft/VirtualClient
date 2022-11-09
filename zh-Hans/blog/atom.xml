@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://microsoft.github.io/VirtualClient/zh-Hans/blog</id>
+    <title>Virtual Client Blog</title>
+    <updated>2022-10-12T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://microsoft.github.io/VirtualClient/zh-Hans/blog"/>
+    <subtitle>Virtual Client Blog</subtitle>
+    <icon>https://microsoft.github.io/VirtualClient/zh-Hans/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Releasing VirtualClient v0.0.1]]></title>
+        <id>release-0-0-1</id>
+        <link href="https://microsoft.github.io/VirtualClient/zh-Hans/blog/release-0-0-1"/>
+        <updated>2022-10-12T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Release Note]]></summary>
+        <content type="html"><![CDATA[<p>Release Note</p>]]></content>
+        <author>
+            <name>Yang Pan</name>
+            <uri>https://github.com/yangpanMS</uri>
+        </author>
+        <category label="virtualclient" term="virtualclient"/>
+    </entry>
+</feed>
