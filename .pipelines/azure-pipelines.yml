@@ -22,16 +22,12 @@ variables:
   
 
 steps:
-- task: gitversion/setup@1
-  displayName: 'Install GitVersion'
+- task: GitVersion@5
   inputs:
-    versionSpec: '0.0.1'
-    
-- task: gitversion/execute@1
-  displayName: 'Execute GitVersion'
-  inputs:
-    useConfigFile: true
+    runtime: 'core'
     configFilePath: 'GitVersion.yml'
+    updateAssemblyInfo: true
+
 - task: UseDotNet@2
   continueOnError: false
   inputs:
