@@ -31,7 +31,7 @@ steps:
   displayName: 'Execute GitVersion'
   inputs:
     useConfigFile: true
-    configFilePath: '${{ parameters.gitversionConfigFile }}'
+    configFilePath: 'GitVersion.yml'
 - task: UseDotNet@2
   continueOnError: false
   inputs:
