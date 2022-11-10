@@ -1,0 +1,3998 @@
+START LIN DOUBLE
+ Tests of the DOUBLE PRECISION LAPACK routines 
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M   :       0     1     2     3     5    10    50
+    N   :       0     1     2     3     5    10    50
+    NRHS:       1     2    15
+    NB  :       1     3     3     3    20
+    NX  :       1     0     5     9     1
+    RANK:      30    50    90
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+
+ DGE routines passed the tests of the error exits
+
+ All tests for DGE routines passed the threshold (   3653 tests run)
+
+ DGE drivers passed the tests of the error exits
+
+ All tests for DGE drivers  passed the threshold (   5748 tests run)
+
+ DGB routines passed the tests of the error exits
+
+ All tests for DGB routines passed the threshold (  28938 tests run)
+
+ DGB drivers passed the tests of the error exits
+
+ All tests for DGB drivers  passed the threshold (  36567 tests run)
+
+ DGT routines passed the tests of the error exits
+
+ All tests for DGT routines passed the threshold (   2694 tests run)
+
+ DGT drivers passed the tests of the error exits
+
+ All tests for DGT drivers  passed the threshold (   2033 tests run)
+
+ DPO routines passed the tests of the error exits
+
+ All tests for DPO routines passed the threshold (   1628 tests run)
+
+ DPO drivers passed the tests of the error exits
+
+ All tests for DPO drivers  passed the threshold (   1910 tests run)
+
+ DPS routines passed the tests of the error exits
+
+ All tests for DPS routines passed the threshold (    150 tests run)
+
+ DPP routines passed the tests of the error exits
+
+ All tests for DPP routines passed the threshold (   1332 tests run)
+
+ DPP drivers passed the tests of the error exits
+
+ All tests for DPP drivers  passed the threshold (   1910 tests run)
+
+ DPB routines passed the tests of the error exits
+
+ All tests for DPB routines passed the threshold (   3458 tests run)
+
+ DPB drivers passed the tests of the error exits
+
+ All tests for DPB drivers  passed the threshold (   4750 tests run)
+
+ DPT routines passed the tests of the error exits
+
+ All tests for DPT routines passed the threshold (    953 tests run)
+
+ DPT drivers passed the tests of the error exits
+
+ All tests for DPT drivers  passed the threshold (    788 tests run)
+
+ DSY routines passed the tests of the error exits
+
+ All tests for DSY routines passed the threshold (   1846 tests run)
+
+ DSY drivers passed the tests of the error exits
+
+ All tests for DSY drivers  passed the threshold (   1072 tests run)
+
+ DSR routines passed the tests of the error exits
+
+ All tests for DSR routines passed the threshold (   1618 tests run)
+
+ DSR drivers passed the tests of the error exits
+
+ All tests for DSR drivers  passed the threshold (    222 tests run)
+
+ DSK routines passed the tests of the error exits
+
+ All tests for DSK routines passed the threshold (   1618 tests run)
+
+ DSK drivers passed the tests of the error exits
+
+ All tests for DSK drivers  passed the threshold (    222 tests run)
+
+ DSA routines passed the tests of the error exits
+
+ All tests for DSA routines passed the threshold (   1320 tests run)
+
+ DSA drivers passed the tests of the error exits
+
+ All tests for DSA drivers  passed the threshold (    148 tests run)
+
+ DS2 routines passed the tests of the error exits
+
+ All tests for DS2 routines passed the threshold (    666 tests run)
+
+ DS2 drivers passed the tests of the error exits
+
+ All tests for DS2 drivers  passed the threshold (     74 tests run)
+
+ DSP routines passed the tests of the error exits
+
+ All tests for DSP routines passed the threshold (   1404 tests run)
+
+ DSP drivers passed the tests of the error exits
+
+ All tests for DSP drivers  passed the threshold (   1072 tests run)
+
+ DTR routines passed the tests of the error exits
+
+ All tests for DTR routines passed the threshold (   7672 tests run)
+
+ DTP routines passed the tests of the error exits
+
+ All tests for DTP routines passed the threshold (   7392 tests run)
+
+ DTB routines passed the tests of the error exits
+
+ All tests for DTB routines passed the threshold (  19888 tests run)
+
+ DQR routines passed the tests of the error exits
+
+ All tests for DQR routines passed the threshold (  42840 tests run)
+
+ DRQ routines passed the tests of the error exits
+
+ All tests for DRQ routines passed the threshold (  28784 tests run)
+
+ DLQ routines passed the tests of the error exits
+
+ All tests for DLQ routines passed the threshold (  28784 tests run)
+
+ DQL routines passed the tests of the error exits
+
+ All tests for DQL routines passed the threshold (  28784 tests run)
+
+ All tests for DQ3 routines passed the threshold (   4410 tests run)
+
+ DTZ routines passed the tests of the error exits
+
+ All tests for DTZ routines passed the threshold (    252 tests run)
+
+ DLS routines passed the tests of the error exits
+
+ All tests for DLS drivers  passed the threshold ( 105840 tests run)
+
+ All tests for DEQ routines passed the threshold
+
+ DQT routines passed the tests of the error exits
+
+ All tests for DQT routines passed the threshold (    510 tests run)
+
+ DQX routines passed the tests of the error exits
+
+ All tests for DQX routines passed the threshold (   1482 tests run)
+
+ DXQ routines passed the tests of the error exits
+
+ All tests for DXQ routines passed the threshold (   1482 tests run)
+
+ DTQ routines passed the tests of the error exits
+
+ All tests for DTQ routines passed the threshold (    510 tests run)
+
+ DTS routines passed the tests of the error exits
+
+ All tests for DTS routines passed the threshold (  10800 tests run)
+
+ DHH routines passed the tests of the error exits
+
+ All tests for DHH routines passed the threshold (  15900 tests run)
+
+ End of tests
+ Total time used =         4.11 seconds
+
+START LIN COMPLEX
+ Tests of the COMPLEX LAPACK routines 
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M   :       0     1     2     3     5    10    50
+    N   :       0     1     2     3     5    10    50
+    NRHS:       1     2    15
+    NB  :       1     3     3     3    20
+    NX  :       1     0     5     9     1
+    RANK:      30    50    90
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+
+ CGE routines passed the tests of the error exits
+
+ All tests for CGE routines passed the threshold (   3653 tests run)
+
+ CGE drivers passed the tests of the error exits
+
+ All tests for CGE drivers  passed the threshold (   5748 tests run)
+
+ CGB routines passed the tests of the error exits
+
+ All tests for CGB routines passed the threshold (  28938 tests run)
+
+ CGB drivers passed the tests of the error exits
+
+ All tests for CGB drivers  passed the threshold (  36567 tests run)
+
+ CGT routines passed the tests of the error exits
+
+ All tests for CGT routines passed the threshold (   2694 tests run)
+
+ CGT drivers passed the tests of the error exits
+
+ All tests for CGT drivers  passed the threshold (   2033 tests run)
+
+ CPO routines passed the tests of the error exits
+
+ All tests for CPO routines passed the threshold (   1628 tests run)
+
+ CPO drivers passed the tests of the error exits
+
+ All tests for CPO drivers  passed the threshold (   1910 tests run)
+
+ CPS routines passed the tests of the error exits
+
+ All tests for CPS routines passed the threshold (    150 tests run)
+
+ CPP routines passed the tests of the error exits
+
+ All tests for CPP routines passed the threshold (   1332 tests run)
+
+ CPP drivers passed the tests of the error exits
+
+ All tests for CPP drivers  passed the threshold (   1910 tests run)
+
+ CPB routines passed the tests of the error exits
+
+ All tests for CPB routines passed the threshold (   3458 tests run)
+
+ CPB drivers passed the tests of the error exits
+
+ All tests for CPB drivers  passed the threshold (   4750 tests run)
+
+ CPT routines passed the tests of the error exits
+
+ All tests for CPT routines passed the threshold (   1778 tests run)
+
+ CPT drivers passed the tests of the error exits
+
+ All tests for CPT drivers  passed the threshold (    788 tests run)
+
+ CHE routines passed the tests of the error exits
+
+ All tests for CHE routines passed the threshold (   1846 tests run)
+
+ CHE drivers passed the tests of the error exits
+
+ All tests for CHE drivers  passed the threshold (   1072 tests run)
+
+ CHR routines passed the tests of the error exits
+
+ All tests for CHR routines passed the threshold (   1618 tests run)
+
+ CHR drivers passed the tests of the error exits
+
+ All tests for CHR drivers  passed the threshold (    222 tests run)
+
+ CHK routines passed the tests of the error exits
+
+ All tests for CHK routines passed the threshold (   1618 tests run)
+
+ CHK drivers passed the tests of the error exits
+
+ All tests for CHK drivers  passed the threshold (    222 tests run)
+
+ CHA routines passed the tests of the error exits
+
+ All tests for CHA routines passed the threshold (   1320 tests run)
+
+ CHA drivers passed the tests of the error exits
+
+ All tests for CHA drivers  passed the threshold (    148 tests run)
+
+ CH2 routines passed the tests of the error exits
+
+ All tests for CH2 routines passed the threshold (    666 tests run)
+
+ CH2 drivers passed the tests of the error exits
+
+ All tests for CH2 drivers  passed the threshold (     74 tests run)
+
+ CSA routines passed the tests of the error exits
+
+ All tests for CSA routines passed the threshold (   1320 tests run)
+
+ CSA drivers passed the tests of the error exits
+
+ All tests for CSA drivers  passed the threshold (    148 tests run)
+
+ CS2 routines passed the tests of the error exits
+
+ All tests for CS2 routines passed the threshold (    666 tests run)
+
+ CS2 drivers passed the tests of the error exits
+
+ All tests for CS2 drivers  passed the threshold (     74 tests run)
+
+ CHP routines passed the tests of the error exits
+
+ All tests for CHP routines passed the threshold (   1404 tests run)
+
+ CHP drivers passed the tests of the error exits
+
+ All tests for CHP drivers  passed the threshold (   1072 tests run)
+
+ CSY routines passed the tests of the error exits
+
+ All tests for CSY routines passed the threshold (   2122 tests run)
+
+ CSY drivers passed the tests of the error exits
+
+ All tests for CSY drivers  passed the threshold (   1240 tests run)
+
+ CSR routines passed the tests of the error exits
+
+ All tests for CSR routines passed the threshold (   1822 tests run)
+
+ CSR drivers passed the tests of the error exits
+
+ All tests for CSR drivers  passed the threshold (    258 tests run)
+
+ CSK routines passed the tests of the error exits
+
+ All tests for CSK routines passed the threshold (   1822 tests run)
+
+ CSK drivers passed the tests of the error exits
+
+ All tests for CSK drivers  passed the threshold (    258 tests run)
+
+ CSP routines passed the tests of the error exits
+
+ All tests for CSP routines passed the threshold (   1620 tests run)
+
+ CSP drivers passed the tests of the error exits
+
+ All tests for CSP drivers  passed the threshold (   1240 tests run)
+
+ CTR routines passed the tests of the error exits
+
+ All tests for CTR routines passed the threshold (   7672 tests run)
+
+ CTP routines passed the tests of the error exits
+
+ All tests for CTP routines passed the threshold (   7392 tests run)
+
+ CTB routines passed the tests of the error exits
+
+ All tests for CTB routines passed the threshold (  19888 tests run)
+
+ CQR routines passed the tests of the error exits
+
+ All tests for CQR routines passed the threshold (  42840 tests run)
+
+ CRQ routines passed the tests of the error exits
+
+ All tests for CRQ routines passed the threshold (  28784 tests run)
+
+ CLQ routines passed the tests of the error exits
+
+ All tests for CLQ routines passed the threshold (  28784 tests run)
+
+ CQL routines passed the tests of the error exits
+
+ All tests for CQL routines passed the threshold (  28784 tests run)
+
+ All tests for CQ3 routines passed the threshold (   4410 tests run)
+
+ CTZ routines passed the tests of the error exits
+
+ All tests for CTZ routines passed the threshold (    252 tests run)
+
+ CLS routines passed the tests of the error exits
+
+ All tests for CLS drivers  passed the threshold ( 105840 tests run)
+
+ All tests for CEQ routines passed the threshold
+
+ CQT routines passed the tests of the error exits
+
+ All tests for CQT routines passed the threshold (    510 tests run)
+
+ CQX routines passed the tests of the error exits
+
+ All tests for CQX routines passed the threshold (   1482 tests run)
+
+ CXQ routines passed the tests of the error exits
+
+ All tests for CXQ routines passed the threshold (   1482 tests run)
+
+ CTQ routines passed the tests of the error exits
+
+ All tests for CTQ routines passed the threshold (    510 tests run)
+
+ CTS routines passed the tests of the error exits
+
+ All tests for CTS routines passed the threshold (  10800 tests run)
+
+ CHH routines passed the tests of the error exits
+
+ All tests for CHH routines passed the threshold (  15900 tests run)
+
+ End of tests
+ Total time used =        10.50 seconds
+
+END LIN COMPLEX
+START LIN COMPLEX DOUBLE
+ Tests of the COMPLEX*16 LAPACK routines 
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M   :       0     1     2     3     5    10    50
+    N   :       0     1     2     3     5    10    50
+    NRHS:       1     2    15
+    NB  :       1     3     3     3    20
+    NX  :       1     0     5     9     1
+    RANK:      30    50    90
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+
+ ZGE routines passed the tests of the error exits
+
+ All tests for ZGE routines passed the threshold (   3653 tests run)
+
+ ZGE drivers passed the tests of the error exits
+
+ All tests for ZGE drivers  passed the threshold (   5748 tests run)
+
+ ZGB routines passed the tests of the error exits
+
+ All tests for ZGB routines passed the threshold (  28938 tests run)
+
+ ZGB drivers passed the tests of the error exits
+
+ All tests for ZGB drivers  passed the threshold (  36567 tests run)
+
+ ZGT routines passed the tests of the error exits
+
+ All tests for ZGT routines passed the threshold (   2694 tests run)
+
+ ZGT drivers passed the tests of the error exits
+
+ All tests for ZGT drivers  passed the threshold (   2033 tests run)
+
+ ZPO routines passed the tests of the error exits
+
+ All tests for ZPO routines passed the threshold (   1628 tests run)
+
+ ZPO drivers passed the tests of the error exits
+
+ All tests for ZPO drivers  passed the threshold (   1910 tests run)
+
+ ZPS routines passed the tests of the error exits
+
+ All tests for ZPS routines passed the threshold (    150 tests run)
+
+ ZPP routines passed the tests of the error exits
+
+ All tests for ZPP routines passed the threshold (   1332 tests run)
+
+ ZPP drivers passed the tests of the error exits
+
+ All tests for ZPP drivers  passed the threshold (   1910 tests run)
+
+ ZPB routines passed the tests of the error exits
+
+ All tests for ZPB routines passed the threshold (   3458 tests run)
+
+ ZPB drivers passed the tests of the error exits
+
+ All tests for ZPB drivers  passed the threshold (   4750 tests run)
+
+ ZPT routines passed the tests of the error exits
+
+ All tests for ZPT routines passed the threshold (   1778 tests run)
+
+ ZPT drivers passed the tests of the error exits
+
+ All tests for ZPT drivers  passed the threshold (    788 tests run)
+
+ ZHE routines passed the tests of the error exits
+
+ All tests for ZHE routines passed the threshold (   1846 tests run)
+
+ ZHE drivers passed the tests of the error exits
+
+ All tests for ZHE drivers  passed the threshold (   1072 tests run)
+
+ ZHR routines passed the tests of the error exits
+
+ All tests for ZHR routines passed the threshold (   1618 tests run)
+
+ ZHR drivers passed the tests of the error exits
+
+ All tests for ZHR drivers  passed the threshold (    222 tests run)
+
+ ZHK routines passed the tests of the error exits
+
+ All tests for ZHK routines passed the threshold (   1618 tests run)
+
+ ZHK drivers passed the tests of the error exits
+
+ All tests for ZHK drivers  passed the threshold (    222 tests run)
+
+ ZHA routines passed the tests of the error exits
+
+ All tests for ZHA routines passed the threshold (   1320 tests run)
+
+ ZHA drivers passed the tests of the error exits
+
+ All tests for ZHA drivers  passed the threshold (    148 tests run)
+
+ ZH2 routines passed the tests of the error exits
+
+ All tests for ZH2 routines passed the threshold (    666 tests run)
+
+ ZH2 drivers passed the tests of the error exits
+
+ All tests for ZH2 drivers  passed the threshold (     74 tests run)
+
+ ZSA routines passed the tests of the error exits
+
+ All tests for ZSA routines passed the threshold (   1320 tests run)
+
+ ZSA drivers passed the tests of the error exits
+
+ All tests for ZSA drivers  passed the threshold (    148 tests run)
+
+ ZS2 routines passed the tests of the error exits
+
+ All tests for ZS2 routines passed the threshold (    666 tests run)
+
+ ZH2 drivers passed the tests of the error exits
+
+ All tests for ZH2 drivers  passed the threshold (     74 tests run)
+
+ ZHP routines passed the tests of the error exits
+
+ All tests for ZHP routines passed the threshold (   1404 tests run)
+
+ ZHP drivers passed the tests of the error exits
+
+ All tests for ZHP drivers  passed the threshold (   1072 tests run)
+
+ ZSY routines passed the tests of the error exits
+
+ All tests for ZSY routines passed the threshold (   2122 tests run)
+
+ ZSY drivers passed the tests of the error exits
+
+ All tests for ZSY drivers  passed the threshold (   1240 tests run)
+
+ ZSR routines passed the tests of the error exits
+
+ All tests for ZSR routines passed the threshold (   1822 tests run)
+
+ ZSR drivers passed the tests of the error exits
+
+ All tests for ZSR drivers  passed the threshold (    258 tests run)
+
+ ZSK routines passed the tests of the error exits
+
+ All tests for ZSK routines passed the threshold (   1822 tests run)
+
+ ZSK drivers passed the tests of the error exits
+
+ All tests for ZSK drivers  passed the threshold (    258 tests run)
+
+ ZSP routines passed the tests of the error exits
+
+ All tests for ZSP routines passed the threshold (   1620 tests run)
+
+ ZSP drivers passed the tests of the error exits
+
+ All tests for ZSP drivers  passed the threshold (   1240 tests run)
+
+ ZTR routines passed the tests of the error exits
+
+ All tests for ZTR routines passed the threshold (   7672 tests run)
+
+ ZTP routines passed the tests of the error exits
+
+ All tests for ZTP routines passed the threshold (   7392 tests run)
+
+ ZTB routines passed the tests of the error exits
+
+ All tests for ZTB routines passed the threshold (  19888 tests run)
+
+ ZQR routines passed the tests of the error exits
+
+ All tests for ZQR routines passed the threshold (  42840 tests run)
+
+ ZRQ routines passed the tests of the error exits
+
+ All tests for ZRQ routines passed the threshold (  28784 tests run)
+
+ ZLQ routines passed the tests of the error exits
+
+ All tests for ZLQ routines passed the threshold (  28784 tests run)
+
+ ZQL routines passed the tests of the error exits
+
+ All tests for ZQL routines passed the threshold (  28784 tests run)
+
+ All tests for ZQ3 routines passed the threshold (   4410 tests run)
+
+ ZTZ routines passed the tests of the error exits
+
+ All tests for ZTZ routines passed the threshold (    252 tests run)
+
+ ZLS routines passed the tests of the error exits
+
+ All tests for ZLS drivers  passed the threshold ( 105840 tests run)
+
+ All tests for ZEQ routines passed the threshold
+
+ ZQT routines passed the tests of the error exits
+
+ All tests for ZQT routines passed the threshold (    510 tests run)
+
+ ZQX routines passed the tests of the error exits
+
+ All tests for ZQX routines passed the threshold (   1482 tests run)
+
+ ZXQ routines passed the tests of the error exits
+
+ All tests for ZXQ routines passed the threshold (   1482 tests run)
+
+ ZTQ routines passed the tests of the error exits
+
+ All tests for ZTQ routines passed the threshold (    510 tests run)
+
+ ZTS routines passed the tests of the error exits
+
+ All tests for ZTS routines passed the threshold (  10800 tests run)
+
+ ZHH routines passed the tests of the error exits
+
+ All tests for ZHH routines passed the threshold (  15900 tests run)
+
+ End of tests
+ Total time used =        11.63 seconds
+
+END LIN COMPLEX DOUBLE
+START EIG SINGLE
+ Tests of the Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    INMIN:     11    12    11    15    11
+    INWIN:      2     3     5     3     2
+    INIBL:      0     5     7     3   200
+    ISHFTS:      1     2     4     2     1
+    IACC22:      0     1     2     0     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SHS routines passed the tests of the error exits ( 66 tests done)
+
+
+ NEP:  NB =   1, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL =   0, ISHFTS =   1, IACC22 =   0
+
+ All tests for SHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   0, INMIN=  12, INWIN =   3, INIBL =   5, ISHFTS =   2, IACC22 =   1
+
+ All tests for SHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   5, INMIN=  11, INWIN =   5, INIBL =   7, ISHFTS =   4, IACC22 =   2
+
+ All tests for SHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   9, INMIN=  15, INWIN =   3, INIBL =   3, ISHFTS =   2, IACC22 =   0
+
+ All tests for SHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =  20, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL = 200, ISHFTS =   1, IACC22 =   1
+
+ All tests for SHS passed the threshold (  1764 tests run)
+
+
+ End of tests
+ Total time used =         0.06 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ SST routines passed the tests of the error exits (209 tests done)
+
+
+ SEP:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.39 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ SST routines passed the tests of the error exits (209 tests done)
+
+
+ SE2:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for SST passed the threshold (  4440 tests run)
+
+ All tests for SST drivers  passed the threshold (  13464 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.42 seconds
+
+ Tests of the Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     1     1     1     2     2     3     3
+               3    10    10    16    16    30    30    40    40
+    N:         0     1     3     0     1     2     0     1     0     1
+               3    10    16    10    16    30    40    30    40
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    NS:        2     0     2     2     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ SBD routines passed the tests of the error exits ( 55 tests done)
+
+ SGESVD passed the tests of the error exits (  8 tests done)
+ SGESDD passed the tests of the error exits (  6 tests done)
+ SGEJSV passed the tests of the error exits ( 11 tests done)
+ SGESVDX passed the tests of the error exits ( 12 tests done)
+ SGESVDQ passed the tests of the error exits ( 11 tests done)
+
+
+ SVD:  NB =   1, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for SBD routines passed the threshold (  10260 tests run)
+
+ All tests for SBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   0, NRHS =   0
+
+ All tests for SBD routines passed the threshold (  10260 tests run)
+
+ All tests for SBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   5, NRHS =   2
+
+ All tests for SBD routines passed the threshold (  10260 tests run)
+
+ All tests for SBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   9, NRHS =   2
+
+ All tests for SBD routines passed the threshold (  10260 tests run)
+
+ All tests for SBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =  20, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for SBD routines passed the threshold (  10260 tests run)
+
+ All tests for SBD drivers  passed the threshold (  14820 tests run)
+
+
+ End of tests
+ Total time used =         4.48 seconds
+
+ Tests of the Nonsymmetric eigenproblem condition estimation routines
+ SLALN2, SLASY2, SLANV2, SLAEXC, STRSYL, STREXC, STRSNA, STRSEN, SLAQTR
+
+ Relative machine precision (EPS) =     0.119209E-06
+ Safe minimum (SFMIN)             =     0.117549E-37
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SEC routines passed the tests of the error exits ( 35 tests done)
+
+ All tests for SEC routines passed the threshold ( 501251 tests run)
+
+
+ End of tests
+ Total time used =         0.32 seconds
+
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    SGEEV (eigenvalues and eigevectors)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SGEEV passed the tests of the error exits (  7 tests done)
+
+ All tests for SEV passed the threshold (   924 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    SGEES (Schur form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SGEES passed the tests of the error exits (  6 tests done)
+
+ All tests for SES passed the threshold (  3276 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    SGEEVX (eigenvalues, eigenvectors and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SGEEVX passed the tests of the error exits ( 11 tests done)
+
+ All tests for SVX passed the threshold (  5274 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    SGEESX (Schur form and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SGEESX passed the tests of the error exits (  7 tests done)
+
+ All tests for SSX passed the threshold (  3508 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.11 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     1     2     2
+    NBMIN:    40    40     2     2
+    NS:        2     4     2     4
+    MAXB:     40    40     2     2
+    IACC22:      1     2     1     2
+    NBCOL:    40    40     2     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SGG routines passed the tests of the error exits ( 36 tests done)
+
+
+ SGG:  NB =   1, NBMIN =  40, NS =   2, MAXB =  40, IACC22 =   1, NBCOL =  40
+
+ All tests for SGG passed the threshold (  2184 tests run)
+
+
+ SGG:  NB =   1, NBMIN =  40, NS =   4, MAXB =  40, IACC22 =   2, NBCOL =  40
+
+ All tests for SGG passed the threshold (  2184 tests run)
+
+
+ SGG:  NB =   2, NBMIN =   2, NS =   2, MAXB =   2, IACC22 =   1, NBCOL =   2
+
+ All tests for SGG passed the threshold (  2184 tests run)
+
+
+ SGG:  NB =   2, NBMIN =   2, NS =   4, MAXB =   2, IACC22 =   2, NBCOL =   2
+
+ All tests for SGG passed the threshold (  2184 tests run)
+
+
+ End of tests
+ Total time used =         0.04 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver SGGES
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6    10    12    20
+    N:         2     6    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SGS routines passed the tests of the error exits (108 tests done)
+
+ All tests for SGS drivers  passed the threshold (   1560 tests run)
+
+ All tests for SGS drivers  passed the threshold (   1560 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver SGGEV
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6     8    10    15    20
+    N:         2     6     8    10    15    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SGV routines passed the tests of the error exits (108 tests done)
+
+ All tests for SGV drivers  passed the threshold (   1092 tests run)
+
+ All tests for SGV drivers  passed the threshold (   1092 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver SGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         2
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SGX routines passed the tests of the error exits (108 tests done)
+
+ All tests for SGX drivers  passed the threshold (    150 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver SGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SGX routines passed the tests of the error exits (108 tests done)
+
+ All tests for SGX drivers  passed the threshold (     20 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver SGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         5
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SXV routines passed the tests of the error exits (108 tests done)
+
+ All tests for SXV drivers  passed the threshold (   5000 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver SGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ SXV routines passed the tests of the error exits (108 tests done)
+
+ All tests for SXV drivers  passed the threshold (      8 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.23 seconds
+
+ Tests of SSBTRD
+ (reduction of a symmetric band matrix to tridiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         5    20
+    N:         5    20
+    K:         0     1     2     5    16
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ SSB routines passed the tests of the error exits ( 75 tests done)
+
+ All tests for SSB passed the threshold (   810 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3    20
+    NBMIN:     2     2     2
+    NX:        1     1     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ SSG:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for SSG passed the threshold ( 11172 tests run)
+
+
+ SSG:  NB =   3, NBMIN =   2, NX =   1
+
+ All tests for SSG passed the threshold ( 11172 tests run)
+
+
+ SSG:  NB =  20, NBMIN =   2, NX =   1
+
+ All tests for SSG passed the threshold ( 11172 tests run)
+
+
+ End of tests
+ Total time used =         0.41 seconds
+
+ Tests of SGBBRD
+ (reduction of a general band matrix to real bidiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     0     1     1     1     1     2     2
+               2     2     3     3     3     3    10    10    16    16
+    N:         0     1     2     3     0     1     2     3     0     1
+               2     3     0     1     2     3    10    16    10    16
+    K:         0     1     2     3    16
+    NS:        1     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ SBB:  NRHS =   1
+
+ All tests for SBB passed the threshold (  3000 tests run)
+
+
+ SBB:  NRHS =   2
+
+ All tests for SBB passed the threshold (  3000 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Generalized Linear Regression Model routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     8    15    20    40
+    P:         9     0    15    12    15    30
+    N:         5     5    10    25    30    40
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GLM routines passed the tests of the error exits (  8 tests done)
+
+ All tests for GLM routines passed the threshold (     48 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Generalized QR and RQ routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     3    10
+    P:         0     5    20
+    N:         0     3    30
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GQR routines passed the tests of the error exits ( 12 tests done)
+
+ All tests for GQR routines passed the threshold (   1728 tests run)
+
+
+ End of tests
+ Total time used =         0.02 seconds
+
+
+ Tests of the Generalized Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     9    10    20    12    12    40
+    P:         4     0    12    14    10    10    20    15
+    N:         3    10    15    12     8    20     8    20
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GSV routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for GSV routines passed the threshold (    384 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the CS Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0    10    10    10    10    21    24    30    22    32
+
+    P:         0     4     4     0    10     9    10    20    12    12
+
+    N:         0     0    10     4     4    15    12     8    20     8
+
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+
+ CSD routines passed the tests of the error exits (  8 tests done)
+
+ All tests for CSD routines passed the threshold (    600 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Linear Least Squares routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         6     0     5     8    10    30
+    P:         0     5     5     5     8    20
+    N:         5     5     6     8    12    40
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ LSE routines passed the tests of the error exits (  8 tests done)
+
+ All tests for LSE routines passed the threshold (     96 tests run)
+
+
+ End of tests
+ Total time used =         0.00 seconds
+
+END EIG SINGLE
+START EIG DOUBLE
+ Tests of the Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    INMIN:     11    12    11    15    11
+    INWIN:      2     3     5     3     2
+    INIBL:      0     5     7     3   200
+    ISHFTS:      1     2     4     2     1
+    IACC22:      0     1     2     0     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DHS routines passed the tests of the error exits ( 66 tests done)
+
+
+ NEP:  NB =   1, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL =   0, ISHFTS =   1, IACC22 =   0
+
+ All tests for DHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   0, INMIN=  12, INWIN =   3, INIBL =   5, ISHFTS =   2, IACC22 =   1
+
+ All tests for DHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   5, INMIN=  11, INWIN =   5, INIBL =   7, ISHFTS =   4, IACC22 =   2
+
+ All tests for DHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   9, INMIN=  15, INWIN =   3, INIBL =   3, ISHFTS =   2, IACC22 =   0
+
+ All tests for DHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =  20, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL = 200, ISHFTS =   1, IACC22 =   1
+
+ All tests for DHS passed the threshold (  1764 tests run)
+
+
+ End of tests
+ Total time used =         0.08 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ DST routines passed the tests of the error exits (209 tests done)
+
+
+ SEP:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SEP:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.41 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ DST routines passed the tests of the error exits (209 tests done)
+
+
+ SE2:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+ SE2:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for DST passed the threshold (  4440 tests run)
+
+ All tests for DST drivers  passed the threshold (  13464 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.58 seconds
+
+ Tests of the Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     1     1     1     2     2     3     3
+               3    10    10    16    16    30    30    40    40
+    N:         0     1     3     0     1     2     0     1     0     1
+               3    10    16    10    16    30    40    30    40
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    NS:        2     0     2     2     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ DBD routines passed the tests of the error exits ( 55 tests done)
+
+ DGESVD passed the tests of the error exits (  8 tests done)
+ DGESDD passed the tests of the error exits (  6 tests done)
+ DGEJSV passed the tests of the error exits ( 11 tests done)
+ DGESVDX passed the tests of the error exits ( 12 tests done)
+ DGESVDQ passed the tests of the error exits ( 11 tests done)
+
+
+ SVD:  NB =   1, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for DBD routines passed the threshold (  10260 tests run)
+
+ All tests for DBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   0, NRHS =   0
+
+ All tests for DBD routines passed the threshold (  10260 tests run)
+
+ All tests for DBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   5, NRHS =   2
+
+ All tests for DBD routines passed the threshold (  10260 tests run)
+
+ All tests for DBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   9, NRHS =   2
+
+ All tests for DBD routines passed the threshold (  10260 tests run)
+
+ All tests for DBD drivers  passed the threshold (  14820 tests run)
+
+
+ SVD:  NB =  20, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for DBD routines passed the threshold (  10260 tests run)
+
+ All tests for DBD drivers  passed the threshold (  14820 tests run)
+
+
+ End of tests
+ Total time used =         5.90 seconds
+
+ Tests of the Nonsymmetric eigenproblem condition estimation routines
+ DLALN2, DLASY2, DLANV2, DLAEXC, DTRSYL, DTREXC, DTRSNA, DTRSEN, DLAQTR, DTGEXC
+
+ Relative machine precision (EPS) =     0.222045D-15
+ Safe minimum (SFMIN)             =     0.222507-307
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DEC routines passed the tests of the error exits ( 35 tests done)
+
+ All tests for DEC routines passed the threshold ( 501261 tests run)
+
+
+ End of tests
+ Total time used =         0.23 seconds
+
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    DGEEV (eigenvalues and eigevectors)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DGEEV passed the tests of the error exits (  7 tests done)
+
+ All tests for DEV passed the threshold (   924 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    DGEES (Schur form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DGEES passed the tests of the error exits (  6 tests done)
+
+ All tests for DES passed the threshold (  3276 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    DGEEVX (eigenvalues, eigenvectors and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DGEEVX passed the tests of the error exits ( 11 tests done)
+
+ All tests for DVX passed the threshold (  5274 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    DGEESX (Schur form and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DGEESX passed the tests of the error exits (  7 tests done)
+
+ All tests for DSX passed the threshold (  3508 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.11 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     1     2     2
+    NBMIN:    40    40     2     2
+    NS:        2     4     2     4
+    MAXB:     40    40     2     2
+    IACC22:      1     2     1     2
+    NBCOL:    40    40     2     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DGG routines passed the tests of the error exits ( 36 tests done)
+
+
+ DGG:  NB =   1, NBMIN =  40, NS =   2, MAXB =  40, IACC22 =   1, NBCOL =  40
+
+ All tests for DGG passed the threshold (  2184 tests run)
+
+
+ DGG:  NB =   1, NBMIN =  40, NS =   4, MAXB =  40, IACC22 =   2, NBCOL =  40
+
+ All tests for DGG passed the threshold (  2184 tests run)
+
+
+ DGG:  NB =   2, NBMIN =   2, NS =   2, MAXB =   2, IACC22 =   1, NBCOL =   2
+
+ All tests for DGG passed the threshold (  2184 tests run)
+
+
+ DGG:  NB =   2, NBMIN =   2, NS =   4, MAXB =   2, IACC22 =   2, NBCOL =   2
+
+ All tests for DGG passed the threshold (  2184 tests run)
+
+
+ End of tests
+ Total time used =         0.05 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver DGGES
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6    10    12    20
+    N:         2     6    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DGS routines passed the tests of the error exits (108 tests done)
+
+ All tests for DGS drivers  passed the threshold (   1560 tests run)
+
+ All tests for DGS drivers  passed the threshold (   1560 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver DGGEV
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6     8    10    15    20
+    N:         2     6     8    10    15    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DGV routines passed the tests of the error exits (108 tests done)
+
+ All tests for DGV drivers  passed the threshold (   1092 tests run)
+
+ All tests for DGV drivers  passed the threshold (   1092 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver DGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         2
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DGX routines passed the tests of the error exits (108 tests done)
+
+ All tests for DGX drivers  passed the threshold (    150 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver DGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DGX routines passed the tests of the error exits (108 tests done)
+
+ All tests for DGX drivers  passed the threshold (     20 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver DGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         5
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DXV routines passed the tests of the error exits (108 tests done)
+
+ All tests for DXV drivers  passed the threshold (   5000 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver DGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ DXV routines passed the tests of the error exits (108 tests done)
+
+ All tests for DXV drivers  passed the threshold (      8 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.25 seconds
+
+ Tests of DSBTRD
+ (reduction of a symmetric band matrix to tridiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         5    20
+    N:         5    20
+    K:         0     1     2     5    16
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ DSB routines passed the tests of the error exits ( 75 tests done)
+
+ All tests for DSB passed the threshold (   810 tests run)
+
+
+ End of tests
+ Total time used =         0.00 seconds
+
+ Tests of the Symmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3    20
+    NBMIN:     2     2     2
+    NX:        1     1     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ DSG:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for DSG passed the threshold ( 11172 tests run)
+
+
+ DSG:  NB =   3, NBMIN =   2, NX =   1
+
+ All tests for DSG passed the threshold ( 11172 tests run)
+
+
+ DSG:  NB =  20, NBMIN =   2, NX =   1
+
+ All tests for DSG passed the threshold ( 11172 tests run)
+
+
+ End of tests
+ Total time used =         0.52 seconds
+
+ Tests of DGBBRD
+ (reduction of a general band matrix to real bidiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     0     1     1     1     1     2     2
+               2     2     3     3     3     3    10    10    16    16
+    N:         0     1     2     3     0     1     2     3     0     1
+               2     3     0     1     2     3    10    16    10    16
+    K:         0     1     2     3    16
+    NS:        1     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ DBB:  NRHS =   1
+
+ All tests for DBB passed the threshold (  3000 tests run)
+
+
+ DBB:  NRHS =   2
+
+ All tests for DBB passed the threshold (  3000 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Generalized Linear Regression Model routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     8    15    20    40
+    P:         9     0    15    12    15    30
+    N:         5     5    10    25    30    40
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GLM routines passed the tests of the error exits (  8 tests done)
+
+ All tests for GLM routines passed the threshold (     48 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Generalized QR and RQ routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     3    10
+    P:         0     5    20
+    N:         0     3    30
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GQR routines passed the tests of the error exits ( 12 tests done)
+
+ All tests for GQR routines passed the threshold (   1728 tests run)
+
+
+ End of tests
+ Total time used =         0.02 seconds
+
+
+ Tests of the Generalized Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     9    10    20    12    12    40
+    P:         4     0    12    14    10    10    20    15
+    N:         3    10    15    12     8    20     8    20
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GSV routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for GSV routines passed the threshold (    384 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the CS Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0    10    10    10    10    21    24    30    22    32
+
+    P:         0     4     4     0    10     9    10    20    12    12
+
+    N:         0     0    10     4     4    15    12     8    20     8
+
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+
+ CSD routines passed the tests of the error exits (  8 tests done)
+
+ All tests for CSD routines passed the threshold (    600 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Linear Least Squares routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         6     0     5     8    10    30
+    P:         0     5     5     5     8    20
+    N:         5     5     6     8    12    40
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ LSE routines passed the tests of the error exits (  8 tests done)
+
+ All tests for LSE routines passed the threshold (     96 tests run)
+
+
+ End of tests
+ Total time used =         0.00 seconds
+
+END EIG DOUBLE
+START EIG COMPLEX
+ Tests of the Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    INMIN:     11    12    11    15    11
+    INWIN:      2     3     5     3     2
+    INIBL:      0     5     7     3   200
+    ISHFTS:      1     2     4     2     1
+    IACC22:      0     1     2     0     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CHS routines passed the tests of the error exits ( 66 tests done)
+
+
+ NEP:  NB =   1, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL =   0, ISHFTS =   1, IACC22 =   0
+
+ All tests for CHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   0, INMIN=  12, INWIN =   3, INIBL =   5, ISHFTS =   2, IACC22 =   1
+
+ All tests for CHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   5, INMIN=  11, INWIN =   5, INIBL =   7, ISHFTS =   4, IACC22 =   2
+
+ All tests for CHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   9, INMIN=  15, INWIN =   3, INIBL =   3, ISHFTS =   2, IACC22 =   0
+
+ All tests for CHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =  20, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL = 200, ISHFTS =   1, IACC22 =   1
+
+ All tests for CHS passed the threshold (  1764 tests run)
+
+
+ End of tests
+ Total time used =         0.16 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ CST routines passed the tests of the error exits (176 tests done)
+
+
+ SEP:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.61 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ CST routines passed the tests of the error exits (176 tests done)
+
+
+ SE2:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for CST passed the threshold (  4440 tests run)
+
+ All tests for CST drivers  passed the threshold (  11016 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.66 seconds
+
+ Tests of the Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     1     1     1     2     2     3     3
+               3    10    10    16    16    30    30    40    40
+    N:         0     1     3     0     1     2     0     1     0     1
+               3    10    16    10    16    30    40    30    40
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    NS:        2     0     2     2     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ CBD routines passed the tests of the error exits ( 35 tests done)
+
+ CGESVD passed the tests of the error exits (  8 tests done)
+ CGESDD passed the tests of the error exits (  6 tests done)
+ CGEJSV passed the tests of the error exits ( 11 tests done)
+ CGESVDX passed the tests of the error exits ( 12 tests done)
+ CGESVDQ passed the tests of the error exits ( 11 tests done)
+
+
+ SVD:  NB =   1, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for CBD routines passed the threshold (   4085 tests run)
+
+ All tests for CBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   0, NRHS =   0
+
+ All tests for CBD routines passed the threshold (   4085 tests run)
+
+ All tests for CBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   5, NRHS =   2
+
+ All tests for CBD routines passed the threshold (   4085 tests run)
+
+ All tests for CBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   9, NRHS =   2
+
+ All tests for CBD routines passed the threshold (   4085 tests run)
+
+ All tests for CBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =  20, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for CBD routines passed the threshold (   4085 tests run)
+
+ All tests for CBD drivers  passed the threshold (  14340 tests run)
+
+
+ End of tests
+ Total time used =         8.13 seconds
+
+ Tests of the Nonsymmetric eigenproblem condition estimation routines
+ CTRSYL, CTREXC, CTRSNA, CTRSEN
+
+ Relative machine precision (EPS) =     0.119209E-06
+ Safe minimum (SFMIN)             =     0.117549E-37
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CEC routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for CEC routines passed the threshold (   5966 tests run)
+
+
+ End of tests
+ Total time used =         0.03 seconds
+
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    CGEES (Schur form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CGEES passed the tests of the error exits (  6 tests done)
+
+ All tests for CES passed the threshold (  3276 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    CGEEV (eigenvalues and eigevectors)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CGEEV passed the tests of the error exits (  7 tests done)
+
+ All tests for CEV passed the threshold (   924 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    CGEESX (Schur form and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CGEESX passed the tests of the error exits (  7 tests done)
+
+ All tests for CSX passed the threshold (  3406 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    CGEEVX (eigenvalues, eigenvectors and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CGEEVX passed the tests of the error exits ( 10 tests done)
+
+ All tests for CVX passed the threshold (  5172 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.20 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     1     2     2
+    NBMIN:    40    40     2     2
+    NS:        2     4     2     4
+    MAXB:     40    40     2     2
+    IACC22:      1     2     1     2
+    NBCOL:    40    40     2     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CGG routines passed the tests of the error exits ( 36 tests done)
+
+
+ CGG:  NB =   1, NBMIN =  40, NS =   2, MAXB =  40, IACC22 =   1, NBCOL =  40
+
+ All tests for CGG passed the threshold (  2184 tests run)
+
+
+ CGG:  NB =   1, NBMIN =  40, NS =   4, MAXB =  40, IACC22 =   2, NBCOL =  40
+
+ All tests for CGG passed the threshold (  2184 tests run)
+
+
+ CGG:  NB =   2, NBMIN =   2, NS =   2, MAXB =   2, IACC22 =   1, NBCOL =   2
+
+ All tests for CGG passed the threshold (  2184 tests run)
+
+
+ CGG:  NB =   2, NBMIN =   2, NS =   4, MAXB =   2, IACC22 =   2, NBCOL =   2
+
+ All tests for CGG passed the threshold (  2184 tests run)
+
+
+ End of tests
+ Total time used =         0.11 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver CGGEV
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6     8    10    12    20
+    N:         2     6     8    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CGV routines passed the tests of the error exits (106 tests done)
+
+ All tests for CGV drivers  passed the threshold (   1092 tests run)
+
+ All tests for CGV drivers  passed the threshold (   1092 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver CGGES
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6    10    12    20
+    N:         2     6    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CGS routines passed the tests of the error exits (106 tests done)
+
+ All tests for CGS drivers  passed the threshold (   1560 tests run)
+
+ All tests for CGS drivers  passed the threshold (   1560 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver CGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         2
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CGX routines passed the tests of the error exits (106 tests done)
+
+ All tests for CGX drivers  passed the threshold (    150 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver CGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         6
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CXV routines passed the tests of the error exits (106 tests done)
+
+ All tests for CXV drivers  passed the threshold (   5000 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver CGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CGX routines passed the tests of the error exits (106 tests done)
+
+ All tests for CGX drivers  passed the threshold (     20 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver CGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ CXV routines passed the tests of the error exits (106 tests done)
+
+ All tests for CXV drivers  passed the threshold (      8 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.33 seconds
+
+ Tests of CHBTRD
+ (reduction of a Hermitian band matrix to real tridiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         5    20
+    N:         5    20
+    K:         0     1     2     5    16
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ CHB routines passed the tests of the error exits ( 80 tests done)
+
+ All tests for CHB passed the threshold (   810 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3    20
+    NBMIN:     2     2     2
+    NX:        1     1     1
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ CSG:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for CSG passed the threshold ( 11172 tests run)
+
+
+ CSG:  NB =   3, NBMIN =   2, NX =   1
+
+ All tests for CSG passed the threshold ( 11172 tests run)
+
+
+ CSG:  NB =  20, NBMIN =   2, NX =   1
+
+ All tests for CSG passed the threshold ( 11172 tests run)
+
+
+ End of tests
+ Total time used =         0.69 seconds
+
+ Tests of CGBBRD
+ (reduction of a general band matrix to real bidiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     0     1     1     1     1     2     2
+               2     2     3     3     3     3    10    10    16    16
+    N:         0     1     2     3     0     1     2     3     0     1
+               2     3     0     1     2     3    10    16    10    16
+    K:         0     1     2     3    16
+    NS:        1     2
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ CBB:  NRHS =   1
+
+ All tests for CBB passed the threshold (  3000 tests run)
+
+
+ CBB:  NRHS =   2
+
+ All tests for CBB passed the threshold (  3000 tests run)
+
+
+ End of tests
+ Total time used =         0.03 seconds
+
+
+ Tests of the Generalized Linear Regression Model routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     8    15    20    40
+    P:         9     0    15    12    15    30
+    N:         5     5    10    25    30    40
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GLM routines passed the tests of the error exits (  8 tests done)
+
+ All tests for GLM routines passed the threshold (     48 tests run)
+
+
+ End of tests
+ Total time used =         0.02 seconds
+
+
+ Tests of the Generalized QR and RQ routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     3    10
+    P:         0     5    20
+    N:         0     3    30
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GQR routines passed the tests of the error exits ( 12 tests done)
+
+ All tests for GQR routines passed the threshold (   1728 tests run)
+
+
+ End of tests
+ Total time used =         0.04 seconds
+
+
+ Tests of the Generalized Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     9    10    20    12    12    40
+    P:         4     0    12    14    10    10    20    15
+    N:         3    10    15    12     8    20     8    20
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GSV routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for GSV routines passed the threshold (    385 tests run)
+
+
+ End of tests
+ Total time used =         0.02 seconds
+
+
+ Tests of the CS Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0    10    10    10    10    21    24    30    22    32
+
+    P:         0     4     4     0    10     9    10    20    12    12
+
+    N:         0     0    10     4     4    15    12     8    20     8
+
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+
+ CSD routines passed the tests of the error exits (  8 tests done)
+
+ All tests for CSD routines passed the threshold (    600 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Linear Least Squares routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         6     0     5     8    10    30
+    P:         0     5     5     5     8    20
+    N:         5     5     6     8    12    40
+
+ Relative machine underflow is taken to be    0.117549E-37
+ Relative machine overflow  is taken to be    0.340282E+39
+ Relative machine precision is taken to be    0.596046E-07
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ LSE routines passed the tests of the error exits (  8 tests done)
+
+ All tests for LSE routines passed the threshold (     96 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+END EIG COMPLEX
+START EIG COMPLEX DOUBLE
+ Tests of the Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    INMIN:     11    12    11    15    11
+    INWIN:      2     3     5     3     2
+    INIBL:      0     5     7     3   200
+    ISHFTS:      1     2     4     2     1
+    IACC22:      0     1     2     0     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZHS routines passed the tests of the error exits ( 66 tests done)
+
+
+ NEP:  NB =   1, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL =   0, ISHFTS =   1, IACC22 =   0
+
+ All tests for ZHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   0, INMIN=  12, INWIN =   3, INIBL =   5, ISHFTS =   2, IACC22 =   1
+
+ All tests for ZHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   5, INMIN=  11, INWIN =   5, INIBL =   7, ISHFTS =   4, IACC22 =   2
+
+ All tests for ZHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =   3, NBMIN =   2, NX =   9, INMIN=  15, INWIN =   3, INIBL =   3, ISHFTS =   2, IACC22 =   0
+
+ All tests for ZHS passed the threshold (  1764 tests run)
+
+
+ NEP:  NB =  20, NBMIN =   2, NX =   1, INMIN=  11, INWIN =   2, INIBL = 200, ISHFTS =   1, IACC22 =   1
+
+ All tests for ZHS passed the threshold (  1764 tests run)
+
+
+ End of tests
+ Total time used =         0.18 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ ZST routines passed the tests of the error exits (176 tests done)
+
+
+ SEP:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SEP:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.78 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    20
+    N:         0     1     2     3     5    20
+    NB:        1     3     3     3    10
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ ZST routines passed the tests of the error exits (176 tests done)
+
+
+ SE2:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   0
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   5
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =   3, NBMIN =   2, NX =   9
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+ SE2:  NB =  10, NBMIN =   2, NX =   1
+
+ All tests for ZST passed the threshold (  4440 tests run)
+
+ All tests for ZST drivers  passed the threshold (  11016 tests run)
+
+
+     routines were not tested
+
+
+ End of tests
+ Total time used =         0.82 seconds
+
+ Tests of the Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     1     1     1     2     2     3     3
+               3    10    10    16    16    30    30    40    40
+    N:         0     1     3     0     1     2     0     1     0     1
+               3    10    16    10    16    30    40    30    40
+    NB:        1     3     3     3    20
+    NBMIN:     2     2     2     2     2
+    NX:        1     0     5     9     1
+    NS:        2     0     2     2     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   50.00
+
+
+ ZBD routines passed the tests of the error exits ( 35 tests done)
+
+ ZGESVD passed the tests of the error exits (  8 tests done)
+ ZGESDD passed the tests of the error exits (  6 tests done)
+ ZGEJSV passed the tests of the error exits ( 11 tests done)
+ ZGESVDX passed the tests of the error exits ( 12 tests done)
+ ZGESVDQ passed the tests of the error exits ( 11 tests done)
+
+
+ SVD:  NB =   1, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for ZBD routines passed the threshold (   4085 tests run)
+
+ All tests for ZBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   0, NRHS =   0
+
+ All tests for ZBD routines passed the threshold (   4085 tests run)
+
+ All tests for ZBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   5, NRHS =   2
+
+ All tests for ZBD routines passed the threshold (   4085 tests run)
+
+ All tests for ZBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =   3, NBMIN =   2, NX =   9, NRHS =   2
+
+ All tests for ZBD routines passed the threshold (   4085 tests run)
+
+ All tests for ZBD drivers  passed the threshold (  14340 tests run)
+
+
+ SVD:  NB =  20, NBMIN =   2, NX =   1, NRHS =   2
+
+ All tests for ZBD routines passed the threshold (   4085 tests run)
+
+ All tests for ZBD drivers  passed the threshold (  14340 tests run)
+
+
+ End of tests
+ Total time used =         9.87 seconds
+
+ Tests of the Nonsymmetric eigenproblem condition estimation routines
+ ZTRSYL, ZTREXC, ZTRSNA, ZTRSEN
+
+ Relative machine precision (EPS) =     0.222045D-15
+ Safe minimum (SFMIN)             =     0.222507-307
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZEC routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for ZEC routines passed the threshold (   5966 tests run)
+
+
+ End of tests
+ Total time used =         0.03 seconds
+
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    ZGEES (Schur form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZGEES passed the tests of the error exits (  6 tests done)
+
+ All tests for ZES passed the threshold (  3276 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Driver
+    ZGEEV (eigenvalues and eigevectors)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZGEEV passed the tests of the error exits (  7 tests done)
+
+ All tests for ZEV passed the threshold (   924 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    ZGEESX (Schur form and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZGEESX passed the tests of the error exits (  7 tests done)
+
+ All tests for ZSX passed the threshold (  3406 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Nonsymmetric Eigenvalue Problem Expert Driver
+    ZGEEVX (eigenvalues, eigenvectors and condition numbers)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10
+    N:         0     1     2     3     5    10
+    NB:        3
+    NBMIN:     3
+    NX:        1
+    INMIN:       11
+    INWIN:      4
+    INIBL:      8
+    ISHFTS:      2
+    IACC22:      0
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZGEEVX passed the tests of the error exits ( 10 tests done)
+
+ All tests for ZVX passed the threshold (  5172 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.24 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     1     2     2
+    NBMIN:    40    40     2     2
+    NS:        2     4     2     4
+    MAXB:     40    40     2     2
+    IACC22:      1     2     1     2
+    NBCOL:    40    40     2     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZGG routines passed the tests of the error exits ( 36 tests done)
+
+
+ ZGG:  NB =   1, NBMIN =  40, NS =   2, MAXB =  40, IACC22 =   1, NBCOL =  40
+
+ All tests for ZGG passed the threshold (  2184 tests run)
+
+
+ ZGG:  NB =   1, NBMIN =  40, NS =   4, MAXB =  40, IACC22 =   2, NBCOL =  40
+
+ All tests for ZGG passed the threshold (  2184 tests run)
+
+
+ ZGG:  NB =   2, NBMIN =   2, NS =   2, MAXB =   2, IACC22 =   1, NBCOL =   2
+
+ All tests for ZGG passed the threshold (  2184 tests run)
+
+
+ ZGG:  NB =   2, NBMIN =   2, NS =   4, MAXB =   2, IACC22 =   2, NBCOL =   2
+
+ All tests for ZGG passed the threshold (  2184 tests run)
+
+
+ End of tests
+ Total time used =         0.12 seconds
+
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver ZGGEV
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6     8    10    12    20
+    N:         2     6     8    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZGV routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZGV drivers  passed the threshold (   1092 tests run)
+
+ ZGV -- Complex Generalized eigenvalue problem driver
+ Matrix types (see ZDRGEV3 for details): 
+ Special Matrices:                       (J'=transposed Jordan block)
+   1=(0,0)  2=(I,0)  3=(0,I)  4=(I,I)  5=(J',J')  6=(diag(J',I), diag(I,J'))
+ Diagonal Matrices:  ( D=diag(0,1,2,...) )
+   7=(D,I)   9=(large*D, small*I)  11=(large*I, small*D)  13=(large*D, large*I)
+   8=(I,D)  10=(small*D, large*I)  12=(small*I, large*D)  14=(small*D, small*I)
+  15=(D, reversed D)
+ Matrices Rotated by Random Orthogonal Matrices U, V:
+  16=Transposed Jordan Blocks             19=geometric alpha, beta=0,1
+  17=arithm. alpha&beta                   20=arithmetic alpha, beta=0,1
+  18=clustered alpha, beta=0,1            21=random alpha, beta=0,1
+ Large & Small Matrices:
+  22=(large, small)   23=(small,large)    24=(small,small)    25=(large,large)
+  26=random O(1) matrices.
+
+ Tests performed:    
+ 1 = max | ( b A - a B )'*l | / const.,
+ 2 = | |VR(i)| - 1 | / ulp,
+ 3 = max | ( b A - a B )*r | / const.
+ 4 = | |VL(i)| - 1 | / ulp,
+ 5 = 0 if W same no matter if r or l computed,
+ 6 = 0 if l same no matter if l computed,
+ 7 = 0 if r same no matter if r computed,
+
+ Matrix order=   20, type=19, seed=1284,3436,2461,1449, result  5 is 4.504D+15
+ ZGV drivers:      1 out of   1092 tests failed to pass the threshold
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Driver ZGGES
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         2     6    10    12    20
+    N:         2     6    10    12    20
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZGS routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZGS drivers  passed the threshold (   1560 tests run)
+
+ All tests for ZGS drivers  passed the threshold (   1560 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver ZGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         2
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZGX routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZGX drivers  passed the threshold (    150 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver ZGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         6
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZXV routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZXV drivers  passed the threshold (   5000 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver ZGGESX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZGX routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZGX drivers  passed the threshold (     20 tests run)
+
+ -----------------------------------------------------------------------
+
+ Tests of the Generalized Nonsymmetric Eigenvalue Problem Expert Driver ZGGEVX
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    N:         0
+    NB:        1
+    NBMIN:     1
+    NX:        1
+    NS:        2
+    MAXB:      1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   10.00
+
+
+ ZXV routines passed the tests of the error exits (106 tests done)
+
+ All tests for ZXV drivers  passed the threshold (      8 tests run)
+
+ -----------------------------------------------------------------------
+
+
+ End of tests
+ Total time used =         0.38 seconds
+
+ Tests of ZHBTRD
+ (reduction of a Hermitian band matrix to real tridiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         5    20
+    N:         5    20
+    K:         0     1     2     5    16
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ ZHB routines passed the tests of the error exits ( 80 tests done)
+
+ All tests for ZHB passed the threshold (   810 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+ Tests of the Hermitian Eigenvalue Problem routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     1     2     3     5    10    16
+    N:         0     1     2     3     5    10    16
+    NB:        1     3    20
+    NBMIN:     2     2     2
+    NX:        1     1     1
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ ZSG:  NB =   1, NBMIN =   2, NX =   1
+
+ All tests for ZSG passed the threshold ( 11172 tests run)
+
+
+ ZSG:  NB =   3, NBMIN =   2, NX =   1
+
+ All tests for ZSG passed the threshold ( 11172 tests run)
+
+
+ ZSG:  NB =  20, NBMIN =   2, NX =   1
+
+ All tests for ZSG passed the threshold ( 11172 tests run)
+
+
+ End of tests
+ Total time used =         0.80 seconds
+
+ Tests of ZGBBRD
+ (reduction of a general band matrix to real bidiagonal form)
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     0     0     0     1     1     1     1     2     2
+               2     2     3     3     3     3    10    10    16    16
+    N:         0     1     2     3     0     1     2     3     0     1
+               2     3     0     1     2     3    10    16    10    16
+    K:         0     1     2     3    16
+    NS:        1     2
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+
+ ZBB:  NRHS =   1
+
+ All tests for ZBB passed the threshold (  3000 tests run)
+
+
+ ZBB:  NRHS =   2
+
+ All tests for ZBB passed the threshold (  3000 tests run)
+
+
+ End of tests
+ Total time used =         0.04 seconds
+
+
+ Tests of the Generalized Linear Regression Model routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     8    15    20    40
+    P:         9     0    15    12    15    30
+    N:         5     5    10    25    30    40
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GLM routines passed the tests of the error exits (  8 tests done)
+
+ All tests for GLM routines passed the threshold (     48 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Generalized QR and RQ routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     3    10
+    P:         0     5    20
+    N:         0     3    30
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GQR routines passed the tests of the error exits ( 12 tests done)
+
+ All tests for GQR routines passed the threshold (   1728 tests run)
+
+
+ End of tests
+ Total time used =         0.04 seconds
+
+
+ Tests of the Generalized Singular Value Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0     5     9    10    20    12    12    40
+    P:         4     0    12    14    10    10    20    15
+    N:         3    10    15    12     8    20     8    20
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ GSV routines passed the tests of the error exits ( 33 tests done)
+
+ All tests for GSV routines passed the threshold (    384 tests run)
+
+
+ End of tests
+ Total time used =         0.02 seconds
+
+
+ Tests of the CS Decomposition routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         0    10    10    10    10    21    24    30    22    32
+
+    P:         0     4     4     0    10     9    10    20    12    12
+
+    N:         0     0    10     4     4    15    12     8    20     8
+
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   30.00
+
+
+ CSD routines passed the tests of the error exits (  8 tests done)
+
+ All tests for CSD routines passed the threshold (    600 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+
+ Tests of the Linear Least Squares routines
+
+ LAPACK VERSION 3.*.0
+
+ The following parameter values will be used:
+    M:         6     0     5     8    10    30
+    P:         0     5     5     5     8    20
+    N:         5     5     6     8    12    40
+
+ Relative machine underflow is taken to be    0.222507-307
+ Relative machine overflow  is taken to be    0.179769+309
+ Relative machine precision is taken to be    0.111022D-15
+
+ Routines pass computational tests if test ratio is less than   20.00
+
+
+ LSE routines passed the tests of the error exits (  8 tests done)
+
+ All tests for LSE routines passed the threshold (     96 tests run)
+
+
+ End of tests
+ Total time used =         0.01 seconds
+
+END EIG COMPLEX DOUBLE

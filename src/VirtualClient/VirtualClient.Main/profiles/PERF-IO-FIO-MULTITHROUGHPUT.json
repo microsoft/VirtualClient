@@ -1,0 +1,89 @@
+{
+    "Description": "FIO Multi Throughput (OLTP-C) Workload",
+    "Parameters": {
+        "DiskFilter": "BiggestSize",
+        "RandomIOFileSize": "124G",
+        "SequentialIOFileSize": "20G",
+        "TargetIOPS": "5000",
+        "TargetPercents": "10,40,90,98,100,102,110"
+    },
+    "Actions": [
+        {
+            "Type": "FioMultiThroughputExecutor",
+            "Parameters": {
+                "DirectIO": "1",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DiskFill": true,
+                "GroupReporting": "0",
+                "Scenario": "fio_multithroughput_initialize",
+                "PackageName": "fio",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "DurationSec": "300",
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "Tags": "IO,FIO,MultiThroughput,OLTP",
+                "TemplateJobFile": "oltp-c.fio.jobfile"
+            }
+        },
+        {
+            "Type": "FioMultiThroughputExecutor",
+            "Parameters": {
+                "Scenario": "fio_multithroughput",
+                "PackageName": "fio",
+                "DirectIO": "1",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "DurationSec": "300",
+                "GroupReporting": "0",
+                "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
+                "RandomReadBlockSize": "8K",
+                "RandomReadNumJobs": 1,
+                "RandomReadQueueDepth": 512,
+                "RandomReadWeight": 5416,
+                "RandomWriteBlockSize": "8K",
+                "RandomWriteNumJobs": 1,
+                "RandomWriteQueueDepth": 512,
+                "RandomWriteWeight": 4255,
+                "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialReadBlockSize": "56K",
+                "SequentialReadNumJobs": 1,
+                "SequentialReadQueueDepth": 64,
+                "SequentialReadWeight": 0,
+                "SequentialWriteBlockSize": "56K",
+                "SequentialWriteNumJobs": 1,
+                "SequentialWriteQueueDepth": 64,
+                "SequentialWriteWeight": 329,
+                "TargetIOPS": "$.Parameters.TargetIOPS",
+                "TargetPercents": "$.Parameters.TargetPercents",
+                "TemplateJobFile": "oltp-c.fio.jobfile",
+                "Tags": "IO,FIO,MultiThroughput,OLTP"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackages",
+                "Packages-Apt": "libaio1,libaio-dev",
+                "Packages-Dnf": "libaio,libaio-devel",
+                "Packages-Yum": "libaio,libaio-devel",
+                "Packages-Zypper": "libaio1,libaio-dev"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0-1.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
+        }
+    ]
+}

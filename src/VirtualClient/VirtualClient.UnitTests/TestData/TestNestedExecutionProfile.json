@@ -1,0 +1,54 @@
+{
+	"LoopInfinitely": "false",
+	"Metadata": {
+		"ApplicationInsightsKey": "0e3b9f05-6df2-47a5-a471-0794a4655c91"
+	},
+	"Actions": [
+		{
+			"Type": "LoopAction",
+			"ChildActions": [
+				{
+					"Type": "ParallelAction",
+					"ChildActions": [
+						{
+							"Type": "TestAction",
+							"Arguments": [
+								{
+									"Name": "aParameter",
+									"Value": "aValue"
+								},
+								{
+									"Name": "ParallelDiskExecution",
+									"Value": "true"
+								}
+							]
+						}
+					]
+				}
+			],
+			"Arguments": [
+				{
+					"Name": "RepeatCount",
+					"Value": "1"
+				},
+				{
+					"Name": "ParallelDiskExecution",
+					"Value": "true"
+				}
+			]
+		}
+	],
+	"Monitors": [
+		{
+			"Type": "TestMonitor",
+			"Arguments": [
+				{
+					"Name": "anotherParameter",
+					"Value": "anotherValue"
+				}
+			]
+		}
+	]
+}
+	
+	

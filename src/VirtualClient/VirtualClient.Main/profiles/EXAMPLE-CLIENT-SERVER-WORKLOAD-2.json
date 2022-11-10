@@ -1,0 +1,101 @@
+{
+    "Description": "Test Profile Executor",
+    "MinimumExecutionInterval": "00:00:05",
+    "Parameters": {
+        "ProfilingEnabled": false,
+        "ProfilingMode": "None"
+    },
+    "Actions": [
+        {
+            "Type": "ExampleServerExecutor",
+            "Parameters": {
+                "Scenario": "RunServerScenario1",
+                "Role": "Server",
+                "Port": 5000,
+                "PackageName": "exampleworkload",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleReverseProxyExecutor",
+            "Parameters": {
+                "Scenario": "RunServerScenario1",
+                "Role": "ReverseProxy",
+                "Port": 5001,
+                "PackageName": "exampleworkload",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleClientExecutor",
+            "Parameters": {
+                "Scenario": "Scenario1",
+                "Role": "Client",
+                "ServerPort": 5001,
+                "PackageName": "exampleworkload",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleClientExecutor",
+            "Parameters": {
+                "Scenario": "Scenario2",
+                "Role": "Client",
+                "ServerPort": 5001,
+                "PackageName": "exampleworkload",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleClientExecutor",
+            "Parameters": {
+                "Scenario": "Scenario3",
+                "Role": "Client",
+                "ServerPort": 5001,
+                "PackageName": "exampleworkload",
+                "Tags": "Test,VC"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallExampleWorkloadPackage",
+                "Role": "Client",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "exampleworkload",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallWebServerPackage",
+                "Role": "Server",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "exampleworkload",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallExampleWorkloadPackage",
+                "Role": "ReverseProxy",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "exampleworkload",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}

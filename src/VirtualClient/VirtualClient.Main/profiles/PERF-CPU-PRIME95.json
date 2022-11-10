@@ -1,0 +1,39 @@
+{
+    "Description": "Prime95 Workload",
+    "Parameters": {
+        "TimeInMins": "60",
+        "MinTortureFFT": "4",
+        "MaxTortureFFT": "8192",
+        "TortureHyperthreading": "1",
+        "FFTConfiguration": "0",
+        "NumberOfThreads": ""
+    },
+    "Actions": [
+        {
+            "Type": "Prime95Executor",
+            "Parameters": {
+                "Scenario": "ApplyStress",
+                "CommandLine": "-t",
+                "TimeInMins": "$.Parameters.TimeInMins",
+                "MinTortureFFT": "$.Parameters.MinTortureFFT",
+                "MaxTortureFFT": "$.Parameters.MaxTortureFFT",
+                "TortureHyperthreading": "$.Parameters.TortureHyperthreading",
+                "FFTConfiguration": "$.Parameters.FFTConfiguration",
+                "NumberOfThreads":  "$.Parameters.NumberOfThreads",
+                "PackageName": "prime95"
+            }
+        }     
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallPrime95Package",
+                "BlobContainer": "packages",
+                "BlobName": "prime95-v308b16.zip",
+                "PackageName": "prime95",
+                "Extract": true
+            }
+        }
+    ]
+}

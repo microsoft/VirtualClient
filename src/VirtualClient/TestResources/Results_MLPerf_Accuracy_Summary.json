@@ -1,0 +1,5 @@
+﻿{
+  "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server": { "bert": "Accuracy = 91.873, Threshold = 90.783. Accuracy test PASSED." },
+  "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream": { "bert": "Accuracy = 91.568, Threshold = 90.783. Accuracy test PASSED." },
+  "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline": { "bert": "Accuracy = 91.832, Threshold = 90.783. Accuracy test FAILED." }
+}

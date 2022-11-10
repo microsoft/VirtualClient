@@ -1,0 +1,77 @@
+﻿{
+    "Description": "OpenFOAM CPU Performance workload",
+    "Parameters": {
+        "Iterations": "500"
+    },
+    "Actions": [
+        {
+            "Type": "OpenFOAMExecutor",
+            "Parameters": {
+                "Scenario": "airFoil2D",
+                "Iterations": "$.Parameters.Iterations",
+                "Solver": "simpleFoam",
+                "PackageName": "openfoam",
+                "Tags": "airFoil2D,CPU,OpenFOAM,OpenFOAMSimulations"
+            }
+        },
+        {
+            "Type": "OpenFOAMExecutor",
+            "Parameters": {
+                "Scenario": "elbow",
+                "Iterations": "$.Parameters.Iterations",
+                "Solver": "icoFoam",
+                "PackageName": "openfoam",
+                "Tags": "elbow,CPU,OpenFOAM,OpenFOAMSimulations"
+            }
+        },
+        {
+            "Type": "OpenFOAMExecutor",
+            "Parameters": {
+                "Scenario": "lockExchange",
+                "Iterations": "$.Parameters.Iterations",
+                "Solver": "twoLiquidMixingFoam",
+                "PackageName": "openfoam",
+                "Tags": "lockExchange,CPU,OpenFOAM,OpenFOAMSimulations"
+            }
+        },
+        {
+            "Type": "OpenFOAMExecutor",
+            "Parameters": {
+                "Scenario": "motorBike",
+                "Iterations": "$.Parameters.Iterations",
+                "Solver": "simpleFoam",
+                "PackageName": "openfoam",
+                "Tags": "motorBike,CPU,OpenFOAM,OpenFOAMSimulations"
+            }
+        },
+        {
+            "Type": "OpenFOAMExecutor",
+            "Parameters": {
+                "Scenario": "pitzDaily",
+                "Iterations": "$.Parameters.Iterations",
+                "Solver": "simpleFoam",
+                "PackageName": "openfoam",
+                "Tags": "pitzDaily,CPU,OpenFOAM,OpenFOAMSimulations"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallOpenFOAMWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "openfoam.1.4.0-2.zip",
+                "PackageName": "openfoam",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "OpenFOAMInstallation",
+            "Parameters": {
+                "Scenario": "InstallOpenFOAM",
+                "PackageName": "OpenFOAM"
+            }
+        }
+    ]
+}

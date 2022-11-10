@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Monitors</AssemblyName>
+        <RootNamespace>VirtualClient.Monitors</RootNamespace>
+        <NoWarn>CA1416;CA2227,SA1116</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="$(Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion)" />
+        <PackageReference Include="System.Diagnostics.EventLog" Version="$(System_Diagnostics_EventLog_PackageVersion)" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="ETWFilters.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

@@ -1,0 +1,20 @@
+{
+    "Description": "Example On-Demand Monitoring Profile",
+    "Parameters": {
+        "ProfilingEnabled": true,
+        "ProfilingMode": "Interval"
+    },
+    "Monitors": [
+        {
+            "Type": "ExampleWorkloadProfilingScenarioMonitor",
+            "Parameters": {
+                "Scenario": "ProfileSystem",
+                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
+                "ProfilingMode": "$.Parameters.ProfilingMode",
+                "ProfilingPeriod": "00:00:30",
+                "ProfilingInterval": "00:00:45",
+                "Tags": "Test,VC"
+            }
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+{
+    "Description": "Default profile scenario containing a workload to run but no explicit monitors.",
+    "Metadata": {
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload1"
+            }
+        },
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload2"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "TestDependency",
+            "Parameters": {
+                "Scenario": "Dependency1"
+            }
+        }
+    ]
+}

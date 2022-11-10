@@ -1,0 +1,10 @@
+   Static hostname: ip-172-31-17-154.us-west-2.compute.internal
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: ec2e6bee193f09fa6c69d970fafe1840
+           Boot ID: 38e6f515bd7e491fa925344b4ce05ab4
+    Virtualization: amazon
+  Operating System: Amazon Linux 2
+       CPE OS Name: cpe:2.3:o:amazon:amazon_linux:2
+            Kernel: Linux 5.10.135-122.509.amzn2.aarch64
+      Architecture: arm64

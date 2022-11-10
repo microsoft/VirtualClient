@@ -1,0 +1,52 @@
+
+
+ NAS Parallel Benchmarks 3.4 -- FT Benchmark
+
+ No input file inputft.data. Using compiled defaults
+ Size                :   64x  64x  64  (class S)
+ Iterations          :              6
+ Number of processes :              2
+ Processor array     :         1x   2
+ Layout type         :             1D
+
+ Initialization time =      0.0114
+
+ T =    1     Checksum =    5.546087004964D+02    4.845363331978D+02
+ T =    2     Checksum =    5.546385409190D+02    4.865304269511D+02
+ T =    3     Checksum =    5.546148406171D+02    4.883910722337D+02
+ T =    4     Checksum =    5.545423607415D+02    4.901273169046D+02
+ T =    5     Checksum =    5.544255039624D+02    4.917475857993D+02
+ T =    6     Checksum =    5.542683411903D+02    4.932597244941D+02
+ Result verification successful
+
+
+ FT Benchmark Completed.
+ Class           =                        S
+ Size            =             64x  64x  64
+ Iterations      =                        6
+ Time in seconds =                     0.05
+ Total processes =                        2
+ Active processes=                        2
+ Mop/s total     =                  3873.74
+ Mop/s/process   =                  1936.87
+ Operation type  =           floating point
+ Verification    =               SUCCESSFUL
+ Version         =                    3.4.2
+ Compile date    =              25 May 2022
+
+ Compile options:
+    MPIFC        = mpif90
+    FLINK        = $(MPIFC)
+    FMPI_LIB     = (none)
+    FMPI_INC     = (none)
+    FFLAGS       = -O3
+    FLINKFLAGS   = $(FFLAGS)
+    RAND         = randi8
+
+
+ Please send feedbacks and/or the results of this run to:
+
+ NPB Development Team 
+ Internet: npb@nas.nasa.gov
+
+

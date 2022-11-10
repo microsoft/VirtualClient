@@ -1,0 +1,23 @@
+{
+    "Description": "Test Profile Executor",
+    "Metadata": {
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "CommandLine": "--name=testName --engine=V8",
+                "Tags": "Test,VC"
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Counters": "Counter1,Counter2,Counter3",
+                "Tags": "Test,VC,Monitoring"
+            }
+        }
+    ]
+}

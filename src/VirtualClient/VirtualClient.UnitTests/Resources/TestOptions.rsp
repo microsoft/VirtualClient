@@ -1,0 +1,10 @@
+--profile=PERF-CPU-OPENSSL.json
+--timeout=01.00:00:00
+--system=Azure
+--metadata:Prop1=Value1,,,Prop2=Value2
+--parameters:Param1=Value1,,,Param2=Value2
+--contentStore=BlobEndpoint=https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123
+--packageStore=https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b
+--agentId=007
+--experimentId=123456
+--debug

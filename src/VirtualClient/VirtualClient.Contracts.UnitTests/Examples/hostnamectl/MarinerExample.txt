@@ -1,0 +1,11 @@
+ Static hostname: X64-mariner-vcuser1
+       Icon name: computer-vm
+         Chassis: vm ??
+      Machine ID: 2d5652f558d14a2c975d92bbe65ea49d
+         Boot ID: ed273f24c0b442d59cc809ff9c266fba
+  Virtualization: microsoft
+Operating System: CBL-Mariner/Linux
+          Kernel: Linux 5.15.32.1-3.cm2
+    Architecture: x86-64
+ Hardware Vendor: Microsoft Corporation
+  Hardware Model: Virtual Machine

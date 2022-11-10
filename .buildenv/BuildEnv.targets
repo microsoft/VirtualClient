@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- **********************************************************************
+         Environment and Test targets
+     *********************************************************************** -->
+    <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets"
+            Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets') and '$(TestProject)' == 'true'" />
+
+
+    <Target Name="CompileInProjectMetadata" BeforeTargets="CreateGeneratedAssemblyInfoInputsCacheFile" Condition="'$(GenerateProjectMetadata)' == 'true' and '$(GenerateAssemblyInfo)' == 'true'">
+
+        <!-- 
+        *******************************************************************************************************
+        CompileWithProjectMetadata
+        Task adds metadata properties to the intermediates during build so that the metadata will be compiled into
+        the final binary.
+        
+        https://stu.dev/adding-assemblymetadataattribute-using-new-sdk-project-with-msbuild/
+        
+        Important:
+        This target will work only when the assembly information is added using project
+        file definitions where the 'GenerateAssemblyInfo' property is set to true.
+        
+        Example:
+        <PropertyGroup>
+            <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+            <AssemblyVersion>0.4.0</AssemblyVersion>
+        </PropertyGroup>
+        
+        This is equivalent to putting AssemblyMetadataAttributes in your AssemblyInfo file
+        [assembly: AssemblyMetadata("Build", "20190301.4")]
+
+
+          To Disable the Creation of a Project Metadata File:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        1) Set an MSBuild property in the project
+           <CompileInProjectMetadata>false</CompileInProjectMetadata>
+        
+        2) Pass in the MSBuild property to the command (as is typically done with PR/CI automated builds)
+           MSBuild.exe S:\environment\repo\**\*.sln /p:CompileInProjectMetadata=false
+
+        *******************************************************************************************************
+        -->
+        <Message Text="Compiling project metadata into assembly: $(TargetPath)" Importance="High" />
+        <Message Text="Project Metadata: $(ProjectMetadata)" Importance="High" Condition="'$(ProjectMetadata)' != ''" />
+
+        <!-- 
+        Add in additional metadata properties to compile into the target assembly in the ItemGroup below.
+        Each AssemblyAttributes definition should have a Condition to ensure only the properties that are
+        defined are added.
+        -->
+        <ItemGroup>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(BuildNumber)' != ''">
+                <_Parameter1>Build</_Parameter1>
+                <_Parameter2>$(BuildNumber)</_Parameter2>
+            </AssemblyAttribute>
+            <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute" Condition="'$(ProjectMetadata)' != ''">
+                <_Parameter1>ProjectMetadata</_Parameter1>
+                <_Parameter2>$(ProjectMetadata)</_Parameter2>
+            </AssemblyAttribute>
+        </ItemGroup>
+
+    </Target>
+
+    <Target Name="CreateProjectMetadataFile" AfterTargets="Build" Condition="'$(GenerateProjectMetadata)' == 'true'">
+
+        <!--
+        *******************************************************************************************************
+        CreateProjectMetadataFile
+        Task adds metadata properties to a simple text file(s) output to the bin/output directory during build.
+    
+    
+        Example Metadata File Content:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Configuration=Debug
+        Platform=AnyCPU
+        AssemblyVersion=1.0.8
+        NuspecFile=ExampleRestService.nuspec
+        Build=20190301.4
+
+
+        To Disable the Creation of a Project Metadata File:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        1) Set an MSBuild property in the project
+           <GenerateProjectMetadataFile>false</GenerateProjectMetadataFile>
+        
+        2) Pass in the MSBuild property to the command (as is typically done with PR/CI automated builds)
+           MSBuild.exe S:\environment\repo\**\*.sln /p:GenerateProjectMetadataFile=false
+
+
+        To add custom/additional metadata for a specific project:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        Set an MSBuild property in the project with individual metadata key/value pairs separated by a semi-colon
+        <ProjectDescription>Property1=Value;Property2=OtherValue</ProjectDescription>
+    
+        *******************************************************************************************************
+        -->
+
+        <!--
+        Create the project metadata property set.
+        -->
+        <PropertyGroup>
+            <!-- Project Configuration/Platform/Architecture Metadata -->
+            <ProjectMetadataProperties>Configuration=$(Configuration);Platform=$(PlatformTarget);Timestamp=$([System.DateTime]::Now.ToString('o'))</ProjectMetadataProperties>
+            <ProjectMetadataProperties Condition="'$(AssemblyVersion)' != ''">$(ProjectMetadataProperties);Version=$(AssemblyVersion)</ProjectMetadataProperties>
+
+            <!-- Build Metadata -->
+            <ProjectMetadataProperties Condition="'$(BuildNumber)' != ''">$(ProjectMetadataProperties);Build=$(BuildNumber)</ProjectMetadataProperties>
+        </PropertyGroup>
+
+        <!-- 
+        Merge in custom/user-defined metadata defined in the project itself to create the
+        final project metadata definition.
+        -->
+        <PropertyGroup>
+            <ProjectMetadataProperties  Condition="'$(ProjectMetadata)' != ''">$(ProjectMetadataProperties);$(ProjectMetadata)</ProjectMetadataProperties>
+        </PropertyGroup>
+
+        <PropertyGroup>
+            <PackageDescriptionOutputFilePath>$(TargetDir)$(TargetName).meta</PackageDescriptionOutputFilePath>
+            <ProjectDescriptionCommand>Set-Content -Path:$(PackageDescriptionOutputFilePath) -Value:('$(ProjectMetadataProperties)').Replace(';', [Environment]::NewLine)</ProjectDescriptionCommand>
+        </PropertyGroup>
+
+        <Message Text="Generating metadata file for project: $(PackageDescriptionOutputFilePath)" Importance="High" />
+        <Message Condition="'@(AssemblyInfoFile)' != ''" Text="AssemblyInfo.cs file: @(AssemblyInfoFile)" Importance="High" />
+        <Message Condition="'@(AssemblyInfoSharedFile)' != ''" Text="AssemblyInfoShared.cs file: @(AssemblyInfoSharedFile)" Importance="High" />
+
+        <!--
+        Example of PowerShell Steps:
+        Import-Module s:\environment\repo\scripts\RepoNuGet.psd1
+        New-DescriptionFile -Description @{ buildEnvPath='$(BuildEnvRoot)';repoPath='$(SourceRoot)'; } -OutputPath S:\environment\repo.bin\Debug\Project\Project.projdesc
+        -->
+        <Exec  Condition="'$(PlatformTarget)' != 'x64'" Command="Powershell.exe -Exec ByPass -Command &quot;$(ProjectDescriptionCommand)&quot;" />
+
+        <!--
+        When compiling a binary for 'x64' architecture directly, we have to run the MSBuild task in x64 architecture
+        or it will hit a BadImageException caused by trying to load the 64-bit assembly bytes into a 32-bit process as part
+        of the logic that reads the assembly version out of the .dll.
+        -->
+        <Exec  Condition="'$(PlatformTarget)' == 'x64'" MSBuildArchitecture= "x64"  Command="Powershell.exe -Exec ByPass -Command &quot;$(ProjectDescriptionCommand)&quot;" />
+    </Target>
+    
+    <!-- **********************************************************************
+         Build Output Diagnostics targets
+     *********************************************************************** -->
+    <Target Name="ShowBuildPropertiesInOutput" BeforeTargets="Build" Condition="'$(BuildPropertyOutput)' == 'true'">
+        <Message Text="************************************************************" Importance="High" />
+        <Message Text="*** Property/Macro Values:" Importance="High" />
+        <Message Text="MSBuildProjectName            : '$(MSBuildProjectName)'" Importance="High" />
+        <Message Text="DefineConstants               : '$(DefineConstants)'" Importance="High" />
+        <Message Text="OutputType                    : '$(OutputType)'" Importance="High" />
+        <Message Text="ModuleName                    : '$(ModuleName)'" Importance="High" />
+        <Message Text="ModulePath                    : '$(ModulePath)'" Importance="High" />
+        <Message Text="BuildInParallel               : '$(BuildInParallel)'" Importance="High" />
+        <Message Text="BuildEnvPath                  : '$(BuildEnvPath)'" Importance="High" />
+        <Message Text="BuildEnvRulesPath             : '$(BuildEnvRulesPath)'" Importance="High" />
+        <Message Text="BuildEnvScriptsPath           : '$(BuildEnvScriptsPath)'" Importance="High" />
+        <Message Text="BuildEnvSigningFilePath       : '$(BuildEnvSigningFilePath)'" Importance="High" />
+        <Message Text="BuildEnvToolsetsPath          : '$(BuildEnvToolsetsPath)'" Importance="High" />
+        <Message Text="BuildRoot                     : '$(BuildRoot)'" Importance="High" />
+        <Message Text="BuildBinPath                  : '$(BuildBinPath)'" Importance="High" />
+        <Message Text="BuildIntermediatesPath        : '$(BuildIntermediatesPath)'" Importance="High" />
+        <Message Text="BuildNuGetPath                : '$(BuildNuGetPath)'" Importance="High" />
+        <Message Text="BuildNuGetPackageCachePath    : '$(BuildNuGetPackageCachePath)'" Importance="High" />
+        <Message Text="RepoPath                      : '$(RepoPath)'" Importance="High" />
+        <Message Text="RepoScriptsPath               : '$(RepoScriptsPath)'" Importance="High" />
+        <Message Text="RepoToolsetsPath              : '$(RepoToolsetsPath)'" Importance="High" />
+        <Message Text="OutputPath                    : '$(OutputPath)'" Importance="High" />
+        <Message Text="OutDir                        : '$(OutDir)'" Importance="High" />
+        <Message Text="BaseIntermediateOutputPath    : '$(BaseIntermediateOutputPath)'" Importance="High" />
+        <Message Text="IntermediateOutputPath        : '$(IntermediateOutputPath)'" Importance="High" />
+        <Message Text="IntDir                        : '$(IntDir)'" Importance="High" />
+        <Message Text="TargetName                    : '$(TargetName)'" Importance="High" />
+        <Message Text="TargetDir                     : '$(TargetDir)'" Importance="High" />
+        <Message Text="TargetPath                    : '$(TargetPath)'" Importance="High" />
+        <Message Text="SignAssembly                  : '$(SignAssembly)'" Importance="High" />
+        <Message Text="AssemblyOriginatorKeyFile     : '$(AssemblyOriginatorKeyFile)'" Importance="High" />
+        <Message Text="NuGetPackageRoot              : '$(NuGetPackageRoot)'" Importance="High" />
+        <Message Text="NuGetPackageFolders           : '$(NuGetPackageFolders)'" Importance="High" />
+        <Message Text="NuGetProjectStyle             : '$(NuGetProjectStyle)'" Importance="High" />
+        <Message Text="NuGetToolVersion              : '$(NuGetToolVersion)'" Importance="High" />
+        <Message Text="VisualStudioVersion           : '$(VisualStudioVersion)'" Importance="High" />
+        <Message Text="TargetFrameworkVersion        : '$(TargetFrameworkVersion)'" Importance="High" />
+        <Message Text="TargetFramework               : '$(TargetFramework)'" Importance="High" />
+        <Message Text="Configuration                 : '$(Configuration)'" Importance="High" />
+        <Message Text="Platform                      : '$(Platform)'" Importance="High" />
+        <Message Text="PlatformName                  : '$(PlatformName)'" Importance="High" />
+        <Message Text="PlatformTarget                : '$(PlatformTarget)'" Importance="High" />
+        <Message Text="IsDotNetCore                  : '$(IsDotNetCore)'" Importance="High" />
+        <Message Text="IsDotNetStandard              : '$(IsDotNetStandard)'" Importance="High" />
+        <Message Text="IsUniversalWindows            : '$(IsUniversalWindows)'" Importance="High" />
+        <Message Text="RuntimeIdentifier             : '$(RuntimeIdentifier)'" Importance="High" />
+        <Message Text="RuntimeIdentifiers            : '$(RuntimeIdentifiers)'" Importance="High" />
+        <Message Text="VCTargetsPath                 : '$(VCTargetsPath)'" Importance="High" />
+        <Message Text="MSBuildExtensionsPath         : '$(MSBuildExtensionsPath)'" Importance="High" />
+        <Message Text="MSBuildTasksAssemblyFullPath  : '$(MSBuildTasksAssemblyFullPath)'" Importance="High" />
+        <Message Text="MSBuildAssemblyVersion        : '$(MSBuildAssemblyVersion)'" Importance="High" />
+        <Message Text="ProjectTypeExtension          : '$(ProjectTypeExtension)'" Importance="High" />
+        <Message Text="BuildingInsideVisualStudio    : '$(BuildingInsideVisualStudio)'" Importance="High" />
+        <Message Text="RunCodeAnalysis               : '$(RunCodeAnalysis)'" Importance="High" />
+        <Message Text="CodeAnalysisRuleSet           : '$(CodeAnalysisRuleSet)'" Importance="High" />
+        <Message Text="NoWarn                        : '$(NoWarn)'" Importance="High" />
+        <Message Text="DocumentationFile             : '$(DocumentationFile)'" Importance="High" />
+        <Message Text="DocumentationMarkDownFile     : '$(DocumentationMarkDownFile)'" Importance="High" />
+        <Message Text="AppxPackageDir                : '$(AppxPackageDir)'" Importance="High" />
+        <Message Text="AssemblySearchPaths           : '$(AssemblySearchPaths)'" Importance="High" />
+        <Message Text="************************************************************" />
+    </Target>
+
+</Project>

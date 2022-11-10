@@ -1,0 +1,12 @@
+﻿gzip_final/reymont.gz:   72.0% -- replaced with gzip_final/reymont
+gzip_final/x-ray.gz:     28.8% -- replaced with gzip_final/x-ray
+gzip_final/ooffice.gz:   49.7% -- replaced with gzip_final/ooffice
+gzip_final/sao.gz:       26.5% -- replaced with gzip_final/sao
+gzip_final/webster.gz:   70.6% -- replaced with gzip_final/webster
+gzip_final/nci.gz:       90.5% -- replaced with gzip_final/nci
+gzip_final/mr.gz:        63.0% -- replaced with gzip_final/mr
+gzip_final/xml.gz:       87.1% -- replaced with gzip_final/xml
+gzip_final/dickens.gz:   62.0% -- replaced with gzip_final/dickens
+gzip_final/osdb.gz:      62.9% -- replaced with gzip_final/osdb
+gzip_final/mozilla.gz:   62.8% -- replaced with gzip_final/mozilla
+gzip_final/samba.gz:     74.7% -- replaced with gzip_final/samba

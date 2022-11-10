@@ -1,0 +1,8 @@
+{
+  "label": "Workloads",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Explore the Virtual Client workload repository."
+  }
+}

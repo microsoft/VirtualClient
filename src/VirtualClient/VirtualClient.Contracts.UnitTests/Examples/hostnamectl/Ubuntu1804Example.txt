@@ -1,0 +1,8 @@
+   Static hostname: ARM20-03
+         Icon name: computer-desktop
+           Chassis: desktop
+        Machine ID: aafbf31e56194aaebab7fd739a44c1f9
+           Boot ID: 0413e60c08f340b997d7540fbe4804ce
+  Operating System: Ubuntu 18.04.6 LTS
+            Kernel: Linux 5.15.0-rc2-private-sriov-20211013+
+      Architecture: arm64

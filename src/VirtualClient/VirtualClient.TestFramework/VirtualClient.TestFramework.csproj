@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.TestFramework</AssemblyName>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <NoWarn>CA2214,CS1591,SA1508</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="AutoFixture" Version="$(AutoFixture_PackageVersion)" />
+        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

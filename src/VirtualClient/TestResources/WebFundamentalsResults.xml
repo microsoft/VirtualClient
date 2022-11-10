@@ -1,0 +1,766 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='report.xsl'?>
+<report name="wcat" version="6.5" level="1" top="200">
+	<section name="header" key="90000">
+		<table name="collection" style="info" >
+			<item>
+				<data name="start" header="collected" >10/20/2021 05:40:08</data>
+				<data name="start(UTC)" >10/20/2021 05:40:08</data>
+				<data name="warmup" >300</data>
+				<data name="duration" >1800</data>
+				<data name="cooldown" >30</data>
+				<data name="minbps" >0</data>
+				<data name="virtualclients" >160</data>
+				<data name="clients" >2</data>
+				<data name="host" >testuser1ser</data>
+				<data name="title" header="title" ></data>
+			</item>
+		</table>
+	</section>
+	<section name="summary" key="200">
+		<table name="summarydata" level="10" key="210" >
+			<summary key="1"  level="1"  find="field"  field="main" >
+				<data name="tps" title="tps" class="string"  />
+			</summary>
+			<summary key="2"  level="1"  find="field"  field="main" >
+				<data name="ppt" title="ppt" class="string"  />
+			</summary>
+			<summary key="3"  level="1"  find="field"  field="main" >
+				<data name="cspt" title="cspt" class="string"  />
+			</summary>
+			<summary key="4"  level="1"  find="field"  field="main" >
+				<data name="rps" title="rps" class="string"  />
+			</summary>
+			<summary key="5"  level="1"  find="field"  field="main" >
+				<data name="ppr" title="ppr" class="string"  />
+			</summary>
+			<summary key="6"  level="1"  find="field"  field="main" >
+				<data name="cspr" title="cspr" class="string"  />
+			</summary>
+			<summary key="7"  level="1"  find="field"  field="main" >
+				<data name="cpu" title="cpu" class="string"  />
+			</summary>
+			<summary key="8"  level="1"  find="field"  field="main" >
+				<data name="mbps" title="mbps" class="string"  />
+			</summary>
+			<summary key="9"  level="1"  find="field"  field="main" >
+				<data name="terrors" title="terrors" class="string"  />
+			</summary>
+			<item>
+				<data name="main"  />
+				<data name="tps" >2956.20</data>
+				<data name="mbps" >122.76</data>
+				<data name="terrors" warning="testhaderrors" >11249237</data>
+				<data name="rps" >9205.74</data>
+			</item>
+		</table>
+	</section>
+	<section name="details" key="500">
+		<table name="netstats" level="1" key="510" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="connects" class="number"  />
+				<data name="disconnects" class="number"  />
+				<data name="sends" class="number"  />
+				<data name="receives" class="number"  />
+				<data name="fullhandshake" class="number"  />
+				<data name="reconnect" class="number"  />
+				<data name="sentbytes" class="number"  />
+				<data name="receivedbytes" class="number"  />
+				<data name="sentbytessecure" class="number"  />
+				<data name="receivedbytessecure" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >total</data>
+				<data name="connects" >3314270</data>
+				<data name="disconnects" >3314272</data>
+				<data name="sends" >16570330</data>
+				<data name="receives" >16660524</data>
+				<data name="fullhandshake" >0</data>
+				<data name="reconnect" >0</data>
+				<data name="sentbytes" >4872534860</data>
+				<data name="receivedbytes" >22748474662</data>
+				<data name="sentbytessecure" >0</data>
+				<data name="receivedbytessecure" >0</data>
+			</item>
+			<item>
+				<data name="reportt" >rate</data>
+				<data name="connects" >1841</data>
+				<data name="disconnects" >1841</data>
+				<data name="sends" >9205</data>
+				<data name="receives" >9255</data>
+				<data name="fullhandshake" >0</data>
+				<data name="reconnect" >0</data>
+				<data name="sentbytes" >2706963</data>
+				<data name="receivedbytes" >12638041</data>
+				<data name="sentbytessecure" >0</data>
+				<data name="receivedbytessecure" >0</data>
+			</item>
+		</table>
+		<table name="times" level="1" key="510" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="minttfb" class="number"  />
+				<data name="maxttfb" class="number"  />
+				<data name="avgttfb" class="number"  />
+				<data name="minttlb" class="number"  />
+				<data name="maxttlb" class="number"  />
+				<data name="avgttlb" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >total</data>
+				<data name="minttfb" >760</data>
+				<data name="maxttfb" >2686823348</data>
+				<data name="avgttfb" >417686</data>
+				<data name="minttlb" >760</data>
+				<data name="maxttlb" >2686823348</data>
+				<data name="avgttlb" >417686</data>
+			</item>
+		</table>
+		<table name="histogram" level="1" key="513" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="response_time_avg" class="number"  />
+				<data name="response_time_min" class="number"  />
+				<data name="response_time_1" class="number"  />
+				<data name="response_time_5" class="number"  />
+				<data name="response_time_25" class="number"  />
+				<data name="response_time_50" class="number"  />
+				<data name="response_time_75" class="number"  />
+				<data name="response_time_95" class="number"  />
+				<data name="response_time_99" class="number"  />
+				<data name="response_time_max" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >time to first byte, us</data>
+				<data name="response_time_avg" >417686</data>
+				<data name="response_time_min" >760</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >250496</data>
+				<data name="response_time_25" >332416</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621184</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >2686823348</data>
+			</item>
+			<item>
+				<data name="reportt" >time to last byte, us</data>
+				<data name="response_time_avg" >417686</data>
+				<data name="response_time_min" >760</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >250496</data>
+				<data name="response_time_25" >332416</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621184</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >2686823348</data>
+			</item>
+		</table>
+		<table name="requeststats" level="1" key="520" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="transactions" class="number"  />
+				<data name="requests" class="number"  />
+				<data name="secure" class="number"  />
+				<data name="responses" class="number"  />
+				<data name="responsessecure" class="number"  />
+				<data name="redirects" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >total</data>
+				<data name="transactions" >5321166</data>
+				<data name="requests" >16570330</data>
+				<data name="secure" >0</data>
+				<data name="responses" >5321161</data>
+				<data name="responsessecure" >0</data>
+				<data name="redirects" >0</data>
+			</item>
+			<item>
+				<data name="reportt" >rate</data>
+				<data name="transactions" >2956</data>
+				<data name="requests" >9205</data>
+				<data name="secure" >0</data>
+				<data name="responses" >2956</data>
+				<data name="responsessecure" >0</data>
+				<data name="redirects" >0</data>
+			</item>
+		</table>
+		<table name="httpcodes" level="1" key="530" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="http200" class="number"  />
+				<data name="http302" class="number"  />
+				<data name="http404" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >total</data>
+				<data name="http200" >3465292</data>
+				<data name="http302" >1855869</data>
+				<data name="http404" >11249169</data>
+			</item>
+			<item>
+				<data name="reportt" >rate</data>
+				<data name="http0" >1925</data>
+				<data name="http0" >1031</data>
+				<data name="http0" >6249</data>
+			</item>
+		</table>
+		<table name="transstats" level="1" key="530" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="count" class="number"  />
+				<data name="bytessent" class="number"  />
+				<data name="bytesreceived" class="number"  />
+				<data name="requests" class="number"  />
+				<data name="requestssecure" class="number"  />
+				<data name="responses" class="number"  />
+				<data name="responsessecure" class="number"  />
+				<data name="errors" class="number"  />
+				<data name="avgttfb" class="number"  />
+				<data name="avgduration" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >hot.htm (close)</data>
+				<data name="count" >3314212</data>
+				<data name="bytessent" >960223489</data>
+				<data name="bytesreceived" >4659779260</data>
+				<data name="requests" >3314210</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >0</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >3314212</data>
+				<data name="avgttfb" >0</data>
+				<data name="avgduration" >318304</data>
+			</item>
+			<item>
+				<data name="reportt" >warm.htm</data>
+				<data name="count" >130535</data>
+				<data name="bytessent" >38442296</data>
+				<data name="bytesreceived" >183013337</data>
+				<data name="requests" >130535</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >1024</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >129511</data>
+				<data name="avgttfb" >504160</data>
+				<data name="avgduration" >309464</data>
+			</item>
+			<item>
+				<data name="reportt" >aspx.redirect</data>
+				<data name="count" >1855884</data>
+				<data name="bytessent" >549337224</data>
+				<data name="bytesreceived" >965051880</data>
+				<data name="requests" >1855869</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >1855869</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >15</data>
+				<data name="avgttfb" >412291</data>
+				<data name="avgduration" >412311</data>
+			</item>
+			<item>
+				<data name="reportt" >cold.htm</data>
+				<data name="count" >662807</data>
+				<data name="bytessent" >195205691</data>
+				<data name="bytesreceived" >929576968</data>
+				<data name="requests" >662804</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >4532</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >658275</data>
+				<data name="avgttfb" >480600</data>
+				<data name="avgduration" >335578</data>
+			</item>
+			<item>
+				<data name="reportt" >warm.gif</data>
+				<data name="count" >530223</data>
+				<data name="bytessent" >156157675</data>
+				<data name="bytesreceived" >743504655</data>
+				<data name="requests" >530222</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >3538</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >526685</data>
+				<data name="avgttfb" >493384</data>
+				<data name="avgduration" >321569</data>
+			</item>
+			<item>
+				<data name="reportt" >hot.htm</data>
+				<data name="count" >1458076</data>
+				<data name="bytessent" >422445787</data>
+				<data name="bytesreceived" >2050052044</data>
+				<data name="requests" >1458074</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >0</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >1458076</data>
+				<data name="avgttfb" >0</data>
+				<data name="avgduration" >312268</data>
+			</item>
+			<item>
+				<data name="reportt" >cold.gif</data>
+				<data name="count" >1325698</data>
+				<data name="bytessent" >390435951</data>
+				<data name="bytesreceived" >1858896060</data>
+				<data name="requests" >1325695</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >9081</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >1316617</data>
+				<data name="avgttfb" >487027</data>
+				<data name="avgduration" >315551</data>
+			</item>
+			<item>
+				<data name="reportt" >ifmodified.htm</data>
+				<data name="count" >265100</data>
+				<data name="bytessent" >90061977</data>
+				<data name="bytesreceived" >372729194</data>
+				<data name="requests" >265099</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >0</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >265100</data>
+				<data name="avgttfb" >0</data>
+				<data name="avgduration" >307218</data>
+			</item>
+			<item>
+				<data name="reportt" >hot.gif</data>
+				<data name="count" >2916659</data>
+				<data name="bytessent" >845036652</data>
+				<data name="bytesreceived" >4100797246</data>
+				<data name="requests" >2916641</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >0</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >2916659</data>
+				<data name="avgttfb" >0</data>
+				<data name="avgduration" >321614</data>
+			</item>
+			<item>
+				<data name="reportt" >ifmodified.gif</data>
+				<data name="count" >530403</data>
+				<data name="bytessent" >180191950</data>
+				<data name="bytesreceived" >745740994</data>
+				<data name="requests" >530399</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >0</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >530403</data>
+				<data name="avgttfb" >0</data>
+				<data name="avgduration" >329261</data>
+			</item>
+			<item>
+				<data name="reportt" >aspx.get</data>
+				<data name="count" >3446344</data>
+				<data name="bytessent" >1005395138</data>
+				<data name="bytesreceived" >5950726162</data>
+				<data name="requests" >3446326</data>
+				<data name="requestssecure" >0</data>
+				<data name="responses" >3446326</data>
+				<data name="responsessecure" >0</data>
+				<data name="errors" >18</data>
+				<data name="avgttfb" >420469</data>
+				<data name="avgduration" >420490</data>
+			</item>
+		</table>
+		<table name="errors" level="1" key="540" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="connecterrors" class="number"  />
+				<data name="senderrors" class="number"  />
+				<data name="receiveerrors" class="number"  />
+				<data name="parseerrors" class="number"  />
+				<data name="unexpected" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >total</data>
+				<data name="connecterrors" >0</data>
+				<data name="senderrors" >68</data>
+				<data name="receiveerrors" >0</data>
+				<data name="parseerrors" >0</data>
+				<data name="unexpected" >11249169</data>
+			</item>
+			<item>
+				<data name="reportt" >rate</data>
+				<data name="connecterrors" >0</data>
+				<data name="senderrors" >0</data>
+				<data name="receiveerrors" >0</data>
+				<data name="parseerrors" >0</data>
+				<data name="unexpected" >6249</data>
+			</item>
+		</table>
+	</section>
+	<section name="clientss" key="600">
+		<table name="netstats" level="1" key="610" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="connects" class="number"  />
+				<data name="disconnects" class="number"  />
+				<data name="sends" class="number"  />
+				<data name="receives" class="number"  />
+				<data name="fullhandshake" class="number"  />
+				<data name="reconnect" class="number"  />
+				<data name="sentbytes" class="number"  />
+				<data name="receivedbytes" class="number"  />
+				<data name="sentbytessecure" class="number"  />
+				<data name="receivedbytessecure" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="connects" >1633800</data>
+				<data name="disconnects" >1633802</data>
+				<data name="sends" >8167889</data>
+				<data name="receives" >8212605</data>
+				<data name="fullhandshake" >0</data>
+				<data name="reconnect" >0</data>
+				<data name="sentbytes" >2401759808</data>
+				<data name="receivedbytes" >11214174492</data>
+				<data name="sentbytessecure" >0</data>
+				<data name="receivedbytessecure" >0</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="connects" >1680470</data>
+				<data name="disconnects" >1680470</data>
+				<data name="sends" >8402441</data>
+				<data name="receives" >8447919</data>
+				<data name="fullhandshake" >0</data>
+				<data name="reconnect" >0</data>
+				<data name="sentbytes" >2470775052</data>
+				<data name="receivedbytes" >11534300170</data>
+				<data name="sentbytessecure" >0</data>
+				<data name="receivedbytessecure" >0</data>
+			</item>
+		</table>
+		<table name="times" level="1" key="510" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="minttfb" class="number"  />
+				<data name="maxttfb" class="number"  />
+				<data name="avgttfb" class="number"  />
+				<data name="minttlb" class="number"  />
+				<data name="maxttlb" class="number"  />
+				<data name="avgttlb" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="minttfb" >2476</data>
+				<data name="maxttfb" >2686823348</data>
+				<data name="avgttfb" >426679</data>
+				<data name="minttlb" >2476</data>
+				<data name="maxttlb" >2686823348</data>
+				<data name="avgttlb" >426679</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="minttfb" >760</data>
+				<data name="maxttfb" >62957134</data>
+				<data name="avgttfb" >408936</data>
+				<data name="minttlb" >760</data>
+				<data name="maxttlb" >62957134</data>
+				<data name="avgttlb" >408936</data>
+			</item>
+		</table>
+		<table name="histogram_ttfb" level="1" key="513" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="response_time_avg" class="number"  />
+				<data name="response_time_min" class="number"  />
+				<data name="response_time_1" class="number"  />
+				<data name="response_time_5" class="number"  />
+				<data name="response_time_25" class="number"  />
+				<data name="response_time_50" class="number"  />
+				<data name="response_time_75" class="number"  />
+				<data name="response_time_95" class="number"  />
+				<data name="response_time_99" class="number"  />
+				<data name="response_time_max" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="response_time_avg" >426680</data>
+				<data name="response_time_min" >2476</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >252544</data>
+				<data name="response_time_25" >334464</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621185</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >2686823348</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="response_time_avg" >408937</data>
+				<data name="response_time_min" >760</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >248448</data>
+				<data name="response_time_25" >330368</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621184</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >62957134</data>
+			</item>
+		</table>
+		<table name="histogram_ttlb" level="1" key="513" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="response_time_avg" class="number"  />
+				<data name="response_time_min" class="number"  />
+				<data name="response_time_1" class="number"  />
+				<data name="response_time_5" class="number"  />
+				<data name="response_time_25" class="number"  />
+				<data name="response_time_50" class="number"  />
+				<data name="response_time_75" class="number"  />
+				<data name="response_time_95" class="number"  />
+				<data name="response_time_99" class="number"  />
+				<data name="response_time_max" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="response_time_avg" >426679.5</data>
+				<data name="response_time_min" >2476</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >252544</data>
+				<data name="response_time_25" >334464</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621186</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >2686823348</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="response_time_avg" >408936</data>
+				<data name="response_time_min" >760</data>
+				<data name="response_time_1" >199296</data>
+				<data name="response_time_5" >248448</data>
+				<data name="response_time_25" >330368</data>
+				<data name="response_time_50" >383616</data>
+				<data name="response_time_75" >436864</data>
+				<data name="response_time_95" >621187</data>
+				<data name="response_time_99" >748160</data>
+				<data name="response_time_max" >62957134</data>
+			</item>
+		</table>
+		<table name="requeststats" level="1" key="620" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="transactions" class="number"  />
+				<data name="requests" class="number"  />
+				<data name="secure" class="number"  />
+				<data name="responses" class="number"  />
+				<data name="responsessecure" class="number"  />
+				<data name="redirects" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="transactions" >2624110</data>
+				<data name="requests" >8167889</data>
+				<data name="secure" >0</data>
+				<data name="responses" >2624104</data>
+				<data name="responsessecure" >0</data>
+				<data name="redirects" >0</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="transactions" >2697056</data>
+				<data name="requests" >8402441</data>
+				<data name="secure" >0</data>
+				<data name="responses" >2697057</data>
+				<data name="responsessecure" >0</data>
+				<data name="redirects" >0</data>
+			</item>
+		</table>
+		<table name="httpcodes" level="1" key="630" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="http200" class="number"  />
+				<data name="http302" class="number"  />
+				<data name="http404" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="http200" >1709243</data>
+				<data name="http302" >914861</data>
+				<data name="http404" >5543785</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="http200" >1756049</data>
+				<data name="http302" >941008</data>
+				<data name="http404" >5705384</data>
+			</item>
+		</table>
+		<table name="errors" level="1" key="640" >
+			<header>
+				<data name="reportt" class="string"  />
+				<data name="connecterrors" class="number"  />
+				<data name="senderrors" class="number"  />
+				<data name="receiveerrors" class="number"  />
+				<data name="parseerrors" class="number"  />
+				<data name="unexpected" class="number"  />
+			</header>
+			<item>
+				<data name="reportt" >testuser1con</data>
+				<data name="connecterrors" >0</data>
+				<data name="senderrors" >38</data>
+				<data name="receiveerrors" >0</data>
+				<data name="parseerrors" >0</data>
+				<data name="unexpected" >5543785</data>
+			</item>
+			<item>
+				<data name="reportt" >r1-x5341</data>
+				<data name="connecterrors" >0</data>
+				<data name="senderrors" >30</data>
+				<data name="receiveerrors" >0</data>
+				<data name="parseerrors" >0</data>
+				<data name="unexpected" >5705384</data>
+			</item>
+		</table>
+	</section>
+	<warnings>
+		<warning name="testhaderrors" type="warning" >This test contained errors.</warning>
+		<warning name="wmierror" type="warning" >An error occured collecting server information data. Check that WMI is available.</warning>
+		<warning name="badvalue" type="warning" >An error was encountered querying remote server information. This value may be wrong.</warning>
+		<warning name="countererror" type="warning" >An error occured during the collection of this counter.</warning>
+		<warning name="perfmonerror" type="warning" >An error occured during the collection of performance counters.</warning>
+		<warning name="lowcachehits" type="warning" >HTTP.sys cache hits number is low: either warmed up during cold test or didn't warm up enough during normal test.</warning>
+	</warnings>
+	<titles>
+		<title name="wcat">Web Capacity Analysis Tool</title>
+		<title name="cpu">% Processor Time</title>
+		<title name="times">Time Analysis</title>
+		<title name="histogram">Response Time Analysis</title>
+		<title name="histogram_ttfb">Response Time Analysis (Time to First Byte)</title>
+		<title name="histogram_ttlb">Response Time Analysis (Time to Last Byte)</title>
+		<title name="tps">Transactions/sec</title>
+		<title name="ppt">Pathlength/Transaction</title>
+		<title name="cspt">Context Switches/Transaction</title>
+		<title name="rps">Requests/sec</title>
+		<title name="ppr">Pathlength/Request</title>
+		<title name="cspr">Context Switches/Request</title>
+		<title name="mbps">MBits/sec</title>
+		<title name="header">General Information</title>
+		<title name="server">Server Information</title>
+		<title name="collection">Test Settings</title>
+		<title name="perfmon">Performance Counters</title>
+		<title name="counter">Counter Name</title>
+		<title name="registry">Registry Keys</title>
+		<title name="keypath">Registry Key Path</title>
+		<title name="avgttfb">Time to First Byte (Avg)</title>
+		<title name="avgttlb">Time to Last Byte (Avg)</title>
+		<title name="avgduration">Total Duration (Avg)</title>
+		<title name="minttfb">Time to First Byte (Min)</title>
+		<title name="minttlb">Time to Last Byte (Min)</title>
+		<title name="maxttfb">Time to First Byte (Max)</title>
+		<title name="maxttlb">Time to Last Byte (Max)</title>
+		<title name="response_time_avg">Avg</title>
+		<title name="response_time_min">Min</title>
+		<title name="response_time_1">1%</title>
+		<title name="response_time_5">5%</title>
+		<title name="response_time_25">25%</title>
+		<title name="response_time_50">50%</title>
+		<title name="response_time_75">75%</title>
+		<title name="response_time_95">95%</title>
+		<title name="response_time_99">99%</title>
+		<title name="response_time_max">Max</title>
+		<title name="key">Registry Key Name</title>
+		<title name="value">Value</title>
+		<title name="config">Server Configuration</title>
+		<title name="min">Minimum</title>
+		<title name="max">Maximum</title>
+		<title name="delta">Delta</title>
+		<title name="qfe">Windows QFE</title>
+		<title name="qfep">Windows QFE</title>
+		<title name="qfen">QFE Name</title>
+		<title name="time">Time</title>
+		<title name="current">Current Value</title>
+		<title name="avg">Average</title>
+		<title name="avgCPU">Average Processor Time</title>
+		<title name="details">Overall Statistics</title>
+		<title name="clientss">Per Client Statistics</title>
+		<title name="netstats">Network Statistics</title>
+		<title name="machine">Machine</title>
+		<title name="reportt">Report Title</title>
+		<title name="connects">Connections</title>
+		<title name="disconnects">Disconnects</title>
+		<title name="sends">Socket Sends</title>
+		<title name="receives">Socket Receives</title>
+		<title name="fullhandshake">Handshakes (Full)</title>
+		<title name="reconnect">Handshakes (Reconnect)</title>
+		<title name="sentbytes">Bytes Sent</title>
+		<title name="receivedbytes">Bytes Received</title>
+		<title name="bytessent">Bytes Sent</title>
+		<title name="bytesreceived">Bytes Received</title>
+		<title name="sentbytessecure">SSL Bytes Sent</title>
+		<title name="receivedbytessecure">SSL Bytes Received</title>
+		<title name="responsessecure">SSL Responses</title>
+		<title name="latency">Time to First Byte</title>
+		<title name="response">Response Time (us)</title>
+		<title name="requeststats">Request/Response Statistics</title>
+		<title name="transactions">Transactions</title>
+		<title name="requests">Requests</title>
+		<title name="secure">SSL Requests</title>
+		<title name="requestssecure">SSL Requests</title>
+		<title name="responses">Responses</title>
+		<title name="responses10">HTTP/1.0 Responses</title>
+		<title name="responses11">HTTP/1.1 Responses</title>
+		<title name="redirects">Redirects</title>
+		<title name="httpcodes">HTTP Status Codes</title>
+		<title name="http100">100 Continue</title>
+		<title name="http101">101 Switching Protocols</title>
+		<title name="http200">200 OK</title>
+		<title name="http201">201 Created</title>
+		<title name="http202">202 Accepted</title>
+		<title name="http203">203 Non-Authoritative Information</title>
+		<title name="http204">204 No Content</title>
+		<title name="http205">205 Reset Content</title>
+		<title name="http206">206 Partial Content</title>
+		<title name="http300">300 Multiple Choices</title>
+		<title name="http301">301 Moved Permanently</title>
+		<title name="http302">302 Found</title>
+		<title name="http303">303 See Other</title>
+		<title name="http304">304 Not Modified</title>
+		<title name="http305">305 Use Proxy</title>
+		<title name="http306">306 (reserved)</title>
+		<title name="http307">307 Temporary Redirect</title>
+		<title name="http400">400 Bad Request</title>
+		<title name="http401">401 Unauthorized</title>
+		<title name="http402">402 Payment Required</title>
+		<title name="http403">403 Forbidden</title>
+		<title name="http404">404 Not Found</title>
+		<title name="http405">405 Method Not Allowed</title>
+		<title name="http406">406 Not Acceptable</title>
+		<title name="http407">407 Proxy Authentication Required</title>
+		<title name="http408">408 Request Timeout</title>
+		<title name="http409">409 Conflict</title>
+		<title name="http410">410 Gone</title>
+		<title name="http411">411 Length Required</title>
+		<title name="http412">412 Precondition Failed</title>
+		<title name="http413">413 Request Entity Too Large</title>
+		<title name="http414">414 Request-URI Too Long</title>
+		<title name="http415">415 Unsupported Media Type</title>
+		<title name="http416">416 Requested Range Not Satisfiable</title>
+		<title name="http417">417 Expectation Failed</title>
+		<title name="http500">500 Internal Server Error</title>
+		<title name="http501">501 Not Implemented</title>
+		<title name="http502">502 Bad Gateway</title>
+		<title name="http503">503 Service Unavailable</title>
+		<title name="http504">504 Gateway Timeout</title>
+		<title name="http505">505 HTTP Version Not Supported</title>
+		<title name="errors">Errors</title>
+		<title name="terrors">Total Errors</title>
+		<title name="unexpected">Unexpected Status Codes</title>
+		<title name="connecterrors">Connect Errors</title>
+		<title name="senderrors">Send Errors</title>
+		<title name="receiveerrors">Receive Errors</title>
+		<title name="parseerrors">Parsing Errors</title>
+		<title name="transstats">Transaction Statistics</title>
+		<title name="transid">ID</title>
+		<title name="count">Executed</title>
+		<title name="percentage">% of Overall</title>
+	</titles>
+</report>

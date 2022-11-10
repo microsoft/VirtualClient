@@ -1,0 +1,50 @@
+{
+    "Description": "Test Profile Executor",
+    "MinimumExecutionInterval": "00:00:05",
+    "Parameters": {
+    },
+    "Actions": [
+        {
+            "Type": "ClientServerProxyExecutor",
+            "Parameters": {
+                "Scenario": "RunProxy",
+                "TargetRole": "localhost"
+            },
+            "Components": [
+                {
+                    "Type": "GeekbenchExecutor",
+                    "Parameters": {
+                        "Scenario": "ScoreSystem",
+                        "CommandLine": "--no-upload",
+                        "PackageName": "geekbench5"
+                    }
+                }
+            ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallGeekBench5WorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "geekbench5.1.0.0-1.zip",
+                "PackageName": "geekbench5",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer",
+                "Port": 4500
+            }
+        },
+        {
+            "Type": "ClientServerProxy",
+            "Parameters": {
+                "Scenario": "RunProxy"
+            }
+        }
+    ]
+}

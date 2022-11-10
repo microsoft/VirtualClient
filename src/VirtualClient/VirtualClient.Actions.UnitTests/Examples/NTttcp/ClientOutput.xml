@@ -1,0 +1,60 @@
+﻿<ntttcps computername="DESKTOP-A8C60BN" version="5.33-linux">
+  <parameters>
+    <send_socket_buff>126976</send_socket_buff>
+    <recv_socket_buff>126976</recv_socket_buff>
+    <port>5001</port>
+    <sync_port>5000</sync_port>
+    <no_sync>False</no_sync>
+    <wait_timeout_milliseconds>0</wait_timeout_milliseconds>
+    <async>False</async>
+    <verbose>False</verbose>
+    <wsa>False</wsa>
+    <use_ipv6>False</use_ipv6>
+    <udp>False</udp>
+    <verify_data>False</verify_data>
+    <wait_all>False</wait_all>
+    <run_time>300</run_time>
+    <warmup_time>5</warmup_time>
+    <cooldown_time>0</cooldown_time>
+    <dash_n_timeout>0</dash_n_timeout>
+    <bind_sender>False</bind_sender>
+    <sender_name>NA</sender_name>
+    <max_active_threads>0</max_active_threads>
+    <tp>False</tp>
+    <no_stdio_buffer>False</no_stdio_buffer>
+    <throughput_Bpms>0</throughput_Bpms>
+    <cpu_burn>0</cpu_burn>
+    <latency_measurement>False</latency_measurement>
+    <use_io_compl_ports>NA</use_io_compl_ports>
+    <cpu_from_idle_flag>False</cpu_from_idle_flag>
+    <get_estats>False</get_estats>
+    <qos_flag>False</qos_flag>
+    <jitter_measurement>False</jitter_measurement>
+    <packet_spacing>0</packet_spacing>
+  </parameters>
+  <total_bytes metric="MB">2047288.901632</total_bytes>
+  <realtime metric="s">294.988728</realtime>
+  <avg_bytes_per_compl metric="B">0.000</avg_bytes_per_compl>
+  <threads_avg_bytes_per_compl metric="B">0.000</threads_avg_bytes_per_compl>
+  <avg_frame_size metric="B">0.000</avg_frame_size>
+  <throughput metric="MB/s">6940.228</throughput>
+  <throughput metric="mbps">55521.821</throughput>
+  <throughput metric="Bps">6940227564.593</throughput>
+  <total_buffers>0.000</total_buffers>
+  <throughput metric="buffers/s">0.000</throughput>
+  <avg_packets_per_interrupt metric="packets/interrupt">0.000</avg_packets_per_interrupt>
+  <interrupts metric="count/sec">0.000</interrupts>
+  <dpcs metric="count/sec">0.000</dpcs>
+  <avg_packets_per_dpc metric="packets/dpc">0.000</avg_packets_per_dpc>
+  <cycles metric="cycles/byte">2.594</cycles>
+  <packets_sent>0</packets_sent>
+  <packets_received>0</packets_received>
+  <packets_retransmitted>522885</packets_retransmitted>
+  <errors>0</errors>
+  <cpu metric="%">326.990</cpu>
+  <bufferCount>0</bufferCount>
+  <bufferLen>0</bufferLen>
+  <io>0</io>
+  <tcp_average_rtt metric="us">1886</tcp_average_rtt>
+  <os>Linux DESKTOP-A8C60BN 5.10.102.1-microsoft-standard-WSL2 #1 SMP Wed Mar 2 00:30:59 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux</os>
+</ntttcps>

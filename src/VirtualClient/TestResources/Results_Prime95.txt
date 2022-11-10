@@ -1,0 +1,265 @@
+[Thu Aug 18 10:38:16 2022]
+Self-test 2688K passed!
+Self-test 2688K passed!
+[Thu Aug 18 10:45:19 2022]
+Self-test 8K (thread 2 of 2) passed!
+Self-test 8K (thread 1 of 2) passed!
+Self-test 8K (thread 1 of 2) passed!
+Self-test 8K (thread 2 of 2) passed!
+[Thu Aug 18 10:51:56 2022]
+Self-test 10K (thread 2 of 2) passed!
+Self-test 10K (thread 1 of 2) passed!
+Self-test 10K (thread 2 of 2) passed!
+Self-test 10K (thread 1 of 2) passed!
+[Thu Aug 18 10:58:10 2022]
+Self-test 12K (thread 1 of 2) passed!
+Self-test 12K (thread 2 of 2) passed!
+Self-test 12K (thread 2 of 2) passed!
+Self-test 12K (thread 1 of 2) passed!
+[Thu Aug 18 11:04:23 2022]
+Self-test 15K (thread 1 of 2) passed!
+Self-test 15K (thread 2 of 2) passed!
+Self-test 15K (thread 2 of 2) passed!
+Self-test 15K (thread 1 of 2) passed!
+[Thu Aug 18 11:10:55 2022]
+Self-test 16K (thread 1 of 2) passed!
+Self-test 16K (thread 2 of 2) passed!
+Self-test 16K (thread 2 of 2) passed!
+Self-test 16K (thread 1 of 2) passed!
+[Thu Aug 18 11:16:55 2022]
+Self-test 18K (thread 1 of 2) passed!
+Self-test 18K (thread 2 of 2) passed!
+Self-test 18K (thread 2 of 2) passed!
+Self-test 18K (thread 1 of 2) passed!
+[Thu Aug 18 11:24:10 2022]
+Self-test 20K (thread 2 of 2) passed!
+Self-test 20K (thread 1 of 2) passed!
+Self-test 20K (thread 2 of 2) passed!
+Self-test 20K (thread 1 of 2) passed!
+[Thu Aug 18 11:29:46 2022]
+Self-test 21K (thread 1 of 2) passed!
+Self-test 21K (thread 2 of 2) passed!
+Self-test 21K (thread 2 of 2) passed!
+Self-test 21K (thread 1 of 2) passed!
+[Thu Aug 18 11:35:53 2022]
+Self-test 24K (thread 2 of 2) passed!
+Self-test 24K (thread 1 of 2) passed!
+Self-test 24K (thread 1 of 2) passed!
+Self-test 24K (thread 2 of 2) passed!
+[Thu Aug 18 11:41:26 2022]
+Self-test 25K (thread 1 of 2) passed!
+Self-test 25K (thread 2 of 2) passed!
+Self-test 25K (thread 1 of 2) passed!
+Self-test 25K (thread 2 of 2) passed!
+[Thu Aug 18 11:49:14 2022]
+Self-test 28K (thread 1 of 2) passed!
+Self-test 28K (thread 2 of 2) passed!
+Self-test 28K (thread 2 of 2) passed!
+Self-test 28K (thread 1 of 2) passed!
+[Thu Aug 18 11:55:41 2022]
+Self-test 30K (thread 2 of 2) passed!
+Self-test 30K (thread 1 of 2) passed!
+Self-test 30K (thread 2 of 2) passed!
+Self-test 30K (thread 1 of 2) passed!
+[Thu Aug 18 12:02:19 2022]
+Self-test 32K (thread 2 of 2) passed!
+Self-test 32K (thread 1 of 2) passed!
+Self-test 32K (thread 2 of 2) passed!
+Self-test 32K (thread 1 of 2) passed!
+[Thu Aug 18 12:08:11 2022]
+Self-test 36K (thread 2 of 2) passed!
+Self-test 36K (thread 2 of 2) passed!
+Self-test 36K (thread 1 of 2) passed!
+Self-test 36K (thread 1 of 2) passed!
+[Thu Aug 18 12:14:30 2022]
+Self-test 40K (thread 2 of 2) passed!
+Self-test 40K (thread 1 of 2) passed!
+Self-test 40K (thread 1 of 2) passed!
+Self-test 40K (thread 2 of 2) passed!
+[Thu Aug 18 12:20:48 2022]
+Self-test 48K (thread 1 of 2) passed!
+Self-test 48K (thread 2 of 2) passed!
+Self-test 48K (thread 2 of 2) passed!
+Self-test 48K (thread 1 of 2) passed!
+[Thu Aug 18 12:26:44 2022]
+Self-test 50K (thread 2 of 2) passed!
+Self-test 50K (thread 1 of 2) passed!
+Self-test 50K (thread 1 of 2) passed!
+Self-test 50K (thread 2 of 2) passed!
+[Thu Aug 18 12:32:42 2022]
+Self-test 60K (thread 2 of 2) passed!
+Self-test 60K (thread 1 of 2) passed!
+Self-test 60K (thread 1 of 2) passed!
+Self-test 60K (thread 2 of 2) passed!
+[Thu Aug 18 12:38:42 2022]
+Self-test 64K (thread 2 of 2) passed!
+Self-test 64K (thread 1 of 2) passed!
+Self-test 64K (thread 2 of 2) passed!
+Self-test 64K (thread 1 of 2) passed!
+[Thu Aug 18 12:46:45 2022]
+Self-test 72K (thread 2 of 2) passed!
+Self-test 72K (thread 1 of 2) passed!
+Self-test 72K (thread 2 of 2) passed!
+Self-test 72K (thread 1 of 2) passed!
+[Thu Aug 18 12:52:36 2022]
+Self-test 80K (thread 2 of 2) passed!
+Self-test 80K (thread 1 of 2) passed!
+Self-test 80K (thread 2 of 2) passed!
+Self-test 80K (thread 1 of 2) passed!
+[Thu Aug 18 13:01:02 2022]
+Self-test 84K (thread 2 of 2) passed!
+Self-test 84K (thread 1 of 2) passed!
+Self-test 84K (thread 2 of 2) passed!
+Self-test 84K (thread 1 of 2) passed!
+[Thu Aug 18 13:06:56 2022]
+Self-test 96K (thread 1 of 2) passed!
+Self-test 96K (thread 2 of 2) passed!
+Self-test 96K (thread 2 of 2) passed!
+Self-test 96K (thread 1 of 2) passed!
+[Thu Aug 18 13:12:45 2022]
+Self-test 100K (thread 2 of 2) passed!
+Self-test 100K (thread 1 of 2) passed!
+Self-test 100K (thread 2 of 2) passed!
+Self-test 100K (thread 1 of 2) passed!
+[Thu Aug 18 13:18:35 2022]
+Self-test 112K (thread 2 of 2) passed!
+Self-test 112K (thread 1 of 2) passed!
+Self-test 112K (thread 2 of 2) passed!
+Self-test 112K (thread 1 of 2) passed!
+[Thu Aug 18 13:24:29 2022]
+Self-test 120K (thread 1 of 2) passed!
+Self-test 120K (thread 2 of 2) passed!
+Self-test 120K (thread 2 of 2) passed!
+Self-test 120K (thread 1 of 2) passed!
+[Thu Aug 18 13:30:28 2022]
+Self-test 128K (thread 1 of 2) passed!
+Self-test 128K (thread 2 of 2) passed!
+Self-test 128K (thread 2 of 2) passed!
+Self-test 128K (thread 1 of 2) passed!
+[Thu Aug 18 13:36:23 2022]
+Self-test 140K (thread 2 of 2) passed!
+Self-test 140K (thread 1 of 2) passed!
+Self-test 140K (thread 2 of 2) passed!
+Self-test 140K (thread 1 of 2) passed!
+[Thu Aug 18 13:44:36 2022]
+Self-test 144K (thread 2 of 2) passed!
+Self-test 144K (thread 1 of 2) passed!
+Self-test 144K (thread 2 of 2) passed!
+Self-test 144K (thread 1 of 2) passed!
+[Thu Aug 18 13:50:38 2022]
+Self-test 160K (thread 2 of 2) passed!
+Self-test 160K (thread 1 of 2) passed!
+Self-test 160K (thread 1 of 2) passed!
+Self-test 160K (thread 2 of 2) passed!
+[Thu Aug 18 13:59:09 2022]
+Self-test 168K (thread 2 of 2) passed!
+Self-test 168K (thread 1 of 2) passed!
+Self-test 168K (thread 1 of 2) passed!
+Self-test 168K (thread 2 of 2) passed!
+[Thu Aug 18 14:04:58 2022]
+Self-test 192K (thread 2 of 2) passed!
+Self-test 192K (thread 1 of 2) passed!
+Self-test 192K (thread 1 of 2) passed!
+Self-test 192K (thread 2 of 2) passed!
+[Thu Aug 18 14:13:26 2022]
+Self-test 200K (thread 2 of 2) passed!
+Self-test 200K (thread 1 of 2) passed!
+Self-test 200K (thread 2 of 2) passed!
+Self-test 200K (thread 1 of 2) passed!
+[Thu Aug 18 14:19:32 2022]
+Self-test 224K (thread 2 of 2) passed!
+Self-test 224K (thread 1 of 2) passed!
+Self-test 224K (thread 2 of 2) passed!
+Self-test 224K (thread 1 of 2) passed!
+[Thu Aug 18 14:25:20 2022]
+Self-test 240K (thread 2 of 2) passed!
+Self-test 240K (thread 1 of 2) passed!
+Self-test 240K (thread 2 of 2) passed!
+Self-test 240K (thread 1 of 2) passed!
+[Thu Aug 18 14:31:39 2022]
+Self-test 256K passed!
+Self-test 256K passed!
+[Thu Aug 18 14:37:30 2022]
+Self-test 288K passed!
+Self-test 288K passed!
+[Thu Aug 18 14:44:33 2022]
+Self-test 2880K passed!
+Self-test 2880K passed!
+[Thu Aug 18 14:50:52 2022]
+Self-test 320K passed!
+Self-test 320K passed!
+[Thu Aug 18 14:57:13 2022]
+Self-test 336K passed!
+Self-test 336K passed!
+[Thu Aug 18 15:03:45 2022]
+Self-test 384K passed!
+Self-test 384K passed!
+[Thu Aug 18 15:09:44 2022]
+Self-test 3072K passed!
+Self-test 3072K passed!
+[Thu Aug 18 15:15:56 2022]
+Self-test 400K passed!
+Self-test 400K passed!
+[Thu Aug 18 15:22:14 2022]
+Self-test 448K passed!
+Self-test 448K passed!
+[Thu Aug 18 15:28:25 2022]
+Self-test 480K passed!
+Self-test 480K passed!
+[Thu Aug 18 15:34:52 2022]
+Self-test 3200K passed!
+Self-test 3200K passed!
+[Thu Aug 18 15:40:40 2022]
+Self-test 512K passed!
+Self-test 512K passed!
+[Thu Aug 18 15:47:10 2022]
+Self-test 560K passed!
+Self-test 560K passed!
+[Thu Aug 18 15:52:58 2022]
+Self-test 576K passed!
+Self-test 576K passed!
+[Thu Aug 18 15:58:52 2022]
+Self-test 3360K passed!
+Self-test 3360K passed!
+[Thu Aug 18 16:05:08 2022]
+Self-test 640K passed!
+Self-test 640K passed!
+[Thu Aug 18 16:11:27 2022]
+Self-test 672K passed!
+Self-test 672K passed!
+[Thu Aug 18 16:17:38 2022]
+Self-test 720K passed!
+Self-test 720K passed!
+[Thu Aug 18 16:23:28 2022]
+Self-test 3456K passed!
+Self-test 3456K passed!
+[Thu Aug 18 16:29:30 2022]
+Self-test 768K passed!
+Self-test 768K passed!
+[Thu Aug 18 16:35:34 2022]
+Self-test 800K passed!
+Self-test 800K passed!
+[Thu Aug 18 16:41:52 2022]
+Self-test 864K passed!
+Self-test 864K passed!
+[Thu Aug 18 16:48:04 2022]
+Self-test 3584K passed!
+Self-test 3584K passed!
+[Thu Aug 18 16:54:22 2022]
+Self-test 896K passed!
+Self-test 896K passed!
+[Thu Aug 18 17:00:26 2022]
+Self-test 960K passed!
+Self-test 960K passed!
+[Thu Aug 18 17:06:58 2022]
+Self-test 1024K passed!
+Self-test 1024K passed!
+[Thu Aug 18 17:12:49 2022]
+Self-test 3840K passed!
+Self-test 3840K passed!
+[Thu Aug 18 17:18:59 2022]
+Self-test 1120K passed!
+Self-test 1120K passed!
+[Thu Aug 18 17:25:11 2022]
+Self-test 1152K passed!
+Self-test 1152K passed!

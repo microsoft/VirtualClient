@@ -1,0 +1,58 @@
+Running 30s test @ http://localhost:8080
+  2 threads and 2 connections
+  Thread calibration: mean lat.: 0.549ms, rate sampling interval: 10ms
+  Thread calibration: mean lat.: 0.526ms, rate sampling interval: 10ms
+  Thread Stats   Avg      Stdev     99%   +/- Stdev
+    Latency   540.95us   66.96us 729.00us   72.50%
+    Req/Sec     1.07     10.83     0.00     99.01%
+  Latency Distribution (HdrHistogram - Recorded Latency)
+ 50.000%  524.00us
+ 75.000%  573.00us
+ 90.000%  620.00us
+ 99.000%  729.00us
+ 99.900%  729.00us
+ 99.990%  729.00us
+ 99.999%  729.00us
+100.000%  729.00us
+
+  Detailed Percentile spectrum:
+       Value   Percentile   TotalCount 1/(1-Percentile)
+
+       0.429     0.000000            1         1.00
+       0.459     0.100000            4         1.11
+       0.486     0.200000            8         1.25
+       0.503     0.300000           12         1.43
+       0.520     0.400000           17         1.67
+       0.524     0.500000           20         2.00
+       0.534     0.550000           22         2.22
+       0.540     0.600000           24         2.50
+       0.551     0.650000           26         2.86
+       0.567     0.700000           28         3.33
+       0.573     0.750000           30         4.00
+       0.582     0.775000           31         4.44
+       0.588     0.800000           32         5.00
+       0.589     0.825000           33         5.71
+       0.597     0.850000           34         6.67
+       0.610     0.875000           35         8.00
+       0.620     0.887500           36         8.89
+       0.620     0.900000           36        10.00
+       0.630     0.912500           37        11.43
+       0.630     0.925000           37        13.33
+       0.664     0.937500           38        16.00
+       0.664     0.943750           38        17.78
+       0.664     0.950000           38        20.00
+       0.708     0.956250           39        22.86
+       0.708     0.962500           39        26.67
+       0.708     0.968750           39        32.00
+       0.708     0.971875           39        35.56
+       0.708     0.975000           39        40.00
+       0.729     0.978125           40        45.71
+       0.729     1.000000           40          inf
+#[Mean    =        0.541, StdDeviation   =        0.067]
+#[Max     =        0.729, Total count    =           40]
+#[Buckets =           27, SubBuckets     =         2048]
+----------------------------------------------------------
+  62 requests in 30.01s, 186.97KB read
+  Socket errors: connect 0, read 0, write 0, timeout 5
+Requests/sec:      2.07
+Transfer/sec:      6.23KB

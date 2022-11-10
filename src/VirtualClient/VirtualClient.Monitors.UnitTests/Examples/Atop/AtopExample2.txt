@@ -1,0 +1,26 @@
+﻿ATOP - subw4app1   2021/11/03  21:04:41   --------------    84d16h45m49s elapsed
+PRC | sys    2h55m | user   3h37m | #proc    154 | #zombie    0 | no  procacct |
+CPU | sys       1% | user      2% | irq       3% | idle    399% | wait      0% |
+cpu | sys       0% | user      0% | irq       0% | idle    100% | cpu000 w  0% |
+cpu | sys       0% | user      0% | irq       0% | idle    100% | cpu002 w  0% |
+cpu | sys       0% | user      0% | irq       0% | idle    100% | cpu001 w  0% |
+cpu | sys       0% | user      0% | irq       0% | idle    100% | cpu003 w  0% |
+CPL | avg1    0.00 | avg5    0.00 | avg15   0.00 | csw 143221e4 | intr 30873e4 |
+MEM | tot    31.4G | free   28.2G | cache   2.6G | buff    5.5M | slab  251.0M |
+SWP | tot    20.0G | free   20.0G |              | vmcom 571.4M | vmlim  35.7G |
+LVM | p-lv_usr_sap | busy      0% | read     731 | write 752696 | avio 2.00 ms |
+DSK |          sda | busy      0% | read   22018 | write 3000e3 | avio 2.00 ms |
+DSK |          sdc | busy      0% | read     812 | write 673326 | avio 3.00 ms |
+DSK |          sdb | busy      0% | read     459 | write   2679 | avio 4.00 ms |
+NFM |      /sapmnt | srv 11.0.1.1 | read      0K | write     0K | nread     0K |
+NFM |    /sapmedia | srv 11.0.1.1 | read      0K | write     0K | nread     0K |
+NFM |    /saptrans | srv 11.0.1.1 | read      0K | write     0K | nread     0K |
+NFC | rpc  1566827 | read       0 | write      0 | retxmit    0 | autref 157e4 |
+NET | transport    | tcpi 25041e3 | tcpo 36064e3 | udpi   19923 | udpo   69215 |
+NET | network      | ipi 25110356 | ipo 36131777 | ipfrw      0 | deliv 2511e4 |
+NET | eth0      0% | pcki 31321e3 | pcko 36083e3 | si   15 Kbps | so    7 Kbps |
+NET | eth1      0% | pcki   49860 | pcko  610216 | si    0 Kbps | so    0 Kbps |
+NET | lo      ---- | pcki   49209 | pcko   49209 | si    0 Kbps | so    0 Kbps |
+*** system and process activity since boot ***
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID
+   154  2h55m  3h37m 372.4M     0K     0K     0K     0     0   0% host--------

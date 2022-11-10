@@ -1,0 +1,71 @@
+cd results && make summary percent 2>/dev/null | more
+make[1]: Entering directory '/home/vcvmadmin/VirtualClient/packages/lmbench/0.0.4/runtimes/linux-arm64/results'
+
+                 L M B E N C H  3 . 0   S U M M A R Y
+                 ------------------------------------
+		 (Alpha software, do not distribute)
+
+
+Processor, Processes - times in microseconds - smaller is better
+------------------------------------------------------------------------------
+Host                 OS  Mhz null null      open slct sig  sig  fork exec sh  
+                             call  I/O stat clos TCP  inst hndl proc proc proc
+--------- ------------- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ARM64-Lin Linux 5.10.0l 2494 3.41 3.58 4.46 9.54 7.01 3.58 9.62 370. 946. 2281
+
+Basic integer operations - times in nanoseconds - smaller is better
+-------------------------------------------------------------------
+Host                 OS  intgr intgr  intgr  intgr  intgr  
+                          bit   add    mul    div    mod   
+--------- ------------- ------ ------ ------ ------ ------ 
+ARM64-Lin Linux 5.10.0l 0.2700 0.1000 0.0100 7.2300 7.5500
+
+Basic float operations - times in nanoseconds - smaller is better
+-----------------------------------------------------------------
+Host                 OS  float  float  float  float
+                         add    mul    div    bogo
+--------- ------------- ------ ------ ------ ------ 
+ARM64-Lin Linux 5.10.0l 2.4100 2.4100 6.4200 6.8300
+
+Basic double operations - times in nanoseconds - smaller is better
+------------------------------------------------------------------
+Host                 OS  double double double double
+                         add    mul    div    bogo
+--------- ------------- ------  ------ ------ ------ 
+ARM64-Lin Linux 5.10.0l 2.4100 2.4100 9.2500 9.6700
+
+Context switching - times in microseconds - smaller is better
+-------------------------------------------------------------------------
+Host                 OS  2p/0K 2p/16K 2p/64K 8p/16K 8p/64K 16p/16K 16p/64K
+                         ctxsw  ctxsw  ctxsw ctxsw  ctxsw   ctxsw   ctxsw
+--------- ------------- ------ ------ ------ ------ ------ ------- -------
+ARM64-Lin Linux 5.10.0l   15.8   19.6   13.1   12.8   14.7    16.5    16.9
+
+*Local* Communication latencies in microseconds - smaller is better
+---------------------------------------------------------------------
+Host                 OS 2p/0K  Pipe AF     UDP  RPC/   TCP  RPC/ TCP
+                        ctxsw       UNIX         UDP         TCP conn
+--------- ------------- ----- ----- ---- ----- ----- ----- ----- ----
+ARM64-Lin Linux 5.10.0l  15.8  41.8 42.0  54.1        62.0        63.
+
+File & VM system latencies in microseconds - smaller is better
+-------------------------------------------------------------------------------
+Host                 OS   0K File      10K File     Mmap    Prot   Page   100fd
+                        Create Delete Create Delete Latency Fault  Fault  selct
+--------- ------------- ------ ------ ------ ------ ------- ----- ------- -----
+ARM64-Lin Linux 5.10.0l   23.5   15.4   48.2   22.2   76.7M 3.545         5.070
+
+*Local* Communication bandwidths in MB/s - bigger is better
+-----------------------------------------------------------------------------
+Host                OS  Pipe AF    TCP  File   Mmap  Bcopy  Bcopy  Mem   Mem
+                             UNIX      reread reread (libc) (hand) read write
+--------- ------------- ---- ---- ---- ------ ------ ------ ------ ---- -----
+ARM64-Lin Linux 5.10.0l 2159 4149 2250 2641.3 3202.3 6442.9 1505.7 1190 8098.
+
+Memory latencies in nanoseconds - smaller is better
+    (WARNING - may not be correct, check graphs)
+------------------------------------------------------------------------------
+Host                 OS   Mhz   L1 $   L2 $    Main mem    Rand mem    Guesses
+--------- -------------   ---   ----   ----    --------    --------    -------
+ARM64-Lin Linux 5.10.0l  2494 1.6130 4.4630  107.7        74.4
+make[1]: Leaving directory '/home/vcvmadmin/VirtualClient/packages/lmbench/0.0.4/runtimes/linux-arm64/results'

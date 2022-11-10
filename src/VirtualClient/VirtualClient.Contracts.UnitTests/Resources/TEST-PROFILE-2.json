@@ -1,0 +1,30 @@
+{
+    "Description": "Test Profile Executor",
+    "RequiresApi": true,
+    "MinimumExecutionInterval": "00:05:00",
+    "MinimumRequiredExecutionTime": "01:00:00",
+    "Iterations": 1,
+    "Metadata": {
+        "Property1": "Value",
+        "Property2": 12345,
+        "Property3": true
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "CommandLine": "--name=testName --engine=V8",
+                "Tags": "Test,VC"
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Counters": "Counter1,Counter2,Counter3",
+                "Tags": "Test,VC,Monitoring"
+            }
+        }
+    ]
+}

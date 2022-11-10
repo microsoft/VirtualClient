@@ -1,0 +1,58 @@
+{
+    "Description": "SuperBenchmark GPU Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+  "Parameters": {
+    "ConfigurationFile": "default.yaml",
+    "Username": "testuser",
+    "CudaVersion": "11.6",
+    "DriverVersion": "510",
+    "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
+  },
+    "Actions": [
+        {
+          "Type": "SuperBenchmarkExecutor",
+          "Parameters": {
+            "Scenario": "GPUBenchmark",
+            "Username": "$.Parameters.Username",
+            "Version": "0.5.0",
+            "ConfigurationFile": "$.Parameters.ConfigurationFile",
+            "ContainerVersion": "superbench/superbench:v0.5.0-cuda11.1.1"
+          }
+        }
+    ],
+  "Dependencies": [
+    {
+      "Type": "CudaAndNvidiaGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallCudaAndNvidiaGPUDriver",
+        "CudaVersion": "$.Parameters.CudaVersion",
+        "DriverVersion": "$.Parameters.DriverVersion",
+        "Username": "$.Parameters.Username",
+        "LocalRunFile": "$.Parameters.LocalRunFile"
+      }
+    },
+    {
+      "Type": "DockerInstallation",
+      "Parameters": {
+        "Scenario": "InstallDocker"
+      }
+    },
+    {
+      "Type": "NvidiaContainerToolkitInstallation",
+      "Parameters": {
+        "Scenario": "InstallNvidiaContainerToolkit"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackages",
+        "Packages": "sshpass,python3-pip",
+        "Packages-Apt": "nvidia-common",
+        "Packages-Dnf": "nvidia-driver",
+        "Packages-Yum": "nvidia-driver",
+        "Packages-Zypper": ""
+      }
+    }
+  ]
+}

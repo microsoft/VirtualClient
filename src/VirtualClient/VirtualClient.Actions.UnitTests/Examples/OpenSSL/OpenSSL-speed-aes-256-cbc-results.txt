@@ -1,0 +1,8 @@
+version: 3.0.0-beta3-dev
+built on: built on: Thu Aug  5 18:45:56 2021 UTC
+options:bn(64,64) 
+compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
+CPUINFO: OPENSSL_ia32cap=0xfeda32235f8bffff:0x405f46f1bf2fb9
+The 'numbers' are in 1000s of bytes per second processed.
+type             16 bytes     64 bytes    256 bytes   1024 bytes   8192 bytes  16384 bytes
+AES-256-CBC    1109022.36k  1209391.13k  1232451.87k  1237247.28k  1239375.05k  1239090.79k

@@ -1,0 +1,9 @@
+.create-or-alter function with (folder = "", docstring = "", skipvalidation = "true") GetVirtualClientErrors(startTime:datetime=datetime(null), endTime:datetime=datetime(null)) {
+      let dateRangeBegin = iff(isnull(startTime), ago(2d), startTime);
+      let dateRangeEnd = iff(isnull(endTime), now(), endTime);
+      Traces
+      | where Timestamp >= dateRangeBegin and Timestamp < dateRangeEnd and SeverityLevel > 1
+      | extend Error = tostring(CustomDimensions.error)
+      | extend ErrorCallstack = tostring(CustomDimensions.errorCallstack)
+      | project Timestamp, ExperimentId, ClientId, Profile, ProfileName, Message, SeverityLevel, Error, ErrorCallstack, OperationId, OperationParentId, AppName, AppHost, AppVersion, AppTelemetryVersion, CustomDimensions
+  }

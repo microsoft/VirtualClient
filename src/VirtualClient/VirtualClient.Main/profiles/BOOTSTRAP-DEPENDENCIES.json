@@ -1,0 +1,19 @@
+{
+    "Description": "Installs dependencies from a package store.",
+    "Parameters": {
+        "Package": "Undefined",
+        "RegisterAsName": "Undefined"
+    },
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDependenciesPackage",
+                "BlobContainer": "packages",
+                "BlobName": "$.Parameters.Package",
+                "PackageName": "$.Parameters.RegisterAsName",
+                "Extract": true
+            }
+        }
+    ]
+}

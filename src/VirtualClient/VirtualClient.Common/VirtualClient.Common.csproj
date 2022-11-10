@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Common</AssemblyName>
+        <NoWarn></NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Azure.Identity" Version="$(Azure_Identity_PackageVersion)" />
+        <PackageReference Include="Azure.Messaging.EventHubs" Version="$(Azure_Messaging_EventHubs_PackageVersion)" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="$(Azure_Storage_Blobs_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="$(Microsoft_Extensions_Configuration_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(Microsoft_Extensions_DependencyInjection_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="$(Microsoft_Extensions_Logging_PackageVersion)" />
+        <PackageReference Include="Newtonsoft.Json" Version="$(Newtonsoft_Json_PackageVersion)" />
+        <PackageReference Include="Polly" Version="$(Polly_PackageVersion)" />
+        <PackageReference Include="Polly.Extensions.Http" Version="$(Polly_Extensions_Http_PackageVersion)" />
+        <PackageReference Include="Serilog.Extensions.Logging" Version="$(Serilog_Extensions_Logging_PackageVersion)" />
+        <PackageReference Include="Serilog.Sinks.File" Version="$(Serilog_Sinks_File_PackageVersion)" />
+        <PackageReference Include="Serilog.Sinks.RollingFile" Version="$(Serilog_Sinks_RollingFile_PackageVersion)" />
+        <PackageReference Include="System.Net.NameResolution" Version="$(System_Net_NameResolution_PackageVersion)" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

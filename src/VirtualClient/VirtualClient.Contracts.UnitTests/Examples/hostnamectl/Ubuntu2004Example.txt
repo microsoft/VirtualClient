@@ -1,0 +1,9 @@
+   Static hostname: X64-Linux-01-vcuser1
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: b4d0ac2d71a846298becaeb4bbac8fde
+           Boot ID: 6fc833740d4f4d4b96e357a78db1de5c
+    Virtualization: microsoft
+  Operating System: Ubuntu 20.04.4 LTS
+            Kernel: Linux 5.13.0-1017-azure
+      Architecture: x86-64

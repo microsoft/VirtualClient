@@ -1,0 +1,345 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Contracts
+{
+    using System;
+    using System.IO;
+    using System.Reflection;
+    using System.Runtime.InteropServices;
+    using NUnit.Framework;
+
+    [TestFixture]
+    [Category("Unit")]
+    public class PlatformSpecificsTests
+    {
+        private static Assembly dllAssembly = Assembly.GetAssembly(typeof(DependencyPathTests));
+
+        [Test]
+        public void FundamentalPathsMatchExpectedPaths()
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            Assert.AreEqual(
+                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "logs"),
+                platformSpecifics.LogsDirectory);
+
+            Assert.AreEqual(
+                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "packages"),
+                platformSpecifics.PackagesDirectory);
+
+            Assert.AreEqual(
+                Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "profiles"),
+                platformSpecifics.ProfilesDirectory);
+
+            Assert.AreEqual(
+              Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "scripts"),
+              platformSpecifics.ScriptsDirectory);
+
+            Assert.AreEqual(
+               Path.Combine(Path.GetDirectoryName(PlatformSpecificsTests.dllAssembly.Location), "state"),
+               platformSpecifics.StateDirectory);
+        }
+
+        [Test]
+        public void GetPackagePathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/packages", platformSpecifics.GetPackagePath());
+            Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("/any.package/1.0.0"));
+            Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("/any.package", "/1.0.0"));
+            Assert.AreEqual("/home/anyuser/virtualclient/packages/any.package/1.0.0", platformSpecifics.GetPackagePath("any.package", "1.0.0"));
+        }
+
+        [Test]
+        public void GetPackagePathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\packages", platformSpecifics.GetPackagePath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\packages\any.package\1.0.0", platformSpecifics.GetPackagePath(@"\any.package\1.0.0"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\packages\any.package\1.0.0", platformSpecifics.GetPackagePath(@"\any.package", @"\1.0.0"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\packages\any.package\1.0.0", platformSpecifics.GetPackagePath(@"any.package", "1.0.0"));
+        }
+
+        [Test]
+        public void GetProfilePathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/profiles", platformSpecifics.GetProfilePath());
+            Assert.AreEqual("/home/anyuser/virtualclient/profiles/ANY-PROFILE.json", platformSpecifics.GetProfilePath("ANY-PROFILE.json"));
+            Assert.AreEqual("/home/anyuser/virtualclient/profiles/other/ANY-PROFILE.json", platformSpecifics.GetProfilePath("/other", "ANY-PROFILE.json"));
+            Assert.AreEqual("/home/anyuser/virtualclient/profiles/other/ANY-PROFILE.json", platformSpecifics.GetProfilePath("other", "ANY-PROFILE.json"));
+        }
+
+        [Test]
+        public void GetProfilePathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\profiles", platformSpecifics.GetProfilePath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\profiles\ANY-PROFILE.json", platformSpecifics.GetProfilePath(@"ANY-PROFILE.json"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\profiles\other\ANY-PROFILE.json", platformSpecifics.GetProfilePath(@"\other", "ANY-PROFILE.json"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\profiles\other\ANY-PROFILE.json", platformSpecifics.GetProfilePath("other", "ANY-PROFILE.json"));
+        }
+
+        [Test]
+        public void GetScriptPathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/scripts", platformSpecifics.GetScriptPath());
+            Assert.AreEqual("/home/anyuser/virtualclient/scripts/anyscript.sh", platformSpecifics.GetScriptPath("/anyscript.sh"));
+            Assert.AreEqual("/home/anyuser/virtualclient/scripts/other/anyscript.sh", platformSpecifics.GetScriptPath("/other", "/anyscript.sh"));
+            Assert.AreEqual("/home/anyuser/virtualclient/scripts/other/anyscript.sh", platformSpecifics.GetScriptPath("other", "anyscript.sh"));
+        }
+
+        [Test]
+        public void GetScriptPathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\scripts", platformSpecifics.GetScriptPath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\scripts\anyscript.cmd", platformSpecifics.GetScriptPath(@"anyscript.cmd"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\scripts\other\anyscript.cmd", platformSpecifics.GetScriptPath(@"\other", "anyscript.cmd"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\scripts\other\anyscript.cmd", platformSpecifics.GetScriptPath(@"\other", "anyscript.cmd"));
+        }
+
+        [Test]
+        public void GetStatePathReturnsTheExpectedPathOnUnixSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Unix, Architecture.X64, "/home/anyuser/virtualclient");
+
+            Assert.AreEqual("/home/anyuser/virtualclient/state", platformSpecifics.GetStatePath());
+            Assert.AreEqual("/home/anyuser/virtualclient/state/anystate.json", platformSpecifics.GetStatePath("anystate.json"));
+            Assert.AreEqual("/home/anyuser/virtualclient/state/other/anystate.json", platformSpecifics.GetStatePath("/other", "anystate.json"));
+            Assert.AreEqual("/home/anyuser/virtualclient/state/other/anystate.json", platformSpecifics.GetStatePath("other", "anystate.json"));
+        }
+
+        [Test]
+        public void GetStatePathReturnsTheExpectedPathOnWindowsSystems()
+        {
+            PlatformSpecifics platformSpecifics = new TestPlatformSpecifics2(PlatformID.Win32NT, Architecture.X64, @"C:\users\anyuser\virtualclient");
+
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\state", platformSpecifics.GetStatePath());
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\anystate.json", platformSpecifics.GetStatePath(@"anystate.json"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\other\anystate.json", platformSpecifics.GetStatePath(@"\other", "anystate.json"));
+            Assert.AreEqual(@"C:\users\anyuser\virtualclient\state\other\anystate.json", platformSpecifics.GetStatePath(@"\other", "anystate.json"));
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
+        public void GetPlatformArchitectureNameReturnsTheExpectedNameForCombinationsSupported(PlatformID platform, Architecture architecture, string expectedValue)
+        {
+            string actualValue = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
+            Assert.AreEqual(expectedValue, actualValue);
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, true)]
+        [TestCase(PlatformID.Unix, true)]
+        [TestCase(PlatformID.Other , false)]
+        public void TheListOfSupportedPlatformsMatchesExpected(PlatformID platform, bool isSupported)
+        {
+            if (isSupported)
+            {
+                Assert.DoesNotThrow(() => PlatformSpecifics.ThrowIfNotSupported(platform));
+            }
+            else
+            {
+                Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(platform));
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (win-x64)")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (win-arm64)")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (linux-x64)")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (linux-arm64)")]
+        public void GetPlatformNameReturnsTheExpectedPlatformSpecificNameForAllSupportedPlatformsAndArchitectures(PlatformID platform, Architecture architecture, string profile, string expectedName)
+        {
+            string actualName = PlatformSpecifics.GetProfileName(profile, platform, architecture);
+            Assert.AreEqual(expectedName, actualName);
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "PERF-CPU-COREMARK", "PERF-CPU-COREMARK (win-x64)")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (win-x64)")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "PERF-CPU-COREMARK", "PERF-CPU-COREMARK (linux-arm64)")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (linux-arm64)")]
+        public void GetPlatformNameHandlesPossibleVariationsInTheProfileNames(PlatformID platform, Architecture architecture, string profile, string expectedName)
+        {
+            string actualName = PlatformSpecifics.GetProfileName(profile, platform, architecture);
+            Assert.AreEqual(expectedName, actualName);
+        }
+
+        [Test]
+        [TestCase(Architecture.X64, true)]
+        [TestCase(Architecture.Arm64, true)]
+        [TestCase(Architecture.Arm, false)]
+        [TestCase(Architecture.X86, false)]
+        public void TheListOfSupportedProcessorArchitecturesMatchesExpected(Architecture architecture, bool isSupported)
+        {
+            if (isSupported)
+            {
+                Assert.DoesNotThrow(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
+            }
+            else
+            {
+                Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
+            }
+        }
+
+        [Test]
+        [TestCase(@"\packages", @"\packages")]
+        [TestCase(@"/packages", @"\packages")]
+        [TestCase(@"C:", "C:")]
+        [TestCase(@"C:\packages\", @"C:\packages")]
+        [TestCase(@"C:\packages//", @"C:\packages")]
+        [TestCase(@"C:/packages\", @"C:\packages")]
+        [TestCase(@"C:\packages\", @"C:\packages")]
+        public void PlatformStandardizesPathsCorrectlyOnWindowsSystems(string path, string expectedPath)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+            string actualPath = platformSpecifics.StandardizePath(path);
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(@"/", "/")]
+        [TestCase(@"/packages/", @"/packages")]
+        [TestCase(@"/packages//", @"/packages")]
+        [TestCase(@"/packages\", @"/packages")]
+        [TestCase(@"\packages\", @"/packages")]
+        public void PlatformStandardizesPathsCorrectlyOnLinuxSystems(string path, string expectedPath)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+            string actualPath = platformSpecifics.StandardizePath(path);
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(@"/a", "/b", "/c", "/")]
+        [TestCase(@"/packages/a", @"/packages/b", @"/packages/c", @"/packages/")]
+        [TestCase(@"/packages/a/b/c", @"/packages/a/b", @"/packages/a", @"/packages/")]
+        [TestCase(@"/packages/a/b/c/d", @"/packages/a/b/c", @"/packages/a/b", @"/packages/a/")]
+        [TestCase(@"/packages2/a/b/c/d", @"/packages/a/b/c", @"/packages/a/b", @"/")]
+        [TestCase(@"/vc/packages2/a\b/c/d", @"/vc\packages2/a/b/c", @"\vc/packages/a/b", @"/vc/")]
+        public void PlatformGetCommmonDirectoryCorrectlyOnLinuxSystems(string path1, string path2, string path3, string expectedPath)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+            string actualPath = platformSpecifics.GetCommonDirectory(new string[] { path1, path2, path3 });
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        [TestCase(@"A:\", @"B:\", @"C:\", "")]
+        [TestCase(@"A:\a.txt", @"A:\b.pdf", @"A:\c.jpg", @"A:\")]
+        [TestCase(@"A:\a\a.txt", @"A:\a\b\b.pdf", @"A:\a\b\c\c.jpg", @"A:\a\")]
+        [TestCase(@"A:\a\a.txt", @"A:\a\b\b.pdf", @"AA:\a\b\c\c.jpg", @"")]
+        [TestCase(@"A:\a\a.txt", @"B:\a\b.pdf", @"A:\a\c.jpg", @"")]
+        public void PlatformGetCommmonDirectoryCorrectlyOnWindowsSystems(string path1, string path2, string path3, string expectedPath)
+        {
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+            string actualPath = platformSpecifics.GetCommonDirectory(new string[] { path1, path2, path3 });
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsJoinsPathSegmentsCorrectlyOnWindowsSystems()
+        {
+            string[] pathSegments = new string[] { "C:", "any", "path", "on", "the", "system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            string expectedPath = @"C:\any\path\on\the\system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsJoinsPathSegmentsCorrectlyOnUnixSystems()
+        {
+            string[] pathSegments = new string[] { "home", "any", "path", "on", "the", "system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string expectedPath = @"home/any/path/on/the/system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+
+        [Test]
+        public void PlatformSpecificsHandlesExtraneousPathDelimitersOnWindowsSystems()
+        {
+            string[] pathSegments = new string[] { @"C:\", "any", @"\path", @"on\\", @"\the", @"\\\\system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            string expectedPath = @"C:\any\path\on\the\system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsHandlesMixedPathDelimitersOnWindowsSystems()
+        {
+            string[] pathSegments = new string[] { @"C:\", "any", @"\path", "//on", @"\the///", "////system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            string expectedPath = @"C:\any\path\on\the\system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsHandlesExtraneousPathDelimitersOnUnixSystems()
+        {
+            string[] pathSegments = new string[] { "/home/", "any//", "///path", "on", "/the/", "//system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string expectedPath = @"/home/any/path/on/the/system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsHandlesMixedPathDelimitersOnUnixSystems()
+        {
+            string[] pathSegments = new string[] { "/home/", "any//", "//path", "on", @"\the/", @"\\\\system" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string expectedPath = @"/home/any/path/on/the/system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsHandlesMixedPathDelimitersOnUnixSystems2()
+        {
+            string[] pathSegments = new string[] { "/etc", "rc.local" };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string actualPath = platformSpecifics.Combine(pathSegments);
+        }
+
+        // Used to expose the ability to define the 'current directory' for the purposes of
+        // testing paths (i.e. comparisons of Windows vs. Unix formatted paths).
+        private class TestPlatformSpecifics2 : PlatformSpecifics
+        {
+            public TestPlatformSpecifics2(PlatformID platform, Architecture architecture, string currentDirectory)
+                : base(platform, architecture, currentDirectory)
+            {
+            }
+        }
+    }
+}

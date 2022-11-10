@@ -1,0 +1,37 @@
+﻿{
+    "Description": "Graph500 Performance workload",
+    "Parameters": {
+        "Scale": "10",
+        "EdgeFactor": "16"
+    },
+    "Actions": [
+        {
+            "Type": "Graph500Executor",
+            "Parameters": {
+                "Scenario": "ProcessorSpeed",
+                "PackageName": "graph500",
+                "Scale": "$.Parameters.Scale",
+                "EdgeFactor": "$.Parameters.EdgeFactor"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackages",
+                "Packages": "make,mpich"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallGraph500WorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "graph500.3.0.0-1.zip",
+                "PackageName": "graph500",
+                "Extract": true
+            }
+        }
+    ]
+}

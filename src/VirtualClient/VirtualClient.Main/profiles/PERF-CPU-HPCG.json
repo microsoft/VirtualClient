@@ -1,0 +1,43 @@
+{
+    "Description": "HPCG Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Parameters": {
+        "CompilerName": "gcc",
+        "CompilerVersion": "10"
+    },
+    "Actions": [
+        {
+            "Type": "HpcgExecutor",
+            "Parameters": {
+                "PackageName": "hpcg",
+                "SpackPackageName": "spack",
+                "HpcgVersion": "3.1",
+                "OpenMpiVersion": "4.1.1"
+            }
+        }
+    ],
+  "Dependencies": [
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "Scenario": "InstallCompiler",
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackages",
+        "Packages": "python3-pip,mpich"
+      }
+    },
+    {
+      "Type": "SpackInstallation",
+      "Parameters": {
+        "Scenario": "InstallSpack",
+        "PackageName": "spack"
+      }
+    }
+  ]
+}

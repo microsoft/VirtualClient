@@ -1,0 +1,23 @@
+{
+	"LoopInfinitely": "false",
+	"Metadata": {
+	},
+	"Actions": [
+		{
+			"Type": "TestAction"
+		}
+	],
+	"Monitors": [
+		{
+			"Type": "TestMonitor",
+			"Arguments": [
+				{
+					"Name": "anotherParameter",
+					"Value": "anotherValue"
+				}
+			]
+		}
+	]
+}
+	
+	

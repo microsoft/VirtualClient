@@ -1,0 +1,211 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient</AssemblyName>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
+        <RunAnalyzers>false</RunAnalyzers>
+        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118,NU5110,NU5111</NoWarn>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
+        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
+        <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
+        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
+        <ProjectReference Include="..\VirtualClient.Api\VirtualClient.Api.csproj" />
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Dependencies\VirtualClient.Dependencies.csproj" />
+        <ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Scripts\Kusto\EventHub\TableMappings.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Scripts\Kusto\EventHub\Tables.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\system_list.py" Link="scripts\mlperf\GPUConfigFiles\system_list.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Offline\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Server\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\SingleStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Offline\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Server\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\SingleStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Server\__init__.py">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+        <None Include="..\VirtualClient.Actions\SuperBenchmark\default.yaml" Link="scripts\superbenchmark\default.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\SuperBenchmark\1xM60.yaml" Link="scripts\superbenchmark\1xM60.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\SuperBenchmark\8xA100.yaml" Link="scripts\superbenchmark\8xA100.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\SuperBenchmark\local.ini" Link="scripts\superbenchmark\local.ini">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\SuperBenchmark\initialize.sh" Link="scripts\superbenchmark\initialize.sh">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.sh" Link="scripts\dotnet\dotnet-install.sh">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.ps1" Link="scripts\dotnet\dotnet-install.ps1">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\Lzbench\lzbenchexecutor.sh" Link="scripts\lzbench\lzbenchexecutor.sh">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Core\Scripts\RefreshEnv.cmd" Link="scripts\RefreshEnv.cmd">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\FIO\oltp-c.fio.jobfile" Link="scripts\fio\oltp-c.fio.jobfile">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--
+        This prevents having ALL profiles published to the win-x64, win-arm64, linux-x64 and linux-arm64 directories
+        during the publish phase. We DO NOT want all profiles in each of those directories because certain profiles and
+        corresponding workloads cannot support both operating systems.
+
+        Below we have targets that copy the relevant profiles to the target platform/arch folders based upon the
+        supported operating system.
+        -->
+      <Content Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--
+        Windows-specific Profiles
+        The following profiles run on Windows and will be published to the VirtualClient
+        NuGet package in the /content/win-x64|win-arm64/profiles folder
+        -->
+        <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
+        <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
+        <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
+        <WindowsProfiles Include="profiles\PERF-NETWORK-PING.json" />
+        <WindowsProfiles Include="profiles\PERF-NETWORK.json" />
+	    <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
+        <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--
+        Linux-specific Profiles
+        The following profiles run on Windows and will be published to the VirtualClient
+        NuGet package in the /content/linux-x64|linux-arm64/profiles folder.
+        -->
+		<LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
+        <LinuxProfiles Include="profiles\PERF-ASPNETBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-HPCG.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
+        <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
+		<LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
+        <LinuxProfiles Include="profiles\PERF-GRAPH500.json" />
+        <LinuxProfiles Include="profiles\PERF-HPC-NASPARALLELBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-IO-FIO.json" />
+        <LinuxProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
+        <LinuxProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-LAPACK.json" />
+        <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
+        <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-REDIS.json" />
+        <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
+        <LinuxProfiles Include="profiles\PERF-NETWORK-PING.json" />
+        <LinuxProfiles Include="profiles\PERF-NETWORK.json" />
+        <LinuxProfiles Include="profiles\PERF-NETWORK-DEATHSTARBENCH.json" />
+		<LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECJVM.json" />
+        <LinuxProfiles Include="profiles\PERF-OPENFOAM.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <MonitorProfiles Include="profiles\MONITORS-DEFAULT.json" />
+        <MonitorProfiles Include="profiles\MONITORS-NONE.json" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <Target Name="PublishProfiles" AfterTargets="Publish">
+        <Message Importance="high" Text="RuntimeIdentifier = $(RuntimeIdentifier)" />
+
+        <!-- Windows-supported workload profiles -->
+        <Copy Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-arm64'" SourceFiles="@(WindowsProfiles)" DestinationFiles="@(WindowsProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
+
+        <!-- Linux-supported workload profiles -->
+        <Copy Condition="'$(RuntimeIdentifier)' == 'linux-x64' or '$(RuntimeIdentifier)' == 'linux-arm64'" SourceFiles="@(LinuxProfiles)" DestinationFiles="@(LinuxProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
+
+        <!-- Monitoring profiles -->
+        <Copy SourceFiles="@(MonitorProfiles)" DestinationFiles="@(MonitorProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
+    </Target>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
+   
+</Project>

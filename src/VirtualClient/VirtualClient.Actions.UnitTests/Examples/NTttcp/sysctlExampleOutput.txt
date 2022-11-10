@@ -1,0 +1,2 @@
+net.ipv4.tcp_rmem = 4096	131072	6291456
+net.ipv4.tcp_wmem = 4096	16384	4194304

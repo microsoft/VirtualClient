@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.TestExtensions</AssemblyName>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <NoWarn>CA2214,CS1591,SA1508</NoWarn>
+        <ImportTestExtensions>true</ImportTestExtensions>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
+        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
+        <PackageReference Include="System.IO.FileSystem.AccessControl" Version="$(System_IO_FileSystem_AccessControl_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestFramework\VirtualClient.TestFramework.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Resources\testcertificate.private">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

@@ -1,0 +1,10 @@
+   Static hostname: RH8.3-vcuser1
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 3dc07e54291e4330a1cdfb805be6f4e1
+           Boot ID: 5a6e8c7b9b87422da81bbe28e7f20d4c
+    Virtualization: microsoft
+  Operating System: Red Hat Enterprise Linux 8.3 (Ootpa)
+       CPE OS Name: cpe:/o:redhat:enterprise_linux:8.3:GA
+            Kernel: Linux 4.18.0-240.el8.x86_64
+      Architecture: x86-64

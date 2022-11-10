@@ -1,0 +1,35 @@
+---
+system-info:
+      stress-ng-version: 0.09.25
+      run-by: anyuser
+      date-yyyy-mm-dd: 2022:04:29
+      time-hh-mm-ss: 20:13:56
+      epoch-secs: 1651263236
+      hostname: X64-U18-D16
+      sysname: Linux
+      nodename: X64-U18-D16
+      release: 5.4.0-1077-azure
+      version: #80~18.04.1-Ubuntu SMP Wed Apr 13 02:07:09 UTC 2022
+      machine: x86_64
+      uptime: 332014
+      totalram: 67442651136
+      freeram: 63099256832
+      sharedram: 2957312
+      bufferram: 223805440
+      totalswap: 0
+      freeswap: 0
+      pagesize: 4096
+      cpus: 16
+      cpus-online: 16
+      ticks-per-second: 100
+
+metrics:
+    - stressor: cpu
+      bogo-ops: 31532
+      bogo-ops-per-second-usr-sys-time: 196.448819
+      bogo-ops-per-second-real-time: 3239.115687
+      wall-clock-time: 10.045186
+      user-time: 160.510000
+      system-time: 0.000000
+
+...

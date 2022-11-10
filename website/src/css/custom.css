@@ -1,0 +1,241 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+
+:root {
+  --ifm-color-primary: #2e3385;
+  --ifm-color-primary-dark: #292e78;
+  --ifm-color-primary-darker: #272b71;
+  --ifm-color-primary-darkest: #20245d;
+  --ifm-color-primary-light: #333892;
+  --ifm-color-primary-lighter: #353b99;
+  --ifm-color-primary-lightest: #3c42ad;
+  --ifm-code-font-size: 85%;
+  --ifm-menu-color: #000;
+  --ifm-menu-color-background-active: #efefef;
+  --docusaurus-highlighted-code-line-bg: rgb(74, 75, 70);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #3b41f7;
+  --ifm-color-primary-dark: #1e25f6;
+  --ifm-color-primary-darker: #0f16f5;
+  --ifm-color-primary-darkest: #080fce;
+  --ifm-color-primary-light: #585ef8;
+  --ifm-color-primary-lighter: #676cf9;
+  --ifm-color-primary-lightest: #9397fb;
+  --ifm-code-font-size: 85%;
+  --ifm-menu-color: rgb(211, 238, 250);
+  --ifm-menu-color-background-active: #2b2246;
+  --docusaurus-highlighted-code-line-bg: rgb(74, 75, 70);
+}
+
+
+
+.menu__link {
+  font-weight: bold;
+}
+
+.menu__link {
+  font-size: 1.1em;
+}
+
+.menu__list .menu__list {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.menu__list .menu__list .menu__list-item {
+  margin: 0;
+}
+
+.menu__list .menu__list .menu__list-item .menu__link {
+  border-left: 1px solid transparent;
+}
+
+.menu__list .menu__list .menu__list-item .menu__link:hover,
+.menu__list .menu__list .menu__list-item .menu__link--active {
+  border-left: 1px solid var(--ifm-color-primary);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.menu__list .menu__list .menu__list-item .menu__link {
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.menu__list .menu__list .menu__list-item .menu__link--active {
+  font-weight: bold;
+  color: var(--ifm-color-primary);
+}
+
+
+.footer__logo {
+  max-width: 125px;
+}
+
+/* Section */
+
+.Section {
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 50px;
+  overflow-x: hidden;
+}
+
+.Section + .Section {
+  border-top: 1px solid var(--ifm-table-border-color);
+}
+
+.Section.tint {
+  background-color: var(--ifm-menu-color-background-active);
+}
+
+.Section.dark {
+  background-color: var(--dark);
+}
+
+.Section p a {
+  display: initial;
+    color: var(--ifm-font-color-base);
+    background-color: rgba(187, 239, 253, 0.3);
+    line-height: calc(var(--ifm-font-size-base) + 4px);
+    border-bottom: 1px solid var(--ifm-hr-border-color);
+}
+
+html[data-theme="dark"] .Section p a {
+  background-color: rgba(97, 218, 251, 0.12);
+  border-bottom-color: rgba(97, 218, 251, 0.3);
+}
+
+/* Two columns */
+
+.TwoColumns {
+  display: grid;
+}
+
+.TwoColumns .column {
+  width: 100%;
+}
+
+.TwoColumns .column.first {
+  grid-area: first;
+}
+
+.TwoColumns .column.last {
+  grid-area: last;
+}
+
+@media only screen and (min-width: 961px) {
+  .TwoColumns {
+    max-width: 900px;
+    margin: 0 auto;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas: "first last";
+  }
+
+  .TwoColumns.reverse {
+    grid-template-areas: "last first";
+  }
+
+  .TwoColumns .column {
+    max-width: 450px;
+  }
+
+  .TwoColumns .column.left {
+    padding-right: 50px;
+  }
+
+  .TwoColumns .column.right {
+    padding-left: 50px;
+  }
+}
+
+@media only screen and (max-width: 960px) {
+  .TwoColumns,
+  .TwoColumns.reverse {
+    grid-template-columns: 1fr;
+    grid-template-areas: "first" "last";
+  }
+
+  .TwoColumns .column {
+    padding: 0 4rem;
+  }
+}
+
+@media only screen and (max-width: 480px) {
+  .TwoColumns .column {
+    padding: 0 1.25rem;
+  }
+}
+
+/* Native Code */
+
+.NativeCode .column.last {
+  margin-bottom: -50px;
+}
+
+.NativeCode pre {
+  margin: 0;
+}
+
+.NativeCode .prism-code {
+  border-radius: 0;
+  font-size: 80%;
+  background-color: #282c34;
+}
+
+@media only screen and (max-width: 480px) {
+  .NativeCode .column.last {
+    width: 100%;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  .NativeCode .prism-code {
+    font-size: 10px;
+    padding: 1.25rem 1.25rem;
+  }
+}
+
+@media screen and (min-width: 481px) and (max-width: 960px) {
+  .NativeCode .TwoColumns {
+    grid-gap: 2rem;
+  }
+
+  .NativeCode .column.last {
+    width: 100%;
+    padding: 0;
+    background-color: var(--dark);
+    height: 28rem;
+    overflow-y: scroll;
+  }
+
+  .NativeCode .prism-code {
+    width: 30rem;
+    margin: 0 auto;
+    padding: 1.25rem 0rem;
+  }
+}
+
+@media only screen and (min-width: 961px) {
+  .NativeCode .TwoColumns .column.right {
+    /* Make flush with top and bottom */
+    margin-top: -50px;
+    /* Get rid of default left padding */
+    padding-left: 0;
+  }
+
+  .NativeCode .column.right .prism-code {
+    /* Bleed background into the right */
+    margin-right: -9999px;
+    padding: 16px 1.5rem;
+    height: 460px;
+  }
+}

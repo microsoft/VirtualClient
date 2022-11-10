@@ -1,0 +1,38 @@
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>exampleworkload</id>
+        <version>1.1.0</version>
+        <title>exampleworkload</title>
+        <description>Example application that runs a fake workload or monitor.</description>
+        <authors>Microsoft</authors>
+        <license type="expression">MIT</license>
+        <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+        <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
+    </metadata>
+
+    <files>
+        <!-- 
+        MSBuild Properties
+        The following properties are defined in the packaging project <NuSpecProperties> element
+        for reference in the various .nuspec files:
+
+        - BinDir
+          The path to the 'bin' directory in the repo 'out' folder (e.g. /repo/out/bin).
+         
+        - BinConfigDir
+          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Debug).
+          
+        - PackagingSourceDir
+          The directory to the/this project where the .nuspec files are contained.
+         
+        - ToolsOutDir
+          The directory in the build 'out' directory where the external/3rd party tools exist and from
+          which NuGet packages are created (e.g. /repo/out/tools).
+        -->
+        <file src="$PackagingSourceDir$\exampleworkload.vcpkg" target="." />
+        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net6.0\win-x64\publish\**\*.*" target="win-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net6.0\linux-x64\publish\**\*.*" target="linux-x64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net6.0\win-arm64\publish\**\*.*" target="win-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net6.0\linux-arm64\publish\**\*.*" target="linux-arm64" />
+    </files>
+</package>

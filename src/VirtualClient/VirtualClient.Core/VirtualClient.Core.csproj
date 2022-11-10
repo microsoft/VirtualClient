@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Core</AssemblyName>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <NoWarn>CA1060,CA1416;CA2200,SA1116,SA1508</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(Microsoft_AspNetCore_Hosting_PackageVersion)" />
+        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

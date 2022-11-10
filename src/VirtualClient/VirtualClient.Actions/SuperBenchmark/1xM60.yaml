@@ -1,0 +1,78 @@
+# SuperBench Config
+version: v0.5
+superbench:
+  enable: null
+  var:
+    default_local_mode: &default_local_mode
+      enable: true
+      modes:
+        - name: local
+          proc_num: 1
+          prefix: CUDA_VISIBLE_DEVICES={proc_rank}
+          parallel: yes
+    default_pytorch_mode: &default_pytorch_mode
+      enable: true
+      modes:
+        - name: torch.distributed
+          proc_num: 1
+          node_num: 1
+      frameworks:
+        - pytorch
+    common_model_config: &common_model_config
+      duration: 0
+      num_warmup: 16
+      num_steps: 128
+      precision:
+        - float32
+        - float16
+      model_action:
+        - train
+  benchmarks:
+    gpt_models:
+      <<: *default_pytorch_mode
+      models:
+        - gpt2-small
+      parameters:
+        <<: *common_model_config
+        batch_size: 1
+    bert_models:
+      <<: *default_pytorch_mode
+      models:
+        - bert-base
+      parameters:
+        <<: *common_model_config
+        batch_size: 2
+    lstm_models:
+      <<: *default_pytorch_mode
+      models:
+        - lstm
+      parameters:
+        <<: *common_model_config
+        batch_size: 32
+    resnet_models:
+      <<: *default_pytorch_mode
+      models:
+        - resnet50
+        - resnet101
+        - resnet152
+      parameters:
+        <<: *common_model_config
+        batch_size: 32
+    densenet_models:
+      <<: *default_pytorch_mode
+      models:
+        - densenet169
+        - densenet201
+      parameters:
+        <<: *common_model_config
+        batch_size: 32
+    vgg_models:
+      <<: *default_pytorch_mode
+      models:
+        - vgg11
+        - vgg13
+        - vgg16
+        - vgg19
+      parameters:
+        <<: *common_model_config
+        batch_size: 32

@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+        <NoWarn>NU5100,NU5110,NU5111,NU5118,NU5128,NU5131</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
+        
+    </PropertyGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
+
+    <!--
+    NuGet Integration: Properties that are passed into the .nuspec files in order to create NuGet packages.
+    
+    The packages that are labelled as 'Framework Package' are those that are required to build the 'VirtualClient.Framework' 
+    NuGet package.
+    
+    The packages that are labelled as 'Test Framework Package' are those that are required to build the 'VirtualClient.TestFramework' 
+    NuGet package.
+    -->
+    <PropertyGroup>
+        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
+        <NuspecBasePath>$(OutputPath)$(TargetFramework)</NuspecBasePath>
+        <NuspecProperties>BinDir=$(OutDir)\bin;BinConfigDir=$(OutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(OutDir)\tools;Version=$(Version)</NuspecProperties>
+
+        <!-- Framework Package = AutoFixture -->
+        <NuspecProperties>$(NuspecProperties);AutoFixture_Version=$(AutoFixture_PackageVersion)</NuspecProperties>
+        
+        <!-- Framework Package = Azure.Identity -->
+        <NuspecProperties>$(NuspecProperties);Azure_Identity_Version=$(Azure_Identity_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Azure.Messaging.EventHubs -->
+        <NuspecProperties>$(NuspecProperties);Azure_Messaging_EventHubs_Version=$(Azure_Messaging_EventHubs_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Azure.Storage.Blobs -->
+        <NuspecProperties>$(NuspecProperties);Azure_Storage_Blobs_Version=$(Azure_Storage_Blobs_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = MathNet.Numerics.Signed -->
+        <NuspecProperties>$(NuspecProperties);MathNet_Numerics_Signed_Version=$(MathNet_Numerics_Signed_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Microsoft.AspNetCore.Hosting -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_AspNetCore_Hosting_Version=$(Microsoft_AspNetCore_Hosting_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Microsoft.Extensions.Configuration -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Configuration_Version=$(Microsoft_Extensions_Configuration_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Microsoft.Extensions.DependencyInjection -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_DependencyInjection_Version=$(Microsoft_Extensions_DependencyInjection_PackageVersion)</NuspecProperties>
+        
+        <!-- Framework Package = Microsoft.Extensions.Logging -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Logging_Version=$(Microsoft_Extensions_Logging_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Microsoft.Extensions.Http.Polly -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Http_Polly_Version=$(Microsoft_Extensions_Http_Polly_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Microsoft.Win32.Registry -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_Win32_Registry_Version=$(Microsoft_Win32_Registry_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Newtonsoft.Json -->
+        <NuspecProperties>$(NuspecProperties);Newtonsoft_Json_Version=$(Newtonsoft_Json_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Polly -->
+        <NuspecProperties>$(NuspecProperties);Polly_Version=$(Polly_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = Polly.Extensions.Http -->
+        <NuspecProperties>$(NuspecProperties);Polly_Extensions_Http_Version=$(Polly_Extensions_Http_PackageVersion)</NuspecProperties>
+
+        <!-- Test Framework Package = Moq -->
+        <NuspecProperties>$(NuspecProperties);Moq_Version=$(Moq_PackageVersion)</NuspecProperties>
+        
+        <!-- Framework Package = System.Diagnostics.PerformanceCounter -->
+        <NuspecProperties>$(NuspecProperties);System_Diagnostics_PerformanceCounter_Version=$(System_Diagnostics_PerformanceCounter_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = System.IO.Abstractions -->
+        <NuspecProperties>$(NuspecProperties);System_IO_Abstractions_Version=$(System_IO_Abstractions_PackageVersion)</NuspecProperties>
+
+        <!-- Framework Package = System.IO.FileSystem.Primitives -->
+        <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
+    </PropertyGroup>
+</Project>

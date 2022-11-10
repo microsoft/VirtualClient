@@ -1,0 +1,11 @@
+ Static hostname: Flatcar-01
+       Icon name: computer-vm
+         Chassis: vm
+      Machine ID: 4defaa6bb61442a59d6d94fdf2d0ff52
+         Boot ID: 7aa60ef7c8a1468e8b44353fb35e7ffe
+  Virtualization: microsoft
+Operating System: Flatcar Container Linux by Kinvolk 3033.2.4 (Oklo)
+          Kernel: Linux 5.10.107-flatcar
+    Architecture: x86-64
+ Hardware Vendor: Microsoft Corporation
+  Hardware Model: Virtual Machine
