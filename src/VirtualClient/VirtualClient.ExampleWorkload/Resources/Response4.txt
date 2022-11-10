@@ -1,0 +1,4 @@
+﻿{
+    "example": "virtual client",
+    "workload": 1
+}

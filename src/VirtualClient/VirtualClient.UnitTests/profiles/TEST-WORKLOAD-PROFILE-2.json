@@ -1,0 +1,48 @@
+{
+    "Description": "Default profile scenario containing actions, dependencies and monitors.",
+    "Metadata": {
+    },
+    "Actions": [
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload1"
+            }
+        },
+        {
+            "Type": "TestExecutor",
+            "Parameters": {
+                "Scenario": "Workload2"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "TestDependency",
+            "Parameters": {
+                "Scenario": "Dependency1"
+            }
+        },
+        {
+            "Type": "TestDependency",
+            "Parameters": {
+                "Scenario": "Dependency2",
+                "Tags": "Test,VC"
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "TestMonitor",
+            "Parameters": {
+                "Scenario": "Monitor1"
+            }
+        },
+        {
+            "Type": "TestMonitor",
+            "Parameters": {
+                "Scenario": "Monitor2"
+            }
+        }
+    ]
+}

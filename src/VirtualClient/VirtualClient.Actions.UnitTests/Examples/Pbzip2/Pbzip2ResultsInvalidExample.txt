@@ -1,0 +1,14 @@
+﻿Parallel BZIP2 v1.1.13 [Dec 18, 2015]
+By: Jeff Gilchrist [http://compression.ca]
+Major contributions: Yavor Nikolov [http://javornikolov.wordpress.com]
+Uses libbzip2 by Julian Seward
+
+         # CPUs: 16
+ BWT Block Size: 900 KB
+File Block Size: 900 KB
+ Maximum Memory: 100 MB
+-------------------------------------------
+         File #: 1 of 12
+     Input Name: pbzip2/dickens
+    Output Name: pbzip2/dickens.bz2
+

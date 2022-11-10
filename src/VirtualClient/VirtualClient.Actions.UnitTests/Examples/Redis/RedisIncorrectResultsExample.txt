@@ -1,0 +1,4 @@
+﻿6379
+4         Threads
+1         Connections per thread
+30        Seconds

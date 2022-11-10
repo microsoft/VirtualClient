@@ -1,0 +1,17 @@
+{
+    "Description": "Network I/O Ping Performance Workload",
+    "Parameters": {
+        "IPAddress": "NotDefined"
+    },
+    "Actions": [
+        {
+            "Type": "NetworkPingExecutor",
+            "Parameters": {
+                "Scenario": "ICMPCommunications",
+                "IPAddress": "$.Parameters.IPAddress",
+                "PingIterations": 300,
+                "Tags": "Performance,Networking,Ping"
+            }
+        }
+    ]
+}

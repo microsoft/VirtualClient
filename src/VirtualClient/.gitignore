@@ -1,0 +1,4 @@
+# revert gitignore for superbench run log.
+!sb*.log
+# revert gitignore for specjbb run log.
+!spec*.log

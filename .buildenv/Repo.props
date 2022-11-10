@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- 
+    *****************************************************************************
+    Repo base paths from which the build environment will be built.
+    
+    *****************************************************************************
+    -->
+    <PropertyGroup>
+        <!--
+        The root path of the repo/enlistment (ex:  S:\Source\repo).
+        
+        ex: S:\buildRoot\repo
+        -->
+        <RepoPath>$([System.IO.Path]::GetDirectoryName($(MSBuildThisFileDirectory)).TrimEnd('\'))</RepoPath>
+
+        <!--
+        The path to scripts that are used by repo build, packaging etc. processes.
+        
+        ex: S:\buildRoot\repo\scripts
+        -->
+        <RepoScriptsPath>$(RepoPath)\scripts</RepoScriptsPath>
+
+        <!--
+        .targets and .props files used in projects to produce common behaviors during build that are specific
+        to the repo itself.
+        
+        ex: S:\buildRoot\repo\toolsets
+        -->
+        <RepoToolsetsPath>$(RepoPath)\toolsets</RepoToolsetsPath>
+    </PropertyGroup>
+    
+    
+    <!--
+    *****************************************************************************
+    Import the build environment settings.  These settings define the paths that 
+    will be used during build/compilation 
+    
+    (e.g. bin/output path, intermediates path, NuGet package cache path).
+    *****************************************************************************
+    -->
+
+    <!-- 
+    1) Load the build environment settings from the 'buildEnv' submodule if a Git submodule is being used.
+    -->
+    <Import Project="$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props" Condition="Exists('$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props')" />
+
+    <!--
+    OR
+    
+    2) Otherwise, load the build environment settings from the local repo root directory if a Git submodule IS NOT being used.
+    -->
+    <Import Project="$(MSBuildThisFileDirectory)BuildEnv.props" Condition="!Exists('$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props')" />
+
+</Project>

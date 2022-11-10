@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>ExampleWorkload</AssemblyName>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
+        <RunAnalyzers>false</RunAnalyzers>
+        <IsPackable>true</IsPackable>
+        <DelaySign>false</DelaySign>
+        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
+        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
+        <PackageReference Include="System.IO.Abstractions" Version="$(System_IO_Abstractions_PackageVersion)" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+      <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Properties\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Properties\Resources.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
+        <NuspecProperties>
+            BinDir=$(OutDir)\bin;BinConfigDir=$(OutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(OutDir)\tools;Version=$(Version)
+        </NuspecProperties>
+    </PropertyGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
+
+</Project>

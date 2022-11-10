@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RunCodeAnalysis>false</RunCodeAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <RootNamespace>VirtualClient</RootNamespace>
+        <NoWarn>SA1116,AsyncFixer02</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
+        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestFramework\VirtualClient.TestFramework.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Examples\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

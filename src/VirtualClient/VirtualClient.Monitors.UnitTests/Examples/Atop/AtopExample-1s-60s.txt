@@ -1,0 +1,1552 @@
+
+
+ATOP - Ubuntu20-16c-01   2022/07/17  16:48:10   --------------   2h3m33s elapsed
+PRC | sys    7m23s | user  15m11s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       7% | user    284% | irq       1% | idle   1305% | wait      3% |
+cpu | sys       1% | user     18% | irq       0% | idle     81% | cpu002 w  0% |
+cpu | sys       1% | user     19% | irq       0% | idle     80% | cpu010 w  0% |
+cpu | sys       1% | user     19% | irq       0% | idle     81% | cpu014 w  0% |
+cpu | sys       0% | user     19% | irq       0% | idle     80% | cpu001 w  1% |
+cpu | sys       1% | user     18% | irq       0% | idle     81% | cpu006 w  0% |
+cpu | sys       1% | user     18% | irq       0% | idle     81% | cpu012 w  0% |
+cpu | sys       1% | user     18% | irq       0% | idle     81% | cpu008 w  0% |
+cpu | sys       1% | user     18% | irq       0% | idle     81% | cpu004 w  0% |
+cpu | sys       0% | user     18% | irq       0% | idle     82% | cpu003 w  0% |
+cpu | sys       1% | user     17% | irq       1% | idle     82% | cpu000 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     82% | cpu007 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     82% | cpu005 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     82% | cpu011 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     83% | cpu009 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     83% | cpu013 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     83% | cpu015 w  0% |
+CPL | avg1    7.69 | avg5    7.41 | avg15   6.66 | csw 18828968 | intr 15034e3 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PAG | scan  195892 | steal 190904 | stall      0 | swin       0 | swout      0 |
+PSI | cs  25/19/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      4% | read   89374 | write 371174 | avio 0.61 ms |
+DSK |          sdb | busy      0% | read     315 | write      0 | avio 2.06 ms |
+DSK |          sdc | busy      0% | read     315 | write      0 | avio 2.04 ms |
+NET | transport    | tcpi  103789 | tcpo  166490 | udpi    5656 | udpo    5662 |
+NET | network      | ipi   109463 | ipo    92736 | ipfrw      0 | deliv 109455 |
+NET | enP4560   0% | pcki  427882 | pcko  156926 | si  588 Kbps | so  186 Kbps |
+NET | eth0      0% | pcki   94942 | pcko   77126 | si  569 Kbps | so  182 Kbps |
+NET | lo      ---- | pcki   15631 | pcko   15631 | si    1 Kbps | so    1 Kbps |
+                   *** system and process activity since boot ***
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+   369  7m23s 15m11s   5.1G     0K     0K     0K     0     0  18% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:11    --------------      1s elapsed
+PRC | sys    0.10s | user   1.29s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       3% | user    132% | irq       2% | idle   1471% | wait      3% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu002 w  0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu013 w  0% |
+cpu | sys       2% | user      5% | irq       0% | idle     93% | cpu004 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu010 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu006 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     96% | cpu012 w  3% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    7.69 | avg5    7.41 | avg15   6.66 | csw     2798 | intr    2034 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PSI | cs  27/20/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      6% | read       0 | write    380 | avio 0.17 ms |
+NET | transport    | tcpi      48 | tcpo      75 | udpi       0 | udpo       0 |
+NET | network      | ipi       48 | ipo       42 | ipfrw      0 | deliv     48 |
+NET | eth0      0% | pcki      48 | pcko      42 | si   18 Kbps | so  712 Kbps |
+NET | enP4560   0% | pcki      48 | pcko      75 | si   23 Kbps | so  726 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    26  0.10s  1.29s   2.8G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:12    --------------      1s elapsed
+PRC | sys    0.15s | user   1.24s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys      11% | user    125% | irq       2% | idle   1474% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu002 w  0% |
+cpu | sys       3% | user     19% | irq       0% | idle     78% | cpu013 w  0% |
+cpu | sys       3% | user      3% | irq       0% | idle     94% | cpu004 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu008 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu007 w  0% |
+CPL | avg1    7.69 | avg5    7.41 | avg15   6.66 | csw     2698 | intr    2029 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PSI | cs  27/20/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      0% | read       2 | write      0 | avio 2.00 ms |
+NET | transport    | tcpi      13 | tcpo      21 | udpi      14 | udpo      14 |
+NET | network      | ipi       27 | ipo       35 | ipfrw      0 | deliv     27 |
+NET | eth0      0% | pcki      21 | pcko      27 | si  100 Kbps | so   52 Kbps |
+NET | enP4560   0% | pcki       8 | pcko      27 | si   47 Kbps | so   52 Kbps |
+NET | lo      ---- | pcki       8 | pcko       8 | si    8 Kbps | so    8 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    25  0.15s  1.24s   2.8G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:13    --------------      1s elapsed
+PRC | sys    0.09s | user   1.27s | #proc    368 | #zombie    1 | #exit     11 |
+CPU | sys      12% | user    130% | irq       2% | idle   1469% | wait      1% |
+cpu | sys       0% | user     71% | irq       0% | idle     29% | cpu003 w  0% |
+cpu | sys       0% | user     30% | irq       0% | idle     70% | cpu002 w  0% |
+cpu | sys       0% | user     18% | irq       0% | idle     82% | cpu012 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu006 w  0% |
+cpu | sys       1% | user      2% | irq       1% | idle     96% | cpu000 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu013 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu001 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu005 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+CPL | avg1    7.69 | avg5    7.41 | avg15   6.66 | csw     4149 | intr    2582 |
+MEM | tot    62.8G | free   54.1G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PSI | cs  28/20/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      2% | read       6 | write      0 | avio 2.67 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    42  0.09s  1.27s   2.7G     0K     0K     0K     0     0 137% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:14    --------------      1s elapsed
+PRC | sys    0.17s | user   0.87s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       7% | user     96% | irq       0% | idle   1507% | wait      0% |
+cpu | sys       0% | user     69% | irq       0% | idle     31% | cpu002 w  0% |
+cpu | sys       3% | user     20% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+CPL | avg1    7.15 | avg5    7.30 | avg15   6.63 | csw     2608 | intr    1891 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PSI | cs  28/20/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       4 | tcpo       4 | udpi       0 | udpo       0 |
+NET | network      | ipi        4 | ipo        4 | ipfrw      0 | deliv      4 |
+NET | eth0      0% | pcki       4 | pcko       4 | si    1 Kbps | so    2 Kbps |
+NET | enP4560   0% | pcki       4 | pcko       4 | si    2 Kbps | so    2 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    35  0.17s  0.87s   2.9G     0K     0K     0K     0     0 105% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:15    --------------      1s elapsed
+PRC | sys    0.16s | user   0.68s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       7% | user     63% | irq       0% | idle   1542% | wait      0% |
+cpu | sys       1% | user     32% | irq       0% | idle     67% | cpu006 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       4% | user      1% | irq       0% | idle     95% | cpu004 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu014 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu002 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu010 w  0% |
+CPL | avg1    7.15 | avg5    7.30 | avg15   6.63 | csw     2476 | intr    1913 |
+MEM | tot    62.8G | free   53.9G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.0G | vmlim  31.4G |
+PSI | cs  30/21/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi      15 | tcpo      24 | udpi       0 | udpo       0 |
+NET | network      | ipi       15 | ipo       16 | ipfrw      0 | deliv     15 |
+NET | eth0      0% | pcki      15 | pcko      16 | si    7 Kbps | so  178 Kbps |
+NET | enP4560   0% | pcki      15 | pcko      24 | si    8 Kbps | so  181 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    30  0.16s  0.68s   3.0G     0K     0K     0K     0     0  85% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:16    --------------      1s elapsed
+PRC | sys    0.14s | user   1.25s | #proc    368 | #zombie    1 | #exit      9 |
+CPU | sys      15% | user    128% | irq       4% | idle   1468% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu006 w  0% |
+cpu | sys       5% | user     17% | irq       0% | idle     77% | cpu012 w  1% |
+cpu | sys       3% | user      3% | irq       0% | idle     94% | cpu004 w  0% |
+cpu | sys       2% | user      4% | irq       0% | idle     94% | cpu010 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       3% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+CPL | avg1    7.15 | avg5    7.30 | avg15   6.63 | csw     3969 | intr    2569 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.0G | vmlim  31.4G |
+PSI | cs  30/21/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      2% | read       3 | write      0 | avio 5.33 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    3 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    3 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    39  0.14s  1.25s   2.9G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:17    --------------      1s elapsed
+PRC | sys    0.13s | user   0.40s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       4% | user     45% | irq       0% | idle   1561% | wait      1% |
+cpu | sys       0% | user     23% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       0% | user     14% | irq       0% | idle     86% | cpu006 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu007 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu005 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu008 w  0% |
+CPL | avg1    7.15 | avg5    7.30 | avg15   6.63 | csw     2417 | intr    1850 |
+MEM | tot    62.8G | free   54.1G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   8.9G | vmlim  31.4G |
+PSI | cs  32/22/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      1% | read       2 | write      0 | avio 6.00 ms |
+NET | transport    | tcpi       3 | tcpo       3 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    33  0.13s  0.40s   2.7G     0K     0K     0K     0     0  54% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:18    --------------      1s elapsed
+PRC | sys    0.13s | user   1.13s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user    113% | irq       0% | idle   1491% | wait      0% |
+cpu | sys       3% | user     87% | irq       0% | idle     10% | cpu005 w  0% |
+cpu | sys       4% | user     18% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu007 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu013 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu015 w  0% |
+CPL | avg1    7.15 | avg5    7.30 | avg15   6.63 | csw     2512 | intr    1851 |
+MEM | tot    62.8G | free   54.0G | cache   4.4G | buff  243.1M | slab  722.1M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.0G | vmlim  31.4G |
+PSI | cs  32/22/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.13s  1.13s   2.9G     0K     0K     0K     0     0 127% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:19    --------------      1s elapsed
+PRC | sys    0.11s | user   1.28s | #proc    368 | #zombie    1 | #exit      9 |
+CPU | sys      11% | user    129% | irq       4% | idle   1467% | wait      0% |
+cpu | sys       3% | user     97% | irq       0% | idle      0% | cpu005 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu006 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu014 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       0% | user      1% | irq       1% | idle     98% | cpu001 w  0% |
+cpu | sys       0% | user      0% | irq       3% | idle     97% | cpu003 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu008 w  0% |
+CPL | avg1    6.66 | avg5    7.20 | avg15   6.60 | csw     4045 | intr    2545 |
+MEM | tot    62.8G | free   53.8G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.0G | vmlim  31.4G |
+PSI | cs  35/22/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       3 | tcpo       3 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    39  0.11s  1.28s   3.1G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:20    --------------      1s elapsed
+PRC | sys    0.14s | user   1.26s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys      13% | user    122% | irq       3% | idle   1475% | wait      0% |
+cpu | sys       0% | user     50% | irq       0% | idle     50% | cpu010 w  0% |
+cpu | sys       4% | user     45% | irq       0% | idle     51% | cpu005 w  0% |
+cpu | sys       2% | user     20% | irq       0% | idle     77% | cpu012 w  1% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       4% | user      1% | irq       0% | idle     95% | cpu007 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       0% | user      0% | irq       3% | idle     97% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu006 w  0% |
+CPL | avg1    6.66 | avg5    7.20 | avg15   6.60 | csw     2554 | intr    1928 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.3M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  35/22/23 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      2% | read       2 | write      0 | avio 8.00 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    32  0.14s  1.26s   3.0G     0K     0K     0K     0     0 141% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:21    --------------      1s elapsed
+PRC | sys    0.09s | user   1.35s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       4% | user    134% | irq       3% | idle   1459% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu010 w  0% |
+cpu | sys       0% | user     23% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu007 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       1% | user      1% | irq       3% | idle     95% | cpu001 w  0% |
+CPL | avg1    6.66 | avg5    7.20 | avg15   6.60 | csw     2423 | intr    1943 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.1M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  35/23/23 | ms     0/0/0 | mf     0/0/0 | is     0/1/0 | if     0/1/0 |
+NET | transport    | tcpi      12 | tcpo      21 | udpi       0 | udpo       0 |
+NET | network      | ipi       12 | ipo       11 | ipfrw      0 | deliv     12 |
+NET | eth0      0% | pcki      12 | pcko      11 | si    5 Kbps | so  155 Kbps |
+NET | enP4560   0% | pcki      12 | pcko      21 | si    7 Kbps | so  160 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    33  0.09s  1.35s   3.2G     0K     0K     0K     0     0 144% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:22    --------------      1s elapsed
+PRC | sys    0.15s | user   0.75s | #proc    368 | #zombie    1 | #exit     10 |
+CPU | sys      14% | user     81% | irq       0% | idle   1517% | wait      0% |
+cpu | sys       1% | user     46% | irq       0% | idle     53% | cpu010 w  0% |
+cpu | sys       3% | user     20% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       6% | user      4% | irq       0% | idle     90% | cpu006 w  0% |
+cpu | sys       0% | user      5% | irq       0% | idle     95% | cpu005 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu000 w  0% |
+cpu | sys       0% | user      2% | irq       1% | idle     97% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu008 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu003 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu009 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu014 w  0% |
+CPL | avg1    6.66 | avg5    7.20 | avg15   6.60 | csw     4125 | intr    2502 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.1M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  35/23/23 | ms     0/0/0 | mf     0/0/0 | is     0/1/0 | if     0/1/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    1 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    46  0.15s  0.75s   3.1G     0K     0K     0K     0     0  91% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:23    --------------      1s elapsed
+PRC | sys    0.09s | user   0.79s | #proc    368 | #zombie    1 | #exit      3 |
+CPU | sys       6% | user     77% | irq       2% | idle   1527% | wait      0% |
+cpu | sys       2% | user     42% | irq       0% | idle     56% | cpu006 w  0% |
+cpu | sys       2% | user     21% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       0% | user      8% | irq       0% | idle     92% | cpu005 w  0% |
+cpu | sys       1% | user      4% | irq       0% | idle     95% | cpu014 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+CPL | avg1    6.66 | avg5    7.20 | avg15   6.60 | csw     2445 | intr    1893 |
+MEM | tot    62.8G | free   53.8G | cache   4.4G | buff  243.1M | slab  722.3M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  37/23/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       3 | tcpo       3 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so    2 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       3 | si    0 Kbps | so    2 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    32  0.09s  0.79s   3.0G     0K     0K     0K     0     0  89% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:24    --------------      1s elapsed
+PRC | sys    0.10s | user   0.30s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       6% | user     29% | irq       0% | idle   1577% | wait      0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu008 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    6.12 | avg5    7.08 | avg15   6.56 | csw     2426 | intr    1800 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.2M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  37/23/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    26  0.10s  0.30s   3.1G     0K     0K     0K     0     0  40% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:25    --------------      1s elapsed
+PRC | sys    0.15s | user   0.76s | #proc    366 | #zombie    1 | #exit      3 |
+CPU | sys       8% | user     78% | irq       0% | idle   1524% | wait      0% |
+cpu | sys       0% | user     52% | irq       0% | idle     48% | cpu014 w  0% |
+cpu | sys       3% | user     20% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu008 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+CPL | avg1    6.12 | avg5    7.08 | avg15   6.56 | csw     2353 | intr    1951 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.3M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  40/25/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       1 | write      0 | avio 8.00 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    31  0.15s  0.76s   2.9G     0K     0K     0K     0     0  92% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:26    --------------      1s elapsed
+PRC | sys    0.12s | user   0.77s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      15% | user     70% | irq       6% | idle   1523% | wait      0% |
+cpu | sys       3% | user     45% | irq       0% | idle     52% | cpu014 w  0% |
+cpu | sys       4% | user     19% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       3% | user      0% | irq       0% | idle     97% | cpu008 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu010 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       5% | idle     93% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu006 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu015 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu001 w  0% |
+CPL | avg1    6.12 | avg5    7.08 | avg15   6.56 | csw     3917 | intr    2573 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.4M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  40/25/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      5% | read       0 | write    405 | avio 0.13 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    39  0.12s  0.77s   3.1G     0K     0K     0K     0     0  90% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:27    --------------      1s elapsed
+PRC | sys    0.11s | user   1.12s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       7% | user    117% | irq       4% | idle   1472% | wait      0% |
+cpu | sys       0% | user     89% | irq       0% | idle     11% | cpu014 w  0% |
+cpu | sys       2% | user     21% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu008 w  0% |
+cpu | sys       0% | user      0% | irq       4% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+CPL | avg1    6.12 | avg5    7.08 | avg15   6.56 | csw     2305 | intr    1923 |
+MEM | tot    62.8G | free   53.8G | cache   4.4G | buff  243.1M | slab  722.4M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  41/25/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    32  0.11s  1.12s   3.1G     0K     0K     0K     0     0 123% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:28    --------------      1s elapsed
+PRC | sys    0.09s | user   0.41s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       8% | user     38% | irq       0% | idle   1568% | wait      0% |
+cpu | sys       2% | user     20% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       0% | user     11% | irq       0% | idle     89% | cpu005 w  0% |
+cpu | sys       3% | user      0% | irq       0% | idle     97% | cpu009 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       1% | user      4% | irq       0% | idle     95% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+CPL | avg1    6.12 | avg5    7.08 | avg15   6.56 | csw     2043 | intr    1798 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.5M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  41/25/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    26  0.09s  0.41s   3.0G     0K     0K     0K     0     0  51% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:29    --------------      1s elapsed
+PRC | sys    0.17s | user   0.70s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      15% | user     70% | irq       2% | idle   1524% | wait      1% |
+cpu | sys       2% | user     28% | irq       0% | idle     70% | cpu014 w  0% |
+cpu | sys       4% | user     19% | irq       0% | idle     77% | cpu012 w  0% |
+cpu | sys       0% | user     17% | irq       0% | idle     83% | cpu005 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu009 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       1% | idle     97% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu008 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu007 w  0% |
+CPL | avg1    5.79 | avg5    6.99 | avg15   6.54 | csw     3833 | intr    2538 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.4M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/26/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       1 | write      0 | avio 8.00 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    40  0.17s  0.70s   3.1G     0K     0K     0K     0     0  88% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:30    --------------      1s elapsed
+PRC | sys    0.09s | user   0.89s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       5% | user     84% | irq       3% | idle   1522% | wait      0% |
+cpu | sys       0% | user     55% | irq       0% | idle     45% | cpu014 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu008 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       1% | idle     98% | cpu002 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    5.79 | avg5    6.99 | avg15   6.54 | csw     2292 | intr    1885 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.1M | slab  722.5M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/26/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    31  0.09s  0.89s   2.9G     0K     0K     0K     0     0  99% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:31    --------------      1s elapsed
+PRC | sys    0.11s | user   0.95s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       6% | user     98% | irq       1% | idle   1505% | wait      0% |
+cpu | sys       0% | user     70% | irq       0% | idle     30% | cpu014 w  0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu012 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu008 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu006 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu010 w  0% |
+CPL | avg1    5.79 | avg5    6.99 | avg15   6.54 | csw     2336 | intr    1931 |
+MEM | tot    62.8G | free   53.8G | cache   4.4G | buff  243.1M | slab  722.5M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.0G | vmlim  31.4G |
+PSI | cs  44/27/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       3 | write      0 | avio 2.67 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.11s  0.95s   2.9G     0K     0K     0K     0     0 107% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:32    --------------      1s elapsed
+PRC | sys    0.22s | user   0.57s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      20% | user     56% | irq       2% | idle   1524% | wait      0% |
+cpu | sys       1% | user     21% | irq       1% | idle     77% | cpu012 w  0% |
+cpu | sys       4% | user     16% | irq       0% | idle     80% | cpu010 w  0% |
+cpu | sys       1% | user     12% | irq       0% | idle     87% | cpu005 w  0% |
+cpu | sys       4% | user      1% | irq       0% | idle     95% | cpu008 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu006 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+cpu | sys       1% | user      0% | irq       1% | idle     98% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu015 w  0% |
+CPL | avg1    5.79 | avg5    6.99 | avg15   6.54 | csw     3747 | intr    2541 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.1M | slab  722.5M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/27/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       3 | write      0 | avio 2.67 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    41  0.22s  0.57s   3.4G     0K     0K     0K     0     0  79% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:33    --------------      1s elapsed
+PRC | sys    0.09s | user   0.81s | #proc    366 | #zombie    1 | #exit      3 |
+CPU | sys       6% | user     80% | irq       1% | idle   1524% | wait      0% |
+cpu | sys       1% | user     54% | irq       0% | idle     45% | cpu010 w  0% |
+cpu | sys       3% | user     22% | irq       0% | idle     75% | cpu012 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+CPL | avg1    5.79 | avg5    6.99 | avg15   6.54 | csw     2392 | intr    1936 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.1M | slab  722.4M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/27/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    31  0.09s  0.81s   3.1G     0K     0K     0K     0     0  91% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:34    --------------      1s elapsed
+PRC | sys    0.09s | user   0.78s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       5% | user     79% | irq       1% | idle   1529% | wait      0% |
+cpu | sys       2% | user     60% | irq       0% | idle     38% | cpu012 w  0% |
+cpu | sys       0% | user     13% | irq       0% | idle     87% | cpu002 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu013 w  0% |
+CPL | avg1    5.41 | avg5    6.89 | avg15   6.51 | csw     2278 | intr    1861 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.1M | slab  722.4M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/27/24 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.09s  0.78s   3.0G     0K     0K     0K     0     0  88% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:35    --------------      1s elapsed
+PRC | sys    0.12s | user   1.31s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys       8% | user    133% | irq       4% | idle   1468% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu012 w  0% |
+cpu | sys       0% | user     23% | irq       0% | idle     77% | cpu002 w  0% |
+cpu | sys       3% | user      3% | irq       0% | idle     94% | cpu014 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu010 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       1% | user      0% | irq       2% | idle     97% | cpu000 w  0% |
+cpu | sys       0% | user      0% | irq       3% | idle     97% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+CPL | avg1    5.41 | avg5    6.89 | avg15   6.51 | csw     3792 | intr    2578 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.1M | slab  722.5M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/28/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    44  0.12s  1.31s   3.3G     0K     0K     0K     0     0 144% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:36    --------------      1s elapsed
+PRC | sys    0.10s | user   1.27s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user    125% | irq       4% | idle   1454% | wait      8% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu012 w  0% |
+cpu | sys       3% | user     21% | irq       0% | idle     76% | cpu002 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu014 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu010 w  0% |
+cpu | sys       0% | user      0% | irq       4% | idle     96% | cpu000 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     93% | cpu006 w  6% |
+CPL | avg1    5.41 | avg5    6.89 | avg15   6.51 | csw     2424 | intr    2040 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.7M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/28/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy     10% | read       0 | write    361 | avio 0.29 ms |
+NET | transport    | tcpi       3 | tcpo       3 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       3 | pcko       3 | si    1 Kbps | so    2 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    30  0.10s  1.27s   3.3G     0K     0K     0K     0     0 137% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:37    --------------      1s elapsed
+PRC | sys    0.20s | user   1.16s | #proc    366 | #zombie    1 | #exit      2 |
+CPU | sys      14% | user    117% | irq       3% | idle   1477% | wait      0% |
+cpu | sys       0% | user     90% | irq       0% | idle     10% | cpu012 w  0% |
+cpu | sys       3% | user     20% | irq       0% | idle     76% | cpu002 w  1% |
+cpu | sys       5% | user      1% | irq       0% | idle     94% | cpu006 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu014 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+CPL | avg1    5.41 | avg5    6.89 | avg15   6.51 | csw     5297 | intr    2485 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.7M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  42/28/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       1 | write      0 | avio 8.00 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.20s  1.16s   3.2G     0K     0K     0K     0     0 137% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:38    --------------      1s elapsed
+PRC | sys    0.07s | user   0.46s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       4% | user     38% | irq       0% | idle   1567% | wait      0% |
+cpu | sys       0% | user     23% | irq       0% | idle     77% | cpu002 w  0% |
+cpu | sys       0% | user      9% | irq       0% | idle     91% | cpu011 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu014 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    5.41 | avg5    6.89 | avg15   6.51 | csw     2362 | intr    1867 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.6M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  42/28/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    22  0.07s  0.46s   3.2G     0K     0K     0K     0     0  54% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:39    --------------      1s elapsed
+PRC | sys    0.16s | user   1.28s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      11% | user    129% | irq       6% | idle   1468% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu011 w  0% |
+cpu | sys       5% | user     18% | irq       0% | idle     77% | cpu002 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu012 w  0% |
+cpu | sys       0% | user      2% | irq       6% | idle     92% | cpu000 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu015 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    5.22 | avg5    6.83 | avg15   6.49 | csw     3965 | intr    2644 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.6M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/29/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        2 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    37  0.16s  1.28s   3.3G     0K     0K     0K     0     0 145% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:40    --------------      1s elapsed
+PRC | sys    0.09s | user   0.34s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user     38% | irq       0% | idle   1566% | wait      0% |
+cpu | sys       3% | user     18% | irq       0% | idle     79% | cpu002 w  0% |
+cpu | sys       0% | user     11% | irq       0% | idle     89% | cpu011 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu008 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu012 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu009 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu006 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu007 w  0% |
+CPL | avg1    5.22 | avg5    6.83 | avg15   6.49 | csw     2295 | intr    1848 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.6M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/29/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       2 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        1 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    21  0.09s  0.34s   3.2G     0K     0K     0K     0     0  43% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:41    --------------      1s elapsed
+PRC | sys    0.11s | user   1.20s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       6% | user    115% | irq       1% | idle   1488% | wait      0% |
+cpu | sys       2% | user     71% | irq       0% | idle     27% | cpu010 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       0% | user     15% | irq       0% | idle     85% | cpu005 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu012 w  0% |
+cpu | sys       0% | user      3% | irq       1% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+CPL | avg1    5.22 | avg5    6.83 | avg15   6.49 | csw     2238 | intr    1879 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.2M | slab  722.6M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  45/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      1% | read       1 | write      0 | avio 8.00 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    24  0.11s  1.20s   3.1G     0K     0K     0K     0     0 132% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:42    --------------      1s elapsed
+PRC | sys    0.17s | user   1.25s | #proc    366 | #zombie    1 | #exit     10 |
+CPU | sys      13% | user    126% | irq       6% | idle   1455% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu010 w  0% |
+cpu | sys       5% | user     17% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       4% | user      3% | irq       0% | idle     93% | cpu012 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu003 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      0% | irq       7% | idle     93% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu013 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu015 w  0% |
+CPL | avg1    5.22 | avg5    6.83 | avg15   6.49 | csw     3807 | intr    2577 |
+MEM | tot    62.8G | free   53.5G | cache   4.4G | buff  243.2M | slab  722.7M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  45/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    40  0.17s  1.25s   3.1G     0K     0K     0K     0     0 142% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:43    --------------      1s elapsed
+PRC | sys    0.11s | user   1.28s | #proc    366 | #zombie    1 | #exit      3 |
+CPU | sys       6% | user    125% | irq       2% | idle   1476% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu010 w  0% |
+cpu | sys       2% | user     20% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       3% | user      0% | irq       0% | idle     97% | cpu000 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu012 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       1% | idle     98% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu006 w  0% |
+CPL | avg1    5.22 | avg5    6.83 | avg15   6.49 | csw     2330 | intr    1942 |
+MEM | tot    62.8G | free   53.5G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  43/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       1 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        2 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    25  0.11s  1.28s   3.2G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:44    --------------      1s elapsed
+PRC | sys    0.11s | user   1.25s | #proc    366 | #zombie    0 | #exit      0 |
+CPU | sys      11% | user    123% | irq       1% | idle   1480% | wait      0% |
+cpu | sys       3% | user     59% | irq       0% | idle     38% | cpu005 w  0% |
+cpu | sys       0% | user     38% | irq       0% | idle     62% | cpu010 w  0% |
+cpu | sys       3% | user     14% | irq       0% | idle     83% | cpu009 w  0% |
+cpu | sys       0% | user      6% | irq       0% | idle     94% | cpu008 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu012 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu001 w  0% |
+CPL | avg1    4.96 | avg5    6.75 | avg15   6.47 | csw     2099 | intr    1884 |
+MEM | tot    62.8G | free   53.5G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.3G | vmlim  31.4G |
+PSI | cs  43/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       2 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        1 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    21  0.11s  1.25s   3.2G     0K     0K     0K     0     0 137% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:45    --------------      1s elapsed
+PRC | sys    0.15s | user   0.42s | #proc    365 | #zombie    0 | #exit      9 |
+CPU | sys      11% | user     47% | irq       7% | idle   1537% | wait      0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       0% | user     16% | irq       0% | idle     84% | cpu005 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu010 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu012 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       7% | idle     92% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      0% | irq       1% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu015 w  0% |
+CPL | avg1    4.96 | avg5    6.75 | avg15   6.47 | csw     3705 | intr    2495 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  41/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    39  0.15s  0.42s   3.2G     0K     0K     0K     0     0  57% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:46    --------------      1s elapsed
+PRC | sys    0.13s | user   1.03s | #proc    365 | #zombie    0 | #exit      1 |
+CPU | sys       8% | user    104% | irq       0% | idle   1499% | wait      0% |
+cpu | sys       1% | user     72% | irq       0% | idle     27% | cpu014 w  0% |
+cpu | sys       4% | user     18% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       0% | user      6% | irq       0% | idle     94% | cpu005 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu012 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+CPL | avg1    4.96 | avg5    6.75 | avg15   6.47 | csw     2443 | intr    1993 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  41/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      7% | read       0 | write    380 | avio 0.18 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    32  0.13s  1.03s   3.1G     0K     0K     0K     0     0 117% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:47    --------------      1s elapsed
+PRC | sys    0.14s | user   0.33s | #proc    365 | #zombie    0 | #exit      1 |
+CPU | sys       8% | user     31% | irq       0% | idle   1572% | wait      0% |
+cpu | sys       3% | user     19% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       0% | user      5% | irq       0% | idle     95% | cpu005 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu012 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu015 w  0% |
+CPL | avg1    4.96 | avg5    6.75 | avg15   6.47 | csw     2226 | intr    1819 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    22  0.14s  0.33s   3.0G     0K     0K     0K     0     0  47% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:48    --------------      1s elapsed
+PRC | sys    0.13s | user   1.29s | #proc    365 | #zombie    0 | #exit      9 |
+CPU | sys      11% | user    127% | irq       3% | idle   1468% | wait      0% |
+cpu | sys       2% | user     89% | irq       0% | idle      9% | cpu006 w  0% |
+cpu | sys       2% | user     20% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       0% | user     11% | irq       0% | idle     89% | cpu005 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu012 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu015 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu003 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+CPL | avg1    4.96 | avg5    6.75 | avg15   6.47 | csw     4232 | intr    2750 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  43/30/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    42  0.13s  1.29s   3.4G     0K     0K     0K     0     0 143% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:49    --------------      1s elapsed
+PRC | sys    0.12s | user   1.21s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       9% | user    121% | irq       2% | idle   1460% | wait     20% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu006 w  0% |
+cpu | sys       3% | user     15% | irq       0% | idle     62% | cpu009 w 20% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       2% | user      1% | irq       0% | idle     97% | cpu012 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu000 w  0% |
+cpu | sys       0% | user      0% | irq       3% | idle     97% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu008 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    4.72 | avg5    6.67 | avg15   6.44 | csw     2352 | intr    1941 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  44/31/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy      7% | read      22 | write      0 | avio 3.27 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    28  0.12s  1.21s   3.0G     0K     0K     0K     0     0 134% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:50    --------------      1s elapsed
+PRC | sys    0.11s | user   0.63s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       8% | user     66% | irq       3% | idle   1538% | wait      0% |
+cpu | sys       0% | user     38% | irq       0% | idle     62% | cpu006 w  0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       3% | user      0% | irq       0% | idle     97% | cpu000 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu002 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu013 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       0% | user      0% | irq       2% | idle     98% | cpu001 w  0% |
+CPL | avg1    4.72 | avg5    6.67 | avg15   6.44 | csw     2249 | intr    1917 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/31/25 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    26  0.11s  0.63s   3.2G     0K     0K     0K     0     0  75% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:51    --------------      1s elapsed
+PRC | sys    0.10s | user   0.96s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      12% | user     87% | irq       0% | idle   1515% | wait      0% |
+cpu | sys       0% | user     60% | irq       0% | idle     40% | cpu010 w  0% |
+cpu | sys       5% | user     17% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       4% | user      1% | irq       1% | idle     94% | cpu000 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu002 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu006 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu005 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu012 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu014 w  0% |
+CPL | avg1    4.72 | avg5    6.67 | avg15   6.44 | csw     2129 | intr    1894 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/31/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    25  0.10s  0.96s   3.1G     0K     0K     0K     0     0 107% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:52    --------------      1s elapsed
+PRC | sys    0.16s | user   0.36s | #proc    366 | #zombie    1 | #exit     13 |
+CPU | sys      17% | user     43% | irq       1% | idle   1541% | wait      0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu009 w  0% |
+cpu | sys       1% | user     13% | irq       0% | idle     86% | cpu010 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       4% | user      0% | irq       0% | idle     96% | cpu002 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu012 w  0% |
+CPL | avg1    4.72 | avg5    6.67 | avg15   6.44 | csw     4351 | intr    2697 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.2M | slab  723.0M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/31/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+DSK |          sda | busy      1% | read       3 | write      0 | avio 2.67 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    50  0.16s  0.36s   3.2G     0K     0K     0K     0     0  52% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:53    --------------      1s elapsed
+PRC | sys    0.09s | user   1.22s | #proc    366 | #zombie    1 | #exit      3 |
+CPU | sys       7% | user    117% | irq       3% | idle   1487% | wait      0% |
+cpu | sys       0% | user     90% | irq       0% | idle     10% | cpu015 w  0% |
+cpu | sys       2% | user     20% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       3% | user      1% | irq       3% | idle     93% | cpu000 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu013 w  0% |
+cpu | sys       0% | user      1% | irq       1% | idle     98% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu009 w  0% |
+CPL | avg1    4.72 | avg5    6.67 | avg15   6.44 | csw     2304 | intr    1932 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/32/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.09s  1.22s   3.1G     0K     0K     0K     0     0 132% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:54    --------------      1s elapsed
+PRC | sys    0.15s | user   1.25s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user    124% | irq       4% | idle   1476% | wait      0% |
+cpu | sys       1% | user     99% | irq       0% | idle      0% | cpu015 w  0% |
+cpu | sys       4% | user     19% | irq       0% | idle     77% | cpu008 w  0% |
+cpu | sys       3% | user      0% | irq       4% | idle     93% | cpu000 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu012 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+CPL | avg1    4.50 | avg5    6.59 | avg15   6.42 | csw     2277 | intr    1911 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  44/32/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    25  0.15s  1.25s   3.1G     0K     0K     0K     0     0 141% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:55    --------------      1s elapsed
+PRC | sys    0.14s | user   0.84s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      13% | user     92% | irq       6% | idle   1496% | wait      0% |
+cpu | sys       1% | user     56% | irq       0% | idle     43% | cpu015 w  0% |
+cpu | sys       0% | user     23% | irq       0% | idle     77% | cpu008 w  0% |
+cpu | sys       5% | user      2% | irq       2% | idle     91% | cpu000 w  0% |
+cpu | sys       3% | user      2% | irq       0% | idle     95% | cpu004 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu002 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu010 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu013 w  0% |
+cpu | sys       1% | user      0% | irq       3% | idle     96% | cpu001 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu006 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu012 w  0% |
+CPL | avg1    4.50 | avg5    6.59 | avg15   6.42 | csw     3736 | intr    2559 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/32/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    39  0.14s  0.84s   3.2G     0K     0K     0K     0     0  98% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:56    --------------      1s elapsed
+PRC | sys    0.13s | user   0.71s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user     67% | irq       0% | idle   1532% | wait      0% |
+cpu | sys       1% | user     31% | irq       0% | idle     68% | cpu005 w  0% |
+cpu | sys       5% | user     17% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       0% | user     11% | irq       0% | idle     89% | cpu013 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu012 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+CPL | avg1    4.50 | avg5    6.59 | avg15   6.42 | csw     2282 | intr    1884 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/32/26 | ms     0/0/0 | mf     0/0/0 | is     1/0/0 | if     1/0/0 |
+NET | transport    | tcpi       1 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        2 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.13s  0.71s   3.1G     0K     0K     0K     0     0  85% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:57    --------------      1s elapsed
+PRC | sys    0.18s | user   0.51s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user     57% | irq       0% | idle   1516% | wait     27% |
+cpu | sys       0% | user     35% | irq       0% | idle     65% | cpu013 w  0% |
+cpu | sys       3% | user     16% | irq       0% | idle     61% | cpu008 w 20% |
+cpu | sys       4% | user      1% | irq       0% | idle     95% | cpu000 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     96% | cpu014 w  1% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     93% | cpu011 w  6% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu005 w  0% |
+CPL | avg1    4.50 | avg5    6.59 | avg15   6.42 | csw     2363 | intr    1896 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PAG | scan     918 | steal    918 | stall      0 | swin       0 | swout      0 |
+PSI | cs  44/33/26 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+DSK |          sda | busy     12% | read      15 | write    381 | avio 0.30 ms |
+NET | transport    | tcpi       3 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        2 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       2 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    27  0.18s  0.51s   3.1G     0K     0K     0K     0     0  70% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:58    --------------      1s elapsed
+PRC | sys    0.12s | user   1.02s | #proc    366 | #zombie    1 | #exit      9 |
+CPU | sys      10% | user     94% | irq      10% | idle   1488% | wait      0% |
+cpu | sys       2% | user     66% | irq       0% | idle     32% | cpu012 w  0% |
+cpu | sys       1% | user     22% | irq       0% | idle     77% | cpu008 w  0% |
+cpu | sys       4% | user      0% | irq       4% | idle     92% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu003 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      0% | irq       7% | idle     93% | cpu001 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu005 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu013 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu007 w  0% |
+CPL | avg1    4.50 | avg5    6.59 | avg15   6.42 | csw     3770 | intr    2548 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PAG | scan     376 | steal    376 | stall      0 | swin       0 | swout      0 |
+PSI | cs  44/33/26 | ms     0/0/0 | mf     0/0/0 | is     0/0/0 | if     0/0/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    37  0.12s  1.02s   3.1G     0K     0K     0K     0     0 114% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:48:59    --------------      1s elapsed
+PRC | sys    0.11s | user   1.26s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       8% | user    128% | irq       2% | idle   1477% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu012 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       4% | user      1% | irq       1% | idle     94% | cpu000 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu011 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu005 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu007 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+CPL | avg1    4.22 | avg5    6.50 | avg15   6.39 | csw     2281 | intr    1955 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.7M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PAG | scan     477 | steal    477 | stall      0 | swin       0 | swout      0 |
+PSI | cs  43/33/26 | ms     0/0/0 | mf     0/0/0 | is     2/1/0 | if     2/1/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    24  0.11s  1.26s   3.0G     0K     0K     0K     0     0 138% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:00    --------------      1s elapsed
+PRC | sys    0.13s | user   1.32s | #proc    366 | #zombie    1 | #exit      1 |
+CPU | sys       6% | user    130% | irq       0% | idle   1473% | wait      0% |
+cpu | sys       1% | user     99% | irq       0% | idle      0% | cpu012 w  0% |
+cpu | sys       0% | user     22% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       2% | user      2% | irq       1% | idle     95% | cpu000 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu009 w  0% |
+CPL | avg1    4.22 | avg5    6.50 | avg15   6.39 | csw     2613 | intr    2087 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.7M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  43/33/26 | ms     0/0/0 | mf     0/0/0 | is     2/1/0 | if     2/1/0 |
+NET | transport    | tcpi       3 | tcpo       4 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so   22 Kbps |
+NET | enP4560   0% | pcki       3 | pcko       4 | si    1 Kbps | so   22 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    33  0.13s  1.32s   3.7G     0K     0K     0K     0     0 146% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:01    --------------      1s elapsed
+PRC | sys    0.19s | user   1.42s | #proc    366 | #zombie    1 | #exit     15 |
+CPU | sys      20% | user    143% | irq      12% | idle   1429% | wait      0% |
+cpu | sys       2% | user     98% | irq       0% | idle      0% | cpu012 w  0% |
+cpu | sys       1% | user     22% | irq       0% | idle     77% | cpu008 w  0% |
+cpu | sys       3% | user      8% | irq       0% | idle     89% | cpu010 w  0% |
+cpu | sys       2% | user      5% | irq       0% | idle     93% | cpu004 w  0% |
+cpu | sys       4% | user      3% | irq       0% | idle     93% | cpu005 w  0% |
+cpu | sys       4% | user      1% | irq       9% | idle     86% | cpu000 w  0% |
+cpu | sys       2% | user      3% | irq       0% | idle     95% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       2% | idle     97% | cpu002 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu003 w  0% |
+CPL | avg1    4.22 | avg5    6.50 | avg15   6.39 | csw     4853 | intr    3007 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.8M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  42/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    1 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    51  0.19s  1.42s   3.2G     0K     0K     0K     0     0 161% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:02    --------------      1s elapsed
+PRC | sys    0.12s | user   1.27s | #proc    367 | #zombie    1 | #exit      1 |
+CPU | sys      10% | user    125% | irq       3% | idle   1476% | wait      0% |
+cpu | sys       0% | user     65% | irq       0% | idle     35% | cpu013 w  0% |
+cpu | sys       0% | user     36% | irq       0% | idle     64% | cpu012 w  0% |
+cpu | sys       3% | user     19% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       4% | user      2% | irq       2% | idle     92% | cpu000 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu011 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu005 w  0% |
+CPL | avg1    4.22 | avg5    6.50 | avg15   6.39 | csw     2261 | intr    1946 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  42/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       3 | tcpo       3 | udpi       0 | udpo       0 |
+NET | network      | ipi        3 | ipo        3 | ipfrw      0 | deliv      3 |
+NET | eth0      0% | pcki       3 | pcko       3 | si    1 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       3 | pcko       3 | si    1 Kbps | so    2 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    29  0.12s  1.27s   3.3G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:03    --------------      1s elapsed
+PRC | sys    0.10s | user   0.62s | #proc    367 | #zombie    1 | #exit      3 |
+CPU | sys       7% | user     68% | irq       1% | idle   1538% | wait      0% |
+cpu | sys       2% | user     36% | irq       0% | idle     62% | cpu013 w  0% |
+cpu | sys       1% | user     22% | irq       0% | idle     77% | cpu008 w  0% |
+cpu | sys       4% | user      0% | irq       1% | idle     95% | cpu000 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu006 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu004 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+CPL | avg1    4.22 | avg5    6.50 | avg15   6.39 | csw     2284 | intr    1889 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  40/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    21  0.10s  0.62s   3.0G     0K     0K     0K     0     0  73% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:04    --------------      1s elapsed
+PRC | sys    0.11s | user   0.96s | #proc    367 | #zombie    1 | #exit      1 |
+CPU | sys       9% | user     89% | irq       0% | idle   1512% | wait      0% |
+cpu | sys       0% | user     34% | irq       0% | idle     66% | cpu002 w  0% |
+cpu | sys       0% | user     29% | irq       0% | idle     71% | cpu005 w  0% |
+cpu | sys       4% | user     17% | irq       0% | idle     79% | cpu008 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu004 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu012 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu010 w  0% |
+CPL | avg1    3.88 | avg5    6.39 | avg15   6.35 | csw     2325 | intr    1915 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  40/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    30  0.11s  0.96s   3.3G     0K     0K     0K     0     0 108% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:05    --------------      1s elapsed
+PRC | sys    0.13s | user   1.27s | #proc    368 | #zombie    1 | #exit      9 |
+CPU | sys      12% | user    126% | irq       6% | idle   1471% | wait      0% |
+cpu | sys       0% | user    100% | irq       0% | idle      0% | cpu002 w  0% |
+cpu | sys       2% | user     20% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       3% | user      2% | irq       6% | idle     90% | cpu000 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu004 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu011 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu015 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu010 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu012 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu005 w  0% |
+CPL | avg1    3.88 | avg5    6.39 | avg15   6.35 | csw     3964 | intr    2627 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  41/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      0% | read       1 | write      0 | avio 4.00 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    42  0.13s  1.27s   3.2G     0K     0K     0K     0     0 141% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:06    --------------      1s elapsed
+PRC | sys    0.08s | user   1.31s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys       8% | user    125% | irq       0% | idle   1477% | wait      1% |
+cpu | sys       1% | user     99% | irq       0% | idle      0% | cpu002 w  0% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       3% | user      1% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu012 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu004 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     98% | cpu006 w  1% |
+CPL | avg1    3.88 | avg5    6.39 | avg15   6.35 | csw     2209 | intr    1947 |
+MEM | tot    62.8G | free   53.7G | cache   4.4G | buff  243.2M | slab  723.0M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  41/33/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      3% | read       0 | write      2 | avio 16.0 ms |
+NET | transport    | tcpi       1 | tcpo       1 | udpi       0 | udpo       0 |
+NET | network      | ipi        1 | ipo        1 | ipfrw      0 | deliv      1 |
+NET | eth0      0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+NET | enP4560   0% | pcki       1 | pcko       1 | si    0 Kbps | so    0 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    22  0.08s  1.31s   3.0G     0K     0K     0K     0     0 140% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:07    --------------      1s elapsed
+PRC | sys    0.15s | user   0.31s | #proc    368 | #zombie    1 | #exit      2 |
+CPU | sys       7% | user     36% | irq       0% | idle   1561% | wait      6% |
+cpu | sys       1% | user     21% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu000 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu002 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     91% | cpu004 w  6% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu005 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu010 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu013 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu001 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu006 w  0% |
+cpu | sys       0% | user      1% | irq       0% | idle     99% | cpu014 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu009 w  0% |
+CPL | avg1    3.88 | avg5    6.39 | avg15   6.35 | csw     2606 | intr    1999 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  722.9M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PSI | cs  41/34/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy     16% | read       0 | write    466 | avio 0.34 ms |
+NET | transport    | tcpi      16 | tcpo      23 | udpi       0 | udpo       0 |
+NET | network      | ipi       16 | ipo       13 | ipfrw      0 | deliv     16 |
+NET | eth0      0% | pcki      16 | pcko      13 | si    6 Kbps | so  213 Kbps |
+NET | enP4560   0% | pcki      16 | pcko      23 | si    8 Kbps | so  217 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    30  0.15s  0.31s   3.2G     0K     0K     0K     0     0  46% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:08    --------------      1s elapsed
+PRC | sys    0.23s | user   0.60s | #proc    368 | #zombie    1 | #exit     12 |
+CPU | sys      21% | user     57% | irq       2% | idle   1531% | wait      0% |
+cpu | sys       0% | user     20% | irq       0% | idle     80% | cpu010 w  0% |
+cpu | sys       6% | user     17% | irq       0% | idle     78% | cpu008 w  0% |
+cpu | sys       3% | user      5% | irq       1% | idle     91% | cpu000 w  0% |
+cpu | sys       2% | user      5% | irq       0% | idle     93% | cpu004 w  0% |
+cpu | sys       4% | user      1% | irq       0% | idle     95% | cpu003 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu001 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu002 w  0% |
+cpu | sys       0% | user      2% | irq       0% | idle     98% | cpu006 w  0% |
+cpu | sys       1% | user      1% | irq       0% | idle     98% | cpu014 w  0% |
+cpu | sys       0% | user      1% | irq       1% | idle     98% | cpu005 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu011 w  0% |
+cpu | sys       1% | user      0% | irq       0% | idle     99% | cpu012 w  0% |
+cpu | sys       2% | user      0% | irq       0% | idle     98% | cpu015 w  0% |
+CPL | avg1    3.88 | avg5    6.39 | avg15   6.35 | csw     4795 | intr    3002 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  723.3M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.1G | vmlim  31.4G |
+PAG | scan     212 | steal    212 | stall      0 | swin       0 | swout      0 |
+PSI | cs  41/34/26 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+DSK |          sda | busy      2% | read       5 | write      0 | avio 3.20 ms |
+NET | transport    | tcpi       7 | tcpo       8 | udpi       6 | udpo       6 |
+NET | network      | ipi       13 | ipo       13 | ipfrw      0 | deliv     13 |
+NET | eth0      0% | pcki       7 | pcko       7 | si    4 Kbps | so   45 Kbps |
+NET | enP4560   0% | pcki       5 | pcko       8 | si    2 Kbps | so   45 Kbps |
+NET | lo      ---- | pcki       6 | pcko       6 | si    4 Kbps | so    4 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    45  0.23s  0.60s   3.3G     0K     0K     0K     0     0  84% host-------- 
+
+
+ATOP - Ubuntu20-16c-01    2022/07/17  16:49:09    --------------      1s elapsed
+PRC | sys    0.17s | user   1.10s | #proc    368 | #zombie    1 | #exit      1 |
+CPU | sys      15% | user    113% | irq       2% | idle   1470% | wait      0% |
+cpu | sys       0% | user     30% | irq       0% | idle     70% | cpu015 w  0% |
+cpu | sys       1% | user     25% | irq       0% | idle     75% | cpu008 w  0% |
+cpu | sys       1% | user     11% | irq       0% | idle     88% | cpu005 w  0% |
+cpu | sys       4% | user      5% | irq       1% | idle     90% | cpu000 w  0% |
+cpu | sys       1% | user      5% | irq       0% | idle     94% | cpu012 w  0% |
+cpu | sys       2% | user      2% | irq       0% | idle     96% | cpu002 w  0% |
+cpu | sys       2% | user      5% | irq       0% | idle     93% | cpu004 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu014 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu001 w  0% |
+cpu | sys       1% | user      4% | irq       0% | idle     95% | cpu006 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu010 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu011 w  0% |
+cpu | sys       1% | user      2% | irq       0% | idle     97% | cpu013 w  0% |
+cpu | sys       1% | user      3% | irq       0% | idle     96% | cpu003 w  0% |
+cpu | sys       0% | user      4% | irq       0% | idle     96% | cpu007 w  0% |
+cpu | sys       0% | user      3% | irq       0% | idle     97% | cpu009 w  0% |
+CPL | avg1    3.73 | avg5    6.32 | avg15   6.33 | csw     2732 | intr    2116 |
+MEM | tot    62.8G | free   53.6G | cache   4.4G | buff  243.2M | slab  723.1M |
+SWP | tot     0.0M | free    0.0M |              | vmcom   9.2G | vmlim  31.4G |
+PSI | cs  43/34/27 | ms     0/0/0 | mf     0/0/0 | is     1/1/0 | if     1/1/0 |
+NET | transport    | tcpi       2 | tcpo       2 | udpi       0 | udpo       0 |
+NET | network      | ipi        2 | ipo        2 | ipfrw      0 | deliv      2 |
+NET | eth0      0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+NET | enP4560   0% | pcki       2 | pcko       2 | si    0 Kbps | so    1 Kbps |
+
+NPROCS SYSCPU USRCPU  RSIZE  PSIZE  RDDSK  WRDSK  RNET  SNET  CPU CID          
+    21  0.17s  1.10s   2.9G     0K     0K     0K     0     0 127% host-------- 

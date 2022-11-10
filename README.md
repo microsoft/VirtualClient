@@ -1,14 +1,33 @@
-# Project
+# Virtual Client
+Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud. 
+The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). It has been an inner-source project in Microsoft for two years and now it is open sourced on GitHub.
+The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports different environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+* [Platform Details](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/VirtualClient.Documentation/VirtualClientPlatform.md&_a=preview)
+* [Platform Design](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/VirtualClient.Documentation/VirtualClientDesign.md&_a=preview)
+* [Developer Guide](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/DEVELOPER_GUIDE.md&_a=preview)
+* [Additional Usage Examples](./VirtualClient.Documentation/UsageScenarios.md)  
 
-As the maintainer of this project, please make a few updates:
+## Team Contacts
+* [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+## [Getting Started](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/)
+
+## [Supported Workloads](https://microsoft.github.io/VirtualClient/docs/overview/#supported-benchmark-workloads)
+
+## Please bear with us for a second
+VirtualClient is an MSFT inner source project we are migrating to GitHub. We are still gradually migrating our code and documents.
+Please be patient if the documents have wrong links. We are actively cleaning those up.
+
+#### About benchmark examples in source
+VirtualClient has example benchmark outputs in source, for unit-testing purpose, to make sure our parsers work correctly.
+Those runs might or might not be ran on Azure VMs. The results have also been randomly scrubbed. These examples do not represent Azure VM performance. They are in the source purely for unit testing purposes.
+
+
+## Telemetry Notice
+Data Collection. 
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
 ## Contributing
 

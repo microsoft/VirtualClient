@@ -1,0 +1,20 @@
+[Wed Sep 14 06:33:15 2011]
+Self-test 14K passed!
+Self-test 14K passed!
+Self-test 14K passed!
+FATAL ERROR: Rounding was 0.5, expected less than 0.4
+Hardware failure detected, consult stress.txt file.
+[Wed Sep 14 06:40:49 2011]
+FATAL ERROR: Rounding was 0.5, expected less than 0.4
+Hardware failure detected, consult stress.txt file.
+[Wed Sep 14 06:50:08 2011]
+Self-test 640K passed!
+[Wed Sep 14 07:05:32 2011]
+Self-test 512K passed!
+[Wed Sep 14 07:21:22 2011]
+Self-test 16K passed!
+[Wed Sep 14 07:36:32 2011]
+Self-test 20K passed!
+[Wed Sep 14 07:43:51 2011]
+FATAL ERROR: Rounding was 0.5, expected less than 0.4
+Hardware failure detected, consult stress.txt file.

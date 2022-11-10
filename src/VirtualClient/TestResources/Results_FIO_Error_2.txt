@@ -1,0 +1,4 @@
+fio: pid=4879, err=84/file:io_u.c:2141, func=io_u_queued_complete, error=Invalid or incomplete multibyte or wide character 1
+fio: pid=4904, err=84/file:io_u.c:2141, func=io_u_queued_complete, error=Invalid or incomplete multibyte or wide character 2
+fio: pid=4903, err=84/file:io_u.c:2141, func=io_u_queued_complete, error=Invalid or incomplete multibyte or wide character 3
+fio: pid=4888, err=84/file:io_u.c:2141, func=io_u_queued_complete, error=Invalid or incomplete multibyte or wide character 4

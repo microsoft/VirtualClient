@@ -1,0 +1,8 @@
+{
+  "label": "Usage Scenarios",
+  "position": 10,
+  "link": {
+    "type": "generated-index",
+    "description": "How to use VC in your specific environments."
+  }
+}

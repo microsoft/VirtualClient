@@ -1,0 +1,270 @@
+﻿// Errors
+// --------------------------------------------
+.create table VirtualClientErrors (Timestamp: datetime, ExperimentId: string, Message: string, SeverityLevel: int, Error: dynamic, ErrorCallStack: string, ExecutionProfile: string, ExecutionArguments: string, ProfileFriendlyName: string, ExecutionPlatform: string, OperatingSystemPlatform: string, TestName: string, TestedInstance: string, OperationId: string, OperationParentId: string, TransactionId: string, SdkVersion: string, AppName: string, AppHost: string, BinaryVersion: string, AgentId: string, Metadata: dynamic) 
+
+// JSON Mappings
+.create table VirtualClientErrors ingestion json mapping 'VirtualClientErrorsMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.experimentId","datatype":"","transform":null},{"column":"Message","path":"$.message","datatype":"","transform":null},{"column":"SeverityLevel","path":"$.severityLevel","datatype":"","transform":null},{"column":"Error","path":"$.customDimensions.error","datatype":"","transform":null},{"column":"ErrorCallStack","path":"$.customDimensions.errorCallstack","datatype":"","transform":null},{"column":"ExecutionProfile","path":"$.customDimensions.ExecutionProfile","datatype":"","transform":null},{"column":"ExecutionArguments","path":"$.customDimensions.ExecutionArguments","datatype":"","transform":null},{"column":"ProfileFriendlyName","path":"$.customDimensions.ProfileFriendlyName","datatype":"","transform":null},{"column":"ExecutionPlatform","path":"$.customDimensions.ExecutionSubsystemPlatform","datatype":"","transform":null},{"column":"OperatingSystemPlatform","path":"$.customDimensions.OperatingSystemVersionPlatform","datatype":"","transform":null},{"column":"TestName","path":"$.TestName","datatype":"","transform":null},{"column":"TestedInstance","path":"$.TestedInstance","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"SdkVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"BinaryVersion","path":"$.customDimensions.BinaryVersion","datatype":"","transform":null},{"column":"AgentId","path":"$.customDimensions.agentId","datatype":"","transform":null},{"column":"Dimensions","path":"$.customDimensions","datatype":"","transform":null}]'
+.create table VirtualClientErrors ingestion json mapping 'ErrorsTelemetryMapping' '[{"column":"Timestamp","Properties": {"Path":"$.timestamp"}},{"column":"ExperimentId","Properties": {"Path":"$.customDimensions.metadata.experimentId"}},{"column":"Message","Properties": {"Path":"$.message"}},{"column":"SeverityLevel","Properties": {"Path":"$.severityLevel"}},{"column":"Error","Properties": {"Path":"$.customDimensions.error"}},{"column":"ErrorCallStack","Properties": {"Path":"$.customDimensions.errorCallstack"}},{"column":"ExecutionProfile","Properties": {"Path":"$.customDimensions.executionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.executionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.profileFriendlyName"}},{"column":"ExecutionPlatform","Properties": {"Path":"$.customDimensions.executionPlatform"}},{"column":"OperatingSystemPlatform","Properties": {"Path":"$.customDimensions.operatingSystemPlatform"}},{"column":"TestName","Properties": {"Path":"$.customDimensions.testName"}},{"column":"TestedInstance","Properties": {"Path":"$.customDimensions.testedInstance"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"BinaryVersion","Properties": {"Path":"$.customDimensions.binaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.metadata.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+
+// Hubs
+vc-errors
+telemetry-errors
+
+// Rebuild Script: Requires new VirtualClientDiagnostics database
+//
+.set-or-append VirtualClientErrors <|
+database("VirtualClientMeasurementsDb").VirtualClientErrors
+| extend Metadata = pack(
+    "experimentId", ExperimentId,
+    "experimentStepId", ExperimentStepId,
+    "experimentGroup", ExperimentGroup,
+    "nodeId", NodeId,
+    "nodeName", NodeName,
+    "clusterName", ClusterName,
+    "virtualMachineName", VirtualMachineName,
+    "containerId", ContainerId,
+    "agentId", AgentId,
+    "tipSessionId", TipSessionId
+)
+| extend message = coalesce(Description, ErrorText, Message)
+| where not(isnull(message)) and message != "Error"
+| extend error = pack_array(pack(
+    "errorType", "System.Exception",
+    "errorMessage", message
+))
+| project 
+    Timestamp = TimeStamp,
+    ExperimentId,
+    Message = message,
+    SeverityLevel = toint(3),
+    Error = error,
+    ErrorCallStack = "",
+    ExecutionProfile,
+    ExecutionArguments,
+    ProfileFriendlyName,
+    ExecutionPlatform = ExecutionSubsystemPlatform,
+    OperatingSystemPlatform = OperatingSystemVersionPlatform,
+    TestName,
+    TestedInstance,
+    OperationId,
+    OperationParentId,
+    TransactionId,
+    SdkVersion,
+    AppName,
+    AppHost,
+    BinaryVersion,
+    AgentId,
+    Dimensions
+
+// Logs
+// --------------------------------------------
+.create table VirtualClientLogs (Timestamp: datetime, ExperimentId: string, Message: string, SeverityLevel: int, ItemType: string, ExecutionProfile: string, ExecutionArguments: string, ProfileFriendlyName: string, ExecutionPlatform: string, OperatingSystemPlatform: string, OperationId: string, OperationParentId: string, SdkVersion: string, AppName: string, AppHost: string, BinaryVersion: string, AgentId: string, Metadata: dynamic) 
+
+// JSON Mappings
+.create table VirtualClientLogs ingestion json mapping 'VirtualClientLogsMapping' '[{"column":"Timestamp","Properties": {"Path":"$.timestamp"}},{"column":"ExperimentId","Properties": {"Path":"$.customDimensions.experimentId"}},{"column":"Message","Properties": {"Path":"$.message"}},{"column":"SeverityLevel","Properties": {"Path":"$.severityLevel"}},{"column":"ItemType","Properties": {"Path":"$.itemType"}},{"column":"ExecutionProfile","Properties": {"Path":"$.customDimensions.ExecutionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.ExecutionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.ProfileFriendlyName"}},{"column":"ExecutionPlatform","Properties": {"Path":"$.customDimensions.ExecutionSubsystemPlatform"}},{"column":"OperatingSystemPlatform","Properties": {"Path":"$.customDimensions.OperatingSystemVersionPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"BinaryVersion","Properties": {"Path":"$.customDimensions.BinaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+.create table VirtualClientLogs ingestion json mapping 'LogsTelemetryMapping' '[{"column":"Timestamp","Properties": {"Path":"$.timestamp"}},{"column":"ExperimentId","Properties": {"Path":"$.customDimensions.metadata.experimentId"}},{"column":"Message","Properties": {"Path":"$.message"}},{"column":"SeverityLevel","Properties": {"Path":"$.severityLevel"}},{"column":"ItemType","Properties": {"Path":"$.itemType"}},{"column":"ExecutionProfile","Properties": {"Path":"$.customDimensions.executionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.executionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.profileFriendlyName"}},{"column":"ExecutionPlatform","Properties": {"Path":"$.customDimensions.executionPlatform"}},{"column":"OperatingSystemPlatform","Properties": {"Path":"$.customDimensions.operatingSystemPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"BinaryVersion","Properties": {"Path":"$.customDimensions.binaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.metadata.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+
+// Hubs
+vc-logs
+telemetry-logs
+
+// Rebuild Script: Requires new VirtualClientDiagnostics database
+//
+.set-or-append VirtualClientLogs <|
+database("VirtualClientMeasurementsDb").VirtualClientLogs
+| where TimeStamp >= ago(30d)
+| extend Metadata = pack(
+    "experimentId", ExperimentId,
+    "experimentStepId", ExperimentStepId,
+    "experimentGroup", ExperimentGroup,
+    "nodeId", NodeId,
+    "nodeName", NodeName,
+    "clusterName", ClusterName,
+    "virtualMachineName", VirtualMachineName,
+    "containerId", ContainerId,
+    "agentId", AgentId,
+    "tipSessionId", TipSessionId
+)
+| where not(isnull(Message))
+| project 
+    Timestamp = TimeStamp,
+    ExperimentId,
+    Message,
+    SeverityLevel,
+    ItemType,
+    ExecutionProfile,
+    ExecutionArguments,
+    ProfileFriendlyName,
+    ExecutionPlatform = ExecutionSubsystemPlatform,
+    OperatingSystemPlatform = OperatingSystemVersionPlatform,
+    OperationId,
+    OperationParentId,
+    SdkVersion,
+    AppName,
+    AppHost,
+    BinaryVersion,
+    AgentId,
+    Dimensions
+
+// Events
+// ------------------------------------------
+.create table VirtualClientEvents2 (Timestamp: datetime, ExperimentId: string, Message: string, Name: string, Value: string, ExecutionProfile: string, ExecutionArguments:string, ProfileFriendlyName: string, ExecutionPlatform: string, OperatingSystemPlatform: string, OperationId: string, OperationParentId: string, SdkVersion: string, AppName: string, AppHost: string, BinaryVersion: string, AgentId: string, Metadata: dynamic)
+
+// JSON Mappings
+.create table VirtualClientEvents ingestion json mapping 'VirtualClientEventsMapping' '[{"column":"Timestamp","Properties":{"Path":"$.timestamp"}},{"column":"ExperimentId","Properties":{"Path":"$.customDimensions.experimentId"}},{"column":"Message","Properties":{"Path":"$.message"}},{"column":"Name","Properties":{"Path":"$.Name"}},{"column":"Value","Properties":{"Path":"$.Value"}},{"column":"ExecutionProfile","Properties":{"Path":"$.customDimensions.ExecutionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.ExecutionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.ProfileFriendlyName"}},{"column":"ExecutionPlatform","Properties":{"Path":"$.customDimensions.ExecutionSubsystemPlatform"}},{"column":"OperatingSystemPlatform","Properties":{"Path":"$.customDimensions.operatingSystemPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"BinaryVersion","Properties":{"Path":"$.customDimensions.BinaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+.create table VirtualClientEvents ingestion json mapping 'SystemEventsTelemetryMapping' '[{"column":"Timestamp","Properties":{"Path":"$.timestamp"}},{"column":"ExperimentId","Properties":{"Path":"$.customDimensions.metadata.experimentId"}},{"column":"Message","Properties":{"Path":"$.message"}},{"column":"Name","Properties":{"Path":"$.customDimensions.name"}},{"column":"Value","Properties":{"Path":"$.customDimensions.value"}},{"column":"ExecutionProfile","Properties":{"Path":"$.customDimensions.executionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.executionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.profileFriendlyName"}},{"column":"ExecutionPlatform","Properties":{"Path":"$.customDimensions.executionPlatform"}},{"column":"OperatingSystemPlatform","Properties":{"Path":"$.customDimensions.operatingSystemPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"BinaryVersion","Properties":{"Path":"$.customDimensions.binaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.metadata.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+
+// Hubs
+vc-events
+telemetry-events
+
+// Rebuild Script
+//
+.set-or-append VirtualClientEvents2 <|
+VirtualClientEvents
+| extend Metadata = pack(
+    "experimentId", ExperimentId,
+    "experimentStepId", ExperimentStepId,
+    "experimentGroup", ExperimentGroup,
+    "nodeId", NodeId,
+    "agentId", AgentId
+)
+| project
+    Timestamp = TimeStamp,
+    ExperimentId,
+    Message,
+    Name,
+    Value,
+    ExecutionProfile,
+    ExecutionArguments = "",
+    ProfileFriendlyName,
+    ExecutionPlatform = ExecutionSubsystemPlatform,
+    OperatingSystemPlatform = OperatingSystemVersionPlatform,
+    OperationId = "",
+    OperationParentId = "",
+    SdkVersion = "",
+    AppName = "",
+    AppHost = "",
+    BinaryVersion,
+    AgentId,
+    Dimensions
+
+.rename table VirtualClientEvents to xVirtualClientEvents
+.rename table VirtualClientEvents2 to VirtualClientEvents
+
+// Monitors
+// ---------------------------------------------------
+.create table VirtualClientMonitors2 (Timestamp: datetime, TimeStamp: datetime, ExperimentId: string, Message: string, CounterName: string, CounterValue: real, DurationMs: int, ExecutionProfile: string, ExecutionArguments:string, ProfileFriendlyName: string, ExecutionSubsystemPlatform: string, OperatingSystemVersionPlatform: string, OperationId: string, OperationParentId: string, SdkVersion: string, AppName: string, AppHost: string, NodeId: string, ExperimentStepId: string, ExperimentGroup: string, GroupId: string, BinaryVersion: string, AgentId: string, Metadata: dynamic) 
+
+// JSON Mappings
+.create table VirtualClientMonitors ingestion json mapping 'VirtualClientMonitorsMapping' '[{"column":"Timestamp","Properties":{"Path":"$.timestamp"}},{"column":"TimeStamp","Properties":{"Path":"$.timestamp"}},{"column":"ExperimentId","Properties":{"Path":"$.customDimensions.experimentId"}},{"column":"CounterName","Properties":{"Path":"$.CounterName"}},{"column":"CounterValue","Properties":{"Path":"$.CounterValue"}},{"column":"Message","Properties":{"Path":"$.message"}},{"column":"DurationMs","Properties":{"Path":"$.customDimensions.durationMs"}},{"column":"ExecutionProfile","Properties":{"Path":"$.customDimensions.ExecutionProfile"}},{"column":"ExecutionArguments","Properties":{"Path":"$.customDimensions.ExecutionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.ProfileFriendlyName"}},{"column":"ExecutionSubsystemPlatform","Properties":{"Path":"$.customDimensions.ExecutionSubsystemPlatform"}},{"column":"OperatingSystemVersionPlatform","Properties":{"Path":"$.customDimensions.OperatingSystemVersionPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"NodeId","Properties": {"Path":"$.customDimensions.nodeId"}},{"column":"ExperimentStepId","Properties":{"Path":"$.customDimensions.experimentStepId"}},{"column":"ExperimentGroup","Properties":{"Path":"$.customDimensions.experimentGroup"}},{"column":"GroupId","Properties":{"Path":"$.customDimensions.groupId"}},{"column":"BinaryVersion","Properties":{"Path":"$.customDimensions.BinaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+.create table VirtualClientMonitors ingestion json mapping 'MonitorsTelemetryMapping' '[{"column":"Timestamp","Properties":{"Path":"$.timestamp"}},{"column":"TimeStamp","Properties":{"Path":"$.timestamp"}},{"column":"ExperimentId","Properties":{"Path":"$.customDimensions.metadata.experimentId"}},{"column":"Message","Properties":{"Path":"$.message"}},{"column":"CounterName","Properties":{"Path":"$.customDimensions.counterName"}},{"column":"CounterValue","Properties":{"Path":"$.customDimensions.counterValue"}},{"column":"DurationMs","Properties":{"Path":"$.customDimensions.durationMs"}},{"column":"ExecutionProfile","Properties":{"Path":"$.customDimensions.executionProfile"}},{"column":"ExecutionArguments","Properties":{"Path":"$.customDimensions.executionArguments"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.profileFriendlyName"}},{"column":"ExecutionSubsystemPlatform","Properties":{"Path":"$.customDimensions.executionPlatform"}},{"column":"OperatingSystemVersionPlatform","Properties":{"Path":"$.customDimensions.operatingSystemPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.metadata.agentId"}},{"column":"NodeId","Properties": {"Path":"$.customDimensions.metadata.nodeId"}},{"column":"ExperimentStepId","Properties":{"Path":"$.customDimensions.metadata.experimentStepId"}},{"column":"ExperimentGroup","Properties":{"Path":"$.customDimensions.metadata.experimentGroup"}},{"column":"GroupId","Properties":{"Path":"$.customDimensions.metadata.groupId"}},{"column":"BinaryVersion","Properties":{"Path":"$.customDimensions.binaryVersion"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+
+// Hubs
+vc-monitors
+telemetry-monitors
+
+// Rebuild Script
+// (Have to move the data 1 range of time at a time. 60 day/2 month increments.)
+.set-or-append VirtualClientMonitors2 <|
+VirtualClientMonitors
+| where TimeStamp >= ago(90d) and TimeStamp < ago(45d)
+| extend Metadata = pack(
+    "experimentId", ExperimentId,
+    "experimentStepId", ExperimentStepId,
+    "experimentGroup", ExperimentGroup,
+    "groupId", GroupId,
+    "nodeId", NodeId,
+    "agentId", AgentId
+)
+| project
+    Timestamp = TimeStamp,
+    TimeStamp,
+    ExperimentId,
+    Message,
+    CounterName,
+    CounterValue,
+    DurationMs,
+    ExecutionProfile,
+    ExecutionArguments = "",
+    ProfileFriendlyName,
+    ExecutionSubsystemPlatform,
+    OperatingSystemVersionPlatform,
+    OperationId = "",
+    OperationParentId = "",
+    SdkVersion = "",
+    AppName = "",
+    AppHost = "",
+    NodeId,
+    ExperimentStepId,
+    ExperimentGroup,
+    GroupId,
+    BinaryVersion,
+    AgentId,
+    Dimensions
+
+.rename table VirtualClientMonitors to xVirtualClientMonitors
+.rename table VirtualClientMonitors2 to VirtualClientMonitors
+
+// Metrics
+// ---------------------------------------------------
+.create table VirtualClientMetrics2 (Timestamp: datetime, TimeStamp: datetime, ExperimentId: string, TestName: string, MetricName: string, TestResult: real, Unit: string, TestStartTime: datetime, TestEndTime: datetime, ToolName: string, Tags: string, TestedInstance: string, ExecutionProfile: string, ExecutionArguments: string, ExecutionParameters: string, ProfileFriendlyName: string, ExecutionSubsystemPlatform: string, OperatingSystemVersionPlatform: string, OperationId: string, OperationParentId: string, SdkVersion: string, AppName: string, AppHost: string, TransactionId: string, ExperimentStepId: string, ExperimentGroup: string, GroupId: string, VirtualMachineName: string, ClusterName: string, TipSessionId: string, NodeId: string, BinaryVersion: string, AgentId: string, Metadata: dynamic) 
+
+// JSON Mappings
+.create table VirtualClientMetrics ingestion json mapping 'VirtualClientMetricsMapping' '[{"column":"Timestamp","Properties": {"Path":"$.timestamp"}},{"column":"TimeStamp","Properties": {"Path":"$.timestamp"}},{"column":"ExperimentId","Properties": {"Path":"$.customDimensions.experimentId"}},{"column":"TestName","Properties": {"Path":"$.TestName"}},{"column":"MetricName","Properties": {"Path":"$.MetricName"}},{"column":"TestResult","Properties": {"Path":"$.TestResult"}},{"column":"Unit","Properties": {"Path":"$.Units"}},{"column":"TestStartTime","Properties": {"Path":"$.TestStartTime"}},{"column":"TestEndTime","Properties": {"Path":"$.TestEndTime"}},{"column":"ToolName","Properties": {"Path":"$.ToolName"}},{"column":"Tags","Properties": {"Path":"$.Tags"}},{"column":"TestedInstance","Properties": {"Path":"$.TestedInstance"}},{"column":"ExecutionProfile","Properties": {"Path":"$.customDimensions.ExecutionProfile"}},{"column":"ExecutionArguments","Properties": {"Path":"$.customDimensions.ExecutionArguments"}},{"column":"ExecutionParameters","Properties": {"Path":"$.CommandLineParameter"}},{"column":"ProfileFriendlyName","Properties": {"Path":"$.customDimensions.ProfileFriendlyName"}},{"column":"ExecutionSubsystemPlatform","Properties": {"Path":"$.customDimensions.ExecutionSubsystemPlatform"}},{"column":"OperatingSystemVersionPlatform","Properties": {"Path":"$.customDimensions.OperatingSystemVersionPlatform"}},{"column":"OperationId","Properties": {"Path":"$.operation_Id"}},{"column":"OperationParentId","Properties": {"Path":"$.operation_ParentId"}},{"column":"SdkVersion","Properties": {"Path":"$.sdkVersion"}},{"column":"AppName","Properties": {"Path":"$.appName"}},{"column":"AppHost","Properties": {"Path":"$.appHost"}},{"column":"TransactionId","Properties": {"Path":"$.customDimensions.transactionId"}},{"column":"ExperimentStepId","Properties": {"Path":"$.customDimensions.experimentStepId"}},{"column":"ExperimentGroup","Properties": {"Path":"$.customDimensions.experimentGroup"}},{"column":"GroupId","Properties": {"Path":"$.customDimensions.groupId"}},{"column":"VirtualMachineName","Properties": {"Path":"$.customDimensions.virtualMachineName"}},{"column":"ClusterName","Properties": {"Path":"$.customDimensions.clusterName"}},{"column":"TipSessionId","Properties": {"Path":"$.customDimensions.tipSessionId"}},{"column":"NodeId","Properties": {"Path":"$.customDimensions.nodeId"}},{"column":"BinaryVersion","Properties": {"Path":"$.customDimensions.BinaryVersion"}},{"column":"AgentId","Properties": {"Path":"$.customDimensions.agentId"}},{"column":"Dimensions","Properties": {"Path":"$.customDimensions"}}]'
+.create table VirtualClientMetrics ingestion json mapping 'MetricsTelemetryMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"TimeStamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.metadata.experimentId","datatype":"","transform":null},{"column":"TestName","path":"$.customDimensions.testName","datatype":"","transform":null},{"column":"MetricName","path":"$.customDimensions.metricName","datatype":"","transform":null},{"column":"TestResult","path":"$.customDimensions.testResult","datatype":"","transform":null},{"column":"Unit","path":"$.customDimensions.units","datatype":"","transform":null},{"column":"TestStartTime","path":"$.customDimensions.testStartTime","datatype":"","transform":null},{"column":"TestEndTime","path":"$.customDimensions.testEndTime","datatype":"","transform":null},{"column":"ToolName","path":"$.customDimensions.toolName","datatype":"","transform":null},{"column":"Tags","path":"$.customDimensions.tags","datatype":"","transform":null},{"column":"TestedInstance","path":"$.customDimensions.testedInstance","datatype":"","transform":null},{"column":"ExecutionProfile","path":"$.customDimensions.executionProfile","datatype":"","transform":null},{"column":"ExecutionArguments","path":"$.customDimensions.executionArguments","datatype":"","transform":null},{"column":"ExecutionParameters","path":"$.customDimensions.testArguments","datatype":"","transform":null},{"column":"ProfileFriendlyName","path":"$.customDimensions.profileFriendlyName","datatype":"","transform":null},{"column":"ExecutionSubsystemPlatform","path":"$.customDimensions.executionPlatform","datatype":"","transform":null},{"column":"OperatingSystemVersionPlatform","path":"$.customDimensions.operatingSystemPlatform","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"SdkVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"TransactionId","path":"$.customDimensions.transactionId","datatype":"","transform":null},{"column":"ExperimentStepId","path":"$.customDimensions.metadata.experimentStepId","datatype":"","transform":null},{"column":"ExperimentGroup","path":"$.customDimensions.metadata.experimentGroup","datatype":"","transform":null},{"column":"GroupId","path":"$.customDimensions.metadata.groupId","datatype":"","transform":null},{"column":"VirtualMachineName","path":"$.customDimensions.metadata.virtualMachineName","datatype":"","transform":null},{"column":"ClusterName","path":"$.customDimensions.metadata.clusterName","datatype":"","transform":null},{"column":"TipSessionId","path":"$.customDimensions.metadata.tipSessionId","datatype":"","transform":null},{"column":"NodeId","path":"$.customDimensions.metadata.nodeId","datatype":"","transform":null},{"column":"BinaryVersion","path":"$.customDimensions.binaryVersion","datatype":"","transform":null},{"column":"AgentId","path":"$.customDimensions.metadata.agentId","datatype":"","transform":null},{"column":"Dimensions","path":"$.customDimensions","datatype":"","transform":null}]'
+
+// Hubs
+vc-metrics
+telemetry-metrics
+
+// Rebuild Script
+// (Have to move the data 1 range of time at a time. 60 day/2 month increments.)
+.set-or-append VirtualClientMetrics2 <|
+VirtualClientMetrics
+| where TimeStamp >= ago(300d) and TimeStamp < ago(250d)
+| extend Metadata = pack(
+    "experimentId", ExperimentId,
+    "experimentStepId", ExperimentStepId,
+    "experimentGroup", ExperimentGroup,
+    "nodeId", NodeId,
+    "clusterName", ClusterName,
+    "virtualMachineName", VirtualMachineName,
+    "agentId", AgentId,
+    "tipSessionId", TipSessionId
+)
+| project
+    Timestamp = TimeStamp,
+    TimeStamp,
+    ExperimentId,
+    TestName,
+    MetricName,
+    TestResult,
+    Unit,
+    TestStartTime,
+    TestEndTime,
+    ToolName,
+    Tags,
+    TestedInstance,
+    ExecutionProfile,
+    ExecutionArguments = "",
+    ExecutionParameters,
+    ProfileFriendlyName,
+    ExecutionSubsystemPlatform,
+    OperatingSystemVersionPlatform,
+    OperationId = "",
+    OperationParentId = "",
+    SdkVersion = "",
+    AppName = "",
+    AppHost = "",
+    TransactionId,
+    ExperimentStepId,
+    ExperimentGroup,
+    GroupId,
+    VirtualMachineName,
+    ClusterName,
+    TipSessionId,
+    NodeId,
+    BinaryVersion,
+    AgentId,
+    Dimensions

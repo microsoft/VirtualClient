@@ -1,0 +1,367 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- 
+  Reference Links:
+  
+  MSBuild Reserved and Well-Known Properties
+  https://msdn.microsoft.com/en-us/library/ms164309.aspx
+  
+  Common MSBuild Project Properties
+  https://msdn.microsoft.com/en-us/library/bb629394.aspx
+  
+  Common MSBuild Project Items
+  https://msdn.microsoft.com/en-us/library/bb629388.aspx
+  
+  MSBuild Command-Line Reference
+  https://msdn.microsoft.com/en-us/library/ms164311.aspx
+  
+  MSBuild Property Function Reference
+  https://msdn.microsoft.com/en-us/library/dd633440.aspx
+  
+  Target Frameworks
+  https://docs.microsoft.com/en-us/nuget/schema/target-frameworks
+  https://docs.microsoft.com/en-us/dotnet/standard/net-standard
+  -->
+
+    <!--
+    **********************************************************************************
+    Build Environment/Repo Core Directory Paths
+
+    IMPORTANT:
+    The 'RepoPath' property must be defined in the Repo.props file.  This file MUST be 
+    in the root of each individual repo.
+
+    Note:
+    These settings can be overriden in either the Module.props file for a solution or
+    within a specific project file (e.g. .csproj).
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        
+        <!--
+        The path to the build environment source root (e.g. contains all of the build environment settings files).
+        By default the build environment path is the same as the repo path.  If a Git submodule is used to provide
+        the build environment settings, this path will be a subdirectory within the repo.
+        
+        ex: S:\buildRoot\repo
+            S:\buildRoot\buildEnv
+        -->
+        <BuildEnvPath>$([MSBuild]::ValueOrDefault($(MSBuildThisFileDirectory), '.\').TrimEnd('\'))</BuildEnvPath>
+
+        <!--
+        Targets and Props files that define rules within the build environment (ex:  code signing, static analysis).
+        By default this path will be the same as the 'RepoScriptsPath' property when the build environment definitions 
+        are in the same repo.  If a Git submodule is used to provide the build environment settings, this path will be 
+        a subdirectory within the repo.
+        
+        ex:  S:\environment\repo\rules
+             S:\environment\repo\buildenv\rules
+        -->
+        <BuildEnvRulesPath>$(BuildEnvPath)\rules</BuildEnvRulesPath>
+
+        <!--
+        Build environment core scripts used for common operations for all repos in the build environment.  By default this path
+        will be the same as the 'RepoScriptsPath' property when the build environment definitions are in the same repo.
+        If a Git submodule is used to provide the build environment settings, this path will be a subdirectory within the repo.
+
+        ex:  S:\Source\repo\scripts
+             S:\Source\repo\buildenv\scripts
+        -->
+        <BuildEnvScriptsPath>$(BuildEnvPath)\scripts</BuildEnvScriptsPath>
+
+        <!--
+        Strong name key signing files and certificates for binaries in the environment.  By default this path
+        will be the same as the 'RepoScriptsPath' property when the build environment definitions are in the same repo.
+        If a Git submodule is used to provide the build environment settings, this path will be a subdirectory within the repo.
+
+        ex:  S:\Source\repo\signing
+             S:\Source\repo\buildenv\signing
+        -->
+        <BuildEnvSigningFilePath>$(BuildEnvPath)\signing</BuildEnvSigningFilePath>
+
+        <!--
+        Targets and Props files used by projects across all repos to produce common behaviors during build (ex:  create help documentation).
+        By default this path will be the same as the 'RepoToolsetsPath' property when the build environment definitions are in the same repo.
+        If a Git submodule is used to provide the build environment settings, this path will be a subdirectory within the repo.
+        
+        ex:  S:\Source\repo\toolsets
+             S:\Source\repo\buildenv\toolsets
+        -->
+        <BuildEnvToolsetsPath>$(BuildEnvPath)\toolsets</BuildEnvToolsetsPath>
+
+        <!--
+        The path to the parent directory of the source code that contains the repos, output directories 
+        and NuGet package directories.
+        
+        ex:  S:\Source  -> is the root of ->  S:\Source\repo
+        -->
+        <BuildRoot>$([System.IO.Path]::GetFullPath('$(RepoPath)\..').TrimEnd('\'))</BuildRoot>
+
+        <!--
+        The root bin/output path where binary files generated during build are output for all projects
+        within the repo.
+        
+        ex:  S:\Source\repo.bin
+        -->
+        <BuildBinPath Condition="'$(BuildBinPath)' == ''">$(RepoPath)\out\bin</BuildBinPath>
+
+        <!--
+        The root obj/intermediates file path where files generated during build are output for all projects
+        within the repo.
+        
+        ex:  S:\Source\repo.obj
+        -->
+        <BuildIntermediatesPath Condition="'$(BuildIntermediatesPath)' == ''">$(RepoPath)\out\obj</BuildIntermediatesPath>
+
+        <!--
+        Path to directory containing NuGet.exe and NuGet package cache.
+        
+        ex: S:\Source\.nuget
+        -->
+        <BuildNuGetPath Condition="'$(BuildNuGetPath)' == ''">$(BuildRoot)\.nuget</BuildNuGetPath>
+
+        <!--
+        Path to directory containing the NuGet package cache.  This is the default path to which NuGet packages/dependencies
+        are downloaded during build/restoration operations.  The package cache is shared by all repos within the build root
+        directory by default.
+        
+        ex: S:\Source\.nuget\packages
+        -->
+        <BuildNuGetPackageCachePath Condition="'$(BuildNuGetPackageCachePath)' == ''">$(BuildNuGetPath)\packages</BuildNuGetPackageCachePath>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+    .NET Framework Platform and Project Distinctions
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        <IsDotNetCore>false</IsDotNetCore>
+        <IsDotNetStandard>false</IsDotNetStandard>
+        <IsUniversalWindows>false</IsUniversalWindows>
+        <!--
+        Starting net6.0, the .NET framework implements .NET Core.
+        -->
+        <IsDotNetCore Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(TargetFramework)', 'netcoreapp[1-5]\.[0-9]|net[5-9]\.[0-9]'))">true</IsDotNetCore>
+        <IsDotNetStandard Condition="$(TargetFramework.StartsWith('netstandard'))">true</IsDotNetStandard>
+        <IsUniversalWindows Condition="$(TargetPlatformIdentifier.StartsWith('uap'))">true</IsUniversalWindows>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <TestProject Condition="$(MSBuildProjectName.EndsWith('Tests'))">true</TestProject>
+        <ProjectTypeExtension>$([System.IO.Path]::GetExtension('$(MSBuildProjectFile)'))</ProjectTypeExtension>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <DefineConstants Condition="'$(IsDotNetCore)' == 'true'">$(DefineConstants);NETCORE</DefineConstants>
+        <DefineConstants Condition="'$(IsDotNetStandard)' == 'true'">$(DefineConstants);NETSTANDARD</DefineConstants>
+        <DefineConstants Condition="'$(IsUniversalWindows)' == 'true'">$(DefineConstants);UNIVERSALWINDOWS</DefineConstants>
+    </PropertyGroup>
+
+    <!--
+        Default the runtime identifier to AnyCPU if not supplied.
+    -->
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <PlatformTarget Condition="'$(PlatformTarget)' == ''">AnyCPU</PlatformTarget>
+        <Platform Condition="'$(Platform)' == ''">AnyCPU</Platform>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'linux-x64'">
+        <PlatformTarget>x64</PlatformTarget>
+        <Platform>x64</Platform>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-arm64' or '$(RuntimeIdentifier)' == 'linux-arm64'">
+        <PlatformTarget>ARM64</PlatformTarget>
+        <Platform>ARM64</Platform>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x86' or '$(RuntimeIdentifier)' == 'linux-x86'">
+        <PlatformTarget>x86</PlatformTarget>
+        <Platform>x86</Platform>
+    </PropertyGroup>
+
+    <!--
+    **********************************************************************************
+    Intermediates/obj Paths (.NET Full Framework)
+
+    Examples:
+    S:\environment\repo.obj\Debug
+    S:\environment\repo.obj\Debug\x86
+    S:\environment\repo.obj\Debug\x64
+    **********************************************************************************
+    -->
+    <PropertyGroup Condition="'$(IsDotNetCore)' != 'true' and '$(IsDotNetStandard)' != 'true'">
+        <BaseIntermediateOutputPath>$(BuildIntermediatesPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+        <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+        <IntDir>$(IntermediateOutputPath)</IntDir>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+    Intermediates/obj Paths (.NET Core/Standard Framework)
+
+    Examples:
+    S:\environment\repo.obj\Debug
+    S:\environment\repo.obj\Debug\x86
+    S:\environment\repo.obj\Debug\x64
+    **********************************************************************************
+    -->
+    <PropertyGroup Condition="'$(IsDotNetCore)' == 'true' or '$(IsDotNetStandard)' == 'true'">
+        <IntermediateOutputPath>$(BuildIntermediatesPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</IntermediateOutputPath>
+        <IntDir>$(IntermediateOutputPath)</IntDir>
+    </PropertyGroup>
+
+
+    <!-- 
+    **********************************************************************************
+    Bin/Output Paths
+    https://docs.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-properties?view=vs-2019
+
+    Examples:
+    S:\environment\repo.bin\Debug
+    S:\environment\repo.bin\Debug\x86
+    S:\environment\repo.bin\Debug\x64
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        <OutputPath>$(BuildBinPath)\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</OutputPath>
+        <OutDir Condition="'$(IsDotNetCore)' == 'true' or '$(IsDotNetStandard)' == 'true'">$(OutputPath)$(TargetFramework)</OutDir>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+    VS/MSBuild toolset paths and platform versions
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+        <MSBuildTasksAssemblyFullPath Condition="'$(MSBuildToolsVersion)' == '14.0' and Exists('$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll')">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll</MSBuildTasksAssemblyFullPath>
+        <MSBuildTasksAssemblyFullPath Condition="'$(MSBuildToolsVersion)' != '14.0'">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v$(MSBuildToolsVersion).dll</MSBuildTasksAssemblyFullPath>
+        <MSBuildTasksAssemblyFullPath Condition="Exists('$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll')">$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</MSBuildTasksAssemblyFullPath>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+    Build configurations
+    **********************************************************************************
+    -->
+
+    <PropertyGroup>
+        <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+        <ErrorReport Condition="'$(ErrorReport)' == ''">prompt</ErrorReport>
+        <WarningLevel Condition="'$(WarningLevel)' == ''">4</WarningLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>$(NoWarn),NU1603</NoWarn>
+        <FileAlignment>512</FileAlignment>
+        <Prefer32Bit Condition="'$(Prefer32Bit)' == ''">false</Prefer32Bit>
+        <BuildInParallel Condition="$(BuildInParallel) == ''">true</BuildInParallel>
+    </PropertyGroup>
+
+    <!--
+    Visual Studio keys off of these to determine which project configurations exist.
+    This unfortunately means we need to duplicate this line for each potential architecture, even if it is EMPTY.
+     -->
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'" />
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|ARM64'" />
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release'">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <DefineConstants>TRACE</DefineConstants>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+         Project Compilation Specifics/Settings
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <AssemblyNeutralResourcesLanguage>en-US</AssemblyNeutralResourcesLanguage>
+        <NeutralResourcesLanguage>true</NeutralResourcesLanguage>
+        
+        <AssemblyAttributeCLSCompliant>false</AssemblyAttributeCLSCompliant>
+        <AssemblyAttributeUseComVisible>true</AssemblyAttributeUseComVisible>
+        <AssemblyAttributeComVisible Condition="'$(AssemblyAttributeComVisible)'==''">false</AssemblyAttributeComVisible>
+
+        <!-- So that XAML compilation doesn't hold open files in the bindir -->
+        <AlwaysCompileMarkupFilesInSeparateDomain>true</AlwaysCompileMarkupFilesInSeparateDomain>
+
+        <!-- Keep MSBuild from locking files when doing ResGen -->
+        <GenerateResourceNeverLockTypeAssemblies>true</GenerateResourceNeverLockTypeAssemblies>
+
+        <!-- Disable caching of the inputs to the compiler for Intellisense -->
+        <EnableProjectCaching>false</EnableProjectCaching>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+           Strong-Name Key/Assembly Signing
+    **********************************************************************************
+    -->
+    <PropertyGroup>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>$(BuildEnvSigningFilePath)\Signing.snk</AssemblyOriginatorKeyFile>
+    </PropertyGroup>
+
+
+    <!--
+    **********************************************************************************
+         Testing and Code Analysis Settings
+    **********************************************************************************
+    -->
+    <PropertyGroup Condition="'$(TestProject)' == ''">
+        <UnitTestPlatformVersion  Condition="'$(UnitTestPlatformVersion)' == ''">$(VisualStudioVersion)</UnitTestPlatformVersion>
+        <ErrorReport Condition="'$(ErrorReport)' == ''">prompt</ErrorReport>
+        <WarningLevel Condition="'$(WarningLevel)' == ''">4</WarningLevel>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>$(NoWarn),NU1603</NoWarn>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <CodeAnalysisRuleSet>$(BuildEnvRulesPath)\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(TestProjectType)'=='UnitTest' or '$(TestProject)'=='True'">
+        
+        <!-- Test specific analyzer settings that are a bit less specific -->
+        <CodeAnalysisRuleSet>$(BuildEnvRulesPath)\CodeAnalysis.tests.ruleset</CodeAnalysisRuleSet>
+        <NoWarn>$(NoWarn),CS1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AvailableItemName Include="AdditionalFiles" />
+        <CodeAnalysisDictionary Include="$(BuildEnvRulesPath)\CodeAnalysis.dictionary" />
+    </ItemGroup>
+
+
+    <!--
+    *****************************************************************************
+         Import Custom/Global Environment Build Targets
+    **********************************************************************************
+    -->
+    <Import Project="$(BuildEnvPath)\BuildEnv.targets"/>
+
+</Project>
+

@@ -1,0 +1,37 @@
+{
+    "Description": "LMbench Performance Workload",
+    "MinimumExecutionInterval": "00:10:00",
+    "Parameters": {
+        "CompilerName": "gcc",
+        "CompilerVersion": "10"
+    },
+    "Actions": [
+        {
+            "Type": "LMbenchExecutor",
+            "Parameters": {
+                "Scenario": "MemoryPerformance",
+                "PackageName": "lmbench"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "Scenario": "InstallCompiler",
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLMbenchWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "lmbench.1.0.0-2alpha8-1.zip",
+                "PackageName": "lmbench",
+                "Extract": true
+            }
+        }
+    ]
+}

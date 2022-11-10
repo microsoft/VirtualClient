@@ -1,0 +1,33 @@
+{
+	"LoopInfinitely": "false",
+	"Metadata": {
+	},
+	"Actions": [
+		{
+			"Type": "TestAction",
+			"Arguments": [
+				{
+					"Name": "aParameter",
+					"Value": "aValue"
+				},
+				{
+					"Name": "ParallelDiskExecution",
+					"Value": "true"
+				}
+			]
+		}
+	],
+	"Monitors": [
+		{
+			"Type": "TestMonitor",
+			"Arguments": [
+				{
+					"Name": "anotherParameter",
+					"Value": "anotherValue"
+				}
+			]
+		}
+	]
+}
+	
+	

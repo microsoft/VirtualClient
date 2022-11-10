@@ -1,0 +1,422 @@
+﻿# SuperBenchmark Workload Metrics
+The following document illustrates the type of results that are emitted by the SuperBenchmark workload and captured by the
+Virtual Client for net impact analysis.
+
+* [SuperBenchmark MicroBenchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/micro-benchmarks)
+* [SuperBenchmark ModelBenchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/model-benchmarks)  
+* [SuperBenchmark DockerBenchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/docker-benchmarks)  
+
+### System Metrics
+* [Performance Counters](./PerformanceCounterMetrics.md)
+* [Power/Temperature Measurements](./PowerMetrics.md)  
+
+### Workload-Specific Metrics
+The following metrics are captured during the operations of the SuperBenchmark workload.
+
+# Micro Benchmarks
+
+## Computation Benchmarks
+
+### `kernel-launch`
+
+#### Introduction
+
+Measure GPU kernel launch latency,
+which is defined as the time range from the beginning of the launch API call to the beginning of the kernel execution.
+
+#### Metrics
+
+| Name                     | Unit      | Description                          |
+|--------------------------|-----------|--------------------------------------|
+| kernel-launch/event_time | time (ms) | Launch latency measured in GPU time. |
+| kernel-launch/wall_time  | time (ms) | Launch latency measured in CPU time. |
+
+### `gemm-flops`
+
+#### Introduction
+
+Measure the GPU GEMM FLOPS for different float and int data types, with or without Tensor Core (XDLOPS),
+performed by NVIDIA [cutlass](https://github.com/NVIDIA/cutlass/tree/ccb697bac77fcc898e9c897b2c90aa5b60ac72fb)
+or AMD [rocblas-bench](https://github.com/ROCmSoftwarePlatform/rocBLAS/tree/develop/clients/benchmarks).
+
+#### Metrics
+
+| Name                         | Unit           | Description                                             |
+|------------------------------|----------------|---------------------------------------------------------|
+| gemm-flops/fp64_flops        | FLOPS (GFLOPS) | GEMM float64 peak FLOPS.                                |
+| gemm-flops/fp32_flops        | FLOPS (GFLOPS) | GEMM float32 peak FLOPS.                                |
+| gemm-flops/fp16_flops        | FLOPS (GFLOPS) | GEMM float16 peak FLOPS.                                |
+| gemm-flops/fp64_tc_flops     | FLOPS (GFLOPS) | GEMM float64 peak FLOPS with NVIDIA Tensor Core.        |
+| gemm-flops/tf32_tc_flops     | FLOPS (GFLOPS) | GEMM tensor-float32 peak FLOPS with NVIDIA Tensor Core. |
+| gemm-flops/fp16_tc_flops     | FLOPS (GFLOPS) | GEMM float16 peak FLOPS with NVIDIA Tensor Core.        |
+| gemm-flops/bf16_tc_flops     | FLOPS (GFLOPS) | GEMM bfloat16 peak FLOPS with NVIDIA Tensor Core.       |
+| gemm-flops/int8_tc_iops      | IOPS (GIOPS)   | GEMM int8 peak IOPS with NVIDIA Tensor Core.            |
+| gemm-flops/int4_tc_iops      | IOPS (GIOPS)   | GEMM int4 peak IOPS with NVIDIA Tensor Core.            |
+| gemm-flops/fp32_xdlops_flops | FLOPS (GFLOPS) | GEMM tensor-float32 peak FLOPS with AMD XDLOPS.         |
+| gemm-flops/fp16_xdlops_flops | FLOPS (GFLOPS) | GEMM float16 peak FLOPS with AMD XDLOPS.                |
+| gemm-flops/bf16_xdlops_flops | FLOPS (GFLOPS) | GEMM bfloat16 peak FLOPS with AMD XDLOPS.               |
+| gemm-flops/int8_xdlops_iops  | IOPS (GIOPS)   | GEMM int8 peak IOPS with AMD XDLOPS.                    |
+
+### `matmul`
+
+#### Introduction
+
+Large scale matmul operation using `torch.matmul` with one GPU.
+
+#### Metrics
+
+| Name                           | Unit      | Description                    |
+|--------------------------------|-----------|--------------------------------|
+| pytorch-matmul/nosharding_time | time (ms) | Time of pure matmul operation. |
+
+### `cublas-function`
+
+TODO
+
+### `cudnn-function`
+
+TODO
+
+### `tensorrt-inference`
+
+#### Introduction
+
+Inference PyTorch/ONNX models on NVIDIA GPUs with [TensorRT](https://developer.nvidia.com/tensorrt).
+Currently the following models are supported:
+
+> alexnet, densenet121, densenet169, densenet201, densenet161, googlenet, inception_v3, mnasnet0_5,
+> mnasnet1_0, mobilenet_v2, resnet18, resnet34, resnet50, resnet101, resnet152, resnext50_32x4d,
+> resnext101_32x8d, wide_resnet50_2, wide_resnet101_2, shufflenet_v2_x0_5, shufflenet_v2_x1_0,
+> squeezenet1_0, squeezenet1_1, vgg11, vgg11_bn, vgg13, vgg13_bn, vgg16, vgg16_bn, vgg19_bn, vgg19
+
+#### Metrics
+
+| Name                                             | Unit      | Description                                                                                              |
+|--------------------------------------------------|-----------|----------------------------------------------------------------------------------------------------------|
+| tensorrt-inference/${model}_gpu_time_mean        | time (ms) | The mean GPU latency to execute the kernels for a query.                                                 |
+| tensorrt-inference/${model}_gpu_time_99          | time (ms) | The 99th percentile GPU latency to execute the kernels for a query.                                      |
+| tensorrt-inference/${model}_host_time_mean       | time (ms) | The mean H2D, GPU, and D2H latency to execute the kernels for a query.                                   |
+| tensorrt-inference/${model}_host_time_99         | time (ms) | The 99th percentile H2D, GPU, and D2H latency to execute the kernels for a query.                        |
+| tensorrt-inference/${model}_end_to_end_time_mean | time (ms) | The mean duration from when the H2D of a query is called to when the D2H of the same query is completed. |
+| tensorrt-inference/${model}_end_to_end_time_99   | time (ms) | The P99 duration from when the H2D of a query is called to when the D2H of the same query is completed.  |
+
+### `ort-inference`
+
+#### Introduction
+
+Inference performance of the torchvision models using ONNXRuntime. Currently the following models are supported:
+
+> alexnet, densenet121, densenet169, densenet201, densenet161, googlenet, inception_v3, mnasnet0_5,
+> mnasnet1_0, mobilenet_v2, resnet18, resnet34, resnet50, resnet101, resnet152, resnext50_32x4d,
+> resnext101_32x8d, wide_resnet50_2, wide_resnet101_2, shufflenet_v2_x0_5, shufflenet_v2_x1_0,
+> squeezenet1_0, squeezenet1_1, vgg11, vgg11_bn, vgg13, vgg13_bn, vgg16, vgg16_bn, vgg19_bn, vgg19
+
+#### Metrics
+
+| Name                                          | Unit      | Description                                               |
+|-----------------------------------------------|-----------|-----------------------------------------------------------|
+| ort-inference/{precision}_{model}_time        | time (ms) | The mean latency to execute one batch of inference.       |
+
+## Communication Benchmarks
+
+### `mem-bw`
+
+#### Introduction
+
+Measure the memory copy bandwidth across PCI-e and memory copy bandwidth between GPUs,
+performed by [NVIDIA](https://github.com/NVIDIA/cuda-samples/tree/master/Samples/bandwidthTest)
+or [AMD](https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/1_Utils/hipBusBandwidth) bandwidth test tool.
+
+#### Metrics
+
+| Name          | Unit             | Description                      |
+|---------------|------------------|----------------------------------|
+| mem-bw/h2d_bw | bandwidth (GB/s) | Host to device copy bandwidth.   |
+| mem-bw/d2h_bw | bandwidth (GB/s) | Device to host copy bandwidth.   |
+| mem-bw/d2d_bw | bandwidth (GB/s) | Device to device copy bandwidth. |
+
+### `gpu-copy-bw`
+
+Measure the memory copy bandwidth performed by GPU SM/DMA engine, including device-to-host, host-to-device and device-to-device.
+
+#### Metrics
+
+| Name                                                                          | Unit             | Description                                                                                                                |
+|-------------------------------------------------------------------------------|------------------|----------------------------------------------------------------------------------------------------------------------------|
+| cpu\_to\_gpu[0-9]+\_by\_gpu[0-9]+\_using\_(sm\|dma)\_under_numa[0-9]+_bw      | bandwidth (GB/s) | The bandwidth reading from all NUMA nodes' host memory using DMA engine or GPU SM by all GPUs.                             |
+| gpu[0-9]+\_to\_cpu\_by\_gpu[0-9]+\_using\_(sm\|dma)\_under_numa[0-9]+_bw      | bandwidth (GB/s) | The bandwidth writing to all NUMA nodes' host memory using DMA engine or GPU SM by all GPUs.                               |
+| gpu[0-9]+\_to_gpu[0-9]+\_by\_gpu[0-9]+\_using\_(sm\|dma)\_under_numa[0-9]+_bw | bandwidth (GB/s) | The bandwidth reading from  or writing to all GPUs using DMA engine or GPU SM by all GPUs with peer communication enabled. |
+
+### `ib-loopback`
+
+#### Introduction
+
+Measure the InfiniBand loopback verbs bandwidth, performed by
+[OFED performance tests](https://github.com/linux-rdma/perftest/tree/7504ce48ac396a02f4d00de359257b2cb8458f06).
+
+#### Metrics
+
+| Name                                        | Unit             | Description                                                  |
+|---------------------------------------------|------------------|--------------------------------------------------------------|
+| ib-loopback/ib_write_${msg_size}_ib[0-9]_bw | bandwidth (GB/s) | InfiniBand loopback write bandwidth with given message size. |
+| ib-loopback/ib_read_${msg_size}_ib[0-9]_bw  | bandwidth (GB/s) | InfiniBand loopback read bandwidth with given message size.  |
+| ib-loopback/ib_send_${msg_size}_ib[0-9]_bw  | bandwidth (GB/s) | InfiniBand loopback send bandwidth with given message size.  |
+
+### `nccl-bw` / `rccl-bw`
+
+#### Introduction
+
+Measure the performance of NCCL/RCCL operations,
+performed by [nccl-tests](https://github.com/NVIDIA/nccl-tests/tree/44df0bf010dcc95e840ca0fb7466c67cff3f1f0f)
+or [rccl-tests](https://github.com/ROCmSoftwarePlatform/rccl-tests/tree/dc1ad4853d7ec738387d42a75a58a98d7af00c7b).
+Support the following operations currently: allreduce, allgather, broadcast, reduce, reducescatter, alltoall.
+
+#### Metrics
+
+| Name                                   | Unit             | Description                                                 |
+|----------------------------------------|------------------|-------------------------------------------------------------|
+| nccl-bw/${operation}_${msg_size}_time  | time (us)        | NCCL operation lantency with given message size.            |
+| nccl-bw/${operation}_${msg_size}_algbw | bandwidth (GB/s) | NCCL operation algorithm bandwidth with given message size. |
+| nccl-bw/${operation}_${msg_size}_busbw | bandwidth (GB/s) | NCCL operation bus bandwidth with given message size.       |
+| rccl-bw/${operation}_${msg_size}_time  | time (us)        | RCCL operation lantency with given message size.            |
+| rccl-bw/${operation}_${msg_size}_algbw | bandwidth (GB/s) | RCCL operation algorithm bandwidth with given message size. |
+| rccl-bw/${operation}_${msg_size}_busbw | bandwidth (GB/s) | RCCL operation bus bandwidth with given message size.       |
+
+### `tcp-connectivity`
+
+#### Introduction
+
+Test the TCP connectivity between current node and nodes in the hostfile,
+performed by [tcping](https://github.com/zhengxiaowai/tcping)
+
+#### Metrics
+
+| Metrics                                         | Unit      | Description                                                                           |
+|-------------------------------------------------|-----------|---------------------------------------------------------------------------------------|
+| tcp-connectivity/${hostname/ip}_successed_count | count     | successed times of tcp connections between current node and other nodes               |
+| tcp-connectivity/${hostname/ip}_failed_count    | count     | failed times of tcp connections between current node and other nodes                  |
+| tcp-connectivity/${hostname/ip}_success_rate    |           | success rate (successed/total) of tcp connection between current node and other nodes |
+| tcp-connectivity/${hostname/ip}_time_min        | time (ms) | mininum latency of tcp connections between current node and other nodes               |
+| tcp-connectivity/${hostname/ip}_time_max        | time (ms) | maximum latency of tcp connections between current node and other nodes               |
+| tcp-connectivity/${hostname/ip}_time_avg        | time (ms) | average latency of tcp connections between current node and other nodes               |
+
+### `gpcnet-network-test` / `gpcnet-network-load-test`
+
+#### Introduction
+
+Distributed test, test the global network performance and congestion,
+performed by [GPCNET](https://github.com/netbench/GPCNET)
+
+gpcnet-network-test: Full system network tests in random and natural ring, alltoall and allreduce, at least 2 nodes
+
+gpcnet-network-load-test: Select full system network tests run with four congestors to measure network congestion or contention, at least 10 nodes
+
+ - supporting network tests: RR Two-sided Lat (8 B), RR Get Lat (8 B), RR Two-sided BW (131072 B), RR Put BW (131072 B), RR Two-sided BW+Sync (131072 B), Nat Two-sided BW (131072 B), Multiple Allreduce (8 B), Multiple Alltoall (4096 B)
+ - supporting congestors: Alltoall (4096 B), Two-sided Incast (4096 B), Put Incast (4096 B), Get Bcast (4096 B)
+
+#### Metrics
+
+| Metrics                                                 | Unit                   | Description                                                                                                                                                                |
+|---------------------------------------------------------|------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| gpcnet-network-test/rr_two-sided_lat_${stat}            | time (us)              | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'random ring communication pattern two-side latency' for network testing                 |
+| gpcnet-network-test/rr_two-sided+sync_bw_${stat}        | bandwidth (MiB/s/rank) | fstatistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'random ring communication pattern two-side bandwidth with barrier' for network testing |
+| gpcnet-network-test/multiple_allreduce_time_${stat}     | time (us)              | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'multiple allreduce bandwidth' for network testing                                       |
+| gpcnet-network-test/rr_get_lat_${stat}                  | bandwidth (MiB/s/rank) | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'RR GetLat (8 B)' for network testing                                                    |
+| gpcnet-network-test/rr_two-sided_bw_${stat}             | bandwidth (MiB/s/rank) | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'RR Two-sidedBW (131072 B)' for network testing                                          |
+| gpcnet-network-test/nat_two-sided_bw_${stat}            | bandwidth (MiB/s/rank) | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'Nat Two-sidedBW (131072 B)' for network testing                                         |
+| gpcnet-network-test/multiple_alltoall_bw_${stat}        | bandwidth (MiB/s/rank) | statistical values(min, max, avg, 99%, 99.9%) obtained by all nodes use algorithm 'Multiple Alltoall (4096 B)' for network testing                                         |
+| gpcnet-network-load-test/rr_two-sided_lat_x_${stat}     | factor (x)             | summary about congestion impact factor of the network test algorithm                                                                                                       |
+| gpcnet-network-load-test/rr_two-sided+sync_bw_x_${stat} | factor (x)             | summary about congestion impact factor of the network test algorithm                                                                                                       |
+| gpcnet-network-load-test/multiple_allreduce_x_${stat}   | factor (x)             | summary about congestion impact factor of the network test algorithm                                                                                                       |
+
+### `ib-traffic`
+
+#### Introduction
+
+Measure the InfiniBand performance under multi nodes' traffic pattern.
+
+The traffic pattern is defined in a config file, which is pre-defined for one-to-many, many-to-one and all-to-all patterns.
+Each row in the config is one round, and all pairs of nodes in a row run ib command simultaneously.
+
+#### Metrics
+
+| Metrics                                                       | Unit             | Description                                                                                                                                                                                                                         |
+|---------------------------------------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ib-traffic/${command}_${line}_${pair}_${server}_${client}_bw  | bandwidth (GB/s) | The max bandwidth of ib command (ib_write_bw, ib_send_bw, ib_read_bw) run between the ${pair}<sup>th</sup> node pair in the ${line}<sup>th</sup> line of the config, ${server} and ${client} are the hostname of server and client  |
+| ib-traffic/${command}_${line}_${pair}_${server}_${client}_lat | time (us)        | The max latency of ib command (ib_write_lat, ib_send_lat, ib_read_lat) run between the ${pair}<sup>th</sup> node pair in the ${line}<sup>th</sup> line of the config, ${server} and ${client} are the hostname of server and client |
+
+
+## Computation-communication Benchmarks
+
+### `computation-communication-overlap`
+
+#### Introduction
+
+Test the performance of single node when communication and computation overlap.
+
+#### Metrics
+
+| Name                                                  | Unit      | Description                                                  |
+|-------------------------------------------------------|-----------|--------------------------------------------------------------|
+| pytorch-computation-communication-overlap/mul_time    | time (ms) | Time of communication and mul kernel computation overlap.    |
+| pytorch-computation-communication-overlap/matmul_time | time (ms) | Time of communication and matmul kernel computation overlap. |
+
+####
+
+### `sharding-matmul`
+
+#### Introduction
+
+Test the performance of large scale matmul operation with multiple GPUs:
+* allreduce: Each GPU will calculate part of the MM calculation, and use AllReduce to merge all data into one tensor.
+* allgather: Each GPU will calculate part of the MM calculation, and use AllGather + Concat to merge all data into one tensor.
+
+#### Metrics
+
+| Name                                   | Unit      | Description                              |
+|----------------------------------------|-----------|------------------------------------------|
+| pytorch-sharding-matmul/allreduce_time | time (ms) | Time of sharding matmul using allreduce. |
+| pytorch-sharding-matmul/allgather_time | time (ms) | Time of sharding matmul using allgather. |
+
+## Storage Benchmarks
+
+### `disk-benchmark`
+
+#### Introduction
+
+Measure the disk performance through [FIO](https://github.com/axboe/fio/tree/0313e938c9c8bb37d71dade239f1f5326677b079).
+
+#### Metrics
+
+| Name                                                          | Unit         | Description                                              |
+|---------------------------------------------------------------|--------------|----------------------------------------------------------|
+| disk-benchmark/${disk_name}_rand_read_write_bs                | size (bytes) | Disk random read write block size.                       |
+| disk-benchmark/${disk_name}_rand_read_write_read_iops         | IOPS         | Disk random read write read IOPS.                        |
+| disk-benchmark/${disk_name}_rand_read_write_read_lat_ns_95.0  | time (ns)    | Disk random read write read latency in 95.0 percentile.  |
+| disk-benchmark/${disk_name}_rand_read_write_read_lat_ns_99.0  | time (ns)    | Disk random read write read latency in 99.0 percentile.  |
+| disk-benchmark/${disk_name}_rand_read_write_read_lat_ns_99.9  | time (ns)    | Disk random read write read latency in 99.9 percentile.  |
+| disk-benchmark/${disk_name}_rand_read_write_write_iops        | IOPS         | Disk random read write write IOPS.                       |
+| disk-benchmark/${disk_name}_rand_read_write_write_lat_ns_95.0 | time (ns)    | Disk random read write write latency in 95.0 percentile. |
+| disk-benchmark/${disk_name}_rand_read_write_write_lat_ns_99.0 | time (ns)    | Disk random read write write latency in 99.0 percentile. |
+| disk-benchmark/${disk_name}_rand_read_write_write_lat_ns_99.9 | time (ns)    | Disk random read write write latency in 99.9 percentile. |
+
+# Model Benchmarks
+
+## PyTorch Model Benchmarks
+
+### `gpt_models`
+
+#### Introduction
+
+Run training or inference tasks with single or half precision for GPT models,
+including gpt2-small, gpt2-medium, gpt2-large and gpt2-xl.
+
+#### Metrics
+
+| Name                                                       | Unit                   | Description                                 |
+|------------------------------------------------------------|------------------------|---------------------------------------------|
+| gpt_models/pytorch-${model_name}/fp32_train_step_time      | time (ms)              | Train step time with single precision.      |
+| gpt_models/pytorch-${model_name}/fp32_train_throughput     | throughput (samples/s) | Train throughput with single precision.     |
+| gpt_models/pytorch-${model_name}/fp32_inference_step_time  | time (ms)              | Inference step time with single precision.  |
+| gpt_models/pytorch-${model_name}/fp32_inference_throughput | throughput (samples/s) | Inference throughput with single precision. |
+| gpt_models/pytorch-${model_name}/fp16_train_step_time      | time (ms)              | Train step time with half precision.        |
+| gpt_models/pytorch-${model_name}/fp16_train_throughput     | throughput (samples/s) | Train throughput with half precision.       |
+| gpt_models/pytorch-${model_name}/fp16_inference_step_time  | time (ms)              | Inference step time with half precision.    |
+| gpt_models/pytorch-${model_name}/fp16_inference_throughput | throughput (samples/s) | Inference throughput with half precision.   |
+
+### `bert_models`
+
+#### Introduction
+
+Run training or inference tasks with single or half precision for BERT models, including bert-base and bert-large.
+
+#### Metrics
+
+| Name                                                        | Unit                   | Description                                 |
+|-------------------------------------------------------------|------------------------|---------------------------------------------|
+| bert_models/pytorch-${model_name}/fp32_train_step_time      | time (ms)              | Train step time with single precision.      |
+| bert_models/pytorch-${model_name}/fp32_train_throughput     | throughput (samples/s) | Train throughput with single precision.     |
+| bert_models/pytorch-${model_name}/fp32_inference_step_time  | time (ms)              | Inference step time with single precision.  |
+| bert_models/pytorch-${model_name}/fp32_inference_throughput | throughput (samples/s) | Inference throughput with single precision. |
+| bert_models/pytorch-${model_name}/fp16_train_step_time      | time (ms)              | Train step time with half precision.        |
+| bert_models/pytorch-${model_name}/fp16_train_throughput     | throughput (samples/s) | Train throughput with half precision.       |
+| bert_models/pytorch-${model_name}/fp16_inference_step_time  | time (ms)              | Inference step time with half precision.    |
+| bert_models/pytorch-${model_name}/fp16_inference_throughput | throughput (samples/s) | Inference throughput with half precision.   |
+
+### `lstm_models`
+
+#### Introduction
+
+Run training or inference tasks with single or half precision for one bidirectional LSTM model.
+
+#### Metrics
+
+| Name                                               | Unit                   | Description                                 |
+|----------------------------------------------------|------------------------|---------------------------------------------|
+| lstm_models/pytorch-lstm/fp32_train_step_time      | time (ms)              | Train step time with single precision.      |
+| lstm_models/pytorch-lstm/fp32_train_throughput     | throughput (samples/s) | Train throughput with single precision.     |
+| lstm_models/pytorch-lstm/fp32_inference_step_time  | time (ms)              | Inference step time with single precision.  |
+| lstm_models/pytorch-lstm/fp32_inference_throughput | throughput (samples/s) | Inference throughput with single precision. |
+| lstm_models/pytorch-lstm/fp16_train_step_time      | time (ms)              | Train step time with half precision.        |
+| lstm_models/pytorch-lstm/fp16_train_throughput     | throughput (samples/s) | Train throughput with half precision.       |
+| lstm_models/pytorch-lstm/fp16_inference_step_time  | time (ms)              | Inference step time with half precision.    |
+| lstm_models/pytorch-lstm/fp16_inference_throughput | throughput (samples/s) | Inference throughput with half precision.   |
+
+### `cnn_models`
+
+#### Introduction
+
+Run training or inference tasks with single or half precision for CNN models listed in
+[`torchvision.models`](https://pytorch.org/vision/0.8/models.html), including:
+* resnet: resnet18, resnet34, resnet50, resnet101, resnet152
+* resnext: resnext50_32x4d, resnext101_32x8d
+* wide_resnet: wide_resnet50_2, wide_resnet101_2
+* densenet: densenet121, densenet169, densenet201, densenet161
+* vgg: vgg11, vgg11_bn, vgg13, vgg13_bn, vgg16, vgg16_bn, vgg19_bn, vgg19
+* mnasnet: mnasnet0_5, mnasnet0_75, mnasnet1_0, mnasnet1_3
+* mobilenet: mobilenet_v2
+* shufflenet: shufflenet_v2_x0_5, shufflenet_v2_x1_0, shufflenet_v2_x1_5, shufflenet_v2_x2_0
+* squeezenet: squeezenet1_0, squeezenet1_1
+* others: alexnet, googlenet, inception_v3
+
+#### Metrics
+
+| Name                                                       | Unit                   | Description                                 |
+|------------------------------------------------------------|------------------------|---------------------------------------------|
+| cnn_models/pytorch-${model_name}/fp32_train_step_time      | time (ms)              | Train step time with single precision.      |
+| cnn_models/pytorch-${model_name}/fp32_train_throughput     | throughput (samples/s) | Train throughput with single precision.     |
+| cnn_models/pytorch-${model_name}/fp32_inference_step_time  | time (ms)              | Inference step time with single precision.  |
+| cnn_models/pytorch-${model_name}/fp32_inference_throughput | throughput (samples/s) | Inference throughput with single precision. |
+| cnn_models/pytorch-${model_name}/fp16_train_step_time      | time (ms)              | Train step time with half precision.        |
+| cnn_models/pytorch-${model_name}/fp16_train_throughput     | throughput (samples/s) | Train throughput with half precision.       |
+| cnn_models/pytorch-${model_name}/fp16_inference_step_time  | time (ms)              | Inference step time with half precision.    |
+| cnn_models/pytorch-${model_name}/fp16_inference_throughput | throughput (samples/s) | Inference throughput with half precision.   |
+
+---
+id: docker-benchmarks
+---
+
+# Docker Benchmarks
+
+## ROCm ONNXRuntime Model Benchmarks
+
+### `ort-models`
+
+#### Introduction
+
+Run the rocm onnxruntime model training benchmarks packaged in docker `superbench/benchmark:rocm4.3.1-onnxruntime1.9.0` which includes Bert-large, Distilbert-base, GPT-2, facebook/Bart-large and Roberta-large.
+
+#### Metrics
+
+| Name                                                                   | Unit                   | Description                                               |
+|------------------------------------------------------------------------|------------------------|-----------------------------------------------------------|
+| onnxruntime-ort-models/bert_large_uncased_ngpu_1_train_throughput      | throughput (samples/s) | The throughput of bert large uncased model on 1 GPU.      |
+| onnxruntime-ort-models/bert_large_uncased_ngpu_8_train_throughput      | throughput (samples/s) | The throughput of bert large uncased model on 8 GPU.      |
+| onnxruntime-ort-models/distilbert_base_uncased_ngpu_1_train_throughput | throughput (samples/s) | The throughput of distilbert base uncased model on 1 GPU. |
+| onnxruntime-ort-models/distilbert_base_uncased_ngpu_8_train_throughput | throughput (samples/s) | The throughput of distilbert base uncased model on 8 GPU. |
+| onnxruntime-ort-models/gpt2_ngpu_1_train_throughput                    | throughput (samples/s) | The throughput of gpt2 model on 1 GPU.                    |
+| onnxruntime-ort-models/gpt2_ngpu_8_train_throughput                    | throughput (samples/s) | The throughput of gpt2 model on 8 GPU.                    |
+| onnxruntime-ort-models/facebook_bart_large_ngpu_1_train_throughput     | throughput (samples/s) | The throughput of facebook bart large model on 1 GPU.     |
+| onnxruntime-ort-models/facebook_bart_large_ngpu_8_train_throughput     | throughput (samples/s) | The throughput of facebook bart large model on 8 GPU.     |
+| onnxruntime-ort-models/roberta_large_ngpu_1_train_throughput           | throughput (samples/s) | The throughput of roberta large model on 1 GPU.           |
+| onnxruntime-ort-models/roberta_large_ngpu_8_train_throughput           | throughput (samples/s) | The throughput of roberta large model on 8 GPU.           |

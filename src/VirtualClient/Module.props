@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!--
+    *****************************************************************************
+    Set the module name and root path properties.
+    *****************************************************************************
+    -->
+    <PropertyGroup>
+        <ModuleName>$([MSBuild]::MakeRelative($([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props)), $(MSBuildThisFileDirectory)).TrimEnd('\'))</ModuleName>
+        <ModulePath>$(MSBuildThisFileDirectory)</ModulePath>
+        <Platforms>AnyCPU;x64;ARM64</Platforms>
+        <NoWarn>$(NoWarn),CS8632</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!--
+        The following properties define versions of NuGet dependency packages that are used across the solution projects. By 
+        putting these here it helps to consolidate the work required to upversion dependencies across the common base. We intend to use
+        the same versions of a specific package across the board as a general rule. 
+        -->
+
+        <!-- AutoFixture -->
+        <AutoFixture_PackageVersion>4.17.0</AutoFixture_PackageVersion>
+
+        <!-- Azure.Identity -->
+        <Azure_Identity_PackageVersion>1.6.1</Azure_Identity_PackageVersion>
+
+        <!-- Azure.Messaging.EventHubs -->
+        <Azure_Messaging_EventHubs_PackageVersion>5.7.2</Azure_Messaging_EventHubs_PackageVersion>
+
+        <!-- Azure.Storage.Blobs -->
+        <Azure_Storage_Blobs_PackageVersion>12.13.1</Azure_Storage_Blobs_PackageVersion>
+
+        <!-- Extreme.Numerics -->
+        <Extreme_Numerics_PackageVersion>8.1.9</Extreme_Numerics_PackageVersion>
+
+        <!-- MathNet.Numerics.Signed -->
+        <MathNet_Numerics_Signed_PackageVersion>5.0.0</MathNet_Numerics_Signed_PackageVersion>
+
+        <!-- Microsoft.AspNetCore -->
+        <Microsoft_AspNetCore_PackageVersion>2.2.0</Microsoft_AspNetCore_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Authentication -->
+        <Microsoft_AspNetCore_Authentication_PackageVersion>2.2.0</Microsoft_AspNetCore_Authentication_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Hosting -->
+        <Microsoft_AspNetCore_Hosting_PackageVersion>2.2.0</Microsoft_AspNetCore_Hosting_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Mvc -->
+        <Microsoft_AspNetCore_Mvc_PackageVersion>2.2.0</Microsoft_AspNetCore_Mvc_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Mvc.Formatters.Json -->
+        <Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion>2.2.0</Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Mvc.Versioning -->
+        <Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>5.0.0</Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>
+
+        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson -->
+        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>6.0.0</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
+
+        <!-- Microsoft_Azure_Profiling_PackageVersion -->
+        <Microsoft_Azure_Profiling_PackageVersion>1.0.30</Microsoft_Azure_Profiling_PackageVersion>
+
+        <!-- Microsoft.Azure.Services.AppAuthentication -->
+        <Microsoft_Azure_Services_AppAuthentication_PackageVersion>1.3.1</Microsoft_Azure_Services_AppAuthentication_PackageVersion>
+
+        <!-- Microsoft.Diagnostics.Tracing.TraceEvent -->
+        <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>2.0.61</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
+
+        <!-- Microsoft.Extensions.Configuration -->
+        <Microsoft_Extensions_Configuration_PackageVersion>6.0.1</Microsoft_Extensions_Configuration_PackageVersion>
+
+        <!-- Microsoft.Extensions.Configuration.Json -->
+        <Microsoft_Extensions_Configuration_Json_PackageVersion>6.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
+
+        <!-- Microsoft.Extensions.DependencyInjection -->
+        <Microsoft_Extensions_DependencyInjection_PackageVersion>6.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
+
+        <!-- Microsoft.Extensions.Logging -->
+        <Microsoft_Extensions_Logging_PackageVersion>6.0.0</Microsoft_Extensions_Logging_PackageVersion>
+
+        <!-- Microsoft.Extensions.Logging.Console -->
+        <Microsoft_Extensions_Logging_Console_PackageVersion>6.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
+
+        <!-- Microsoft.NET.Test.Sdk -->
+        <Microsoft_NET_Test_Sdk_PackageVersion>17.0.0</Microsoft_NET_Test_Sdk_PackageVersion>
+
+        <!-- Microsoft.Extensions.Http.Polly -->
+        <Microsoft_Extensions_Http_Polly_PackageVersion>6.0.9</Microsoft_Extensions_Http_Polly_PackageVersion>
+
+        <!-- Microsoft.Windows.Compatibility -->
+        <Microsoft_Windows_Compatibility_PackageVersion>6.0.0</Microsoft_Windows_Compatibility_PackageVersion>
+
+        <!-- Microsoft.Win32.Registry -->
+        <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
+
+        <!-- Moq -->
+        <Moq_PackageVersion>4.18.2</Moq_PackageVersion>
+
+        <!-- Newtonsoft.Json -->
+        <Newtonsoft_Json_PackageVersion>13.0.1</Newtonsoft_Json_PackageVersion>
+
+        <!-- NUnit -->
+        <NUnit_PackageVersion>3.13.2</NUnit_PackageVersion>
+
+        <!-- NUnit3TestAdapter -->
+        <NUnit3TestAdapter_PackageVersion>4.2.1</NUnit3TestAdapter_PackageVersion>
+
+        <!-- Polly -->
+        <Polly_PackageVersion>7.2.3</Polly_PackageVersion>
+
+        <!-- Polly.Extensions.Http -->
+        <Polly_Extensions_Http_PackageVersion>3.0.0</Polly_Extensions_Http_PackageVersion>
+
+        <!-- Serilog.Extensions.Logging -->
+        <Serilog_Extensions_Logging_PackageVersion>3.1.0</Serilog_Extensions_Logging_PackageVersion>
+
+        <!-- Serilog.Sinks.File -->
+        <Serilog_Sinks_File_PackageVersion>5.0.0</Serilog_Sinks_File_PackageVersion>
+
+        <!-- Serilog.Sinks.RollingFile -->
+        <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
+
+        <!-- System.CommandLine -->
+        <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
+
+        <!-- System.Diagnostics.Debug -->
+        <System_Diagnostics_Debug_PackageVersion>4.3.0</System_Diagnostics_Debug_PackageVersion>
+
+        <!-- System.Diagnostics.EventLog -->
+        <System_Diagnostics_EventLog_PackageVersion>6.0.0</System_Diagnostics_EventLog_PackageVersion>
+
+        <!-- System.Diagnostics.PerformanceCounter -->
+        <System_Diagnostics_PerformanceCounter_PackageVersion>6.0.0</System_Diagnostics_PerformanceCounter_PackageVersion>
+
+        <!-- System.IO.Abstractions -->
+        <System_IO_Abstractions_PackageVersion>13.2.47</System_IO_Abstractions_PackageVersion>
+
+        <!-- System.IO.FileSystem.AccessControl -->
+        <System_IO_FileSystem_AccessControl_PackageVersion>5.0.0</System_IO_FileSystem_AccessControl_PackageVersion>
+
+        <!-- System.IO.FileSystem.Primitives -->
+        <System_IO_FileSystem_Primitives_PackageVersion>4.3.0</System_IO_FileSystem_Primitives_PackageVersion>
+
+        <!-- System.Net.Http -->
+        <System_Net_Http_PackageVersion>4.3.4</System_Net_Http_PackageVersion>
+
+        <!-- System.Net.NameResolution -->
+        <System_Net_NameResolution_PackageVersion>4.3.0</System_Net_NameResolution_PackageVersion>
+
+        <!-- System.Reflection.Metadata -->
+        <System_Reflection_Metadata_PackageVersion>6.0.0</System_Reflection_Metadata_PackageVersion>
+
+        <!-- System.Security.Principal.Windows -->
+        <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
+
+        <!-- YamlDotNet -->
+        <YamlDotNet_PackageVersion>11.2.1</YamlDotNet_PackageVersion>
+
+    </PropertyGroup>
+
+    <!--
+    *****************************************************************************
+    Ensure the target .NET Core runtime is explicitly defined to avoid issues
+    between NuGet package restores and build.
+    *****************************************************************************
+    -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+        <RuntimeFrameworkVersion>6.0.0</RuntimeFrameworkVersion>
+    </PropertyGroup>
+
+    <!--
+    ******************************************************************************
+    
+    Adding AssemblyVersion in every project. 
+
+    Note that the default AssemblyVersion below should be set to a major/minor version
+    higher than the latest production release version as defined in the YAML files
+    (e.g. /repo/.pipeline) and that is used in the Official builds. For example, if the
+    major/minor version in the YAML file is set to 1.5.*, then the default version below
+    should be set to 1.6.0.0. This helps to simplify the debugging experience for developers
+    who are creating extensions to the Virtual Client by avoiding errors/warnings surfaced by
+    the Visual Studio debugger around mismatched versions of common .dlls.
+    
+    *****************************************************************************
+    -->
+    <PropertyGroup>
+        <PackagePreReleaseSuffix></PackagePreReleaseSuffix>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+        <AssemblyVersion>1.6.0.0</AssemblyVersion>
+        <AssemblyVersion Condition="'$(VCBuildVersion)' != ''">$(VCBuildVersion)</AssemblyVersion>
+    </PropertyGroup>
+
+    <!--
+    *****************************************************************************
+    Import the build environment settings.  These settings define the paths that 
+    will be used during build/compilation 
+    
+    (e.g. bin/output path, intermediates path, NuGet package cache path).
+    *****************************************************************************
+    -->
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\Repo.props" />
+    <Import Project="$(ModulePath)\CodeQuality.targets" />
+    <Import Project="$(BuildEnvToolsetsPath)\Documentation.targets" />
+
+</Project>

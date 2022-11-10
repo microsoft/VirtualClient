@@ -1,0 +1,15 @@
+﻿Scanning the drive:
+1 file, 51220480 bytes (49 MiB)
+
+Updating archive: silesialzma2.7z
+
+Add new data to archive: 1 file, 51220480 bytes (49 MiB)
+
+
+Files read from disk: 1
+Archive size: 13336765 bytes (13 MiB)
+Everything is Ok
+
+Kernel  Time =     0.156 =    1%    Cnt:          52381 MCycles
+User    Time =    20.484 =  171%    Freq (cnt/ptime):  2537 MHz
+Process Time =    20.640 =  172%    Virtual  Memory =    538 MB

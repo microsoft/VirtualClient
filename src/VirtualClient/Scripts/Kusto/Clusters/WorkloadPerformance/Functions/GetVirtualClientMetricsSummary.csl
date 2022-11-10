@@ -1,0 +1,11 @@
+.create-or-alter function with (folder = "", docstring = "", skipvalidation = "true") GetVirtualClientMetricsSummary(revision:string, startTime:datetime=datetime(null), endTime:datetime=datetime(null)) {
+    let dateRangeBegin = iff(isnull(startTime), datetime(2020-05-28), startTime);
+    let dateRangeEnd = iff(isnull(endTime), now(), endTime);
+    Metrics
+    | where Timestamp >= dateRangeBegin and Timestamp <= dateRangeEnd
+    | extend Revision = tostring(todynamic(CustomDimensions.metadata).revision)
+    | where Revision == revision
+    | project Profile, ToolName, ScenarioName, MetricName, MetricValue
+    | summarize min(MetricValue), max(MetricValue), avg(MetricValue), stdev(MetricValue) by Profile, ToolName, ScenarioName, MetricName
+    | order by Profile asc, ToolName asc, ScenarioName asc, MetricName asc
+}

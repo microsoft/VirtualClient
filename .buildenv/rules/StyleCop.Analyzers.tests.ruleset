@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="StyleCop Ruleset" Description="Stylecop rules" ToolsVersion="10.0">
+  <Localization ResourceAssembly="Microsoft.VisualStudio.CodeAnalysis.RuleSets.Strings.dll" ResourceBaseName="Microsoft.VisualStudio.CodeAnalysis.RuleSets.Strings.Localized">
+    <Name Resource="MinimumRecommendedRules_Name" />
+    <Description Resource="MinimumRecommendedRules_Description" />
+  </Localization>
+  <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="SA1028" Action="None" /> <!-- Code must not contain trailing whitespace -->
+    <Rule Id="SA1119" Action="None" /> <!-- Statement must not use unnecessary parenthesis -->
+    <Rule Id="SA1200" Action="None" /> <!-- Using directives must be placed within namespace -->
+    <Rule Id="SA1402" Action="None" /> <!-- File may only contain a single class -->
+    <Rule Id="SA1413" Action="None" /> <!-- Use trailing comma in multi-line initializers -->
+    <Rule Id="SA1504" Action="None" /> <!-- All accessors must be multi line or single line -->
+    <Rule Id="SA1512" Action="None" /> <!-- Single Line Comments Must Not Be Followed By Blank Line -->
+    <Rule Id="SA1515" Action="None" /> <!-- Single Line Comments Must Be Preceded By Blank Line -->
+    <Rule Id="SA1600" Action="None" /> <!-- Elements must be documented -->
+    <Rule Id="SA1601" Action="None" /> <!-- Partial elements must be documented -->
+    <Rule Id="SA1602" Action="None" /> <!-- Enumeration items must be documented -->
+    <Rule Id="SA1603" Action="None" /> <!-- Documentation Must Contain Valid XML -->
+    <Rule Id="SA1604" Action="None" /> <!-- Element documentation must have summary -->
+    <Rule Id="SA1605" Action="None" /> <!-- Partial element documentation must have summary -->
+    <Rule Id="SA1606" Action="None" /> <!-- Element documentation must have summary text -->
+    <Rule Id="SA1607" Action="None" /> <!-- Partial element documentation must have summary text -->
+    <Rule Id="SA1608" Action="None" /> <!-- Element documentation must not have default summary -->
+    <Rule Id="SA1609" Action="None" /> <!-- Property Documentation Must Have Value -->
+    <Rule Id="SA1610" Action="None" /> <!-- Property Documentation Must Have Value Text -->
+    <Rule Id="SA1611" Action="None" /> <!-- Element parameters must be documented -->
+    <Rule Id="SA1612" Action="None" /> <!-- Element parameter documentation must match element parameters -->
+    <Rule Id="SA1613" Action="None" /> <!-- Element parameter documentation must declare parameter name -->
+    <Rule Id="SA1614" Action="None" /> <!-- Element parameter documentation must have text -->
+    <Rule Id="SA1615" Action="None" /> <!-- Element return value must be documented -->
+    <Rule Id="SA1616" Action="None" /> <!-- Element return value documentation must have text -->
+    <Rule Id="SA1617" Action="None" /> <!-- Void return value must not be documented -->
+    <Rule Id="SA1618" Action="None" /> <!-- Generic type parameters must be documented -->
+    <Rule Id="SA1619" Action="None" /> <!-- Generic type parameters must be documented partial class -->
+    <Rule Id="SA1620" Action="None" /> <!-- Generic type parameter documentation must match type parameters -->
+    <Rule Id="SA1621" Action="None" /> <!-- Generic type parameter documentation must declare parameter name -->
+    <Rule Id="SA1622" Action="None" /> <!-- Generic type parameter docuemntation must have text -->
+    <Rule Id="SA1623" Action="None" /> <!-- Property Summary Documentation Must Match Accessors -->
+    <Rule Id="SA1624" Action="None" /> <!-- Property Summary Documentation Must Omit Set Accessor With Restricted Access -->
+    <Rule Id="SA1625" Action="None" /> <!-- Element documentation must not be copied and pasted -->
+    <Rule Id="SA1626" Action="None" /> <!-- Single line comments must not use documentation style slashes -->
+    <Rule Id="SA1627" Action="None" /> <!-- Documentation text must not be empty -->
+    <Rule Id="SA1628" Action="None" /> <!-- Documentation Text Must Begin With A Capital Letter -->
+    <Rule Id="SA1629" Action="None" /> <!-- Documentation Text Must End With A Period -->
+    <Rule Id="SA1630" Action="None" /> <!-- Documentation text must contain whitespace -->
+    <Rule Id="SA1631" Action="None" /> <!-- Documentation Must Meet Character Percentage -->
+    <Rule Id="SA1632" Action="None" /> <!-- Documentation Text Must Meet Minimum Character Length -->
+    <Rule Id="SA1633" Action="None" /> <!-- File must have header -->
+    <Rule Id="SA1634" Action="None" /> <!-- File header must show copyright -->
+    <Rule Id="SA1635" Action="None" /> <!-- File header must have copyright text -->
+    <Rule Id="SA1637" Action="None" /> <!-- File header must contain file name -->
+    <Rule Id="SA1638" Action="None" /> <!-- File header file name documentation must match file name -->
+    <Rule Id="SA1639" Action="None" /> <!-- File Header Must Have Summary -->
+    <Rule Id="SA1640" Action="None" /> <!-- File header must have valid company text -->
+    <Rule Id="SA1642" Action="None" /> <!-- Constructor summary documentation must begin with standard text -->
+    <Rule Id="SA1643" Action="None" /> <!-- Destructor summary documentation must begin with standard text -->
+    <Rule Id="SA1644" Action="None" /> <!-- Documentation Headers Must Not Contain Blank Lines -->
+    <Rule Id="SA1646" Action="None" /> <!-- Included Documentation XPath Does Not Exist -->
+    <Rule Id="SA1647" Action="None" /> <!-- Include Node Does Not Contain Valid File And Path -->
+    <Rule Id="SA1648" Action="None" /> <!-- Inherit doc must be used with inheriting class -->
+    <Rule Id="SA1649" Action="None" /> <!-- File header file name documentation must match type name -->
+    <Rule Id="SA1650" Action="None" /> <!-- Element Documentation Must Be Spelled Correctly -->
+    <Rule Id="SA1652" Action="None" /> <!-- Enable XML documentation output -->
+    <!--Property*Docu-->
+
+    <!-- Test specific rules -->
+    <Rule Id="SA0001" Action="None" /> <!-- XML comment analysis is disabled due to project configuration -->
+  </Rules>
+</RuleSet>

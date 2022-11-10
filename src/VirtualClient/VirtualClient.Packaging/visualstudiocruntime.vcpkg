@@ -1,0 +1,6 @@
+﻿{
+    "name": "visualstudiocruntime",
+    "description": "Visual Studio C Runtime library.",
+    "version": "14.30.30708.0",
+    "metadata": {}
+}

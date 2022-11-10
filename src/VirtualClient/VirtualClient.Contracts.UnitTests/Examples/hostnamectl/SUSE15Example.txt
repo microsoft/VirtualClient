@@ -1,0 +1,10 @@
+   Static hostname: X64-SUSE15-vcuser1
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 8308286cad9a4aa48a2fe21f6c30de82
+           Boot ID: c51282d0080743bb912113ebbc39f518
+    Virtualization: microsoft
+  Operating System: SUSE Linux Enterprise Server 15 SP3
+       CPE OS Name: cpe:/o:suse:sles:15:sp3
+            Kernel: Linux 5.3.18-150300.38.53-azure
+      Architecture: x86-64

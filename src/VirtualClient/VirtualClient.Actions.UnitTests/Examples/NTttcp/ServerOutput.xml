@@ -1,0 +1,75 @@
+﻿<ntttcpr computername="LAPTOP-QAJMR977" version="5.35">
+    <parameters>
+        <send_socket_buff>0</send_socket_buff>
+        <recv_socket_buff>-1</recv_socket_buff>
+        <port>5005</port>
+        <sync_port>False</sync_port>
+        <no_sync>False</no_sync>
+        <wait_timeout_milliseconds>600000</wait_timeout_milliseconds>
+        <async>True</async>
+        <verbose>False</verbose>
+        <wsa>False</wsa>
+        <use_ipv6>False</use_ipv6>
+        <udp>False</udp>
+        <verify_data>False</verify_data>
+        <wait_all>False</wait_all>
+        <run_time>30000</run_time>
+        <warmup_time>0</warmup_time>
+        <cooldown_time>0</cooldown_time>
+        <dash_n_timeout>10800000</dash_n_timeout>
+        <bind_sender>False</bind_sender>
+        <sender_name></sender_name>
+        <max_active_threads>4</max_active_threads>
+    </parameters>
+    <thread index="0">
+        <realtime metric="s">30.007</realtime>
+        <throughput metric="KB/s">929454.115</throughput>
+        <throughput metric="MB/s">907.670</throughput>
+        <throughput metric="mbps">7614.088</throughput>
+        <avg_bytes_per_compl metric="B">65521.117</avg_bytes_per_compl>
+    </thread>
+    <thread index="1">
+        <realtime metric="s">30.008</realtime>
+        <throughput metric="KB/s">932642.341</throughput>
+        <throughput metric="MB/s">910.784</throughput>
+        <throughput metric="mbps">7640.206</throughput>
+        <avg_bytes_per_compl metric="B">65518.921</avg_bytes_per_compl>
+    </thread>
+    <thread index="2">
+        <realtime metric="s">30.007</realtime>
+        <throughput metric="KB/s">945013.509</throughput>
+        <throughput metric="MB/s">922.865</throughput>
+        <throughput metric="mbps">7741.551</throughput>
+        <avg_bytes_per_compl metric="B">65527.128</avg_bytes_per_compl>
+    </thread>
+    <thread index="3">
+        <realtime metric="s">30.008</realtime>
+        <throughput metric="KB/s">930987.449</throughput>
+        <throughput metric="MB/s">909.167</throughput>
+        <throughput metric="mbps">7626.649</throughput>
+        <avg_bytes_per_compl metric="B">65526.694</avg_bytes_per_compl>
+    </thread>
+    <total_bytes metric="MB">109552.625000</total_bytes>
+    <realtime metric="s">30.010424</realtime>
+    <avg_bytes_per_compl metric="B">65523.477</avg_bytes_per_compl>
+    <threads_avg_bytes_per_compl metric="B">65523.465</threads_avg_bytes_per_compl>
+    <avg_frame_size metric="B">21842.770</avg_frame_size>
+    <throughput metric="MB/s">3650.486</throughput>
+    <throughput metric="mbps">30622.494</throughput>
+    <total_buffers>1752842.000</total_buffers>
+    <throughput metric="buffers/s">58407.772</throughput>
+    <avg_packets_per_interrupt metric="packets/interrupt">2.074</avg_packets_per_interrupt>
+    <interrupts metric="count/sec">84480.280</interrupts>
+    <dpcs metric="count/sec">2116.864</dpcs>
+    <avg_packets_per_dpc metric="packets/dpc">82.785</avg_packets_per_dpc>
+    <cycles metric="cycles/byte">4.026</cycles>
+    <packets_sent>1753314</packets_sent>
+    <packets_received>5259143</packets_received>
+    <packets_retransmitted>0</packets_retransmitted>
+    <errors>12</errors>
+    <cpu metric="%">91.205</cpu>
+    <num_processors>8</num_processors>
+    <bufferCount>9223372036854775807</bufferCount>
+    <bufferLen>65536</bufferLen>
+    <io>2</io>
+</ntttcpr>

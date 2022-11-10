@@ -1,0 +1,440 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Actions.NetworkPerformance
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO.Abstractions;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Polly;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
+    /// <summary>
+    /// NTttcp(Test Bandwith and Throughput) Tool Client Executor. 
+    /// </summary>
+    [WindowsCompatible]
+    [UnixCompatible]
+    public class NTttcpExecutor : NetworkingWorkloadToolExecutor
+    {
+        private const string OutputFileName = "ntttcp-results.xml";
+        private static readonly TimeSpan DefaultWarmupTime = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan DefaultCooldownTime = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NTttcpExecutor"/> class.
+        /// </summary>
+        /// <param name="dependencies">Provides required dependencies to the component.</param>
+        /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
+        public NTttcpExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+           : base(dependencies, parameters)
+        {
+            this.WorkloadEmitsResults = true;
+            this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
+               .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
+
+            this.Parameters.SetIfNotDefined(nameof(this.ConcurrentThreads), 1);
+            this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
+            this.Parameters.SetIfNotDefined(nameof(this.Port), 5001);
+        }
+
+        /// <summary>
+        /// Get buffer size value in bytes for Client.(e.g. 4K,64K,1400)
+        ///  Where 4K = 4*1024 = 4096 bytes.
+        /// </summary>
+        public string BufferSizeClient
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.BufferSizeClient)).ToString();
+            }
+        }
+
+        /// <summary>
+        /// Get buffer size value in bytes for Server.(e.g. 4K,64K,1400)
+        ///  Where 4K = 4*1024 = 4096 bytes.
+        /// </summary>
+        public string BufferSizeServer
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.BufferSizeServer)).ToString();
+            }
+        }
+
+        /// <summary>
+        /// get number of concurrent threads to use.
+        /// </summary>
+        public int ConcurrentThreads
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ConcurrentThreads), 1);
+            }
+        }
+
+        /// <summary>
+        /// get test run duration value in seconds.
+        /// </summary>
+        public int TestDuration
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
+            }
+        }
+
+        /// <summary>
+        /// The starting port for the range of ports that will be used for client/server 
+        /// network connections.
+        /// </summary>
+        public int Port
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Port), 5001);
+            }
+        }
+
+        /// <summary>
+        /// ReceiverMultiClientMode is only for server/receiver role.
+        /// The ReceiverMultiClientMode tells server to work in multi-client mode.
+        /// </summary>
+        public bool? ReceiverMultiClientMode
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ReceiverMultiClientMode), out IConvertible receiverMultiClientMode);
+                return receiverMultiClientMode?.ToBoolean(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// SenderLastClient is only for client/sender role.
+        /// The SenderLastClient indicates that this is the last client when test with multi-client mode.
+        /// </summary>
+        public bool? SenderLastClient
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.SenderLastClient), out IConvertible senderLastClient);
+                return senderLastClient?.ToBoolean(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// ThreadsPerServerPort is only for client/sender role.
+        /// The ThreadsPerServerPort gets the number of threads per each server port.
+        /// </summary>
+        public int? ThreadsPerServerPort
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ThreadsPerServerPort), out IConvertible threadsPerServerPort);
+                return threadsPerServerPort?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// ConnectionsPerThread is only for client/sender role.
+        /// The ConnectionsPerThread gets the number of connections in each sender thread.
+        /// </summary>
+        public int? ConnectionsPerThread
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(NetworkingWorkloadExecutor.ConnectionsPerThread), out IConvertible connectionsPerThread);
+                return connectionsPerThread?.ToInt32(CultureInfo.InvariantCulture);
+            }
+        }
+
+        /// <summary>
+        /// DevInterruptsDifferentiator gets the differentiator.
+        /// Used for getting number of interrupts for the devices specified by the differentiator.
+        /// Examples for differentiator: Hyper-V PCIe MSI, mlx4, Hypervisor callback interrupts,etc.
+        /// </summary>
+        public string DevInterruptsDifferentiator
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.DevInterruptsDifferentiator), out IConvertible differentiator);
+                return differentiator?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The type of the protocol that should be used for the workload.(e.g. TCP,UDP)
+        /// </summary>
+        public string Protocol
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.Protocol));
+            }
+        }
+
+        /// <summary>
+        /// The retry policy to apply to the startup of the NTttcp workload to handle
+        /// transient issues.
+        /// </summary>
+        protected IAsyncPolicy ProcessStartRetryPolicy { get; set; }
+
+        /// <summary>
+        /// The Sysctl output.
+        /// </summary>
+        protected string SysctlOutput { get; set; }
+
+        /// <summary>
+        /// Initializes the environment and dependencies for running the tool.
+        /// </summary>
+        protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string protocol = this.Protocol.ToLowerInvariant();
+            if (protocol != "tcp" && protocol != "udp")
+            {
+                throw new NotSupportedException($"The network protocol '{this.Protocol}' is not supported for the NTttcp workload.");
+            }
+
+            if (string.IsNullOrWhiteSpace(this.Scenario))
+            {
+                throw new WorkloadException(
+                    $"Scenario parameter missing. The profile supplied is missing the required '{nameof(this.Scenario)}' parameter " +
+                    $"for one or more of the '{nameof(NTttcpExecutor)}' steps.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            DependencyPath workloadPackage = this.GetDependencyPath(this.PackageName, cancellationToken);
+
+            this.IsInClientRole = this.IsInRole(ClientRole.Client);
+            this.IsInServerRole = !this.IsInClientRole;
+
+            this.Role = this.IsInClientRole ? ClientRole.Client : ClientRole.Server;
+            this.Name = $"{this.Scenario} {this.Role}";
+            this.ProcessName = "ntttcp";
+            this.Tool = NetworkingWorkloadTool.NTttcp;
+            this.ResultsPath = this.PlatformSpecifics.Combine(workloadPackage.Path, NTttcpExecutor.OutputFileName);
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NTttcp.exe");
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "ntttcp");
+            }
+            else
+            {
+                throw new NotSupportedException($"{this.Platform} is not supported");
+            }
+
+            return this.SystemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns the NTttcp command line arguments.
+        /// </summary>
+        protected override string GetCommandLineArguments()
+        {
+            string command = null;
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                command = this.GetWindowsSpecificCommandLine();
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                command = this.GetLinuxSpecificCommandLine();
+            }
+
+            return command;
+        }
+
+        /// <summary>
+        /// Gets the Sysctl command output.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
+        protected Task GetSysctlOutput()
+        {
+            string sysctlCommand = "sysctl";
+            string sysctlArguments = "net.ipv4.tcp_rmem net.ipv4.tcp_wmem";
+
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("command", sysctlCommand)
+                .AddContext("commandArguments", sysctlArguments);
+
+            return this.Logger.LogMessageAsync($"{nameof(NTttcpExecutor)}.GetSysctlOutput", telemetryContext, async () =>
+            {
+                using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(sysctlCommand, sysctlArguments))
+                {
+                    try
+                    {
+                        await process.StartAndWaitAsync(CancellationToken.None).ConfigureAwait(false);
+
+                        this.Logger.LogProcessDetails<NTttcpExecutor>(process, telemetryContext);
+                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+
+                        this.SysctlOutput = process.StandardOutput.ToString();
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogMessage($"{this.GetType().Name}.SysctlError", LogLevel.Warning, telemetryContext.AddError(exc));
+                    }
+                    finally
+                    {
+                        process.SafeKill();
+                    }
+                }
+            });
+        }
+
+        /// <inheritdoc/>
+        protected override Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            IProcessProxy process = null;
+
+            EventContext relatedContext = telemetryContext.Clone()
+               .AddContext("command", this.ExecutablePath)
+               .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
+            {
+                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                {
+                    await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
+                    {
+                        using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        {
+                            try
+                            {
+                                this.CleanupTasks.Add(() => process.SafeKill());
+
+                                await process.StartAndWaitAsync(cancellationToken, timeout)
+                                    .ConfigureAwait(false);
+
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            }
+                            catch (TimeoutException exc)
+                            {
+                                // We give this a best effort but do not want it to prevent the next workload
+                                // from executing.
+                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
+                                process.SafeKill();
+                            }
+                            catch (Exception exc)
+                            {
+                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
+                                process.SafeKill();
+                                throw;
+                            }
+                            finally
+                            {
+                                if (this.IsInClientRole)
+                                {
+                                    this.Logger.LogProcessDetails<NTttcpClientExecutor>(process, relatedContext);
+                                }
+                                else
+                                {
+                                    this.Logger.LogProcessDetails<NTttcpServerExecutor>(process, relatedContext);
+                                }
+                            }
+                        }
+                    }).ConfigureAwait(false);
+                }
+
+                return process;
+            });
+        }
+
+        /// <summary>
+        /// Logs the workload metrics to the telemetry.
+        /// </summary>
+        protected override async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        {
+            IFile fileAccess = this.SystemManagement.FileSystem.File;
+            EventContext relatedContext = telemetryContext.Clone();
+            string parsedSysctlResults = string.Empty;
+
+            if (fileAccess.Exists(this.ResultsPath))
+            {
+                string resultsContent = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
+                    .ConfigureAwait(false);
+
+                if (!string.IsNullOrWhiteSpace(resultsContent))
+                {
+                    MetricsParser parser = new NTttcpMetricsParser(resultsContent, this.IsInClientRole);
+                    IList<Metric> metrics = parser.Parse();
+
+                    if (parser.Metadata.Any())
+                    {
+                        foreach (var entry in parser.Metadata)
+                        {
+                            relatedContext.Properties[entry.Key] = entry.Value;
+                        }
+                    }
+                    
+                    await this.GetSysctlOutput().ConfigureAwait(false);
+
+                    SysctlParser sysctlParser = new SysctlParser(this.SysctlOutput);
+                    parsedSysctlResults = sysctlParser.Parse();
+
+                    relatedContext.AddContext("parsedSysctlResults", parsedSysctlResults);
+
+                    this.Logger.LogMetrics(
+                        this.Tool.ToString(),
+                        this.Name,
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        commandArguments,
+                        this.Tags,
+                        relatedContext);
+                }
+            }
+        }
+
+        private string GetWindowsSpecificCommandLine()
+        {
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
+                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
+                $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
+                $"-t {this.TestDuration} " +
+                $"-l {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
+                $"-p {this.Port} " +
+                $"-xml {this.ResultsPath} " +
+                $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
+                $"{(this.IsInClientRole ? $"-nic {clientIPAddress}" : string.Empty)}".Trim();
+        }
+
+        private string GetLinuxSpecificCommandLine()
+        {
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            return $"{(this.IsInClientRole ? "-s" : "-r")} " +
+                $"-V " +
+                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
+                $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
+                $"-t {this.TestDuration} " +
+                $"-b {(this.IsInClientRole ? $"{this.BufferSizeClient}" : $"{this.BufferSizeServer}")} " +
+                $"-x {this.ResultsPath} " +
+                $"-p {this.Port} " +
+                $"{(this.Protocol.ToLowerInvariant() == "udp" ? "-u" : string.Empty)} " +
+                $"{((this.IsInClientRole && this.SenderLastClient == true) ? "-L" : string.Empty)} " +
+                $"{((this.IsInServerRole && this.ReceiverMultiClientMode == true) ? "-M" : string.Empty)} " +
+                $"{((this.IsInClientRole && this.ThreadsPerServerPort != null) ? $"-n {this.ThreadsPerServerPort}" : string.Empty)} " +
+                $"{((this.IsInClientRole && this.ConnectionsPerThread != null) ? $"-l {this.ConnectionsPerThread}" : string.Empty)} " +
+                $"{((this.DevInterruptsDifferentiator != null) ? $"--show-dev-interrupts {this.DevInterruptsDifferentiator}" : string.Empty)}".Trim();
+        }
+    }
+}

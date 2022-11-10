@@ -1,0 +1,14 @@
+{
+    "Description": "Test Profile Executor With Blob Upload",
+    "MinimumExecutionInterval": "00:00:05",
+    "Monitors": [
+        {
+            "Type": "ExampleMonitorWithBlobUploadIntegration",
+            "Parameters": {
+                "Scenario": "BlobUploadExample",
+                "MonitorFrequency": "00:01:00",
+                "MonitorWarmupPeriod": "00:00:30"
+            }
+        }
+    ]
+}

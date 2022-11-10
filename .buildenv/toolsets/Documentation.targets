@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <!-- 
+    Documentation file output locations (XML comment-based).  Generates XML file as well as markdown file.
+    -->
+    <PropertyGroup>
+        <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    </PropertyGroup>
+
+</Project>

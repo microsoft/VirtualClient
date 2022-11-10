@@ -1,0 +1,39 @@
+.create-or-alter function with (folder = "", docstring = "", skipvalidation = "true") GetVirtualClientMonitorsData(startTime:datetime=datetime(null), endTime:datetime=datetime(null)) {
+    let dateRangeBegin = iff(isnull(startTime), datetime(2020-05-28), startTime);
+    let dateRangeEnd = iff(isnull(endTime), now(), endTime);
+    Metrics
+    | where (Profile == "RealTimeDataMonitor.json" or Profile == "MONITORS-AZURE-HOST.json") and Timestamp >= dateRangeBegin and Timestamp < dateRangeEnd  
+    | where ScenarioName in ("PerfMeasurement", "PerformanceCounter")
+    | extend SplitCounterName = split(ScenarioName, '|')    
+    | extend MeasurementCategory = tostring(SplitCounterName[0]),
+             MeasurementSubCategory = tostring(SplitCounterName[1]),
+             MeasurementAggregation = tostring(SplitCounterName[2])  
+    | extend Metadata = todynamic(CustomDimensions.metadata)
+    | extend NodeId = tostring(Metadata.nodeId)     
+    | project 
+        PreciseTimeStamp = Timestamp, 
+        Name = MeasurementSubCategory, 
+        MeasurementCategory,
+        MeasurementAggregation,
+        CounterName = MetricName,
+        Value = todouble(MetricValue), 
+        ObjectId = NodeId,
+        AgentId = ClientId,
+        ObjectType = "Node", 
+        ExperimentId,
+        NodeId,
+        OS = OperatingSystemPlatform,
+        LastUpdatedTimeStamp = ingestion_time()
+    | summarize 
+        Value = avg(Value), 
+        OS = any(OS), 
+        LastUpdatedTimeStamp = max(LastUpdatedTimeStamp) by MeasurementCategory,
+        MeasurementAggregation,
+        CounterName,
+        Name, 
+        ObjectType, 
+        PreciseTimeStamp = bin(PreciseTimeStamp, 1h), 
+        ObjectId,
+        ExperimentId,
+        AgentId
+}

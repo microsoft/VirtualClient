@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Examples</AssemblyName>
+        <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
+        <RunAnalyzers>false</RunAnalyzers>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <!-- Justification:
+        NU5100 is a warning saying the dlls/exes aren't installed into the lib folder (which is what we want, this is a standalone tool, not a nuget to be referenced)
+        NU5118 is a warning saying the virtualclient.exe is only added once per platform to the lib folder, which we don't care about
+        NU5128 is a warning saying the target framework is wrong, but again because this nuget shouldn't be built as a reference to other projects that's OK
+        -->
+        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118</NoWarn>
+        <DelaySign>false</DelaySign>
+        <RootNamespace>VirtualClient</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(Microsoft_Extensions_Logging_Console_PackageVersion)" />
+        <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
+        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Api\VirtualClient.Api.csproj" />
+        <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
+        <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Update="profiles\EXAMPLE-MONITORS-PROFILE.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </Content>
+      <Content Update="profiles\EXAMPLE-WORKLOAD-PROFILE.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </Content>
+      <Content Update="profiles\MONITORS-TEST-PROFILE.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

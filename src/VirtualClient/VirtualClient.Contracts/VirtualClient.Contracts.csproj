@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Contracts</AssemblyName>
+        <NoWarn>SA1117,SA1508</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Global package dependency versions are defined in the Module.props for the solution. -->
+        <PackageReference Include="MathNet.Numerics.Signed" Version="$(MathNet_Numerics_Signed_PackageVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="$(Microsoft_Extensions_Http_Polly_PackageVersion)" />
+        <PackageReference Include="System.IO.Abstractions" Version="$(System_IO_Abstractions_PackageVersion)" />
+        <PackageReference Include="System.IO.FileSystem.Primitives" Version="$(System_IO_FileSystem_Primitives_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\VirtualClient.Common\VirtualClient.Common.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

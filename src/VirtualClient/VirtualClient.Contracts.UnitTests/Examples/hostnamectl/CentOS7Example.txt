@@ -1,0 +1,11 @@
+   Static hostname: arm64-ct79-vcuser1
+   Pretty hostname: ARM64-CT79-vcuser1
+Transient hostname: ARM64-CT79-vcuser1
+         Icon name: computer-desktop
+           Chassis: desktop
+        Machine ID: 26ae5f478d834c38838208981747c006
+           Boot ID: 67bf1d1af77b496484ec5cfa0fcd27d5
+  Operating System: CentOS Linux 7 (AltArch)
+       CPE OS Name: cpe:/o:centos:centos:7:server
+            Kernel: Linux 5.4.155-200_ol003.el7.aarch64
+      Architecture: arm64

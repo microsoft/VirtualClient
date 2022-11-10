@@ -1,0 +1,23 @@
+﻿{
+    "Description": "stress-ng workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Parameters": {},
+    "Actions": [
+        {
+            "Type": "StressNgExecutor",
+            "Parameters": {
+                "DurationInSecond": 60,
+                "Tags": "Stress"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallStressNGLinuxPackage",
+                "Packages": "stress-ng"
+            }
+        }
+    ]
+}

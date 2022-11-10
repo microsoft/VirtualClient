@@ -1,0 +1,37 @@
+{
+    "Description": "Test Profile Executor",
+    "MinimumExecutionInterval": "00:00:05",
+    "Parameters": {
+    },
+    "Actions": [
+        {
+            "Type": "ExampleWorkloadProfilingScenarioExecutor",
+            "Parameters": {
+                "Scenario": "Scenario1",
+                "WorkloadRuntime": "00:01:00",
+                "ProfilingPeriod": "00:00:30",
+                "ProfilingWarmUpPeriod": "00:00:10",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleWorkloadProfilingScenarioExecutor",
+            "Parameters": {
+                "Scenario": "Scenario2",
+                "WorkloadRuntime": "00:00:30",
+                "ProfilingPeriod": "00:00:30",
+                "ProfilingWarmUpPeriod": "00:00:00",
+                "Tags": "Test,VC"
+            }
+        },
+        {
+            "Type": "ExampleWorkloadProfilingScenarioExecutor",
+            "Parameters": {
+                "Scenario": "Scenario3",
+                "WorkloadRuntime": "00:00:45",
+                "ProfilingWarmUpPeriod": "00:00:00",
+                "Tags": "Test,VC"
+            }
+        }
+    ]
+}

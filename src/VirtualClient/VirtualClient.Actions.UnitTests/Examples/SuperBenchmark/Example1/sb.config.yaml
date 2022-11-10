@@ -1,0 +1,158 @@
+version: v0.3
+superbench:
+  enable: null
+  var:
+    default_local_mode:
+      enable: true
+      modes:
+      - name: local
+        proc_num: 1
+        prefix: CUDA_VISIBLE_DEVICES={proc_rank}
+        parallel: true
+    default_pytorch_mode:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+    common_model_config:
+      duration: 0
+      num_warmup: 16
+      num_steps: 128
+      precision:
+      - float32
+      - float16
+      model_action:
+      - train
+  benchmarks:
+    gpt_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - gpt2-small
+      - gpt2-large
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 1
+    bert_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - bert-base
+      - bert-large
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 2
+    lstm_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - lstm
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 32
+    resnet_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - resnet50
+      - resnet101
+      - resnet152
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 32
+    densenet_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - densenet169
+      - densenet201
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 32
+    vgg_models:
+      enable: true
+      modes:
+      - name: torch.distributed
+        proc_num: 1
+        node_num: 1
+      frameworks:
+      - pytorch
+      models:
+      - vgg11
+      - vgg13
+      - vgg16
+      - vgg19
+      parameters:
+        duration: 0
+        num_warmup: 16
+        num_steps: 128
+        precision:
+        - float32
+        - float16
+        model_action:
+        - train
+        batch_size: 32
+  env: {}

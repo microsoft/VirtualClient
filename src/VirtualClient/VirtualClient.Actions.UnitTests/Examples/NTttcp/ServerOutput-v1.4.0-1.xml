@@ -1,0 +1,73 @@
+<ntttcpr computername="Ubuntu20-16c-02" version="5.33-linux">
+    <parameters>
+        <send_socket_buff>126976</send_socket_buff>
+        <recv_socket_buff>126976</recv_socket_buff>
+        <port>5500</port>
+        <sync_port>5499</sync_port>
+        <no_sync>False</no_sync>
+        <wait_timeout_milliseconds>0</wait_timeout_milliseconds>
+        <async>False</async>
+        <verbose>True</verbose>
+        <wsa>False</wsa>
+        <use_ipv6>False</use_ipv6>
+        <udp>False</udp>
+        <verify_data>False</verify_data>
+        <wait_all>False</wait_all>
+        <run_time>60</run_time>
+        <warmup_time>10</warmup_time>
+        <cooldown_time>10</cooldown_time>
+        <dash_n_timeout>0</dash_n_timeout>
+        <bind_sender>False</bind_sender>
+        <sender_name>NA</sender_name>
+        <max_active_threads>0</max_active_threads>
+        <tp>False</tp>
+        <no_stdio_buffer>False</no_stdio_buffer>
+        <throughput_Bpms>0</throughput_Bpms>
+        <cpu_burn>0</cpu_burn>
+        <latency_measurement>False</latency_measurement>
+        <use_io_compl_ports>NA</use_io_compl_ports>
+        <cpu_from_idle_flag>False</cpu_from_idle_flag>
+        <get_estats>False</get_estats>
+        <qos_flag>False</qos_flag>
+        <jitter_measurement>False</jitter_measurement>
+        <packet_spacing>0</packet_spacing>
+    </parameters>
+    <thread index="0">
+        <realtime metric="s">60.026</realtime>
+        <throughput metric="KB/s">1484399.757</throughput>
+        <throughput metric="MB/s">1484.400</throughput>
+        <throughput metric="mbps">11875.198</throughput>
+        <avg_bytes_per_compl metric="B">0.000</avg_bytes_per_compl>
+    </thread>
+    <total_bytes metric="MB">89102.432956</total_bytes>
+    <realtime metric="s">60.025901</realtime>
+    <avg_bytes_per_compl metric="B">0.000</avg_bytes_per_compl>
+    <threads_avg_bytes_per_compl metric="B">0.000</threads_avg_bytes_per_compl>
+    <avg_frame_size metric="B">0.000</avg_frame_size>
+    <throughput metric="MB/s">1484.400</throughput>
+    <throughput metric="mbps">11875.198</throughput>
+    <throughput metric="Bps">1484399756.673</throughput>
+    <total_buffers>0.000</total_buffers>
+    <throughput metric="buffers/s">0.000</throughput>
+    <avg_packets_per_interrupt metric="packets/interrupt">0.000</avg_packets_per_interrupt>
+    <interrupts metric="count/sec">0.000</interrupts>
+    <dpcs metric="count/sec">0.000</dpcs>
+    <avg_packets_per_dpc metric="packets/dpc">0.000</avg_packets_per_dpc>
+    <packets_sent>0</packets_sent>
+    <packets_received>0</packets_received>
+    <packets_retransmitted>0</packets_retransmitted>
+    <errors>0</errors>
+    <bufferCount>0</bufferCount>
+    <bufferLen>0</bufferLen>
+    <cpu_cores metric="cpu cores">16</cpu_cores>
+    <cpu_speed metric="MHz">2593.906</cpu_speed>
+    <user metric="%">0.47</user>
+    <system metric="%">4.08</system>
+    <idle metric="%">94.76</idle>
+    <iowait metric="%">0.05</iowait>
+    <softirq metric="%">0.65</softirq>
+    <cycles_per_byte metric="cycles/byte">1.47</cycles_per_byte>
+    <cpu_busy_all metric="%">69.13</cpu_busy_all>
+    <io>0</io>
+    <os>Linux Ubuntu20-16c-02 5.15.0-1014-azure #17~20.04.1-Ubuntu SMP Thu Jun 23 20:01:51 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux</os>
+</ntttcpr>

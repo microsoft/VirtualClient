@@ -1,0 +1,82 @@
+﻿ATOP - ml4drvr 2021/11/09 00:40:45 -------------- 5d17h8m18s elapsed
+PRC | sys 6h09m | user 1h45m | #proc 728 | #zombie 0 | #exit 0 |
+CPU | sys 24% | user 52% | irq 2% | idle 6321% | wait 0% |
+cpu | sys 1% | user 2% | irq 0% | idle 97% | cpu000 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu002 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu004 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu012 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu008 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu010 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu014 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu026 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu006 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu018 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu031 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu020 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu063 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu024 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu022 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu030 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu016 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu021 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu028 w 0% |
+cpu | sys 1% | user 1% | irq 0% | idle 98% | cpu042 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 98% | cpu032 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu034 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu040 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu009 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu062 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu011 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu001 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu015 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu019 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu036 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu017 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu003 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu007 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu005 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu044 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu013 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu046 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu027 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu025 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu023 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu052 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu038 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu050 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu054 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu048 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu060 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu056 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu029 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu058 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu047 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu035 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu039 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu045 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu041 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu033 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu051 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu043 w 0% |
+cpu | sys 0% | user 1% | irq 0% | idle 99% | cpu059 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu053 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu049 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu061 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu037 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu055 w 0% |
+cpu | sys 0% | user 0% | irq 0% | idle 99% | cpu057 w 0% |
+CPL | avg1 0.50 | avg5 0.73 | avg15 0.91 | csw 335053e4 | intr 40551e5 |
+MEM | tot 1.0T | free 993.6G | cache 6.0G | buff 75.0M | slab 2.0G |
+SWP | tot 19.5G | free 19.5G | | vmcom 6.6G | vmlim 523.5G |
+DSK | sda | busy 100% | read 69231 | write 4764e3 | avio 102 ms |
+DSK | sdb | busy 1% | read 1760 | write 87676 | avio 45.5 ms |
+NFS | rpc 4411559 | cread 763 | cwrit 1508e3 | MBcr/s 0.0 | MBcw/s 0.0 |
+NET | transport | tcpi 11948e5 | tcpo 12089e5 | udpi 47301 | udpo 47538 |
+NET | network | ipi 119488e4 | ipo 120831e4 | ipfrw 0 | deliv 1195e6 |
+NET | eth1 0% | pcki 25033e5 | pcko 12090e5 | si 39 Mbps | so 3454 Kbps |
+NET | eth0 0% | pcki 11953e5 | pcko 12083e5 | si 37 Mbps | so 3453 Kbps |
+NET | lo ---- | pcki 12271 | pcko 12271 | si 0 Kbps | so 0 Kbps |
+*** system and process activity since boot ***
+NPROCS SYSCPU USRCPU RSIZE PSIZE RDDSK WRDSK RNET SNET CPU CID
+728 6h09m 1h45m 2.1G 0K 1.9G 14.4G 0 0 6% host--------
+ml4drvr:/tmp #

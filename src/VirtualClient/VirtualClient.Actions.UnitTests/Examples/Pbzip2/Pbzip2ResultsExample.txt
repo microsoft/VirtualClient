@@ -1,0 +1,108 @@
+﻿Parallel BZIP2 v1.1.13 [Dec 18, 2015]
+By: Jeff Gilchrist [http://compression.ca]
+Major contributions: Yavor Nikolov [http://javornikolov.wordpress.com]
+Uses libbzip2 by Julian Seward
+
+         # CPUs: 16
+ BWT Block Size: 900 KB
+File Block Size: 900 KB
+ Maximum Memory: 100 MB
+-------------------------------------------
+         File #: 1 of 12
+     Input Name: pbzip2/dickens
+    Output Name: pbzip2/dickens.bz2
+
+     Input Size: 10192446 bytes
+Compressing data...
+    Output Size: 2799085 bytes
+-------------------------------------------
+         File #: 2 of 12
+     Input Name: pbzip2/mozilla
+    Output Name: pbzip2/mozilla.bz2
+
+     Input Size: 51220480 bytes
+Compressing data...
+    Output Size: 17894574 bytes
+-------------------------------------------
+         File #: 3 of 12
+     Input Name: pbzip2/mr
+    Output Name: pbzip2/mr.bz2
+
+     Input Size: 9970564 bytes
+Compressing data...
+    Output Size: 2456706 bytes
+-------------------------------------------
+         File #: 4 of 12
+     Input Name: pbzip2/nci
+    Output Name: pbzip2/nci.bz2
+
+     Input Size: 33553445 bytes
+Compressing data...
+    Output Size: 1852018 bytes
+-------------------------------------------
+         File #: 5 of 12
+     Input Name: pbzip2/ooffice
+    Output Name: pbzip2/ooffice.bz2
+
+     Input Size: 6152192 bytes
+Compressing data...
+    Output Size: 2857996 bytes
+-------------------------------------------
+         File #: 6 of 12
+     Input Name: pbzip2/osdb
+    Output Name: pbzip2/osdb.bz2
+
+     Input Size: 10085684 bytes
+Compressing data...
+    Output Size: 2803944 bytes
+-------------------------------------------
+         File #: 7 of 12
+     Input Name: pbzip2/reymont
+    Output Name: pbzip2/reymont.bz2
+
+     Input Size: 6627202 bytes
+Compressing data...
+    Output Size: 1246207 bytes
+-------------------------------------------
+         File #: 8 of 12
+     Input Name: pbzip2/samba
+    Output Name: pbzip2/samba.bz2
+
+     Input Size: 21606400 bytes
+Compressing data...
+    Output Size: 4574800 bytes
+-------------------------------------------
+         File #: 9 of 12
+     Input Name: pbzip2/sao
+    Output Name: pbzip2/sao.bz2
+
+     Input Size: 7251944 bytes
+Compressing data...
+    Output Size: 4942302 bytes
+-------------------------------------------
+         File #: 10 of 12
+     Input Name: pbzip2/webster
+    Output Name: pbzip2/webster.bz2
+
+     Input Size: 41458703 bytes
+Compressing data...
+    Output Size: 8649137 bytes
+-------------------------------------------
+         File #: 11 of 12
+     Input Name: pbzip2/x-ray
+    Output Name: pbzip2/x-ray.bz2
+
+     Input Size: 8474240 bytes
+Compressing data...
+    Output Size: 4051284 bytes
+-------------------------------------------
+         File #: 12 of 12
+     Input Name: pbzip2/xml
+    Output Name: pbzip2/xml.bz2
+
+     Input Size: 5345280 bytes
+Compressing data...
+    Output Size: 438729 bytes
+-------------------------------------------
+
+     Wall Clock: 2.722705 seconds

@@ -1,0 +1,5 @@
+﻿{
+    "calculationsPerSec": "323.23",
+    "avgLatency": "1200.35",
+    "score": "125"
+}

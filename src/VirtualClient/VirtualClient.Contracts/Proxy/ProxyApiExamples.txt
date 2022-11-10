@@ -1,0 +1,59 @@
+
+
+VirtualClient.exe --profile=QUAL-PHASE-1.json --iterations=1 --system=Azure --api-proxy=http://10.1.0.1:8245
+
+========================================
+Scenario Download Blob: Log Files
+========================================
+GET: /api/blobs/diskspd.1.2.3.zip?source=VirtualClient&storeType=Packages&containerName=packages
+
+
+========================================
+Scenario: Upload Blob: Log Files
+========================================
+POST: /api/blobs/log1.txt?source=VirtualClient&contentType=Content&containerName=logs
+      BODY
+      [
+          (byte stream...)
+      ]
+
+POST: /api/blobs/log1.txt?source=VirtualClient&storeType=Content&containerName=logs&blobPath=/agentId/toolset
+      BODY
+      [
+          (byte stream...)
+      ]
+
+
+========================================
+Upload Telemetry
+========================================
+POST: /api/telemetry
+      BODY
+      [
+          {
+              "source": ""VirtualClient",
+              "eventType": "Metrics",
+              "message": "DiskSpd.ScenarioResult",
+              "severityLevel": "Information",
+              "itemType": "traces",
+              "operationId": "7C6FCCB4-48D9-488D-8B1B-D20D8B547C33",
+              "operationParentId": "95643D8A-DFFD-4F98-8E45-C6F0C6614C1D",
+              "appName": "VirtualClient",
+              "appHost": "LENF01C01R01N02",
+              "sdkVersion": "1.10.0.0",
+              "customDimensions": { "scenarioName": "diskspd_randwrite_4k_d32_16th", "metricName": "bandwidth", "metricValue": 356782.09878, "metricUnit": "bytes", ... } 
+          },
+          {
+              "source": ""VirtualClient",
+              "eventType": "Metrics",
+              "message": "DiskSpd.ExecuteStop",
+              "severityLevel": "Information",
+              "itemType": "traces",
+              "operationId": "7C6FCCB4-48D9-488D-8B1B-D20D8B547C33",
+              "operationParentId": "95643D8A-DFFD-4F98-8E45-C6F0C6614C1D",
+              "appName": "VirtualClient",
+              "appHost": "LENF01C01R01N02",
+              "sdkVersion": "1.10.0.0",
+              "customDimensions": { "scenarioName": "diskspd_randwrite_4k_d32_16th", "metricName": "bandwidth", "metricValue": 356782.09878, "metricUnit": "bytes", ... }
+          }
+      ]

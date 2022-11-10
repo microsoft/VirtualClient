@@ -1,0 +1,37 @@
+{
+    "Description": "Lzench Workload",
+    "Parameters": {
+      "AccountKey": "[secret:commandline]=StorageAccountKey",
+      "Options":  "-t16,16 -eall -o4 -r",
+      "InputFilesOrDirs": "",
+      "CompilerName": "gcc",
+      "CompilerVersion": "10"
+    },
+    "Actions": [
+        {
+          "Type": "LzbenchExecutor",
+          "Parameters": {
+            "Version": "1.8.1",
+            "Options": "$.Parameters.Options",
+            "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
+            "PackageName": "lzbench"
+          }
+        }
+    ],
+  "Dependencies": [
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackages",
+        "Packages-Apt": "unzip"
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+    "Description": "CoreMark Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Parameters": {
+        "CompilerName": "gcc",
+        "CompilerVersion": "10"
+    },
+    "Actions": [
+        {
+            "Type": "CoreMarkExecutor",
+            "Parameters": {
+                "Scenario": "ScoreSystem",
+                "PackageName": "coremark"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "RepoUri": "https://github.com/eembc/coremark.git",
+                "PackageName": "coremark"
+            }
+        }
+    ]
+}

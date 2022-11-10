@@ -1,0 +1,10 @@
+   Static hostname: X64-CT81-vcuser1
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 90be29f2806148d29cc9a085f8621e05
+           Boot ID: 55711697ffa54807bc702872270fd4d0
+    Virtualization: microsoft
+  Operating System: CentOS Linux 8 (Core)
+       CPE OS Name: cpe:/o:centos:centos:8
+            Kernel: Linux 4.18.0-147.8.1.el8_1.x86_64
+      Architecture: x86-64

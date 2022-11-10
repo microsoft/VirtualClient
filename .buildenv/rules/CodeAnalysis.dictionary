@@ -1,0 +1,35 @@
+<Dictionary>
+  <Acronyms>
+    <CasingExceptions>
+      <Acronym>Nt</Acronym> <!-- Consistency with legacy service. -->
+      <Acronym>Mi</Acronym> <!-- MiB -->
+    </CasingExceptions>
+  </Acronyms>
+  <Words>
+    <Recognized>
+      <Word>Acls</Word> <!-- Standard Windows acronym for Access Control Lists -->
+      <Word>Api</Word> <!-- Standard acronym for Application Programming Interface -->
+      <Word>etag</Word> <!-- Part of the HTTP/1.1 spec -->
+      <Word>Dfs</Word> <!-- Standard acronym for Domain File System -->
+      <Word>Auth</Word> <!-- Standard abbreviation for Authorization -->
+      <Word>Ini</Word> <!-- Standard extension for Initialize file format -->
+      <Word>lhs</Word> <!-- Left Hand Side - typical term in comparison operators -->
+      <Word>Mi</Word> <!-- MiB -->
+      <Word>Ms</Word> <!-- Standard abbreviation for Milliseconds -->
+      <Word>Msdl</Word> <!-- Currently used for the service hosted by msdl.microsoft.com.  Maybe change? -->
+      <Word>Nt</Word> <!-- Consistency with legacy service. -->
+      <Word>Perf</Word> <!-- Standard abbreviation for Performance. Can remove after symweb cleanup. -->
+      <Word>Ppe</Word> <!-- Standard abbreviation for Preproduction Environment -->
+      <Word>Retryable</Word> <!-- Standard CS term (though of questionable spelling) -->
+      <Word>rhs</Word> <!-- Right Hand Side - typical term in comparison operators -->
+      <Word>Srv</Word> <!-- Part of SymSrv.dll name, but we can't add the whole token.  Consider a better name for classes? -->
+      <Word>Ssi</Word> <!-- Symbols extension for request file format -->
+      <Word>Stateful</Word> <!-- Standard CS term -->
+      <Word>Sym</Word> <!-- Common abbreviation for Symbols and part of SymSrv DLL name -->
+      <Word>th</Word> <!-- Used as part of 95th, but CA won't accept adding the whole token. Can remove after symweb cleanup. -->
+      <Word>Timestamped</Word> <!-- It should be a word.  It is understandable. -->
+      <Word>Vso</Word> <!-- Abbreviation for Visual Studio Online. Deliverable 15089948 to convert to Vsts and delete this line. -->
+      <Word>Vsts</Word> <!-- Abbreviation for Visual Studio Team Services -->
+    </Recognized>
+  </Words>
+</Dictionary>

@@ -1,0 +1,208 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RunCodeAnalysis>false</RunCodeAnalysis>
+        <RunAnalyzers>true</RunAnalyzers>
+        <RootNamespace>VirtualClient.Actions</RootNamespace>
+        <NoWarn>SA1116,SA1117,SA1118,AsyncFixer02</NoWarn>
+        <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Include="..\TestResources\Compressor7zipResults.txt" Link="Resources\Compressor7zipResults.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\GzipResults.txt" Link="Resources\GzipResults.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\LzbenchResults.csv" Link="Resources\LzbenchResults.csv">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\oltp-c.fio.jobfile" Link="Resources\oltp-c.fio.jobfile">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\OpenFOAMResults.txt" Link="Resources\OpenFOAMResults.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Pbzip2Results.txt" Link="Resources\Pbzip2Results.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\ntttcp-results.xml" Link="Resources\ntttcp-results.xml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\cps-results.txt" Link="Resources\cps-results.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\latte-results.txt" Link="Resources\latte-results.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\sockperf-results.txt" Link="Resources\sockperf-results.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results-OpenSSL-Speed.txt" Link="Resources\Results-OpenSSL-Speed.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_DiskSpd.txt" Link="Resources\Results_DiskSpd.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_DeathStarBench.txt" Link="Resources\Results_DeathStarBench.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_FIO.json" Link="Resources\Results_FIO.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_Graph500.txt" Link="Resources\Results_Graph500.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_LAPACK.txt" Link="Resources\Results_LAPACK.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_MemcachedMemtier.txt" Link="Resources\Results_MemcachedMemtier.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_MLPerf_Accuracy_Summary.json" Link="Resources\Results_MLPerf_Accuracy_Summary.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_MLPerf_Harness_Summary.json" Link="Resources\Results_MLPerf_Harness_Summary.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_Prime95.txt" Link="Resources\Results_Prime95.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_RedisMemtier.txt" Link="Resources\Results_RedisMemtier.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_RedisBenchmark.txt" Link="Resources\Results_RedisBenchmark.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_SuperBenchmark.jsonl" Link="Resources\Results_SuperBenchmark.jsonl">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_SPECjvm.txt" Link="Resources\Results_SPECjvm.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_Hpcg.txt" Link="Resources\Results_Hpcg.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_StressNg.txt" Link="Resources\Results_StressNg.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_AspNetBench.txt" Link="Resources\Results_AspNetBench.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_SysbenchOLTP.txt" Link="Resources\Results_SysbenchOLTP.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Content Include="..\TestResources\**\*.json" Link="Resources\$(File.json" CopyToOutputDirectory="PreserveNewest" / -->
+
+        <Content Include="..\VirtualClient.Main\profiles\EXAMPLE-WORKLOAD.json" Link="Profiles\EXAMPLE-WORKLOAD.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\MONITORS-DEFAULT.json" Link="Profiles\MONITORS-DEFAULT.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\MONITORS-NONE.json" Link="Profiles\MONITORS-NONE.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-ASPNETBENCH.json" Link="Profiles\PERF-ASPNETBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-COMPRESSION.json" Link="Profiles\PERF-COMPRESSION.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-COREMARK.json" Link="Profiles\PERF-CPU-COREMARK.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-HPCG.json" Link="Profiles\PERF-CPU-HPCG.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-LAPACK.json" Link="Profiles\PERF-CPU-LAPACK.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-REDIS.json" Link="Profiles\PERF-REDIS.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-OPENSSL.json" Link="Profiles\PERF-CPU-OPENSSL.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-PRIME95.json" Link="Profiles\PERF-CPU-PRIME95.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-HPC-NASPARALLELBENCH.json" Link="Profiles\PERF-HPC-NASPARALLELBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-GRAPH500.json" Link="Profiles\PERF-GRAPH500.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-OPENFOAM.json" Link="Profiles\PERF-OPENFOAM.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-STRESSNG.json" Link="Profiles\PERF-STRESSNG.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-GPU-SUPERBENCH.json" Link="Profiles\PERF-GPU-SUPERBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-GPU-MLPERF.json" Link="Profiles\PERF-GPU-MLPERF.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-IO-DISKSPD.json" Link="Profiles\PERF-IO-DISKSPD.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-IO-FIO.json" Link="Profiles\PERF-IO-FIO.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" Link="Profiles\PERF-IO-FIO-MULTITHROUGHPUT.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-IO-FIO-DISCOVERY.json" Link="Profiles\PERF-IO-FIO-DISCOVERY.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-LZBENCH.json" Link="Profiles\PERF-LZBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-MEM-LMBENCH.json" Link="Profiles\PERF-MEM-LMBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-MEMCACHED.json" Link="Profiles\PERF-MEMCACHED.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-PING.json" Link="Profiles\PERF-NETWORK-PING.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK.json" Link="Profiles\PERF-NETWORK.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-2.json" Link="Profiles\PERF-NETWORK-2.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-SPECJVM.json" Link="Profiles\PERF-SPECJVM.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
+        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
+        <ProjectReference Include="..\VirtualClient.Dependencies\VirtualClient.Dependencies.csproj" />
+        <ProjectReference Include="..\VirtualClient.Monitors\VirtualClient.Monitors.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

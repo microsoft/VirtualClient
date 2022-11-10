@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+      <!--
+      NuGet package versioning.
+      https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets
+      
+      VC NuGet packages are packaged using the same version to keep things a bit more manageable when publishing
+      packages that need to be consumed by other repos/projects.
+      
+      How this works.
+      This *.targets file is included/imported into each of the projects for which we want to use the package version(s)
+      defined below. The OOB MSBuild property 'GeneratePackageOnBuild' must be set before building the project. This can be
+      set directly in the .csproj or may be passed in a property on the command line. This will cause all projects that import
+      this *.targets file to generate NuGet packages all having the same package version.
+      
+      Examples:
+      1) Add import to project for NuGet package versioning. Add the following line to the bottom of the .csproj file just before
+         the </Project> end tag.
+         
+         <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
+      
+      2) Create NuGet package from the command-line by passing in the required MSBuild property. Run the following command on a project to
+         generate the NuGet package for that project.
+          
+         dotnet pack $(ProjectPath) -p:GeneratePackageOnBuild=true
+         dotnet pack $(ProjectPath) -p:GeneratePackageOnBuild=true -p:Version=3.1.0
+         
+      3) To build ALL NuGet packages in the repo, run the 'build-packages.cmd' in the root of the repo.
+      
+         build-packages.cmd 3.0.0
+      -->
+      <Authors>virtualclient@microsoft.com</Authors>
+      <PackageTags>Azure;VirtualClient</PackageTags>
+      
+      <!--
+      NuGet packages are all output to the root directory for a given configuration and platform
+      
+        Ex:
+        /out/bin/Debug/x64/Packages
+        /out/bin/Release/x64/Packages
+      -->
+      <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$(RepoPath)\out\packages</PackageOutputPath>
+  </PropertyGroup>
+</Project>
