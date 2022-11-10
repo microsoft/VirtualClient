@@ -26,6 +26,12 @@ steps:
   continueOnError: false
   inputs:
     packageType: 'sdk'
+    version: '2.1.*'
+
+- task: UseDotNet@2
+  continueOnError: false
+  inputs:
+    packageType: 'sdk'
     version: '6.0.400'
     useGlobalJson: false
     performMultiLevelLookup: true
