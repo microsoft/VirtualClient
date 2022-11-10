@@ -22,12 +22,6 @@ variables:
   
 
 steps:
-- task: GitVersion@5
-  inputs:
-    runtime: 'core'
-    configFilePath: 'GitVersion.yml'
-    updateAssemblyInfo: true
-
 - task: UseDotNet@2
   continueOnError: false
   inputs:
@@ -37,6 +31,11 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
+- task: GitVersion@5
+  inputs:
+    runtime: 'core'
+    configFilePath: 'GitVersion.yml'
+    updateAssemblyInfo: true
 
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
