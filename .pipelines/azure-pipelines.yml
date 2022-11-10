@@ -4,7 +4,12 @@
 # https://aka.ms/yaml
 
 trigger:
-- main
+  branches:
+    include:
+    - main
+  paths:
+    exclude:
+    - website
 
 pool:
   vmImage: windows-latest
@@ -23,6 +28,8 @@ steps:
     useGlobalJson: false
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
+
+- task: onebranch.pipeline.toolsinstaller@1
 
 - task: onebranch.pipeline.version@1 # generates automatic version. For other versioning options check https://aka.ms/obpipelines/versioning
   displayName: 'Setup Build Number'
