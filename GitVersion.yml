@@ -4,6 +4,7 @@ branches:
   feature:
     tag: alpha
   main:
+    regex: ^main$
     tag: ''
 ignore:
   sha: []
