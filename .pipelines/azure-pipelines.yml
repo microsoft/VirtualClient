@@ -22,12 +22,16 @@ variables:
   
 
 steps:
-- task: GitVersion@5
+- task: gitversion/setup@1
+  displayName: 'Install GitVersion'
   inputs:
-    runtime: 'core'
-    versionSpec: '0.0.x'
-    updateAssemblyInfo: true
+    versionSpec: '0.0.1'
     
+- task: gitversion/execute@1
+  displayName: 'Execute GitVersion'
+  inputs:
+    useConfigFile: true
+    configFilePath: '${{ parameters.gitversionConfigFile }}'
 - task: UseDotNet@2
   continueOnError: false
   inputs:
@@ -37,15 +41,6 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
-- task: onebranch.pipeline.toolsinstaller@1
-
-- task: onebranch.pipeline.version@1 # generates automatic version. For other versioning options check https://aka.ms/obpipelines/versioning
-  displayName: 'Setup Build Number'
-  inputs:
-    system: 'RevisionCounter'
-    major: '1'
-    minor: '5'
-    exclude_commit: true
 
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
@@ -59,12 +54,29 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd
   displayName: 'Build NuGet Packages'
 
-- task: onebranch.pipeline.signing@1
-  displayName: 'Sign VC Pilotfish Packages'
-  condition: and(succeeded(), eq(variables['GENERATE_PILOTFISH_PACKAGES'], true))
+- task: EsrpCodeSigning@2
   inputs:
-    command: 'sign'
-    signing_environment: 'azure-ado'
-    signing_profile: 'internal_azure_service'
-    files_to_sign: '**/*.exe;**/*.dll;**/*.ps1;**/*.psm1;**/*.cat'
-    search_root: $(Build.SourcesDirectory)/out/deployment/VirtualClient
+    ConnectedServiceName: 'ESRP Service'
+    FolderPath: '$(System.DefaultWorkingDirectory)'
+    Pattern: '*.nupkg'
+    signConfigType: 'inlineSignParams'
+    inlineOperation: |
+      [    
+          {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetSign",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          },
+          {
+            "KeyCode": "CP-401405",
+            "OperationCode": "NuGetVerify",
+            "Parameters": {},
+            "ToolName": "sign",
+            "ToolVersion": "1.0"
+          }
+      ]
+    SessionTimeout: '60'
+    MaxConcurrency: '50'
+    MaxRetryAttempts: '5'
