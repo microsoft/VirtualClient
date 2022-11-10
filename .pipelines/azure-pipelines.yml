@@ -30,6 +30,24 @@ steps:
     workingDirectory: '$(Build.SourcesDirectory)'
 
 - task: onebranch.pipeline.toolsinstaller@1
+  inputs:
+      dialtone: true
+      overrides: |
+        {
+          "AdoFeeds": [
+              "https://cloudes.pkgs.visualstudio.com/CDPX/_packaging/cdx-testing/nuget/v3/index.json"
+          ],
+          "Tools": {
+              "onebranch.dss": {
+                  "windows": {
+                      "Package": "Microsoft.OneBranch.DropsSyncService.Client.Tool.windows",
+                      "Version": "1.0.123-test",
+                      "PreRelease": false,
+                      "SubFolder": "tools"
+                  }
+              }
+          }
+        }
 
 - task: onebranch.pipeline.version@1 # generates automatic version. For other versioning options check https://aka.ms/obpipelines/versioning
   displayName: 'Setup Build Number'
