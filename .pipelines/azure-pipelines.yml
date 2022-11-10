@@ -52,7 +52,7 @@ steps:
 
 - task: EsrpCodeSigning@2
   inputs:
-    ConnectedServiceName: 'ESRP Service'
+    ConnectedServiceName: 'virtualclient-esrp'
     FolderPath: '$(System.DefaultWorkingDirectory)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
