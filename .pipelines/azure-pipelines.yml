@@ -22,11 +22,11 @@ variables:
   
 
 steps:
-- task: GitVersion@5
+- task: UseDotNet@2
+  continueOnError: false
   inputs:
-    runtime: 'core'
-    configFilePath: 'GitVersion.yml'
-    updateAssemblyInfo: true
+    packageType: 'sdk'
+    version: '2.1.x'
 
 - task: UseDotNet@2
   continueOnError: false
@@ -37,6 +37,11 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
+- task: GitVersion@5
+  inputs:
+    runtime: 'core'
+    configFilePath: 'GitVersion.yml'
+    updateAssemblyInfo: true
 
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
@@ -52,7 +57,7 @@ steps:
 
 - task: EsrpCodeSigning@2
   inputs:
-    ConnectedServiceName: 'ESRP Service'
+    ConnectedServiceName: 'virtualclient-esrp'
     FolderPath: '$(System.DefaultWorkingDirectory)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
