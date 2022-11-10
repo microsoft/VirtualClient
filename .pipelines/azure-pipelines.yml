@@ -11,54 +11,141 @@ trigger:
     exclude:
     - website
 
-#pool:
-  #vmImage: windows-latest
+parameters: # parameters are shown up in ADO UI in a build queue time
+- name: 'debug'
+  displayName: 'Enable debug output'
+  type: boolean
+  default: false
 
 variables:
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
-  
-  # WindowsContainerImage: 'cdpxwin1809.azurecr.io/global/vse2019:latest'
+  system.debug: ${{ parameters.debug }}
 
-steps:
-- task: UseDotNet@2
-  continueOnError: false
-  inputs:
-    packageType: 'sdk'
-    version: '6.0.400'
-    useGlobalJson: false
-    performMultiLevelLookup: true
-    workingDirectory: '$(Build.SourcesDirectory)'
+  WindowsContainerImage: 'cdpxwin1809.azurecr.io/global/vse2019:latest' # Docker image which is used to build the project https://aka.ms/obpipelines/containers
 
-- task: onebranch.pipeline.toolsinstaller@1
+resources:
+  repositories: 
+    - repository: templates
+      type: git
+      name: OneBranch.Pipelines/GovernedTemplates
+      ref: refs/heads/main
 
-- task: onebranch.pipeline.version@1 # generates automatic version. For other versioning options check https://aka.ms/obpipelines/versioning
-  displayName: 'Setup Build Number'
-  inputs:
-    system: 'RevisionCounter'
-    major: '1'
-    minor: '5'
-    exclude_commit: true
+extends:
+  template: v2/OneBranch.Official.CrossPlat.yml@templates # https://aka.ms/obpipelines/templates
+  parameters:
+    reddog:
+      # https://onebranch.visualstudio.com/OneBranch/_wiki/wikis/OneBranch.wiki/4620/Reddog-Upload
+      enabled: true
 
-  # Ensure the artifact output/bin/obj directories are clean.
-- script: $(Build.SourcesDirectory)\clean.cmd
-  displayName: 'Clean Output Directories'
-  
-  # Build the repo.
-- script: $(Build.SourcesDirectory)\build.cmd
-  displayName: 'Build Solutions'
+    cloudvault:
+      # https://aka.ms/obpipelines/cloudvault
+      enabled: false
 
-  # Build NuGet packages for the services/agents in the repo.
-- script: $(Build.SourcesDirectory)\build-packages.cmd
-  displayName: 'Build NuGet Packages'
+    # https://onebranch.visualstudio.com/OneBranch/_wiki/wikis/OneBranch.wiki/4621/Publish-Packages
+    # nugetPublishing:
+    #  feeds:
+    #  - name: One/CRC
+    #    files_to_publish: '*.nupkg'
+    #    continueOnConflict: true
 
-- task: onebranch.pipeline.signing@1
-  displayName: 'Sign VC Pilotfish Packages'
-  condition: and(succeeded(), eq(variables['GENERATE_PILOTFISH_PACKAGES'], true))
-  inputs:
-    command: 'sign'
-    signing_environment: 'azure-ado'
-    signing_profile: 'internal_azure_service'
-    files_to_sign: '**/*.exe;**/*.dll;**/*.ps1;**/*.psm1;**/*.cat'
-    search_root: $(Build.SourcesDirectory)/out/deployment/VirtualClient
+    globalSdl: # https://aka.ms/obpipelines/sdl
+      baseline:
+        baselineFile: $(Build.SourcesDirectory)\.gdn\global.gdnbaselines
+        suppressionSet: default
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\global.gdnsuppress
+        suppressionSet: default
+      tsa:
+        enabled: true # onebranch publish all sdl results to TSA. If TSA is disabled all SDL tools will forced into 'break' build mode.
+      # credscan:
+      #   suppressionsFile: $(Build.SourcesDirectory)\.config\CredScanSuppressions.json
+      policheck:
+        break: true # always break the build on policheck issues. You can disable it by setting to 'false'
+        exclusionsFile: $(Build.SourcesDirectory)\.config\PolicheckExclusion.xml
+
+    stages:
+    - stage: main
+      jobs:
+      - job: build
+        pool:
+          type: windows  # read more about custom job pool types at https://aka.ms/obpipelines/yaml/jobs
+        
+        variables: # More settings at https://aka.ms/obpipelines/yaml/jobs
+
+          # this directory is uploaded to pipeline artifacts, reddog and cloudvault. More info at https://aka.ms/obpipelines/artifacts
+          ob_outputDirectory: '$(Build.SourcesDirectory)\out'
+          ob_reddog_enabled: true
+          # ob_nugetPublishing_enabled: true
+
+          # https://aka.ms/obpipelines/sdl
+          ob_sdl_binskim_break: true # always break the build on binskim issues, even if TSA enabled. You can disable it by setting to 'false'
+          ob_sdl_roslyn_break: true
+
+          # Exclude javascript files, all test files and all Guardian (gdn) package files
+          # https://onebranch.visualstudio.com/OneBranch/_wiki/wikis/OneBranch.wiki/4630/Exclude-files-from-CodeSign-Validation
+          ob_sdl_codeSignValidation_excludes: -|**\bin\**;-|**\obj\**;-|**\tools\**;-|**\*.nupkg*\**;-|**\*.sys;
+
+          ob_symbolsPublishing_enabled: true # https://aka.ms/obpipelines/symbols
+          ob_sdl_baseline_baselineFile: $(Build.SourcesDirectory)\.gdn\global.gdnbaselines
+          ob_sdl_baseline_baselineSet: default
+          ob_sdl_suppression_suppressionFile: $(Build.SourcesDirectory)\.gdn\global.gdnsuppress
+          ob_sdl_suppression_suppressionSet: default
+
+        steps:
+        - task: UseDotNet@2
+          continueOnError: false
+          inputs:
+            packageType: 'sdk'
+            version: '6.0.400'
+            useGlobalJson: false
+            performMultiLevelLookup: true
+            workingDirectory: '$(Build.SourcesDirectory)'
+
+        - task: onebranch.pipeline.version@1 # generates automatic version. For other versioning options check https://aka.ms/obpipelines/versioning
+          displayName: 'Setup Build Number'
+          inputs:
+            system: 'RevisionCounter'
+            major: '1'
+            minor: '5'
+            exclude_commit: true
+
+          # Ensure the artifact output/bin/obj directories are clean.
+        - script: $(Build.SourcesDirectory)\clean.cmd
+          displayName: 'Clean Output Directories'
+          
+          # Build the repo.
+        - script: $(Build.SourcesDirectory)\build.cmd
+          displayName: 'Build Solutions'
+
+          # Run the unit + functional tests in the repo.
+        - script: $(Build.SourcesDirectory)\build-test.cmd
+          displayName: 'Run Tests'
+
+          # Build NuGet packages for the services/agents in the repo.
+        - script: $(Build.SourcesDirectory)\build-packages.cmd
+          displayName: 'Build NuGet Packages'
+
+          # Create the Pilotfish packages.
+        - script: $(Build.SourcesDirectory)\src\VirtualClient\build-packages-pilotfish.cmd CreatePackage
+          displayName: 'Create VC Pilotfish Packages'
+          condition: and(succeeded(), eq(variables['GENERATE_PILOTFISH_PACKAGES'], true))
+
+        - script: $(Build.SourcesDirectory)\src\VirtualClient\build-packages-pilotfish.cmd CreateCatalog
+          displayName: 'Create VC Pilotfish Package Catalogs'
+          condition: and(succeeded(), eq(variables['GENERATE_PILOTFISH_PACKAGES'], true))
+
+          # Code Signing Documentation
+          # https://onebranch.visualstudio.com/OneBranch/_wiki/wikis/OneBranch.wiki/4623/Signing
+          # https://onebranch.visualstudio.com/Pipeline/_git/OneBranch.Pipeline.Toolset?path=%2Fsrc%2Fonebranch.pipeline.signing%2FREADME.md&_a=preview
+
+        - task: onebranch.pipeline.signing@1
+          displayName: 'Sign VC Pilotfish Packages'
+          condition: and(succeeded(), eq(variables['GENERATE_PILOTFISH_PACKAGES'], true))
+          inputs:
+            command: 'sign'
+            signing_environment: 'azure-ado'
+            signing_profile: 'internal_azure_service'
+            files_to_sign: '**/*.exe;**/*.dll;**/*.ps1;**/*.psm1;**/*.cat'
+            search_root: $(Build.SourcesDirectory)/out/deployment/VirtualClient
