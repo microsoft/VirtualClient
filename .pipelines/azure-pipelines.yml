@@ -56,7 +56,7 @@ steps:
 - script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.3
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@2
+- task: EsrpCodeSigning@1
   inputs:
     ConnectedServiceName: 'virtualclient-esrp'
     FolderPath: '$(System.DefaultWorkingDirectory)'
