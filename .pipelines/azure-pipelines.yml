@@ -37,11 +37,12 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
-- task: GitVersion@5
-  inputs:
-    runtime: 'core'
-    configFilePath: 'GitVersion.yml'
-    updateAssemblyInfo: true
+#- task: GitVersion@5
+#  inputs:
+#    runtime: 'core'
+#    configFilePath: 'GitVersion.yml'
+#    updateAssemblyInfo: true
+
 
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
@@ -52,10 +53,10 @@ steps:
   displayName: 'Build Solutions'
 
   # Build NuGet packages for the services/agents in the repo.
-- script: $(Build.SourcesDirectory)\build-packages.cmd
+- script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.3
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@2
+- task: EsrpCodeSigning@1
   inputs:
     ConnectedServiceName: 'virtualclient-esrp'
     FolderPath: '$(System.DefaultWorkingDirectory)'
