@@ -1,7 +1,7 @@
 mode: ContinuousDeployment
 next-version: 0.0.1
 branches:
-  main:
+  master:
     regex: ^main$
     is-mainline: true
     source-branches: ['main']
