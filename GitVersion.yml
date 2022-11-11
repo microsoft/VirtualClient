@@ -4,6 +4,7 @@ branches:
   main:
     regex: ^main$
     is-mainline: true
+    source-branches: ['main']
     tag: ''
 ignore:
   sha: []
