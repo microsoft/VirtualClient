@@ -1,10 +1,12 @@
 mode: ContinuousDeployment
-next-version: 0.0.1
+next-version: 0.0.2
 branches:
   master:
-    regex: ^main$
-    is-mainline: true
-    source-branches: ['main']
     tag: ''
+    regex: ^main$
+    source-branches:
+    - main
+    is-mainline: true
 ignore:
   sha: []
+merge-message-formats: {}
