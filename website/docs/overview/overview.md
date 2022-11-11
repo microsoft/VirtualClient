@@ -1,6 +1,8 @@
 ---
 id: overview
 sidebar_position: 1
+keywords: [benchmark, automation, workload, monitoring, microsoft,
+    coremark,hpcg, lapack, openfoam,redis, memcached, specjvm] 
 ---
 
 # Overview
