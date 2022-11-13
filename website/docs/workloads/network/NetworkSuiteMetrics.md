@@ -2,9 +2,7 @@
 The following document illustrates the type of results that are emitted by the Azure Networking benchmark workload suite and captured by the
 Virtual Client for net impact analysis.
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)
+
 
 ### Workload-Specific Metrics
 The following metrics are emitted by the suite of Networking workloads.

@@ -1,6 +1,5 @@
 ﻿---
 id: lapack
-sidebar_position: 1
 ---
 
 # LAPACK Workload

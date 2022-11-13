@@ -255,8 +255,8 @@ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experimentId=
     "message": "OpenSSLExecutor.Execute",
     "severityLevel": "1",
     "itemType": "trace",
-    "operation_Id": "6978d01d-b28d-4f81-8a0e-6296592dad07"
-    "operation_ParentId": "00000000-0000-0000-0000-000000000000"
+    "operation_Id": "6978d01d-b28d-4f81-8a0e-6296592dad07",
+    "operation_ParentId": "00000000-0000-0000-0000-000000000000",
     "appName": "VirtualClient",
     "appHost": "virtualmachine01",
     "sdkVersion": "1.9.0.0",

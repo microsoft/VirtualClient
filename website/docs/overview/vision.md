@@ -18,10 +18,16 @@ sidebar_position: 10
 
 
 ## Workloads
+1. Commercial workload will come to VirtualClient soon. We will provide a model to release the automation of a workload, with user provided binaries.
+
+
 
 ## Monitors
+1. NvQual
 
 ## Dependencies
 
-## Send us a [Feature request](https://github.com/microsoft/VirtualClient/issues/new?assignees=&labels=&template=feature_request.md&title=)
+
+## Have something you want to see?
+Send us a [Feature request](https://github.com/microsoft/VirtualClient/issues/new?assignees=&labels=&template=feature_request.md&title=)
 

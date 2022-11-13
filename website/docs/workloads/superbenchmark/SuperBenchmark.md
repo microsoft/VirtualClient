@@ -1,6 +1,5 @@
 ﻿---
 id: superbenchmark
-sidebar_position: 1
 ---
 
 # SuperBenchmark Workload Suite
