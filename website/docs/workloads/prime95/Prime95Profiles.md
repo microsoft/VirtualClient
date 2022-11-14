@@ -4,8 +4,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./Prime95.md)
 * [Workload Profile Metrics](./Prime95Metrics.md)
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 

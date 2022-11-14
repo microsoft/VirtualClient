@@ -3,8 +3,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./OpenSSL.md)  
 * [Workload Profile Metrics](./OpenSSLMetrics.md)  
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 

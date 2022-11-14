@@ -3,9 +3,7 @@
 The following document illustrates the type of results that are emitted by the DeathStarBench workload and captured by the
 Virtual Client for net impact analysis.
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)
+
 
 ### Workload-Specific Metrics
 The following metrics are emitted by the DeathStarBench workload itself.

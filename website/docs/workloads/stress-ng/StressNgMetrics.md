@@ -2,9 +2,7 @@
 The following document illustrates the type of results that are emitted by the StressNg workload and captured by the
 Virtual Client for net impact analysis.
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)  
+  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the StressNg workload.

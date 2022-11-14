@@ -4,8 +4,7 @@ workload suite.
 
 * [Workload Details](./NetworkSuite.md)  
 * [Workload Profile Metrics](./NetworkSuiteMetrics.md)  
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 

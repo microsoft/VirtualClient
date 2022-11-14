@@ -2,9 +2,7 @@
 The following document illustrates the type of results that are emitted by the NAS Parallel workload and captured by the
 Virtual Client for net impact analysis.
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)
+
 
 ### Workload-Specific Metrics
 

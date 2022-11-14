@@ -16,17 +16,18 @@ is with automation. That's how VC is born.
 2. We need your contribution. If you can make improvements into how VirtualClient runs some benchmarks, we would really appreciate your contribution. This will enable everyone else around the globe
 
 ## Why you should (or not) use VirtualClient
-
+1. VC is so much more than just scripts to automate a workload. The expertise that went into automation is more valuable than automation itself. We understand there is so much to learn about every workload and every piece of hardware. VC is positioned to host the collective wisdom of perf engineers from different fields. We studied how to run every benchmark, and the best configurations to use, so that you don't have to spend your time to learn them.
+2. VC has the vision to become the united industrial standard of benchmarking and monitoring systems.
+3. 
 
 ### When VirtualClient is probably not a good fit
 1. You only need one-off testing with a workload you already understand. You might have some scripts that doesn't need much maintainces.
-2. 
-
+2. You are fine tuning for an absolutely best score from one particular workload, for benchmarking competitions. VirtualClient is designed to measure **general experience** 
+from customers' perspective.
 
 
 ## How is VC used at Azure
-1. Quality is top priority for Azure.
-2. Azure uses VC to protect the customer from upadtes that will regress the reliability or performance.
+Quality is top priority for Azure. Azure uses VC to protect the customer from updates that will regress the reliability or performance.
 
 ## Will VC support commercial workloads like SPECcpu, GeekBench?
 Yes, VC plans to support commercial workloads in the future releases. VirtualClient needs to establish a model to enable the workload automation, without distributing the workloads themselves.

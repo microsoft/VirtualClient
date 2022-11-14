@@ -6,9 +6,7 @@ Virtual Client for net impact analysis.
 * [SuperBenchmark ModelBenchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/model-benchmarks)  
 * [SuperBenchmark DockerBenchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/docker-benchmarks)  
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)  
+  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the SuperBenchmark workload.

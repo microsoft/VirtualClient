@@ -3,8 +3,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./Compression.md)  
 * [Workload Profile Metrics](./CompressionMetrics.md)
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 
