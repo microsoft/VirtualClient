@@ -27,7 +27,7 @@ in Virtual Client for Prime95 are the following:
 * Prime95 Test Runtime (Unit: seconds)
 
 Prime95 also supports some command line arguments for fine grained control stress testing. The details of parameters
-are mentioned in [Workload Profile Documentation](./Prime95Profiles.md)
+are mentioned in [Workload Profile Documentation](./prime95-profiles.md)
 
 The ScenarioName in results also captures the input parameters.
 

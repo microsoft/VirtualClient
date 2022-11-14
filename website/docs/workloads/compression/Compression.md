@@ -6,13 +6,11 @@ Virtual Client host different types of compression and decompression workloads w
  * Pbzip2
 
 ### Documentation
-* [Lzbench](../VirtualClient.Documentation/Lzbench.md)
-* [7zip](../VirtualClient.Documentation/7zip.md)
-* [Gzip](../VirtualClient.Documentation/Gzip.md)
-* [Pbzip2](../VirtualClient.Documentation/Pbzip2.md)
+* [Lzbench](./Lzbench.md)
+* [7zip](./7zip.md)
+* [Gzip](./Gzip.md)
+* [Pbzip2](./Pbzip2.md)
 
-### Package Details
-* [Workload Package Details](../VirtualClient.Documentation/DependencyPackages.md)
 
 ### Supported Platforms and Architectures
 * linux-x64
@@ -30,12 +28,6 @@ of the Lzbench workload. Note that the Virtual Client will handle the installati
 * unzip
 * pbzip2
 * gzip
-
-### Workload Usage 
-* [Lzbench](../VirtualClient.Documentation/Lzbench.md)
-* [7zip](../VirtualClient.Documentation/7zip.md)
-* [Gzip](../VirtualClient.Documentation/Gzip.md)
-* [Pbzip2](../VirtualClient.Documentation/Pbzip2.md)
 
 ### What is Being Tested?
 * Lzbench

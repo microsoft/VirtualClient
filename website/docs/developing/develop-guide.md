@@ -11,13 +11,10 @@ Before beginning, it is helpful to understand some of the concepts and foundatio
 platform overview and design concepts. The remainder of this guide will use terms that are covered in these documents, so it is important to go through
 these first.
 
-* [Virtual Client Platform Overview](VirtualClient.Documentation/VirtualClientPlatform.md)
-* [Virtual Client Platform Design Concepts](VirtualClient.Documentation/VirtualClientDesign.md)
-* [Dependency Packages](VirtualClient.Documentation/DependencyPackages.md)
 
 If you are developing extensions to the Virtual Client platform in another repo, the following documentation can get you started.
 
-* [Developing Virtual Client Extensions](DEVELOPER_GUIDE_EXTENSIONS.md)
+* [Developing Virtual Client Extensions](./vc-extension.md)
 
 
 After going through this developer guide, there are links code examples at the bottom of this document to get you hands-on experience.
@@ -210,14 +207,6 @@ new component (workload, monitor) to the Virtual Client so as to cover the space
   and the Python3 framework libraries in a separate package (for reusability with other workloads in the future). These packages would be deployed with the Virtual 
   Client in the 'packages' folder so that there is no need for Virtual Client to download them.
   
-  There are also other reasons why it is beneficial to be able to run Virtual Client with the packages already included (no download necessary). Packages are typically
-  uploaded to the VC Team package store (an Azure storage account). If you have not discovered the documentation on dependency packages, you can learn more about those
-  in the following location.
-
-  Custom Virtual Client packages should be uploaded to the VC Team Azure storage account. Contact the team using information in the general documentation at the top of
-  this document for guidance on building and uploading dependency packages.
-
-  * [Dependency Packages](VirtualClient.Documentation/DependencyPackages.md)
 
 * **Design your workload or monitor profile**  
   Virtual Client profiles represent the interface to the user for your workloads/tests, monitors and dependencies. They represent the expertise that a developer gained
@@ -315,7 +304,7 @@ for functional correctness.
 
 * **API Clients**  
   Certain workload scenarios require multiple systems to operate (e.g. networking workloads, client/server). These workloads have a requirement to communicate
-  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](VirtualClient.Documentation/EnvironmentLayouts.md) provided on
+  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](../guides/3-server-client/3-server-client.md) provided on
   the command line to determine the IP addresses of other instances. API client creation and management is encapsulated in the following interfaces/classes:
 
   * IApiClientManager
@@ -574,7 +563,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
   it has its own developer guidance documentation. Follow the recommendations in the documentation to ensure high quality exceptions and error information is
   always provided to users of the Virtual Client.
 
-  * [Virtual Client Error Handling Developer Guide](VirtualClient.Documentation/VirtualClientDeveloperGuide-ErrorHandling.md)
+  * [Virtual Client Error Handling Developer Guide](./error-handling.md)
 
 ## General Code Flow
 The following section provides information on the general flow of the code for a Virtual Client component. This is helpful to understand when developing new
@@ -818,7 +807,6 @@ euphoria. We typically use the Visual Studio IDE due to its robust support for d
   * [Workload/Test Executor and Background Profiling Monitor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Monitors/ExampleProfilingMonitor.cs)  
     Provides a coded example of how to write a monitor that can be used for background profiling operations (both Interval-based as well as On-Demand).
 
-    * [Background Profiling Monitors](VirtualClient.Documentation/MonitoringProfilerIntegration.md)
 
   * [Example Client/Server Executor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Actions/Examples/ClientServer)  
     Provides a coded example for how to write advanced, client/server workload executors.

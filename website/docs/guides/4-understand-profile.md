@@ -137,7 +137,7 @@ VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=03:00:00 --packages="{Blo
 
 ### Scenario: Running a Custom Profile on the File System
 Virtual Client can run profiles that are not necessarily part of the original release package. For example, a user can create a custom profile and place it in a folder that is not in the Virtual Client application
-folder itself. This is very helpful for debugging scenarios (see the section at the bottom of the [Developer Guide](../DEVELOPER_GUIDE.md) for examples). The one requirement for this scenario is that the actions, monitors or
+folder itself. This is very helpful for debugging scenarios (see the section at the bottom of the [Developer Guide](../developing/develop-guide.md) for examples). The one requirement for this scenario is that the actions, monitors or
 dependencies in the custom profile must be known to the version of the Virtual Client runtime executable being used to run the profile.
 
 

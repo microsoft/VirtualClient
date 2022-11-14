@@ -3,7 +3,7 @@ Atop is a toolset that enables support for capturing performance information on 
 to formulate a performance counter base.
 
 * [Atop Documentation](https://manpages.debian.org/testing/atop/atop.1.en.html)
-* [Counters Captured](./PerformanceCounterMetrics.md)
+* [Counters Captured](./perf-counter-metrics.md)
 
 ### Supported Platforms
 * linux-x64

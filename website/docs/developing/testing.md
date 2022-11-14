@@ -20,7 +20,7 @@ The following open source libraries are used to enable rich and robust testing o
   AutoFixture is a library/framework that is used to create mock/fake objects that are used in testing scenarios. The ability to create valid mock objects in test
   code is a very common requirement. The AutoFixture framework makes mock object setup a triviality.
 
-  Within the Virtual Client codebase, a C# [extension method approach](../src/VirtualClient/VirtualClient.TestFramework/FixtureExtensions.cs) 
+  Within the Virtual Client codebase, a C# [extension method approach](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.TestFramework/FixtureExtensions.cs) 
   in conjunction with AutoFixture to define the setup of a wide range of different mock objects in a single, consolidated place minimizing the need for that setup in all of the tests. 
 
 * **[Moq](https://github.com/Moq/moq4/wiki/Quickstart)**  
@@ -33,14 +33,14 @@ The Virtual Client solution uses a few different types of testing fixtures to si
 test workload executor and supporting classes. Testing fixtures enable a reduction in the code required to setup mock/test behaviors by encapsulating the logic
 in a single place or to use C# extension methods to do the same.
 
-* **[MockFixture](../src/VirtualClient/VirtualClient.TestFramework/MockFixture.cs)**  
+* **[MockFixture](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.TestFramework/MockFixture.cs)**  
   The MockFixture provides/encapsulates all of the dependencies required by Virtual Client workload executors implemented as mock objects using the Moq 
   framework. Mock fixtures help to minimize lines of code required to properly test classes and components in a few different ways. Firstly, the developer does
   not have to duplicate all of the mock class/interface dependencies over and over in individual test classes. Almost every dependency needed is on the MockFixture
   class. The MockFixture is also used as to create reusable C# extensions methods. These extensions method allow the developer to perform setup and verifications
   of test code more simply.
 
-* **[DependencyFixture](../src/VirtualClient/VirtualClient.TestFramework/DependencyFixture.cs)**  
+* **[DependencyFixture](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.TestFramework/DependencyFixture.cs)**  
   The DependencyFixture provides/encapsulates all of the dependencies required by Virtual Client workload executors implemented to work the same way
   as live/real dependencies except using only in-memory backing. In-memory backing means that the dependency keeps track of its assets/objects purely
   in-memory. For example, the real package management dependency in Virtual Client uses the file system to reference and manage workload packages. The
@@ -66,17 +66,17 @@ cover a wide range of scenario setups. The following list describes some of the 
 
 * Testing fixtures should have helper methods that make it easy to accomplish the setup of very common mock/fake behaviors on dependencies. One of the most common
   ways we do this is to implement C# extension methods. This can significantly reduce the code required in the test classes and methods and improve readability.
-  See the [MockSetupExtensions](../src/VirtualClient/VirtualClient.TestExtensions/MockSetupExtensions.cs) 
+  See the [MockSetupExtensions](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.TestExtensions/MockSetupExtensions.cs) 
   class for examples.
 
 The best way to illustrate the ideas is to showcase the usage patterns. The following links provide good examples of using the various testing fixtures to establish robust
 tests for a given class or component. For developers using the Visual Studio IDE, it is easy to debug the code. Simply set a breakpoint in any one of the test methods, 
 right-click on the test and select "Debug Test(s)" to see the mechanics in motion.
 
-* [Example Using MockFixture Mechanics](../src/VirtualClient/VirtualClient.Actions.UnitTests/Example2WorkloadExecutorTests_MockFixture.cs)  
+* [Example Using MockFixture Mechanics](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions.UnitTests/Example2WorkloadExecutorTests_MockFixture.cs)  
   Example of how to write unit or functional tests using the Moq framework and MockFixture class as the foundation for the testing fixture and setup mechanics. 
 
-* [Example Using DependencyFixture Mechanics](../src/VirtualClient/VirtualClient.Actions.UnitTests/Example2WorkloadExecutorTests_DependencyFixture.cs)  
+* [Example Using DependencyFixture Mechanics](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Actions.UnitTests/Example2WorkloadExecutorTests_DependencyFixture.cs)  
   Example of how to write unit or functional tests using the in-memory dependency implementations as the foundation for the testing fixture 
   and setup mechanics.
 

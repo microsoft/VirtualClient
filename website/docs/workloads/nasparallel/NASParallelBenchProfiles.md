@@ -2,7 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the NAS Parallel toolset.
 
 * [Workload Details](./NASParallelBench.md)
-* [Workload Metrics](./NASParallelBenchs.md)
+* [Workload Metrics](./NASParallelBenchMetrics.md)
 
 
 -----------------------------------------------------------------------
@@ -20,7 +20,7 @@ The Virtual Client running on the client and server systems will synchronize wit
 file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. See 
 the section below on 'Client/Server Topologies'.
 
-[Environment Layouts](./EnvironmentLayouts.md)
+[Environment Layouts](../../guides/3-server-client/environment-layout.md)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system(s)/VM(s) as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -136,4 +136,4 @@ Virtual Client is deployed. Once the environment is setup, it is easy to provide
 instance running on a given system knows about all of the other instances and additionally knows what its role to play in the client/server workload
 execution process is.
 
-See [Environment Layouts](./EnvironmentLayouts.md) for more information.
+See [Environment Layouts](../../guides/3-server-client/environment-layout.md) for more information.

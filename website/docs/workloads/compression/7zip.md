@@ -22,9 +22,6 @@ The main features of 7-Zip are:
 ### Documentation
 * [7zip](https://www.7-zip.org/)
 
-### Package Details
-* [Workload Package Details](../VirtualClient.Documentation/DependencyPackages.md)
-
 ### Supported Platforms and Architectures
 * win-x64
 * win-arm64

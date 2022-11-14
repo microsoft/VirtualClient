@@ -1,8 +1,8 @@
 ﻿# HPCG Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the HPCG workload.
 
-* [Workload Details](./HPCG.md)  
-* [Workload Profile Metrics](./HPCGMetrics.md)  
+* [Workload Details](./hpcg.md)  
+* [Workload Profile Metrics](./hpcg-metrics.md)  
 
 -----------------------------------------------------------------------
 

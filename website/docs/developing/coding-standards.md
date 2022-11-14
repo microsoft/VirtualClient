@@ -1,7 +1,5 @@
 # Coding Standards
 
-* [Repo Fundamentals](README.md)
-
 ### Style Guidelines
 Most of the coding style is enforced using static code/style analysis toolsets that are integrated into the project when built.
 This makes it easier for developers to follow the patterns. The important thing to remember here is that new projects must import

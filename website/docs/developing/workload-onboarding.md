@@ -8,7 +8,7 @@ list of expected metrics which will be pushed to telemetry.
 * Get all the doubts and discrepancies clarified by setting a meeting with SME again.
 
 #### **Step2: Dependency Packages Creation and Uploading**
-* To understand the different package store options available in Virtual Client used for downloading and installing dependencies on the system, please refer [Dependency Packages](./DependencyPackages.md)
+
 * **NuGet Package Creation Steps**
     * Go to VirtualClient.Packaging project and create a folder with the name of workload in each of the supporting architectures folder.
     * Copy all the required files based on architecture in the newly created folders.
@@ -67,7 +67,6 @@ build-packages-workloads.cmd
 #### Step5: Profile Creation
 * Create json file with name PERF-<PERF_CRITERION>-<Workload_Name>.json (eg. PERF-WEB-WEBFUNDAMENTALS.json) in profiles folder of VirtualClient.Main project.
 * This file contains all the dependencies that are required by the workload.
-* Refer [Dependency Packages](./DependencyPackages.md) for a more detailed description.
 * Dependencies are included in the project VortualClient.Dependencies.
 * Update VirtualClient.Main.csproj file and VirtualClient.Actions.FunctionalTests.csproj file with the json file created.
 
@@ -109,19 +108,12 @@ This documentation should exist in the VirtualClient.Packaging folder and should
 This includes information on exactly where to get the binaries/scripts etc. required to create a workload package (including custom build/compile instructions). 
 This should also and especially include information on pieces of the workload package that are NOT in source control (e.g. where is it at if not in source control). 
 An example of this is the SPEC CPU workload requirements for an *.iso file. This file is over 2 GB in size and we do not keep it in source control. It exists ONLY in the package store.
-        * Example: [Notes-OPENSSL.md](../VirtualClient.Packaging/Notes-OPENSSL.md)
+        * Example: [Notes-OPENSSL.md](../../src/VirtualClient/VirtualClient.Packaging/Notes-OPENSSL.md)
 * **Workload Details, Profiles and Metrics**
 A standard pattern is in place for describing the details of the workload (what it is and what it does) as well as the different profiles that are offered to run that workload as well as what type of metrics to we capture when the workload is run. 
 This is very important for users of the Virtual Client to understand fine-grained details about these workloads and profile scenarios. This information is divided into 3 parts/documents. Use the examples below for reference.
     * Examples: 
-        * [OpenSSL.md](./OpenSSL.md)
-        * [OpenSSLMetrics.md](./OpenSSLMetrics.md)
-        * [OpenSSLProfiles.md](./OpenSSLProfiles.md)
+        * [OpenSSL.md](../workloads/openssl/openssl.md)
+        * [OpenSSLMetrics.md](../workloads/openssl/openssl-metrics.md)
+        * [OpenSSLProfiles.md](../workloads/openssl/openssl-profiles.md)
 
-  <br/><br/>
-  
-  * **References**
-    * See [Dependency Packages](./DependencyPackages.md) for a more detailed description of how packages are 
-  expected to be defined for use with Virtual Client operations.
-    * See [Workload Recommendations](./WorkloadRecommendations.md) for a detailed description of the recommendations 
-  that should be followed for onboarding a workload on Virtual Client.

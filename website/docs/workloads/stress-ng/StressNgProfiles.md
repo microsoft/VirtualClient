@@ -1,7 +1,7 @@
 ﻿# StressNg Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the StressNg workload.
 
-* [Workload Details](./StressNg.md)  
+* [Workload Details](./stress-ng.md)  
 * [Workload Profile Metrics](./StressNgMetrics.md)  
 
 -----------------------------------------------------------------------
