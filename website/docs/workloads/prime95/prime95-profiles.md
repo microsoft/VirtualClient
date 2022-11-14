@@ -2,8 +2,8 @@
 The following profiles run customer-representative or benchmarking scenarios using the
  Prime95 workload.
 
-* [Workload Details](./Prime95.md)
-* [Workload Profile Metrics](./Prime95Metrics.md)
+* [Workload Details](./prime95.md)
+* [Workload Profile Metrics](./prime95-metrics.md)
 
 
 -----------------------------------------------------------------------

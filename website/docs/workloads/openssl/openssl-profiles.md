@@ -1,8 +1,8 @@
 ﻿# OpenSSL Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the OpenSSL speed workload.  
 
-* [Workload Details](./OpenSSL.md)  
-* [Workload Profile Metrics](./OpenSSLMetrics.md)  
+* [Workload Details](./openssl.md)  
+* [Workload Profile Metrics](./openssl-metrics.md)  
 
 
 -----------------------------------------------------------------------

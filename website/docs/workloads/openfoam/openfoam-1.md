@@ -8,8 +8,6 @@ chemical reactions, turbulence and heat transfer, to solid dynamics and electrom
 ### Documentation
 * [OpenFOAM](https://www.openfoam.com/)
 
-### Package Details
-* [Workload Package Details](../VirtualClient.Documentation/DependencyPackages.md)
 
 ### Simulations Onboarded For linux-x64
 

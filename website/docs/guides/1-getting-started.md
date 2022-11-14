@@ -118,7 +118,7 @@ from a benchmark run.
     - Output from tools like uname, lscpu, lspci
 
 :::tip Reading logs is tedious?
-VC is designed for large scale perf testing. Check [Telemetry-TODO] to see how to setup automatic data upload pipeline.
+VC is designed for large scale perf testing. Check [Telemetry](./telemetry/telemetry.md) to see how to setup automatic data upload pipeline.
 :::
 
 ## Congratulations !!

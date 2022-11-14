@@ -35,7 +35,7 @@ layout describes the topology...where the other Virtual Client instances are and
 with defining an environment layouts, see the documentation below. Note that each of the workload profiles has documentation that
 provides examples of a valid environment layout for that particular workload profile/workload.
 
-* [Environment Layouts](./EnvironmentLayouts.md)
+* [Environment Layouts](../3-server-client/environment-layout.md)
 
 
 ```
@@ -61,7 +61,7 @@ The Virtual Client supports the ability to upload metrics, counters, logs etc...
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).
 Note that the Virtual Client does have a set of explicit expectations for how the Event Hubs are setup. The following documentation covers what is required:
 
-* [Event Hub Integration](./EventHubIntegration.md) 
+* [Event Hub Integration](../telemetry/telemetry.md) 
 
 
 ```
@@ -77,10 +77,8 @@ Certain monitors that exist in the Virtual Client allow the user to upload infor
 a cloud Blob store. In order to enable this, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
 on monitor profiles below for additional details on which profiles support this.
 
-* [Blob Store Support](./BlobStorageSupport.md)
-* [Monitor Profiles](./MonitorProfiles.md)
-* [Interval vs. On-Demand Monitors](./MonitoringProfilerIntegration.md)
-
+* [Blob Store Support](../blob-storage.md)
+* [Monitor Profiles](../../monitors/monitor-profiles.md)
 
 
 ```
@@ -95,11 +93,8 @@ The Azure Profiler monitor is a part of the default monitoring profile and can b
 In order to enable file uploads, the connection string or SAS URI to the Blob store should be supplied on the command line. See the documentation
 on monitor profiles below for additional details on which profiles support this.
 
-* [Azure Profiler Monitor](./AzureProfilerMonitor.md)
-* [Blob Store Support](./BlobStorageSupport.md)
-* [Monitor Profiles](./MonitorProfiles.md)
-* [Interval vs. On-Demand Monitors](./MonitoringProfilerIntegration.md)
-
+* [Blob Store Support](../blob-storage.md)
+* [Monitor Profiles](../../monitors/monitor-profiles.md)
 
 ```
 # Profiling on an interval in the background.

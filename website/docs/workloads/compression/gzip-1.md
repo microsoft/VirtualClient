@@ -9,9 +9,6 @@ gzip also refers to the associated compressed data format used by the utility.
 ### Documentation
 * [Gzip](https://www.gzip.org/)
 
-### Package Details
-* [Workload Package Details](../VirtualClient.Documentation/DependencyPackages.md)
-
 ### Supported Platforms and Architectures
 * linux-x64
 * linux-arm64

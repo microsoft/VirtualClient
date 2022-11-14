@@ -9,7 +9,7 @@ binaries/.dlls containing actions, monitors, dependency handlers etc... that are
 repo. Extensions allow development teams to add features to the Virtual Client runtime platform that are specialized towards their team's needs and charter.
 Before getting started, it is helpful to familiarize yourself with the Virtual Client platform design and concepts.
 
-* [General Developer Guide](DEVELOPER_GUIDE.md)
+* [General Developer Guide](../developing/develop-guide.md)
 
 The following example extensions repo can be used for reference to the details described within this guide.
 
@@ -76,8 +76,6 @@ The following section provides requirements to follow when considering versions 
 semantic versioning with the Virtual Client runtime application and framework libraries. The versions of the assemblies/.dlls/.exes can be used to determine
 which version of the NuGet packages should be used. The following resource explains the versioning process.
 
-* [Platform Versioning](VERSIONING.md)
-
 It is recommended that you follow the same "semantic versioning" strategy as is followed for the Virtual Client platform. The following examples 
 illustrate versions of extensions (when compiled) that would be expected to work with a specific Virtual Client release. It is really only the
 'major' and 'minor' versions that are important here. The following table illustrates the general idea.
@@ -96,7 +94,6 @@ that contains the files required for a particular dependency. Dependency package
 including those that are disconnected from the internet. Additionally, they enable each version of the Virtual Client to operate using exact/known
 binaries, scripts etc... This is an important concept both for producing repeatable results as well as for simplifying deployment and setup requirements.
 
-* [Dependency Packages](VirtualClient.Documentation/DependencyPackages.md)
 
 For extensions packages, the following illustrates the expected folder structure and contents. Note that you do not have to compile your libraries
 specifically for the platform/architectures noted below. Compilation against 'AnyCPU' is sufficient to keep things simple. An extensions package
@@ -272,7 +269,7 @@ be integrated into the Virtual Client runtime.
 This next section is going to cover the topic of debugging Virtual Client extensions. It is very helpful at times when doing development work to have
 the ability to run the Virtual Client runtime executable while enabling the ability to step through the code line by line. For this section, we will be
 looking at how to do this using the Visual Studio IDE and facilities that it has to make debugging easier. Make sure to review the section "Debugging Virtual Client Code"
-at the bottom of the [General Developer Guide](DEVELOPER_GUIDE.md) for more information on debugging.
+at the bottom of the [General Developer Guide](../developing/develop-guide.md) for more information on debugging.
 
 * **Debug Using Unit/Functional Tests**  
   This option is documented in the general developer guide. The technique is the same for debugging extensions as it is for any other component.
@@ -284,8 +281,7 @@ at the bottom of the [General Developer Guide](DEVELOPER_GUIDE.md) for more info
 
   Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a 
   "just-built" version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the 
-  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net6.0/VirtualClient.exe). See the repo
-  general [README](../../README.md) for guidance on building the platform/core repo.
+  VirtualClient.exe from the built output location (e.g. /\{repoDir\}/out/bin/Debug/x64/VirtualClient.Main/net6.0/VirtualClient.exe).
 
 
 

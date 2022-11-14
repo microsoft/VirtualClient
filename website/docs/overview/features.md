@@ -112,8 +112,6 @@ set of files and dependencies associated. This helps simplify the deployment of 
 simply download the dependencies it needs at runtime. However, this also enables Virtual Client to support "disconnected" scenarios where the systems under test do not have an internet
 connection.
 
-* [Dependency Packages](./DependencyPackages.md)
-
 Examples of package/dependency requirements supported by the platform include:
 
 * A common model for how to define a workload or dependency package.
@@ -127,8 +125,8 @@ Another core ability of the Virtual Client platform is that it provides a consol
 monitors. This is an important aspect of the platform end-to-end solution in that it makes it possible to integrate many different types of workloads while ensuring a
 common methodology for reading the results to determine outcomes.
 
-* [Example Workload Metrics](./DiskSpdMetrics.md)  
-* [Example Monitoring Metrics](./PerformanceCounterMetrics.md)  
+* [Example Workload Metrics](../workloads/diskspd/diskspd-metrics.md)  
+* [Example Monitoring Metrics](../monitors/perf-counter-metrics.md)  
 * [Azure Event Hub + Azure Data Explorer/Kusto Integration](./EventHubIntegrationNext.md)
 
 Examples of data capture requirements supported by the platform include:

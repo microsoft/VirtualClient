@@ -11,8 +11,6 @@ architectures. The choice to implement the application using managed code was ma
 as meeting all of the requirements for cross-platform + architecture support. Additionally, the .NET 6.0 framework integrates all of the performance and runtime 
 efficiency work done by the .NET Core team over the past 5 years into a unified platform.
 
-Reference the [Platform Overview](./VirtualClientPlatform.md) documentation for more information on the platform offerings.
-
 ## Application Concepts
 The following sections describes some of the high-level concepts and features sets of the Virtual Client platform.
 
@@ -23,10 +21,10 @@ that are useful in comparing the performance of the system. Each of the workload
 Azure organization as well as from empirical evidence derived from running them in large-scale experiments. The Virtual Client has ran on more than
 a million VM systems (Windows and Linux) in the Azure cloud.
 
-* [Workloads and Profiles Supported](../README.md)  
+* [Workloads and Profiles Supported](../overview/overview.md)  
 * [Example Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json&version=GBmaster)
 * [Profiles Supported](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
-* [Usage Examples](./UsageScenarios.md)
+* [Usage Examples](../guides/usage-scenarios/)
 
 Using the example below as a reference, there are a 3 different fundamental sections inside a workload profile:
 
@@ -117,7 +115,7 @@ is the need to capture performance counters from the system. Monitoring profiles
 and reliability information while workloads are executing in-parallel. The Virtual Client runs a default monitoring profile (MONITORS-DEFAULT.json) when a specific monitoring
 profile is not provided. However, a different monitoring profile can be supplied on the command line if desired (extensibility).
 
-* [Monitors and Profiles Supported](../README.md)  
+* [Monitors and Profiles Supported](../overview/overview.md)  
 * [Example Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-DEFAULT.json&version=GBmaster)
 * [Profiles Supported](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
 
@@ -185,9 +183,7 @@ The section above talked a bit about defining dependencies in Virtual Client wor
 be packaged. Virtual Client workload and dependency packages follow the strict schema for the folder structure of the packages that allows for putting binaries, scripts and
 other files in the package separated by their target runtime OS and architecture platforms (e.g. win-x64, win-arm64, linux-x64, linux-arm64). Workload and dependency
 packages are typically stored in an Azure storage account blob store. However, Virtual Client also supports the ability to include the packages alongside the runtime platform
-and they will be incorporated at runtime without need of download. See the following references for more information:
-
-* [Workload/Dependency Packages](./DependencyPackages.md)
+and they will be incorporated at runtime without need of download. 
 
 In addition to workload and dependency packages stored in a Storage Account location, there are some packages that are packaged directly with the Virtual Client application itself.
 The are called "built-in packages". There is no specific rhyme or reason to what is determined to qualify as a built-in package; however, they are as a general rule dependencies
@@ -279,7 +275,7 @@ blob store. This is a need often enough with certain types of background monitor
 telemetry pipelines. Any component in the Virtual Client can be developed to upload files/content to a target blob store. Then the user of the application simply
 passes in a connection string or SAS URI to the target "content" store on the command line.
 
-* [Blob Store Support](./BlobStorageSupport.md)
+* [Blob Store Support](../guides/blob-storage.md)
 
 
 

@@ -9,10 +9,10 @@ Virtual Client is a unified workload and system monitoring platform for running 
 The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). It has been an inner-source project in Microsoft for two years and now it is open sourced on GitHub.
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports different environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
-* [Platform Details](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/VirtualClient.Documentation/VirtualClientPlatform.md&_a=preview)
-* [Platform Design](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/VirtualClient.Documentation/VirtualClientDesign.md&_a=preview)
-* [Developer Guide](https://github.com/Azure/AzureVirtualClient/blob/main/src/VirtualClient/DEVELOPER_GUIDE.md&_a=preview)
-* [Additional Usage Examples](./VirtualClient.Documentation/UsageScenarios.md)  
+* [Platform Features](https://microsoft.github.io/VirtualClient/docs/overview/features/)
+* [Platform Design](https://microsoft.github.io/VirtualClient/docs/overview/design/)
+* [Developer Guide](https://microsoft.github.io/VirtualClient/docs/developing/develop-guide/)
+* [Additional Usage Examples](https://microsoft.github.io/VirtualClient/docs/category/usage-scenarios/)  
 
 ## Team Contacts
 * [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
