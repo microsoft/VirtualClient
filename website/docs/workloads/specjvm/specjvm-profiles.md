@@ -1,8 +1,8 @@
-﻿# SuperBenchmark Workload Profiles
-The following profiles run customer-representative or benchmarking scenarios using the SuperBenchmark workload.
+﻿# SPECjvm Workload Profiles
+The following profiles run customer-representative or benchmarking scenarios using the SPECjvm workload.
 
-* [Workload Details](./SuperBenchmark.md)  
-* [Workload Profile Metrics](./SuperBenchmarkMetrics.md)
+* [Workload Details](./specjvm.md)  
+* [Workload Profile Metrics](./specjvm-metrics.md)
 
 
 -----------------------------------------------------------------------
@@ -13,52 +13,58 @@ must be supplied on the command line. See the 'Workload Packages' documentation 
 
 -----------------------------------------------------------------------
 
-### PERF-GPU-SUPERBENCH.json
-Runs the SuperBenchmark benchmark workload to test GPU performance. <mark>This workload is <b>supported ONLY for systems that contain nVidia GPU
-hardware components</b>. Work is underway with partner teams in Azure to support additional GPU manufacturers.</mark>
+### PERF-SPECJVM.json
+Runs the SPECjvm benchmark workload to evaluate the performance of the core Java Runtime.
 
 * **Supported Platform/Architectures**
   * linux-x64
+  * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supported Operating Systems**
   * Ubuntu 18
   * Ubuntu 20
   * Ubuntu 22
+  * Windows 10
+  * Windows 11
+  * Windows Server 2016
+  * Windows Server 2019
 
 * **Dependencies**  
   The following dependencies must be met to run this workload profile.
 
   * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
-  * The VM must run on hardware containing Nvidia GPU cards/components.
 
-* **Profile Parameters**  
-  The following parameters can be supplied on the command line. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+* **Scenarios**  
+  The following scenarios are covered by this workload profile.
 
-  | Parameter             | Purpose | Default Value |
-  |-----------------------|---------|---------------|
-  | ConfigurationFile     | Optional. The configuration file to use on the system providing all of the specifics required by Superbench for the particular GPU SKU. | default.yaml  |
+  * Compression aspects
+  * Cryptography aspects
+  * Derby aspects
+  * MPEG Audio streaming aspects
+  * SciMark aspects
+  * Serial aspects
+  * Sunflow aspects
+
 
 * **Workload Runtimes**  
   The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
   minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
   particular workload takes multiple days to complete the number of iterations required for valid results.
 
-  * Expected Runtime = 4 hours
+  * Expected Runtime (8-core/vCPU VM) = 3 hours
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
 
-
   ``` bash
-  VirtualClient.exe --profile=PERF-GPU-SUPERBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-SPECJVM.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
 
-
 -----------------------------------------------------------------------
-
 
 ### Resources
 * [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)

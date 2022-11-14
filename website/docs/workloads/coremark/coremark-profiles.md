@@ -1,9 +1,8 @@
 ﻿# CoreMark Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the CoreMark workload.  
 
-* [Workload Details](./CoreMark.md)  
-* [Workload Profile Metrics](./CoreMarkMetrics.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+* [Workload Details](./coremark.md)  
+* [Workload Profile Metrics](./coremark-metrics.md)
 
 -----------------------------------------------------------------------
 

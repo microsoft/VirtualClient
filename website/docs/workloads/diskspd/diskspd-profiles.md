@@ -1,8 +1,8 @@
 ﻿# DiskSpd Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DiskSpd workload.  
 
-* [Workload Details](./DiskSpd.md)  
-* [Workload Profile Metrics](./DiskSpdMetrics.md)
+* [Workload Details](./diskspd.md)  
+* [Workload Profile Metrics](./diskspd-metrics.md)
 
 
 -----------------------------------------------------------------------

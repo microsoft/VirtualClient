@@ -2,8 +2,8 @@
 The following profiles run customer-representative or benchmarking scenarios using the Azure Networking benchmark
 workload suite.
 
-* [Workload Details](./NetworkSuite.md)  
-* [Workload Profile Metrics](./NetworkSuiteMetrics.md)  
+* [Workload Details](./network-suite.md)  
+* [Workload Profile Metrics](./network-suite-metrics.md)  
 
 
 -----------------------------------------------------------------------

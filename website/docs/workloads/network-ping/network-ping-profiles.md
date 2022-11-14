@@ -2,8 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using basic network pings/ICMP protocol.  
 
 * [Workload Details](./network-ping.md)  
-* [Workload Profile Metrics](./NetworkPingMetrics.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+* [Workload Profile Metrics](./network-ping-metrics.md)
 
 -----------------------------------------------------------------------
 

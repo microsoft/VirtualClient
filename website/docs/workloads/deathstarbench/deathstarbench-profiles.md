@@ -1,8 +1,8 @@
 ﻿# DeathStarBench Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DeathStarBench workload.  
 
-* [Workload Details](./DeathStarBench.md)  
-* [Workload Profile Metrics](./DeathStarBenchMetrics.md)  
+* [Workload Details](./deathstarbench.md)  
+* [Workload Profile Metrics](./deathstarbench-metrics.md)  
 
 
 -----------------------------------------------------------------------

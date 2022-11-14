@@ -1,8 +1,8 @@
 ﻿# MLPerf Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the MLPerf workload.
 
-* [Workload Details](./MLPerf.md)  
-* [Workload Profile Metrics](./MLPerfMetrics.md)
+* [Workload Details](./mlperf.md)  
+* [Workload Profile Metrics](./mlperf-metrics.md)
 
 
 -----------------------------------------------------------------------

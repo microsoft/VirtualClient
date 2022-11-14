@@ -1,8 +1,8 @@
 ﻿# Graph500 Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the Graph500 workload.  
 
-* [Workload Details](./Graph500.md)  
-* [Workload Profile Metrics](./Graph500Metrics.md)  
+* [Workload Details](./graph500.md)  
+* [Workload Profile Metrics](./graph500-metrics.md)  
 
 
 -----------------------------------------------------------------------
