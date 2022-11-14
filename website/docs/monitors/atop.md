@@ -155,7 +155,7 @@ adjusted to change the precision of the counter samples window.
 
 See the link at the top for more details on the exact performance counters that are captured.
 
-[Monitor Profiles](./MonitorProfiles.md)
+[Monitor Profiles](./monitor-profiles.md)
 
 ### Monitor Parameters
 The following parameters are available on the monitor component .

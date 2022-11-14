@@ -21,13 +21,6 @@ The platform additionally provides the ability to capture important performance 
 
 ## [Supported Workloads](https://microsoft.github.io/VirtualClient/docs/overview/#supported-benchmark-workloads)
 
----
-## Please bear with us for a second
-VirtualClient is an MSFT inner source project we are migrating to GitHub. We are still gradually migrating our code and documents.
-Please be patient if the documents have wrong links. We are actively cleaning those up.
-
-
-
 
 ## Telemetry Notice
 Data Collection. 

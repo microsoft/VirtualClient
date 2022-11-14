@@ -28,7 +28,7 @@
             "Parameters": {
                 "Scenario": "InstallGeekBench5WorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "geekbench5.1.0.0-1.zip",
+                "BlobName": "geekbench5.1.0.0.zip",
                 "PackageName": "geekbench5",
                 "Extract": true
             }

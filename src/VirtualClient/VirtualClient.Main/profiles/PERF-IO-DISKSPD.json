@@ -376,7 +376,7 @@
             "Parameters": {
                 "Scenario": "InstallDiskSpdWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "diskspd.2.0.21-1.zip",
+                "BlobName": "diskspd.2.0.21.zip",
                 "PackageName": "diskspd",
                 "Extract": true
             }

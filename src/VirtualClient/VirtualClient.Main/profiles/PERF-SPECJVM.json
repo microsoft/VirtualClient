@@ -27,7 +27,7 @@
             "Parameters": {
                 "Scenario": "InstallSPECWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "specjvm.2008.0.0-1.zip",
+                "BlobName": "specjvm.2008.0.0.zip",
                 "PackageName": "specjvm2008",
                 "Extract": true
             }

@@ -7,7 +7,7 @@ order to capture performance and reliability information from the system while w
 Instructs the Virtual Client to not run any monitors at all.
 
 
-```
+```bash
 // Do not run any background monitors.
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-NONE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 ```
@@ -16,8 +16,8 @@ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-NONE.json -
 The default monitor profile for the Virtual Client. This profile captures performance counters on the system using one or more different specialized
 toolsets. This monitor profile will be used when no other monitor profiles are specified on the command line.
 
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Atop](./AtopMonitor.md)
+* [Performance Counters](./perf-counter-metrics.md)
+* [Atop](./atop.md)
 
 * **OS/Architecture Platform Support**
   * Linux

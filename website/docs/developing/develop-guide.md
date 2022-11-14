@@ -48,7 +48,7 @@ in the Virtual Client derive from the base class 'VirtualClientComponent'.
             "Parameters": {
                 "Scenario": "InstallOpenSSLWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "openssl.3.0.0-1.zip",
+                "BlobName": "openssl.3.0.0.zip",
                 "PackageName": "openssl",
                 "Extract": true
             }
