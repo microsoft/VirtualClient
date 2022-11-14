@@ -3,8 +3,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./NASParallelBench.md)
 * [Workload Metrics](./NASParallelBenchs.md)
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 

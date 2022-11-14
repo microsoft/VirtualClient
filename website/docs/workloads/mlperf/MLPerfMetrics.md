@@ -5,9 +5,7 @@ Virtual Client for net impact analysis.
 * [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.0/tree/main/NVIDIA/benchmarks)
 * [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA/code)    
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)  
+  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the MLPerf workload.

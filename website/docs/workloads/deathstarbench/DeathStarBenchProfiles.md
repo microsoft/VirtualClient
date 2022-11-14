@@ -3,8 +3,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./DeathStarBench.md)  
 * [Workload Profile Metrics](./DeathStarBenchMetrics.md)  
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+
 
 -----------------------------------------------------------------------
 

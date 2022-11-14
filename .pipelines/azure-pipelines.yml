@@ -22,11 +22,11 @@ variables:
   
 
 steps:
-- task: GitVersion@5
+- task: UseDotNet@2
+  continueOnError: false
   inputs:
-    runtime: 'core'
-    configFilePath: 'GitVersion.yml'
-    updateAssemblyInfo: true
+    packageType: 'sdk'
+    version: '2.1.x'
 
 - task: UseDotNet@2
   continueOnError: false
@@ -36,6 +36,12 @@ steps:
     useGlobalJson: false
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
+
+#- task: GitVersion@5
+#  inputs:
+#    runtime: 'core'
+#    configFilePath: 'GitVersion.yml'
+#    updateAssemblyInfo: true
 
 
   # Ensure the artifact output/bin/obj directories are clean.
@@ -47,12 +53,12 @@ steps:
   displayName: 'Build Solutions'
 
   # Build NuGet packages for the services/agents in the repo.
-- script: $(Build.SourcesDirectory)\build-packages.cmd
+- script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.3
   displayName: 'Build NuGet Packages'
 
-- task: EsrpCodeSigning@2
+- task: EsrpCodeSigning@1
   inputs:
-    ConnectedServiceName: 'ESRP Service'
+    ConnectedServiceName: 'virtualclient-esrp'
     FolderPath: '$(System.DefaultWorkingDirectory)'
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'

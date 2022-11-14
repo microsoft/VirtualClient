@@ -1,6 +1,8 @@
 ---
 id: overview
 sidebar_position: 1
+keywords: [benchmark, automation, workload, monitoring, microsoft,
+    coremark,hpcg, lapack, openfoam,redis, memcached, specjvm] 
 ---
 
 # Overview
@@ -9,9 +11,9 @@ The platform supports a wide range of different industry standard/benchmark work
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports all business-critical 
 Azure environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
-* [Platform Features](../guides/features)
-* [Platform Design](../guides/design)
-* [Developer Guide](../developing/develop-guide)
+* [Platform Features](../overview/features.md)
+* [Platform Design](../overview/design.md)
+* [Developer Guide](../developing/develop-guide.md)
 * [Additional Usage Examples](../category/usage-scenarios)  
 
 ## Team Contacts
@@ -27,7 +29,7 @@ VirtualClient handles the installation and execution of various tools. Individua
 
 | **Benchmark** | **Specialization** | **Supported Platforms/Architectures** | **License(s)**  |
 |---|---|---|---|
-| [7zip](../workloads/compression/Compression.md) | 7zip compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html)  |
+| [7zip](../workloads/compression/7zip.md) | 7zip compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html)  |
 | [AspNetBench](../workloads/aspnetbench/AspNetBench.md) | ASP.NET server | linux-x64, linux-arm64, win-x64, win-arm64 | [**ASP.NET**:MIT](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[**Bombardier**:MIT](https://github.com/codesenberg/bombardier/blob/master/LICENSE)  |
 | [CoreMark](../workloads/coremark/CoreMark.md) | Generic CPU | linux-x64,linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CPS](../workloads/network/NetworkSuite.md) | Network RoundTripTime | linux-x64, linux-arm64, win-x64, win-arm64 | MSFT developed  |
@@ -48,13 +50,13 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [NTttcp](../workloads/network/NetworkSuite.md) | Network bandwidth | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/ntttcp/blob/main/LICENSE)  |
 | [OpenFOAM](../workloads/openfoam/OpenFOAM.md) | Fluidmechanics | linux-x64, linux-arm64 | [Custom](https://github.com/OpenFOAM/OpenFOAM-10/blob/master/COPYING)  |
 | [OpenSSL](../workloads/openssl/OpenSSL.md) | Cryptography | linux-x64, linux-arm64, win-x64 | [Apache-2.0](https://github.com/openssl/openssl/blob/master/LICENSE.txt)  |
-| [pbzip2](../workloads/compression/Compression.md) | pbzip2 compression | linux-x64, linux-arm64 | [BSD](http://compression.great-site.net/pbzip2/)  |
+| [pbzip2](../workloads/compression/pbzip2.md) | pbzip2 compression | linux-x64, linux-arm64 | [BSD](http://compression.great-site.net/pbzip2/)  |
 | [Prime95](../workloads/prime95/prime95.md) | Prime number search | linux-x64 | [Custom](https://www.mersenne.org/legal/)  |
 | [Redis](../workloads/redis/Redis.md) | Redis Performance | linux-x64, linux-arm64 | [**Redis**:BSD-3](https://github.com/redis/redis/blob/unstable/COPYING)<br/>[**Memtier**:GPL-2.0](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
 | [SockPerf](../workloads/network/NetworkSuite.md) | Network latency | linux-x64, linux-arm64 | [Custom](https://github.com/Mellanox/sockperf/blob/sockperf_v2/copying)  |
 | [SPECjvm](../workloads/specjvm/SPECjvm.md) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
 | [stress-ng](../workloads/stress-ng/StressNg.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
-| [SuperBench](../workloads/superbenchmark/Superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
+| [SuperBench](../workloads/superbenchmark/superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
 
 
 
@@ -75,11 +77,10 @@ VirtualClient is just migrated from MSFT inner-source to GitHub. We are still re
 :::
 
 ## Current Stable Version(s)
-The following section designates the latest stable versions of the Virtual Client. If the version of the Virtual Client is not in this list, then it is NOT recommended
-for use anymore.
+The following section designates the latest stable versions of the Virtual Client. If the version of the Virtual Client is not in this list, then it is NOT recommended for use anymore.
 
-### Version WIP
-Released on ?
+### Version 0.0.2
+Released 
 
 * NuGet Release
 

@@ -4,9 +4,7 @@ Virtual Client for net impact analysis.
 
 [Bombardier output example](https://github.com/codesenberg/bombardier#examples)
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)  
+  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the AspNetBench workload.
