@@ -2,8 +2,6 @@
 The following document illustrates the type of results that are emitted by the NAS Parallel workload and captured by the
 Virtual Client for net impact analysis.
 
-
-
 ### Workload-Specific Metrics
 
 | Name                   | Unit           |Supported Scenarios| Description                                                                             |

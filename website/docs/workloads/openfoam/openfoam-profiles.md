@@ -1,8 +1,8 @@
 ﻿# OpenFOAM Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the OpenFOAM workload.
 
-* [Workload Details](./OpenFOAM.md)  
-* [Workload Profile Metrics](./OpenFOAMMetrics.md)
+* [Workload Details](./openfoam.md)  
+* [Workload Profile Metrics](./openfoam-metrics.md)
 
 
 -----------------------------------------------------------------------

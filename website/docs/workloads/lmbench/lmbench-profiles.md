@@ -1,8 +1,8 @@
 ﻿# LMbench Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the LMbench workload.  
 
-* [Workload Details](./LMbench.md)  
-* [Workload Profile Metrics](./LMbenchMetrics.md)
+* [Workload Details](./lmbench.md)  
+* [Workload Profile Metrics](./lmbench-metrics.md)
 
 
 -----------------------------------------------------------------------

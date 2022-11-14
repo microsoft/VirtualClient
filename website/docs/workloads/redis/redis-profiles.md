@@ -1,8 +1,8 @@
-﻿# SPECjvm Workload Profiles
-The following profiles run customer-representative or benchmarking scenarios using the SPECjvm workload.
+﻿# Redis Workload Profiles
+The following profiles run customer-representative or benchmarking scenarios using the Redis workload.  
 
-* [Workload Details](./SPECjvm.md)  
-* [Workload Profile Metrics](./SPECjvmMetrics.md)
+* [Workload Details](./redis.md)  
+* [Workload Profile Metrics](./redis-metrics.md)  
 
 
 -----------------------------------------------------------------------
@@ -13,55 +13,34 @@ must be supplied on the command line. See the 'Workload Packages' documentation 
 
 -----------------------------------------------------------------------
 
-### PERF-SPECJVM.json
-Runs the SPECjvm benchmark workload to evaluate the performance of the core Java Runtime.
+### PERF-REDIS.json
+#### 1. Memtier Benchmarking Tool :
+This tool can be used to generate various traffic patterns against Redis instances.
+#### 2.Redis Benchmarking Tool:
+The redis-benchmark program is a quick and useful way to get some figures and evaluate the performance of a Redis instance on a given hardware.
 
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
-  * win-x64
-  * win-arm64
-
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
 
 * **Dependencies**  
   The following dependencies must be met to run this workload profile.
 
   * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
 
-* **Scenarios**  
-  The following scenarios are covered by this workload profile.
-
-  * Compression aspects
-  * Cryptography aspects
-  * Derby aspects
-  * MPEG Audio streaming aspects
-  * SciMark aspects
-  * Serial aspects
-  * Sunflow aspects
-
-
 * **Workload Runtimes**  
   The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
-  particular workload takes multiple days to complete the number of iterations required for valid results.
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
 
-  * Expected Runtime (8-core/vCPU VM) = 3 hours
+  * Expected Runtime on Linux Systems
+    * (2-core/vCPU VM) = 30 minutes.( Depends on number of cores of the machine.)
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-
-  ``` bash
-  VirtualClient.exe --profile=PERF-SPECJVM.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ``` csharp
+  ./VirtualClient --profile=PERF-REDIS.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
 
 -----------------------------------------------------------------------

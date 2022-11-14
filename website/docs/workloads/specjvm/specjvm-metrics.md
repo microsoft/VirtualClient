@@ -4,7 +4,6 @@ Virtual Client for net impact analysis.
 
 * [SPECjvm Benchmarks](https://www.spec.org/jvm2008/docs/benchmarks/index.html)
 
-  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the SuperBenchmark workload.

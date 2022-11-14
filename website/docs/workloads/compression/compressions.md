@@ -6,10 +6,10 @@ Virtual Client host different types of compression and decompression workloads w
  * Pbzip2
 
 ### Documentation
-* [Lzbench](./Lzbench.md)
+* [Lzbench](./lzbench.md)
 * [7zip](./7zip.md)
-* [Gzip](./Gzip.md)
-* [Pbzip2](./Pbzip2.md)
+* [Gzip](./gzip.md)
+* [Pbzip2](./pbzip2.md)
 
 
 ### Supported Platforms and Architectures
@@ -31,7 +31,7 @@ of the Lzbench workload. Note that the Virtual Client will handle the installati
 
 ### What is Being Tested?
 * Lzbench
-<br/><br/>
+
 Lzbench is used to measure performance in terms of compression speed, decompression speed and ratio of compressed size and original size. Below are the metrics measured by Lzbench Workload.
 
 | Name                                  |   Unit     |
@@ -41,7 +41,7 @@ Lzbench is used to measure performance in terms of compression speed, decompress
 | Compressed size and original size ratio        | -  |
 
 * Gzip
-<br/><br/>
+
 	Gzip is used to measure performance in terms of ReductionRatio. Below are the metrics measured by Gzip Workload.
 
 | Name                                  |   Unit     |
@@ -50,7 +50,7 @@ Lzbench is used to measure performance in terms of compression speed, decompress
 
 
 * 7zip 
- <br/><br/>
+ 
 7zip is used to measure performance in terms of compressionTime, and ratio of compressed size and original size. Below are the metrics measured by 7zip Workload.
 
 | Name                                  |   Unit     |
@@ -59,7 +59,7 @@ Lzbench is used to measure performance in terms of compression speed, decompress
 | CompressionTime   | seconds |
 
 * Pbzip2 
- <br/><br/>
+ 
 Pbzip2 is used to measure performance in terms of compressionTime, and ratio of compressed size and original size in case of compression and ratio of decompressed size and original size in case of compression. Below are the metrics measured by Pbzip2 Workload.
 
 | Name                                  |   Unit     |
