@@ -43,7 +43,7 @@
       "Parameters": {
         "Scenario": "InstallLAPACKWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "lapack.3.10.0-1.zip",
+        "BlobName": "lapack.3.10.0.zip",
         "PackageName": "lapack",
         "Extract": true
       }

@@ -61,7 +61,7 @@
             "Parameters": {
                 "Scenario": "InstallOpenFOAMWorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "openfoam.1.4.0-2.zip",
+                "BlobName": "openfoam.1.4.0.zip",
                 "PackageName": "openfoam",
                 "Extract": true
             }

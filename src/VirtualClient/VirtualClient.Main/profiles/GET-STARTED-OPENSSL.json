@@ -1,0 +1,27 @@
+{
+    "Description": "OpenSSL 3.0 CPU Performance Workload",
+    "Parameters": { },
+    "Actions": [
+        {
+            "Type": "OpenSslExecutor",
+            "Parameters": {
+                "Scenario": "SHA256",
+                "CommandArguments": "speed -elapsed -seconds 10 sha256",
+                "PackageName": "openssl",
+                "Tags": "CPU,OpenSSL,Cryptography"
+            }
+        }        
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallOpenSSLWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "openssl.3.0.0.zip",
+                "PackageName": "openssl",
+                "Extract": true
+            }
+        }
+    ]
+}

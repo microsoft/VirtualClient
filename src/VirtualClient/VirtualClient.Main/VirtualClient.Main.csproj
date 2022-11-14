@@ -133,6 +133,7 @@
         The following profiles run on Windows and will be published to the VirtualClient
         NuGet package in the /content/win-x64|win-arm64/profiles folder
         -->
+        <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
@@ -156,6 +157,7 @@
         The following profiles run on Windows and will be published to the VirtualClient
         NuGet package in the /content/linux-x64|linux-arm64/profiles folder.
         -->
+        <LinuxProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
 		<LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <LinuxProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />

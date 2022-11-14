@@ -28,7 +28,7 @@
             "Parameters": {
                 "Scenario": "InstallGraph500WorkloadPackage",
                 "BlobContainer": "packages",
-                "BlobName": "graph500.3.0.0-1.zip",
+                "BlobName": "graph500.3.0.0.zip",
                 "PackageName": "graph500",
                 "Extract": true
             }
