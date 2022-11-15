@@ -42,7 +42,7 @@ sidebar_position: 10
 2. Internal monitors we are reviewing
 
 ### Dependencies
-1. We are adding documents for the dependencies we are supporting
+1. We are adding documents for the dependencies we already support
     - Nvidia GPU driver and CUDA installation
     - Compiler Installation
     - Docker insallation

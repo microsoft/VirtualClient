@@ -31,7 +31,6 @@ or examples on how to build and test code within the repo.
   * Team members will typically help you with pointers to documentation needing update as part of the pull request process.
 * Increase the version numbers for any assemblies (.exe or .dll) for which you have changed.
   * We use [semantic versioning](http://semver.org/).
-* Include your change description in `CHANGELOG.md` file as part of pull request.
 * Push your changes to the remote.
 * Browse to the Azure DevOps location for the repo and create a pull request for your branch/changes. You do not need to
   add reviewers to the pull request. The team will be automatically added.  Feel free to add any other reviewers that you'd like
@@ -43,5 +42,3 @@ After you've created the pull request, the following requirements must be met be
 * An automated PR build must complete successfully.
 * Team reviewers must review the code and provide at least 1 approval.
   * Any feedback/comments provided by reviewers must be resolved and changes committed + pushed to the remote.
-* Ownership enforcement must be satisfied. In general this is satisfied by the step above since most (if not all) of the team reviewers
-  are part of the owners group for the repo (see: owners.txt).

@@ -4,8 +4,6 @@ application can run on both Windows and Linux operating systems as well as on ha
 practices to consider when doing development work in the Virtual Client source code. The goal is to enable a developer new to the codebase to quickly understand the high level requirements and expectations before 
 he/she commits to doing work extending the features of the Virtual Client platform.
 
-* [General Documentation and Contacts](https://aka.ms/virtualclient)
-
 ## Preliminaries
 Before beginning, it is helpful to understand some of the concepts and foundations involved in Virtual Client development. The following links provide
 platform overview and design concepts. The remainder of this guide will use terms that are covered in these documents, so it is important to go through
@@ -113,7 +111,7 @@ important thing is to keep things as simple as possible.
   in place protecting the correct functioning of the logic for the future. There are plenty of good examples and patterns in the source
   code to follow.
 
-  * [Testing Guide](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/TESTING_GUIDE.md&_a=preview)
+  * [Testing Guide](./testing.md)
 
 * **Functional tests are required for new profiles.**  
   Functional tests are similar to unit tests except that they focus on the correct integration of all components. When the VC Team creates new

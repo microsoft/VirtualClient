@@ -97,7 +97,7 @@ A second fundamental aspect of the Virtual Client platform is the ability to cap
 timing for capturing system monitoring information with the running of a workload produces high fidelity, highly correlated results around the performance of the system. The correlation
 of workload measurements with system/OS measurements can provide deep insights into the performance and reliability of the system from a customer perspective.
 
-* [Monitors Available](../monitors)  
+* [Monitors Available](../monitors/monitor-profiles.md)  
 
 Examples of monitoring requirements supported by the platform include:
 

@@ -1,9 +1,9 @@
 ﻿---
 id: environment-layout
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# Environment Layouts
+# Environment Layouts Json
 Some information required to conduct experiments cannot be easily discovered by the Virtual Client when the application starts. This type of
 information must be provided to the Virtual Client via an "environment layout". An environment layout provides additional information
 to the Virtual Client in support of the needs of the experiment that is not otherwise discoverable from the information on the VM/host system

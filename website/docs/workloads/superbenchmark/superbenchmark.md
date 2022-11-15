@@ -2,7 +2,7 @@
 id: superbenchmark
 ---
 
-# SuperBenchmark Workload Suite
+# SuperBenchmark
 SuperBench is a validation and profiling tool for AI infrastructure. It highly specializes in GPU performance benchmarking.
 * [SuperBenchmark Documentation](https://microsoft.github.io/superbenchmark/docs/introduction)  
 * [SuperBenchmark Benchmarks](https://microsoft.github.io/superbenchmark/docs/user-tutorial/benchmarks/micro-benchmarks)

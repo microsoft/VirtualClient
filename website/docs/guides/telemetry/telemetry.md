@@ -105,7 +105,7 @@ The following steps describe the databases and tables required.
 
     Run the following Kusto Query Language (KQL) commands to create the tables required for ingesting Virtual Client data. 
 
-    ``` sql
+    ``` kusto
     // Create the table for capturing traces/logs/errors
     .create table Traces (
         Timestamp: datetime,
@@ -140,7 +140,7 @@ The following steps describe the databases and tables required.
 
     Run the following Kusto Query Language (KQL) commands to create the tables required for ingesting Virtual Client data.
 
-    ``` sql
+    ``` kusto
     // Create the table that will maintain important system events information.
     .create table Events (
         Timestamp: datetime,
@@ -198,7 +198,7 @@ The following functions are used to simplify data analysis, diagnostics and debu
 * **Functions for logs/traces database (e.g. WorkloadDiagnostics)**  
 
 
-  ``` sql
+  ``` kusto
   .create-or-alter function GetVirtualClientErrors(startTime:datetime=datetime(null),endTime:datetime=datetime(null)) {
       let dateRangeBegin = iff(isnull(startTime), ago(2d), startTime);
       let dateRangeEnd = iff(isnull(endTime), now(), endTime);
@@ -218,7 +218,7 @@ ADX databases.
   Run the following Kusto Query Language (KQL) commands to create the JSON ingestion mappings required for ingesting Virtual Client logs/traces data.
 
 
-  ``` sql
+  ``` kusto
   // 1) Create the ingestion mappings for the 'Traces' table
   .create table Traces ingestion json mapping 'IngestionMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.experimentId","datatype":"","transform":null},{"column":"ClientId","path":"$.customDimensions.metadata.agentId","datatype":"","transform":null},{"column":"Profile","path":"$.customDimensions.executionProfile","datatype":"","transform":null},{"column":"ProfileName","path":"$.customDimensions.executionProfileName","datatype":"","transform":null},{"column":"Message","path":"$.message","datatype":"","transform":null},{"column":"SeverityLevel","path":"$.severityLevel","datatype":"","transform":null},{"column":"ItemType","path":"$.itemType","datatype":"","transform":null},{"column":"ExecutionSystem","path":"$.customDimensions.executionSystem","datatype":"","transform":null},{"column":"OperatingSystemPlatform","path":"$.customDimensions.operatingSystemPlatform","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"AppVersion","path":"$.customDimensions.appVersion","datatype":"","transform":null},{"column":"AppTelemetryVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"CustomDimensions","path":"$.customDimensions","datatype":"","transform":null}]'
   ```
@@ -227,7 +227,7 @@ ADX databases.
   Run the following Kusto Query Language (KQL) commands to create the JSON ingestion mappings required for ingesting Virtual Client performance and monitoring data.
 
 
-  ``` sql
+  ``` kusto
   // 1) Create the ingestion mappings for the 'Events' table
   .create table Events ingestion json mapping 'IngestionMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.experimentId","datatype":"","transform":null},{"column":"ClientId","path":"$.customDimensions.metadata.agentId","datatype":"","transform":null},{"column":"Profile","path":"$.customDimensions.executionProfile","datatype":"","transform":null},{"column":"ProfileName","path":"$.customDimensions.executionProfileName","datatype":"","transform":null},{"column":"EventType","path":"$.customDimensions.eventType","datatype":"","transform":null},{"column":"EventInfo","path":"$.customDimensions.eventInfo","datatype":"","transform":null},{"column":"SeverityLevel","path":"$.severityLevel","datatype":"","transform":null},{"column":"ItemType","path":"$.itemType","datatype":"","transform":null},{"column":"ExecutionSystem","path":"$.customDimensions.executionSystem","datatype":"","transform":null},{"column":"OperatingSystemPlatform","path":"$.customDimensions.operatingSystemPlatform","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"AppVersion","path":"$.customDimensions.appVersion","datatype":"","transform":null},{"column":"AppTelemetryVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"Tags","path":"$.customDimensions.tags","datatype":"","transform":null},{"column":"CustomDimensions","path":"$.customDimensions","datatype":"","transform":null}]'
 
@@ -290,7 +290,7 @@ The following steps configure the Azure Data Explorer (ADX) cluster data ingesti
 
   https://docs.microsoft.com/en-us/azure/data-explorer/kusto/management/batchingpolicy
 
-  ``` sql 
+  ``` kusto 
   // Update the ingestion batching policies on each of the databases. This updates the cadence for ingesting data 
   // to be every 1 minute.
   .alter database {DatabaseName} policy ingestionbatching @"{ 'MaximumBatchingTimeSpan': '00:01:00', 'MaximumNumberOfItems': 500, 'MaximumRawDataSizeMB': 1024 }"
