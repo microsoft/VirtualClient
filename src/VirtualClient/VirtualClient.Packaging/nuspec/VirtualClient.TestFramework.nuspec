@@ -6,6 +6,7 @@
         <description>Provides common mock classes and extensions that are helpful for testing (unit + functional) Virtual Client platform components.</description>
         <authors>Microsoft</authors>
         <license type="expression">MIT</license>
+        <projectUrl>https://github.com/microsoft/VirtualClient</projectUrl>
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
 

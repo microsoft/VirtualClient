@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Getting Started
 
-In this document, we are going to run a "hello-world" version of VirtualClient: benchmark your system with CoreMark.
+In this document, we are going to run a "hello-world" version of VirtualClient: benchmark your system's crypotography performance, with OpenSSL Speed, using SHA256 algorithm.
 
 ---
 
@@ -13,13 +13,11 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 
 #### *NuGet package*
 
-
-
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
 ```powershell
-PM> NuGet\Install-Package VirtualClient -Version 0.0.2
+PM> NuGet\Install-Package VirtualClient -Version 0.0.3
 ```
-- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.2
+- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.3
 - VC executable could be find in those paths
 ```treeview
 VirtualClient/
@@ -56,21 +54,22 @@ VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\Virtua
 
 - Execute this command
 ```bash
-VirtualClient --profile=PERF-CPU-COREMARK.json --profile=MONITORS-NONE.json --iterations=1
+sudo ./VirtualClient --profile=GET-STARTED-OPENSSL.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages
 ```
-- `--profile=PERF-CPU-COREMARK.json` tells VC to run a CoreMark benchmark
+- `--profile=GET-STARTED-OPENSSL.json` tells VC to run a stripped down version of OpenSSL benchmark.
 - VirtualClient has a default profile, `--profile=MONITORS-NONE.json` overrides that behavior in this one-time run.
 - `--iteration=1` Tells VC to run this profile once. Default behavior is to run profiles repetatively until timeout.
+- `--packages=https://virtualclient.blob.core.windows.net/packages` defines the packages store that VC will download OpenSSL binary from. Not every workload needs binary download. You can also use your own binary and package store if desired.
 
 
 :::caution
-In this profile, VC will install gcc-9 and other development tools, and set gcc-9 as default compiler in your system.<br/>
+In this profile, VC will download OpenSSL binaries onto your system, under `/virtualclient/packages/openssl.3.0.0/`.<br/>
 If prefered, run in a Virtual Machine to avoid those changes to your system.
 :::
 
 ## Read results and logs
 
-- You will find three local files under directory `/vc/logs/`
+- You will find three local files under directory `/virtualclient/logs/`
 ```bash
 logs
 ├── events-20221109.log
@@ -79,29 +78,34 @@ logs
 ```
 - Metrics.log contains the Metrics captured by the benchmark. Columns `metricName`, `metricValue`, `metricUnit` contain some of the most important information
 from a benchmark run.
-```json {16,18,19}
+```json {16,17,18,19}
 {
-    "timestamp": "2022-11-09T04:09:59.3573706+00:00",
+    "timestamp": "2022-11-14T07:26:18.2717145+00:00",
     "level": "Information",
-    "message": "CoreMark.ScenarioResult",
-    "agentId": "ExampleClient",
+    "message": "OpenSSL.ScenarioResult",
+    "agentId": "testuser",
     "appVersion": "1.6.0.0",
-    "clientId": "ExampleClient",
-    "executionProfileName": "PERF-CPU-COREMARK.json",
-    "executionProfilePath": "/home/vcvmadmin/vc/profiles/PERF-CPU-COREMARK.json",
+    "clientId": "testuser",
+    "executionProfileName": "GET-STARTED-OPENSSL.json",
+    "executionProfilePath": "/home/testuser/virtualclient/profiles/GET-STARTED-OPENSSL.json",
     "executionSystem": null,
-    "experimentId": "3a225222-f834-4101-8a81-219a1f4e9587",
-    "metadata": {"experimentId":"3a225222-f834-4101-8a81-219a1f4e9587","agentId":"ExampleClient"},
+    "experimentId": "6619e311-e3ee-4727-a082-dc61f1fbb44d",
+    "metadata": {"experimentId":"6619e311-e3ee-4727-a082-dc61f1fbb44d","agentId":"testuser"},
     "metricCategorization": "",
     "metricDescription": "",
     "metricMetadata": {},
-    "metricName": "Iterations/Sec",
+    "metricName": "sha256 16-byte",
     "metricRelativity": "HigherIsBetter",
-    "metricUnit": "iterations/sec",
-    "metricValue": 93187.139894,
-    "parameters": {"scenario":"ScoreSystem","packageName":"coremark","profileIteration":1,"profileIterationStartTime":"2022-11-09T04:09:22.3729518Z"},
+    "metricUnit": "kilobytes/sec",
+    "metricValue": 323830.14,
+    "parameters": {"scenario":"SHA256","commandArguments":"speed -elapsed -seconds 10 sha256","packageName":"openssl","tags":"CPU,OpenSSL,Cryptography","profileIteration":1,"profileIterationStartTime":"2022-11-14T07:25:18.1731942Z"},
     "platformArchitecture": "linux-arm64",
-    "scenarioArguments": "XCFLAGS=\"-DMULTITHREAD=4 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread",
+    "scenarioArguments": "speed -multi 4 -elapsed -seconds 10 sha256",
+    "scenarioEndTime": "2022-11-14T07:26:18.2470775Z",
+    "scenarioName": "OpenSSL Speed",
+    "scenarioStartTime": "2022-11-14T07:25:18.2251103Z",
+    "systemInfo": {"etc"},
+    "tags": "CPU,OpenSSL,Cryptography",
     "etc": ...
 }
 ```
@@ -117,4 +121,4 @@ VC is designed for large scale perf testing. Check [Telemetry](./telemetry/telem
 :::
 
 ## Congratulations !!
-You just benchmarked your system with CoreMark.
+You just benchmarked your system with OpenSSL.

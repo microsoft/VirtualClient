@@ -33,6 +33,7 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
+          exclude: ['**/1-getting-started-new.md'],
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:

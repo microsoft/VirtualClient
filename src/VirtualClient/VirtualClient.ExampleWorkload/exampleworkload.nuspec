@@ -6,6 +6,7 @@
         <description>Example application that runs a fake workload or monitor.</description>
         <authors>Microsoft</authors>
         <license type="expression">MIT</license>
+        <projectUrl>https://github.com/microsoft/VirtualClient</projectUrl>
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
     </metadata>

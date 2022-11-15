@@ -6,6 +6,7 @@
         <description>Provides common classes and interfaces required for extension development in the Virtual Client platform.</description>
         <authors>Microsoft</authors>
         <license type="expression">MIT</license>
+        <projectUrl>https://github.com/microsoft/VirtualClient</projectUrl>
         <copyright>© Microsoft Corporation. All rights reserved.</copyright>
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
 
