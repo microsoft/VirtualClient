@@ -123,7 +123,7 @@ function NativeCode() {
           <TextColumn
             title="Performance testing, with ease"
             text="Driver and compiler installation are confusing? We got you. <br><br/>
-            Virtual Client componentize vaiours dependencies for a benchmark, which you can define in a json flow. <br><br/>
+            Virtual Client componentize various dependencies for a benchmark, which you can define in a json flow. <br><br/>
             Performance experts curate those profiles so that you don't have to learn every intricacies of every benchmark."
           />
         }
