@@ -77,12 +77,13 @@ VirtualClient is just migrated from MSFT inner-source to GitHub. We are still re
 :::
 
 ## Current Stable Version(s)
-The following section designates the latest stable versions of the Virtual Client. If the version of the Virtual Client is not in this list, then it is NOT recommended for use anymore.
 
 ### Version 0.0.2
 Released 
 
 * NuGet Release
+    * https://www.nuget.org/packages/VirtualClient
+    * Please note we will be renaming package to Microsoft.VirtualClient, pending MSFT internal processes.
 
 
 
