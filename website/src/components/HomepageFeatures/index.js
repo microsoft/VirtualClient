@@ -4,29 +4,29 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Cross-Platform, Cross-Distribution. Comprehensively powerful',
+    title: 'Designed for Cloud Systems.',
     Svg: require('@site/static/img/undraw/undraw_connected_world_wuay.svg').default,
     description: (
       <>
-        Support X64, ARM64, Windows, various Linux distributions. Supports wide range of benchmarks covering CPU, GPU, Memory, IO, Network and more.
+        Supports a wide range of industry-standard benchmarks designed to thoroughly cover system performance, to reduce variance and increase confidence in measurements.
       </>
     ),
   },
   {
-    title: 'Designed for largescale A/B cloud testing.',
-    Svg: require('@site/static/img/undraw/undraw_split_testing_l1uw.svg').default,
-    description: (
-      <>
-        VC is designed to run multiple iterations cross instances, to reduce variance and increase confidence scores.
-      </>
-    ),
-  },
-  {
-    title: 'Deterministic configurations by experts.',
+    title: 'Cross-Platform, Cross-Architecture. Comprehensive.',
     Svg: require('@site/static/img/undraw/undraw_in_sync_re_jlqd.svg').default,
     description: (
       <>
-        It is now easy to reproduce others' runs with deterministic configurations curated by performance experts.
+         Evaluates CPU, GPU, Memory, Storage, Network and more, on X64 and ARM64 architectures, Windows and Linux distributions.
+      </>
+    ),
+  },
+  {
+    title: 'Deterministic Configurations Crafted by Experts.',
+    Svg: require('@site/static/img/undraw/undraw_split_testing_l1uw.svg').default,
+    description: (
+      <>
+        Workloads selected and configured by a community of experts, designed for exhaustive system analysis to produce data you can trust.
       </>
     ),
   },
