@@ -129,7 +129,7 @@ We welcome your contribution, and there are many ways to contribute to VirtualCl
 * [Submit bugs](https://github.com/microsoft/VirtualClient/issues/new/choose). We apologize for the bug and we will investigate it ASAP.
 * Review [source code changes](https://github.com/microsoft/VirtualClient/pulls). You likely know more about one workload than us. Tell us your insights.
 * Review the [documentation](https://github.com/microsoft/VirtualClient/tree/main/website/docs) and make pull requests for anything from typos to new content.
-* We welcome you to directly work in the codebase. Please take a look at our [CONTRIBUTING.md](./CONTRIBUTING.md) and [start here](https://microsoft.github.io/VirtualClient/docs/category/developing/) and contact us if you have any questions.
+* We welcome you to directly work in the codebase. Please take a look at our [CONTRIBUTING.md](./CONTRIBUTING.md). [Start here](https://microsoft.github.io/VirtualClient/docs/category/developing/) and contact us if you have any questions.
 
 Thank you and we look forward to your contribution.
 

@@ -5,7 +5,7 @@
 
 const config = {
   title: 'Virtual Client',
-  tagline: 'Workload automation that protects Azure is now open source.',
+  tagline: 'Cloud-ready standardized workload automation from Microsoft Azure.',
   url: 'https://microsoft.github.io',
   baseUrl: '/VirtualClient/',
   onBrokenLinks: 'warn',
