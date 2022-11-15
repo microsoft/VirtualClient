@@ -1,9 +1,12 @@
-# Virtual Client
+# <img src="./website/static/img/vc-logo.svg" width="50"> Virtual Client
+
 
 [![Pull Request Build](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pull-request.yml)
 [![Document Build](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml/badge.svg?branch=main)](https://github.com/microsoft/VirtualClient/actions/workflows/deploy-doc.yml)
 [![Document Deployment](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment)
 [![NuGet Release Status](https://msazure.visualstudio.com/One/_apis/build/status/OneBranch/CRC-AIR-Workloads/microsoft.VirtualClient?branchName=main)](https://msazure.visualstudio.com/One/_build/latest?definitionId=297462&branchName=main)
+
+---
 
 Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud. 
 The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). It has been an inner-source project in Microsoft for two years and now it is open sourced on GitHub.
@@ -116,7 +119,19 @@ VirtualClient does not collect any of your benchmark data and upload to Microsof
 VirtualClient has example benchmark outputs in source, for unit-testing purpose, to make sure our parsers work correctly.
 Those runs might or might not be ran on Azure VMs. The results have also been randomly scrubbed. These examples do not represent Azure VM performance. They are in the source purely for unit testing purposes.
 
+---
 ## Contributing
+
+We welcome your contribution, and there are many ways to contribute to VirtualClient:
+
+* [Just say Hi](https://github.com/microsoft/VirtualClient/discussions/categories/show-and-tell). It inspires us to know that there are fellow performance enthusiatics out there and VirtualClient made your work a little easier.
+* [Feature Requests](https://github.com/microsoft/VirtualClient/issues/new/choose). It helps us to know what benchmarks people are using.
+* [Submit bugs](https://github.com/microsoft/VirtualClient/issues/new/choose). We apologize for the bug and we will investigate it ASAP.
+* Review [source code changes](https://github.com/microsoft/VirtualClient/pulls). You likely know more about one workload than us. Tell us your insights.
+* Review the [documentation](https://github.com/microsoft/VirtualClient/tree/main/website/docs) and make pull requests for anything from typos to new content.
+* We welcome you to directly work in the codebase. Please take a look at our [CONTRIBUTING.md](./CONTRIBUTING.md) and [start here](https://microsoft.github.io/VirtualClient/docs/category/developing/) and contact us if you have any questions.
+
+Thank you and we look forward to your contribution.
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
@@ -130,6 +145,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
+---
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
