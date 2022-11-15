@@ -13,8 +13,6 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 
 #### *NuGet package*
 
-
-
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
 ```powershell
 PM> NuGet\Install-Package VirtualClient -Version 0.0.2

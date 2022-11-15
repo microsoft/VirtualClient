@@ -5,7 +5,7 @@
 
 const config = {
   title: 'Virtual Client',
-  tagline: 'Workload automation that protects Azure, is now open source.',
+  tagline: 'Workload automation that protects Azure is now open source.',
   url: 'https://microsoft.github.io',
   baseUrl: '/VirtualClient/',
   onBrokenLinks: 'warn',
@@ -127,7 +127,7 @@ const config = {
       announcementBar: {
         id: 'supportus',
         content:
-          '📢 We are getting ready. Please come back in a week. 📢',
+          '⭐️ If you like VirtualClient, give it a star on <a target="_blank" rel="noopener noreferrer" href="https://github.com/microsoft/VirtualClient">GitHub</a> ⭐️',
       },
       prism: {
         defaultLanguage: 'csharp',

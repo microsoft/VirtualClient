@@ -1,4 +1,4 @@
-﻿# Graph500 Workload
+﻿# Graph500
 Graph500 3.0.0 is an open-source data-intensive workload. The intent of benchmark problems (“Search” and “Shortest-Path”) is to 
 develop a compact application that has multiple analysis techniques (multiple kernels) accessing a single data structure representing
 a weighted, undirected graph. In addition to a kernel to construct the graph from the input tuple list, there are two additional computational 

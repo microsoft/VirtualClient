@@ -1,6 +1,6 @@
 ﻿---
 id: blob-storage
-sidebar_position: 9
+sidebar_position: 7
 ---
 
 # Blob storage support

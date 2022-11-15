@@ -1,4 +1,4 @@
-﻿# CoreMark Workload
+﻿# CoreMark
 CoreMark is a third party tool that runs a set of benchmark tests in order to measure CPU performance. CoreMark is a preferred CPU benchmarking
 toolset because it is compiled to be specialized for the exact physical characteristics of the CPU on the system.
 
