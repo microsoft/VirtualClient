@@ -11,6 +11,8 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 
 ## Installation
 
+Virtual Client is a self-contained .NET application. There is no ""
+
 #### *NuGet package*
 
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
@@ -18,6 +20,7 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 PM> NuGet\Install-Package VirtualClient -Version 0.0.4
 ```
 - You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
+- The .nupkg NuGet package is just a .zip file, you can unzip with programs like 7zip, or rename .nupkg to .zip and unzip.
 - VC executable could be find in those paths
 ```treeview
 VirtualClient/

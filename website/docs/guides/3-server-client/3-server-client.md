@@ -53,8 +53,9 @@ If prefered, run in a Virtual Machine to avoid those changes to your system.
     sudo ./VirtualClient --clientId=TestServer --profile=GET-STARTED-REDIS.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages --layoutPath=layout.json
     ```
 - Notice the two commands are exactly the same except the `--clientId`. The clientId is default to the machine name. You don't need to pass in `clientId` if the `name` in layout.json matches your actual machine name.
-
-- The benchmark might run for about 10 minutes, get a cup of coffee.
+- `--layoutPath` should point to the layout json file you just created. Relative and absolute paths are both supported.
+- The two VC will install Redis on server, Memtier on client, handshake, and then start the benchmarking.
+- The benchmark might run for about 10 minutes, get a cup of ☕.
 
 
 ## Read results and logs
@@ -88,7 +89,7 @@ If prefered, run in a Virtual Machine to avoid those changes to your system.
         "scenarioEndTime": "2022-11-16T05:35:55.2210932+00:00",
         "scenarioName": "Memtier_4t_1c",
         "scenarioStartTime": "2022-11-16T05:31:55.1121065+00:00",
-        "systemInfo": ...
+        "systemInfo": ...,
         "toolName": "RedisMemtier",
         "etc": ...
     }
@@ -119,7 +120,7 @@ If prefered, run in a Virtual Machine to avoid those changes to your system.
         "scenarioEndTime": "2022-11-16T05:35:55.2210932+00:00",
         "scenarioName": "Memtier_4t_1c",
         "scenarioStartTime": "2022-11-16T05:31:55.1121065+00:00",
-        "systemInfo": ...
+        "systemInfo": ...,
         "toolName": "RedisMemtier",
         "etc": ...
     }
