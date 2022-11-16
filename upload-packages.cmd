@@ -17,7 +17,7 @@ echo Feed              : %FeedUri%
 echo:
 
 for %%f in (%PackageDirectory%\*.nupkg) do (
-    call dotnet nuget push %%f --api-key %~2 --timeout 1200 --source https://api.nuget.org/v3/index.json  %~3 && echo: || Goto :Error
+    call dotnet nuget push %%f --api-key %~2 --timeout 1200 --source https://api.nuget.org/v3/index.json --skip-duplicate  %~3 && echo: || Goto :Error
 )
 
 Goto :End

@@ -26,6 +26,8 @@ This action actually deploys gh-pages branch to GitHub page server.
 [![Document Deployment](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/microsoft/VirtualClient/actions/workflows/pages/pages-build-deployment)
 
 ## NuGet build
-Azure Pipeline: This is still work in progress as we are waiting on internal process on MSFT signing.
+Azure Pipeline:
+
+Unfortunately this Azure pipeline will not be public, because it involves Microsoft signing processes. That is also why our pull requests will always require one Microsoft employee to sign off.
 
 [![NuGet Release Status](https://msazure.visualstudio.com/One/_apis/build/status/OneBranch/CRC-AIR-Workloads/microsoft.VirtualClient?branchName=main)](https://msazure.visualstudio.com/One/_build/latest?definitionId=297462&branchName=main)
