@@ -3,7 +3,7 @@ id: getting-started
 sidebar_position: 1
 ---
 
-# Getting Started
+# Getting Started : OpenSSL
 
 In this document, we are going to run a "hello-world" version of VirtualClient: benchmark your system's crypotography performance, with OpenSSL Speed, using SHA256 algorithm.
 
@@ -15,9 +15,9 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
 ```powershell
-PM> NuGet\Install-Package VirtualClient -Version 0.0.3
+PM> NuGet\Install-Package VirtualClient -Version 0.0.4
 ```
-- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.3
+- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
 - VC executable could be find in those paths
 ```treeview
 VirtualClient/
@@ -56,8 +56,8 @@ VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\Virtua
 ```bash
 sudo ./VirtualClient --profile=GET-STARTED-OPENSSL.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages
 ```
-- `--profile=GET-STARTED-OPENSSL.json` tells VC to run a stripped down version of OpenSSL benchmark.
-- VirtualClient has a default profile, `--profile=MONITORS-NONE.json` overrides that behavior in this one-time run.
+- [`--profile=GET-STARTED-OPENSSL.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json) tells VC to run a stripped down version of OpenSSL benchmark. With SHA256 algorithm.
+- VirtualClient has a default profile, [`--profile=MONITORS-NONE.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-NONE.json) overrides that behavior in this one-time run.
 - `--iteration=1` Tells VC to run this profile once. Default behavior is to run profiles repetatively until timeout.
 - `--packages=https://virtualclient.blob.core.windows.net/packages` defines the packages store that VC will download OpenSSL binary from. Not every workload needs binary download. You can also use your own binary and package store if desired.
 
@@ -104,7 +104,7 @@ from a benchmark run.
     "scenarioEndTime": "2022-11-14T07:26:18.2470775Z",
     "scenarioName": "OpenSSL Speed",
     "scenarioStartTime": "2022-11-14T07:25:18.2251103Z",
-    "systemInfo": {"etc"},
+    "systemInfo": ...,
     "tags": "CPU,OpenSSL,Cryptography",
     "etc": ...
 }
@@ -122,3 +122,5 @@ VC is designed for large scale perf testing. Check [Telemetry](./telemetry/telem
 
 ## Congratulations !!
 You just benchmarked your system with OpenSSL.
+
+- To benchmark your system's crypotography performance holisticaly, we recommend the full profile for OpenSSL: [`PERF-CPU-OPENSSL.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json)

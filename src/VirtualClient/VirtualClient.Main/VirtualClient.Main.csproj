@@ -158,6 +158,7 @@
         NuGet package in the /content/linux-x64|linux-arm64/profiles folder.
         -->
         <LinuxProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
+        <LinuxProfiles Include="profiles\GET-STARTED-REDIS.json" />
 		<LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <LinuxProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />

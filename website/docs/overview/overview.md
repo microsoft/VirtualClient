@@ -86,7 +86,6 @@ Released
     * Please note we will be renaming package to Microsoft.VirtualClient, pending MSFT internal processes.
 
 
-
 ## Telemetry Notice
 Data Collection. 
 
