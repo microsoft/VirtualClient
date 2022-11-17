@@ -1,4 +1,8 @@
-﻿# Linux Distributions And Package Management
+﻿---
+id: linux-package-installation
+---
+
+# Linux Package Installation
 VirtualClient has the goal of supporting all platforms and specifics with relative ease. It should work, out of the box. 
 Installing a package is easy. Installing packages on different platforms and package managers is not. 
 VC encapsulates the complex logic of handling package installation on different distros into a single component that users can easily use in profiles.
@@ -7,7 +11,7 @@ VC encapsulates the complex logic of handling package installation on different 
 [Package Manager Dnf](https://github.com/rpm-software-management/dnf)  
 [Package Manager Yum](http://yum.baseurl.org/)  
 [Package Manager Zypper](https://en.opensuse.org/Portal:Zypper)  
-[A good Third-party intro that I found](https://www.linode.com/docs/guides/linux-package-management-overview/)  
+[A good Third-party intro](https://www.linode.com/docs/guides/linux-package-management-overview/)  
 [Website to search for packages](https://pkgs.org/)  
 
 ## .NET Supported Linux Distributions
@@ -34,7 +38,7 @@ LinuxPackageInstallation is a dependency class that handles the complexity of in
 TLDR: The packages that will install on your system are "Packages" + "Packages Specific to your package manager" + "Packages Specific to your distro".  
 For example: if you are on Ubuntu. Packages = "Packages"+"Packages-Apt"+"Packages-Ubuntu".
 
-### Support for packages that have the same name across distros
+### Example: Packages that have the same name across distros
 This is the simplest case. The package is well-known and all package manager have the same name for the package, in default repo. 
 Life is simple.
 
@@ -47,7 +51,7 @@ Life is simple.
 }
 ```
 
-### Support for packages that have different names across package managers
+### Example: Packages that have different names across package managers
 If the packages are directly available in the default repositories, users only need to fill in the corresponding package names, in the different package manager.
 You need to repeat it for other package management because the name could be different in different package manager.
 The following is example for libaio, which is used in FIO tests.
@@ -64,7 +68,7 @@ The following is example for libaio, which is used in FIO tests.
 }
 ```
 
-### Support for packages that have different names across different Linux distros
+### Example: Packages that have different names across different Linux distros
 There are packages that has different names/paths in different distributions. It follows the convention of *Packages-Distro*.
 The following example is for Atop. Apt and Zypper have them in default repository, however Redhat decided to put them in EPEL repo and not as default.  
 However, please note that in actual installation, epel-release and atop can't be installed in the same command. 
@@ -85,7 +89,7 @@ Epel-release needs to be installed first, so this is separated into two LinuxPac
 }
 ```
 
-### Support for packages that require specific repositories
+### Example: Packages that require specific repositories
 There are packages that are not available in the default repositories. Thus VC needs to add them to the system. Due to how package manager works, they are intrinsicly packageManager specific.
 It follows the convention of *Repositories-PackageManager*. 
 
@@ -102,7 +106,7 @@ It follows the convention of *Repositories-PackageManager*.
 }
 ```
 
-### Support for packages that require repositories specific to a given Linux distro
+### Example: Packages that require repositories specific to a given Linux distro
 There are packages that are not available in the default repositories. Thus VC needs to add them to the system. What makes it worse is that those repository could be distro-version specific.
 For these scenarios, LinuxPackageInstallation class supports definition of distro-specific extra repository. It follows the convention of *Repositories-Distro*.
 Luckily so far VC does not use those packages in current workloads. However, those things do exist.

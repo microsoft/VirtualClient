@@ -1,6 +1,6 @@
 {
   "label": "Monitors",
-  "position": 4,
+  "position": 5,
   "link": {
     "type": "generated-index",
     "description": "VirtualClient Monitors runs in parallel and indefinitely."
