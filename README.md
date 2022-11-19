@@ -26,9 +26,9 @@ The platform additionally provides the ability to capture important performance 
 
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
 ```powershell
-PM> NuGet\Install-Package VirtualClient -Version 0.0.4
+PM> NuGet\Install-Package VirtualClient -Version 0.0.5
 ```
-- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
+- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.5
 - VC executable could be find in those paths
 ```treeview
 VirtualClient/

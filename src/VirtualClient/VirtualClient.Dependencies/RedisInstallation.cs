@@ -155,7 +155,7 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<CompilerInstallation>(process, relatedContext);
+                        this.Logger.LogProcessDetails<RedisInstallation>(process, relatedContext);
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }

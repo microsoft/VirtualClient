@@ -78,7 +78,7 @@ VirtualClient is just migrated from MSFT inner-source to GitHub. We are still re
 
 ## Current Stable Version(s)
 
-### Version 0.0.2
+### Version 0.0.5
 Released 
 
 * NuGet Release
