@@ -15,10 +15,10 @@ Virtual Client is a self-contained .NET 6 application. "Installation" practicall
 
 #### *NuGet package*
 - We publish NuGet Package at https://www.nuget.org/packages/VirtualClient
-- You could download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
+- You could download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.5
 - You could also use powershell 
     ```powershell
-    PM> NuGet\Install-Package VirtualClient -Version 0.0.4
+    PM> NuGet\Install-Package VirtualClient -Version 0.0.5
     ```
 - The .nupkg NuGet package is just a .zip file, you can unzip with programs like 7zip, or rename .nupkg to .zip and unzip.
 - VC executable could be find in those paths
