@@ -148,7 +148,7 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<CompilerInstallation>(process, relatedContext);
+                        this.Logger.LogProcessDetails<MemtierInstallation>(process, relatedContext);
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }

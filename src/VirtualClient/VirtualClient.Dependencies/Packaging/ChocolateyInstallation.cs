@@ -38,6 +38,13 @@ namespace VirtualClient.Dependencies
         {
             if (this.Platform == PlatformID.Win32NT)
             {
+                ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+
+                if (!systemManagement.FileSystem.Directory.Exists(this.PlatformSpecifics.PackagesDirectory))
+                {
+                    systemManagement.FileSystem.Directory.CreateDirectory(this.PlatformSpecifics.PackagesDirectory);
+                }
+
                 // https://chocolatey.org/install
                 // https://docs.chocolatey.org/en-us/choco/setup#more-install-options
                 // Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
@@ -45,8 +52,7 @@ namespace VirtualClient.Dependencies
                 string argument = "Set-ExecutionPolicy Bypass -Scope Process -Force; " +
                     "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; " +
                     "iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))";
-
-                ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+                
                 using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(
                         this.Platform, "powershell.exe", $"-Command {argument}", this.PlatformSpecifics.PackagesDirectory))
                 {
