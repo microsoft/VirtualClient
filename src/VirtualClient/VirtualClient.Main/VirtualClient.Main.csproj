@@ -12,6 +12,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <_ContentIncludedByDefault Remove="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
+    </ItemGroup>
+
+    <ItemGroup>
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
@@ -176,6 +180,7 @@
         <LinuxProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
+		<LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-PING.json" />

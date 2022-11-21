@@ -1,0 +1,2021 @@
+﻿{
+  "Description": "Sysbench Database Server Performance Workload",
+  "MinimumExecutionInterval": "00:01:00",
+  "Parameters": {
+    "DatabaseName": "sbtest"
+  },
+  "Actions": [
+    {
+      "Type": "SysbenchOLTPServerExecutor",
+      "Parameters": {
+        "Scenario": "SysbenchOLTPServer",
+        "Role": "Server"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T2_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client", 
+        "Threads": "2",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T4_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T8_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client", 
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB16_REC50",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "50",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB16_REC100",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "100",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T4_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T8_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB16_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T16_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T64_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T96_TB32_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T96_TB32_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T96_TB32_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T96_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T32_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T64_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T96_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T152_TB4_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T152_TB4_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T152_TB4_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_write_T152_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_write",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T2_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "2",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T4_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T8_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB16_REC50",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "50",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB16_REC100",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "100",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T4_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T8_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB16_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T16_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T64_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T96_TB32_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T96_TB32_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T96_TB32_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T96_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T32_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T64_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T96_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T152_TB4_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T152_TB4_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T152_TB4_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_read_only_T152_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_read_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T2_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "2",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T4_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T8_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB16_REC50",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "50",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB16_REC100",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "100",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T4_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T8_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB16_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T16_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T64_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T96_TB32_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T96_TB32_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T96_TB32_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T96_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T32_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T64_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T96_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T152_TB4_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T152_TB4_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T152_TB4_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_write_only_T152_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_write_only",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T2_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "2",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T4_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T8_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB16_REC50",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "50",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB16_REC100",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "100",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T4_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T8_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB16_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T16_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T64_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T96_TB32_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T96_TB32_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T96_TB32_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T96_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T32_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T64_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T96_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T152_TB4_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T152_TB4_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T152_TB4_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_delete_T152_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_delete",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T2_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "2",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T4_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T8_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB16_REC50",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "50",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB16_REC100",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "100",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T4_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "4",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T8_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "8",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB16_REC500",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "500",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB16_REC1000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "1000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB16_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB16_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "16",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T16_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "16",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T64_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T96_TB32_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T96_TB32_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T96_TB32_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T96_TB32_REC500000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "32",
+        "RecordCount": "500000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T32_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "32",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T64_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "64",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T96_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "96",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T152_TB4_REC5000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "5000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T152_TB4_REC10000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "10000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T152_TB4_REC50000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "50000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "SysbenchOLTPClientExecutor",
+      "Parameters": {
+        "Scenario": "oltp_insert_T152_TB4_REC100000",
+        "DatabaseName": "sbtest", 
+        "Role": "Client",
+        "Threads": "152",
+        "NumTables": "4",
+        "RecordCount": "100000",
+        "DurationSecs": "1800",
+        "Workload": "oltp_insert",
+        "PackageName": "sysbench"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackages",
+        "Packages": "mysql-server, make, automake, libtool, pkg-config",
+        "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
+        "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
+        "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
+        "Packages-Zypper": "libaio-dev, libmysqlclient-devel, openssl-devel"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneSysbenchRepo",
+        "RepoUri": "https://github.com/akopytov/sysbench.git",
+        "PackageName": "sysbench"
+      }
+    },
+    {
+      "Type": "MySQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "StartDatabaseServer",
+        "Action": "StartServer",
+        "DatabaseName": "$.Parameters.DatabaseName"
+      }
+    },
+    {
+      "Type": "MySQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "CreateDatabase",
+        "Action": "CreateDatabase",
+        "DatabaseName": "$.Parameters.DatabaseName"
+      }
+    },
+    {
+      "Type": "MySQLServerConfiguration",
+      "Parameters": {
+        "Scenario": "RaisedStatementCount",
+        "Action": "RaisedStatementCount",
+        "DatabaseName": "$.Parameters.DatabaseName"
+      }
+    }
+  ]
+}

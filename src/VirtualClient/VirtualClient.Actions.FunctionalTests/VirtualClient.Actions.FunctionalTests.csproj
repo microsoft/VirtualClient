@@ -172,6 +172,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-MEMCACHED.json" Link="Profiles\PERF-MEMCACHED.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-OLTP.json" Link="Profiles\PERF-MYSQL-SYSBENCH-OLTP.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
