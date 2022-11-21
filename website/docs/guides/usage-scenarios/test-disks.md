@@ -7,10 +7,9 @@ sidebar_position: 1
 VC automates disk formating and run storage workloads on the target systems. We documented the rules and the mechanism we used to identify disks to run workloads on.
 
 ## Rules
-1. On OS Disk, only run on OS partition
+1. On OS Disk, only run on the OS partition.
 2. If other disks have more than 1 partition, run on all concurrently that passes the filters (exclude /, /mnt, /boot.efi)
 3. On Linux, only run on four prefix: `/dev/hd`, `/dev/sd`, `/dev/nvme`, `/dev/xvd`.
-3. Default: All the largest disks
 
 ## Disk Filters
 Different environments, Azure, AWS/GCP, Lab host, Lab VM, have vastly different configuration of disks. It is a challenge to have a schema that allows you to target the desired disk consistently.
