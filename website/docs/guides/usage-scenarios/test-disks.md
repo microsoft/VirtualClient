@@ -17,7 +17,7 @@ Different environments, Azure, AWS/GCP, Lab host, Lab VM, have vastly different 
 Virtual Client implements a set of DiskFilters to accomplish this. 
 
 Disk Filters are delimited by ampersand '&'. FilterName and FilterValues are delimited by colon, if applicable. 
-The following filter will return you the disks that are not OS Disk, and is between 3TB and 5TB in size. 
+For example, the following filter will return you the disks that are not OS Disk, and is between 3TB and 5TB in size. 
 ```bash
 OSDisk:false&SizeGreaterThan:3TB&SizeLessThan:5TB
 ```
@@ -38,7 +38,7 @@ It is important to note that filters are calculated in-order and are non-commuta
 
 
 ### Default Filter
-Default filter means getting the biggest disks. In Azure VM scenario, most of the cases users want the remote disks be tested. In lab scenarios user generally wants to test on the largest attached disk as well.
+Default filter means getting the biggest disks.
 ```bash
 BiggestSize
 ```
@@ -46,7 +46,7 @@ BiggestSize
 ### Disk Filter Examples
 Here we give some example filters for disk testing scenarios.
 
-1. Testing all the remote disks on an Azure VM.
+1. Test all the biggest disks except your OS disk. The `OSDisk:false` would be redundant if it's smaller than the disks you want to test.
 ```bash
 BiggestSize&OSDisk:false
 ```
@@ -56,15 +56,13 @@ BiggestSize&OSDisk:false
 OSDisk
 ```
 
-3. Testing the temp disk on an Azure VM.  
-On Azure VMs the temp disk is typically the smallest which isn't an OS Disk. The filter below applies these conditions. If user attaches disks that are even smaller than the temp disk, they just need to 
-swap the smallest with biggest
+3. Testing the smallest non-OS disk.
 ```bash
 Smallest&OSDisk:false
 ```
 
-4. Test a specific disk on your lab machine with size.
-This filter would return all the non-OS disk volumes with size of 4TB approx. If you want to test a specific disk with a unique size like 4TB, you can do filters that targets that disk.
+4. Test specific disks on your machine with size.
+This filter would return all the non-OS disk volumes with size of 4TB ±1%. If you want to test a specific disk with a unique size like 4TB, you can do filters that targets that disk.
 ```bash
 SizeEqualTo:4TB&OSDisk:false
 ```
