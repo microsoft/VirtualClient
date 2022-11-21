@@ -26,9 +26,9 @@ The platform additionally provides the ability to capture important performance 
 
 - VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
 ```powershell
-PM> NuGet\Install-Package VirtualClient -Version 0.0.4
+PM> NuGet\Install-Package VirtualClient -Version 0.0.5
 ```
-- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
+- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.5
 - VC executable could be find in those paths
 ```treeview
 VirtualClient/
@@ -63,7 +63,7 @@ VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\Virtua
 
 ## [Getting Started](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/)
 
-You will follow the [**Tutorial**](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/) to benchmark your system with a quick workload: Coremark.
+You will follow the [**Tutorial**](https://microsoft.github.io/VirtualClient/docs/guides/getting-started/) to benchmark your system with a quick workload: OpenSSL Speed - SHA256.
 
 ---
 ## [Supported Workloads](https://microsoft.github.io/VirtualClient/docs/overview/#supported-benchmark-workloads)
@@ -106,20 +106,6 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
 
 
-
-## Telemetry Notice
-Data Collection. 
-
-The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
-
-#### VirtualClient does not collect your data by default
-VirtualClient does not collect any of your benchmark data and upload to Microsoft. When benchmarking at scale, and leveraging VC's telemetry capabilities, users need to explicitly provide a connection string, that points to a user-owned Azure Data Explorer cluster. VirtualClient does host a Azure storage account to host the benchmark binaries or source. The only information VirtualClient team could infer from usage, is the download traces from Azure storage account.
-
-#### About benchmark examples in source
-VirtualClient has example benchmark outputs in source, for unit-testing purpose, to make sure our parsers work correctly.
-Those runs might or might not be ran on Azure VMs. The results have also been randomly scrubbed. These examples do not represent Azure VM performance. They are in the source purely for unit testing purposes.
-
----
 ## Contributing
 
 We welcome your contribution, and there are many ways to contribute to VirtualClient:
@@ -145,7 +131,20 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
 contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
----
+
+## Telemetry Notice
+Data Collection. 
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
+
+#### VirtualClient does not collect your data by default
+VirtualClient does not collect any of your benchmark data and upload to Microsoft. When benchmarking at scale, and leveraging VC's telemetry capabilities, users need to explicitly provide a connection string, that points to a user-owned Azure Data Explorer cluster. VirtualClient does host a Azure storage account to host the benchmark binaries or source. The only information VirtualClient team could infer from usage, is the download traces from Azure storage account.
+
+#### About benchmark examples in source
+VirtualClient has example benchmark outputs in source, for unit-testing purpose, to make sure our parsers work correctly.
+Those runs might or might not be ran on Azure VMs. The results have also been randomly scrubbed. These examples do not represent Azure VM performance. They are in the source purely for unit testing purposes.
+
+
 ## Trademarks
 
 This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
