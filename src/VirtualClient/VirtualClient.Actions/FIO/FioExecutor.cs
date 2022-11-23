@@ -478,7 +478,10 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        /// <summary>
+        /// Log Metrics to Kusto Cluster.
+        /// </summary>
+        protected virtual void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             FioMetricsParser parser = null;
             if (this.TestFocus == FioExecutor.TestFocusDataIntegrity)
@@ -496,9 +499,6 @@ namespace VirtualClient.Actions
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
             }
-
-            var duration = endTime - startTime;
-            metrics.Add(new Metric("duration", duration.TotalSeconds, "seconds", MetricRelativity.LowerIsBetter));
 
             if (metricMetadata != null)
             {
