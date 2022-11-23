@@ -33,7 +33,8 @@ The desired scenario can be configured based on the number of logical cores of t
 * 16-core VM: {benchmarkName}_T32_TB4_REC100000, {benchmarkName}_T64_TB4_REC100000, {benchmarkName}_T96_TB4_REC100000, {benchmarkName}_T152_TB4_REC5000, {benchmarkName}_T152_TB4_REC10000, {benchmarkName}_T152_TB4_REC50000, {benchmarkName}_T152_TB4_REC100000
 
 * **Supported Platform/Architectures**
-  * linux x64
+  * linux-x64
+  * linux-arm64
 
 ### Package Dependencies
 The following package dependencies are required to be installed on the Unix/Linux system in order to support the requirements of the NAS Parallel workload. Note that the Virtual Client will handle the installation of any required dependencies.

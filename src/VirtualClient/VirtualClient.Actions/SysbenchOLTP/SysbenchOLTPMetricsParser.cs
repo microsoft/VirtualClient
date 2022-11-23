@@ -17,7 +17,6 @@ namespace VirtualClient.Actions
         private const string QueriesPerSecond = "queries/sec";
         private const string IgnoredErrorsPerSecond = "ignored errors/sec";
         private const string ReconnectsPerSecond = "reconnects/sec";
-        private const string EventsPerSecond = "eps";
         private const string Second = "seconds";
         private const string MilliSecond = "milliseconds";
 
@@ -43,13 +42,13 @@ namespace VirtualClient.Actions
                 new MetricInfo("# write queries", string.Empty, MetricRelativity.HigherIsBetter),
                 new MetricInfo("# other queries", string.Empty, MetricRelativity.HigherIsBetter),
                 new MetricInfo("# transactions", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("transaction/sec", TransactionsPerSecond, MetricRelativity.HigherIsBetter),
+                new MetricInfo("transactions/sec", TransactionsPerSecond, MetricRelativity.HigherIsBetter),
                 new MetricInfo("# queries", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("query/sec", QueriesPerSecond, MetricRelativity.HigherIsBetter),
+                new MetricInfo("queries/sec", QueriesPerSecond, MetricRelativity.HigherIsBetter),
                 new MetricInfo("# ignored errors", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("ignored error/sec", IgnoredErrorsPerSecond, MetricRelativity.HigherIsBetter),
+                new MetricInfo("ignored errors/sec", IgnoredErrorsPerSecond, MetricRelativity.HigherIsBetter),
                 new MetricInfo("# reconnects", string.Empty, MetricRelativity.HigherIsBetter),
-                new MetricInfo("reconnect/sec", ReconnectsPerSecond, MetricRelativity.HigherIsBetter),
+                new MetricInfo("reconnects/sec", ReconnectsPerSecond, MetricRelativity.HigherIsBetter),
                 new MetricInfo("elapsed time", Second, MetricRelativity.LowerIsBetter),
                 new MetricInfo("latency min", MilliSecond, MetricRelativity.LowerIsBetter),
                 new MetricInfo("latency avg", MilliSecond, MetricRelativity.LowerIsBetter),

@@ -50,8 +50,8 @@ Runs an intensive workload using the Sysbench Benchmark to test the bandwidth of
   <div style="font-size:10pt">
 
   ``` csharp
-  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=oltp_read_write_T1_TB4_REC100
-  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=oltp_read_write_T1_TB4_REC100 --parameters="DatabaseName=mytestDB"
+  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100
+  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --parameters="DatabaseName=mytestDB"
   ```
   </div>
 

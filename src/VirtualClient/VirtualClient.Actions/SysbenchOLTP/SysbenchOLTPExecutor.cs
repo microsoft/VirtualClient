@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The Sysbch workload executor.
+    /// The Sysbench workload executor.
     /// </summary>
     public class SysbenchOLTPExecutor : VirtualClientComponent
     { 

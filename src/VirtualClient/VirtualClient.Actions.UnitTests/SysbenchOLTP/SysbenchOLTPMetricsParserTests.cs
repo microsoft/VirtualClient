@@ -32,13 +32,13 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "# write queries", 259534, "");
             MetricAssert.Exists(metrics, "# other queries", 1284992, "");
             MetricAssert.Exists(metrics, "# transactions", 257521, "");
-            MetricAssert.Exists(metrics, "transaction/sec", 143.01, "transactions/sec");
+            MetricAssert.Exists(metrics, "transactions/sec", 143.01, "transactions/sec");
             MetricAssert.Exists(metrics, "# queries", 6584298, "");
-            MetricAssert.Exists(metrics, "query/sec", 3657.94, "queries/sec");
+            MetricAssert.Exists(metrics, "queries/sec", 3657.94, "queries/sec");
             MetricAssert.Exists(metrics, "# ignored errors", 0, "");
-            MetricAssert.Exists(metrics, "ignored error/sec", 0.00, "ignored errors/sec");
+            MetricAssert.Exists(metrics, "ignored errors/sec", 0.00, "ignored errors/sec");
             MetricAssert.Exists(metrics, "# reconnects", 0, "");
-            MetricAssert.Exists(metrics, "reconnect/sec", 0.00, "reconnects/sec");
+            MetricAssert.Exists(metrics, "reconnects/sec", 0.00, "reconnects/sec");
             MetricAssert.Exists(metrics, "elapsed time", 1800.0319, "seconds");
             MetricAssert.Exists(metrics, "latency min", 7.39, "milliseconds");
             MetricAssert.Exists(metrics, "latency avg", 28.97, "milliseconds");

@@ -15,7 +15,10 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
-    internal class SysbenchOLTPServerExecutor : SysbenchOLTPExecutor
+    /// <summary>
+    /// The Sysbench Server workload executor.
+    /// </summary>
+    public class SysbenchOLTPServerExecutor : SysbenchOLTPExecutor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPServerExecutor"/> class.
@@ -65,7 +68,7 @@ namespace VirtualClient.Actions
                     {
                         try
                         {
-                            IEnumerable<IProcessProxy> processProxyList = this.ProcessesRunning("sysbench");
+                            IEnumerable<IProcessProxy> processProxyList = this.ProcessesRunning("mysqld");
 
                             this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
 
