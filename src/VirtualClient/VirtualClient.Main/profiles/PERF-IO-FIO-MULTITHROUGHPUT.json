@@ -80,7 +80,7 @@
       "Parameters": {
         "Scenario": "InstallFIOWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "fio.3.30.0-1.zip",
+        "BlobName": "fio.3.30.0.zip",
         "PackageName": "fio",
         "Extract": true
       }
