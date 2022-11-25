@@ -203,7 +203,7 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<CompilerInstallation>(process, relatedContext);
+                        this.Logger.LogProcessDetails<YumPackageInstallation>(process, relatedContext);
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
