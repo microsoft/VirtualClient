@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
-
 namespace VirtualClient.Actions
 {
     using System;
@@ -48,6 +47,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters.Add(nameof(DiskPerformanceWorkloadExecutor.CommandLine), $"--runtime=300 --rw=[{nameof(FioDiscoveryExecutor.IOType)}] --bs=[{nameof(FioDiscoveryExecutor.BlockSize)}]");
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DiskFillSize), "140G");
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.FileSize), "134G");
+            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DurationSec), 300);
             this.mockFixture.Parameters.Add(nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), "true");
             this.mockFixture.Parameters.Add("PackageName", "fio");
             this.mockFixture.Parameters[nameof(DiskPerformanceWorkloadExecutor.Scenario)] = "AnyScenario_[IOType]_[BlockSize]";
@@ -58,7 +58,7 @@ namespace VirtualClient.Actions
             this.defaultOutput.Clear();
             this.defaultOutput.Append(rawtext);
 
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix,true);
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
 
             this.defaultMemoryProcess = new InMemoryProcess
@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.MaxThreads), "1024");
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.IOType), "randwrite");
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            { 
+            {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     if (!arguments.Contains("chmod"))
@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
             Assert.IsTrue(executions == 3);
         }
 
-        
+
         [Test]
         public async Task FioDiscoveryExecutorExecutesAsExpectedInSingleProcessModel()
         {
@@ -130,6 +130,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.BlockSize), "16k");
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.MaxThreads), "32");
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.IOType), "randwrite");
+            this.mockFixture.Parameters[nameof(DiskPerformanceWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=[{nameof(FioDiscoveryExecutor.IOType)}] --bs=[{nameof(FioDiscoveryExecutor.BlockSize)}]";
 
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -173,7 +174,7 @@ namespace VirtualClient.Actions
                     if (!arguments.Contains("chmod"))
                     {
                         executions++;
-                        
+
                         Assert.IsTrue(expectedCommandLines.Where(cmd => arguments.Contains(cmd)).Count() != 0);
                     }
                     return this.defaultMemoryProcess;
@@ -202,3 +203,4 @@ namespace VirtualClient.Actions
     }
 
 }
+
