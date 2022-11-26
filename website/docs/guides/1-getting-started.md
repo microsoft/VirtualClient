@@ -11,15 +11,15 @@ In this document, we are going to run a "hello-world" version of VirtualClient: 
 
 ## Installation
 
-Virtual Client is a self-contained .NET application. There is no ""
+Virtual Client is a self-contained .NET 6 application. "Installation" practically means copying the VirtualClient package into your system. It runs out-of-box on [all OS supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
 
 #### *NuGet package*
-
-- VirtualClient NuGet Package is at https://www.nuget.org/packages/VirtualClient
-```powershell
-PM> NuGet\Install-Package VirtualClient -Version 0.0.4
-```
-- You could optionally download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.4
+- We publish NuGet Package at https://www.nuget.org/packages/VirtualClient
+- You could download directly from NuGet https://www.nuget.org/api/v2/package/VirtualClient/0.0.5
+- You could also use powershell 
+    ```powershell
+    PM> NuGet\Install-Package VirtualClient -Version 0.0.5
+    ```
 - The .nupkg NuGet package is just a .zip file, you can unzip with programs like 7zip, or rename .nupkg to .zip and unzip.
 - VC executable could be find in those paths
 ```treeview
@@ -39,16 +39,16 @@ VirtualClient/
 #### *Build yourself*
 - You need to [install .Net SDK 6.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
 - Use build script at the root of the repo build.cmd
-```bash
-build.cmd
-```
+    ```bash
+    build.cmd
+    ```
 - You will find VC binary in corresponding arch/runtimes folder. 
-```bash
-VirtualClient\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\linux-arm64\publish\VirtualClient
-VirtualClient\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\win-arm64\publish\VirtualClient.exe
-VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\linux-x64\publish\VirtualClient
-VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\VirtualClient.exe
-```
+    ```bash
+    VirtualClient\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\linux-arm64\publish\VirtualClient
+    VirtualClient\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\win-arm64\publish\VirtualClient.exe
+    VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\linux-x64\publish\VirtualClient
+    VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\VirtualClient.exe
+    ```
 - VirtualClient is a self-contained .NET app. When you use VC, you need to copy over the entire `/publish/` folder
 
 ---
@@ -60,6 +60,8 @@ VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\Virtua
 sudo ./VirtualClient --profile=GET-STARTED-OPENSSL.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages
 ```
 - [`--profile=GET-STARTED-OPENSSL.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json) tells VC to run a stripped down version of OpenSSL benchmark. With SHA256 algorithm.
+    - VC supports remote profile, you can reference a url to a json file.
+    - `--profile=https://raw.githubusercontent.com/microsoft/VirtualClient/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json` is equavilent to `--profile=GET-STARTED-OPENSSL.json`.
 - VirtualClient has a default profile, [`--profile=MONITORS-NONE.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-NONE.json) overrides that behavior in this one-time run.
 - `--iteration=1` Tells VC to run this profile once. Default behavior is to run profiles repetatively until timeout.
 - `--packages=https://virtualclient.blob.core.windows.net/packages` defines the packages store that VC will download OpenSSL binary from. Not every workload needs binary download. You can also use your own binary and package store if desired.

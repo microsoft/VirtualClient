@@ -263,8 +263,7 @@ namespace VirtualClient.Actions
                         disksToTest = this.GetDisksToTest(updatedDisks);
                     }
 
-                    disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
-
+                    telemetryContext.AddContext(nameof(this.DiskFilter), this.DiskFilter);
                     telemetryContext.AddContext("executable", this.ExecutablePath);
                     telemetryContext.AddContext(nameof(ioEngine), ioEngine);
                     telemetryContext.AddContext(nameof(disks), disks);
