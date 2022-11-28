@@ -37,37 +37,6 @@
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
-    },
-    {
-      "Type": "AzurePerfCollectorMonitor",
-      "Parameters": {
-        "Scenario": "CaptureAzurePerfCounters",
-        "PackageName": "azureperfcollector",
-        "MonitorFrequency": "$.Parameters.MonitorFrequency_AzurePerfCollector",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod_AzurePerfCollector"
-      }
-    },
-    {
-      "Type": "AzureProfilerMonitor",
-      "Parameters": {
-        "Scenario": "CaptureProfiles",
-        "PackageName": "azureprofiler",
-        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-        "ProfilingMode": "$.Parameters.ProfilingMode",
-        "ProfilingPeriod": "00:00:30",
-        "ProfilingInterval": "00:01:00",
-        "ProfilingWarmupPeriod": "00:00:00",
-        "ProfileDataUploadInterval": "00:00:30"
-      }
-    },
-    {
-      "Type": "SystemLogMonitor",
-      "Parameters": {
-        "Scenario": "CaptureSystemLogs",
-        "MonitorEnabled": "$.Parameters.SystemMonitoringEnabled",
-        "MonitorFrequency": "00:05:00",
-        "MonitorWarmupPeriod": "00:00:00"
-      }
     }
   ]
 }
