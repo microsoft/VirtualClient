@@ -60,6 +60,8 @@ VirtualClient/
 sudo ./VirtualClient --profile=GET-STARTED-OPENSSL.json --profile=MONITORS-NONE.json --iterations=1 --packages=https://virtualclient.blob.core.windows.net/packages
 ```
 - [`--profile=GET-STARTED-OPENSSL.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json) tells VC to run a stripped down version of OpenSSL benchmark. With SHA256 algorithm.
+    - VC supports remote profile, you can reference a url to a json file.
+    - `--profile=https://raw.githubusercontent.com/microsoft/VirtualClient/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-OPENSSL.json` is equavilent to `--profile=GET-STARTED-OPENSSL.json`.
 - VirtualClient has a default profile, [`--profile=MONITORS-NONE.json`](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/MONITORS-NONE.json) overrides that behavior in this one-time run.
 - `--iteration=1` Tells VC to run this profile once. Default behavior is to run profiles repetatively until timeout.
 - `--packages=https://virtualclient.blob.core.windows.net/packages` defines the packages store that VC will download OpenSSL binary from. Not every workload needs binary download. You can also use your own binary and package store if desired.
