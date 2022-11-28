@@ -87,564 +87,100 @@ namespace VirtualClient.Actions
                 $"sudo make install",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=2 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=4 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=50 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=100 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=4 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=32 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=96 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=5000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=10000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-user=root prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-user=root --mysql-host=1.2.3.5 cleanup"
             };
 
             return commands;

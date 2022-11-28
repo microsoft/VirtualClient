@@ -23,14 +23,19 @@ Sysbench also provides a .lua script named oltp_common that is used to set up th
 
 ---
 
+### Client-Server Workflow
+In this workload, the client(s) run(s) sysbench; sysbench helps prepare various queries to perform on the server based on the number of tables, records per table, and threads. The server, which hosts the MySQL database, remains idle as long as mysql processes are running. The client only is in charge of downloading the sysbench package, running the appropriate sysbench commands, and logging the output. 
+
 ### Workload Configuration
 The workload provides a host of scenarios to choose between for coverage of a 1- to 16-core system under test, varying the thread count, record count per table, and benchmark used (as listed above).
 The desired scenario can be configured based on the number of logical cores of the VM and desired stress on the system. These parameters were collected as a part of testing and observation on VMs of different sizes. Each runs for 30 minutes.
 
-* 2-core VM: {benchmarkName}_T2_TB16_REC1000, {benchmarkName}_T4_TB16_REC1000, {benchmarkName}_T8_TB16_REC1000, {benchmarkName}_T16_TB16_REC50, {benchmarkName}_T16_TB16_REC100, {benchmarkName}_T16_TB16_REC500, {benchmarkName}_T16_TB16_REC1000
-* 4-core VM: {benchmarkName}_T4_TB16_REC10000, {benchmarkName}_T8_TB16_REC10000, {benchmarkName}_T16_TB16_REC10000, {benchmarkName}_T32_TB16_REC500, {benchmarkName}_T32_TB16_REC1000, {benchmarkName}_T32_TB16_REC5000, {benchmarkName}_T32_TB16_REC10000
-* 8-core VM: {benchmarkName}_T16_TB32_REC500000, {benchmarkName}_T32_TB32_REC500000, {benchmarkName}_T64_TB32_REC500000, {benchmarkName}_T96_TB32_REC10000, {benchmarkName}_T96_TB32_REC50000, {benchmarkName}_T96_TB32_REC100000, {benchmarkName}_T16_TB32_REC500000
-* 16-core VM: {benchmarkName}_T32_TB4_REC100000, {benchmarkName}_T64_TB4_REC100000, {benchmarkName}_T96_TB4_REC100000, {benchmarkName}_T152_TB4_REC5000, {benchmarkName}_T152_TB4_REC10000, {benchmarkName}_T152_TB4_REC50000, {benchmarkName}_T152_TB4_REC100000
+* 2-core VM: {benchmarkName}_T8_TB16_REC500, {benchmarkName}_T16_TB16_REC1000
+* 4-core VM: {benchmarkName}_T16_TB16_REC5000, {benchmarkName}_T32_TB16_REC10000
+* 8-core VM: {benchmarkName}_T8_TB32_REC50000, {benchmarkName}_T16_TB32_REC500000
+* 16-core VM: {benchmarkName}_T92_TB4_REC50000, {benchmarkName}_T152_TB4_REC100000
+
+The supported benchmark names are as follows: oltp_read_write, oltp_write_only, and oltp_read_only.
 
 * **Supported Platform/Architectures**
   * linux-x64

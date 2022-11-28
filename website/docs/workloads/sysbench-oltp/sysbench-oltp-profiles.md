@@ -40,20 +40,20 @@ Runs an intensive workload using the Sysbench Benchmark to test the bandwidth of
   | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
 
 * **Workload Runtimes**
-  The Sysbench OLTP Workload Runtime can be set as an input parameter in Profile and commandLine. The default value is 30 minutes for a single round of tests run.
-  These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results.
+  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
+
+  * Expected Runtime on Linux Systems
+    * (2-core/vCPU VM) = 3.5 hours. (Depends on number of cores of the machine.)
 
 * **Usage Examples**
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-  <div style="font-size:10pt">
-
   ``` csharp
-  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100
-  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --parameters="DatabaseName=mytestDB"
+  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --layout="{Path to layout file}"
+  ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --parameters="DatabaseName=mytestDB" --layout="{Path to layout file}"
   ```
-  </div>
 
 -----------------------------------------------------------------------
 
