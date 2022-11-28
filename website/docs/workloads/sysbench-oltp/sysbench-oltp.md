@@ -1,4 +1,4 @@
-# Sysbench Workload
+# Sysbench OLTP Workload
 Sysbench is an open-source multi-threaded database benchmark tool. As a suite, it offers benchmarks that test many different aspects of the system, but this workload supports only the OLTP .lua script tests on MySQL, PostgreSQL, and MariaDB systems -- VC implements support for testing on a MySQL database.
 
 This suite was pulled from the original GitHub repository.
