@@ -83,6 +83,38 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Duration in Seconds.
+        /// </summary>
+        public int DurationSec
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.DurationSec));
+            }
+
+        }
+
+        /// <summary>
+        /// Group Id.
+        /// </summary>
+        public string GroupId
+        {
+            get
+            {
+                object metadata = null;
+                EventContext.PersistentProperties.TryGetValue(nameof(metadata), out metadata);
+
+                IConvertible value = string.Empty;
+                if (metadata != null)
+                {
+                    (metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId).CamelCased(), out value);
+                }
+
+                return value == null ? string.Empty : value.ToString();
+            }
+        }
+
+        /// <summary>
         /// Retry Wait Time for FIO executors.
         /// </summary>
         protected static TimeSpan RetryWaitTime { get; } = TimeSpan.FromSeconds(30);
@@ -170,11 +202,11 @@ namespace VirtualClient.Actions
                                 int variation = Interlocked.Increment(ref variationNumber);
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    int threads = (queueDepth < maxThreads) ? queueDepth : maxThreads;
-                                    int queueDepthPerThread = (queueDepth + threads - 1) / threads;
+                                    int numJobs = (queueDepth < maxThreads) ? queueDepth : maxThreads;
+                                    int queueDepthPerThread = (queueDepth + numJobs - 1) / numJobs;
                                     string testName = this.ApplyParameter(this.Scenario, nameof(ioType), ioType);
                                     testName = this.ApplyParameter(testName, nameof(blockSize), blockSize);
-                                    testName = $"{testName}_d{queueDepthPerThread}_th{threads}";
+                                    testName = $"{testName}_d{queueDepthPerThread}_th{numJobs}";
 
                                     try
                                     {
@@ -187,13 +219,19 @@ namespace VirtualClient.Actions
                                         string commandLine = this.ApplyParameter(this.CommandLine, nameof(this.FileSize), this.FileSize);
                                         commandLine = this.ApplyParameter(commandLine, nameof(ioType), ioType);
                                         commandLine = this.ApplyParameter(commandLine, nameof(blockSize), blockSize);
+                                        commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
 
-                                        commandLine = commandLine + $" --name={testName} --numjobs={threads} --iodepth={queueDepthPerThread}";
+                                        commandLine = commandLine + $" --name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread}";
 
                                         EventContext processContext = telemetryContext.Clone();
                                         processContext.AddContext(nameof(testName), testName);
                                         Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>();
+                                        string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());
 
+                                        metricsMetadata[nameof(this.GroupId).CamelCased()] = this.GroupId;
+                                        metricsMetadata[nameof(this.DurationSec).CamelCased()] = this.DurationSec;
+                                        metricsMetadata[nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration;
+                                        metricsMetadata[nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime;
                                         metricsMetadata[nameof(blockSizeKiB).CamelCased()] = blockSizeKiB;
                                         metricsMetadata[nameof(queueDepth).CamelCased()] = queueDepth;
                                         metricsMetadata[nameof(ioType).CamelCased()] = ioType;
@@ -201,10 +239,9 @@ namespace VirtualClient.Actions
                                         metricsMetadata[nameof(commandLine).CamelCased()] = commandLine;
                                         metricsMetadata[nameof(variation).CamelCased()] = variation;
                                         metricsMetadata[nameof(maxThreads).CamelCased()] = maxThreads;
-                                        metricsMetadata[nameof(threads).CamelCased()] = threads;
+                                        metricsMetadata[nameof(numJobs).CamelCased()] = numJobs;
                                         metricsMetadata[nameof(fileSizeGiB).CamelCased()] = fileSizeGiB;
-                                        metricsMetadata[nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration;
-                                        metricsMetadata[nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime;
+                                        metricsMetadata[nameof(filePath).CamelCased()] = filePath;
 
                                         this.Logger.LogTraceMessage($"{testName}.ExecutionStarted", processContext);
 

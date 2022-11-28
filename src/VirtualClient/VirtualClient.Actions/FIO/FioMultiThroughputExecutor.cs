@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Server.IIS.Core;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -57,6 +58,26 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.DirectIO));
+            }
+        }
+
+        /// <summary>
+        /// Group Id.
+        /// </summary>
+        public string GroupId
+        {
+            get
+            {
+                object metadata = null;
+                EventContext.PersistentProperties.TryGetValue(nameof(metadata), out metadata);
+
+                IConvertible value = string.Empty;
+                if (metadata != null)
+                {
+                    (metadata as Dictionary<string, IConvertible>).TryGetValue(nameof(this.GroupId).CamelCased(), out value);
+                }
+
+                return value == null ? string.Empty : value.ToString();
             }
         }
 
@@ -193,7 +214,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// QueueDepth for Sequential Read.
+        /// Queue Depth for Sequential Read.
         /// </summary>
         public int SequentialReadQueueDepth
         {
@@ -366,14 +387,14 @@ namespace VirtualClient.Actions
                 if (await this.IsDiskFillCompleteAsync(cancellationToken).ConfigureAwait(false) == false)
                 {
                     string testName = this.Scenario;
-                    Dictionary<string, IConvertible> metricsMetadata = this.GetMetricsMetadata();
-                    
+                    Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>();
+
                     this.Logger.LogMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
 
                     await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken, metricsMetadata)
                                         .ConfigureAwait(false);
 
-                    this.Logger.LogMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
+                    this.Logger.LogMessage($"{this.Scenario}.ExecutionCompleted", telemetryContext);
 
                     await this.RegisterDiskFillCompleteAsync(cancellationToken)
                         .ConfigureAwait(false);
@@ -397,8 +418,8 @@ namespace VirtualClient.Actions
                             EventContext variationContext = telemetryContext.Clone();
                             variationContext.AddContext(nameof(testName), testName);
 
-                            Dictionary<string, IConvertible> metricsMetadata = this.GetMetricsMetadata();
-                            
+                            Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>();
+
                             metricsMetadata[nameof(targetPercent).CamelCased()] = targetPercent;
                             metricsMetadata[nameof(variation).CamelCased()] = variation;
                             metricsMetadata[nameof(testName).CamelCased()] = testName;
@@ -450,7 +471,7 @@ namespace VirtualClient.Actions
         protected override void GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, string commandLine)
         {
             parseReadMetrics = false;
-            parseWriteMetrics = false; 
+            parseWriteMetrics = false;
 
             if (commandLine.Contains("--section init", StringComparison.OrdinalIgnoreCase) || commandLine.Contains("--section randomwrite", StringComparison.OrdinalIgnoreCase) || commandLine.Contains("--section sequentialwrite", StringComparison.OrdinalIgnoreCase))
             {
@@ -461,6 +482,43 @@ namespace VirtualClient.Actions
             {
                 parseReadMetrics = true;
             }
+        }
+
+        /// <inheritdoc/>
+        protected override void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        {
+            FioMetricsParser parser = null;
+
+            this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
+            parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
+
+            IList<Metric> metrics = parser.Parse();
+            if (this.MetricFilters?.Any() == true)
+            {
+                metrics = metrics.FilterBy(this.MetricFilters).ToList();
+            }
+
+            if (metricMetadata != null)
+            {
+                foreach (var metric in metrics)
+                {
+                    foreach (var metricMetadataValue in metricMetadata)
+                    {
+                        metric.Metadata[metricMetadataValue.Key] = metricMetadataValue.Value;
+                    }
+                }
+            }
+
+            this.Logger.LogMetrics(
+               "FIO",
+               testName,
+               startTime,
+               endTime,
+               this.GetSectionizedMetrics(metrics),
+               testedInstance,
+               commandArguments,
+               this.Tags,
+               telemetryContext);
         }
 
         /// <summary>
@@ -519,7 +577,7 @@ namespace VirtualClient.Actions
             string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
 
             if (this.DiskFill)
-            { 
+            {
                 text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
                 text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", this.DirectIO);
                 text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
@@ -571,58 +629,130 @@ namespace VirtualClient.Actions
             this.SystemManagement.FileSystem.File.WriteAllText(@destinationPath, text);
         }
 
-        private Dictionary<string, IConvertible> GetMetricsMetadata()
+        private IList<Metric> GetSectionizedMetrics(IList<Metric> metrics)
         {
-            var metricsMetadata = new Dictionary<string, IConvertible>();
-            
-            metricsMetadata[nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration;
-            metricsMetadata[nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime;
+            IList<Metric> sectionizedMetrics = new List<Metric>();
+
+            foreach (var metric in metrics)
+            {
+                string ioType = metric.Metadata["rw"].ToString();
+                bool validMetric = true;
+
+                switch (ioType.ToLower())
+                {
+                    case "read":
+                    case "randread":
+                        if (metric.Name.StartsWith("write", StringComparison.OrdinalIgnoreCase))
+                        {
+                            validMetric = false;
+                        }
+
+                        break;
+
+                    case "write":
+                    case "randwrite":
+                        if (metric.Name.StartsWith("read", StringComparison.OrdinalIgnoreCase))
+                        {
+                            validMetric = false;
+                        }
+
+                        break;
+
+                    default:
+                        validMetric = true;
+                        break;
+                }
+
+                if (validMetric)
+                {
+                    IDictionary<string, IConvertible> metadata = this.GetMetricsMetadata(ioType);
+
+                    foreach (var metadataValue in metadata)
+                    {
+                        metric.Metadata[metadataValue.Key] = metadataValue.Value;
+                    }
+
+                    sectionizedMetrics.Add(metric);
+                }
+            }
+
+            return sectionizedMetrics;
+        }
+
+        private IDictionary<string, IConvertible> GetMetricsMetadata(string ioType)
+        {
+            Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+
+            metadata[nameof(this.ProfileIteration).CamelCased()] = this.ProfileIteration;
+            metadata[nameof(this.ProfileIterationStartTime).CamelCased()] = this.ProfileIterationStartTime;
+            metadata[nameof(this.GroupId)] = this.GroupId;
 
             if (!this.DiskFill)
             {
-                double randomReadBlockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.RandomReadBlockSize, MetricUnit.Kilobytes));
-                double randomWriteBlockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.RandomWriteBlockSize, MetricUnit.Kilobytes));
+                string blockSizeKiB = string.Empty;
+                string fileSizeGiB = string.Empty;
+                string queueDepth = string.Empty;
+                string numJobs = string.Empty;
+                string filePath = string.Empty;
+                string weight = string.Empty;
 
-                double sequentialReadBlockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.SequentialReadBlockSize, MetricUnit.Kilobytes));
-                double sequentialWriteBlockSizeKiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.SequentialWriteBlockSize, MetricUnit.Kilobytes));
+                switch (ioType.ToLower())
+                {
+                    case "randread":
+                        blockSizeKiB = TextParsingExtensions.TranslateStorageByUnit(this.RandomReadBlockSize, MetricUnit.Kilobytes);
+                        fileSizeGiB = TextParsingExtensions.TranslateStorageByUnit(this.RandomIOFileSize, MetricUnit.Gigabytes);
+                        queueDepth = this.RandomReadQueueDepth.ToString();
+                        numJobs = this.RandomReadNumJobs.ToString();
+                        filePath = this.randomIOFilePath.ToString();
+                        weight = this.RandomReadWeight.ToString();
 
-                double randomIOFileSizeGiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.RandomIOFileSize, MetricUnit.Gigabytes));
-                double sequentialIOFileSizeGiB = Convert.ToDouble(TextParsingExtensions.TranslateStorageByUnit(this.SequentialIOFileSize, MetricUnit.Gigabytes));
+                        break;
 
-                metricsMetadata[nameof(this.TargetIOPS).CamelCased()] = this.TargetIOPS;
+                    case "read":
+                        blockSizeKiB = TextParsingExtensions.TranslateStorageByUnit(this.SequentialReadBlockSize, MetricUnit.Kilobytes);
+                        fileSizeGiB = TextParsingExtensions.TranslateStorageByUnit(this.SequentialIOFileSize, MetricUnit.Gigabytes);
+                        queueDepth = this.SequentialReadQueueDepth.ToString();
+                        numJobs = this.SequentialReadNumJobs.ToString();
+                        filePath = this.sequentialIOFilePath.ToString();
+                        weight = this.SequentialReadWeight.ToString();
 
-                metricsMetadata[nameof(this.DurationSec).CamelCased()] = this.DurationSec;
-                metricsMetadata[nameof(this.DirectIO).CamelCased()] = this.DirectIO;
-                metricsMetadata[nameof(this.GroupReporting).CamelCased()] = this.GroupReporting;
+                        break;
 
-                metricsMetadata[nameof(randomIOFileSizeGiB).CamelCased()] = randomIOFileSizeGiB;
-                metricsMetadata[nameof(sequentialIOFileSizeGiB).CamelCased()] = sequentialIOFileSizeGiB;
-                metricsMetadata[nameof(this.randomIOFilePath).CamelCased()] = this.randomIOFilePath;
-                metricsMetadata[nameof(this.sequentialIOFilePath).CamelCased()] = this.sequentialIOFilePath;
+                    case "randwrite":
+                        blockSizeKiB = TextParsingExtensions.TranslateStorageByUnit(this.RandomWriteBlockSize, MetricUnit.Kilobytes);
+                        fileSizeGiB = TextParsingExtensions.TranslateStorageByUnit(this.RandomIOFileSize, MetricUnit.Gigabytes);
+                        queueDepth = this.RandomWriteQueueDepth.ToString();
+                        numJobs = this.RandomWriteNumJobs.ToString();
+                        filePath = this.randomIOFilePath.ToString();
+                        weight = this.RandomWriteWeight.ToString();
 
-                metricsMetadata[nameof(sequentialReadBlockSizeKiB).CamelCased()] = sequentialReadBlockSizeKiB;
-                metricsMetadata[nameof(this.SequentialReadQueueDepth).CamelCased()] = this.SequentialReadQueueDepth;
-                metricsMetadata[nameof(this.SequentialReadNumJobs).CamelCased()] = this.SequentialReadNumJobs;
-                metricsMetadata[nameof(this.SequentialReadWeight).CamelCased()] = this.SequentialReadWeight;
+                        break;
 
-                metricsMetadata[nameof(sequentialWriteBlockSizeKiB).CamelCased()] = sequentialWriteBlockSizeKiB;
-                metricsMetadata[nameof(this.SequentialWriteQueueDepth).CamelCased()] = this.SequentialWriteQueueDepth;
-                metricsMetadata[nameof(this.SequentialWriteNumJobs).CamelCased()] = this.SequentialWriteNumJobs;
-                metricsMetadata[nameof(this.SequentialWriteWeight).CamelCased()] = this.SequentialWriteWeight;
+                    case "write":
+                        blockSizeKiB = TextParsingExtensions.TranslateStorageByUnit(this.SequentialWriteBlockSize, MetricUnit.Kilobytes);
+                        fileSizeGiB = TextParsingExtensions.TranslateStorageByUnit(this.SequentialIOFileSize, MetricUnit.Gigabytes);
+                        queueDepth = this.SequentialWriteQueueDepth.ToString();
+                        numJobs = this.SequentialWriteNumJobs.ToString();
+                        filePath = this.sequentialIOFilePath.ToString();
+                        weight = this.SequentialWriteWeight.ToString();
 
-                metricsMetadata[nameof(randomReadBlockSizeKiB).CamelCased()] = randomReadBlockSizeKiB;
-                metricsMetadata[nameof(this.RandomReadQueueDepth).CamelCased()] = this.RandomReadQueueDepth;
-                metricsMetadata[nameof(this.RandomReadNumJobs).CamelCased()] = this.RandomReadNumJobs;
-                metricsMetadata[nameof(this.RandomReadWeight).CamelCased()] = this.RandomReadWeight;
+                        break;
+                }
 
-                metricsMetadata[nameof(randomWriteBlockSizeKiB).CamelCased()] = randomWriteBlockSizeKiB;
-                metricsMetadata[nameof(this.RandomWriteQueueDepth).CamelCased()] = this.RandomWriteQueueDepth;
-                metricsMetadata[nameof(this.RandomWriteNumJobs).CamelCased()] = this.RandomWriteNumJobs;
-                metricsMetadata[nameof(this.RandomWriteWeight).CamelCased()] = this.RandomWriteWeight;
-
+                metadata[nameof(this.TargetIOPS).CamelCased()] = this.TargetIOPS;
+                metadata[nameof(this.DurationSec).CamelCased()] = this.DurationSec;
+                metadata[nameof(this.DirectIO).CamelCased()] = this.DirectIO;
+                metadata[nameof(this.GroupReporting).CamelCased()] = this.GroupReporting;
+                metadata[nameof(ioType).CamelCased()] = ioType;
+                metadata[nameof(blockSizeKiB).CamelCased()] = blockSizeKiB;
+                metadata[nameof(fileSizeGiB).CamelCased()] = fileSizeGiB;
+                metadata[nameof(queueDepth).CamelCased()] = queueDepth;
+                metadata[nameof(numJobs).CamelCased()] = numJobs;
+                metadata[nameof(filePath).CamelCased()] = filePath;
+                metadata[nameof(weight).CamelCased()] = weight;
             }
 
-            return metricsMetadata;
+            return metadata;
         }
 
         private void SetRuntimeParameters(int targetPercent)

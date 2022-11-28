@@ -10,6 +10,8 @@ trigger:
   paths:
     exclude:
     - website
+    
+pr: none
 
 pool:
   vmImage: windows-latest
