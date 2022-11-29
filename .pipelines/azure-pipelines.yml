@@ -55,7 +55,7 @@ steps:
   displayName: 'Build Solutions'
 
   # Build NuGet packages for the services/agents in the repo.
-- script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.5
+- script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.6
   displayName: 'Build NuGet Packages'
 
 - task: EsrpCodeSigning@1
