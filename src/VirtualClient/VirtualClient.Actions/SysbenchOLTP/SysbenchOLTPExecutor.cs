@@ -30,6 +30,13 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.ApiClientManager = dependencies.GetService<IApiClientManager>();
+
+            // Supported roles for this client/server workload.
+            this.SupportedRoles = new List<string>
+            {
+                ClientRole.Client,
+                ClientRole.Server
+            };
         }
 
         /// <summary>
@@ -53,6 +60,16 @@ namespace VirtualClient.Actions
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
+
+        /// <summary>
+        /// Server IpAddress on which MySQL Server runs.
+        /// </summary>
+        protected string ServerIpAddress { get; set; }
+
+        /// <summary>
+        /// Server IpAddress on which the client runs.
+        /// </summary>
+        protected string ClientIpAddress { get; set; }
 
         /// <summary>
         /// An interface that can be used to communicate with the underlying system.
@@ -104,6 +121,12 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.ServerIpAddress = serverIPAddress.ToString();
+
+                ClientInstance clientInstance = this.GetLayoutClientInstance();
+                IPAddress.TryParse(clientInstance.PrivateIPAddress, out IPAddress clientIPAddress);
+
+                this.ClientIpAddress = clientIPAddress.ToString();
             }
         }
 

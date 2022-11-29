@@ -215,7 +215,7 @@ namespace VirtualClient.Actions
             }
 
             // prepares database based on prepare arguments in profile 
-            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-user=root prepare";
+            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
 
             string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
             await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
@@ -259,7 +259,7 @@ namespace VirtualClient.Actions
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
                 this.StartTime = DateTime.UtcNow;
-                this.sysbenchExecutionArguments = $@"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-user=root --mysql-host={serverIpAddress}";
+                this.sysbenchExecutionArguments = $@"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress}";
 
                 DateTime startTime = DateTime.UtcNow;
                 // gets executor arguments, combines with path & directory to get full command; metrics are stdout

@@ -405,6 +405,9 @@
         "DatabaseName": "$.Parameters.DatabaseName",
         "Role": "Server"
       }
+    },
+    {
+      "Type": "ApiServer"
     }
   ]
 }
