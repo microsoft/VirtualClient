@@ -15,13 +15,13 @@ The following metrics are captured during the operations of the Sysbench OLTP wo
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # write queries | 259534 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # other queries | 1284332 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # transactions | 257421 |
-| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | transaction/sec | 153.01 |
+| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | transactions/sec | 153.01 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # queries | 5948220 |
-| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | query/sec | 2850.17 |
+| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | queries/sec | 2850.17 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # ignored errors | 0 |
-| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | ignored error/sec | 0.00 |
+| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | ignored errors/sec | 0.00 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | # reconnects | 0 |
-| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | reconnect/sec | 0.00 |
+| PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | reconnects/sec | 0.00 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | elapsed time | 1800.0012 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | latency min | 7.19 |
 | PERF-MYSQL-SYSBENCH-OLTP.json | Sysbench OLTP | latency avg | 26.97 |

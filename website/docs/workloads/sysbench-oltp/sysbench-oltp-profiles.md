@@ -42,9 +42,10 @@ Runs an intensive workload using the Sysbench Benchmark to test the bandwidth of
 * **Workload Runtimes**
   The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
   minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
+  It is practical to allow for 1 to 2 hours extra runtime to ensure the tests can complete full test runs.
 
-  * Expected Runtime on Linux Systems
-    * (2-core/vCPU VM) = 3.5 hours. (Depends on number of cores of the machine.)
+  * Expected Runtime on Linux systems
+    * (2-core/vCPU VM) = 3.5 hours
 
 * **Usage Examples**
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the

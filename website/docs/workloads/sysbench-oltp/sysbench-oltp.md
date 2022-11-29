@@ -9,15 +9,17 @@ This suite was pulled from the original GitHub repository.
 ### What is Being Tested?
 The Sysbench test suite executes varied transactions on the database system including reads, writes, and other queries. The list of OLTP benchmarks supported by Sysbench are as follows:
 
-* oltp_read_write
-* oltp_read_only
-* oltp_write_only
-* oltp_delete
-* oltp_insert
-* oltp_update_index
-* oltp_update_non_index
-* select_random_points
-* select_random_ranges
+| Benchmark Name        | Description                                                           |
+|-----------------------|-----------------------------------------------------------------------|
+| oltp_read_write       | Measures performance of read and write queries on MySQL database      |
+| oltp_read_only        | Measures performance of only read queries on MySQL database           |
+| oltp_write_only       | Measures performance of only write queries on MySQL database          |
+| oltp_delete           | Measures performance of only delete queries on the MySQL database     |
+| oltp_insert           | Measures performance of only insert queries on MySQL database         |
+| oltp_update_index     | Measures performance of index updates on the MySQL database           |
+| oltp_update_non_index | Measures performance of non-index updates on the MySQL database       |
+| select_random_points  | Measures performance of random point select on the MySQL database     |
+| select_random_ranges  | Measures performance of random range select on the MySQL database     |
 
 Sysbench also provides a .lua script named oltp_common that is used to set up the database with tables and records to prepare it for testing.
 
@@ -43,3 +45,6 @@ The supported benchmark names are as follows: oltp_read_write, oltp_write_only, 
 
 ### Package Dependencies
 The following package dependencies are required to be installed on the Unix/Linux system in order to support the requirements of the NAS Parallel workload. Note that the Virtual Client will handle the installation of any required dependencies.
+
+* Client: make, automake, libtool, pkg-config, libaio-dev, libmysqlclient-dev, libssl-dev, sysbench
+* Server: mysql-server
