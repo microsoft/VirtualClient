@@ -2,10 +2,8 @@
 
 The following profiles run customer-representative or benchmarking scenarios using the Sysbench OLTP workload.
 
-* [Workload Details](./Sysbench.md)  
-* [Workload Profile Metrics](./SysbenchOLTPMetrics.md)  
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+* [Workload Details](./sysbench-oltp.md)  
+* [Workload Profile Metrics](./sysbench-oltp-metrics.md)  
 
 -----------------------------------------------------------------------
 
@@ -51,14 +49,7 @@ Runs an intensive workload using the Sysbench Benchmark to test the bandwidth of
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-  ``` csharp
+  ``` bash
   ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --layout="{Path to layout file}"
   ./VirtualClient --profile=PERF-MYSQL-SYSBENCH-OLTP.json --system=Azure --timeout=1440 --scenarios=oltp_read_write_T1_TB4_REC100 --parameters="DatabaseName=mytestDB" --layout="{Path to layout file}"
   ```
-
------------------------------------------------------------------------
-
-### Resources
-
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

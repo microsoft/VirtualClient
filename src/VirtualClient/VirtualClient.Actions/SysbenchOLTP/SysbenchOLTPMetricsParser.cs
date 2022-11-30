@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
                 new MetricInfo("latency min", MilliSecond, MetricRelativity.LowerIsBetter),
                 new MetricInfo("latency avg", MilliSecond, MetricRelativity.LowerIsBetter),
                 new MetricInfo("latency max", MilliSecond, MetricRelativity.LowerIsBetter),
-                new MetricInfo("latency 95p", MilliSecond, MetricRelativity.LowerIsBetter),
+                new MetricInfo("latency p95", MilliSecond, MetricRelativity.LowerIsBetter),
                 new MetricInfo("latency sum", MilliSecond, MetricRelativity.LowerIsBetter),
             };
 

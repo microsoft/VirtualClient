@@ -44,7 +44,7 @@ The supported benchmark names are as follows: oltp_read_write, oltp_write_only, 
   * linux-arm64
 
 ### Package Dependencies
-The following package dependencies are required to be installed on the Unix/Linux system in order to support the requirements of the NAS Parallel workload. Note that the Virtual Client will handle the installation of any required dependencies.
+The following package dependencies are required to be installed on the Unix/Linux system in order to support the requirements of the Sysbench OLTP workload. Note that the Virtual Client will handle the installation of any required dependencies.
 
 * Client: make, automake, libtool, pkg-config, libaio-dev, libmysqlclient-dev, libssl-dev, sysbench
 * Server: mysql-server

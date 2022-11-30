@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "latency min", 7.39, "milliseconds");
             MetricAssert.Exists(metrics, "latency avg", 28.97, "milliseconds");
             MetricAssert.Exists(metrics, "latency max", 720.22, "milliseconds");
-            MetricAssert.Exists(metrics, "latency 95p", 68.05, "milliseconds");
+            MetricAssert.Exists(metrics, "latency p95", 68.05, "milliseconds");
             MetricAssert.Exists(metrics, "latency sum", 7458385.25, "milliseconds");
         }
     }

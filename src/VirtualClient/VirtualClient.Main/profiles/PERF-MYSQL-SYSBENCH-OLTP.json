@@ -1,5 +1,5 @@
 ﻿{
-  "Description": "Sysbench Database Server Performance Workload",
+  "Description": "Sysbench OLTP MySQL Database Server Performance Workload",
   "MinimumExecutionInterval": "00:01:00",
   "Parameters": {
     "DatabaseName": "sbtest"
