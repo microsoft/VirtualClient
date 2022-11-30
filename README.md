@@ -104,6 +104,7 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [SPECjvm](https://microsoft.github.io/VirtualClient/docs/workloads/specjvm) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
 | [stress-ng](https://microsoft.github.io/VirtualClient/docs/workloads/stress-ng) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
+| [Sysbench OLTP](../workloads/sysbench-oltp/sysbench-oltp.md) | MySQL Server Performance | linux-x64, linux-arm64 | [**Sysbench**:GPL-2.0](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[**MySQL**:GPL-2.0](https://www.mysql.com/about/legal/licensing/oem/) |
 
 
 ## Contributing
