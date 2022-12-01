@@ -69,6 +69,16 @@ namespace VirtualClient
         public string ExecutionSystem { get; set; }
 
         /// <summary>
+        /// Metadata properties (key/value pairs) supplied to the application.
+        /// </summary>
+        public IDictionary<string, IConvertible> Metadata { get; set; }
+
+        /// <summary>
+        /// Additional or override parameters (key/value pairs) supplied to the application.
+        /// </summary>
+        public IDictionary<string, IConvertible> Parameters { get; set; }
+
+        /// <summary>
         /// Blob store to use for downloading dependencies/workload packages required
         /// by Virtual Client profiles.
         /// </summary>
@@ -106,7 +116,16 @@ namespace VirtualClient
             this.InitializeGlobalTelemetryProperties(args);
 
             IConfiguration configuration = Program.LoadAppSettings();
-            ILogger logger = CommandBase.CreateLogger(configuration, this.EventHubConnectionString, this.ProxyApiUri, this.Debug);
+
+            IConvertible telemetrySource;
+            this.Parameters.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
+
+            ILogger logger = CommandBase.CreateLogger(
+                configuration,
+                this.EventHubConnectionString,
+                this.ProxyApiUri,
+                this.Debug,
+                telemetrySource?.ToString());
 
             List<IBlobManager> blobStores = new List<IBlobManager>();
 
@@ -117,8 +136,13 @@ namespace VirtualClient
             // on the same local network that has that access (e.g. hardware manufacturing facility scenarios).
             if (this.ProxyApiUri != null)
             {
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri)));
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri)));
+                IConvertible contentSource = null;
+                IConvertible packageSource = null;
+                this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
+                this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
+
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString()));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString()));
             }
             else
             {
@@ -187,16 +211,16 @@ namespace VirtualClient
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, Uri proxyApiUri)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, Uri proxyApiUri, string source = null)
         {
             if (proxyApiUri != null)
             {
                 VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(proxyApiUri);
-                loggingProviders.Add(new ProxyLoggerProvider(proxyApiClient));
+                loggingProviders.Add(new ProxyLoggerProvider(proxyApiClient, source));
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, string eventHubConnectionString, Uri proxyApiUri, bool debugMode)
+        private static ILogger CreateLogger(IConfiguration configuration, string eventHubConnectionString, Uri proxyApiUri, bool debugMode, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
@@ -207,7 +231,7 @@ namespace VirtualClient
 
             if (proxyApiUri != null)
             {
-                CommandBase.AddProxyApiLogging(loggingProviders, configuration, proxyApiUri);
+                CommandBase.AddProxyApiLogging(loggingProviders, configuration, proxyApiUri, source);
             }
             else
             {

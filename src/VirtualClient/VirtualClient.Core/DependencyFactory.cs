@@ -292,12 +292,13 @@ namespace VirtualClient
         /// endpoint.
         /// </summary>
         /// <param name="storeDescription">Describes the type of blob store (e.g. Content, Packages).</param>
-        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription)
+        /// <param name="source">An explicit source to use for blob uploads/downloads through the proxy API.</param>
+        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
 
             VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6));
-            return new ProxyBlobManager(storeDescription, proxyApiClient);
+            return new ProxyBlobManager(storeDescription, proxyApiClient, source);
         }
 
         /// <summary>

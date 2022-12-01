@@ -56,6 +56,26 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
+        public void ProxyLoggerUsesTheExpectedSourceWhenAnExplicitSourceIsProvided()
+        {
+            string expectedSource = "AnySource";
+            this.mockProxyLogger = new TestProxyLogger(this.mockProxyApiClient.Object, expectedSource);
+            this.mockProxyLogger.Log(LogLevel.Information, new EventId(123, "AnyName"), EventContext.None, null, null);
+            ProxyTelemetryMessage messageLogged = this.mockProxyLogger.Buffer.Dequeue();
+
+            Assert.AreEqual(expectedSource, messageLogged.Source);
+        }
+
+        [Test]
+        public void ProxyLoggerUsesTheExpectedSourceWhenAnExplicitSourceIsNotProvided()
+        {
+            this.mockProxyLogger.Log(LogLevel.Information, new EventId(123, "AnyName"), EventContext.None, null, null);
+            ProxyTelemetryMessage messageLogged = this.mockProxyLogger.Buffer.Dequeue();
+
+            Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, messageLogged.Source);
+        }
+
+        [Test]
         public void ProxyLoggerAddsMessagesToTheBufferInExpectedOrder()
         {
             List<ProxyTelemetryMessage> expectedEvents = new List<ProxyTelemetryMessage>
@@ -336,8 +356,8 @@ namespace VirtualClient.Proxy
 
         private class TestProxyLogger : ProxyLogger
         {
-            public TestProxyLogger(IProxyApiClient apiClient)
-                : base(apiClient)
+            public TestProxyLogger(IProxyApiClient apiClient, string source = null)
+                : base(apiClient, source)
             {
             }
 
