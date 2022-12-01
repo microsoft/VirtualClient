@@ -23,11 +23,6 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
-        /// Metadata properties (key/value pairs) supplied to the application.
-        /// </summary>
-        public IDictionary<string, IConvertible> Metadata { get; set; }
-
-        /// <summary>
         /// The name of the package to bootstrap/install.
         /// </summary>
         public string Name { get; set; }

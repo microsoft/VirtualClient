@@ -50,7 +50,8 @@ namespace VirtualClient.Proxy
         /// Initializes a new instance of the <see cref="ProxyLogger"/> class.
         /// </summary>
         /// <param name="apiClient">The API client for interacting with the proxy endpoint.</param>
-        public ProxyLogger(IProxyApiClient apiClient)
+        /// <param name="source">Defines an explicit source to use for telemetry uploads.</param>
+        public ProxyLogger(IProxyApiClient apiClient, string source = null)
         {
             apiClient.ThrowIfNull(nameof(apiClient));
 
@@ -61,6 +62,10 @@ namespace VirtualClient.Proxy
             this.TransmissionFailureWaitTime = TimeSpan.FromSeconds(5);
             this.cancellationTokenSource = new CancellationTokenSource();
             this.autoFlushWaitHandle = new AutoResetEvent(false);
+
+            this.Source = !string.IsNullOrWhiteSpace(source)
+                ? source
+                : ProxyBlobDescriptor.DefaultSource;
         }
 
         /// <summary>
@@ -98,6 +103,11 @@ namespace VirtualClient.Proxy
         protected Queue<ProxyTelemetryMessage> Buffer { get; private set; }
 
         /// <summary>
+        /// Defines an explicit source to use for telemetry uploads.
+        /// </summary>
+        protected string Source { get; }
+
+        /// <summary>
         /// Not implemented.
         /// </summary>
         public IDisposable BeginScope<TState>(TState state)
@@ -133,7 +143,7 @@ namespace VirtualClient.Proxy
 
                 ProxyTelemetryMessage message = new ProxyTelemetryMessage
                 {
-                    Source = "VirtualClient",
+                    Source = this.Source,
                     EventType = eventType,
                     Message = eventId.Name,
                     ItemType = "trace",

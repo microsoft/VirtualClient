@@ -49,4 +49,25 @@ namespace VirtualClient.Contracts
         /// </summary>
         public const string DefaultDisk = "disk";
     }
+
+    /// <summary>
+    /// Global or well-known parameters available for use on the Virtual Client command line.
+    /// </summary>
+    public class GlobalParameter
+    {
+        /// <summary>
+        /// ContentStoreSource
+        /// </summary>
+        public const string ContestStoreSource = "ContentStoreSource";
+
+        /// <summary>
+        /// PackageStoreSource
+        /// </summary>
+        public const string PackageStoreSource = "PackageStoreSource";
+
+        /// <summary>
+        /// TelemetrySource
+        /// </summary>
+        public const string TelemetrySource = "TelemetrySource";
+    }
 }

@@ -3,8 +3,10 @@
 
 namespace VirtualClient.Proxy
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
@@ -33,13 +35,18 @@ namespace VirtualClient.Proxy
         /// </summary>
         /// <param name="storeDescription">Provides the store details and requirement for the blob manager.</param>
         /// <param name="apiClient">The API client for interacting with the proxy endpoint.</param>
-        public ProxyBlobManager(DependencyProxyStore storeDescription, IProxyApiClient apiClient)
+        /// <param name="source">Defines an explicit source to use for blob downloads/uploads.</param>
+        public ProxyBlobManager(DependencyProxyStore storeDescription, IProxyApiClient apiClient, string source = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
             apiClient.ThrowIfNull(nameof(apiClient));
 
             this.ApiClient = apiClient;
             this.StoreDescription = storeDescription;
+
+            this.Source = !string.IsNullOrWhiteSpace(source)
+                ? source
+                : ProxyBlobDescriptor.DefaultSource;
         }
 
         /// <summary>
@@ -51,6 +58,11 @@ namespace VirtualClient.Proxy
         /// The API client for interacting with the proxy endpoint.
         /// </summary>
         protected IProxyApiClient ApiClient { get; }
+
+        /// <summary>
+        /// Defines an explicit source to use for blob downloads/uploads.
+        /// </summary>
+        protected string Source { get; }
 
         public async Task<DependencyDescriptor> DownloadBlobAsync(DependencyDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy retryPolicy = null)
         {
@@ -68,7 +80,7 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                "VirtualClient",
+                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,
@@ -100,7 +112,7 @@ namespace VirtualClient.Proxy
             }
 
             ProxyBlobDescriptor info = new ProxyBlobDescriptor(
-                "VirtualClient",
+                this.Source,
                 this.StoreDescription.StoreName,
                 blobName,
                 blobDescriptor.ContainerName,

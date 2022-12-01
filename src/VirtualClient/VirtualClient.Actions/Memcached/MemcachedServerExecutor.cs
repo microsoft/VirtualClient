@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     public class MemcachedServerExecutor : MemcachedExecutor
     {
         private IProcessProxy process;
+        private bool disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemcachedServerExecutor"/> class.
@@ -117,6 +118,22 @@ namespace VirtualClient.Actions
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.Copies = Environment.ProcessorCount.ToString();
             this.InitializeApiClients();
+        }
+
+        /// <summary>
+        /// Disposes of resources used by the instance.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                if (!this.disposed)
+                {
+                    this.process?.Dispose();
+                    this.disposed = true;
+                }
+            }
         }
 
         private async Task ExecuteServerWorkload(CancellationToken cancellationToken)

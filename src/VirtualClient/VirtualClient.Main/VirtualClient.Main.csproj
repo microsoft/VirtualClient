@@ -41,48 +41,48 @@
     </ItemGroup>
 
     <ItemGroup>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\system_list.py" Link="scripts\mlperf\GPUConfigFiles\system_list.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Offline\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Server\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\SingleStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Offline\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Server\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\SingleStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Server\__init__.py">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\system_list.py" Link="scripts\mlperf\GPUConfigFiles\system_list.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Offline\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Server\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\SingleStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Offline\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Server\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\SingleStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Server\__init__.py">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
         <None Include="..\VirtualClient.Actions\SuperBenchmark\default.yaml" Link="scripts\superbenchmark\default.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
@@ -124,7 +124,7 @@
         Below we have targets that copy the relevant profiles to the target platform/arch folders based upon the
         supported operating system.
         -->
-      <Content Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
+        <Content Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
     </ItemGroup>
 
     <ItemGroup>
@@ -146,7 +146,7 @@
         <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK-PING.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK.json" />
-	    <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
+        <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
     </ItemGroup>
@@ -159,7 +159,7 @@
         -->
         <LinuxProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
         <LinuxProfiles Include="profiles\GET-STARTED-REDIS.json" />
-		<LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
+        <LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <LinuxProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
@@ -167,7 +167,7 @@
         <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
-		<LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
+        <LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
         <LinuxProfiles Include="profiles\PERF-GRAPH500.json" />
         <LinuxProfiles Include="profiles\PERF-HPC-NASPARALLELBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-IO-FIO.json" />
@@ -176,13 +176,13 @@
         <LinuxProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
-		<LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
+        <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-PING.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-DEATHSTARBENCH.json" />
-		<LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
+        <LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
         <LinuxProfiles Include="profiles\PERF-SPECJVM.json" />
         <LinuxProfiles Include="profiles\PERF-OPENFOAM.json" />
     </ItemGroup>
@@ -193,7 +193,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Properties\" />
+        <Folder Include="Properties\" />
     </ItemGroup>
 
     <Target Name="PublishProfiles" AfterTargets="Publish">
@@ -211,5 +211,5 @@
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
-   
+
 </Project>

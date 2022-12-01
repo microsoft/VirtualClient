@@ -51,16 +51,6 @@ namespace VirtualClient
         public string LayoutPath { get; set; }
 
         /// <summary>
-        /// Metadata properties (key/value pairs) supplied to the application.
-        /// </summary>
-        public IDictionary<string, IConvertible> Metadata { get; set; }
-
-        /// <summary>
-        /// Additional or override parameters (key/value pairs) supplied to the application.
-        /// </summary>
-        public IDictionary<string, IConvertible> Parameters { get; set; }
-
-        /// <summary>
         /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).
         /// </summary>
         public List<string> Profiles { get; set; }
