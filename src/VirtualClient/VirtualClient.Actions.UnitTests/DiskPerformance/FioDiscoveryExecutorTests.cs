@@ -43,9 +43,8 @@ namespace VirtualClient.Actions
             // Setup default profile parameter values
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { nameof(DiskPerformanceWorkloadExecutor.Scenario), "AnyScenario_ReadOrWrite_BlockSize" },
-                
-                { nameof(DiskPerformanceWorkloadExecutor.CommandLine), "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
+                { nameof(FioDiscoveryExecutor.Scenario), "AnyScenario_ReadOrWrite_AnyBlockSize" },
+                { nameof(FioDiscoveryExecutor.CommandLine), "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
                 { nameof(FioDiscoveryExecutor.BlockSize), "4K" },
                 { nameof(FioDiscoveryExecutor.DiskFillSize), "140G" },
                 { nameof(FioDiscoveryExecutor.FileSize), "134G" },
@@ -53,9 +52,10 @@ namespace VirtualClient.Actions
                 { nameof(FioDiscoveryExecutor.QueueDepths), "1,4,16" },
                 { nameof(FioDiscoveryExecutor.MaxThreads), 8 },
                 { nameof(FioDiscoveryExecutor.IOType), "randwrite" },
-                { nameof(DiskPerformanceWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
-                { nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), "true" },
-                { nameof(DiskPerformanceWorkloadExecutor.PackageName), "fio" },
+                { nameof(FioDiscoveryExecutor.DirectIO), true },
+                { nameof(FioDiscoveryExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
+                { nameof(FioDiscoveryExecutor.DeleteTestFilesOnFinish), "true" },
+                { nameof(FioDiscoveryExecutor.PackageName), "fio" },
                 { nameof(FioDiscoveryExecutor.DiskFilter), "BiggestSize" }
             };
 
@@ -151,9 +151,9 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d4_th4 --numjobs=4 --iodepth=4 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d8_th2 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
             };
 
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -162,7 +162,7 @@ namespace VirtualClient.Actions
                      .ConfigureAwait(false);
 
                 Assert.AreEqual(4, this.mockFixture.ProcessManager.Commands.Count());
-                this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
             }
         }
 
@@ -173,15 +173,15 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d4_th4 --numjobs=4 --iodepth=4 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d4_th4 --numjobs=4 --iodepth=4 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d4_th4 --numjobs=4 --iodepth=4 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d8_th2 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d8_th2 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
-                $"--name=fio_discovery_randwrite_134G_4K_d8_th2 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=134G --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
             };
 
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -189,7 +189,36 @@ namespace VirtualClient.Actions
                 await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
                       .ConfigureAwait(false);
 
-                this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray());
+                Assert.AreEqual(10, this.mockFixture.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorUsesBufferedIOWhenInstructed()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = false;
+
+            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=0"));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorUsesDirectNonBufferedIOWhenInstructed()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = true;
+
+            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=1"));
             }
         }
 

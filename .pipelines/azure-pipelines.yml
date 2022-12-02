@@ -17,6 +17,7 @@ pool:
   vmImage: windows-latest
 
 variables:
+  VcVersion : 0.0.9
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -51,11 +52,11 @@ steps:
   displayName: 'Clean Output Directories'
   
   # Build the repo.
-- script: $(Build.SourcesDirectory)\build.cmd
+- script: $(Build.SourcesDirectory)\build.cmd $(VcVersion)
   displayName: 'Build Solutions'
 
   # Build NuGet packages for the services/agents in the repo.
-- script: $(Build.SourcesDirectory)\build-packages.cmd 0.0.8
+- script: $(Build.SourcesDirectory)\build-packages.cmd $(VcVersion)
   displayName: 'Build NuGet Packages'
 
 - task: EsrpCodeSigning@1

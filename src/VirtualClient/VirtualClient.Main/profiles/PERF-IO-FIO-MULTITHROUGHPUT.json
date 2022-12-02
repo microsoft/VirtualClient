@@ -5,14 +5,15 @@
         "RandomIOFileSize": "124G",
         "SequentialIOFileSize": "20G",
         "TargetIOPS": "5000",
-        "TargetPercents": "10,40,90,98,100,102,110"
+        "TargetPercents": "10,40,90,98,100,102,110",
+        "DirectIO": true
     },
     "Actions": [
         {
             "Type": "FioMultiThroughputExecutor",
             "Parameters": {
                 "Scenario": "DiskFill",
-                "DirectIO": "1",
+                "DirectIO": true,
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "DiskFill": true,
                 "GroupReporting": "0",
@@ -29,7 +30,7 @@
             "Parameters": {
                 "Scenario": "OLTP",
                 "PackageName": "fio",
-                "DirectIO": "1",
+                "DirectIO": "$.Parameters.DirectIO",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "DurationSec": "300",
                 "GroupReporting": "0",

@@ -2,7 +2,9 @@
 
 Set ExitCode=0
 
-if "%CDP_FILE_VERSION_NUMERIC%" NEQ "" (
+if /i "%CDP_FILE_VERSION_NUMERIC%" == "" (
+    set VCBuildVersion=%~1
+) else (
     set VCBuildVersion=%CDP_FILE_VERSION_NUMERIC%
 )
 

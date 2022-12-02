@@ -51,13 +51,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Direct IO parameter for FIO.
+        /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
         /// </summary>
-        public string DirectIO
+        public bool DirectIO
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DirectIO));
+                return this.Parameters.GetValue<bool>(nameof(this.DirectIO), true);
             }
         }
 
@@ -404,9 +404,9 @@ namespace VirtualClient.Actions
                         int variation = Interlocked.Increment(ref variationNumber);
 
                         // e.g.
-                        // fio_multithroughput_read/write/randread/randwrite_20G_128G(56K/56K/8k/8k, d64/64/512/512, th1/1/1/1, w0/329/5416/4255)_10%
+                        // fio_multithroughput_read/write/randread/randwrite_20G_128G(56k/56k/8k/8k, d64/64/512/512, th1/1/1/1, w0/329/5416/4255)_10%
                         string testName = $"fio_multithroughput_read/write/randread/randwrite_{this.SequentialIOFileSize}_{this.RandomIOFileSize}(" +
-                            $"{this.SequentialReadBlockSize}/{this.SequentialWriteBlockSize}/{this.RandomReadBlockSize}/{this.RandomWriteBlockSize}, " +
+                            $"{this.SequentialReadBlockSize.ToLowerInvariant()}/{this.SequentialWriteBlockSize.ToLowerInvariant()}/{this.RandomReadBlockSize.ToLowerInvariant()}/{this.RandomWriteBlockSize.ToLowerInvariant()}, " +
                             $"d{this.SequentialReadQueueDepth}/{this.SequentialWriteQueueDepth}/{this.RandomReadQueueDepth}/{this.RandomWriteQueueDepth}, " +
                             $"th{this.SequentialReadNumJobs}/{this.SequentialWriteNumJobs}/{this.RandomReadNumJobs}/{this.RandomWriteNumJobs}, " +
                             $"w{this.SequentialReadWeight}/{this.SequentialWriteWeight}/{this.RandomReadWeight}/{this.RandomWriteWeight})_{targetPercent}%";
@@ -484,10 +484,8 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
-            FioMetricsParser parser = null;
-
             this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
-            parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
+            FioMetricsParser parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
 
             IList<Metric> metrics = parser.Parse();
             if (this.MetricFilters?.Any() == true)
@@ -554,7 +552,7 @@ namespace VirtualClient.Actions
         /// </summary>
         private DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string jobFile)
         {
-            string fioArguments = $"{jobFile.Trim()} {this.GetSections().Trim()} --time_based --output-format=json --thread --group_reporting --fallocate=none".Trim();
+            string fioArguments = $"{jobFile.Trim()} {this.GetSections().Trim()} --time_based --output-format=json --thread --fallocate=none".Trim();
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 
@@ -567,14 +565,14 @@ namespace VirtualClient.Actions
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
         {
             string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
+            int direct = this.DirectIO ? 1 : 0;
 
             if (this.DiskFill)
             {
                 text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
-                text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", this.DirectIO);
                 text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
-
+                text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
                 text = text.Replace($"${{{nameof(this.RandomIOFileSize).ToLower()}}}", this.RandomIOFileSize.ToString());
                 text = text.Replace($"${{{nameof(this.randomIOFilePath).ToLower()}}}", this.randomIOFilePath.ToString());
                 text = text.Replace($"${{{nameof(this.SequentialIOFileSize).ToLower()}}}", this.SequentialIOFileSize.ToString());
@@ -588,7 +586,7 @@ namespace VirtualClient.Actions
                 int sequentialWriteIOdepth = this.SequentialWriteQueueDepth / this.SequentialWriteNumJobs;
 
                 text = text.Replace("${ioengine}", FioExecutor.GetIOEngine(this.Platform));
-                text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", this.DirectIO);
+                text = text.Replace($"${{{nameof(this.DirectIO).ToLower()}}}", direct.ToString());
                 text = text.Replace($"${{{nameof(this.DurationSec).ToLower()}}}", this.DurationSec.ToString());
                 text = text.Replace($"${{{nameof(this.GroupReporting).ToLower()}}}", this.GroupReporting.ToString());
 

@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -117,8 +118,8 @@ namespace VirtualClient
 
             IConfiguration configuration = Program.LoadAppSettings();
 
-            IConvertible telemetrySource;
-            this.Parameters.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
+            IConvertible telemetrySource = null;
+            this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
 
             ILogger logger = CommandBase.CreateLogger(
                 configuration,
@@ -243,6 +244,15 @@ namespace VirtualClient
 
         private void InitializeGlobalTelemetryProperties(string[] args)
         {
+            string vcAssemblyVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+            string extensionVersion = null;
+            // If a VC extension dll exist, then the appVersion in telemetry will be replaced by the extension version.
+            string[] versionDllFiles = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*VirtualClient.Version.dll");
+            if (versionDllFiles.Length > 0)
+            {
+                extensionVersion = versionDllFiles.ToList().Select(f => FileVersionInfo.GetVersionInfo(f).FileVersion).FirstOrDefault();
+            }
+            
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
@@ -251,8 +261,8 @@ namespace VirtualClient
                 ["agentId"] = this.AgentId.ToLowerInvariant(),
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
                 ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
-                ["appVersion"] = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
-                ["binaryVersion"] = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
+                ["appVersion"] = extensionVersion ?? vcAssemblyVersion,
+                ["binaryVersion"] = extensionVersion == null ? extensionVersion : $"{extensionVersion},{vcAssemblyVersion}",
                 ["operatingSystemPlatform"] = Environment.OSVersion.Platform.ToString(),
                 ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 ["executionPlatform"] = this.ExecutionSystem,

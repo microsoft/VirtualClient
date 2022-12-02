@@ -51,6 +51,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
+        /// </summary>
+        public bool DirectIO
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.DirectIO), true);
+            }
+        }
+
+        /// <summary>
         /// The IO types list whether it is randomRead,randomWrite,sequentialRead,sequentialWrite.
         /// </summary>
         public List<string> IOType
@@ -92,7 +103,6 @@ namespace VirtualClient.Actions
             {
                 return this.Parameters.GetValue<int>(nameof(this.DurationSec));
             }
-
         }
 
         /// <summary>
@@ -227,6 +237,9 @@ namespace VirtualClient.Actions
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.IOType), ioType);
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), blockSize);
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
+
+                                            int direct = this.DirectIO ? 1 : 0;
+                                            commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
                                             commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --ioengine={ioEngine} " + commandLine;
 
                                             string filePath = string.Join(',', disksToTest.Select(disk => disk.DevicePath).ToArray());

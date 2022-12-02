@@ -400,13 +400,17 @@ namespace VirtualClient.Actions
 
                 if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
                 {
-                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, string.Join(",", disks.Select(d => d.DevicePath)), disks.ToArray()));
+                    // Example Metric Categorization
+                    // SingleProcess,BiggestSize,16
+                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcess},{this.DiskFilter},{disks.Count()}", disks.ToArray()));
                 }
                 else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessPerDisk, StringComparison.OrdinalIgnoreCase))
                 {
+                    // Example Metric Categorization
+                    // SingleProcessPerDisk,BiggestSize,16
                     processes.AddRange(new List<DiskPerformanceWorkloadProcess>(disks.Select(disk =>
                     {
-                        return this.CreateWorkloadProcess(executable, commandArguments, disk.DevicePath, disk);
+                        return this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcessPerDisk},{this.DiskFilter},1", disk);
                     })));
                 }
 
