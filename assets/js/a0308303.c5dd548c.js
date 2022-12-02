@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[5199],{7085:e=>{e.exports=JSON.parse('{"name":"docusaurus-theme-search-algolia","id":"default"}')}}]);
