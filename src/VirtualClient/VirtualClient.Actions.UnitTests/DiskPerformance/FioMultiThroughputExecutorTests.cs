@@ -109,9 +109,9 @@ namespace VirtualClient.Actions
                     {
                         Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
-                            $"{fioMultiThroughputExecutor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
-                            $" --section initrandomio --section initsequentialio " +
-                            $"--output-format=json --fallocate=none"));
+                            $"{fioMultiThroughputExecutor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]} " +
+                            $"--section initrandomio --section initsequentialio " +
+                            $"--time_based --output-format=json --thread --group_reporting --fallocate=none"));
                     }
                     return this.defaultMemoryProcess;
                 };
@@ -161,7 +161,7 @@ namespace VirtualClient.Actions
                         Assert.IsTrue(arguments.Equals($"{this.mockPath.Path}/linux-x64/fio {this.mockPath.Path}/linux-x64/" +
                             $"{nameof(FioMultiThroughputExecutor)}" +
                             $"{fioMultiThroughputExecutor.Parameters[nameof(FioMultiThroughputExecutor.TemplateJobFile)]}" +
-                            $" --section randomreader --section randomwriter --section sequentialwriter --output-format=json --fallocate=none"));
+                            $" --section randomreader --section randomwriter --section sequentialwriter --time_based --output-format=json --thread --group_reporting --fallocate=none"));
                     }
                     return this.defaultMemoryProcess;
                 };

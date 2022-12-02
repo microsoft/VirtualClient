@@ -386,15 +386,8 @@ namespace VirtualClient.Actions
 
                 if (await this.IsDiskFillCompleteAsync(cancellationToken).ConfigureAwait(false) == false)
                 {
-                    string testName = this.Scenario;
-                    Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>();
-
-                    this.Logger.LogMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
-
-                    await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken, metricsMetadata)
-                                        .ConfigureAwait(false);
-
-                    this.Logger.LogMessage($"{this.Scenario}.ExecutionCompleted", telemetryContext);
+                    await this.ExecuteWorkloadAsync(this.Scenario, new Dictionary<string, IConvertible>(), telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
 
                     await this.RegisterDiskFillCompleteAsync(cancellationToken)
                         .ConfigureAwait(false);
@@ -410,35 +403,39 @@ namespace VirtualClient.Actions
                     {
                         int variation = Interlocked.Increment(ref variationNumber);
 
-                        string testName = $"{this.Scenario}_targetPercent{targetPercent}";
+                        // e.g.
+                        // fio_multithroughput_read/write/randread/randwrite_20G_128G(56K/56K/8k/8k, d64/64/512/512, th1/1/1/1, w0/329/5416/4255)_10%
+                        string testName = $"fio_multithroughput_read/write/randread/randwrite_{this.SequentialIOFileSize}_{this.RandomIOFileSize}(" +
+                            $"{this.SequentialReadBlockSize}/{this.SequentialWriteBlockSize}/{this.RandomReadBlockSize}/{this.RandomWriteBlockSize}, " +
+                            $"d{this.SequentialReadQueueDepth}/{this.SequentialWriteQueueDepth}/{this.RandomReadQueueDepth}/{this.RandomWriteQueueDepth}, " +
+                            $"th{this.SequentialReadNumJobs}/{this.SequentialWriteNumJobs}/{this.RandomReadNumJobs}/{this.RandomWriteNumJobs}, " +
+                            $"w{this.SequentialReadWeight}/{this.SequentialWriteWeight}/{this.RandomReadWeight}/{this.RandomWriteWeight})_{targetPercent}%";
+
+                        EventContext variationContext = telemetryContext.Clone().AddContext(nameof(testName), testName);
+
                         try
                         {
-                            this.SetRuntimeParameters(targetPercent);
-
-                            EventContext variationContext = telemetryContext.Clone();
-                            variationContext.AddContext(nameof(testName), testName);
-
-                            Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>();
-
-                            metricsMetadata[nameof(targetPercent).CamelCased()] = targetPercent;
-                            metricsMetadata[nameof(variation).CamelCased()] = variation;
-                            metricsMetadata[nameof(testName).CamelCased()] = testName;
-
-                            this.Logger.LogMessage($"{testName}.ExecutionStarted", variationContext);
-
-                            await fioMultiThroughputRetryPolicy.ExecuteAsync(async () =>
+                            await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteVariation", variationContext, async () =>
                             {
-                                await this.ExecuteWorkloadAsync(variationContext, cancellationToken, metricsMetadata)
-                                    .ConfigureAwait(false);
-                            }).ConfigureAwait(false);
+                                this.SetRuntimeParameters(targetPercent);
 
-                            this.Logger.LogMessage($"{testName}.ExecutionCompleted", variationContext);
+                                Dictionary<string, IConvertible> metricsMetadata = new Dictionary<string, IConvertible>
+                                {
+                                    [nameof(targetPercent).CamelCased()] = targetPercent,
+                                    [nameof(variation).CamelCased()] = variation,
+                                    [nameof(testName).CamelCased()] = testName
+                                };
+
+                                await fioMultiThroughputRetryPolicy.ExecuteAsync(async () =>
+                                {
+                                    await this.ExecuteWorkloadAsync(testName, metricsMetadata, variationContext, cancellationToken)
+                                        .ConfigureAwait(false);
+                                }).ConfigureAwait(false);
+
+                            }).ConfigureAwait(false);
                         }
                         catch (VirtualClientException exc)
                         {
-                            // Adding exception instead of throwing it.
-                            // Furhter runs might not fail. We should try running it.
-                            this.Logger.LogError($"{testName}.ExecutionFailed", exc);
                             exceptions.Add(exc);
                         }
                     }
@@ -524,10 +521,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the FIO workload, captures performance results and logs them to telemetry.
         /// </summary>
-        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="metricsMetadata">Metric's Metadata.</param>
-        private async Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken, Dictionary<string, IConvertible> metricsMetadata)
+        private async Task ExecuteWorkloadAsync(string testName, Dictionary<string, IConvertible> metricsMetadata, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -542,7 +536,6 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 string jobFileFolder = this.PlatformSpecifics.GetScriptPath("fio");
-
                 string templateJobFilePath = this.PlatformSpecifics.Combine(jobFileFolder, this.TemplateJobFile);
                 string jobFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, nameof(FioMultiThroughputExecutor) + this.TemplateJobFile);
 
@@ -551,9 +544,8 @@ namespace VirtualClient.Actions
                 DiskPerformanceWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
                 metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
-                await this.ExecuteWorkloadAsync(process, this.Scenario, telemetryContext, cancellationToken, metricsMetadata)
+                await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
                     .ConfigureAwait(false);
-
             }
         }
 
@@ -562,7 +554,7 @@ namespace VirtualClient.Actions
         /// </summary>
         private DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string jobFile)
         {
-            string fioArguments = $"{jobFile.Trim()} {this.GetSections().Trim()} --output-format=json --fallocate=none".Trim();
+            string fioArguments = $"{jobFile.Trim()} {this.GetSections().Trim()} --time_based --output-format=json --thread --group_reporting --fallocate=none".Trim();
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 

@@ -1,514 +1,513 @@
 {
-  "Description": "FIO I/O Stress Performance Workload",
-  "Parameters": {
-    "DiskFillSize": "134G",
-    "FileSize": "134G",
-    "DiskFilter": "BiggestSize",
-    "ProcessModel": "SingleProcess",
-    "MaxThreads": "8",
-    "QueueDepths": "1,4,16,64,256,1024",
-    "Tests": null
-  },
-  "Actions": [
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "CommandLine": "--direct=0 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name=[Scenario] --size=[DiskFillSize]",
-        "PackageName": "fio",
+    "Description": "FIO I/O Stress Performance Workload",
+    "Parameters": {
+        "DiskFillSize": "134G",
+        "FileSize": "134G",
+        "DiskFilter": "BiggestSize",
         "ProcessModel": "SingleProcess",
-        "Scenario": "fiodiscoverydiskfill",
-        "DiskFillSize": "$.Parameters.DiskFillSize",
-        "DiskFill": true,
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
+        "MaxThreads": "8",
+        "QueueDepths": "1,4,16,64,256,1024",
+        "Tests": null
     },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "4k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_4k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "8k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_8k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "16k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_16k",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tags": "IO,FIO,FIODISCOVERY"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "64k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_64k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "256k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_256k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "1024k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randread",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randread_1024k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "4k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_4k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "8k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_8k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "16k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_16k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "64k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_64k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "256k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_256k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "1024k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "randwrite",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_randwrite_1024k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "4k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_4k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "8k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_8k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
+    "Actions": [
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "DiskFill",
+                "CommandLine": "--direct=1 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name={Scenario} --size={DiskFillSize}",
+                "PackageName": "fio",
+                "ProcessModel": "SingleProcess",
+                "DiskFillSize": "$.Parameters.DiskFillSize",
+                "DiskFill": true,
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_4k_BlockSize",
+                "BlockSize": "4k",
+                "CommandLine": "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_8k_BlockSize",
+                "BlockSize": "8k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_16k_BlockSize",
+                "BlockSize": "16k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tags": "IO,FIO,FIODISCOVERY"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_64k_BlockSize",
+                "BlockSize": "64k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_256k_BlockSize",
+                "BlockSize": "256k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomRead_1024k_BlockSize",
+                "BlockSize": "1024k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randread",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_4k_BlockSize",
+                "BlockSize": "4k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_8k_BlockSize",
+                "BlockSize": "8k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_16k_BlockSize",
+                "BlockSize": "16k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_64k_BlockSize",
+                "BlockSize": "64k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_256k_BlockSize",
+                "BlockSize": "256k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_1024k_BlockSize",
+                "BlockSize": "1024k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "randwrite",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_4k_BlockSize",
+                "BlockSize": "4k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_8k_BlockSize",
+                "BlockSize": "8k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
 
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "16k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_16k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "64k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_64k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "256k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_256k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "1024k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "read",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_read_1024k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "4k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_4k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "8k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_8k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "16k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_16k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "64k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_64k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "256k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_256k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    },
-    {
-      "Type": "FioDiscoveryExecutor",
-      "Parameters": {
-        "BlockSize": "1024k",
-        "CommandLine": "--direct=0 --runtime=[DurationSec] --overwrite=1 --output-format=json --size=[FileSize] --rw=[IOType] --bs=[BlockSize]",
-        "FileSize": "$.Parameters.FileSize",
-        "DurationSec": "300",
-        "IOType": "write",
-        "MaxThreads": "$.Parameters.MaxThreads",
-        "PackageName": "fio",
-        "ProcessModel": "$.Parameters.ProcessModel",
-        "QueueDepths": "$.Parameters.QueueDepths",
-        "Scenario": "fiodiscovery_write_1024k",
-        "Tags": "IO,FIO,FIODISCOVERY",
-        "DeleteTestFilesOnFinish": false,
-        "DiskFilter": "$.Parameters.DiskFilter",
-        "Tests": "$.Parameters.Tests"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "FormatDisks",
-      "Parameters": {
-        "Scenario": "InitializeDisks",
-        "DiskFilter": "$.Parameters.DiskFilter"
-      }
-    },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallRequiredLinuxPackages",
-        "Packages-Apt": "libaio1,libaio-dev",
-        "Packages-Dnf": "libaio,libaio-devel",
-        "Packages-Yum": "libaio,libaio-devel",
-        "Packages-Zypper": "libaio1,libaio-dev"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallFIOWorkloadPackage",
-        "BlobContainer": "packages",
-        "BlobName": "fio.3.30.0.zip",
-        "PackageName": "fio",
-        "Extract": true
-      }
-    }
-  ]
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_16k_BlockSize",
+                "BlockSize": "16k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_64k_BlockSize",
+                "BlockSize": "64k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_256k_BlockSize",
+                "BlockSize": "256k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialRead_1024k_BlockSize",
+                "BlockSize": "1024k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "read",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_4k_BlockSize",
+                "BlockSize": "4k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_8k_BlockSize",
+                "BlockSize": "8k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_16k_BlockSize",
+                "BlockSize": "16k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_64k_BlockSize",
+                "BlockSize": "64k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_256k_BlockSize",
+                "BlockSize": "256k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        },
+        {
+            "Type": "FioDiscoveryExecutor",
+            "Parameters": {
+                "Scenario": "SequentialWrite_1024k_BlockSize",
+                "BlockSize": "1024k",
+                "CommandLine": "---size={FileSize} --rw={IOType} --bs={BlockSize} --direct=1 --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
+                "FileSize": "$.Parameters.FileSize",
+                "DurationSec": "300",
+                "IOType": "write",
+                "MaxThreads": "$.Parameters.MaxThreads",
+                "PackageName": "fio",
+                "ProcessModel": "$.Parameters.ProcessModel",
+                "QueueDepths": "$.Parameters.QueueDepths",
+                "Tags": "IO,FIO,FIODISCOVERY",
+                "DeleteTestFilesOnFinish": false,
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "Tests": "$.Parameters.Tests"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackages",
+                "Packages-Apt": "libaio1,libaio-dev",
+                "Packages-Dnf": "libaio,libaio-devel",
+                "Packages-Yum": "libaio,libaio-devel",
+                "Packages-Zypper": "libaio1,libaio-dev"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFIOWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "fio.3.30.0.zip",
+                "PackageName": "fio",
+                "Extract": true
+            }
+        }
+    ]
 }

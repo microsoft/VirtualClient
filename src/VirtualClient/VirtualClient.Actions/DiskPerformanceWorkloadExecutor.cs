@@ -397,17 +397,16 @@ namespace VirtualClient.Actions
             return this.Logger.LogMessage($"{this.GetType().Name}.CreateProcesses", telemetryContext, () =>
             {
                 List<DiskPerformanceWorkloadProcess> processes = new List<DiskPerformanceWorkloadProcess>();
-                string testedInstance = this.DiskFilter;
 
                 if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
                 {
-                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, testedInstance, disks.Select(disk => disk).ToArray()));
+                    processes.Add(this.CreateWorkloadProcess(executable, commandArguments, string.Join(",", disks.Select(d => d.DevicePath)), disks.ToArray()));
                 }
                 else if (string.Equals(processModel, WorkloadProcessModel.SingleProcessPerDisk, StringComparison.OrdinalIgnoreCase))
                 {
                     processes.AddRange(new List<DiskPerformanceWorkloadProcess>(disks.Select(disk =>
                     {
-                        return this.CreateWorkloadProcess(executable, commandArguments, testedInstance, disk);
+                        return this.CreateWorkloadProcess(executable, commandArguments, disk.DevicePath, disk);
                     })));
                 }
 
