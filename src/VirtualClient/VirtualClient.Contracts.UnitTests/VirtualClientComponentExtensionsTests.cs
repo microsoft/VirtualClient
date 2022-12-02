@@ -26,6 +26,205 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void ApplyParameterExtensionReplacesPlaceholderReferencesWithMatchingParameterValues_1()
+        {
+            // Placeholders like: {Parameter1}
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_{Parameter1}_ending{Parameter1}_{Parameter1}beginning_in{Parameter1}between";
+                IConvertible parameterValue = "anyvalue";
+
+                string inlinedText = component.ApplyParameter(text, "Parameter1", parameterValue);
+
+                Assert.AreEqual(
+                    "any_text_anyvalue_endinganyvalue_anyvaluebeginning_inanyvaluebetween",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParameterExtensionReplacesPlaceholderReferencesWithMatchingParameterValues_2()
+        {
+            // Placeholders like: [Parameter1]
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[Parameter1]_ending[Parameter1]_[Parameter1]beginning_in[Parameter1]between";
+                IConvertible parameterValue = "anyvalue";
+
+                string inlinedText = component.ApplyParameter(text, "Parameter1", parameterValue);
+
+                Assert.AreEqual(
+                    "any_text_anyvalue_endinganyvalue_anyvaluebeginning_inanyvaluebetween",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParameterExtensionDoesNotChangeNonMatchingParameterReferences()
+        {
+            // Multiple placeholders
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[Parameter1]_ending{Parameter2}_[Parameter3]beginning_in[Parameter4]between";
+                IConvertible parameterValue = "anyvalue";
+
+                string inlinedText = component.ApplyParameter(text, "Parameter1", parameterValue);
+
+                Assert.AreEqual(
+                    "any_text_anyvalue_ending{Parameter2}_[Parameter3]beginning_in[Parameter4]between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParameterExtensionSupportsMixedFormatParameterReferences()
+        {
+            // Mixed Placeholders: {Parameter1} and [Parameter1]
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[Parameter1]_ending{Parameter1}_[Parameter1]beginning_in{Parameter1}between";
+                IConvertible parameterValue = "anyvalue";
+
+                string inlinedText = component.ApplyParameter(text, "Parameter1", parameterValue);
+
+                Assert.AreEqual(
+                    "any_text_anyvalue_endinganyvalue_anyvaluebeginning_inanyvaluebetween",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParameterExtensionIsNotCaseSensitive()
+        {
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[parameter1]_{PARAMETER1}_{paRaMeter1}";
+                IConvertible parameterValue = "anyvalue";
+
+                string inlinedText = component.ApplyParameter(text, "Parameter1", parameterValue);
+
+                Assert.AreEqual("any_text_anyvalue_anyvalue_anyvalue", inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParametersExtensionReplacesPlaceholderReferencesWithMatchingParameterValues_1()
+        {
+            // Placeholders like: {Parameter1}
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_{Parameter1}_ending{Parameter2}_{Parameter3}beginning_in{Parameter4}between";
+
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234,
+                    ["Parameter3"] = true,
+                    ["Parameter4"] = 23.1
+                };
+
+                string inlinedText = component.ApplyParameters(text, parameters).ToLowerInvariant();
+
+                Assert.AreEqual(
+                    "any_text_value1_ending1234_truebeginning_in23.1between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParametersExtensionReplacesPlaceholderReferencesWithMatchingParameterValues_2()
+        {
+            // Placeholders like: [Parameter1]
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[Parameter1]_ending[Parameter2]_[Parameter3]beginning_in[Parameter4]between";
+
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234,
+                    ["Parameter3"] = true,
+                    ["Parameter4"] = 23.1
+                };
+
+                string inlinedText = component.ApplyParameters(text, parameters).ToLowerInvariant();
+
+                Assert.AreEqual(
+                    "any_text_value1_ending1234_truebeginning_in23.1between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParametersExtensionReplacesPlaceholderReferencesWithMatchingParameterValues_3()
+        {
+            // Single parameter referenced in multiple places.
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_{Parameter1}_ending{Parameter2}_{Parameter1}beginning_in{Parameter2}between";
+
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234
+                };
+
+                string inlinedText = component.ApplyParameters(text, parameters).ToLowerInvariant();
+
+                Assert.AreEqual(
+                    "any_text_value1_ending1234_value1beginning_in1234between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParametersExtensionSupportsMixedFormatParameterReferences()
+        {
+            // Mixed Placeholders: {Parameter1} and [Parameter2]
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[Parameter1]_ending{Parameter2}_[Parameter3]beginning_in{Parameter4}between";
+
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234,
+                    ["Parameter3"] = true,
+                    ["Parameter4"] = 23.1
+                };
+
+                string inlinedText = component.ApplyParameters(text, parameters).ToLowerInvariant();
+
+                Assert.AreEqual(
+                    "any_text_value1_ending1234_truebeginning_in23.1between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
+        public void ApplyParametersExtensionIsNotCaseSensitive()
+        {
+            using (TestVirtualClientComponent component = new TestVirtualClientComponent(this.fixture))
+            {
+                string text = "any_text_[parameter1]_ending{parameter2}_[PARAMETER3]beginning_in{ParaMeteR4}between";
+
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234,
+                    ["Parameter3"] = true,
+                    ["Parameter4"] = 23.1
+                };
+
+                string inlinedText = component.ApplyParameters(text, parameters).ToLowerInvariant();
+
+                Assert.AreEqual(
+                    "any_text_value1_ending1234_truebeginning_in23.1between",
+                    inlinedText);
+            }
+        }
+
+        [Test]
         public void CombineExtensionProducesTheExpectedPathOnWindowsSystems()
         {
             this.fixture.Setup(PlatformID.Win32NT);
