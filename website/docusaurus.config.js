@@ -148,6 +148,22 @@ const config = {
           hideable: true,
         },
       },
+      algolia: {
+        // The application ID provided by Algolia
+        appId: '0I7D8A07MA',
+        // Public API key: it is safe to commit it
+        apiKey: '9719e4c77f353e73e0ac475e92c64ac7',
+        indexName: 'virtualclient',
+        // Optional: see doc section below
+        contextualSearch: false,
+        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
+        // externalUrlRegex: 'external\\.com|domain\\.com',
+        // Optional: Algolia search parameters
+        // searchParameters: {},
+        // Optional: path for search page that enabled by default (`false` to disable it)
+        // searchPagePath: 'search',
+        //... other Algolia params
+      },
     }),
 };
 
