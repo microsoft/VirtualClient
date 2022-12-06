@@ -5,10 +5,9 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +19,64 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class VirtualClientComponentExtensions
     {
+        // Example Format:
+        // fio_{IOType}_{BlockSize}_{FileSize}_thmax{MaxThreads}
+        private static readonly Regex ParameterReferenceExpression = new Regex(@"(\x7B[\x20-\x7A\x7C\x7D-\x7E]+\x7D)|(\x5B[\x20-\x5A\x5C\x5E-\x7E]+\x5D)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        /// <summary>
+        /// Applies the parameter value to any parameter references/placeholders within the text.
+        /// </summary>
+        /// <param name="component">The component related to the parameters.</param>
+        /// <param name="text">The text containing references/placeholders to replace with values from the parameters.</param>
+        /// <param name="parameterName">The parameter whose value will be used to replace the references/placeholders in the text.</param>
+        /// <param name="value">The value to use when replacing the parameter reference/placeholder.</param>
+        /// <returns>The text having all of the parameter references replaced with matching values.</returns>
+        public static string ApplyParameter(this VirtualClientComponent component, string text, string parameterName, IConvertible value)
+        {
+            component.ThrowIfNull(nameof(component));
+            text.ThrowIfNull(nameof(text));
+            parameterName.ThrowIfNullOrWhiteSpace(nameof(parameterName));
+            value.ThrowIfNull(nameof(value));
+
+            string inlinedText = text.Replace($"{{{parameterName}}}", value.ToString(), StringComparison.OrdinalIgnoreCase);
+            inlinedText = inlinedText.Replace($"[{parameterName}]", value.ToString(), StringComparison.OrdinalIgnoreCase);
+
+            return inlinedText;
+        }
+
+        /// <summary>
+        /// Applies parameter values to any parameter references/placeholders within the text.
+        /// </summary>
+        /// <param name="component">The component related to the parameters.</param>
+        /// <param name="text">The text containing references/placeholders to replace with values from the parameters.</param>
+        /// <param name="parameters">The parameters whose values will be used to replace the references/placeholders in the text.</param>
+        /// <returns>The text having all of the parameter references replaced with matching values.</returns>
+        public static string ApplyParameters(this VirtualClientComponent component, string text, IDictionary<string, IConvertible> parameters)
+        {
+            component.ThrowIfNull(nameof(component));
+            text.ThrowIfNull(nameof(text));
+
+            string inlinedText = text;
+            if (parameters?.Any() == true)
+            {
+                MatchCollection parameterReferences = VirtualClientComponentExtensions.ParameterReferenceExpression.Matches(text);
+
+                if (parameterReferences?.Any() == true)
+                {
+                    foreach (Match reference in parameterReferences)
+                    {
+                        string parameterName = reference.Value.Substring(1, reference.Value.Length - 2);
+                        if (parameters.TryGetValue(parameterName, out IConvertible parameterValue))
+                        {
+                            inlinedText = inlinedText.Replace(reference.Value, parameterValue.ToString(), StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                }
+            }
+
+            return inlinedText;
+        }
+
         /// <summary>
         /// Combines the path segments into a valid path for the OS platform.
         /// </summary>

@@ -90,14 +90,14 @@ namespace VirtualClient.Actions
             this.CalculateLAPACKResult();
 
             List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(this.LINSingleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINDoubleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINComplexResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINComplexDoubleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGSingleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGDoubleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGComplexResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGComplexDoubleResult.GetMetric(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.LINSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.LINDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.LINComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.LINComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.EIGSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.EIGDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.EIGComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.EIGComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
 
             return metrics;
         }

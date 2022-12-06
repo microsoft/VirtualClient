@@ -112,48 +112,48 @@ namespace VirtualClient.Actions
 
             for (int index = 2; index < this.ProcessorTimes.Columns.Count; index++)
             {
-                metrics.AddRange(this.ProcessorTimes.GetMetric(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ProcessorTimes-"));
+                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ProcessorTimes-"));
             }
 
             for (int index = 2; index < this.BasicInt.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicInt.GetMetric(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicInt-"));
+                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicInt-"));
             }
 
             for (int index = 2; index < this.BasicFloat.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicFloat.GetMetric(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicFloat-"));
+                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicFloat-"));
             }
 
             for (int index = 2; index < this.BasicDouble.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicDouble.GetMetric(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicDouble-"));
+                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicDouble-"));
             }
 
             for (int index = 2; index < this.ContextSwitching.Columns.Count; index++)
             {
-                metrics.AddRange(this.ContextSwitching.GetMetric(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ContextSwitching-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.ContextSwitching.GetMetrics(valueIndex: index, name: this.ContextSwitching.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ContextSwitching-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.CommunicationLatency.Columns.Count; index++)
             {
-                metrics.AddRange(this.CommunicationLatency.GetMetric(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "CommunicationLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.CommunicationLatency.GetMetrics(valueIndex: index, name: this.CommunicationLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "CommunicationLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.FileVmLatency.Columns.Count; index++)
             {
-                metrics.AddRange(this.FileVmLatency.GetMetric(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "FileVmLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.FileVmLatency.GetMetrics(valueIndex: index, name: this.FileVmLatency.Columns[index].ColumnName, unit: "microseconds", namePrefix: "FileVmLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.CommunicationBandwidth.Columns.Count; index++)
             {
-                metrics.AddRange(this.CommunicationBandwidth.GetMetric(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: "MB/s", namePrefix: "CommunicationBandwidth-", metricRelativity: MetricRelativity.HigherIsBetter));
+                metrics.AddRange(this.CommunicationBandwidth.GetMetrics(valueIndex: index, name: this.CommunicationBandwidth.Columns[index].ColumnName, unit: "MB/s", namePrefix: "CommunicationBandwidth-", metricRelativity: MetricRelativity.HigherIsBetter));
             }
 
             for (int index = 2; index < this.MemoryLatency.Columns.Count - 1; index++)
             {
                 // The last column is "Guesses" which is not a metric.
-                metrics.AddRange(this.MemoryLatency.GetMetric(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "MemoryLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.MemoryLatency.GetMetrics(valueIndex: index, name: this.MemoryLatency.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "MemoryLatency-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             // The unit is not totally consistent in the output. Adjusting to correct units.

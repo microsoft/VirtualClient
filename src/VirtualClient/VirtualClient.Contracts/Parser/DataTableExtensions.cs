@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using VirtualClient;
-using VirtualClient.Contracts;
-
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+    using VirtualClient;
+
     /// <summary>
     /// Extensions for parsing test documents related to data tables.
     /// </summary>
     public static class DataTableExtensions
     {
+        private static readonly Regex WhitespaceExpression = new Regex(@"\s+", RegexOptions.Compiled);
+
         /// <summary>
         /// Format text into data table delimited by column Delimiter regex.
         /// </summary>
@@ -138,7 +138,7 @@ namespace VirtualClient.Contracts
         /// <param name="tags">Tags</param>
         /// <param name="ignoreFormatError">If this method ignore FormatException. Default is false.</param>
         /// <returns>Parsed Metrics from a data table.</returns>
-        public static IList<Metric> GetMetric(
+        public static IList<Metric> GetMetrics(
             this DataTable dataTable, 
             int valueIndex, 
             int nameIndex = -1, 
@@ -161,37 +161,48 @@ namespace VirtualClient.Contracts
             {
                 try
                 {
-                    if (unitIndex >= 0)
+                    object value = row[valueIndex];
+                    if (value == null || value == DBNull.Value)
                     {
-                        unit = Convert.ToString(row[unitIndex]);
+                        continue;
                     }
 
-                    if (tagIndex >= 0)
+                    string normalizedValue = DataTableExtensions.WhitespaceExpression.Replace(value?.ToString(), string.Empty);
+                    if (!string.IsNullOrWhiteSpace(normalizedValue) && double.TryParse(normalizedValue, out double metricValue))
                     {
-                        tags = new List<string>() { Convert.ToString(row[tagIndex]) };
-                    }
+                        if (unitIndex >= 0)
+                        {
+                            unit = Convert.ToString(row[unitIndex]);
+                        }
 
-                    if (nameIndex >= 0)
-                    {
-                        name = (string)row[nameIndex];
-                    }
+                        if (tagIndex >= 0)
+                        {
+                            tags = new List<string>() { Convert.ToString(row[tagIndex]) };
+                        }
 
-                    if (startTimeIndex >= 0)
-                    {
-                        startTime = new DateTime(Convert.ToInt64(row[startTimeIndex]));
-                    }
+                        if (nameIndex >= 0)
+                        {
+                            name = (string)row[nameIndex];
+                        }
 
-                    if (endTimeIndex >= 0)
-                    {
-                        endTime = new DateTime(Convert.ToInt64(row[endTimeIndex]));
-                    }
+                        if (startTimeIndex >= 0)
+                        {
+                            startTime = new DateTime(Convert.ToInt64(row[startTimeIndex]));
+                        }
 
-                    Metric metric = new Metric(namePrefix + name, Convert.ToDouble(row[valueIndex]), unit, metricRelativity, tags)
-                    {
-                        StartTime = (startTime == null) ? DateTime.MinValue : startTime.Value,
-                        EndTime = (endTime == null) ? DateTime.MinValue : endTime.Value
-                    };
-                    metrics.Add(metric);
+                        if (endTimeIndex >= 0)
+                        {
+                            endTime = new DateTime(Convert.ToInt64(row[endTimeIndex]));
+                        }
+
+                        Metric metric = new Metric(namePrefix + name, metricValue, unit, metricRelativity, tags)
+                        {
+                            StartTime = (startTime == null) ? DateTime.MinValue : startTime.Value,
+                            EndTime = (endTime == null) ? DateTime.MinValue : endTime.Value
+                        };
+                        
+                        metrics.Add(metric);
+                    }
                 }
                 catch (Exception exc)
                 {
