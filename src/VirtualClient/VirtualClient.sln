@@ -31,10 +31,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Api.UnitTests
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.TestExtensions", "VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj", "{E35A1704-7210-4C7B-8136-5BD53F452F65}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{64A3A9B6-05C6-452F-B559-726ABDE00CA8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Documentation", "VirtualClient.Documentation\VirtualClient.Documentation.csproj", "{4EFDB1CD-4957-48EE-B6AD-E20454073E99}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Dependencies", "VirtualClient.Dependencies\VirtualClient.Dependencies.csproj", "{42A69CC4-C7BB-4436-9647-045DBAAA18AD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Dependencies.UnitTests", "VirtualClient.Dependencies.UnitTests\VirtualClient.Dependencies.UnitTests.csproj", "{F8920606-C71A-4E21-A93F-1B452DF8A113}"
@@ -181,12 +177,6 @@ Global
 		{E35A1704-7210-4C7B-8136-5BD53F452F65}.Release|ARM64.Build.0 = Release|ARM64
 		{E35A1704-7210-4C7B-8136-5BD53F452F65}.Release|x64.ActiveCfg = Release|x64
 		{E35A1704-7210-4C7B-8136-5BD53F452F65}.Release|x64.Build.0 = Release|x64
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Debug|x64.ActiveCfg = Debug|x64
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Release|ARM64.ActiveCfg = Release|ARM64
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99}.Release|x64.ActiveCfg = Release|x64
 		{42A69CC4-C7BB-4436-9647-045DBAAA18AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{42A69CC4-C7BB-4436-9647-045DBAAA18AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42A69CC4-C7BB-4436-9647-045DBAAA18AD}.Debug|ARM64.ActiveCfg = Debug|ARM64
@@ -358,9 +348,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{4EFDB1CD-4957-48EE-B6AD-E20454073E99} = {64A3A9B6-05C6-452F-B559-726ABDE00CA8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD13E46C-71D6-4858-A5FC-55184DF2A539}
