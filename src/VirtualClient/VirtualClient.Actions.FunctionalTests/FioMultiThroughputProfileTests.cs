@@ -131,7 +131,6 @@ namespace VirtualClient.Actions
             {
                 "/home/user/tools/VirtualClient/packages/fio/linux-x64/fio /home/user/tools/VirtualClient/packages/fio/linux-x64/FioMultiThroughputExecutoroltp-c.fio.jobfile --section initrandomio --section initsequentialio",
                 "/home/user/tools/VirtualClient/packages/fio/linux-x64/fio /home/user/tools/VirtualClient/packages/fio/linux-x64/FioMultiThroughputExecutoroltp-c.fio.jobfile --section randomreader --section randomwriter --section sequentialwriter"
-                // Given the test setup created 2 remote disks, we will perform a disk fill on both 
             };
         }
     }

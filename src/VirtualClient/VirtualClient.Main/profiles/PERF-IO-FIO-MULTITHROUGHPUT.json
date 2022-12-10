@@ -32,7 +32,7 @@
                 "PackageName": "fio",
                 "DirectIO": "$.Parameters.DirectIO",
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "DurationSec": "300",
+                "DurationSec": "180",
                 "GroupReporting": "0",
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "RandomReadBlockSize": "8K",
