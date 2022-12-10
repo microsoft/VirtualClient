@@ -76,7 +76,7 @@ namespace VirtualClient
                     {
                         // 1) Run the API server.
                         // ==================================================
-                        Task apiServerHostingTask = ApiHosting.StartApiServer<ApiServerStartup>(configuration, systemManagement.FirewallManager, VirtualClientApiClient.DefaultApiPort)
+                        Task apiServerHostingTask = ApiHosting.StartApiServer<ApiServerStartup>(configuration, systemManagement.FirewallManager, ApiClientManager.DefaultApiPort)
                             .StartAsync(cancellationToken);
 
                         // 2) Run the workloads

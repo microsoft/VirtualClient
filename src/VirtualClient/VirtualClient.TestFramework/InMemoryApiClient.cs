@@ -34,7 +34,7 @@ namespace VirtualClient
                 address = "localhost";
             }
 
-            this.BaseUri = new Uri($"https://{address}:{port ?? VirtualClientApiClient.DefaultApiPort}");
+            this.BaseUri = new Uri($"https://{address}:{port ?? ApiClientManager.DefaultApiPort}");
         }
 
         /// <summary>

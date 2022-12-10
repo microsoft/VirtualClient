@@ -37,6 +37,11 @@ namespace VirtualClient
         public Func<string, IApiClient> OnGetApiClient { get; set; }
 
         /// <summary>
+        /// Delegate enables custom logic to be executed on a call to get the API port.
+        /// </summary>
+        public Func<ClientInstance, int> OnGetApiPort { get; set; }
+
+        /// <summary>
         /// Delegate enables custom logic to be executed on a call to retrieve or create api client.
         /// <list>
         /// <item>Parameters:</item>
@@ -100,6 +105,19 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns the effective port to use for hosting the API service. The port can be defined/overridden
+        /// on the command line.
+        /// </summary>
+        /// <param name="instance">The client instance defining the role for the system.</param>
+        /// <returns>The port on which the REST API service will be hosted.</returns>
+        public int GetApiPort(ClientInstance instance = null)
+        {
+            return this.OnGetApiPort != null
+                ? this.OnGetApiPort.Invoke(instance)
+                : ApiClientManager.DefaultApiPort;
+        }
+
+        /// <summary>
         /// Not implemented.
         /// </summary>
         public IProxyApiClient GetProxyApiClient(string id)
@@ -155,7 +173,7 @@ namespace VirtualClient
         public IApiClient GetOrCreateApiClient(string id, ClientInstance targetInstance)
         {
             IPAddress ipAddress = IPAddress.Parse(targetInstance.PrivateIPAddress);
-            return this.GetOrCreateApiClient(id, ipAddress, targetInstance.Port);
+            return this.GetOrCreateApiClient(id, ipAddress, this.GetApiPort(targetInstance));
         }
 
         /// <summary>

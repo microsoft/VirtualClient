@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Http;
+    using System.Runtime.Intrinsics.Arm;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -81,11 +82,6 @@ namespace VirtualClient
             this.RestClient = restClient;
             this.BaseUri = baseUri;
         }
-
-        /// <summary>
-        /// The default port used by the API service for HTTP/TCP communications.
-        /// </summary>
-        public static int DefaultApiPort { get; set; } = 4500;
 
         /// <summary>
         /// Gets the base URI to the server hosting the API.

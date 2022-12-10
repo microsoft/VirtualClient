@@ -36,11 +36,6 @@ namespace VirtualClient
         public bool Monitor { get; set; }
 
         /// <summary>
-        /// The port on which the API server will be listening.
-        /// </summary>
-        public IEnumerable<int> Ports { get; set; }
-
-        /// <summary>
         /// Executes the operations to run the Virtual Client API on the local system and to
         /// monitor either a local or remote instance.
         /// </summary>
@@ -52,11 +47,12 @@ namespace VirtualClient
             CancellationToken cancellationToken = cancellationTokenSource.Token;
             IServiceCollection dependencies = this.InitializeDependencies(args);
             IApiManager apiManager = dependencies.GetService<IApiManager>();
+            IApiClientManager apiClientManager = dependencies.GetService<IApiClientManager>();
 
-            int localPort = this.Ports?.Any() == true ? this.Ports.First() : VirtualClientApiClient.DefaultApiPort;
+            int localPort = apiClientManager.GetApiPort();
             int serverPort = localPort;
 
-            if (this.Ports?.Any() == true && this.Ports.Count() > 1)
+            if (this.ApiPorts?.Any() == true)
             {
                 // Examples:
                 // --port=4500      -> both client and server will use the same port. This is OK so long as they are
@@ -64,7 +60,10 @@ namespace VirtualClient
                 //
                 // --port=4500,4501 -> client will use 4500, server will use 4501. This allows both the client and
                 //                     the server to run on the same system.
-                serverPort = this.Ports.ElementAt(1);
+                serverPort = apiClientManager.GetApiPort(new ClientInstance(
+                    Environment.MachineName,
+                    System.Net.IPAddress.Loopback.ToString(),
+                    ClientRole.Server));
             }
 
             // 1) Host the API server locally.

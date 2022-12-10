@@ -6,7 +6,8 @@
         "NumberOfConnections": "1000",
         "Duration": "300s",
         "RequestPerSec": "1000",
-        "GraphType": "socfb-Reed98"
+        "GraphType": "socfb-Reed98",
+        "ApiPort": 4500
     },
     "Actions": [
         {
@@ -19,6 +20,7 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
+                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "socialNetwork,CPU,DeathStarBench,DeathStarBenchServices"
             }
         },
@@ -31,6 +33,7 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
+                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "mediaMicroservices,CPU,DeathStarBench,DeathStarBenchServices"
             }
         },
@@ -43,6 +46,7 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
+                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "hotelReservation,CPU,DeathStarBench,DeathStarBenchServices"
             }
         }
@@ -76,7 +80,8 @@
         {
             "Type": "ApiServer",
             "Parameters": {
-                "Scenario": "StartAPIServer"
+                "Scenario": "StartAPIServer",
+                "ApiPort": "$.Parameters.ApiPort"
             }
         }
     ]

@@ -2,47 +2,38 @@
 id: telemetry
 ---
 
-
 # Data / Telemetry Integration
-
-## Eventhub integration
-The Virtual Client emits a wide-range of different types of data/telemetry as part of the execution of workload and monitoring
+The Virtual Client emits a range of different types of data/telemetry as part of the execution of workload and monitoring
 profiles. This data/telemetry might for example include measurements/metrics emitted by a particular workload, performance counters
 or just common tracing/logging output. This data is useful for using the Virtual Client as a platform for evaluating performance
-of a system while under test. In order to surface this data, the Virtual Client supports the ability to upload this data to
-an Event Hub namespace. Event Hub is a highly scalable Azure cloud-based messaging hub/proxy that has out-of-the-box integration with
-a number of other Azure data/data pipeline resources (e.g. Azure Data Explorer/Kusto). 
+of a system while under test. The sections below describe how to setup different cloud service provider "big data" resources that
+can be used to manage data analytics at-scale.
 
-Virtual Client allows the user to supply a connection string to an Event Hub namespace on the command line. The remainder of this document 
-covers the requirements for using an Event Hub including the setup.
-
-* [Event Hub Documentation](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_e21e0a74b99318c95ac66be89b11ec19:G:s&ef_id=e21e0a74b99318c95ac66be89b11ec19:G:s&msclkid=e21e0a74b99318c95ac66be89b11ec19)
-
-### Event Hub Namespace Setup
-The following section covers the requirements for setting up an Event Hub namespace to use in conjunction with the Virtual Client. To begin with,
-it is important to understand how the Virtual Client emits data/telemetry. 
-
-#### Categories of Data
-Telemetry data emitted is divided into 5 different categories:
+## Categories of Data
+Telemetry data emitted is divided into 3 different categories:
 
 * **Logs/Traces**  
   The Virtual Client is heavily instrumented with structured logging/tracing logic. This ensures that the inner workings of the application can
   are easily visible to the user. This is particularly important for debugging scenarios. Errors experienced by the application are captured here
   as well and will contain detailed error + callstack information.
 
-  **Workload Metrics**  
+  **Workload and System Metrics**  
   Workload metrics are measurements and information captured from the output of a particular workload (e.g. DiskSpd, FIO, GeekBench) that represent
-  performance data from the system under test.
-
-  **System Performance Counters**  
-  Performance counters provide measurements from the system as-a-whole and are useful for determining exactly how the resources (e.g. CPU, memory, I/O, network)
+  performance data from the system under test. Performance counters for example provide measurements from the system as-a-whole and are useful for determining exactly how the resources (e.g. CPU, memory, I/O, network)
   were used during the execution of a workload.
 
   **System Events**  
   System events describe certain types of important information on the system beyond simple performance measurements. This might for example
   include Windows registry changes or special event logs.
 
-#### Create Event Hub Namespace
+## Event Hubs integration
+Event Hub is a highly scalable Azure cloud messaging hub/proxy that has out-of-the-box integration with a number of other Azure data/data 
+pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
+covers the requirements for using an Event Hub including the setup.
+
+* [Event Hub Documentation](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_e21e0a74b99318c95ac66be89b11ec19:G:s&ef_id=e21e0a74b99318c95ac66be89b11ec19:G:s&msclkid=e21e0a74b99318c95ac66be89b11ec19)
+
+### Create Event Hub Namespace
 The Virtual Client emits data for each one of these categories into a distinct/singular target Event Hub within an Event Hub namespace (a 1-to-1 mapping).
 In order to use Event Hub with the Virtual Client, an Event Hub namespace must be setup. The following recommendations relate to the Event Hub namespace itself.
 
@@ -51,7 +42,7 @@ In order to use Event Hub with the Virtual Client, an Event Hub namespace must b
   to at least 20 for production scenarios. For non-production scale scenarios, this can be set to between 5 and 10. Fortunately, this
   setting can be changed at any point to enable the Event Hubs in the namespace to handle additional message volume.
 
-#### Create Event Hubs
+### Create Event Hubs
 The Event Hub namespace will need 4 Event Hubs to be created. The following steps describe requirements and recommendations. These are general recommendations 
 based upon the VC team's experience that are designed to support high volumes of telemetry (e.g. hundreds of millions of events per day per hub).
 
@@ -73,23 +64,21 @@ based upon the VC team's experience that are designed to support high volumes of
   * Message Retention: 2 days
   * Partition Count: Production Scale = 32, Non-Production/Test Scale = 10
 
-* **telemetry-monitors**  
-  Create an Event Hub named 'telemetry-monitors' to intake performance counter data emitted by the Virtual Client. The following specifications should be used when creating
-  this Event Hub.
-  * Message Retention: 2 days
-  * Partition Count: Production Scale = 32, Non-Production/Test Scale = 10
-
   ![Event Hub Namespace Throughput Units](../img/eventhub-integration-1.png)
   ![Event Hub Namespace Throughput Units](../img/eventhub-integration-2.png)
 
-
-### Integration with Azure Data Explorer/Kusto
+## Event Hubs and Azure Data Explorer integration
 The following section describes how to setup an existing Azure Data Explorer (ADX) cluster to support ingesting Virtual Client data/telemetry
 from the set of Event Hubs describe above. Azure Data Explorer has out-of-box support for defining "data connectors" that will handle the ingestion
 of the data on a rapid cadence with little to no data loss. The data from Virtual Client will be ingested into tables within the ADX cluster in a 1-to-1 
 mapping with the Event Hubs noted above.
 
-#### Create Databases and Tables
+### Create Event Hub Consumer Groups
+On each of the Event Hubs created/noted above (e.g. telemetry-logs, telemetry-metrics) in the Event Hub namespace, create a consumer group named
+'adx-ingestion'. This consumer group will be used exclusively by the ADX data connectors described below to ingest data from the Event Hubs
+into the ADX cluster database tables.
+
+### Create Databases and Tables
 The following steps describe the databases and tables required.
 
   * **Create a Database for Logs/Traces Data**  
@@ -97,6 +86,10 @@ The following steps describe the databases and tables required.
     Virtual Client logs/traces data is useful for debugging necessities but not typically needed to be kept for very long periods of time (vs. performance and monitoring)
     data. Set the data retention period to a value that makes sense for your process. For example, the VC team maintains logs/traces data for 30 days.
     You can name the database whatever you like. The VC team uses the name 'WorkloadDiagnostics' for this database.
+
+  * **Add Managed Identity to the 'Database Ingestor' Role**  
+    Add the managed identity created above to the access permissions for the ADX/Kusto database in which the tables below will be created with the
+    role 'Database Ingestor'.
 
   * **Create the Tables for Logs/Traces Data**  
     Data retention periods are defined at the database level in Azure Data Explorer. As such, a different database should be used to host this data
@@ -133,6 +126,10 @@ The following steps describe the databases and tables required.
     as resource usage and is typically desirable to keep for a longer period of time. Set the data retention period to a value that makes sense for your process. For example, 
     the VC team maintains performance and monitoring data for 10 years/3,650 days. You can name the database whatever you like. The VC team uses the name 'WorkloadPerformance' 
     for this database.
+
+  * **Add Managed Identity to the 'Database Ingestor' Role**  
+    Add the managed identity created above to the access permissions for the ADX/Kusto database in which the tables below will be created with the
+    role 'Database Ingestor'.
 
   * **Create the Tables for Performance and Monitoring Data**  
     As noted above, it is typically desirable to maintain . Performance and monitoring data are useful over long periods of time
@@ -192,31 +189,12 @@ The following steps describe the databases and tables required.
     )
     ```
 
-#### Create Custom Functions
-The following functions are used to simplify data analysis, diagnostics and debugging of Virtual Client operations.
-
-* **Functions for logs/traces database (e.g. WorkloadDiagnostics)**  
-
-
-  ``` kusto
-  .create-or-alter function GetVirtualClientErrors(startTime:datetime=datetime(null),endTime:datetime=datetime(null)) {
-      let dateRangeBegin = iff(isnull(startTime), ago(2d), startTime);
-      let dateRangeEnd = iff(isnull(endTime), now(), endTime);
-      Traces
-      | where Timestamp >= dateRangeBegin and Timestamp < dateRangeEnd and SeverityLevel > 1
-      | extend Error = tostring(CustomDimensions.error)
-      | extend ErrorCallstack = tostring(CustomDimensions.errorCallstack)
-      | project Timestamp, ExperimentId, ClientId, Profile, ProfileName, Message, SeverityLevel, Error, ErrorCallstack, OperationId, OperationParentId, AppName, AppHost, AppVersion, AppTelemetryVersion, CustomDimensions
-  }
-  ```
-
-#### Create the JSON Ingestion Mappings
+### Create the JSON Ingestion Mappings
 JSON ingestion mappings define how to map the information in the structure of the events on the Event Hub with the table columns in the
 ADX databases. 
 
 * **Create the Ingestion Mappings for the Logs/Traces Data**  
   Run the following Kusto Query Language (KQL) commands to create the JSON ingestion mappings required for ingesting Virtual Client logs/traces data.
-
 
   ``` kusto
   // 1) Create the ingestion mappings for the 'Traces' table
@@ -226,7 +204,6 @@ ADX databases.
 * **Create the Ingestion Mappings for the Performance and Monitoring Data**  
   Run the following Kusto Query Language (KQL) commands to create the JSON ingestion mappings required for ingesting Virtual Client performance and monitoring data.
 
-
   ``` kusto
   // 1) Create the ingestion mappings for the 'Events' table
   .create table Events ingestion json mapping 'IngestionMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.experimentId","datatype":"","transform":null},{"column":"ClientId","path":"$.customDimensions.metadata.agentId","datatype":"","transform":null},{"column":"Profile","path":"$.customDimensions.executionProfile","datatype":"","transform":null},{"column":"ProfileName","path":"$.customDimensions.executionProfileName","datatype":"","transform":null},{"column":"EventType","path":"$.customDimensions.eventType","datatype":"","transform":null},{"column":"EventInfo","path":"$.customDimensions.eventInfo","datatype":"","transform":null},{"column":"SeverityLevel","path":"$.severityLevel","datatype":"","transform":null},{"column":"ItemType","path":"$.itemType","datatype":"","transform":null},{"column":"ExecutionSystem","path":"$.customDimensions.executionSystem","datatype":"","transform":null},{"column":"OperatingSystemPlatform","path":"$.customDimensions.operatingSystemPlatform","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"AppVersion","path":"$.customDimensions.appVersion","datatype":"","transform":null},{"column":"AppTelemetryVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"Tags","path":"$.customDimensions.tags","datatype":"","transform":null},{"column":"CustomDimensions","path":"$.customDimensions","datatype":"","transform":null}]'
@@ -235,13 +212,8 @@ ADX databases.
   .create table Metrics ingestion json mapping 'IngestionMapping' '[{"column":"Timestamp","path":"$.timestamp","datatype":"","transform":null},{"column":"ExperimentId","path":"$.customDimensions.experimentId","datatype":"","transform":null},{"column":"ClientId","path":"$.customDimensions.metadata.agentId","datatype":"","transform":null},{"column":"Profile","path":"$.customDimensions.executionProfile","datatype":"","transform":null},{"column":"ProfileName","path":"$.customDimensions.executionProfileName","datatype":"","transform":null},{"column":"ToolName","path":"$.customDimensions.toolName","datatype":"","transform":null},{"column":"ScenarioName","path":"$.customDimensions.scenarioName","datatype":"","transform":null},{"column":"ScenarioStartTime","path":"$.customDimensions.scenarioStartTime","datatype":"","transform":null},{"column":"ScenarioEndTime","path":"$.customDimensions.scenarioEndTime","datatype":"","transform":null},{"column":"MetricCategorization","path":"$.customDimensions.metricCategorization","datatype":"","transform":null},{"column":"MetricName","path":"$.customDimensions.metricName","datatype":"","transform":null},{"column":"MetricValue","path":"$.customDimensions.metricValue","datatype":"","transform":null},{"column":"MetricUnit","path":"$.customDimensions.metricUnit","datatype":"","transform":null},{"column":"ExecutionSystem","path":"$.customDimensions.executionSystem","datatype":"","transform":null},{"column":"OperatingSystemPlatform","path":"$.customDimensions.operatingSystemPlatform","datatype":"","transform":null},{"column":"OperationId","path":"$.operation_Id","datatype":"","transform":null},{"column":"OperationParentId","path":"$.operation_ParentId","datatype":"","transform":null},{"column":"AppName","path":"$.appName","datatype":"","transform":null},{"column":"AppHost","path":"$.appHost","datatype":"","transform":null},{"column":"AppVersion","path":"$.customDimensions.appVersion","datatype":"","transform":null},{"column":"AppTelemetryVersion","path":"$.sdkVersion","datatype":"","transform":null},{"column":"Tags","path":"$.customDimensions.tags","datatype":"","transform":null},{"column":"CustomDimensions","path":"$.customDimensions","datatype":"","transform":null}]'
   ```
 
-#### Create Data Connectors
+### Create Data Connectors
 The following steps describe the data connectors required to ingest data from the Event Hubs into the ADX tables.
-
-* **Create Event Hub Consumer Group**  
-  On each of the Event Hubs created/noted above (e.g. telemetry-logs, telemetry-metrics) in the Event Hub namespace, create a consumer group named
-  'adx-ingestion'. This consumer group will be used by the ADX data connector exclusively to ingest data from the Event Hub
-  into the ADX cluster database tables.
 
 * **Create Data Connector for Events Data**  
   This data connector ingests data from the 'telemetry-events' Event Hub into the VirtualClientEvents table. Use the following
@@ -250,9 +222,9 @@ The following steps describe the data connectors required to ingest data from th
   * Consumer group = adx-ingestion
   * Event system properties = 0/none
   * Compression = None
-  * Assign managed identity = None
+  * Assign managed identity = (the managed identity created above)
   * Table Name = Events (or whatever name was used above when creating the table)
-  * Data format = MULTILINE JSON
+  * Data format = JSON
   * Mapping name = IngestionMapping (or whatever name was used above when creating the ingestion JSON mapping)
 
 * **Create Data Connector for Logs/Traces Data**  
@@ -262,9 +234,9 @@ The following steps describe the data connectors required to ingest data from th
   * Consumer group = adx-ingestion
   * Event system properties = 0/none
   * Compression = None
-  * Assign managed identity = None
+  * Assign managed identity = (the managed identity created above)
   * Table Name = Traces (or whatever name was used above when creating the table)
-  * Data format = MULTILINE JSON
+  * Data format = JSON
   * Mapping name = IngestionMapping (or whatever name was used above when creating the ingestion JSON mapping)
 
 * **Create Data Connector for Metrics Data**  
@@ -274,14 +246,12 @@ The following steps describe the data connectors required to ingest data from th
   * Consumer group = adx-ingestion
   * Event system properties = 0/none
   * Compression = None
-  * Assign managed identity = None
+  * Assign managed identity = (the managed identity created above)
   * Table Name = Metrics (or whatever name was used above when creating the table)
-  * Data format = MULTILINE JSON
+  * Data format = JSON
   * Mapping name = IngestionMapping (or whatever name was used above when creating the ingestion JSON mapping)
 
-
-
-#### Configure ADX Cluster Ingestion Settings
+### Configure ADX Cluster Ingestion Settings
 The following steps configure the Azure Data Explorer (ADX) cluster data ingestion settings.
 
 * **Configure the Ingestion Cadence**  

@@ -1,9 +1,8 @@
 ﻿---
-id: ci-cd
-sidebar_position: 8
+sidebar_position: 45
 ---
 
-# Build and CI / CD pipeline
+# Build a CI / CD pipeline
 
 
 ## Pull Request

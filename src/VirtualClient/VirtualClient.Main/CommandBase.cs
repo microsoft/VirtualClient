@@ -43,6 +43,11 @@ namespace VirtualClient
         public string AgentId { get; set; }
 
         /// <summary>
+        /// The port(s) to use to listen to HTTP traffic for the Virtual Client REST API.
+        /// </summary>
+        public IDictionary<string, int> ApiPorts { get; set; }
+
+        /// <summary>
         /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
         /// or downloaded from the proxy endpoint.
         /// </summary>
@@ -161,7 +166,7 @@ namespace VirtualClient
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IConfiguration>(configuration);
-            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager());
+            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
             dependencies.AddSingleton<PlatformSpecifics>(new PlatformSpecifics(osPlatform, cpuArchitecture));
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
 

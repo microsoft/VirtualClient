@@ -676,6 +676,29 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
+        /// Initializes the API clients for synchronizing between the different instances of
+        /// the Virtual Client.
+        /// </summary>
+        protected void InitializeApiClients()
+        {
+            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
+            ClientInstance localInstance = this.GetLayoutClientInstance(this.AgentId);
+
+            NetworkingWorkloadExecutor.LocalApiClient = clientManager.GetOrCreateApiClient(localInstance.Name, localInstance);
+
+            if (this.IsInClientRole)
+            {
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+
+                // It is important that we reuse the API client. The HttpClient created underneath will need to use a
+                // new connection from the connection pool typically for each instance created. Especially for the case with
+                // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
+                NetworkingWorkloadExecutor.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
+            }
+        }
+
+        /// <summary>
         /// On executes receiving instructions from client. 
         /// </summary>
         protected void OnInstructionsReceived(object sender, JObject instructions)
@@ -975,23 +998,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                     }
                 }
             });
-        }
-
-        private void InitializeApiClients()
-        {
-            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            NetworkingWorkloadExecutor.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
-
-            if (this.IsInClientRole)
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
-
-                // It is important that we reuse the API client. The HttpClient created underneath will need to use a
-                // new connection from the connection pool typically for each instance created. Especially for the case with
-                // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
-                NetworkingWorkloadExecutor.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.PrivateIPAddress, serverIPAddress);
-            }
         }
 
         private Task DeleteWorkloadStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
