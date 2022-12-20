@@ -49,7 +49,11 @@ namespace VirtualClient
             IApiManager apiManager = dependencies.GetService<IApiManager>();
             IApiClientManager apiClientManager = dependencies.GetService<IApiClientManager>();
 
-            int localPort = apiClientManager.GetApiPort();
+            int localPort = apiClientManager.GetApiPort(new ClientInstance(
+                Environment.MachineName,
+                System.Net.IPAddress.Loopback.ToString(),
+                ClientRole.Client));
+
             int serverPort = localPort;
 
             if (this.ApiPorts?.Any() == true)
