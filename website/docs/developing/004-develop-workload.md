@@ -1,8 +1,4 @@
-﻿---
-sidebar_position: 15
----
-
-# Workload Creation Recommendations
+﻿# Workload Creation Recommendations
 The following documentation provides guidance on the practices and fundamentals that the CRC team recommends for teams who want to create workloads to
 run as part of CRC Flighting system experiments. The overarching goal of these recommendations is to create a recipe for the creation of workloads that
 can be easily developed and easily integrated into the CRC Flighting system via the Virtual Client workload provider.

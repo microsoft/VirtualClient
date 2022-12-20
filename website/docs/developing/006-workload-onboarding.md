@@ -1,17 +1,22 @@
-﻿---
-sidebar_position: 25
----
+﻿# Workload Onboarding Lifecycle
+The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to platform. The steps
+defined are not exactly the same every time; however, this gives a developer the general idea of what to expect.
 
-# Workload Onboarding LifeCycle
-The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to VirtualClient platform.
+### Step 1: Research and Understand the Workload Software
+* Research the proper use of the workload software to fully understand how to run it correctly on the system. If a subject matter expert is available, 
+  connect with them to get perspective on the workload software.
+* Collect and keep track of documentation, download locations, licenses etc... related to the workload software. This is particularly important if the
+  workload software is not already pre-built but instead must be built/compiled from a repo by the developer.
+* Run the workload software yourself (on a range of systems if possible) and gather examples of the results/output.
+* Inspect the results/output to determine the list of important metrics that should be captured from them. Sometimes the results are not emitted by the workload
+  but are instead read from the system on which it is running (e.g. performance counters).
+* Try to get all questions that you have answered such that you have a sense of truly understanding what the workload software does and how to operate
+  it for trustworthy results on the system.
 
-#### **Step1: Workload Understanding**
-* Connect with SME(Subject Matter Expert) and understand about the workload, collect documentations and packages related to it, and finalize the 
-list of expected metrics which will be pushed to telemetry.
-* Run the workload as per mentioned in the documentation and verify the parameters of expected metrics.
-* Get all the doubts and discrepancies clarified by setting a meeting with SME again.
-
-#### **Step2: Dependency Packages Creation and Uploading**
+### Step 2: Create Dependency Packages and Uploading to Storage
+It is recommended that any workload software that can be packaged in a Virtual Client package (*.vcpkg) is packaged this way. There are a host of benefits
+to packaging workloads and dependencies in easy-to-consume Virtual Client packages. See the documentation on [dependency packages](https://microsoft.github.io/VirtualClient/docs/developing/dependency-packages) for 
+additional details and insights.
 
 * **NuGet Package Creation Steps**
     * Go to VirtualClient.Packaging project and create a folder with the name of workload in each of the supporting architectures folder.
@@ -46,7 +51,7 @@ build-packages-workloads.cmd
 
  * If size of one or more files involved in the workload dependencies is large then it can directly be uploaded on Blob Store without creating NuGet package for it.
 
-#### **Step3: Create Parser and Unit Tests**
+### Step 3: Create Parsers and Unit Tests
 * Create a parser class file with name <Workload_name>ResultsParser.cs(e.g. WebFundamentalsResultsParser.cs) in project VirtualClient.Parser.
 * Write unit tests for the parser created in project VirtualClient.Parser.UnitTests with the name <Workload_name>ResultsParserTests.cs(e.g. WebFundamentalsResultsParserTests.cs)
 * To store all the required input files for the tests, create a folder with the name of workload in the examples folder in VirtualClient.Parser.UnitTests project.
@@ -54,27 +59,27 @@ build-packages-workloads.cmd
 
 ```xml
     <None Update="Examples\WebFundamentals\WebFundamentalsInvalidExample.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Examples\WebFundamentals\WebFundamentalsInvalidMetricCountExample.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-	<None Update="Examples\WebFundamentals\WebFundamentalsExample.xml">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	</None>
+    <None Update="Examples\WebFundamentals\WebFundamentalsExample.xml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
 ```
 
-#### Step4: Update Package Manager and Unit Tests
+### Step 4: Update Package Manager and Unit Tests
 * Update PackageManager.cs of project VirtualClient.Core to incluide the details of all the packages required to be downloaded.
 * Update PackageManagerTests.cs of project VirtualClient.Core.UnitTests to include the unit tests of the changes.
 
-#### Step5: Profile Creation
+### Step 5: Profile Creation
 * Create json file with name PERF-<PERF_CRITERION>-<Workload_Name>.json (eg. PERF-WEB-WEBFUNDAMENTALS.json) in profiles folder of VirtualClient.Main project.
 * This file contains all the dependencies that are required by the workload.
 * Dependencies are included in the project VortualClient.Dependencies.
 * Update VirtualClient.Main.csproj file and VirtualClient.Actions.FunctionalTests.csproj file with the json file created.
 
-#### **Step6: Create Executor and Unit Tests**
+### Step 6: Create Executor and Unit Tests
 * Create a folder with the name of workload in VirtualClient.Actions project which will contain all the files related to executor.
 * For Client-Server Executor, please refer 
     * [WebFundamentals Client Executor](../VirtualClient.Actions/WebFundamentals/WebFundamentalsClientExecutor.cs)
@@ -85,13 +90,13 @@ build-packages-workloads.cmd
     * [SQLCloudDB Executor](../VirtualClient.Actions/SQLCloudDB/CloudDBClientExecutor.cs)
 * For Single VM Executor, please refer [DotnetRuntime](../VirtualClient.Actions/DotnetRuntime/DotnetRuntimeExecutor.cs) workload.
 
-#### **Step7: Dependencies Creation**
+### Step 7: Dependencies Creation
 * In case, Workload requires one time set-up on VM then that can be added as a dependency in the VC.
 * Add <Depency_Name>.cs(IISInstallation.cs) file in VirtualClient.Dependencies project.
 * Add its unit tests in project VirtualClient.Dependencies.UnitTests project.
 * This dependency can be added in profile file created for workload in VirtualClient.Main.
 
-#### **Step8: Running the Workload on Azure VMs and Verify data in Telemetry**
+### Step 8: Running the Workload on Azure VMs and Verify data in Telemetry
 * Open command prompt and follow these commands to create NuGet package
 
 ```bash
@@ -106,7 +111,7 @@ build-packages-vc.cmd 1.0.0  // 1.0.0 is version and it could be any based on ch
 * Verify the results in telemetry
 * PR can be created now for review and checkin.
 
-#### **Step9: Documentation Updation**
+### Step 9: Documentation Updation
 * **Workload Binaries and Scripts Locations**
 This documentation should exist in the VirtualClient.Packaging folder and should follow the naming convention + format for the example below. 
 This includes information on exactly where to get the binaries/scripts etc. required to create a workload package (including custom build/compile instructions). 

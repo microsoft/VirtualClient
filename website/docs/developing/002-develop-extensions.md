@@ -1,8 +1,4 @@
-﻿---
-sidebar_position: 5
----
-
-# Developing Extensions
+﻿# Developing Extensions
 
 :::danger
 This document hasn't been migrated. Links will be broken.
