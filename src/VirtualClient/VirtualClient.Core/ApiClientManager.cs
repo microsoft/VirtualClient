@@ -17,17 +17,37 @@ namespace VirtualClient
     /// </summary>
     public class ApiClientManager : IApiClientManager
     {
+        /// <summary>
+        /// The default port used by the API service for HTTP/TCP communications.
+        /// </summary>
+        public const int DefaultApiPort = 4500;
+
         private static readonly object LockObject = new object();
         private Dictionary<string, IApiClient> apiClients;
         private Dictionary<string, IProxyApiClient> proxyApiClients;
+        private Dictionary<string, int> apiPorts;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiClientManager"/> class.
         /// </summary>
-        public ApiClientManager()
+        public ApiClientManager(IDictionary<string, int> apiPorts = null)
         {
             this.apiClients = new Dictionary<string, IApiClient>(StringComparer.OrdinalIgnoreCase);
             this.proxyApiClients = new Dictionary<string, IProxyApiClient>(StringComparer.OrdinalIgnoreCase);
+            this.apiPorts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            {
+                [nameof(ApiClientManager.DefaultApiPort)] = ApiClientManager.DefaultApiPort
+            };
+
+            // Override the default API port(s). This can contain an override of the default
+            // API port (single port) or an override of the API port per role (e.g. 4501/Client, 4502/Server).
+            if (apiPorts?.Any() == true)
+            {
+                foreach (var entry in apiPorts)
+                {
+                    this.apiPorts[entry.Key] = entry.Value;
+                }
+            }
         }
 
         /// <summary>
@@ -71,6 +91,23 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns the effective port to use for hosting the API service. The port can be defined/overridden
+        /// on the command line.
+        /// </summary>
+        /// <param name="instance">The client instance defining the role for the system.</param>
+        /// <returns>The port on which the REST API service will be hosted.</returns>
+        public int GetApiPort(ClientInstance instance = null)
+        {
+            int apiPort = this.apiPorts[nameof(ApiClientManager.DefaultApiPort)];
+            if (!string.IsNullOrWhiteSpace(instance?.Role) && this.apiPorts.TryGetValue(instance.Role, out int userDefinedApiPort))
+            {
+                apiPort = userDefinedApiPort;
+            }
+
+            return apiPort;
+        }
+
+        /// <summary>
         /// Gets an existing/cached proxy API client or creates a new one adding it to the cache.
         /// </summary>
         /// <param name="id">The ID of the proxy API client to use for lookups.</param>
@@ -109,7 +146,7 @@ namespace VirtualClient
                 apiClient = this.GetApiClient(id);
                 if (apiClient == null)
                 {
-                    int apiPort = VirtualClientApiClient.DefaultApiPort;
+                    int apiPort = ApiClientManager.DefaultApiPort;
                     if (port != null)
                     {
                         apiPort = port.Value;
@@ -138,7 +175,7 @@ namespace VirtualClient
         public IApiClient GetOrCreateApiClient(string id, ClientInstance targetInstance)
         {
             IPAddress ipAddress = IPAddress.Parse(targetInstance.PrivateIPAddress);
-            return this.GetOrCreateApiClient(id, ipAddress, targetInstance.Port);
+            return this.GetOrCreateApiClient(id, ipAddress, this.GetApiPort(targetInstance));
         }
 
         /// <summary>

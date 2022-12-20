@@ -45,6 +45,55 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the port on which the local self-hosted REST API service
+        /// should list for HTTP traffic.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateApiPortOption(bool required = true, object defaultValue = null)
+        {
+            Option<IDictionary<string, int>> option = new Option<IDictionary<string, int>>(
+                new string[] { "--api-port", "--port" },
+                new ParseArgument<IDictionary<string, int>>(result =>
+                {
+                    IDictionary<string, int> apiPorts = new Dictionary<string, int>();
+                    string portsSpecified = result.Tokens.First().Value;
+                    if (int.TryParse(portsSpecified, out int singlePort))
+                    {
+                        apiPorts.Add(nameof(ApiClientManager.DefaultApiPort), singlePort);
+                    }
+                    else
+                    {
+                        string[] portsByRole = portsSpecified.Split(",", StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string definition in portsByRole)
+                        {
+                            string[] parts = definition.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                            if (parts?.Length != 2 || !int.TryParse(parts[0].Trim(), out int rolePort))
+                            {
+                                throw new ArgumentException(
+                                    "Invalid API port value. The API port can be a single integer value (e.g. 4500) or may define role-specific ports " +
+                                    "delimited by a comma using the format '{Port}/{Role}' (e.g. 4500/Client,4501/Server).");
+                            }
+
+                            apiPorts.Add(parts[1].Trim(), rolePort);
+                        }
+                    }
+
+                    return apiPorts;
+                }))
+            {
+                Name = "ApiPorts",
+                Description = "The port on which the local self-hosted REST API service should list for HTTP traffic. Ports for specific profile roles may be delimited by comma using the format '{Port}/{Role}' (e.g. 4500/Client,4501/Server).",
+                ArgumentHelpName = "port",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines a dependency store to add to the storage options
         /// for the Virtual Client for uploading content/files.
         /// </summary>

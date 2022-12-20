@@ -1,4 +1,8 @@
-﻿# Workload Onboarding LifeCycle
+﻿---
+sidebar_position: 25
+---
+
+# Workload Onboarding LifeCycle
 The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to VirtualClient platform.
 
 #### **Step1: Workload Understanding**

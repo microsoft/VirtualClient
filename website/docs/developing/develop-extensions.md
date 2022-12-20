@@ -1,4 +1,8 @@
-﻿# Writing Virtual Client Extensions
+﻿---
+sidebar_position: 5
+---
+
+# Developing Extensions
 
 :::danger
 This document hasn't been migrated. Links will be broken.

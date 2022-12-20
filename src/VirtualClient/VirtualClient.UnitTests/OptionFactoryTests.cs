@@ -34,6 +34,51 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--port")]
+        [TestCase("--api-port")]
+        public void ApiPortOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateApiPortOption();
+            ParseResult result = option.Parse($"{alias}=4501");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void ApiPortOptionSupportsSinglePortValues()
+        {
+            Option option = OptionFactory.CreateApiPortOption();
+            ParseResult result = option.Parse($"--api-port=4501");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.IsTrue(result.Tokens.First(t => t.Type == TokenType.Argument).Value == "4501");
+        }
+
+        [Test]
+        public void ApiPortOptionSupportsPortPerRoleValues()
+        {
+            Option option = OptionFactory.CreateApiPortOption();
+            ParseResult result = option.Parse($"--api-port=4501/Client,4502/Server");
+            Assert.IsFalse(result.Errors.Any());
+            Assert.IsTrue(result.Tokens.First(t => t.Type == TokenType.Argument).Value == "4501/Client,4502/Server");
+        }
+
+        [Test]
+        public void ApiPortOptionValidatesInvalidSinglePortValues()
+        {
+            Option option = OptionFactory.CreateApiPortOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--api-port=NotANumber"));
+        }
+
+        [Test]
+        public void ApiPortOptionValidatesInvalidPortPerRoleValues()
+        {
+            Option option = OptionFactory.CreateApiPortOption();
+            Assert.Throws<ArgumentException>(() => option.Parse($"--api-port=NotANumber/Client"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--api-port=4501/Client,NotANumber/Server"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--api-port=4501\\Client,4502\\Server"));
+            Assert.Throws<ArgumentException>(() => option.Parse($"--api-port=4501,Client,4502,Server"));
+        }
+
+        [Test]
         [TestCase("--proxy-api")]
         [TestCase("--proxy")]
         public void ProxyApiOptionSupportsExpectedAliases(string alias)

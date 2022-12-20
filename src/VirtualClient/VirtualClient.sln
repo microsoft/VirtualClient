@@ -59,6 +59,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Common", "Vir
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Packaging", "VirtualClient.Packaging\VirtualClient.Packaging.csproj", "{AF9635B5-956F-4C85-862D-57F88AF0B139}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Documentation", "VirtualClient.Documentation\VirtualClient.Documentation.csproj", "{B80C4365-68E7-46A4-BCB2-388BA064C308}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{16320E05-B488-44E1-BB1B-762897A33AD6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -345,9 +349,18 @@ Global
 		{AF9635B5-956F-4C85-862D-57F88AF0B139}.Release|ARM64.Build.0 = Release|ARM64
 		{AF9635B5-956F-4C85-862D-57F88AF0B139}.Release|x64.ActiveCfg = Release|x64
 		{AF9635B5-956F-4C85-862D-57F88AF0B139}.Release|x64.Build.0 = Release|x64
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Debug|x64.ActiveCfg = Debug|x64
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Release|ARM64.ActiveCfg = Release|ARM64
+		{B80C4365-68E7-46A4-BCB2-388BA064C308}.Release|x64.ActiveCfg = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B80C4365-68E7-46A4-BCB2-388BA064C308} = {16320E05-B488-44E1-BB1B-762897A33AD6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD13E46C-71D6-4858-A5FC-55184DF2A539}

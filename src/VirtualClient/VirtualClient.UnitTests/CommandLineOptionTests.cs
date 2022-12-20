@@ -54,6 +54,8 @@ namespace VirtualClient
         [TestCase("--clientid", "AgentID")]
         [TestCase("--client", "AgentID")]
         [TestCase("--a", "AgentID")]
+        [TestCase("--port", "4501")]
+        [TestCase("--api-port", "4501")]
         [TestCase("--contentStore", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--contentstore", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
         [TestCase("--content", "https://anystorageaccount.blob.core.windows.net/;SharedAccessSignature=123")]
@@ -171,6 +173,8 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--port", "4501")]
+        [TestCase("--api-port", "4501")]
         [TestCase("--monitor", null)]
         [TestCase("--mon", null)]
         [TestCase("--ipAddress", "10.0.0.128")]
