@@ -1,8 +1,4 @@
-﻿---
-sidebar_position: 10
----
-
-# Profiler Integration
+﻿# Profiler Integration
 Profilers are applications/programs that are used to capture very detailed information for operations that are happening on the
 system. For example, the [Azure Profiler](https://eng.ms/docs/products/azure-profiler/azure-profiler) is a toolet that captures
 detailed information for various types of low level operations on the system such as CPU callstacks, memory usage, and context
