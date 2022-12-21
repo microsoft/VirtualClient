@@ -81,7 +81,7 @@ Note that the recommendations below are largely implementation details.
     profile-level parameter should be defined so that this can be overridden/defined on the command line (see the 'ExampleProfilerEnabled' parameter in
     the example below). Default = true (profiler is enabled by default).
 
-  <div style="font-size:10pt">
+  <div class="code-section">
 
   ``` json
   {
@@ -153,7 +153,7 @@ send signals to the monitors/profilers to run using simple .NET events where "in
     is not defined (i.e. period == TimeSpan.Zero). This enables support for running the profiler for the entire length of time that the workload runs
     and stopping it promptly when the workload itself finishes.
 
-  <div style="font-size:10pt">
+  <div class="code-section">
 
   ``` json
   {
@@ -209,7 +209,7 @@ the workload 'Actions' to enable support for monitors/profilers supported by the
 the user/automation can run workloads with profiling by simply defining the related profiles on the command line...a workload profile and a monitoring profile.
 The two profiles will be merged into one.
 
-<div style="font-size:10pt">
+<div class="code-section">
 
 ```
 VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-PROFILING.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --parameters="OnDemandProfilingEnabled=true,,,AzureProfilerMode=OnDemand"
@@ -327,7 +327,7 @@ Each workload executor might perform a number of different operations before exe
 instrumented such that on-demand profiling happens at exactly the right/desired moment, a BackgroundProfiling block will be added. The following example
 shows how to do this:
 
-<div style="font-size:10pt">
+<div class="code-section">
 
 ``` csharp
  protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
