@@ -2,7 +2,7 @@
 sidebar_position: 45
 ---
 
-# Build a CI / CD pipeline
+# Build pipeline and CI / CD pipeline
 
 
 ## Pull Request

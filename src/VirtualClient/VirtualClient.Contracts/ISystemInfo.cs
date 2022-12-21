@@ -40,6 +40,11 @@ namespace VirtualClient.Contracts
         PlatformSpecifics PlatformSpecifics { get; }
 
         /// <summary>
+        /// Whether VC is running in container.
+        /// </summary>
+        bool RunningInContainer { get; }
+
+        /// <summary>
         /// Checks if the local IP Address is defined on current system.
         /// </summary>
         /// <param name="ipAddressString">IP address present in the environment layout for the agent</param>
