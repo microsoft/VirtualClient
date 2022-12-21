@@ -1,8 +1,4 @@
----
-id: fio
----
-
-# FIO (Flexible IO Tester) Workload
+# Flexible IO Tester (FIO)
 FIO, or flexible I/O, is a third party tool that simulates a given I/O workload. It allows us to quickly define and run workloads, and reports a variety 
 of metrics about each run. This allows us to compare results under different conditions, such as different hardware and firmware configurations, with 
 workloads that reflect production workloads. 

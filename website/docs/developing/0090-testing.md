@@ -1,11 +1,9 @@
-﻿---
-sidebar_position: 40
----
+﻿# Testing Practices
+The following standards and practices that the Virtual Client team employs when adding new features to the platform. It is expected that developers
+adding features to the application are also adding programmatic tests at the same time. This enables a rapid inner development process at the same time
+as it helps the team to preserve the quality of the application over time as the codebase grows.
 
-# Unit and Live Testing
-
-## Unit Test
-
+## Unit Testing
 The following sections provide insights into a testing methodology that can be applied to testing workload executors in the Virtual Client
 codebase. The goal here is to shine a light on the basic techniques applied and the mechanics they drive when testing Virtual Client logic.
 
@@ -82,7 +80,4 @@ right-click on the test and select "Debug Test(s)" to see the mechanics in motio
 ## Cross-Platform Testing
 When doing development of Virtual Client components, you will often need to consider debugging in cross-platform scenarios (e.g. Windows and Linux). The following
 section provides some useful information to help you do development where you need to validate on different OS platforms.
-
-### Useful Linux Operations
-The following section illustrates some of the more interesting commands/operations you can use when testing on Linux systems.
 

@@ -1,8 +1,4 @@
-﻿---
-id: aspnetbench
----
-
-# AspNetBenchmark
+﻿# AspNetBenchmark
 AspNetBenchmark is a benchmark developed by MSFT ASPNET team, based on open source benchmark TechEmpower.  
 This workload has server and client part, on the same test machine. The server part is started as a ASPNET service. The client calls server using open source bombardier binaries.  
 Bombardier binaries could be downloaded from Github release, or directly compile from source using "go build ."

@@ -1,8 +1,4 @@
-﻿---
-sidebar_position: 30
----
-
-# Error Handling
+﻿# Error Handling Recommendations
 The following sections describe important details and recommendations for handling errors/exceptions in the operations of the
 Virtual Client runtime. Error handling is particularly important for the quality of a runtime platform where there are many moving
 parts.

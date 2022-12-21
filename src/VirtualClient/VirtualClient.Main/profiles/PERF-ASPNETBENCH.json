@@ -22,14 +22,14 @@
             "Type": "ChocolateyInstallation",
             "Parameters": {
                 "Scenario": "InstallChocolatey",
-                "PackageName": "choco"
+                "PackageName": "chocolatey"
             }
         },
         {
             "Type": "ChocolateyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallGitOnWindows",
-                "PackageName": "choco",
+                "PackageName": "chocolatey",
                 "Packages": "git"
             }
         },

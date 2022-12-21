@@ -1,13 +1,17 @@
----
-id: mysql-configuration
----
+# Install MySQL Database
+Virtual Client has dependency components that can be added to a workload or monitor profile to create and configure a MySQL database on the system. The following section illustrates the
+details for integrating this into the profile.
 
-# MySQL Server Configuration
-Virtual Client can configure a MySQL server should the workload require it.
+## Preliminaries
+Reference the following documentation before proceeding.
 
-:::info
-This dependency does not download the MySQL server itself. That can be done using [Chocolatey Package Installation](https://microsoft.github.io/VirtualClient/docs/dependencies/chocolatey-package/) or [Linux Package Installation](https://microsoft.github.io/VirtualClient/docs/dependencies/linux-package-installation/), depending on your platform.
-:::
+* [Install MySQL](https://microsoft.github.io/VirtualClient/docs/dependencies/install-mysql)
+
+## Supported Platform/Architectures
+* linux-x64
+* linux-arm64
+* win-x64
+* win-arm64
 
 ## Parameters
 | **Parameter** | **Required** | **Description**                                                                                                 |
@@ -25,6 +29,10 @@ This dependency does not download the MySQL server itself. That can be done usin
 
 ## Example
 Here is the usage of the dependency by the Sysbench OLTP workload as an example, that uses all three actions to configure the server.
+
+* [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-MYSQL-SYSBENCH-OLTP.json)
+
+<div class="code-section">
 
 ```json
 {
@@ -55,6 +63,4 @@ Here is the usage of the dependency by the Sysbench OLTP workload as an example,
     }
 }
 ```
-
-### Supported runtimes
-win-x64, win-arm64, linux-x64, linux-arm64
+</div>

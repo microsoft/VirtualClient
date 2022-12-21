@@ -1,4 +1,4 @@
-﻿# Compression Workloads
+﻿# Compression
 Virtual Client host different types of compression and decompression workloads which are:
  * 7zip
  * Gzip

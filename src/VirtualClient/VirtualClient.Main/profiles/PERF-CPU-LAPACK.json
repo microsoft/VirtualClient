@@ -1,52 +1,52 @@
 {
-  "Description": "LAPACK Performance workload",
-  "Parameters": {
-    "AccountKey": "[secret:commandline]=StorageAccountKey",
-    "CompilerName": "gcc",
-    "CompilerVersion": "10"
-  },
-  "Actions": [
-    {
-      "Type": "LAPACKExecutor",
-      "Parameters": {
-        "Scenario": "ProcessorSpeed",
-        "PackageName": "lapack"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "ChocolateyInstallation",
-      "Parameters": {
-        "Scenario": "InstallChocolatey",
-        "PackageName": "choco"
-      }
+    "Description": "LAPACK Performance workload",
+    "Parameters": {
+        "AccountKey": "[secret:commandline]=StorageAccountKey",
+        "CompilerName": "gcc",
+        "CompilerVersion": "10"
     },
-    {
-      "Type": "ChocolateyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallCygwinOnWindows",
-        "PackageName": "choco",
-        "Packages": "cygwin"
-      }
-    },
-    {
-      "Type": "CompilerInstallation",
-      "Parameters": {
-        "CompilerName": "$.Parameters.CompilerName",
-        "CompilerVersion": "$.Parameters.CompilerVersion",
-        "CygwinPackages": "python3"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallLAPACKWorkloadPackage",
-        "BlobContainer": "packages",
-        "BlobName": "lapack.3.10.0.zip",
-        "PackageName": "lapack",
-        "Extract": true
-      }
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "LAPACKExecutor",
+            "Parameters": {
+                "Scenario": "ProcessorSpeed",
+                "PackageName": "lapack"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCygwinOnWindows",
+                "PackageName": "chocolatey",
+                "Packages": "cygwin"
+            }
+        },
+        {
+            "Type": "CompilerInstallation",
+            "Parameters": {
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion",
+                "CygwinPackages": "python3"
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLAPACKWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "lapack.3.10.0.zip",
+                "PackageName": "lapack",
+                "Extract": true
+            }
+        }
+    ]
 }

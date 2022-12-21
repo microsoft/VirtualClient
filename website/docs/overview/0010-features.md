@@ -1,9 +1,4 @@
-﻿---
-id: features
-sidebar_position: 2
----
-
-# Features
+﻿# Features
 The Virtual Client is a unified workload and system monitoring platform for running customer-representative or validation scenarios on virtual machines or physical hosts/blades/servers. 
 The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). 
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. In Azure, the platform supports all business-critical 

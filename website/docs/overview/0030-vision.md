@@ -1,12 +1,7 @@
-﻿---
-id: vision
-sidebar_position: 10
----
-
-# Vision
+﻿# Vision
 - **VirtualClient becomes the industrial standard to running benchmarks.**
 - **VirtualClient becomes the knowledge hub for performance engineering.**
----
+
 ## Roadmap
 
 ### Platform improvement
@@ -52,8 +47,6 @@ sidebar_position: 10
     - AMD GPU driver installation
     - AOCC compiler installation
 
-
----
 ## Have something you want to see?
 Send us a [Feature request](https://github.com/microsoft/VirtualClient/issues/new?assignees=&labels=&template=feature_request.md&title=)
 

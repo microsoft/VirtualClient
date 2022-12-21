@@ -1,8 +1,4 @@
-﻿---
-id: network
----
-
-# Network Workload Suite
+﻿# Network Suite
 The Networking workload suite is a set of 4 workloads that are the recommended benchmarks for the Azure Networking team. The workloads are each designed to test network performance
 and reliability.
 
@@ -19,8 +15,6 @@ The workloads that are a part of the suite include:
 
 * **SockPerf**  
   This workload that is used to measure network communications latencies between a client and a server. This workload runs on Unix/Linux systems only.
-
----
 
 ### What is Being Tested?
 The following performance analysis tests are ran as part of the network workload suite.
@@ -137,7 +131,6 @@ each workload.
 * SockPerf
   * TCP communications
   * UDP communications
----
 
 ### Supported Platforms
 * Linux x64

@@ -7,8 +7,6 @@ sidebar_position: 1
 
 In this document, we are going to run a "hello-world" version of VirtualClient: benchmark your system's crypotography performance, with OpenSSL Speed, using SHA256 algorithm.
 
----
-
 ## Installation
 
 Virtual Client is a self-contained .NET 6 application. "Installation" practically means copying the VirtualClient package into your system. It runs out-of-box on [all OS supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
@@ -50,8 +48,6 @@ VirtualClient/
     VirtualClient\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\VirtualClient.exe
     ```
 - VirtualClient is a self-contained .NET app. When you use VC, you need to copy over the entire `/publish/` folder
-
----
 
 ## Run a simple VC profile
 

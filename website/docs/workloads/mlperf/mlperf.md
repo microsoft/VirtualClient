@@ -1,4 +1,4 @@
-﻿# MLPerf Workload Suite
+﻿# MLPerf
 MLPerf is a consortium of AI leaders from academia, research labs, and industry whose mission is to “build fair and useful benchmarks” that provide unbiased evaluations of training and inference performance for hardware, software, and services—all conducted under prescribed conditions. To stay on the cutting edge of industry trends, MLPerf continues to evolve, holding new tests at regular intervals and adding new workloads that represent the state of the art in AI.
 * [MLPerf Training Documentation](https://github.com/mlcommons/training_results_v2.0/blob/main/MLPerf%E2%84%A2%20Training%20v2.0%20Results%20Discussion.pdf)  
 * [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v2.0)  
@@ -8,7 +8,6 @@ MLPerf is a consortium of AI leaders from academia, research labs, and industry 
 ### What is Being Tested?
 GPU performance
 
----
 ### System Requirements
 This is a GPU specific workload and requires high-performance graphic cards to run. 
 
@@ -38,7 +37,6 @@ The details related to whether system is supported or not can be found here: [ML
 ### Supported Platforms
 * Linux x64 - Nvidia GPU
 
----
 ### Dependencies
 
 #### For Nvidia GPUs:
