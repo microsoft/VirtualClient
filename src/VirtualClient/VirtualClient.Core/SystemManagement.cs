@@ -50,6 +50,9 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
+        public bool RunningInContainer { get; internal set; }
+
+        /// <inheritdoc />
         public IDiskManager DiskManager { get; internal set; }
 
         /// <inheritdoc />

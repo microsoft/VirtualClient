@@ -335,7 +335,8 @@ namespace VirtualClient
                 PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
-                StateManager = stateManager
+                StateManager = stateManager,
+                RunningInContainer = PlatformSpecifics.IsRunningInContainer()
             };
         }
 
