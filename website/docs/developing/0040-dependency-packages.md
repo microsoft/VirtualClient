@@ -11,7 +11,7 @@ below covers packages specifically created for direct integration with the Virtu
 ## Virtual Client Packages (*.vcpkg)
 Virtual Client packages used by the Virtual Client follow a strict folder schema which is similar to the NuGet package schema. NuGet is well-designed 
 for the purpose of defining dependency packages and additionally has plenty of tooling support that can be easily integrated into the user local development 
-process as well as the automated/Official build process.This folder schema allows the developer to add support for both cross-platform/OS and cross-architecture/CPU scenarios 
+process as well as the automated/Official build process. This folder schema allows the developer to add support for both cross-platform/OS and cross-architecture/CPU scenarios 
 in a single package. This consistency makes it easier to integrate these packages into the Virtual Client for just about any type of dependency. It is recommended
 that Virtual Client dependency packages be used whenever feasible because they offer the following benefits:
 
@@ -20,36 +20,38 @@ that Virtual Client dependency packages be used whenever feasible because they o
   causing variations in the results/measurements emitted by the software. This is especially important when running VC for longer periods of time with data analysis
   at the end...minimizing variables!
 
-* **They simplify the coding/development requirements.**  
+* **Dependency packages simplify the coding/development requirements.**  
   By pre-packaging dependencies, developers onboarding new features to the Virtual Client remove a significant amount of work that would otherwise need to be done
   in code. Writing additional code takes time and creates more places in the codes for bugs.
 
-* **They make the runtime dependency installation process more reliable**  
-  
+* **Dependency packages make the runtime dependency installation process more reliable**  
+  Additional reliability at runtime is created when placing pre-packaged dependencies in storage locations for which the Virtual Client team or the individual developer own.
+  This is because it reduces the number of dependencies on which the application must rely in order to install the dependencies it needs. Were the dependencies to be installed
+  from a third-party location, the application is subject to the availability of those resource locations without an expedient recourse. The Virtual Client team for example uses Azure
+  storage accounts to host dependency packages because they are highly reliable and can be easily replicated in the case of availability issues/outages.
 
-* Virtual Client packages are additionally expected to be self-describing. To do this a 'vcpkg' definition
-is added to the package folder at the root location (see below).
+* **Dependency packages enable support for "disconnected" scenarios**  
+  Dependency packages can be included with the Virtual Client application (within the /packages directory). If the packages are included, the Virtual Client does
+  not have to download the dependencies because they are already on the system. This allows the user to run the Virtual Client in scenarios whereby there may not be
+  an internet connection (e.g. private/local network scenarios).
 
-ALL custom packages created to be used by the Virtual Client are expected to follow the same folder schema protocol. Additionally, it is best to keep the names 
-of the packages lower-cased (it makes cross-platform support easier).
-
-### Package Definitions
+## Package Definitions
 All Virtual Client packages must have a definition file (.vcpkg) in the parent directory. A .vcpkg definition defines the name of the package, version 
 information and metadata that can be used when implementing components in the Virtual Client that use the packages. As a general rule, the name of the
-.vcpkg file should match the name defined inside of it. Additionally, both the file name and the 'name' within should be lower-cased. This helps avoid
-casing issues when running in cross-platform scenarios.
+.vcpkg file should match the name defined inside of it. Additionally, both the file name and the 'name' within <b>should be lower-cased</b>. This helps avoid
+casing issues when running in cross-platform scenarios (e.g. Linux, Windows). This file makes Virtual Client packages self-describing.
 
-<div style="font-size:10.5pt">
+<div class="code-section">
 
-``` json
-# Example 1: geekbench5.vcpkg
+```
+# Example File 1: geekbench5.vcpkg
 {
     "name": "geekbench5",
     "description": "GeekBench5 benchmark toolsets.",
     "metadata": {}
 }
 
-# Example 2: lshw.vcpkg
+# Example File 2: lshw.vcpkg
 {
     "name": "lshw",
     "description": "Hardware lister for Linux toolset.",
@@ -59,7 +61,7 @@ casing issues when running in cross-platform scenarios.
     }
 }
 
-# Example 2: sqlbackupfiles.vcpkg
+# Examplele 3: sqlbackupfiles.vcpkg
 {
     "name": "sqlbackupfiles",
     "description": "SQL Server database backup files for restoring full databases on the system.",
@@ -72,18 +74,23 @@ casing issues when running in cross-platform scenarios.
 ```
 </div>
 
-### Packages with Binaries/Scripts that Run Anywhere
+## Package Naming Conventions
+With package folder as they exist on the file system, it is best practice to ensure they are always lower-cased. As a general rule this
+helps to avoid issues with path conventions between Windows and Unix systems where the former is NOT case-sensitive but the latter IS case-sensitive. It
+is simply easier to go with a pattern that works on both by lower-casing your package directory names. You will see this convention in practice in the
+examples below.
+
+## Packages with Binaries/Scripts that Run Anywhere
 Virtual Client supports certain types of workloads/dependencies that can essentially run on 'any' platform/architecture that the Virtual Client itself
 runs on. For example, certain workloads use the Java runtime to operate. The binaries and scripts should be placed in the parent directory alongside
 the .vcpkg file. The following examples illustrate the expected folder structure.
 
 * /packageroot
-  * <div style='color:#3DA4CA'>packagename.vcpkg</div>
-  * <div style='color:#3DA4CA'>Workload or dependency binaries, scripts etc... that can run on any system.</div>
+  * packagename.vcpkg
+  * Workload or dependency binaries, scripts etc... that can run on any system.
+  <br/><br/>
 
-<div/>
-
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
   # Example Package Structure 1
@@ -135,24 +142,23 @@ the .vcpkg file. The following examples illustrate the expected folder structure
   ```
   </div>
 
-### Packages with Support for Different Platform/Architectures
+## Packages with Support for Different Platform/Architectures
 Virtual Client also supports binaries/scripts that are compiled specific to a set of platform/architectures. For these type of packages, the
-folder structure should match the platform/architectures that are supported.
+folder structure should match the platform/architectures that are supported. The following examples illustrate the expected folder structure.
 
 * /packageroot
-  * <div style='color:#3DA4CA'>packagename.vcpkg</div>
+  * packagename.vcpkg
   * /linux-arm64
-    * <div style='color:#3DA4CA'>Contains workload or dependency binaries, scripts etc... that can run on Linux/ARM64 systems.</div>
+    * Contains workload or dependency binaries, scripts etc... that can run on Linux/ARM64 systems.
   * /linux-x64
-    * <div style='color:#3DA4CA'>Contains workload or dependency binaries, scripts etc... that can run on Linux/x64/amd64 systems.</div>
+    * Contains workload or dependency binaries, scripts etc... that can run on Linux/x64/amd64 systems.
   * /win-arm64
-    * <div style='color:#3DA4CA'>Contains workload or dependency binaries, scripts etc... that can run on Windows/ARM64 systems.</div>
+    * Contains workload or dependency binaries, scripts etc... that can run on Windows/ARM64 systems.
   * /win-x64
-    * <div style='color:#3DA4CA'>Contains workload or dependency binaries, scripts etc... that can run on Windows/x64/amd64 systems.</div>
+    * Contains workload or dependency binaries, scripts etc... that can run on Windows/x64/amd64 systems.
+  <br/><br/>
 
-<div/>
-
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
   # Example Package Structure 1
@@ -192,10 +198,10 @@ folder structure should match the platform/architectures that are supported.
 The packages that are used as part of a Virtual Client profile are defined in the 'Dependencies' section of the profile. If custom package locations
 are used, the package name <u>MUST match the name in the profile dependencies</u> (e.g. 'geekbench5' in the example below).
 
-<div style="font-size:10.5pt">
+<div class="code-section">
 
-``` json
-# Try to keep package names lower-cased ALWAYS
+```
+# Package names should be lower-cased ALWAYS
 
 "Dependencies": [
     {
@@ -217,20 +223,12 @@ described in the sections that follow. In some cases, it is desirable to deploy 
 describes the order by which Virtual Client searches for packages and the requirements of each search. Note that packages downloaded from a package
 store will be downloaded to the 'packages' folder and registered (version included).
 
-<div style="color:red">
-<div style="font-weight:600">IMPORTANT</div>
-With package folder as they exist on the file system, it is best practice to ensure they are always lower-cased. As a general rule this
-helps to avoid issues with path conventions between Windows and Unix systems where the former is NOT case-sensitive but the latter IS case-sensitive. It
-is simply easier to go with a pattern that works on both by lower-casing your package directory names. You will see this convention in practice in the
-examples below.
-</div>
-
 * **1) Registered package locations**  
   The Virtual Client allows a developer to register a package/dependency path at runtime. There are cases where this is useful or convenient
   for certain scenarios (e.g. installers, installations). A registered package will have a corresponding .vcpkgreg document/definition in the
   'packages' directory of the Virtual Client application.
 
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
   e.g.
@@ -241,9 +239,7 @@ examples below.
   C:\any\custom\package\registration\location\customtoolset.1.0.0\linux-arm64
   C:\any\custom\package\registration\location\customtoolset.1.0.0\win-x64
   C:\any\custom\package\registration\location\customtoolset.1.0.0\win-arm64
-  ```
 
-  ``` json
   # Example of the corresponding registration document in the 'packages' directory
   # C:\VirtualClient\state\customtoolset.vcpkgreg
   {
@@ -257,21 +253,15 @@ examples below.
   </div>
 
 * **2) Search the folder location defined by a user-defined environment variable**  
-  A user of the Virtual Client can define an environment variable called <span style="font-weight:600">VCDependenciesPath</span>. This directory will be used
+  A user of the Virtual Client can define an environment variable called <b>VCDependenciesPath</b>. This directory will be used
   to discover packages with the highest priority. If a package is not defined here, the Virtual Client will look for the package in the 
   locations noted below. If a package is found in this location, Virtual Client will not search for other locations. The package found
   here will be used.
 
-  <div style="background-color:#f1d235;padding:5pt">
-  <div style="font-weight:600">Required Convention:</div>
-  Package parent directory names should ALWAYS be lower-cased (e.g. geekbench5 vs. <span style="text-decoration:line-through">Geekbench5</span>).
-  </div>
-  <br/>
-
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
-  e.g.
+  # e.g.
   set VCDependenciesPath=C:\any\custom\packages\location
 
   C:\any\custom\packages\location\geekbench5
@@ -287,16 +277,10 @@ examples below.
   (or downloaded...see below) into this location. The package .vcpkg definition will be used to register the package in the 'packages'
   directory. You can see that a package has been registered by the existence of a .vcpkgreg file in the same directory.
 
-  <div style="background-color:#f1d235;padding:5pt">
-  <div style="font-weight:600">Required Convention:</div>
-  Package parent directory names should ALWAYS be lower-cased (e.g. geekbench5 vs. <span style="text-decoration:line-through">Geekbench5</span>).
-  </div>
-  <br/>
-
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
-  e.g.
+  # e.g.
   C:\VirtualClient\packages\geekbench5.1.0.0\linux-x64
   C:\VirtualClient\packages\geekbench5.1.0.0\linux-arm64
   C:\VirtualClient\packages\geekbench5.1.0.0\win-x64
@@ -306,20 +290,13 @@ examples below.
   </div>
 
 * **4) Packages downloaded to the 'packages' folder**
-If Virtual Client does not find a package pre-existing on the system in the locations noted above, it will download the package into the 'packages' directory.
-The package will be registered with a .vcpkgreg file in the same directory.
+  If Virtual Client does not find a package pre-existing on the system in the locations noted above, it will download the package into the 'packages' directory.
+  The package will be registered with a .vcpkgreg file in the same directory.
 
-  <div style="background-color:#f1d235;padding:5pt">
-  <div style="font-weight:600">Convention:</div>
-  Packages downloaded will ALWAY have parent directory names lower-cased (e.g. geekbench5 vs. <span style="text-decoration:line-through">Geekbench5</span>).
-  </div>
-  <br/>
-
-  <div style="font-size:10.5pt">
+  <div class="code-section">
 
   ```
   # Package Name = geekbench5.1.0.0.zip
-
   # Would be downloaded to the following location.
   C:\VirtualClient\packages\geekbench5.1.0.0\linux-x64
   C:\VirtualClient\packages\geekbench5.1.0.0\linux-arm64
@@ -329,34 +306,23 @@ The package will be registered with a .vcpkgreg file in the same directory.
   ```
   </div>
 
-### Workload Package Stores
-The Virtual Client uses an Azure Blob store in order to maintain packages that contain workload binaries and dependencies. This enables the CRC team to
-keep the size of the Virtual Client down to a minimum. Indeed some of the workloads and their dependencies have files sizes so large they would exceed the
-maximum allowable size of a NuGet package (in Azure DevOps). In order to enable Virtual Client to download packages from the Azure Blob store, the access token
-must be supplied on the command line. The following section describes how to do that.
+## Package Stores
+The Virtual Client team uses Azure storage accounts to maintain packages that contain workload binaries and dependencies. This enables the Virtual Client team to
+keep the size of the Virtual Client down to a minimum for deployment purposes while also making it easy for the application to download/integrate dependencies. Indeed 
+some of the workloads and their dependencies have files sizes that exceed multiple gigabytes. Virtual Client allows the user to provide a connection string or SAS token/URI
+on the command line so that the packages can be downloaded. The following section describes how to do that. 
 
-* [Workload Packages Blob Store](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/e234e682-48fa-4666-a66d-87d198bff8ca/resourceGroups/rg-crc-virtualclient/providers/Microsoft.Storage/storageAccounts/virtualclientstorage/containersList)
-* [Workload Packages NuGet Feed](https://msazure.visualstudio.com/One/_packaging?_a=feed&feed=CRC) 
+Please contact the Virtual Client team if you do not have questions or need access to the packages stores.
 
-Please contact the CRC team if you do not have questions or need access to the packages stores.
-
-### Providing Package Store Parameters to Virtual Client
-There are scenarios where a secret must be supplied to the Virtual Client in order to access or download dependencies to the system as
-part of a workload profile execution. In these scenarios, it is typical for the secret to be referenced in the profile component definition
-itself with a placeholder used to define the value. The actual value of that secret is then passed into the Virtual Client on the command line
-using the '--parameters' option. Parameters can always be overridden on the command-line in this way. In fact, this applies to any set of Virtual Client 
-component parameters whether they are a secret or not. It is the responsibility of the user of Virtual Client (or the execution system) to supply
-any required parameters to the Virtual Client that are expected to be overridden. The documentation for each profile will cover the specifics
-for parameters that are required.
-
-**Blob Store Packages**  
-If the workload package is stored in an Azure Blob store, the following example shows how to provide the required account key
+**Support for Azure Storage Accounts**  
+If the workload package is stored in an Azure storage account store, the following example shows how to provide the required connection string or
+SAS token/URI to the Virtual Client for the container in which the package/blob exists.
 to the Virtual Client in order to authenticate.
 
-<div style="font-size:10.5pt">
+<div class="code-section">
 
 ``` script
-// Preferred Option: Supply the package store connection string or SAS URI like so:
+# Supply the package store connection string or SAS URI like so:
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Juno --timeout=1440 --packageStore={BlobStoreConnectionString|SAS URI}
 ```
 </div>
@@ -370,14 +336,11 @@ to supply any access keys. Most of the package dependencies used by the Virtual 
 and thus can be hosted in the blob store with "blob anonymous read" enabled. The Virtual Client supports containers that require access keys
 to be provided in order to download the packages as well.
 
-* [Dependency Packages Blob Store](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/e234e682-48fa-4666-a66d-87d198bff8ca/resourceGroups/rg-crc-virtualclient/providers/Microsoft.Storage/storageAccounts/virtualclientstorage/containersList)  
-  (For access to the Package blob store, contact [crc_vc_fte@microsoft.com](mailto:crc_vc_fte@microsoft.com))
-
-##### Defining a Package Dependency  
+#### Defining a Package Dependency  
 To define a package dependency for a given workload, insert a 'DependencyPackageInstallation' dependency in the workload profile. The package store
 connection string or SAS URI must be supplied on the command line as noted above.
 
-<div style="font-size:10.5pt">
+<div class="code-section">
 
 ``` json
 {

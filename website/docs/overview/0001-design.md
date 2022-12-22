@@ -1,8 +1,4 @@
-﻿---
-id: design
-sidebar_position: 2
----
-
+﻿
 # Virtual Client Platform Design
 The following sections cover important design aspects of the Virtual Client platform application. This document is written for engineers and technical roles who
 are interested in how the Virtual Client platform and application is designed. The application itself is a .NET 6.0 command line application written in C# that 

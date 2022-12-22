@@ -1,7 +1,3 @@
----
-sidebar_position: 35
----
-
 # Coding Standards
 
 ### Style Guidelines

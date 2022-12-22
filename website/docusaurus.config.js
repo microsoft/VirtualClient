@@ -37,6 +37,11 @@ const config = {
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/microsoft/VirtualClient/edit/main/website',
+
+          // Turn off the number prefix parsing so that documents are referenced by their
+          // exact name in links. We want the links to work across different applications some
+          // of which will not automatically parse out the numeric part (e.g. vscode).
+          numberPrefixParser: false
         },
         blog: {
           showReadingTime: true,
@@ -47,7 +52,7 @@ const config = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
-        },
+          }
       }),
     ],
   ],

@@ -1,4 +1,4 @@
-# Sysbench OLTP Workload
+# Sysbench OLTP
 Sysbench is an open-source multi-threaded database benchmark tool. As a suite, it offers benchmarks that test many different aspects of the system, but this workload supports only the OLTP .lua script tests on MySQL, PostgreSQL, and MariaDB systems -- VC implements support for testing on a MySQL database.
 
 This suite was pulled from the original GitHub repository.
@@ -22,8 +22,6 @@ The Sysbench test suite executes varied transactions on the database system incl
 | select_random_ranges  | Measures performance of random range select on the MySQL database     |
 
 Sysbench also provides a .lua script named oltp_common that is used to set up the database with tables and records to prepare it for testing.
-
----
 
 ### Client-Server Workflow
 In this workload, the client(s) run(s) sysbench; sysbench helps prepare various queries to perform on the server based on the number of tables, records per table, and threads. The server, which hosts the MySQL database, remains idle as long as mysql processes are running. The client only is in charge of downloading the sysbench package, running the appropriate sysbench commands, and logging the output. 
