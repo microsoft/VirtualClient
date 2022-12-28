@@ -1,11 +1,12 @@
 {
   "name": "virtualclient",
-  "version": "0.0.0",
+  "version": "0.0.8",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "build": "docusaurus build",
+	"build-dev": "docusaurus build --no-minify",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

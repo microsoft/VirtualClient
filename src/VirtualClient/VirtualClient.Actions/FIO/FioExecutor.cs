@@ -480,7 +480,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Log Metrics to Kusto Cluster.
         /// </summary>
-        protected virtual void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        protected virtual void LogMetrics(IProcessProxy workloadProcess, string testName, string metricCategorization, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             FioMetricsParser parser = null;
             if (this.TestFocus == FioExecutor.TestFocusDataIntegrity)
@@ -516,7 +516,7 @@ namespace VirtualClient.Actions
                startTime,
                endTime,
                metrics,
-               testedInstance,
+               metricCategorization,
                commandArguments,
                this.Tags,
                telemetryContext);

@@ -182,6 +182,9 @@ namespace VirtualClient
                 // --agentId
                 OptionFactory.CreateAgentIdOption(required: false, Environment.MachineName),
 
+                // --api-port
+                OptionFactory.CreateApiPortOption(required: false),
+
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
@@ -234,6 +237,9 @@ namespace VirtualClient
                 "runapi",
                 "Runs the Virtual Client API service and optionally monitors the API (local or a remote instance) for heartbeats.")
             {
+                // --api-port
+                OptionFactory.CreateApiPortOption(required: false),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
@@ -241,10 +247,7 @@ namespace VirtualClient
                 OptionFactory.CreateIPAddressOption(required: false),
 
                 // --monitor
-                OptionFactory.CreateMonitorFlag(required: false, false),
-
-                // --port
-                OptionFactory.CreatePortOption(required: false, VirtualClientApiClient.DefaultApiPort)
+                OptionFactory.CreateMonitorFlag(required: false, false)
             };
 
             runApiCommand.AddAlias("RunApi");

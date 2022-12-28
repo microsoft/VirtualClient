@@ -160,6 +160,16 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Return whether the VC is running in container.
+        /// </summary>
+        /// https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-environment-variables#dotnet_running_in_container-and-dotnet_running_in_containers
+        /// <returns></returns>
+        public static bool IsRunningInContainer()
+        {
+            return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true);
+        }
+
+        /// <summary>
         /// Throws an exception if the platform provided is not supported.
         /// </summary>
         /// <param name="platform">The OS/system platform to validate as supported.</param>

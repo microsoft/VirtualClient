@@ -37,6 +37,11 @@ const config = {
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/microsoft/VirtualClient/edit/main/website',
+
+          // Turn off the number prefix parsing so that documents are referenced by their
+          // exact name in links. We want the links to work across different applications some
+          // of which will not automatically parse out the numeric part (e.g. vscode).
+          numberPrefixParser: false
         },
         blog: {
           showReadingTime: true,
@@ -47,7 +52,7 @@ const config = {
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
-        },
+          }
       }),
     ],
   ],
@@ -147,6 +152,22 @@ const config = {
           autoCollapseCategories: true,
           hideable: true,
         },
+      },
+      algolia: {
+        // The application ID provided by Algolia
+        appId: '0I7D8A07MA',
+        // Public API key: it is safe to commit it
+        apiKey: '9719e4c77f353e73e0ac475e92c64ac7',
+        indexName: 'virtualclient',
+        // Optional: see doc section below
+        contextualSearch: false,
+        // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
+        // externalUrlRegex: 'external\\.com|domain\\.com',
+        // Optional: Algolia search parameters
+        // searchParameters: {},
+        // Optional: path for search page that enabled by default (`false` to disable it)
+        // searchPagePath: 'search',
+        //... other Algolia params
       },
     }),
 };

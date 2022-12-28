@@ -98,7 +98,7 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter           | Optional. Defines disk filters. Default is to test on all biggest non-OS disks.     | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details.     | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the DiskSpd profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). Note that this parameter is application ONLY on the Stress profile. | 500G |
   | FileSize                  | Optional. Allows the user to override the default file size used in the DiskSpd profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). Note that this parameter is application ONLY on the Stress profile. | 496G |
 
@@ -136,10 +136,10 @@ aspects of the workload execution.
 -----------------------------------------------------------------------
 
 ### Disk Testing Scenarios
-The Virtual Client supports a range of different disk testing scenarios on both Azure VMs as well as Azure physical hosts. The following
+The Virtual Client supports a range of different disk testing scenarios on both VMs as well as physical hosts. The following
 documentation provides context into how to run disk performance tests for these scenarios.
 
-* [Disk Testing Scenarios](./DiskTestingScenarios.md)
+* [Disk Testing Scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)
 
 -----------------------------------------------------------------------
 

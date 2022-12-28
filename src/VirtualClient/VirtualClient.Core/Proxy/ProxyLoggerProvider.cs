@@ -10,15 +10,18 @@ namespace VirtualClient.Proxy
     internal class ProxyLoggerProvider : ILoggerProvider
     {
         private IProxyApiClient proxyApiClient;
+        private string source;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProxyLoggerProvider"/> class.
         /// </summary>
         /// <param name="apiClient">A client to the proxy API service including its port (e.g. http://any.proxy.uri:5000).</param>
-        public ProxyLoggerProvider(IProxyApiClient apiClient)
+        /// <param name="source">The source to use when uploading telemetry through the proxy API.</param>
+        public ProxyLoggerProvider(IProxyApiClient apiClient, string source = null)
         {
             apiClient.ThrowIfNull(nameof(apiClient));
             this.proxyApiClient = apiClient;
+            this.source = source;
         }
 
         /// <summary>
@@ -26,7 +29,7 @@ namespace VirtualClient.Proxy
         /// </summary>
         public ILogger CreateLogger(string categoryName)
         {
-            ProxyLogger logger = new ProxyLogger(this.proxyApiClient);
+            ProxyLogger logger = new ProxyLogger(this.proxyApiClient, this.source);
             logger.BeginMessageTransmission();
             return logger;
         }

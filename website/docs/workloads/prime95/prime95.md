@@ -1,4 +1,4 @@
-# Prime95 Workload
+# Prime95
 
 Prime95 has been a popular choice for stress / torture testing a CPU since its introduction,
 especially with overclockers and system builders. Since the software makes heavy use of the processor's

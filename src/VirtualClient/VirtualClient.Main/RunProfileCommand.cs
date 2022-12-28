@@ -30,7 +30,7 @@ namespace VirtualClient
     /// </summary>
     internal class RunProfileCommand : CommandBase
     {
-        private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient .blob.core.windows.net/");
+        private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
         private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
         private const string NoMonitorsProfile = "MONITORS-NONE.json";
 
@@ -49,16 +49,6 @@ namespace VirtualClient
         /// The path to the environment layout .json file.
         /// </summary>
         public string LayoutPath { get; set; }
-
-        /// <summary>
-        /// Metadata properties (key/value pairs) supplied to the application.
-        /// </summary>
-        public IDictionary<string, IConvertible> Metadata { get; set; }
-
-        /// <summary>
-        /// Additional or override parameters (key/value pairs) supplied to the application.
-        /// </summary>
-        public IDictionary<string, IConvertible> Parameters { get; set; }
 
         /// <summary>
         /// The workload/monitoring profiles to execute (e.g. PERF-CPU-OPENSSL.json).

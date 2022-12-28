@@ -4,7 +4,6 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Workload Details](./fio.md)  
 * [Workload Profile Metrics](./fio-metrics.md)
 
-
 -----------------------------------------------------------------------
 
 ### Preliminaries
@@ -104,7 +103,7 @@ aspects of the workload execution.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter           | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
 
@@ -146,7 +145,8 @@ aspects of the workload execution.
 
 ### PERF-IO-FIO-DISCOVERY.json
 Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset. FIO Discovery measures throughput as a function of increasing queue depth for multiple operation types(Random Read,Random Write,Sequential Write & Sequential Read) and block sizes.
-The following workload runs on raw disks directly for example "/dev/sda","/dev/sdc",etc on linux.
+The following workload runs on raw disks directly for example "/dev/sda","/dev/sdc",etc on linux. The disk I/O workload for this profile runs directly against the raw disk
+without using the OS file system.
 
 Note that this profile uses a simple algorithm to determine the total number of jobs/threads & Queue Depth Per Thread. Shown below.
 
@@ -228,25 +228,28 @@ Where Threads = Total number of jobs/threads
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter           | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
   | ProcessModel                 | Optional. Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). | SingleProcess |
-  | MaxThresholdThreads                 | Optional. Allows the user to override the maximum number of threads used by FIO.By default if 'null' is given as value. It will use the number cores of the machine | Number of CPU cores |
+  | MaxThreads                 | Optional. Allows the user to override the maximum number of threads used by FIO.By default if 'null' is given as value. It will use the number cores of the machine | Number of CPU cores |
   | QueueDepths                 | Optional. Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
+  | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   
-* **FIO Discovery Executor Parameters** 
-Note these can't be changed from command line.
+* **Action Parameters** 
+  The following additional parameters are part of the individual profile actions.
 
   | Parameter                 | Purpose                                                                         | Accepted Values |
   |---------------------------|-------------------------------------------------------------------------------|-----------------|
-  | CommandLine               | The command line parameters for FIO tool set.                                 |     Any Valid FIO arguments            |
+  | Scenario                  | Scenario use to define the given action of profile. This can be used to specify exact actions to run or exclude from the profile.  | Any string |
+  | CommandLine               | The command line parameters for FIO tool set. |     Any Valid FIO arguments            |
   | BlockSize                 | The block size for FIO tool set. | 4k;8k;16k |
+  | DurationSecs              | The number of seconds to run the FIO scenario/action |  |
   | IOType                    | Type of Input Output operation | RandRead;RandWrite;Read;Write |
-  | PackageName               | The package name for FIO toolset | fio |
-  | Scenario                  | Scenario use to define the given action of profile  | Any string |
+  | PackageName               | The logical name for FIO package downloaded and that contains the toolset. | fio |
   | Tags                      | Tags usefull for telemetry data | Any comma seperated string |
-  | DeleteTestFilesOnFinish   | Should we delete tests file on finishing Virtual Client Execution. | true or false |
+  | DeleteTestFilesOnFinish   | Not used. |  |
+  | Tests                     | Not used. |  |
 
 * **Testing Small-Size Disks (e.g. local/temp disk)**  
   See the section below for important details to understand when testing local/temp disks.
@@ -372,6 +375,7 @@ Below in 'Profile Parameters' section below these 2 parameters are described.
   | SequentialIOFileSize                  | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
   | TargetIOPS                 | Optional. Allows the user to override the default value for Target IOPS for all the components combined. | 5000 |
   | TargetPercents                 | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
+  | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   
   
 * **FIO Multi Throughput Executor Parameters** 
@@ -424,13 +428,13 @@ Note these can't be changed from command line. Also the above parameters are als
   ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   // Test other types of disks
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHOUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:true
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHOUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHOUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&biggestSize
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHOUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=SizeEqualTo:1TB
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:true
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&biggestSize
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=SizeEqualTo:1TB
 
   // Test specific Linux devices
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHOUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
 
   // Run specific queuedepths
   ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="DiskFilter=OSDisk:false&biggestSize,,,TargetPercents=\"40,80,120\""
@@ -439,10 +443,10 @@ Note these can't be changed from command line. Also the above parameters are als
 -----------------------------------------------------------------------
 
 ### Disk Testing Scenarios
-The VirtualClient supports a range of different disk testing scenarios on both Azure VMs as well as Azure physical hosts. The following
+The Virtual Client supports a range of different disk testing scenarios on both VMs as well as physical hosts. The following
 documentation provides context into how to run disk performance tests for these scenarios.
 
-* [Disk Testing Scenarios](./DiskTestingScenarios.md)
+* [Disk Testing Scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)
 
 -----------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-﻿# NAS Parallel Benchmarks Workload
+﻿# NAS Parallel
 The NAS Parallel Benchmarks (NPB) are a small set of programs designed to help evaluate the performance of parallel supercomputers.
 It supports both single and multi machine scanerio.
 In multi machine scanerio we can have 1 client to N server environment.
@@ -8,8 +8,6 @@ For single machine Open Multi-Processing(OpenMP) is used for parallel programmin
 
 * [NAS Parallel](https://www.nas.nasa.gov/software/npb.html)
 * [About NAS](https://www.nas.nasa.gov/aboutnas/about.html)
-
---- 
 
 ### What is Being Tested?
 

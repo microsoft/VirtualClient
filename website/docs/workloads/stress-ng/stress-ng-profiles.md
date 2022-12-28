@@ -13,7 +13,7 @@ must be supplied on the command line. See the 'Workload Packages' documentation 
 -----------------------------------------------------------------------
 
 ### PERF-SRESSNG.json
-Runs the StressNg benchmark workload to assess the performance of a Java Server.
+Runs the StressNg benchmark workload to assess the performance of a system under stress.
 
 * **Supported Platform/Architectures**
   * linux-x64

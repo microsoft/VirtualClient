@@ -13,11 +13,33 @@ Azure environments including guest/VM systems, host/blade systems and data cente
 
 * [Platform Features](../overview/features.md)
 * [Platform Design](../overview/design.md)
+* [Usage](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/6-command-options/6-command-options.md)
+* [Usage Scenarios](https://github.com/microsoft/VirtualClient/tree/main/website/docs/guides/usage-scenarios)  
 * [Developer Guide](../developing/develop-guide.md)
-* [Additional Usage Examples](../category/usage-scenarios)  
 
 ## Team Contacts
 * [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
+
+## Downloads
+The following release versions of the Virtual Client are available and confirmed stable.
+
+#### Version 0.0.5
+* Release Date = 11/15/2022
+
+* NuGet Release
+    * https://www.nuget.org/packages/VirtualClient/0.0.5
+    * Please note we will be renaming package to Microsoft.VirtualClient, pending MSFT internal processes.
+
+## Platform/Architectures
+In the workload and profile sections below, the following designations are used to indicate the OS platform and CPU architecture on which the workloads are supported:
+* **linux-x64**  
+  The workload is supported on the Linux operating system for Intel and AMD x64 architectures.<br/><br/>
+* **linux-arm64**  
+  The workload is supported on the Linux operating system for ARM64/AARCH64 architectures.<br/><br/>
+* **win-x64**  
+  The workload is supported on the Windows operating system for Intel and AMD x64 architectures.<br/><br/>
+* **win-arm64**  
+  The workload is supported on the Windows operating system for ARM64/AARCH64 architectures.
 
 
 ## Supported Benchmark Workloads
@@ -57,9 +79,7 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [SPECjvm](../workloads/specjvm/specjvm.md) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
 | [stress-ng](../workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](../workloads/superbenchmark/superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
-
-
-
+| [Sysbench OLTP](../workloads/sysbench-oltp/sysbench-oltp.md) | MySQL Server Performance | linux-x64, linux-arm64 | [**Sysbench**:GPL-2.0](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[**MySQL**:GPL-2.0](https://www.mysql.com/about/legal/licensing/oem/) |
 
 ## System Monitoring Facilities
 The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client. 
@@ -75,15 +95,6 @@ Certain monitoring facilities are only available on specific hardware because th
 :::tip More workloads and monitors are coming
 VirtualClient is just migrated from MSFT inner-source to GitHub. We are still reviewing the feasibility of some internal workloads and monitors. We are also implementing a way to safely release automation for paid/commercial workloads (SPECcpu, SPECjbb, GeekBench5, 3DMark). They will come to VC in the future.
 :::
-
-## Current Stable Version(s)
-
-### Version 0.0.5
-Released 
-
-* NuGet Release
-    * https://www.nuget.org/packages/VirtualClient
-    * Please note we will be renaming package to Microsoft.VirtualClient, pending MSFT internal processes.
 
 
 ## Telemetry Notice

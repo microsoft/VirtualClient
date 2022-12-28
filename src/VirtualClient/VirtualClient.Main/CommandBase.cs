@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -42,6 +43,11 @@ namespace VirtualClient
         public string AgentId { get; set; }
 
         /// <summary>
+        /// The port(s) to use to listen to HTTP traffic for the Virtual Client REST API.
+        /// </summary>
+        public IDictionary<string, int> ApiPorts { get; set; }
+
+        /// <summary>
         /// Blob store that is behind (backed by) a proxy API service endpoint. Blobs are uploaded
         /// or downloaded from the proxy endpoint.
         /// </summary>
@@ -67,6 +73,16 @@ namespace VirtualClient
         /// The execution system/environment platform (e.g. Azure).
         /// </summary>
         public string ExecutionSystem { get; set; }
+
+        /// <summary>
+        /// Metadata properties (key/value pairs) supplied to the application.
+        /// </summary>
+        public IDictionary<string, IConvertible> Metadata { get; set; }
+
+        /// <summary>
+        /// Additional or override parameters (key/value pairs) supplied to the application.
+        /// </summary>
+        public IDictionary<string, IConvertible> Parameters { get; set; }
 
         /// <summary>
         /// Blob store to use for downloading dependencies/workload packages required
@@ -106,7 +122,16 @@ namespace VirtualClient
             this.InitializeGlobalTelemetryProperties(args);
 
             IConfiguration configuration = Program.LoadAppSettings();
-            ILogger logger = CommandBase.CreateLogger(configuration, this.EventHubConnectionString, this.ProxyApiUri, this.Debug);
+
+            IConvertible telemetrySource = null;
+            this.Parameters?.TryGetValue(GlobalParameter.TelemetrySource, out telemetrySource);
+
+            ILogger logger = CommandBase.CreateLogger(
+                configuration,
+                this.EventHubConnectionString,
+                this.ProxyApiUri,
+                this.Debug,
+                telemetrySource?.ToString());
 
             List<IBlobManager> blobStores = new List<IBlobManager>();
 
@@ -117,8 +142,13 @@ namespace VirtualClient
             // on the same local network that has that access (e.g. hardware manufacturing facility scenarios).
             if (this.ProxyApiUri != null)
             {
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri)));
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri)));
+                IConvertible contentSource = null;
+                IConvertible packageSource = null;
+                this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
+                this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
+
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString()));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString()));
             }
             else
             {
@@ -136,7 +166,7 @@ namespace VirtualClient
             IServiceCollection dependencies = new ServiceCollection();
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IConfiguration>(configuration);
-            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager());
+            dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
             dependencies.AddSingleton<PlatformSpecifics>(new PlatformSpecifics(osPlatform, cpuArchitecture));
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
 
@@ -187,16 +217,16 @@ namespace VirtualClient
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, Uri proxyApiUri)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, Uri proxyApiUri, string source = null)
         {
             if (proxyApiUri != null)
             {
                 VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(proxyApiUri);
-                loggingProviders.Add(new ProxyLoggerProvider(proxyApiClient));
+                loggingProviders.Add(new ProxyLoggerProvider(proxyApiClient, source));
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, string eventHubConnectionString, Uri proxyApiUri, bool debugMode)
+        private static ILogger CreateLogger(IConfiguration configuration, string eventHubConnectionString, Uri proxyApiUri, bool debugMode, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
@@ -207,7 +237,7 @@ namespace VirtualClient
 
             if (proxyApiUri != null)
             {
-                CommandBase.AddProxyApiLogging(loggingProviders, configuration, proxyApiUri);
+                CommandBase.AddProxyApiLogging(loggingProviders, configuration, proxyApiUri, source);
             }
             else
             {
@@ -219,6 +249,15 @@ namespace VirtualClient
 
         private void InitializeGlobalTelemetryProperties(string[] args)
         {
+            string vcAssemblyVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+            string extensionVersion = null;
+            // If a VC extension dll exist, then the appVersion in telemetry will be replaced by the extension version.
+            string[] versionDllFiles = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*VirtualClient.Version.dll");
+            if (versionDllFiles.Length > 0)
+            {
+                extensionVersion = versionDllFiles.ToList().Select(f => FileVersionInfo.GetVersionInfo(f).FileVersion).FirstOrDefault();
+            }
+            
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
                 // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
@@ -227,8 +266,8 @@ namespace VirtualClient
                 ["agentId"] = this.AgentId.ToLowerInvariant(),
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
                 ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
-                ["appVersion"] = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
-                ["binaryVersion"] = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion,
+                ["appVersion"] = extensionVersion ?? vcAssemblyVersion,
+                ["binaryVersion"] = extensionVersion == null ? extensionVersion : $"{extensionVersion},{vcAssemblyVersion}",
                 ["operatingSystemPlatform"] = Environment.OSVersion.Platform.ToString(),
                 ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
                 ["executionPlatform"] = this.ExecutionSystem,

@@ -18,7 +18,6 @@ namespace VirtualClient.Dependencies
     public class ApiServer : VirtualClientComponent
     {
         private static Task apiHostingTask;
-        private IApiClientManager apiClientManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiServer"/> class.
@@ -28,7 +27,6 @@ namespace VirtualClient.Dependencies
         public ApiServer(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.apiClientManager = dependencies.GetService<IApiClientManager>();
         }
 
         /// <summary>
@@ -37,15 +35,14 @@ namespace VirtualClient.Dependencies
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IApiManager apiManager = this.Dependencies.GetService<IApiManager>();
+            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
 
-            int apiPort = VirtualClientApiClient.DefaultApiPort;
+            // Default port
+            int apiPort = clientManager.GetApiPort();
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance client = this.GetLayoutClientInstance();
-                if (client.Port != null)
-                {
-                    apiPort = client.Port.Value;
-                }
+                apiPort = clientManager.GetApiPort(client);
             }
 
             ApiServer.apiHostingTask = apiManager.StartApiHostAsync(this.Dependencies, apiPort, cancellationToken);

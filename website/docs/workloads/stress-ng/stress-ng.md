@@ -1,9 +1,4 @@
-﻿---
-id: stress-ng
-sidebar_position: 1
----
-
-# StressNg
+﻿# StressNg
 stress-ng will stress test a computer system in various selectable ways. 
 It was designed to exercise various physical subsystems of a computer as well as the various operating system kernel interfaces. 
 
@@ -19,6 +14,5 @@ hardware and also can cause excessive system thrashing which may be difficult to
 * Linux x64
 * Linux arm64
 
----
 ### Package Dependencies
 * Stress-Ng

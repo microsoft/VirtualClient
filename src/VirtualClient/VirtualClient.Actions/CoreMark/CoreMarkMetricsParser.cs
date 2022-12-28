@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
 
             List<Metric> metrics = new List<Metric>();
 
-            metrics.AddRange(this.CoreMarkResult.GetMetric(nameIndex: 0, valueIndex: 1, unit: "NA", namePrefix: string.Empty, ignoreFormatError: true));
+            metrics.AddRange(this.CoreMarkResult.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "NA", namePrefix: string.Empty, ignoreFormatError: true));
 
             // CoreMark result doesn't define the unit so needs manually assign units.
             metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Unit = "bytes";

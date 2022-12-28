@@ -8,9 +8,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 namespace VirtualClient.Actions.Properties {
     using System;
     
@@ -22,7 +19,7 @@ namespace VirtualClient.Actions.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TestResources {
@@ -179,7 +176,7 @@ namespace VirtualClient.Actions.Properties {
         ///Starting 32 threads
         ///fio_randrw_1GB_4k_d1_th1_direct: Laying out IO file (1 file / 250MiB)
         ///verify: bad header numberio 3932, wanted 0 at file /home/azureuser/VirtualClient.1.0.1673.1/content/linux-x64/remote_disk_1_1/xejahjpg.cjd offset 229900288, length 65536 (requested block: offset=229900288, length=65536)
-        ///verify: bad header numberio 3835,  [rest of string was truncated]&quot;;.
+        ///verify: bad header numberio  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Results_FIO_Verification_Error_2 {
             get {

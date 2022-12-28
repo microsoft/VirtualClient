@@ -1,9 +1,4 @@
-﻿---
-id: redis
-sidebar_position: 1
----
-
-# REDIS Workload
+﻿# Redis
 
 Redis is an open source (BSD licensed), in-memory data structure store used as a database, 
 cache, message broker, and streaming engine. Redis works with an in-memory dataset. It is 
@@ -14,8 +9,6 @@ Two of the widely used tools are onboarded into Virtual Client. They are
 
 * [Official Redis Documentation](https://redis.io/docs/about/)
 * [Redis Github Repo](https://github.com/redis/redis)
-
----
 
 ### What is Being Tested?
 
@@ -30,8 +23,6 @@ Redis includes the redis-benchmark utility that simulates running commands done 
 while at the same time sending M total queries. The utility provides a default set of tests,
 or you can supply a custom set of tests.Each of this tests generate load against the server and 
 gives percentile latency distribution and Throughput.
-
----
 
 ### Supported Platforms
 

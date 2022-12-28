@@ -35,7 +35,17 @@
   --docusaurus-highlighted-code-line-bg: rgb(74, 75, 70);
 }
 
+.code-section {
+	font-size:10.5pt;
+}
 
+.notice-section {
+	color:red;
+}
+
+.emphasis-section {
+	font-weight:600;
+}
 
 .menu__link {
   font-weight: bold;

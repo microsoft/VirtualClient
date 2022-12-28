@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+
 namespace VirtualClient.Actions
 {
     using System;
@@ -8,15 +9,13 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
-    using VirtualClient.Common;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
-    using Newtonsoft.Json;
     using NUnit.Framework;
+    using VirtualClient.Common;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -42,15 +41,23 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupMocks();
 
             // Setup default profile parameter values
-
-            this.mockFixture.Parameters.Add(nameof(DiskPerformanceWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess);
-            this.mockFixture.Parameters.Add(nameof(DiskPerformanceWorkloadExecutor.CommandLine), $"--runtime=300 --rw=[{nameof(FioDiscoveryExecutor.IOType)}] --bs=[{nameof(FioDiscoveryExecutor.BlockSize)}]");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DiskFillSize), "140G");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.FileSize), "134G");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DurationSec), 300);
-            this.mockFixture.Parameters.Add(nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), "true");
-            this.mockFixture.Parameters.Add("PackageName", "fio");
-            this.mockFixture.Parameters[nameof(DiskPerformanceWorkloadExecutor.Scenario)] = "AnyScenario_[IOType]_[BlockSize]";
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(FioDiscoveryExecutor.Scenario), "AnyScenario_ReadOrWrite_AnyBlockSize" },
+                { nameof(FioDiscoveryExecutor.CommandLine), "--size={FileSize} --rw={IOType} --bs={BlockSize} --direct={DirectIO} --ramp_time=30 --runtime={DurationSec} --time_based --overwrite=1 --thread --group_reporting --output-format=json" },
+                { nameof(FioDiscoveryExecutor.BlockSize), "4K" },
+                { nameof(FioDiscoveryExecutor.DiskFillSize), "140G" },
+                { nameof(FioDiscoveryExecutor.FileSize), "134G" },
+                { nameof(FioDiscoveryExecutor.DurationSec), 300 },
+                { nameof(FioDiscoveryExecutor.QueueDepths), "1,4,16" },
+                { nameof(FioDiscoveryExecutor.MaxThreads), 8 },
+                { nameof(FioDiscoveryExecutor.IOType), "randwrite" },
+                { nameof(FioDiscoveryExecutor.DirectIO), true },
+                { nameof(FioDiscoveryExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
+                { nameof(FioDiscoveryExecutor.DeleteTestFilesOnFinish), "true" },
+                { nameof(FioDiscoveryExecutor.PackageName), "fio" },
+                { nameof(FioDiscoveryExecutor.DiskFilter), "BiggestSize" }
+            };
 
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
@@ -72,6 +79,23 @@ namespace VirtualClient.Actions
                 OnStart = () => true,
                 OnHasExited = () => true,
                 StandardOutput = this.defaultOutput
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+            {
+                return new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = file,
+                        Arguments = arguments,
+                        WorkingDirectory = workingDirectory
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true,
+                    StandardOutput = this.defaultOutput
+                };
             };
         }
 
@@ -100,10 +124,8 @@ namespace VirtualClient.Actions
         public async Task FioDiscoveryExecutorRunsExpectedExecutions()
         {
             int executions = 0;
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.QueueDepths), "4,16,64");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.BlockSize), "4k");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.MaxThreads), "1024");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.IOType), "randwrite");
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.QueueDepths)] = "4,16,64"; // 3 executions
+
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
@@ -125,68 +147,81 @@ namespace VirtualClient.Actions
         [Test]
         public async Task FioDiscoveryExecutorExecutesAsExpectedInSingleProcessModel()
         {
-            int executions = 0;
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.QueueDepths), "16");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.BlockSize), "16k");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.MaxThreads), "32");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.IOType), "randwrite");
-            this.mockFixture.Parameters[nameof(DiskPerformanceWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=[{nameof(FioDiscoveryExecutor.IOType)}] --bs=[{nameof(FioDiscoveryExecutor.BlockSize)}]";
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcess;
+
+            List<string> expectedCommandLines = new List<string>
+            {
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
+            };
 
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-                {
-                    if (!arguments.Contains("chmod"))
-                    {
-                        executions++;
-                        Assert.IsTrue(arguments.Contains($"--runtime=300 --rw=randwrite --bs=16k --name=AnyScenario_randwrite_16k_d1_th16 --numjobs=16 --iodepth=1 --ioengine=libaio "));
-                    }
-                    return this.defaultMemoryProcess;
-                };
-
                 await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
-            Assert.IsTrue(executions == 1);
+                     .ConfigureAwait(false);
 
+                Assert.AreEqual(4, this.mockFixture.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
+            }
         }
 
         [Test]
         public async Task FioDiscoveryExecutorExecutesAsExpectedInSingleProcessPerDiskModel()
         {
-            int executions = 0;
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.QueueDepths), "16");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.BlockSize), "16k");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.MaxThreads), "32");
-            this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.IOType), "randwrite");
             this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.ProcessModel)] = WorkloadProcessModel.SingleProcessPerDisk;
 
             List<string> expectedCommandLines = new List<string>
             {
-                $"--runtime=300 --rw=randwrite --bs=16k --name=AnyScenario_randwrite_16k_d1_th16 --numjobs=16 --iodepth=1 --ioengine=libaio ",
-                $"--runtime=300 --rw=randwrite --bs=16k --name=AnyScenario_randwrite_16k_d1_th16 --numjobs=16 --iodepth=1 --ioengine=libaio "
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th1 --numjobs=1 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d1_th4 --numjobs=4 --iodepth=1 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]",
+                $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
             };
 
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-                {
-                    if (!arguments.Contains("chmod"))
-                    {
-                        executions++;
-
-                        Assert.IsTrue(expectedCommandLines.Where(cmd => arguments.Contains(cmd)).Count() != 0);
-                    }
-                    return this.defaultMemoryProcess;
-                };
-
                 await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
-                    .ConfigureAwait(false);
+                      .ConfigureAwait(false);
+
+                Assert.AreEqual(10, this.mockFixture.ProcessManager.Commands.Count());
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(expectedCommandLines.ToArray()));
             }
-
-            Assert.IsTrue(executions == 3);
-
         }
+
+        [Test]
+        public async Task FioDiscoveryExecutorUsesBufferedIOWhenInstructed()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = false;
+
+            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=0"));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorUsesDirectNonBufferedIOWhenInstructed()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = true;
+
+            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=1"));
+            }
+        }
+
         private class TestFioDiscoveryExecutor : FioDiscoveryExecutor
         {
             public TestFioDiscoveryExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
@@ -201,6 +236,5 @@ namespace VirtualClient.Actions
 
         }
     }
-
 }
 

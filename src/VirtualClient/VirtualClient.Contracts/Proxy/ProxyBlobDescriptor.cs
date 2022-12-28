@@ -12,6 +12,11 @@ namespace VirtualClient.Contracts.Proxy
     public class ProxyBlobDescriptor
     {
         /// <summary>
+        /// The default source to use when interfacing with a proxy API service.
+        /// </summary>
+        public const string DefaultSource = "VirtualClient";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ProxyBlobDescriptor"/> class.
         /// </summary>
         /// <param name="source">The source of the blob upload/download request (e.g. VirtualClient).</param>

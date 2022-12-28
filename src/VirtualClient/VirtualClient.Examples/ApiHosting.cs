@@ -62,7 +62,7 @@ namespace VirtualClient
                     "Virtual Client: Allow API Support",
                     "Allows individual Virtual Client instances to communicate with each other via the self-hosted REST API",
                     "tcp",
-                    new List<int> { VirtualClientApiClient.DefaultApiPort })
+                    new List<int> { ApiClientManager.DefaultApiPort })
             },
             cancellationToken).GetAwaiter().GetResult();
         }

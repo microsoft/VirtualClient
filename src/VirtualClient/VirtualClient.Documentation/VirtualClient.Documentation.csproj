@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <AssemblyName>VirtualClient.Documentation</AssemblyName>
+        <NoWarn>SA1508</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--
+        DO NOT change this item definition. This ensures that the 'docs' folder at the root of the repo is linked
+        properly so that all of the files and folder structure match in the Solution Explorer.
+        -->
+        <Content Include="..\..\..\website\docs\**\*">
+            <Link>docs\%(RecursiveDir)/%(FileName)%(Extension)</Link>
+        </Content>
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

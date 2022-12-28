@@ -65,12 +65,12 @@ namespace VirtualClient.Actions
 
             List<Metric> metrics = new List<Metric>();
             
-            metrics.AddRange(this.WorkloadResult.GetMetric(nameIndex: 0, valueIndex: 1, unit: "iterations/sec", namePrefix: "MultiCore-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WorkloadResult.GetMetric(nameIndex: 0, valueIndex: 2, unit: "iterations/sec", namePrefix: "SingleCore-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WorkloadResult.GetMetric(nameIndex: 0, valueIndex: 3, unit: "scale", namePrefix: "Scaling-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.MarkResult.GetMetric(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: "MultiCore-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.MarkResult.GetMetric(nameIndex: 0, valueIndex: 2, unit: "Score", namePrefix: "SingleCore-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.MarkResult.GetMetric(nameIndex: 0, valueIndex: 3, unit: "scale", namePrefix: "Scaling-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WorkloadResult.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "iterations/sec", namePrefix: "MultiCore-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WorkloadResult.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "iterations/sec", namePrefix: "SingleCore-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WorkloadResult.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "scale", namePrefix: "Scaling-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.MarkResult.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: "MultiCore-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.MarkResult.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "Score", namePrefix: "SingleCore-", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.MarkResult.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "scale", namePrefix: "Scaling-", metricRelativity: MetricRelativity.HigherIsBetter));
 
             return metrics;
         }

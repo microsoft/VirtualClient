@@ -3,27 +3,26 @@ id: environment-layout
 sidebar_position: 2
 ---
 
-# Environment Layouts Json
+# Environment Layouts JSON
 Some information required to conduct experiments cannot be easily discovered by the Virtual Client when the application starts. This type of
 information must be provided to the Virtual Client via an "environment layout". An environment layout provides additional information
 to the Virtual Client in support of the needs of the experiment that is not otherwise discoverable from the information on the VM/host system
 itself.
 
 ``` json
-# Example Environment Layout
-# The following example is a JSON representation of an environment layout. Environment layouts are supplied to the 
-# Virtual Client in a JSON file that is referenced on the command line.
-
-# Command line reference to the environment layout:
-VirtualClient.exe --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --layoutPath="C:\any\path\to\layout.json"
-
+# Schema
 # Contents of the 'layout.json' file:
 {
     "clients": [
         {
-            "name": "cluster01,dfea5b55-abe6-4193-9a4d-461bd133a09d,e46ae74e-0",
-            "privateIPAddress": "10.1.0.1"
-        }
+            "name": "{agent_id_or_machine_name_1}",
+            "privateIPAddress": "{ip_address_1}"
+        },
+        {
+            "name": "{agent_id_or_machine_name_2}",
+            "privateIPAddress": "{ip_address_2}"
+        },
+        ... (N-additional clients in the environment)
     ]
 }
 ```
@@ -40,10 +39,10 @@ In advanced environment layouts each client instance will have a specific "role"
 workload profile/workload and can be determined by looking at the documentation for that particular profile.
 
 ``` json
-# Example Environment Layout
-# The following example is a JSON representation of an environment layout. Environment layouts are supplied to the 
+# The following examples are JSON representation of an environment layout. Environment layouts are supplied to the 
 # Virtual Client in a JSON file that is referenced on the command line.
 
+# Example Environment Layout 1
 # Command line reference to the environment layout:
 VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --layoutPath="C:\any\path\to\layout.json"
 
@@ -53,14 +52,41 @@ VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --la
 {
     "clients": [
         {
-            "name": "cluster01,dfea5b55-abe6-4193-9a4d-461bd133a09d,e46ae74e-0",
+            "name": "vm-e46ae74e-0",
             "role": "Client",
             "privateIPAddress": "10.1.0.1"
         },
         {
-            "name": "cluster01,3a326892-b4f6-41ac-b185-b57253812323,e46ae74e-1",
+            "name": "vm-e46ae74e-1",
             "role": "Server",
             "privateIPAddress": "10.1.0.2"
+        }
+    ]
+}
+
+# Example Environment Layout 2
+# Command line reference to the environment layout:
+VirtualClient.exe --profile=PERF-WEB-NGINX.json --system=Azure --timeout=1440 --layoutPath="C:\any\path\to\layout.json"
+
+# Contents of the 'layout.json' file:
+# In the PERF-WEB-NGINX.json workload profile, there are 3 possible roles: Client, Server and ReverseProxy. They must be named exactly that in
+# the environment layout.
+{
+    "clients": [
+        {
+            "name": "vm-e46ae74e-0",
+            "role": "Client",
+            "privateIPAddress": "10.1.0.1"
+        },
+        {
+            "name": "vm-e46ae74e-1",
+            "role": "Server",
+            "privateIPAddress": "10.1.0.2"
+        },
+        {
+            "name": "vm-e46ae74e-2",
+            "role": "ReverseProxy",
+            "privateIPAddress": "10.1.0.3"
         }
     ]
 }

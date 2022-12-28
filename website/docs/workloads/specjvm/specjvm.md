@@ -1,4 +1,4 @@
-﻿# SPECjvm Workload
+﻿# SPECjvm
 The SPECjvm® 2008 benchmark is a suite for measuring the performance of a Java Runtime Environment (JRE). 
 It contains several real-life applications and benchmarks focusing on core Java functionality. 
 It is SPEC's first Java Virtual Machine benchmark which focuses on the performance of the JRE executing a single application.
@@ -50,16 +50,12 @@ This benchmark tests graphics visualization using an open source, internally mul
 
 This benchmark has two sub-benchmarks: XML.transform and XML.validation. XML.transform exercises the JRE's implementation of javax.xml.transform (and associated APIs) by applying style sheets (.xsl files) to XML documents. The style sheets and XML documents are several real life examples that vary in size (3KB to 156KB) and in the style sheet features that are used most heavily. One "operation" of XML.transform consists of processing each style sheet / document pair, accessing the XML document as a DOM source, a SAX source, and a Stream source. In order that each style sheet / document pair contribute about equally to the time taken for a single operation, some of the input pairs are processed multiple times during one operation.
 
----
-
 ### Supported Platforms
 * win-x64
 * win-arm64
 * linux-x64
 * linux-arm64
 
-
----
 ### Dependencies
 The only dependency is the SPECjvm itself and the Java JDK, both of which are included in the profile.
 

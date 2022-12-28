@@ -31,6 +31,14 @@ namespace VirtualClient
         IApiClient GetApiClient(string id);
 
         /// <summary>
+        /// Returns the effective port to use for hosting the API service. The port can be defined/overridden
+        /// on the command line.
+        /// </summary>
+        /// <param name="instance">The client instance defining the role for the system.</param>
+        /// <returns>The port on which the REST API service will be hosted.</returns>
+        int GetApiPort(ClientInstance instance = null);
+
+        /// <summary>
         /// Gets an existing/cached proxy API client or creates a new one adding it to the cache.
         /// </summary>
         /// <param name="id">The ID of the proxy API client to use for lookups.</param>

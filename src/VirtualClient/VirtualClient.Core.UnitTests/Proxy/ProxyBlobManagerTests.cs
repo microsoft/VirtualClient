@@ -61,6 +61,69 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
+        public Task ProxyBlobManagerDownloadsUseTheExpectedSourceWhenAnExplicitSourceIsSupplied()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                DependencyDescriptor descriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+                {
+                    ["Name"] = "anypackage.1.0.0.zip",
+                    ["ContainerName"] = "packages"
+                });
+
+                // Explicit source is defined
+                string expectedSource = "AnySpecificSource";
+                ProxyBlobManager blobManager = new ProxyBlobManager(this.mockPackagesStore, this.mockProxyApiClient.Object, expectedSource);
+
+                this.mockProxyApiClient
+                .Setup(client => client.DownloadBlobAsync(
+                    It.IsAny<ProxyBlobDescriptor>(),
+                    It.IsAny<Stream>(),
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
+                {
+                    Assert.IsNotNull(blobDescriptor);
+                    Assert.AreEqual(expectedSource, blobDescriptor.Source);
+                })
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+                return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public Task ProxyBlobManagerDownloadsUseTheExpectedSourceWhenAnExplicitSourceIsNotSupplied()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                DependencyDescriptor descriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+                {
+                    ["Name"] = "anypackage.1.0.0.zip",
+                    ["ContainerName"] = "packages"
+                });
+
+                // Explicit source is NOT defined
+                ProxyBlobManager blobManager = new ProxyBlobManager(this.mockPackagesStore, this.mockProxyApiClient.Object);
+
+                this.mockProxyApiClient
+                .Setup(client => client.DownloadBlobAsync(
+                    It.IsAny<ProxyBlobDescriptor>(),
+                    It.IsAny<Stream>(),
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
+                {
+                    Assert.IsNotNull(blobDescriptor);
+                    Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
+                })
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+                return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
+            }
+        }
+
+        [Test]
         public Task ProxyBlobManagerDownloadsTheExpectedBlobThroughTheProxyApi_Scenario1()
         {
             using (MemoryStream stream = new MemoryStream())
@@ -158,6 +221,69 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
+        public Task ProxyBlobManagerUploadsUseTheExpectedSourceWhenAnExplicitSourceIsSupplied()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                DependencyDescriptor descriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+                {
+                    ["Name"] = "anypackage.1.0.0.zip",
+                    ["ContainerName"] = "packages"
+                });
+
+                // Explicit source is defined
+                string expectedSource = "AnySpecificSource";
+                ProxyBlobManager blobManager = new ProxyBlobManager(this.mockPackagesStore, this.mockProxyApiClient.Object, expectedSource);
+
+                this.mockProxyApiClient
+                    .Setup(client => client.UploadBlobAsync(
+                        It.IsAny<ProxyBlobDescriptor>(),
+                        It.IsAny<Stream>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
+                    {
+                        Assert.IsNotNull(blobDescriptor);
+                        Assert.AreEqual(expectedSource, blobDescriptor.Source);
+                    })
+                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+                return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public Task ProxyBlobManagerUploadsUseTheExpectedSourceWhenAnExplicitSourceIsNotSupplied()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                DependencyDescriptor descriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+                {
+                    ["Name"] = "anypackage.1.0.0.zip",
+                    ["ContainerName"] = "packages"
+                });
+
+                // Explicit source is NOT defined
+                ProxyBlobManager blobManager = new ProxyBlobManager(this.mockPackagesStore, this.mockProxyApiClient.Object);
+
+                this.mockProxyApiClient
+                    .Setup(client => client.UploadBlobAsync(
+                        It.IsAny<ProxyBlobDescriptor>(),
+                        It.IsAny<Stream>(),
+                        It.IsAny<CancellationToken>(),
+                        It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Callback<ProxyBlobDescriptor, Stream, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((blobDescriptor, stream, token, retryPolicy) =>
+                    {
+                        Assert.IsNotNull(blobDescriptor);
+                        Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
+                    })
+                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+                return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
+            }
+        }
+
+        [Test]
         public Task ProxyBlobManagerUploadsABlobAsExpectedThroughTheProxyApi_Scenario1()
         {
             using (MemoryStream stream = new MemoryStream())
@@ -184,11 +310,11 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("anyfile.log", blobDescriptor.BlobName);
                     Assert.AreEqual("logs", blobDescriptor.ContainerName);
                     Assert.AreEqual(Encoding.UTF8.WebName, blobDescriptor.ContentEncoding);
-                    Assert.IsNull(blobDescriptor.ContentType);
+                    Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
-                return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
+                return blobManager.UploadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
         }
 

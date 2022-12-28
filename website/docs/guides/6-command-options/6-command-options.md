@@ -4,13 +4,18 @@ sidebar_position: 6
 ---
 
 # Command Line options
+The following sections describe the command line options available on the Virtual Client application.
 
-## Main Command Options
+## Default Command Options
+The following command line options are available on the default Virtual Client command. The default command allows the user to execute one or more profiles
+on the system.
+
 | Option                                                         | Required | Data Type                    | Description |
 |----------------------------------------------------------------|----------|------------------------------|-------------|
 | --p, --profile=\<profile\>                                     | Yes      | string/text                  | The execution profile which indicates the set of workloads to run. |
 | --ps, --packages, --packageStore=\<authtoken\>                 | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which workload and dependency packages can be downloaded. This is required for most workloads because the workload binary/script packages are not typically packaged with the Virtual Client application itself. Contact the VC Team to get a SAS URI for your team. See [Blob Storage Support](../7-blob-storage.md). |
 | --a, --agentId, --clientId=\<id\>                              | No       | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
+| --port, --api-port=\<port\>                                    | No       | integer                      | The port to use for hosting the Virtual Client REST API service for profiles that allow multi-system, client/server operations (e.g. networking). Additionally, a port may be defined for each role associated with the profile operations using the format {Port}/{Role} with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
 | --cs, --content, --contentStore=\<authtoken\>                  | No       | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store where files/content can be uploaded as part of background monitoring processes. Contact the VC Team to get a SAS URI for your team. See [Blob Storage Support](../7-blob-storage.md). |
 | --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\>  | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Event Hub Integration](../telemetry/telemetry.md) |
 | --e, --experimentId=\<guid\>                                   | No       | guid                         | A unique identifier that defines the ID of the experiment for which the Virtual Client workload is associated. |
@@ -29,26 +34,17 @@ sidebar_position: 6
 
 
 ```bash
- # Examples:
- # ---------------------------------------------------------
-
- // Run a workload profile
+ # Run a workload profile
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
 
- // Include specific metadata in the telemetry output by the application.
+ # Include specific metadata in the telemetry output by the application.
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
- // Include experiment/run IDs and agent IDs as correlation identifiers in addition to metadata output by the application.
+ # Include experiment/run IDs and agent IDs as correlation identifiers in addition to metadata output by the application.
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
- // Upload telemetry output to a target Event Hub namespace.
+ # Upload telemetry output to a target Event Hub namespace.
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{AccessPolicy}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
-```
-
-
-```bash
- # Examples:
- # ---------------------------------------------------------
 
  # Use the 'deterministic' instruction to ensure that an action/workload running is allowed
  # to complete before timing out.
@@ -90,14 +86,12 @@ The following tables describe the various subcommands that are supported by the 
 | -?, -h, --help                                                | No       |                              | Show help information. |
 | --ver                                                         | No       |                              | Show application version information. |
 
-```
-# Examples:
-# ---------------------------------------------------------
-// Run a basic bootstrap operation.
+``` bash
+# Run a basic bootstrap operation.
 VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload --packages="{BlobStoreConnectionString|SAS URI}"
 
-// Run a bootstrap operation supplying a range of additional correlation identifiers and metadata
-// that can then be associated with subsequent profile execution operations.
+# Run a bootstrap operation supplying a range of additional correlation identifiers and metadata
+# that can then be associated with subsequent profile execution operations.
 VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload --system=Azure --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --agentId=Agent01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 ```
 
@@ -107,6 +101,7 @@ VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload -
 
 | Option              | Required | Data Type         | Description |
 |---------------------|----------|-------------------|-------------|
+| --port, --api-port=\<port\> | No  | integer | The port to use for hosting the Virtual Client REST API service. Additionally, a port may be defined for the Client system and Server system independently using the format '\{Port\}/\{Role\}' with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
 | --ip, --ipAddress   | No       | string/IP address | An IPv4 or IPv6 address of a target/remote system on which a Virtual Client instance is running to monitor. The API service must also be running on the target instance.  |
 | --mon, --monitor    | No       |                   | If supplied as a flag (i.e. no argument), the Virtual Client will run a background thread that tests the local API. If an IP address is provided, the target Virtual Client API will be monitored/tested. This is typically used for debugging scenarios to make sure 2 different instances of the Virtual Client can communicate with each other through the API. |
 | --debug             | No       |                   | If this flag is set, verbose logging will be output to the console.  |
@@ -115,14 +110,11 @@ VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload -
 
 
 
-```bash
-# Examples:
-# ---------------------------------------------------------
-
-// Run the API service locally.
+``` bash
+# Run the API service locally.
 VirtualClient.exe runapi
 
-// Run the API service locally and monitor another remote instance of the Virtual Client.
+# Run the API service locally and monitor another remote instance of the Virtual Client.
 VirtualClient.exe runapi --monitor --ipAddress=1.2.3.4
 ```
 
@@ -130,7 +122,7 @@ VirtualClient.exe runapi --monitor --ipAddress=1.2.3.4
 ## Exit Codes
 The Virtual Client application is instrumented to provide fine-grained return/exit codes that describe the outcome or result of the application operations. An exit code of
 0 means that the application was successful. Any non-zero exit code indicates a failure somewhere in the set of operations. See the definitions for a list of exit
-codes and their meaning in the source code here: [ErrorReason](./VirtualClient.Contracts/Enumerations.cs)
+codes and their meaning in the source code here: [ErrorReason](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/Enumerations.cs)
 
 ## Response File Support
 The Virtual Client application supports response files out of the box. A response file is a file that contains the command line arguments within. This is useful for certain scenarios where

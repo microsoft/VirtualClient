@@ -30,9 +30,8 @@ namespace VirtualClient.Contracts
         /// </param>
         /// <param name="role">The role of the client instance (e.g. client, server).</param>
         /// <param name="privateIPAddress">Private IP Address of the client.</param>
-        /// <param name="port">The port on which the API service for this instance should listen to HTTP traffic.</param>
         [JsonConstructor]
-        public ClientInstance(string name, string privateIPAddress, string role = null, int? port = null)
+        public ClientInstance(string name, string privateIPAddress, string role = null)
         {
             name.ThrowIfNullOrWhiteSpace(nameof(name));
             privateIPAddress.ThrowIfNullOrWhiteSpace(nameof(privateIPAddress));
@@ -40,7 +39,6 @@ namespace VirtualClient.Contracts
             this.Name = name;
             this.Role = role;
             this.PrivateIPAddress = System.Net.IPAddress.Parse(privateIPAddress).ToString(); // Validate syntax
-            this.Port = port;
 
             this.Extensions = new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase);
         }
@@ -63,12 +61,6 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "privateIPAddress", Required = Required.Always, Order = 2)]
         public string PrivateIPAddress { get; }
-
-        /// <summary>
-        /// The port on which the API service for this instance should listen to HTTP traffic.
-        /// </summary>
-        [JsonProperty(PropertyName = "port", Required = Required.Default, Order = 3)]
-        public int? Port { get; }
 
         /// <summary>
         /// Gets extensions associated with the client instance. This is an extensibility point
