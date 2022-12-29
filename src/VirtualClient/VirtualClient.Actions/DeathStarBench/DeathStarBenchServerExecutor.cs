@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
                     this.ResetFile(this.TokenFilePath, telemetryContext);
 
                     ClientInstance clientInstance = this.GetLayoutClientInstance();
-                    this.ServerIpAddress = clientInstance.PrivateIPAddress;
+                    this.ServerIpAddress = clientInstance.IPAddress;
 
                     string swarmHostCommand = $@"bash -c ""docker swarm init --advertise-addr {this.ServerIpAddress} | grep ' docker swarm join' >> token.txt""";
                     await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>(swarmHostCommand, this.ServiceDirectory, cancellationToken)

@@ -88,7 +88,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <returns>Powershell script parameters as a string.</returns>
         protected override string GetCommandLineArguments()
         {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"-a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToLowerInvariant()}";
         }
 

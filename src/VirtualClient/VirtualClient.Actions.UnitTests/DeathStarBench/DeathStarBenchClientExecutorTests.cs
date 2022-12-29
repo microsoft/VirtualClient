@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
             await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
             ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
             Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
             Assert.AreEqual(this.ipAddress, serverIPAddress);

@@ -393,7 +393,7 @@ namespace VirtualClient.Actions
         private string GetCommandLineArguments()
         {
             // sockperf server -i 10.0.1.1 -p 8201 --tcp
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             string protocolParam = this.Protocol.ToString().ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
 
             return $"server -i {serverIPAddress} -p {this.Port} {protocolParam}".Trim();

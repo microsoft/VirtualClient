@@ -382,8 +382,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().PrivateIPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
             return $"-so -c -a {serverIPAddress}:{this.Port} -rio -i {this.Iterations} -riopoll {this.RioPoll} -{this.Protocol.ToString().ToLowerInvariant()} " +
             $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";

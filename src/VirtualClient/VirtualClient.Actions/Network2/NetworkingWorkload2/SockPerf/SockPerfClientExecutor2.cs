@@ -412,8 +412,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string protocolParam = this.Protocol.ToString().ToLowerInvariant() == "tcp" ? "--tcp" : string.Empty;
 
             // sockperf under-load -i 10.0.1.1 -p 8201 -t 60 --pps=max --full-rtt --msg-size 64 --client_ip 10.0.1.0

@@ -90,7 +90,7 @@ namespace VirtualClient.Actions
 
                 if (this.IsMultiRoleLayout())
                 {
-                    IEnumerable<string> allInstances = this.Layout.Clients.Select(cl => cl.PrivateIPAddress.ToString()).ToList();
+                    IEnumerable<string> allInstances = this.Layout.Clients.Select(cl => cl.IPAddress.ToString()).ToList();
                     string hosts = string.Join(",", allInstances);
                     scenarioArguments = $"-np {this.Layout.Clients.Count()} --host {hosts} {benchmarkPath}";
 
@@ -173,7 +173,7 @@ namespace VirtualClient.Actions
                 IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
                 foreach (ClientInstance client in instances)
                 {
-                    IApiClient apiClient = clientManager.GetOrCreateApiClient(client.PrivateIPAddress, IPAddress.Parse(client.PrivateIPAddress));
+                    IApiClient apiClient = clientManager.GetOrCreateApiClient(client.IPAddress, IPAddress.Parse(client.IPAddress));
                     await apiClient.PollForExpectedStateAsync(nameof(this.NpbBuildState), JObject.FromObject(this.NpbBuildState), this.ClientHeartbeatPollingTimeout, DefaultStateComparer.Instance, cancellationToken)
                         .ConfigureAwait(false);
                 }

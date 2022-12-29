@@ -140,7 +140,7 @@ namespace VirtualClient.Actions
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance clientInstance = this.GetLayoutClientInstance();
-                string layoutIPAddress = clientInstance.PrivateIPAddress;
+                string layoutIPAddress = clientInstance.IPAddress;
 
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
@@ -529,7 +529,7 @@ namespace VirtualClient.Actions
             else
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
             }

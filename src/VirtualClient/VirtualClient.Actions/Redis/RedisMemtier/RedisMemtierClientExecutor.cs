@@ -178,7 +178,7 @@ namespace VirtualClient.Actions
 
                             // 4) Execute the client workload.
                             // ===========================================================================
-                            ipAddress = IPAddress.Parse(server.PrivateIPAddress);
+                            ipAddress = IPAddress.Parse(server.IPAddress);
                             await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
 

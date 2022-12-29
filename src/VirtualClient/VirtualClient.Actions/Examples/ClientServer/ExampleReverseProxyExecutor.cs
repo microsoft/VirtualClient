@@ -155,7 +155,7 @@ namespace VirtualClient.Actions
 
             foreach (ClientInstance server in targetServers)
             {
-                serverClients.Add(IPAddress.Parse(server.PrivateIPAddress));
+                serverClients.Add(IPAddress.Parse(server.IPAddress));
             }
 
             return serverClients;

@@ -402,7 +402,7 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"-s -r {this.Connections} {serverIPAddress},{this.Port} -i {this.DisplayInterval} -wt {this.WarmupTime} -t {this.TestDuration} " +
                 $"{((this.DelayTime != 0) ? $"-ds {this.DelayTime}" : string.Empty)} ";
         }

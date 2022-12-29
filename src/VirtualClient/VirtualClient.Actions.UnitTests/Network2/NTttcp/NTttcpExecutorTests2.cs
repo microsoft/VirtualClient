@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
             await executor.InitializeAsync(EventContext.None, CancellationToken.None);
 
             ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
             if(role == ClientRole.Client)
             {

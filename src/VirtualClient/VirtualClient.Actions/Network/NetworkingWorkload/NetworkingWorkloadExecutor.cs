@@ -538,7 +538,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ClientInstance clientInstance = this.GetLayoutClientInstance(this.AgentId);
-            string layoutIPAddress = clientInstance.PrivateIPAddress;
+            string layoutIPAddress = clientInstance.IPAddress;
 
             this.Logger.LogTraceMessage($"Layout-Defined IP Address: {layoutIPAddress}");
             this.Logger.LogTraceMessage($"Layout-Defined Role: {clientInstance.Role}");
@@ -689,7 +689,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             if (this.IsInClientRole)
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 // It is important that we reuse the API client. The HttpClient created underneath will need to use a
                 // new connection from the connection pool typically for each instance created. Especially for the case with

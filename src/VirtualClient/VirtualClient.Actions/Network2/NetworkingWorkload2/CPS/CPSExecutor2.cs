@@ -137,7 +137,7 @@ namespace VirtualClient.Actions
             }
 
             ClientInstance clientInstance = this.GetLayoutClientInstance(this.AgentId);
-            string layoutIPAddress = clientInstance.PrivateIPAddress;
+            string layoutIPAddress = clientInstance.IPAddress;
 
             this.Logger.LogTraceMessage($"Layout-Defined IP Address: {layoutIPAddress}");
             this.Logger.LogTraceMessage($"Layout-Defined Role: {clientInstance.Role}");
@@ -404,12 +404,12 @@ namespace VirtualClient.Actions
             if (this.IsInRole(ClientRole.Client))
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 // It is important that we reuse the API client. The HttpClient created underneath will need to use a
                 // new connection from the connection pool typically for each instance created. Especially for the case with
                 // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.PrivateIPAddress, serverIPAddress);
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.IPAddress, serverIPAddress);
             }
         }
 

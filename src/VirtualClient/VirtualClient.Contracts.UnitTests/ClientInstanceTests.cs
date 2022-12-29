@@ -14,6 +14,7 @@ namespace VirtualClient.Contracts
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.TestExtensions;
+    using VirtualClient.Common.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -49,13 +50,53 @@ namespace VirtualClient.Contracts
 
             Assert.AreEqual(instance.Name, expectedName);
             Assert.AreEqual(instance.Role, expectedRole);
-            Assert.AreEqual(instance.PrivateIPAddress, expectedPrivateIp);
+            Assert.AreEqual(instance.IPAddress, expectedPrivateIp);
         }
 
         [Test]
         public void ClientInstanceObjectsAreJsonSerializable()
         {
             SerializationAssert.IsJsonSerializable<ClientInstance>(this.mockFixture.Create<ClientInstance>());
+        }
+
+        [Test]
+        public void ClientInstanceObjectsAreJsonSerializable_2()
+        {
+            string originalSchema = "{ \"name\": \"name01\", \"ipAddress\": \"1.2.3.4\", \"role\": \"Client\" }";
+
+            ClientInstance instance = null;
+            Assert.DoesNotThrow(() => instance = originalSchema.FromJson<ClientInstance>());
+            Assert.IsNotNull(instance);
+            Assert.AreEqual("name01", instance.Name);
+            Assert.AreEqual("1.2.3.4", instance.IPAddress);
+            Assert.AreEqual("Client", instance.Role);
+
+            string serialized = instance.ToJson();
+            Assert.DoesNotThrow(() => instance = serialized.FromJson<ClientInstance>());
+            Assert.IsNotNull(instance);
+            Assert.AreEqual("name01", instance.Name);
+            Assert.AreEqual("1.2.3.4", instance.IPAddress);
+            Assert.AreEqual("Client", instance.Role);
+        }
+
+        [Test]
+        public void ClientInstanceObjectsAreBackwardsCompatible()
+        {
+            string originalSchema = "{ \"name\": \"name01\", \"privateIPAddress\": \"1.2.3.4\", \"role\": \"Client\" }";
+
+            ClientInstance instance = null;
+            Assert.DoesNotThrow(() => instance = originalSchema.FromJson<ClientInstance>());
+            Assert.IsNotNull(instance);
+            Assert.AreEqual("name01", instance.Name);
+            Assert.AreEqual("1.2.3.4", instance.IPAddress);
+            Assert.AreEqual("Client", instance.Role);
+
+            string serialized = instance.ToJson();
+            Assert.DoesNotThrow(() => instance = serialized.FromJson<ClientInstance>());
+            Assert.IsNotNull(instance);
+            Assert.AreEqual("name01", instance.Name);
+            Assert.AreEqual("1.2.3.4", instance.IPAddress);
+            Assert.AreEqual("Client", instance.Role);
         }
 
         [Test]
@@ -82,12 +123,12 @@ namespace VirtualClient.Contracts
             ClientInstance template = this.mockFixture.Create<ClientInstance>();
             ClientInstance instance1 = new ClientInstance(
                 template.Name.ToLowerInvariant(),
-                template.PrivateIPAddress.ToLowerInvariant(),
+                template.IPAddress.ToLowerInvariant(),
                 template.Role.ToLowerInvariant());
 
             ClientInstance instance2 = new ClientInstance(
                 template.Name.ToUpperInvariant(),
-                template.PrivateIPAddress.ToUpperInvariant(),
+                template.IPAddress.ToUpperInvariant(),
                 template.Role.ToUpperInvariant());
 
             Assert.AreEqual(instance1.GetHashCode(), instance2.GetHashCode());
