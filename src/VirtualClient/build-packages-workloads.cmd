@@ -1,15 +1,16 @@
 @echo Off
 
+set ExitCode=0
+
 if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
 
-set ExitCode=0
 set PackageName=%~1
 set PackagingDir=%~dp0VirtualClient.Packaging
 set PackagingProject=%~dp0VirtualClient.Packaging\VirtualClient.Packaging.csproj
 
-call build-stage-packaging-tools.cmd && echo: || Goto :Error
+call %~dp0build-stage-packaging-tools.cmd && echo: || Goto :Error
 
 rem The packages project itself is not meant to produce a binary/.dll and thus is not built. However, to ensure
 rem the requisite NuGet package assets file exist in the local 'obj' folder, we need to perform a restore.
@@ -70,7 +71,6 @@ if /i "%PackageName%" NEQ "" (
 
 Goto :End
 
-
 :Usage
 echo:
 echo Usage:
@@ -79,12 +79,10 @@ echo:
 echo Examples:
 echo %~0
 echo %~0 DiskSpd
-Goto :End
-
+Goto :Finish
 
 :Error
 set ExitCode=%ERRORLEVEL%
-
 
 :End
 rem Reset environment variables
@@ -92,5 +90,7 @@ set PackagingDir=
 set PackageName=
 set PackagingProject=
 set PackagesDir=
+echo Packaging Exit Code: %ExitCode%
 
+:Finish
 exit /B %ExitCode%

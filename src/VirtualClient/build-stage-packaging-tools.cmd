@@ -1,11 +1,12 @@
 @echo Off
-REM This script is used to build Virtual Client.
 
 set ExitCode=0
-set OutputDirectory=%~dp0..\..\out\tools
 
-set TrimFlag="-p:PublishTrimmed=true -p:TrimUnusedDependencies=true"
-if /i "%~1" == "noTrim" set TrimFlag=""
+if /i "%~1" == "/?" Goto :Usage
+if /i "%~1" == "-?" Goto :Usage
+if /i "%~1" == "--help" Goto :Usage
+
+set OutputDirectory=%~dp0..\..\out\tools
 
 rem Robocopy exit codes that mean success
 rem 
@@ -21,7 +22,9 @@ rem 6 = Additional files and mismatched files exist. No files were copied and no
 rem     means that the files already exist in the destination directory.
 rem 7 = Files were copied, a file mismatch was present, and additional files were present.
 
+echo:
 echo [Copying External Tools to Packaging Location]
+echo -------------------------------------------------------
 call robocopy %~dp0VirtualClient.Packaging\any %OutputDirectory%\any /mir /ns /nc /njh /nfl /ndl
 echo Robocopy Exit Code = %ERRORLEVEL%
 if %ERRORLEVEL% GEQ 8 goto :Error
@@ -48,10 +51,19 @@ if %ERRORLEVEL% GEQ 8 goto :Error
 
 Goto :End
 
+
+:Usage
+echo:
+echo Usage:
+echo ---------------------
+echo %~0
+Goto :End
+
+
 :Error
 set ExitCode=%ERRORLEVEL%
 
+
 :End
 set OutputDirectory=
-set TrimFlag=
 exit /B %ExitCode%

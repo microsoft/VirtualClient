@@ -28,17 +28,25 @@ namespace VirtualClient.Contracts
         /// The name of the Virtual Client instance. In practice this is typically
         /// the name of the VM/machine on which it is running.
         /// </param>
+        /// <param name="ipAddress">The IP address of the client. </param>
         /// <param name="role">The role of the client instance (e.g. client, server).</param>
-        /// <param name="privateIPAddress">Private IP Address of the client.</param>
+        /// <param name="privateIPAddress">
+        /// Private IP Address of the client. Note that this is here to enable backwards compatibility with the original privateIPAddress parameter.
+        /// This parameter will be deprecated in time.
+        /// </param>
         [JsonConstructor]
-        public ClientInstance(string name, string privateIPAddress, string role = null)
+        public ClientInstance(string name, string ipAddress = null, string role = null, string privateIPAddress = null)
         {
             name.ThrowIfNullOrWhiteSpace(nameof(name));
-            privateIPAddress.ThrowIfNullOrWhiteSpace(nameof(privateIPAddress));
+
+            if (string.IsNullOrWhiteSpace(privateIPAddress) && string.IsNullOrWhiteSpace(ipAddress))
+            {
+                ipAddress.ThrowIfNullOrWhiteSpace(nameof(ipAddress));
+            }
 
             this.Name = name;
             this.Role = role;
-            this.PrivateIPAddress = System.Net.IPAddress.Parse(privateIPAddress).ToString(); // Validate syntax
+            this.IPAddress = System.Net.IPAddress.Parse(ipAddress ?? privateIPAddress).ToString(); // Validate syntax
 
             this.Extensions = new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase);
         }
@@ -59,8 +67,8 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The IP address of the Virtual Client instance.
         /// </summary>
-        [JsonProperty(PropertyName = "privateIPAddress", Required = Required.Always, Order = 2)]
-        public string PrivateIPAddress { get; }
+        [JsonProperty(PropertyName = "ipAddress", Required = Required.Default, Order = 2)]
+        public string IPAddress { get; }
 
         /// <summary>
         /// Gets extensions associated with the client instance. This is an extensibility point
@@ -157,7 +165,7 @@ namespace VirtualClient.Contracts
             if (this.hashCode == null)
             {
                 StringBuilder hashBuilder = new StringBuilder()
-                    .Append($"{this.Name},{this.Role},{this.PrivateIPAddress}");
+                    .Append($"{this.Name},{this.Role},{this.IPAddress}");
 
                 if (this.Extensions?.Any() == true)
                 {

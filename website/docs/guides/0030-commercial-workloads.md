@@ -1,5 +1,5 @@
 ﻿---
-id: commercial-workload
+id: commercial-workloads
 sidebar_position: 4
 ---
 

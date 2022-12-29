@@ -261,8 +261,8 @@ namespace VirtualClient.Actions
 
         private string GetWindowsSpecificCommandLine()
         {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().PrivateIPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{((this.Role == ClientRole.Client) ? "-s" : "-r")} " +
                 $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor2.DefaultWarmupTime.TotalSeconds} " +
@@ -277,7 +277,7 @@ namespace VirtualClient.Actions
 
         private string GetLinuxSpecificCommandLine()
         {
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{((this.Role == ClientRole.Client) ? "-s" : "-r")} " +
                 $"-V " +
                 $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +

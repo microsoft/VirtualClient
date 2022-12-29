@@ -12,7 +12,7 @@ these first.
 
 If you are developing extensions to the Virtual Client platform in another repo, the following documentation can get you started.
 
-* [Developing Virtual Client Extensions](./vc-extension.md)
+* [Developing Virtual Client Extensions](./0020-develop-extensions.md)
 
 
 After going through this developer guide, there are links code examples at the bottom of this document to get you hands-on experience.
@@ -69,7 +69,6 @@ public class OpenSslExecutor : VirtualClientComponent
 public class DependencyPackageInstallation : VirtualClientComponent
 ```
 
-
 ## Practices and Principles
 Before digging into the finer-grained details of development work in the Virtual Client codebase, it is important to understand the high-level practices
 and principles the VC Team follows. The practices and principles the team follows are intended to promote rapid software feature development while ensuring
@@ -111,7 +110,7 @@ important thing is to keep things as simple as possible.
   in place protecting the correct functioning of the logic for the future. There are plenty of good examples and patterns in the source
   code to follow.
 
-  * [Testing Guide](./testing.md)
+  * [Testing Guide](./0090-testing.md)
 
 * **Functional tests are required for new profiles.**  
   Functional tests are similar to unit tests except that they focus on the correct integration of all components. When the VC Team creates new
@@ -146,8 +145,6 @@ important thing is to keep things as simple as possible.
 As a developer is starting to think about contributing to the Virtual Client codebase, there are a few things that are helpful to consider as a guide. 
 The following sections provide some high-level ideas to help form a plan. The sections below are written to account for the onboarding of an entirely
 new component (workload, monitor) to the Virtual Client so as to cover the space thoroughly.
-
-
 
 * **Familiarize yourself with the platform concepts**  
   It is important to understand the fundamental concepts for the Virtual Client before beginning. If you did not go through the platform overview
@@ -220,7 +217,6 @@ new component (workload, monitor) to the Virtual Client so as to cover the space
   VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --timeout=1440 --system=Azure
   ```
   
-
   * [Existing Profiles](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
 
 ## Platform/Core Projects and Libraries
@@ -302,7 +298,7 @@ for functional correctness.
 
 * **API Clients**  
   Certain workload scenarios require multiple systems to operate (e.g. networking workloads, client/server). These workloads have a requirement to communicate
-  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](../guides/3-server-client/3-server-client.md) provided on
+  with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client uses an [environment layout](../guides/0020-client-server.md) provided on
   the command line to determine the IP addresses of other instances. API client creation and management is encapsulated in the following interfaces/classes:
 
   * IApiClientManager
@@ -561,7 +557,7 @@ exhaustive list but does illustrate things that are "fundamental" to development
   it has its own developer guidance documentation. Follow the recommendations in the documentation to ensure high quality exceptions and error information is
   always provided to users of the Virtual Client.
 
-  * [Virtual Client Error Handling Developer Guide](./error-handling.md)
+  * [Virtual Client Error Handling Developer Guide](./0070-error-handling.md)
 
 ## General Code Flow
 The following section provides information on the general flow of the code for a Virtual Client component. This is helpful to understand when developing new
@@ -830,7 +826,7 @@ euphoria. We typically use the Visual Studio IDE due to its robust support for d
 The sections below document some of the ways in which the developer can debug components in the Virtual Client. The Visual Studio IDE is used for these examples because of its
 robust support for developer inner-loop processes including support for debugging.
 
-#### Debug Using Unit/Functional Tests
+#### Debug in Visual Studio Using Unit/Functional Tests
 There is no faster way to get a debugger attached to your code than via an Nunit test. The Visual Studio 'Test Explorer' makes it very
 easy to put a break point in the code of a test method, to right-click in the test and then to select 'Debug Test(s)' from the context
 menu. From that point Visual Studio will build your source code and will execute the test with a debugger attached. The VC Team often 
@@ -845,7 +841,7 @@ Once you have written a unit/functional test in Visual Studio:
 Visual Studio will build the source code, attach a debugger to the test execution runner and will run the test code. The debugger will hit your breakpoint in the test. From that
 point forward, you can step through your code as normal (e.g. F5, F10, F11 debug stepping).
 
-#### Debug by Running a Custom Profile
+#### Debug in Visual Studio by Running a Custom Profile
 The developer may sometimes want to run the full Virtual Client runtime executable to debug his/her code. This is often the case when the developer wants to test the code live and
 without any mocks. To do this, it is easiest to create a custom profile in a directory on the file system that contains actions, monitors, dependencies definitions related to the class
 the developer wants to debug. If the profile is for debugging purposes only, it is best to create it in a directory outside of source control and to place ONLY the components
@@ -857,8 +853,6 @@ examples illustrate how to do this.
 * **Custom Profile Option #1**  
   In this example, a custom profile will be used to debug an action/executor on which the developer is working (e.g. ExampleWorkloadExecutor below). This action/executor requires
   a specific dependency package containing workload binaries to be downloaded. A custom profile will be used to incorporate the action/executor and the workload dependency package.
-
-  
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -933,18 +927,14 @@ examples illustrate how to do this.
   }
   ```
   
-
   The workload dependencies package must be copied into the **\{repo_directory\}/out/bin/Debug/x64/VirtualClient.Main/packages**
   directory before beginning to debug.
-
-  
 
   ```
   e.g.
   S:\one\virtualclient\out\bin\Debug\VirtualClient.Main\packages\exampleworkload.1.0.0.zip
   ```
   
-
   Once the profile is created, setup Visual Studio for debugging
   1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.
   2. Set the **VirtualClient.Main** project as the startup project. To do so, right-click on the project in the Solution Explorer and select 
@@ -958,8 +948,6 @@ examples illustrate how to do this.
 * **Custom Profile Option #3**  
   This option is the same as option #2 above except that we will set an environment variable to the path/directory location of the workload dependency
   package on the system.
-
-  
 
   ``` json
   # A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
@@ -982,11 +970,8 @@ examples illustrate how to do this.
   }
   ```
   
-
   The workload dependencies package exists in a directory on the system already. We set an environment variable **VCDependenciesPath** to this path/directory location 
   before beginning to debug.
-
-  
 
   ```
   e.g.
@@ -995,7 +980,6 @@ examples illustrate how to do this.
   # location.
   S:\one\debugging\packages\exampleworkload.1.0.0.zip
   ```
-  
 
   Once the profile is created, setup Visual Studio for debugging
   1. Set the solution configuration to **Debug** at the top of the Visual Studio IDE window.

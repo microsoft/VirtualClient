@@ -1,19 +1,15 @@
-﻿# Vision
-- **VirtualClient becomes the industrial standard to running benchmarks.**
-- **VirtualClient becomes the knowledge hub for performance engineering.**
+﻿# Roadmap
 
-## Roadmap
-
-### Platform improvement
+## Platform improvement
 1. Run VirtualClient in Docker
 2. Publish VC in mainstream package managers (apt,dnf,yum,zypper)
 
-
-### Workload improvements
+## Workload improvements
 1. Windows support for SPECcpu. 
 
-### Workloads
-1. Commercial workload will come to VirtualClient soon. We will provide a model to release the automation of a workload, with user provided binaries and licenses.
+## Workloads
+1. Commercial workload will come to VirtualClient soon. We will provide a model to release the automation of a workload, with user provided binaries and 
+   licenses.
     - SPECcpu
     - SPECjbb
     - SPECpower
@@ -31,12 +27,11 @@
     - PostgreSQL
     - YCSB
 
-
-### Monitors
+## Monitors
 1. NvQual
 2. Internal monitors we are reviewing
 
-### Dependencies
+## Dependencies
 1. We are adding documents for the dependencies we already support
     - Nvidia GPU driver and CUDA installation
     - Compiler Installation

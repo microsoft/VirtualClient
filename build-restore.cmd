@@ -10,21 +10,29 @@ echo:
 echo [Restoring NuGet Packages]
 echo --------------------------------------------------
 call dotnet restore %~dp0src\VirtualClient\VirtualClient.sln %~1 && echo: || Goto :Error
-
-
-:Usage
-echo Invalid Usage.
-echo:
-echo Usage:
-echo %~0 [--interactive]
 Goto :End
 
+:Usage
+echo:
+echo Usage:
+echo ---------------------
+echo %~0 [--interactive]
+echo:
+echo:
+echo Examples:
+echo ---------------------
+echo # Restore NuGet packages for all projects
+echo %~0
+echo:
+echo # Restore allow user to provide credentials
+echo %~0 --interactive
+Goto :Finish
 
 :Error
 set ExitCode=%ERRORLEVEL%
 
-
 :End
-echo:
-echo Restore Stage Exit/Error Code: %ExitCode%
+echo Restore Stage Exit Code: %ExitCode%
+
+:Finish
 exit /B %ExitCode%

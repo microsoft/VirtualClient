@@ -1,37 +1,15 @@
-﻿---
-id: telemetry
----
+﻿# Azure Event Hub Integration
+Azure Event Hubs is a highly scalable Azure cloud messaging hub/proxy that has out-of-the-box integration with a number of other Azure data/data 
+pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
+covers the requirements for using an Event Hub including the setup.
 
-# Data / Telemetry Integration
-The Virtual Client emits a range of different types of data/telemetry as part of the execution of workload and monitoring
-profiles. This data/telemetry might for example include measurements/metrics emitted by a particular workload, performance counters
-or just common tracing/logging output. This data is useful for using the Virtual Client as a platform for evaluating performance
-of a system while under test. The sections below describe how to setup different cloud service provider "big data" resources that
-can be used to manage data analytics at-scale.
-
-## Categories of Data
-Telemetry data emitted is divided into 3 different categories:
-
-* **Logs/Traces**  
-  The Virtual Client is heavily instrumented with structured logging/tracing logic. This ensures that the inner workings of the application can
-  are easily visible to the user. This is particularly important for debugging scenarios. Errors experienced by the application are captured here
-  as well and will contain detailed error + callstack information.
-
-  **Workload and System Metrics**  
-  Workload metrics are measurements and information captured from the output of a particular workload (e.g. DiskSpd, FIO, GeekBench) that represent
-  performance data from the system under test. Performance counters for example provide measurements from the system as-a-whole and are useful for determining exactly how the resources (e.g. CPU, memory, I/O, network)
-  were used during the execution of a workload.
-
-  **System Events**  
-  System events describe certain types of important information on the system beyond simple performance measurements. This might for example
-  include Windows registry changes or special event logs.
+* [Data/Telemetry Basics](./0040-telemetry.md)
+* [Event Hub Documentation](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_e21e0a74b99318c95ac66be89b11ec19:G:s&ef_id=e21e0a74b99318c95ac66be89b11ec19:G:s&msclkid=e21e0a74b99318c95ac66be89b11ec19)
 
 ## Event Hubs integration
 Event Hub is a highly scalable Azure cloud messaging hub/proxy that has out-of-the-box integration with a number of other Azure data/data 
 pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
 covers the requirements for using an Event Hub including the setup.
-
-* [Event Hub Documentation](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_e21e0a74b99318c95ac66be89b11ec19:G:s&ef_id=e21e0a74b99318c95ac66be89b11ec19:G:s&msclkid=e21e0a74b99318c95ac66be89b11ec19)
 
 ### Create Event Hub Namespace
 The Virtual Client emits data for each one of these categories into a distinct/singular target Event Hub within an Event Hub namespace (a 1-to-1 mapping).
@@ -64,8 +42,8 @@ based upon the VC team's experience that are designed to support high volumes of
   * Message Retention: 2 days
   * Partition Count: Production Scale = 32, Non-Production/Test Scale = 10
 
-  ![Event Hub Namespace Throughput Units](../img/eventhub-integration-1.png)
-  ![Event Hub Namespace Throughput Units](../img/eventhub-integration-2.png)
+  ![Event Hub Namespace Throughput Units](./img/eventhub-integration-1.png)
+  ![Event Hub Namespace Throughput Units](./img/eventhub-integration-2.png)
 
 ## Event Hubs and Azure Data Explorer integration
 The following section describes how to setup an existing Azure Data Explorer (ADX) cluster to support ingesting Virtual Client data/telemetry

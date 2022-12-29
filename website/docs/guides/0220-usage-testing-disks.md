@@ -1,9 +1,4 @@
-﻿---
-id: test-disks
-sidebar_position: 1
----
-
-# Testing Disks
+﻿# Usage: Testing Disks
 VC automates disk formating and run storage workloads on the target systems. We documented the rules and the mechanism we used to identify disks to run workloads on.
 
 ## Rules

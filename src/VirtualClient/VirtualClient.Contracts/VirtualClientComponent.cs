@@ -582,7 +582,7 @@ namespace VirtualClient.Contracts
             bool isMatch = false;
             if (this.Layout != null)
             {
-                if (this.systemInfo.IsLocalIPAddress(clientInstance.PrivateIPAddress))
+                if (this.systemInfo.IsLocalIPAddress(clientInstance.IPAddress))
                 {
                     isMatch = true;
                 }

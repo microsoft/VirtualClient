@@ -411,8 +411,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().PrivateIPAddress;
-            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().PrivateIPAddress;
+            string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
+            string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
 
             return $"-c -r {this.Connections} " +
                 $"{clientIPAddress},0,{serverIPAddress},{this.Port},{this.ConnectionsPerThread},{this.MaxPendingRequestsPerThread},{this.ConnectionDuration},{this.DataTransferMode} " +

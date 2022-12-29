@@ -4,13 +4,9 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Workload Details](./fio.md)  
 * [Workload Profile Metrics](./fio-metrics.md)
 
------------------------------------------------------------------------
-
 ### Preliminaries
 The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
 must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
 
 ### PERF-IO-FIO.json
 Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system as well as 
@@ -24,18 +20,16 @@ aspects of the workload execution.
 
 1) Total number of jobs/threads = {# of logical cores} / 2
 
-
-```
+  ```
    Examples:  
      For a 16-core system:
      16/2 = 8 concurrent jobs/threads per FIO execution (i.e. # threads to run I/O operations against the test file concurrently).
 
      For a 64-core system:
      64/2 = 32 concurrent jobs/threads per FIO execution (i.e. # threads to run I/O operations against the test file concurrently).
-```
+  ```
 
 2) Total I/O depth =  512 / {Total number of jobs/threads}
-
 
  ```
    Examples:
@@ -44,7 +38,7 @@ aspects of the workload execution.
 
      For a 64 core system:
      total # jobs/threads = 64/2 (above) -> 512/32 = 16
-```
+  ```
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -117,9 +111,7 @@ aspects of the workload execution.
     * (64-core/vCPU VM) = 4 - 5 hours (including time required create initial 496GB file on each disk)
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
+  The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
   // Tests the remote/managed disks by default

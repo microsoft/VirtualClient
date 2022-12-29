@@ -172,7 +172,7 @@ namespace VirtualClient
         /// </returns>
         public IApiClient GetOrCreateApiClient(string id, ClientInstance targetInstance)
         {
-            IPAddress ipAddress = IPAddress.Parse(targetInstance.PrivateIPAddress);
+            IPAddress ipAddress = IPAddress.Parse(targetInstance.IPAddress);
             return this.GetOrCreateApiClient(id, ipAddress, this.GetApiPort(targetInstance));
         }
 

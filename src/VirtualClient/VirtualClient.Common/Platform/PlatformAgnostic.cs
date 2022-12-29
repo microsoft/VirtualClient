@@ -8,7 +8,7 @@ namespace VirtualClient.Common.Platform
     /// <summary>
     /// Used to designate a class as being compatible with all platforms.
     /// </summary>
-    public class PlatformAgnostic : SystemOSCompatibilityAttribute
+    public class PlatformAgnostic : SystemCompatibilityAttribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PlatformAgnostic"/> class.

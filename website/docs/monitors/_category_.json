@@ -1,8 +1,8 @@
 {
   "label": "Monitors",
-  "position": 5,
+  "position": 4,
   "link": {
     "type": "generated-index",
-    "description": "VirtualClient Monitors runs in parallel and indefinitely."
+    "description": "Monitors and profiles supported by the Virtual Client."
   }
 }
