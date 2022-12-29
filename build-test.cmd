@@ -1,10 +1,10 @@
 @echo Off
 
+set ExitCode=0
+
 if /i "%~1" == "/?" Goto :Usage
 if /i "%~1" == "-?" Goto :Usage
 if /i "%~1" == "--help" Goto :Usage
-
-set ExitCode=0
 
 echo:
 echo [Running Tests]
@@ -16,23 +16,18 @@ for /f "tokens=*" %%f in ('dir /B /S %~dp0src\*Tests.csproj') do (
 
 Goto :End
 
-
 :Usage
-echo Invalid Usage.
 echo:
 echo Usage:
+echo ---------------------
 echo %~0
-Goto :End
-
+Goto :Finish
 
 :Error
 set ExitCode=%ERRORLEVEL%
 
-
 :End
-set TestResultsPath=
-set TargetFramework=
-set TestRunSettingsPath=
+echo Test Stage Exit Code: %ExitCode%
 
-echo Build Stage Exit/Error Code: %ExitCode%
+:Finish
 exit /B %ExitCode%

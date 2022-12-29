@@ -2,7 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the Memcached workload.  
 
 * [Workload Details](./memcached.md)  
-* [Workload Profile Metrics](./mechached-metrics.md)  
+* [Workload Profile Metrics](./memcached-metrics.md)  
 
 
 -----------------------------------------------------------------------

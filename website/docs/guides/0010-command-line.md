@@ -1,9 +1,4 @@
-﻿---
-id: command-options
-sidebar_position: 6
----
-
-# Command Line options
+﻿# Command Line Options
 The following sections describe the command line options available on the Virtual Client application.
 
 ## Default Command Options
@@ -13,13 +8,13 @@ on the system.
 | Option                                                         | Required | Data Type                    | Description |
 |----------------------------------------------------------------|----------|------------------------------|-------------|
 | --p, --profile=\<profile\>                                     | Yes      | string/text                  | The execution profile which indicates the set of workloads to run. |
-| --ps, --packages, --packageStore=\<authtoken\>                 | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which workload and dependency packages can be downloaded. This is required for most workloads because the workload binary/script packages are not typically packaged with the Virtual Client application itself. Contact the VC Team to get a SAS URI for your team. See [Blob Storage Support](../7-blob-storage.md). |
+| --ps, --packages, --packageStore=\<authtoken\>                 | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which workload and dependency packages can be downloaded. This is required for most workloads because the workload binary/script packages are not typically packaged with the Virtual Client application itself. Contact the VC Team to get a SAS URI for your team. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
 | --a, --agentId, --clientId=\<id\>                              | No       | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
 | --port, --api-port=\<port\>                                    | No       | integer                      | The port to use for hosting the Virtual Client REST API service for profiles that allow multi-system, client/server operations (e.g. networking). Additionally, a port may be defined for each role associated with the profile operations using the format {Port}/{Role} with each port/role combination delimited by a comma (e.g. 4501/Client,4502/Server). |
-| --cs, --content, --contentStore=\<authtoken\>                  | No       | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store where files/content can be uploaded as part of background monitoring processes. Contact the VC Team to get a SAS URI for your team. See [Blob Storage Support](../7-blob-storage.md). |
-| --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\>  | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Event Hub Integration](../telemetry/telemetry.md) |
+| --cs, --content, --contentStore=\<authtoken\>                  | No       | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store where files/content can be uploaded as part of background monitoring processes. Contact the VC Team to get a SAS URI for your team. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
+| --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\>  | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Azure Event Hub Integration](./0610-integration-event-hub.md). |
 | --e, --experimentId=\<guid\>                                   | No       | guid                         | A unique identifier that defines the ID of the experiment for which the Virtual Client workload is associated. |
-| --lp, --layoutPath=\<path\>                                    | No       | string/path                  | A path to a environment layout file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Environment Layouts](../3-server-client/environment-layout.md). |
+| --lp, --layoutPath=\<path\>                                    | No       | string/path                  | A path to a environment layout file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Client/Server Support](./0020-client-server.md). |
 | --mt, --metadata=\<key=value,,,key=value...\>                  | No       | string/text                  | Metadata to include with all logs/telemetry output from the Virtual Client. <br/><br/>Each metadata entry should be akey value pair separated by ",,," delimiters (e.g. property1=value1,,,property2=value2). |
 | --pm, --parameters=\<key=value,,,key=value...\>                | No       | string/text                  | Parameters or overrides to pass to the execution profiles that can modify aspects of their operation. <br/><br/>Each instruction should be a key value pair separated by ",,," delimiters (e.g. instruction1=value1,,,instruction2=value2). |
 | --sc, --scenarios=\<scenario,scenario...\>                     | No       | string/text                  | A comma-delimited list/subset of scenarios defined in the execution profile to run (e.g. scenario1,scenario2,scenario3). |
@@ -31,7 +26,6 @@ on the system.
 | --debug                                                        | No       |                              | If this flag is set, verbose logging will be output to the console.  |
 | -?, -h, --help                                                 | No       |                              | Show help information. |
 | --ver                                                          | No       |                              | Show application version information. |
-
 
 ```bash
  # Run a workload profile
@@ -61,7 +55,6 @@ on the system.
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
 ```
 
-
 ## Subcommands
 The following tables describe the various subcommands that are supported by the Virtual Client application.
 
@@ -76,9 +69,9 @@ The following tables describe the various subcommands that are supported by the 
 |---------------------------------------------------------------|----------|------------------------------|-------------|
 | --pkg, --package =\<blobName\>                                | Yes      | string/blob name             | Defines the name/ID of a package to bootstrap/install (e.g. anypackage.1.0.0.zip). |
 | --n, --name=\<name\>                                          | Yes      | string/name                  | Defines the logical name of a package as it should be registered on the system (e.g. anypackage.1.0.0.zip -> anypackage). |
-| --ps, --packages, --packageStore=\<authtoken\>                | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which dependency packages can be downloaded. This is required if the dependency package DOES NOT already exist on the system and vice versa. Contact the VC Team to get a SAS URI for your team. See [Blob Storage Support](../7-blob-storage.md). |
+| --ps, --packages, --packageStore=\<authtoken\>                | Yes/No   | string/connection string/SAS | A full connection string or SAS URI to an Azure storage account blob store from which dependency packages can be downloaded. This is required if the dependency package DOES NOT already exist on the system and vice versa. Contact the VC Team to get a SAS URI for your team. See [Azure Storage Account Integration](./0600-integration-blob-storage.md). |
 | --a, --agentId, --clientId=\<id\>                             | No       | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
-| --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\> | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Event Hub Integration](../telemetry/telemetry.md) |
+| --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\> | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Azure Event Hub Integration](./0610-integration-event-hub.md). |
 | --e, --experimentId=\<guid\>                                  | No       | guid                         | A unique identifier that defines the ID of the experiment for which the Virtual Client workload is associated. |
 | --mt, --metadata=\<key=value,,,key=value...\>                 | No       | string/text                  | Metadata to include with all logs/telemetry output from the Virtual Client. <br/><br/>Each metadata entry should be akey value pair separated by ",,," delimiters (e.g. property1=value1,,,property2=value2). |
 | --s, --system=\<executionSystem\>                             | No       | string/text                  | The execution system/platform in which Virtual Client is running (e.g. Azure). |
@@ -154,4 +147,3 @@ VirtualClient.exe @C:\VirtualClient\win-x64\CommandLineOptions.rsp
 --eventHub="{AccessPolicy}"
 --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01" 
 ```
-

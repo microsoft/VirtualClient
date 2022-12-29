@@ -70,7 +70,7 @@ Goals of the platform include:
   * Generic data nomenclature.
   * Easy command line options.
 
-#### Workload Facilities
+### Workload Facilities
 A fundamental aspect of the Virtual Client platform is that it provides a wide range of different workloads that can be executed on a system. A workload represents
 a set of one more operations designed to utilize system resources in a specific way. Some workloads are designed to target singular primitive resources on the system
 such as the CPU, memory/RAM, disks. Some workloads are designed to utilize the system holistically (CPU, memory and disk I/O together). Some workloads are designed to
@@ -87,12 +87,12 @@ Examples of workload requirements supported by the platform include:
 * Measure the performance of the system as a whole (e.g. SQL Server).
 * Measure the tolerance of the system to kernel stress (i.e. mean-time-to-failure).
 
-#### Monitoring Facilities
+### Monitoring Facilities
 A second fundamental aspect of the Virtual Client platform is the ability to capture a range of different metrics from the system itself while workloads are running. Aligning the
 timing for capturing system monitoring information with the running of a workload produces high fidelity, highly correlated results around the performance of the system. The correlation
 of workload measurements with system/OS measurements can provide deep insights into the performance and reliability of the system from a customer perspective.
 
-* [Monitors Available](../monitors/monitor-profiles.md)  
+* [Monitors Available](../monitors/0200-monitor-profiles.md)  
 
 Examples of monitoring requirements supported by the platform include:
 
@@ -101,7 +101,7 @@ Examples of monitoring requirements supported by the platform include:
 * Power and temperature measurements on the cloud host/blade.
 * System profiling/callstack information (e.g. Azure Profiler).
 
-#### Workload/Dependency Package Facilities
+### Workload/Dependency Package Facilities
 A final important fundamental of the Virtual Client platform is that is defines a common model/standard for defining workload and dependency packages. Every workload had a different
 set of files and dependencies associated. This helps simplify the deployment of the Virtual client into most environments where an internet connection is available. Virtual Client can
 simply download the dependencies it needs at runtime. However, this also enables Virtual Client to support "disconnected" scenarios where the systems under test do not have an internet
@@ -115,14 +115,14 @@ Examples of package/dependency requirements supported by the platform include:
   * Support for NuGet feeds.
 * Support for "drop-in" packages where the workload or dependency package is deployed with the Virtual Client instead of downloaded.
 
-#### Data Capture Facilities
+### Data Capture Facilities
 Another core ability of the Virtual Client platform is that it provides a consolidated model for defining a data contract/schema for metrics emitted by workloads or by
 monitors. This is an important aspect of the platform end-to-end solution in that it makes it possible to integrate many different types of workloads while ensuring a
 common methodology for reading the results to determine outcomes.
 
 * [Example Workload Metrics](../workloads/diskspd/diskspd-metrics.md)  
-* [Example Monitoring Metrics](../monitors/perf-counter-metrics.md)  
-* [Azure Event Hub + Azure Data Explorer/Kusto Integration](./EventHubIntegrationNext.md)
+* [Example Monitoring Metrics](../monitors/0100-perf-counter-metrics.md)  
+* [Azure Event Hub + Azure Data Explorer/Kusto Integration](../guides/0610-integration-event-hub.md)
 
 Examples of data capture requirements supported by the platform include:
 

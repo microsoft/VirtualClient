@@ -9,9 +9,7 @@ vs. multi-threaded I/O operations as well as the ability to control I/O queue de
 
 * [FIO Documentation](https://fio.readthedocs.io/en/latest/index.html)
 
------------------------------------------------------------------------
-
-### What is Being Tested?
+## What is Being Tested?
 FIO outputs several hundred metrics in a single run of a workload. This is an unrealistic amount of data to store, so we decided to focus on a set of metrics that measure throughput, IOPs, and latency. We can use these values to compare the performance between different versions of hardware and firmware, as well as track overall performance over time.
 
 | Name                                  | Description                                                            |
@@ -22,19 +20,14 @@ FIO outputs several hundred metrics in a single run of a workload. This is an un
 | Completion Latency Mean               | Mean time from submission to completion of IO request                  |
 | Data Corruption Count                 | Number of data verification errors encountered                         |
 
------------------------------------------------------------------------
-
-### Supported Platforms
+## Supported Platforms
 
 * Linux x64
 * Linux arm64
 * Windows x64
 * Windows arm64
 
-
------------------------------------------------------------------------
-
-### Resources
+## Resources
 
 * [Linux Reviews - How to test disk I/O performance](https://linuxreviews.org/HOWTO_Test_Disk_I/O_Performance)
 * [How fast are your disks?](https://arstechnica.com/gadgets/2020/02/how-fast-are-your-disks-find-out-the-open-source-way-with-fio/)  

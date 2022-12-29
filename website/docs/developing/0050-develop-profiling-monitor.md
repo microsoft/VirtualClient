@@ -5,7 +5,7 @@ detailed information for various types of low level operations on the system suc
 switches. The following sections cover support that exists in the Virtual Client for profilers as well as how that is enabled in
 workload and monitoring profiles.
 
-### Preliminaries
+## Preliminaries
 The following pieces of documentation are helpful to understand before implementing any new monitor or profiler support in the
 Virtual Client.
 
@@ -18,12 +18,12 @@ as the startup project and run it. Select option #2 on the initial menu to see a
 on the initial menu to see an example of interval-based monitoring. These are just examples so no actual system profiling is happening,
 but this illustrates the code flow and can be debugged in the Visual Studio IDE.
 
-### Supported Profilers
+## Supported Profilers
 The following profilers are currently supported by the Virtual Client:
 
 * [Azure Profiler](https://eng.ms/docs/products/azure-profiler/azure-profiler)
 
-### Profiling Scenarios
+## Profiling Scenarios
 The Virtual Client supports a few different profiling scenarios designed to enable flexibility with the capture of information from the
 system:
 
@@ -40,16 +40,16 @@ It is recommended that you consider implementing both scenarios in monitors that
 when running on Azure guests/VMs vs. Azure hosts/blades. For example, it is desirable to run profiling during the execution of a specific workload
 on a guest/VM while running a steady/constant profiling on the host/blade underneath.
 
-### Interval-Based Profiling
+## Interval-Based Profiling
 The exact nature of how a given profiler works is dependent upon how it is implemented. The following section intends to provide a recommended
 approach to how a background monitor that runs a profiler should work when supporting interval-based profiling.
 
-#### Recommendations:
+### Recommendations:
 Note that the recommendations below are largely implementation details. 
 
 * Use the following examples for reference:
-  * [Example Monitor](../VirtualClient.Examples/ExampleWorkloadProfilingScenarioMonitor.cs)
-  * [Example Monitoring Profile](../VirtualClient.Examples/profiles/EXAMPLE-MONITORS-PROFILE.json)
+  * [Example Monitor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Monitors/ExampleProfilingMonitor.cs)
+
 * The profiler should be implemented as a background monitor so that it can be defined in a monitoring profile in the "Monitors" section.
 * The specifics of the interval are defined in a monitoring profile. Monitoring profiles define a set of one or more monitors to run and any
   parameters that control the behaviors of the monitors. The following parameters are commonly used to define behaviors for interval-based profilers:
@@ -107,25 +107,25 @@ Note that the recommendations below are largely implementation details.
   ```
   </div>
 
-### On-Demand Profiling
+## On-Demand Profiling
 The exact nature of how a given profiler works is dependent upon how it is implemented. The following section intends to provide a recommended
 approach to how a background monitor that runs a profiler should work when supporting on-demand profiling. The Virtual Client utilizes standard
 .NET events to support on-demand behaviors. This enables real-time support for in-process notifications between workload executors and background
 monitors.
 
-* [VirtualClientEventing class implementation](../VirtualClient.Contracts/VirtualClientEventing.cs)
+* [VirtualClientEventing Class](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientEventing.cs)
 * [.NET Events](https://docs.microsoft.com/en-us/dotnet/standard/events/)
 
-#### Recommendations:
+### Recommendations:
 Note that the recommendations below are largely implementation details. In this implementation requirement there are one or more monitors that run profilers
 defined in a monitoring profile who simply listen until signaled. The workload executors are defined in a workload profile. The workload executors
 send signals to the monitors/profilers to run using simple .NET events where "instructions" are passed to the monitors/profilers.
 
 * Use the following examples for reference:
-  * [Example Workload Executor](../VirtualClient.Examples/ExampleWorkloadProfilingScenarioExecutor.cs)
-  * [Example Workload Profile](../VirtualClient.Examples/profiles/EXAMPLE-WORKLOAD-PROFILE.json)
-  * [Example Monitor](../VirtualClient.Examples/ExampleWorkloadProfilingScenarioMonitor.cs)
-  * [Example Monitoring Profile](../VirtualClient.Examples/profiles/EXAMPLE-MONITORS-PROFILE.json)
+  * [Example Workload Executor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Examples/ExampleWorkloadProfilingScenarioExecutor.cs)
+  * [Example Monitor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Examples/ExampleWorkloadProfilingScenarioMonitor.cs)
+  * [Example Profiles](https://github.com/microsoft/VirtualClient/tree/main/src/VirtualClient/VirtualClient.Examples/profiles)
+
 * The profiler should be implemented as a background monitor so that it can be defined in a monitoring profile in the "Monitors" section.
 * The monitor should be defined in a monitoring profile (separate from any workload profiles).
 * Parameters that define the behaviors of the on-demand monitor/profiler should be defined in a workload profile within the 'Parameters' section
@@ -200,9 +200,9 @@ send signals to the monitors/profilers to run using simple .NET events where "in
   ```
   </div>
 
-### Bringing it All Together
+## Bringing it All Together
 The documentation above covers the essentials for how profilers are integrated into the Virtual Client application. One final thing to cover is the
-extent to which this integration applies. There is logic in the base [VirtualClientComponent](../VirtualClient.Contracts/VirtualClientComponent.cs) class
+extent to which this integration applies. There is logic in the base [VirtualClientComponent](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientComponent.cs) class
 that ensures this behavior is available for all workload executors that exist in the application. There is no need to make any code changes to individual
 workload executors to enable profiling. Thus the parameters noted above in the section for on-demand profiling can be added to the parameters for and of 
 the workload 'Actions' to enable support for monitors/profilers supported by the application. Once these parameters have been added to an existing profile,
@@ -313,16 +313,16 @@ VirtualClient.exe --profile=PERF-NETWORK.json --profile=MONITORS-PROFILING.json 
 ```
 </div>
 
-### Profiling Integration Code Requirements
+## Profiling Integration Code Requirements
 It is necessary to make a small set of code changes to any workload executor that should support on-demand profiling. Note that this does not apply nor is
 it required to support interval-based profiling. Interval-based profiling takes no dependency on the workload executors for signals. The following section
 covers the code changes that must be made to a workload executor.
 
 * Use the following examples for reference:
-  * [Example Workload Executor](../VirtualClient.Examples/ExampleWorkloadProfilingScenarioExecutor.cs)
-  * [BackgroundProfiling Class](../VirtualClient.Core/BackgroundProfiling.cs)
+  * [Example Workload Executor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Examples/ExampleWorkloadProfilingScenarioExecutor.cs)
+  * [BackgroundProfiling Class](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Core/BackgroundProfiling.cs)
 
-#### Add a BackgroundProfiling Block
+### Add a BackgroundProfiling Block
 Each workload executor might perform a number of different operations before executing an actual workload. In order to allow each workload executor to be 
 instrumented such that on-demand profiling happens at exactly the right/desired moment, a BackgroundProfiling block will be added. The following example
 shows how to do this:

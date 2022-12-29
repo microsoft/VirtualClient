@@ -9,7 +9,7 @@ namespace VirtualClient.Common.Platform
     /// Used to designate a class as being compatible with Windows. (PlatformID.Win32NT)
     /// </summary>
     [AttributeUsage(validOn: AttributeTargets.Class)]
-    public sealed class WindowsCompatible : SystemOSCompatibilityAttribute
+    public sealed class WindowsCompatible : SystemCompatibilityAttribute
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WindowsCompatible"/> class.

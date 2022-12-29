@@ -9,21 +9,21 @@ binaries/.dlls containing actions, monitors, dependency handlers etc... that are
 repo. Extensions allow development teams to add features to the Virtual Client runtime platform that are specialized towards their team's needs and charter.
 Before getting started, it is helpful to familiarize yourself with the Virtual Client platform design and concepts.
 
-* [General Developer Guide](../developing/develop-guide.md)
+* [General Developer Guide](./0010-develop-guide.md)
 
 The following example extensions repo can be used for reference to the details described within this guide.
 
 * [CRC-VirtualClient-Examples Git Repo](https://msazure.visualstudio.com/One/_git/CRC-VirtualClient-Examples)
 
-### Platform Libraries
+## Platform Libraries
 In order to develop extensions to the Virtual Client platform, the following libraries are required. These can be referenced or downloaded from the CRC
 team's NuGet feeds.
 
-* ##### NuGet Feeds
+* #### NuGet Feeds
   * [Production Release NuGet Feed](https://msazure.visualstudio.com/One/_artifacts/feed/CRC)  
   * [Pre-Release NuGet Feed](https://msazure.visualstudio.com/One/_artifacts/feed/CRC-Dev)
 
-* ##### NuGet Packages/Libraries
+* #### NuGet Packages/Libraries
   * **VirtualClient.Framework**  
     Contains the fundamental classes and interfaces required to develop actions, monitors and dependency handlers for the Virtual Client.
 
@@ -46,7 +46,7 @@ team's NuGet feeds.
   </Project>
   ```
 
-### Platform Requirements
+## Platform Requirements
 The Virtual Client is a .NET 6.0 application. Assemblies containing extensions to the Virtual Client must likewise be built against the .NET 6.0 framework
 SDK. Assemblies compiled for the Virtual Client must have the term 'VirtualClient' in them. It is recommended that the following format be used when
 naming your assemblies. This will help to avoid any conflicts with extensions produced by other teams.
@@ -71,7 +71,7 @@ that when compiled can be used in the Virtual Client.
 [assembly: VirtualClient.Contracts.VirtualClientComponentAssembly]
 ```
 
-### Versioning Requirements
+## Versioning Requirements
 The following section provides requirements to follow when considering versions of the platform libraries to reference. The VC Team follows a process of
 semantic versioning with the Virtual Client runtime application and framework libraries. The versions of the assemblies/.dlls/.exes can be used to determine
 which version of the NuGet packages should be used. The following resource explains the versioning process.
@@ -87,7 +87,7 @@ illustrate versions of extensions (when compiled) that would be expected to work
 | 2.0.\* (e.g. 2.0.2000.500)               | 2.0.\* (e.g. 2.0.2001.505)            | 2.0.\* (e.g. 2.0.0.0)                        | VirtualClient.exe version 2.0.2000.500 will support framework library versions from 2.0.0.0 to < 2.1.0.0.
 | 2.1.\* (e.g. 2.1.2100.100)               | 2.1.\* (e.g. 2.1.2200.300)            | 2.1.\* (e.g. 2.1.0.0)                        | VirtualClient.exe version 2.1.2100.100 will support framework library versions from 2.1.0.0 to < 2.2.0.0.
 
-### Packaging Requirements
+## Packaging Requirements
 Virtual Client extensions are loaded into runtime execution via dependency packages similarly to the way that other types of dependencies
 (e.g. workload binaries, scripts etc...) are integrated. A Virtual Client dependency package is nothing more than a structured .zip file
 that contains the files required for a particular dependency. Dependency packages allow Virtual Client to support a number of different scenarios
@@ -189,7 +189,7 @@ will have the following content.
    /crc.vc.extensions/win-x64/profiles/EXAMPLE-WORKLOAD-PROFILE.json
   ```
 
-### How To Use/Integrate Extensions
+## How To Use/Integrate Extensions
 Once extensions have been developed and an extensions package exists, they can be used in the Virtual Client runtime. There are a number of different ways that
 extensions can be bootstrapped/installed on the system to suit the needs of the situation. The following examples illustrate some common ways that extensions can 
 be integrated into the Virtual Client runtime.
@@ -230,7 +230,6 @@ be integrated into the Virtual Client runtime.
 * #### A Custom-Defined Bootstrap Profile is Used
   The developer can choose to use a custom profile for bootstrapping/installing extensions as well.
 
-
   ``` json
   # Profile = BOOTSTRAP-EXTENSIONS.json
   {
@@ -264,12 +263,11 @@ be integrated into the Virtual Client runtime.
   /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440
   ```
 
-
-### How To Debug Extensions
+## How To Debug Extensions in Visual Studio
 This next section is going to cover the topic of debugging Virtual Client extensions. It is very helpful at times when doing development work to have
 the ability to run the Virtual Client runtime executable while enabling the ability to step through the code line by line. For this section, we will be
 looking at how to do this using the Visual Studio IDE and facilities that it has to make debugging easier. Make sure to review the section "Debugging Virtual Client Code"
-at the bottom of the [General Developer Guide](../developing/develop-guide.md) for more information on debugging.
+at the bottom of the [General Developer Guide](./0010-develop-guide.md) for more information on debugging.
 
 * **Debug Using Unit/Functional Tests**  
   This option is documented in the general developer guide. The technique is the same for debugging extensions as it is for any other component.
@@ -322,15 +320,12 @@ at the bottom of the [General Developer Guide](../developing/develop-guide.md) f
   The Virtual Client platform allows the developer to define a custom environment variable **VCDependencyPath** to provide an extra location 
   to search for binaries that contain Virtual Client components. This environment variable should be set to the build output path for your extensions.
 
-
-
   ```
   e.g.
 
   # Example output directory for extensions
   S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net6.0
   ```
-
 
 **Setup Visual Studio for debugging:**
 

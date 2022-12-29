@@ -1,32 +1,70 @@
 @echo Off
 
-Set ExitCode=0
+set ExitCode=0
 
-if /i "%CDP_FILE_VERSION_NUMERIC%" == "" (
+if /i "%~1" == "/?" Goto :Usage
+if /i "%~1" == "-?" Goto :Usage
+if /i "%~1" == "--help" Goto :Usage
+
+REM The "VCBuildVersion" environment variable is referenced by the MSBuild processes during build.
+REM All binaries will be compiled with this version (e.g. .dlls + .exes). The packaging process uses 
+REM the same environment variable to define the version of the NuGet package(s) produced. The build 
+REM version can be overridden on the command line.
+if /i NOT "%~1" == "" (
     set VCBuildVersion=%~1
-) else (
-    set VCBuildVersion=%CDP_FILE_VERSION_NUMERIC%
 )
 
+if /i "%VCBuildVersion%" == "" (
+    set VCBuildVersion=0.0.1.0
+)
+
+set VCSolutionDir=%~dp0src\VirtualClient
+
+set TrimFlag="-p:PublishTrimmed=true -p:TrimUnusedDependencies=true"
+if /i "%~1" == "noTrim" set TrimFlag=""
+
+call %VCSolutionDir%\build-stage-packaging-tools.cmd && echo: || Goto :Error
+
 echo:
-echo [Building Solutions]
-echo VirtualClient Version: %VCBuildVersion%
-
-call dotnet build %~dp0src\VirtualClient\VirtualClient.sln -c Debug && echo: || Goto :Error
-call %~dp0src\VirtualClient\build.cmd && echo: || Goto :Error
-
-echo [Copy .artifactignore to Output]
+echo [Building Source Code] VirtualClient %VCBuildVersion%
 echo -------------------------------------------------------
-call robocopy %~dp0 %~dp0out *.artifactignore
-if %ERRORLEVEL% GEQ 8 goto :Error
+call dotnet build "%VCSolutionDir%\VirtualClient.sln" -c Debug && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -c Debug && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c Debug --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c Debug --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c Debug --self-contained %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c Debug --self-contained %TrimFlag% && echo: || Goto :Error
 Goto :End
 
+:Usage
+echo:
+echo Usage:
+echo ---------------------
+echo %~0
+echo %~0 {buildVersion}
+echo:
+echo:
+echo Examples:
+echo ---------------------
+echo # Build using default build version
+echo %~0
+echo:
+echo # Pass the build version into the command
+echo %~0 1.0.1485.571
+echo:
+echo # Set the build version in an environment variable, then build
+echo set VCBuildVersion=1.0.1485.571
+echo %~0
+Goto :Finish
 
 :Error
 set ExitCode=%ERRORLEVEL%
 
-
 :End
+REM Reset environment variables
+set TrimFlag=
+set VCSolutionDir=
+echo Build Stage Exit Code: %ExitCode%
 
-echo Build Stage Exit/Error Code: %ExitCode%
+:Finish
 exit /B %ExitCode%

@@ -10,7 +10,7 @@ efficiency work done by the .NET Core team over the past 5 years into a unified 
 ## Application Concepts
 The following sections describes some of the high-level concepts and features sets of the Virtual Client platform.
 
-#### Workload/Test Profiles
+### Workload/Test Profiles
 Workload profiles define a set of one or more different ways to run a given workload or test on a system. The primary goal of these workload profiles is to evaluate the system
 in a wide range of different ways. This in turn ensures that each round of execution of a workload on the Virtual Client platform can produce a breadth and depth of results
 that are useful in comparing the performance of the system. Each of the workload profiles are tailored based on feedback from subject matter expert teams in the
@@ -20,7 +20,7 @@ a million VM systems (Windows and Linux) in the Azure cloud.
 * [Workloads and Profiles Supported](../overview/overview.md)  
 * [Example Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-OPENSSL.json&version=GBmaster)
 * [Profiles Supported](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)
-* [Usage Examples](../guides/usage-scenarios/)
+* [Usage Examples](../guides/0200-usage-examples.md)
 
 Using the example below as a reference, there are a 3 different fundamental sections inside a workload profile:
 
@@ -32,19 +32,16 @@ Using the example below as a reference, there are a 3 different fundamental sect
   scenarios while not reducing the cohesion and validity of the goals that originally informed the design of the workload profile (this
   latter point is why not all parameters are allowed be overridden).
 
-
-
   ``` bash
-  // An example of overriding the profile parameters so to use a smaller DiskSpd test file footprint. This might
-  // for example be a scenario where the local/temp disk on an Azure virtual machine should be tested. These disks
-  // are often very small and so the default 496G file size would be way to big.
-  //
-  // In the example JSON below, you will also see placeholders in the text of some of the step-specific parameters. These
-  // placeholders will match the names of the parameters at the top and will be replaced with a value before executing
-  // the step (e.g. [diskfillsize]).
+  # An example of overriding the profile parameters so to use a smaller DiskSpd test file footprint. This might
+  # for example be a scenario where the local/temp disk on an Azure virtual machine should be tested. These disks
+  # are often very small and so the default 496G file size would be way to big.
+  #
+  # In the example JSON below, you will also see placeholders in the text of some of the step-specific parameters. These
+  # placeholders will match the names of the parameters at the top and will be replaced with a value before executing
+  # the step (e.g. [diskfillsize]).
   VirtualClient.exe --profile=PERF-IO-DISKSPD.json --timeout=1440 --parameters:DiskFillSize=30G,,,FileSize=30G
   ```
-
 
 * **Actions**  
 This section contains the workload execution workflow. Each of the steps in the 'Actions' section will be executed in sequential order. This section
@@ -58,8 +55,6 @@ a specific workload. In the example below, there are 2 dependencies that must be
 on the system should be initialized and formatted. Additionally the package containing the workload binaries/executables itself should be downloaded
 to the system from an Azure storage account blob store. Other examples of dependencies that are required include different Linux packages
 required, libraries/frameworks (e.g. PowerShell 7.0), scripts and configuring the system itself.
-
-
 
 ``` json
 {
@@ -104,8 +99,7 @@ required, libraries/frameworks (e.g. PowerShell 7.0), scripts and configuring th
 }
 ```
 
-
-#### Monitoring Profiles
+### Monitoring Profiles
 Monitoring profiles define a set of one or more different background system monitors to run during the execution of the application. For example, a common monitoring scenario 
 is the need to capture performance counters from the system. Monitoring profiles are often used in conjunction with workload profiles to capture performance
 and reliability information while workloads are executing in-parallel. The Virtual Client runs a default monitoring profile (MONITORS-DEFAULT.json) when a specific monitoring
@@ -123,12 +117,12 @@ Using the example below as a reference, there are a 3 different fundamental sect
 
 
 
-  ``` csharp
-  // An example of overriding the profile parameters to capture
-  //
-  // In the example JSON below, you will also see placeholders in the text of some of the step-specific parameters. These
-  // placeholders will match the names of the parameters at the top and will be replaced with a value before executing
-  // the step (e.g. [diskfillsize]).
+  ``` bash
+  # An example of overriding the profile parameters to capture
+  #
+  # In the example JSON below, you will also see placeholders in the text of some of the step-specific parameters. These
+  # placeholders will match the names of the parameters at the top and will be replaced with a value before executing
+  # the step (e.g. [diskfillsize]).
   VirtualClient.exe --profile=MONITORS-DEFAULT.json --timeout=1440 --parameters:CounterMonitorFrequency=00:05:00,,,CounterMonitorWarmupPeriod=00:00:30
   ```
 
@@ -141,8 +135,6 @@ concurrently and independently of each other. The monitors will typically run in
 * **Dependencies**  
 Dependencies in monitoring profiles serve the same purpose as they do in workload profiles. See the 'Workload Profiles' section above
 for details.
-
-
 
 ``` json
 {
@@ -173,8 +165,7 @@ for details.
 }
 ```
 
-
-#### Workload Dependency Packages
+### Workload Dependency Packages
 The section above talked a bit about defining dependencies in Virtual Client workload and monitoring profiles. The Virtual Client platform has a model defined for how dependencies should
 be packaged. Virtual Client workload and dependency packages follow the strict schema for the folder structure of the packages that allows for putting binaries, scripts and
 other files in the package separated by their target runtime OS and architecture platforms (e.g. win-x64, win-arm64, linux-x64, linux-arm64). Workload and dependency
@@ -188,11 +179,13 @@ bundled with the Virtual Client itself removing the requirement at runtime of do
 the Virtual Client package to be very large. This is an issue for deployment simplicity and reliability in cloud environments. With that said, the Virtual Client
 Official build pipeline can support producing different packages/bundles for the Virtual Client that contain more workloads built-in.
 
-#### Multi-Instance API Support
+### Multi-Instance API Support
 Certain workload scenarios require multiple systems to operate (e.g. client/server networking workloads and high-performance compute workloads). These workloads have a requirement to communicate
 with each other to be able to synchronize client-side executions with server-side expectations. The Virtual Client has a self-hosted REST API that is used
 for this purpose. This REST API enables simple HTTP communications between 2 or more different instances of the Virtual Client. The REST API provides the following
 support:
+
+* [Client/Server Support](../guides/0020-client-server.md)
 
 * **State Management**  
   The API enables both the client and the server instances of the application to preserve state on the local system. Additionally, state objects/requests can be
@@ -204,12 +197,12 @@ support:
   The API enables one instance of the Virtual Client to confirm another instance of the Virtual Client running on a different system is up and running. This is called
   a heartbeat.
 
-* **Eventing**  
+* **Instructions/Eventing**  
   The API also enables one instance of the Virtual Client to send an event request to another instance of the application. An event is typically a request for the
   target endpoint instance to take an actions. For example in the NTttcp network throughput workload, the client will request that the server-side workload startup by sending it an
   event request. It will then poll for a particular server-side state to determine when the server-side workload is definitively up and running.
 
-#### Telemetry Support
+### Telemetry Support
 One of the most important features of the Virtual Client platform is that it provides a lot of very useful telemetry. Telemetry emitted by the application follows a consistent schema 
 (based on Application Insights) that is designed to enable strong correlation between data related to the process/system executing the application and data related to workloads and 
 monitors.
@@ -230,14 +223,14 @@ Telemetry/data emitted by the Virtual Client application is divided into 4 diffe
   System events describe certain types of important information on the system beyond simple performance measurements. This might for example
   include Windows registry changes or special event logs.
 
-#### Data Correlation
+### Data Correlation
 To enable correlation between data from an execution system and the Virtual Client, metadata is supplied to the Virtual Client on the command line. This is a simple way to "connect-the-dots"
 when creating reports based on the data. This metadata will be included with every telemetry event/message that is emitted by the Virtual Client. The following shows an example of the schema 
 and how metadata is supplied on the command line as well as what the contents of a single telemetry event emitted would look like.
 
+* [Data/Telemetry Support](../guides/0040-telemetry.md)
 
-
-```
+``` bash
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experimentId=2451d02e-b22b-4e8a-9a1f-5436512dbc01 --agentId=virtualmachine01 --metadata:"anyCorrelationId=identifier,,,property2=123,,,property3=true"
 ```
 
@@ -264,28 +257,23 @@ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --experimentId=
 }
 ```
 
-
-#### File Upload Support
+### File Upload Support
 In addition to having support for structured telemetry, the Virtual Client platform supports the ability to upload files/content to an Azure storage account
 blob store. This is a need often enough with certain types of background monitors that produce very large results files too large to send through traditional
 telemetry pipelines. Any component in the Virtual Client can be developed to upload files/content to a target blob store. Then the user of the application simply
 passes in a connection string or SAS URI to the target "content" store on the command line.
 
-* [Blob Store Support](../guides/blob-storage.md)
+* [Blob Store Support](../guides/0600-integration-blob-storage.md)
 
-
-
-```
+``` bash
 VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --timeout=1440 --contentStore={ConnectionString or SASTokenUri}
 ```
-
-
 
 ## Application Development Concepts
 The following sections cover some of the important application development concepts for contributing to the Virtual Client platform. Given the above concepts covered,
 the next sections dive a bit more into the depths of the application (coding concepts).
 
-#### Implementation Concepts
+### Implementation Concepts
 The following concepts and terminology is used to describe the various coded components that exist in Virtual Client codebase.
 
 * **Workload Executors**  
@@ -307,12 +295,10 @@ The following concepts and terminology is used to describe the various coded com
 
 * **Components**  
   All of the above noted types of classes/implementations in the Virtual Client codebase are collectively called "components". This is a generic
-  term directly related to the base/fundamental class in the Virtual Client, the  [VirtualClientComponent](../VirtualClient.Contracts/VirtualClientComponent.cs).
+  term directly related to the base/fundamental class in the Virtual Client, the  [VirtualClientComponent](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientComponent.cs).
   All workload executors, background monitors and dependency handlers in the Virtual Client codebase derive from this class.
 
-
-
-#### Telemetry/Logging Concepts
+### Telemetry/Logging Concepts
 To ensure consistency, a set of common extension methods are used to capture all telemetry from the operations of the application or the execution of workloads and monitors.
 
   * [Logging Extensions](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientLoggingExtensions.cs)

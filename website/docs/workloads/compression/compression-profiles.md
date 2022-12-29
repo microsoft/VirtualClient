@@ -1,7 +1,7 @@
 ﻿# Compression/Decompression Workloads Profiles
 The following profiles run customer-representative or benchmarking scenarios using the compression/decompression workloads.
 
-* [Workload Details](./compressions.md)  
+* [Workload Details](./compression.md)  
 * [Workload Profile Metrics](./compression-metrics.md)
 
 

@@ -1,13 +1,8 @@
-﻿---
-id: blob-storage
-sidebar_position: 7
----
-
-# Blob storage support
+﻿# Azure Storage Account Integration
 Virtual Client supports a few different types of Azure Blob stores that can be used as part of a workload profile execution. This documentation
 covers how to supply those blob stores to the Virtual Client on the command line as well as how to use them in Virtual Client codebase.
   
-### Supported Blob Stores
+## Supported Blob Stores
 The following stores are supported by the Virtual Client. The stores must be Azure Storage Account blob stores.
 
 * **Packages Store**  
@@ -17,17 +12,15 @@ The following stores are supported by the Virtual Client. The stores must be Azu
   The packages store can be supplied to the Virtual Client on the command line using the '--packageStore' parameter and supplying the
   full connection string to the Azure storage account blob resource.
 
+  ``` bash
+  # The blob container does not require authentication (i.e. blob-anonymous read access)
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net"
+
+  # The blob continer requires authentication (e.g. a SAS token)
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
-  Example:
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --packageStore={ConnectionString or SASTokenUri}
-  ```
-
-   Note that Virtual Client expects the packages to exist in the blob store in a container called 'packages'.
-
-
 
   ![packages store](./img/blob-storage-support-1.png)
-
 
 * **Content Store**  
   The content blob store is used for uploading files and content captured by workloads or monitors that run as part of Virtual Client workload
@@ -35,18 +28,17 @@ The following stores are supported by the Virtual Client. The stores must be Azu
   store.
 
   ```
-  Example:
-  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore={ConnectionString or SASTokenUri}
+  # The blob container does not require authentication (i.e. blob-anonymous read access)
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net"
+
+  # The blob continer requires authentication (e.g. a SAS token)
+  VirtualClient.exe --profile=PERF-NETWORK.json --timeout=1440 --contentStore="https://any.blob.core.windows.net/packages?sp=r&st=2022-05-09T18:31:45Z&se=2030-05-10T02:31:45Z&spr=https&sv=2020-08-04&sr=c&sig=..."
   ```
-
-
 
   ![monitoring content](./img/blob-storage-support-2.png)
 
 
----------
-
-### Blob Store Authentication
+## Blob Store Authentication
 Virtual Client supports the following authentication options for all blob stores:
 
 [Shared Access Signatures (SAS) Overview](https://docs.microsoft.com/en-us/azure/storage/common/storage-sas-overview)  
@@ -83,7 +75,6 @@ are granted to the Virtual Client application for uploading and downloading blob
   * Allowed resource types = Container, Object
   * Allowed permissions = Read, Write, Create
   * Allowed protocols = HTTPS only
-  
 
   ![](./img/blob-service-sas-1.png)
 
@@ -93,13 +84,9 @@ are granted to the Virtual Client application for uploading and downloading blob
   * Signing method = Account key
   * Permissions = Read, Write, Create
   * Allowed protocols = HTTPS only
-  
-
 
   ![](./img/blob-container-sas-1.png)
 
-
----------
 
 ### Blob Store Folder/File Naming Conventions
 In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, a naming convention is used.

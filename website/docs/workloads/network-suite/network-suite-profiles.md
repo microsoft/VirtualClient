@@ -50,7 +50,7 @@ the client and server systems will synchronize with each other before running ea
 to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. See the section below 
 on 'Client/Server Topologies'.
 
-[Environment Layouts](../3-server-client/environment-layout.md)
+[Environment Layouts](../../guides/0020-client-server.md)
 
 In the environment layout file provided to the Virtual Client, define the role of the client system/VM as "Client" and the role of the server system/VM as "Server".
 The spelling of the roles must be exact. The IP addresses of the systems/VMs must be correct as well. The following example illustrates the
@@ -99,7 +99,7 @@ the automation running the Virtual Client application. Once the environment is s
 instance running on a given system knows about all of the other instances and additionally knows what its role to play in the client/server workload
 execution process is.
 
-See [Environment Layouts](../3-server-client/environment-layout.md) for more information.
+See [Environment Layouts](../../guides/0020-client-server.md) for more information.
 
 -----------------------------------------------------------------------
 
