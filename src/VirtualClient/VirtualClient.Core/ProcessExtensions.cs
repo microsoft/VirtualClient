@@ -33,7 +33,7 @@ namespace VirtualClient
                 case PlatformID.Unix:
                     string effectiveCommandArguments = arguments;
                     string effectiveCommand = command;
-                    if (!string.Equals(command, "sudo"))
+                    if (!string.Equals(command, "sudo") && !PlatformSpecifics.IsRunningInContainer())
                     {
                         effectiveCommandArguments = $"{command} {arguments}";
                         effectiveCommand = "sudo";

@@ -30,7 +30,7 @@ namespace VirtualClient
     /// </summary>
     internal class RunProfileCommand : CommandBase
     {
-        private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient .blob.core.windows.net/");
+        private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
         private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
         private const string NoMonitorsProfile = "MONITORS-NONE.json";
 
