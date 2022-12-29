@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <AssemblyName>VirtualClient.Actions</AssemblyName>
-        <NoWarn>SA1508;CA1416;CS4014</NoWarn>
+        <NoWarn>SA1508;CA1416;CS4014;CA2213</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

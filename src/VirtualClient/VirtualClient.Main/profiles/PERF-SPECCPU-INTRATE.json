@@ -1,0 +1,47 @@
+{
+  "Description": "SPEC CPU 2017 Integer (SPECrate) Benchmark Workload",
+  "MinimumExecutionInterval": "00:05:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": "10",
+    "SpecProfile": "intrate",
+    "RunPeak": false,
+    "BaseOptimizingFlags": "-g -O3 -march=native",
+    "PeakOptimizingFlags": "-g -Ofast -march=native -flto"
+  },
+  "Actions": [
+    {
+      "Type": "SpecCpuExecutor",
+      "Parameters": {
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "Scenario": "ScoreSystem",
+        "SpecProfile": "$.Parameters.SpecProfile",
+        "PackageName": "speccpu2017",
+        "RunPeak": "$.Parameters.RunPeak",
+        "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+        "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "Scenario": "InstallCompiler",
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECcpuWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "speccpu.2017.1.1.8.zip",
+        "PackageName": "speccpu2017",
+        "Extract": true
+      }
+    }
+  ]
+}

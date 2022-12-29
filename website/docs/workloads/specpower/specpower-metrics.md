@@ -2,13 +2,8 @@
 The following document illustrates the type of results that are emitted by the SPECpower workload and captured by the
 Virtual Client for net impact analysis.
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)
-
 ### Workload-Specific Metrics
-Note that the SPECpower workload itself does not measure power consumption itself but we instead rely upon Azure rack/blade power measurement 
-appliances that exist in production fleet racks for this purpose. The SPECpower workload makes this process more reliable because it is designed
+Note that the SPECpower workload itself does not measure power consumption itself. Please refer to the SPECpower official document on how to setup the power meters, or measure power consumption through other mechanism. The SPECpower workload makes this process more reliable because it is designed
 to use resources on the system in a smooth, constant steady state. This typically causes the power usage to remain consistent as well.
 
 The Virtual Client itself emits heartbeats as metrics and these are used only for validation that the SPECpower workload is running.

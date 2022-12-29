@@ -4,9 +4,6 @@ Virtual Client for net impact analysis.
 
 [SPECjbb2015 Benchmark Result Fields Manual](https://www.spec.org/jbb2015/docs/SPECjbb2015-Result_File_Fields.html)
 
-### System Metrics
-* [Performance Counters](./PerformanceCounterMetrics.md)
-* [Power/Temperature Measurements](./PowerMetrics.md)  
 
 ### Workload-Specific Metrics
 The following metrics are captured during the operations of the SPECjbb workload.

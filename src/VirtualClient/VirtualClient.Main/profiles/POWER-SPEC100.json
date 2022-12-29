@@ -1,0 +1,50 @@
+{
+    "Description": "SPEC Power CPU Stress Benchmark",
+    "Parameters": { },
+    "Actions": [
+        {
+            "Type": "SPECPowerExecutor",
+            "Parameters": {
+                "Scenario": "SteadyStateUsage",
+                "PackageName": "specpower",
+                "JdkPackageName": "javadevelopmentkit",
+                "CCSArguments": "org.spec.power.ccs.SpecPowerCCS ccs.props",
+                "DirectorArguments": "-Djava.awt.headless=true -Xms64m -Xmx256m org.spec.power.ssj.Director -propfile SPECpower_ssj.props",
+                "SSJArguments": "-Djava.awt.headless=true -Xms{RAM_MB}m -Xmx{RAM_MB}m org.spec.power.ssj.SpecPowerSsj -jvmid {JVM_ID} -numJvms {INSTANCE_COUNT} -director 127.0.0.1 -setid sut",
+                "ShouldSetProcessAffinity": true,
+                "LoadPercentageSequence": 100,
+                "LoadLevelLengthSeconds": 86400,
+                "Tags": "Reliability,Power,SPECpower"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallSPECWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "specpower2008.0.0.zip",
+                "PackageName": "specpower",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallJavaSDKPackage",
+                "BlobContainer": "packages",
+                "BlobName": "microsoft-jdk-17.0.3.zip",
+                "PackageName": "javadevelopmentkit",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "JavaDevelopmentKitInstallation",
+            "Parameters": {
+                "Scenario": "InstallJavaSDK",
+                "PackageName": "javadevelopmentkit"
+            }
+        }
+    ]
+}

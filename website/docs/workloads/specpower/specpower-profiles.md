@@ -1,10 +1,8 @@
 ﻿# SPEC Power Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the SPEC Power workload.
 
-* [Workload Details](./SPECpower.md)  
-* [Workload Profile Metrics](./SPECpowerMetrics.md)  
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+* [Workload Details](./specpower.md)  
+* [Workload Profile Metrics](./specpower-metrics.md)
 
 -----------------------------------------------------------------------
 
