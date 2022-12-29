@@ -111,7 +111,7 @@ namespace VirtualClient.Actions
             string processName = $"SPEC Power SSJ-Client #{jvmId}";
 
             string workloadDirectoryPath = this.PlatformSpecifics.Combine(this.ActionOwner.WorkloadPackagePath, SSJFolder);
-            string classPath = PlatformUtil.CurrentPlatform == PlatformID.Win32NT ? WindowsClassPath : UnixClassPath;
+            string classPath = this.Platform == PlatformID.Win32NT ? WindowsClassPath : UnixClassPath;
 
             this.StartSPECProcessAsync(processName, workloadDirectoryPath, classPath, ssjOptions, cancellationToken);
             this.Logger.LogTraceMessage("Started an instance of SPEC Power Client (SSJ).");
@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
 
             // This feature only works if we actually have this many processors. It also only works with up to 64 processors.
             // It is also totally safe to continue if an exception is thrown. Therefore, we will only log the exception, and not stop execution.
-            if (this.ActionOwner.ShouldSetProcessAffinity && PlatformUtil.CurrentPlatform == PlatformID.Win32NT && priorCreatedProcesses < MaxProcessesSet)
+            if (this.ActionOwner.ShouldSetProcessAffinity && this.Platform == PlatformID.Win32NT && priorCreatedProcesses < MaxProcessesSet)
             {
                 // Apologies for the unreadable code, unfortunately this is just how the value we're setting works.
                 // This creates a bit mask for the number of processors it's going to use. If we're using 4 processors per JVM, then the mask we'll get is 0b1111.
