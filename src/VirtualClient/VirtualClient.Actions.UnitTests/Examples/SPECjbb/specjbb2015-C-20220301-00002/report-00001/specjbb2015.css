@@ -1,0 +1,279 @@
+/*
+    Copyright (c) 2012 Standard Performance Evaluation Corporation (SPEC).
+    All rights reserved.
+*/
+
+body {
+    font-family: sans-serif;
+    font-size: small;
+    color: black;
+    background: white;
+}
+
+.section {
+    margin-bottom: 1em;
+    margin-top: 1em;
+    clear: both;
+}
+
+.pageHeader {
+    text-align: center;
+}
+
+.logo {
+    float: left;
+    border-style: none;
+}
+
+.benchmarkName {
+    clear: none;
+    font-weight: bold;
+    font-size: x-large;
+}
+
+.copyright {
+}
+
+.pageFooter {
+    text-align: center;
+}
+
+.mainDesc {
+    font-size: medium;
+}
+
+.vendor {
+    background-color: #E0E0E0;
+    font-size: x-large;
+    text-align: center;
+}
+
+.metric {
+    font-weight: bold;
+    font-size: x-large;
+    text-align: center;
+}
+
+.validMetric {
+    background-color: #ffd700;
+}
+
+.invalidMetric {
+    background-color: #FF5555;
+}
+
+.alternate th {
+    background-color: #FFFFFF;
+}
+
+.alternate tr:nth-child(even) {
+    vertical-align: top;
+    background-color: #EEEEEE;
+}
+
+.alternate tr:nth-child(odd) {
+    vertical-align: top;
+    background-color: #E0E0E0;
+}
+
+.alternate td {
+    border: #a9a9a9 solid 1px;
+}
+
+.errorSection {
+    background-color: #AAAAAA;
+    text-align: center;
+    border: 2px black solid;
+}
+
+.warningSection {
+    background-color: #E0E0E0;
+    text-align: center;
+    border: 2px black solid;
+}
+
+.result {
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.sectionTitle {
+    font-size: large;
+    font-weight: bold;
+    border-bottom: 2px black solid;
+    clear: both;
+}
+
+.subsectionTitle {
+    font-size: large;
+    border-bottom: 1px black solid;
+    clear: both;
+    text-align: center;
+}
+
+.subsectionTitleNoBorder {
+    font-size: large;
+    clear: both;
+    text-align: center;
+}
+
+.subsectionLeftTitle {
+    font-size: large;
+    clear: both;
+    text-align: left;
+    padding-left: 5px;
+    padding-bottom: 10px;
+    padding-top: 5px;
+}
+
+.warningTitle {
+    color: #CC0000;
+    font-size: large;
+    font-weight: bold;
+    border-top: 2px black solid;
+    clear: both;
+}
+
+.warningWaivedTitle {
+    color: #009933;
+    font-size: large;
+    font-weight: bold;
+    clear: both;
+}
+
+.errorWaivedTitle {
+    font-size: large;
+    font-weight: bold;
+    clear: both;
+}
+
+.separator {
+    border-top: 2px black solid;
+}
+
+.cellHeader {
+    font-size: medium;
+    border-bottom: 1px black solid;
+}
+
+.txCellValue {
+    font-size: small;
+    text-align: center;
+    background-color: #dcdcdc;
+}
+
+.txCellEmpty {
+    font-size: small;
+    text-align: center;
+    background-color: #FFFFFF;
+}
+
+.txCellTotal {
+    font-size: small;
+    text-align: center;
+    background-color: #777777;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.txCellCritical {
+    font-size: small;
+    text-align: center;
+    background-color: #FF0000;
+    color: #FFFFFF;
+    font-weight: bold;
+}
+
+.txLeftHeader {
+    font-size: small;
+    font-weight: bold;
+}
+
+.txHeader {
+    font-size: small;
+    font-weight: bold;
+    text-align: center;
+    color: #FFFFFF;
+    background-color: #AAAAAA;
+}
+
+.contentTable {
+    list-style-type: none;
+    text-align: left;
+}
+
+.centered {
+    text-align: center;
+}
+
+.desc {
+}
+
+.details {
+    padding-left: 5px;
+}
+
+.moreDetails {
+    padding-left: 15px;
+    padding-top: 5px;
+}
+
+.verticalDelim {
+    border-right: black solid 3px;
+}
+
+.metricCell-adv {
+    vertical-align: top;
+    width: 300px;
+}
+
+.metricName-adv {
+    font-weight: bold;
+}
+
+.metricDesc-adv {
+}
+
+.metricValue-adv {
+    vertical-align: top;
+    text-align: center;
+}
+
+.metricRow-adv {
+    border-top: #dcdcdc solid 1px;
+    padding-bottom: 10px;
+    padding-top: 5px;
+}
+
+a {
+    color: #0000AA;
+}
+
+    a:hover {
+        color: #0000AA;
+    }
+
+.invalid {
+    background-color: #FF0000;
+    font-weight: bold;
+    color: #FFFFFF;
+    text-decoration: blink;
+}
+
+.glLink {
+    color: inherit;
+    text-decoration: none;
+}
+
+.other {
+    padding-top: 10px;
+}
+
+.disclosureLink {
+    padding-top: 20px;
+}

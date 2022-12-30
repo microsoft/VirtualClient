@@ -1,0 +1,302 @@
+﻿                                               SPEC CPU(R)2017 Integer Rate Result
+                                                         My Corporation
+
+                           CPU2017 License: nnn (Your SPEC license number)          Test date: Jun-2022
+                           Test sponsor: My Corporation                 Hardware availability:
+                           Tested by:    My Corporation                 Software availability:
+
+                 Base     Base        Base        Peak     Peak        Peak
+Benchmarks       Copies  Run Time     Rate        Copies  Run Time     Rate
+--------------- -------  ---------  ---------    -------  ---------  ---------
+500.perlbench_r      64        572      178    *
+500.perlbench_r      64        569      179    S
+502.gcc_r            64        685      132    *
+502.gcc_r            64        682      133    S
+505.mcf_r            64       1043       99.1  *
+505.mcf_r            64       1039       99.5  S
+520.omnetpp_r        64       1055       79.6  S
+520.omnetpp_r        64       1074       78.2  *
+523.xalancbmk_r      64        551      123    S
+523.xalancbmk_r      64        554      122    *
+525.x264_r           64        607      185    S
+525.x264_r           64        611      183    *
+531.deepsjeng_r      64        389      188    S
+531.deepsjeng_r      64        390      188    *
+541.leela_r          64        609      174    S
+541.leela_r          64        614      172    *
+548.exchange2_r      64        534      314    S
+548.exchange2_r      64        538      312    *
+557.xz_r             64        601      115    S
+557.xz_r             64        609      114    *
+=================================================================================
+500.perlbench_r      64        572      178    *
+502.gcc_r            64        685      132    *
+505.mcf_r            64       1043       99.1  *
+520.omnetpp_r        64       1074       78.2  *
+523.xalancbmk_r      64        554      122    *
+525.x264_r           64        611      183    *
+531.deepsjeng_r      64        390      188    *
+541.leela_r          64        614      172    *
+548.exchange2_r      64        538      312    *
+557.xz_r             64        609      114    *
+ SPECrate(R)2017_int_base                 152
+ SPECrate(R)2017_int_peak                                              Not Run
+
+
+                                                             HARDWARE
+                                                             --------
+            CPU Name: could not determine
+             Max MHz:
+             Nominal:
+             Enabled:  cores, could not determine chips,  threads/core
+           Orderable:
+            Cache L1:
+                  L2:
+                  L3:
+               Other:
+              Memory: 123.549 GB fixme: If using DDR4, the format is:
+                      'N GB (N x N GB nRxn PC4-nnnnX-X)'
+             Storage: 339 GB  add more disk info here
+               Other:
+
+
+                                                             SOFTWARE
+                                                             --------
+                  OS: Ubuntu 20.04.4 LTS
+                      5.13.0-1022-aws
+            Compiler: C/C++/Fortran: Version 10.1.0 of GCC, the
+                      GNU Compiler Collection
+            Parallel: No
+            Firmware:
+         File System: ext4
+        System State: Run level 5 (add definition here)
+       Base Pointers: 64-bit
+       Peak Pointers: Not Applicable
+               Other:
+    Power Management:
+
+
+                                                   Environment Variables Notes
+                                                   ---------------------------
+    Environment variables set by runcpu before the start of the run:
+    LD_LIBRARY_PATH = "/usr/lib64/:/usr/lib/:/lib64"
+
+
+                                                          Platform Notes
+                                                          --------------
+
+     Sysinfo program
+     /home/ubuntu/virtualclient/content/linux-arm64/packages/speccpu.2017.1.1.8-1/bin/sysinfo
+     Rev: r6622 of 2021-04-07 982a61ec0915b55891ef0e16acafc64d
+     running on ip-172-31-51-10 Wed Jun 15 23:16:48 2022
+
+     SUT (System Under Test) info as seen by some common utilities.
+     For more information on this section, see
+        https://www.spec.org/cpu2017/Docs/config.html#sysinfo
+
+     From /proc/cpuinfo
+     *
+     * Did not identify cpu model.  If you would
+     * like to write your own sysinfo program, see
+     * www.spec.org/cpu2017/config.html#sysinfo
+     *
+     *
+     * 0 "physical id" tags found.  Perhaps this is an older system,
+     * or a virtualized system.  Not attempting to guess how to
+     * count chips/cores for this system.
+     *
+           64 "processors"
+        cores, siblings (Caution: counting these is hw and system dependent. The following
+        excerpts from /proc/cpuinfo might not be reliable.  Use with caution.)
+
+     From lscpu from util-linux 2.34:
+          Architecture:                    aarch64
+          CPU op-mode(s):                  32-bit, 64-bit
+          Byte Order:                      Little Endian
+          CPU(s):                          64
+          On-line CPU(s) list:             0-63
+          Thread(s) per core:              1
+          Core(s) per socket:              64
+          Socket(s):                       1
+          NUMA node(s):                    1
+          Vendor ID:                       ARM
+          Model:                           1
+          Model name:                      Neoverse-N1
+          Stepping:                        r3p1
+          BogoMIPS:                        243.75
+          L1d cache:                       4 MiB
+          L1i cache:                       4 MiB
+          L2 cache:                        64 MiB
+          L3 cache:                        32 MiB
+          NUMA node0 CPU(s):               0-63
+          Vulnerability Itlb multihit:     Not affected
+          Vulnerability L1tf:              Not affected
+          Vulnerability Mds:               Not affected
+          Vulnerability Meltdown:          Not affected
+          Vulnerability Spec store bypass: Mitigation; Speculative Store Bypass disabled via
+          prctl
+          Vulnerability Spectre v1:        Mitigation; __user pointer sanitization
+          Vulnerability Spectre v2:        Mitigation; CSV2, BHB
+          Vulnerability Srbds:             Not affected
+          Vulnerability Tsx async abort:   Not affected
+          Flags:                           fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics
+          fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp ssbs
+
+     From lscpu --cache:
+          NAME ONE-SIZE ALL-SIZE WAYS TYPE        LEVEL
+          L1d       64K       4M    4 Data            1
+          L1i       64K       4M    4 Instruction     1
+          L2         1M      64M    8 Unified         2
+          L3        32M      32M   16 Unified         3
+
+     Unable to get information from 'numactl --hardware'
+     Please verify numactl installation.
+
+     From /proc/meminfo
+        MemTotal:       129550460 kB
+        HugePages_Total:       0
+        Hugepagesize:       2048 kB
+
+     /usr/bin/lsb_release -d
+        Ubuntu 20.04.4 LTS
+
+     From /etc/*release* /etc/*version*
+        debian_version: bullseye/sid
+        ec2_version: Ubuntu 20.04.4 LTS (Focal Fossa)
+        os-release:
+           NAME="Ubuntu"
+           VERSION="20.04.4 LTS (Focal Fossa)"
+           ID=ubuntu
+           ID_LIKE=debian
+           PRETTY_NAME="Ubuntu 20.04.4 LTS"
+           VERSION_ID="20.04"
+           HOME_URL="https://www.ubuntu.com/"
+           SUPPORT_URL="https://help.ubuntu.com/"
+
+     uname -a:
+        Linux ip-172-31-51-10 5.13.0-1022-aws #24~20.04.1-Ubuntu SMP Thu Apr 7 22:14:11 UTC
+        2022 aarch64 aarch64 aarch64 GNU/Linux
+
+     Kernel self-reported vulnerability status:
+
+     CVE-2018-12207 (iTLB Multihit):                        Not affected
+     CVE-2018-3620 (L1 Terminal Fault):                     Not affected
+     Microarchitectural Data Sampling:                      Not affected
+     CVE-2017-5754 (Meltdown):                              Not affected
+     CVE-2018-3639 (Speculative Store Bypass):              Mitigation: Speculative Store
+                                                            Bypass disabled via prctl
+     CVE-2017-5753 (Spectre variant 1):                     Mitigation: __user pointer
+                                                            sanitization
+     CVE-2017-5715 (Spectre variant 2):                     Mitigation: CSV2, BHB
+     CVE-2020-0543 (Special Register Buffer Data Sampling): Not affected
+     CVE-2019-11135 (TSX Asynchronous Abort):               Not affected
+
+     run-level 5 2022-06-15 23:08
+
+     SPEC is set to:
+     /home/ubuntu/virtualclient/content/linux-arm64/packages/speccpu.2017.1.1.8-1
+        Filesystem     Type  Size  Used Avail Use% Mounted on
+        /dev/root      ext4  339G  7.7G  332G   3% /
+
+     From /sys/devices/virtual/dmi/id
+         Vendor:         Amazon EC2
+         Product:        c6g.16xlarge
+         Serial:         ec2d348a-be5b-4900-6a68-c112fdbcd731
+
+     Additional information from dmidecode 3.2 follows.  WARNING: Use caution when you
+     interpret this section. The 'dmidecode' program reads system data which is "intended to
+     allow hardware to be accurately determined", but the intent may not be met, as there are
+     frequent changes to hardware, firmware, and the "DMTF SMBIOS" standard.
+
+     BIOS:
+        BIOS Vendor:       Amazon EC2
+        BIOS Version:      1.0
+        BIOS Date:         11/1/2018
+        BIOS Revision:     1.0
+
+     (End of data from sysinfo program)
+
+                                                      Compiler Version Notes
+                                                      ----------------------
+    ==============================================================================
+    C       | 500.perlbench_r(base) 502.gcc_r(base) 505.mcf_r(base)
+            | 525.x264_r(base) 557.xz_r(base)
+    ------------------------------------------------------------------------------
+    gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+    Copyright (C) 2019 Free Software Foundation, Inc.
+    This is free software; see the source for copying conditions.  There is NO
+    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    ------------------------------------------------------------------------------
+
+    ==============================================================================
+    C++     | 520.omnetpp_r(base) 523.xalancbmk_r(base) 531.deepsjeng_r(base)
+            | 541.leela_r(base)
+    ------------------------------------------------------------------------------
+    g++ (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+    Copyright (C) 2019 Free Software Foundation, Inc.
+    This is free software; see the source for copying conditions.  There is NO
+    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    ------------------------------------------------------------------------------
+
+    ==============================================================================
+    Fortran | 548.exchange2_r(base)
+    ------------------------------------------------------------------------------
+    GNU Fortran (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+    Copyright (C) 2019 Free Software Foundation, Inc.
+    This is free software; see the source for copying conditions.  There is NO
+    warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    ------------------------------------------------------------------------------
+
+                                                     Base Compiler Invocation
+                                                     ------------------------
+C benchmarks:
+     gcc
+
+C++ benchmarks:
+     g++
+
+Fortran benchmarks:
+     gfortran
+
+
+                                                      Base Portability Flags
+                                                      ----------------------
+ 500.perlbench_r: -DSPEC_LINUX_AARCH64 -DSPEC_LP64
+       502.gcc_r: -DSPEC_LP64
+       505.mcf_r: -DSPEC_LP64
+   520.omnetpp_r: -DSPEC_LP64
+ 523.xalancbmk_r: -DSPEC_LINUX -DSPEC_LP64
+      525.x264_r: -DSPEC_LP64
+ 531.deepsjeng_r: -DSPEC_LP64
+     541.leela_r: -DSPEC_LP64
+ 548.exchange2_r: -DSPEC_LP64
+        557.xz_r: -DSPEC_LP64
+
+
+                                                     Base Optimization Flags
+                                                     -----------------------
+C benchmarks:
+     -mabi=lp64 -std=c99 -g -O2 -mcpu=neoverse-n1 -fno-strict-aliasing -fno-unsafe-math-optimizations -fno-finite-math-only
+     -fgnu89-inline
+
+C++ benchmarks:
+     -mabi=lp64 -std=c++03 -g -O2 -mcpu=neoverse-n1
+
+Fortran benchmarks:
+     -mabi=lp64 -g -O2 -mcpu=neoverse-n1
+
+
+                                                         Base Other Flags
+                                                         ----------------
+C benchmarks:
+     -fcommon
+
+
+  SPEC CPU and SPECrate are registered trademarks of the Standard Performance Evaluation Corporation.  All other brand and
+    product names appearing in this result are trademarks or registered trademarks of their respective holders.
+----------------------------------------------------------------------------------------------------------------------------------
+For questions about this result, please contact the tester.
+For other inquiries, please contact info@spec.org.
+Copyright 2017-2022 Standard Performance Evaluation Corporation
+Tested with SPEC CPU(R)2017 v1.1.8 on 2022-06-15 23:16:47+0000.
+Report generated on 2022-06-16 03:08:41 by CPU2017 text formatter v6255.

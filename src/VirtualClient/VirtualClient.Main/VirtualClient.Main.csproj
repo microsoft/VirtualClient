@@ -137,6 +137,7 @@
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
@@ -149,6 +150,10 @@
         <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
+        <WindowsProfiles Include="profiles\POWER-SPEC30.json" />
+        <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
+        <WindowsProfiles Include="profiles\POWER-SPEC70.json" />
+        <WindowsProfiles Include="profiles\POWER-SPEC100.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -164,6 +169,7 @@
         <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-HPCG.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
@@ -174,6 +180,10 @@
         <LinuxProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
         <LinuxProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-LAPACK.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECCPU-FPSPEED.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECCPU-FPRATE.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECCPU-INTSPEED.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
         <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
@@ -185,6 +195,10 @@
         <LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
         <LinuxProfiles Include="profiles\PERF-SPECJVM.json" />
         <LinuxProfiles Include="profiles\PERF-OPENFOAM.json" />
+        <LinuxProfiles Include="profiles\POWER-SPEC30.json" />
+        <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
+        <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
+        <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
     </ItemGroup>
 
     <ItemGroup>

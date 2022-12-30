@@ -1,0 +1,595 @@
+﻿                                           SPEC CPU(R)2017 Floating Point Speed Result
+                                                      ASUSTeK Computer Inc.
+                                             ASUS RS720A-E11(KMPP-D32) Server System
+                                                     2.00 GHz, AMD EPYC 7713
+
+                           CPU2017 License: 9016                                    Test date: Mar-2021
+                           Test sponsor: ASUSTeK Computer Inc.          Hardware availability: Mar-2021
+                           Tested by:    ASUSTeK Computer Inc.          Software availability: Mar-2021
+
+                 Base     Base        Base        Peak     Peak        Peak
+Benchmarks      Threads  Run Time     Ratio      Threads  Run Time     Ratio
+--------------- -------  ---------  ---------    -------  ---------  ---------
+603.bwaves_s        128       76.7      769    S     128       76.5      771    S
+603.bwaves_s        128       76.7      769    *     128       76.5      771    *
+603.bwaves_s        128       76.9      767    S     128       76.6      777    S
+607.cactuBSSN_s     128       42.3      394    S     128       42.0      397    S
+607.cactuBSSN_s     128       42.3      394    *     128       41.8      398    S
+607.cactuBSSN_s     128       42.4      394    S     128       41.8      398    *
+619.lbm_s           128       41.0      128    S     128       41.0      128    S
+619.lbm_s           128       43.1      121    S     128       43.1      121    S
+619.lbm_s           128       41.3      127    *     128       41.3      127    *
+621.wrf_s           128       77.3      171    S     128       77.3      171    S
+621.wrf_s           128       77.9      170    *     128       77.9      170    *
+621.wrf_s           128       78.4      169    S     128       78.4      169    S
+627.cam4_s          128       50.5      175    S     128       50.5      175    S
+627.cam4_s          128       50.7      175    S     128       50.7      175    S
+627.cam4_s          128       50.7      175    *     128       50.7      175    *
+628.pop2_s          128      164         72.3  S     128      151         78.5  S
+628.pop2_s          128      150         79.4  S     128      152         78.0  *
+628.pop2_s          128      155         76.5  *     128      152         77.9  S
+638.imagick_s       128       31.4      459    S     128       31.4      459    S
+638.imagick_s       128       31.8      453    S     128       31.8      453    S
+638.imagick_s       128       31.4      459    *     128       31.4      459    *
+644.nab_s           128       29.8      587    *     256       29.1      600    *
+644.nab_s           128       29.8      586    S     256       29.1      600    S
+644.nab_s           128       29.7      587    S     256       29.2      598    S
+649.fotonik3d_s     128       80.8      113    *     128       80.8      113    *
+649.fotonik3d_s     128       80.9      113    S     128       80.9      113    S
+649.fotonik3d_s     128       79.1      115    S     128       79.1      115    S
+654.roms_s          128       49.5      318    S     128       41.5      380    *
+654.roms_s          128       49.8      316    *     128       41.9      376    S
+654.roms_s          128       50.6      311    S     128       41.5      380    S
+=================================================================================
+603.bwaves_s        128       76.7      769    *     128       76.5      771    *
+607.cactuBSSN_s     128       42.3      394    *     128       41.8      398    *
+619.lbm_s           128       41.3      127    *     128       41.3      127    *
+621.wrf_s           128       77.9      170    *     128       77.9      170    *
+627.cam4_s          128       50.7      175    *     128       50.7      175    *
+628.pop2_s          128      155         76.5  *     128      152         78.0  *
+638.imagick_s       128       31.4      459    *     128       31.4      459    *
+644.nab_s           128       29.8      587    *     256       29.1      600    *
+649.fotonik3d_s     128       80.8      113    *     128       80.8      113    *
+654.roms_s          128       49.8      316    *     128       41.5      380    *
+ SPECspeed(R)2017_fp_base                 255
+ SPECspeed(R)2017_fp_peak                                                  268
+
+
+                                                             HARDWARE
+                                                             --------
+            CPU Name: AMD EPYC 7713
+             Max MHz: 3675
+             Nominal: 2000
+             Enabled: 128 cores, 2 chips, 2 threads/core
+           Orderable: 1,2 chips
+            Cache L1: 32 KB I + 32 KB D on chip per core
+                  L2: 512 KB I+D on chip per core
+                  L3: 256 MB I+D on chip per chip, 32 MB shared / 8
+                      cores
+               Other: None
+              Memory: 1 TB (16 x 64 GB 2Rx4 PC4-3200AA-R)
+             Storage: 1 x 240 GB SATA SSD
+               Other: None
+
+
+                                                             SOFTWARE
+                                                             --------
+                  OS: SUSE Linux Enterprise Server 15 SP2 (x86_64)
+                      5.3.18-22-default
+            Compiler: C/C++/Fortran: Version 3.0.0 of AOCC
+            Parallel: Yes
+            Firmware: Version 0404 released Feb-2021
+         File System: xfs
+        System State: Run level 3 (multi-user)
+       Base Pointers: 64-bit
+       Peak Pointers: 64-bit
+               Other: jemalloc: jemalloc memory allocator library v5.1.0
+    Power Management: BIOS and OS set to prefer performance
+                      at the cost of additional power usage.
+
+
+                                                          Compiler Notes
+                                                          --------------
+    The AMD64 AOCC Compiler Suite is available at
+    http://developer.amd.com/amd-aocc/
+    
+
+                                                           Submit Notes
+                                                           ------------
+    The config file option 'submit' was used.
+    'numactl' was used to bind copies to the cores.
+    See the configuration file for details.
+
+                                                      Operating System Notes
+                                                      ----------------------
+    'ulimit -s unlimited' was used to set environment stack size
+    'ulimit -l 2097152' was used to set environment locked pages in memory limit
+    runcpu command invoked through numactl i.e.:
+    numactl --interleave=all runcpu <etc>
+    'echo 8 > /proc/sys/vm/dirty_ratio' run as root to limit dirty cache to 8% of
+    memory.
+    'echo 1 > /proc/sys/vm/swappiness' run as root to limit swap usage to minimum
+    necessary.
+    'echo 1 > /proc/sys/vm/zone_reclaim_mode' run as root to free node-local memory
+    and avoid remote memory usage.
+    'sync; echo 3 > /proc/sys/vm/drop_caches' run as root to reset filesystem caches.
+    'sysctl -w kernel.randomize_va_space=0' run as root to disable address space layout
+    randomization (ASLR) to reduce run-to-run variability.
+    To enable Transparent Hugepages (THP) for all allocations,
+    'echo always > /sys/kernel/mm/transparent_hugepage/enabled' and
+    'echo always > /sys/kernel/mm/transparent_hugepage/defrag' run as root.
+    To enable THP only on request for peak runs of 628.pop2_s, and 638.imagick_s,
+    'echo madvise > /sys/kernel/mm/transparent_hugepage/enabled' run as root.
+    To disable THP for peak runs of 627.cam4_s, 644.nab_s, 649.fotonik3d_s, and 654.roms_s,
+    'echo never > /sys/kernel/mm/transparent_hugepage/enabled' run as root.
+
+                                                   Environment Variables Notes
+                                                   ---------------------------
+    Environment variables set by runcpu before the start of the run:
+    GOMP_CPU_AFFINITY = "0-255"
+    LD_LIBRARY_PATH =
+         "/spec2017B1/amd_speed_aocc300_milan_B_lib/64;/spec2017B1/amd_speed_aocc
+         300_milan_B_lib/32:"
+    MALLOC_CONF = "retain:true"
+    OMP_DYNAMIC = "false"
+    OMP_SCHEDULE = "static"
+    OMP_STACKSIZE = "128M"
+    OMP_THREAD_LIMIT = "256"
+    
+    Environment variables set by runcpu during the 603.bwaves_s peak run:
+    GOMP_CPU_AFFINITY = "0-127"
+    
+    Environment variables set by runcpu during the 607.cactuBSSN_s peak run:
+    GOMP_CPU_AFFINITY = "0-127"
+    
+    Environment variables set by runcpu during the 628.pop2_s peak run:
+    GOMP_CPU_AFFINITY = "0-127"
+    
+    Environment variables set by runcpu during the 644.nab_s peak run:
+    GOMP_CPU_AFFINITY = "0 128 1 129 2 130 3 131 4 132 5 133 6 134 7 135 8 136 9
+         137 10 138 11 139 12 140 13 141 14 142 15 143 16 144 17 145 18 146 19
+         152 20 148 21 149 22 150 23 151 24 152 25 153 26 154 27 155 28 156 29
+         157 30 158 31 159 32 160 33 161 34 162 35 163 36 164 37 165 38 166 39
+         167 40 168 41 169 42 170 43 171 44 172 45 173 46 174 47 175 48 176 49
+         177 50 178 51 179 52 180 53 181 54 182 55 183 56 184 57 185 58 186 59
+         187 60 188 61 189 62 190 63 191 64 192 65 193 66 194 67 195 68 196 69
+         197 70 198 71 199 72 200 73 201 74 202 75 203 76 204 77 205 78 206 79
+         207 80 208 81 209 82 210 83 211 84 212 85 213 86 214 87 215 88 216 89
+         217 90 218 91 219 92 220 93 221 94 222 95 223 96 224 97 225 98 226 99
+         227 100 228 101 229 102 230 103 231 104 232 105 233 106 234 107 235 108
+         236 109 237 110 238 111 239 112 240 113 241 114 242 115 243 116 244 117
+         245 118 246 119 247 120 248 121 249 122 250 123 251 124 252 125 253 126
+         254 127 255"
+    
+    Environment variables set by runcpu during the 654.roms_s peak run:
+    GOMP_CPU_AFFINITY = "0-127"
+    
+
+                                                          General Notes
+                                                          -------------
+    Binaries were compiled on a system with 2x AMD EPYC 7742 CPU + 1TiB Memory using openSUSE 15.2
+    
+    NA: The test sponsor attests, as of date of publication, that CVE-2017-5754 (Meltdown)
+    is mitigated in the system as tested and documented.
+    Yes: The test sponsor attests, as of date of publication, that CVE-2017-5753 (Spectre variant 1)
+    is mitigated in the system as tested and documented.
+    Yes: The test sponsor attests, as of date of publication, that CVE-2017-5715 (Spectre variant 2)
+    is mitigated in the system as tested and documented.
+    
+    jemalloc: configured and built with GCC v4.8.2 in RHEL 7.4 (No options specified)
+    jemalloc 5.1.0 is available here:
+    https://github.com/jemalloc/jemalloc/releases/download/5.1.0/jemalloc-5.1.0.tar.bz2
+    
+
+                                                          Platform Notes
+                                                          --------------
+    BIOS Configuration:
+    DLWM Support = Disabled
+    SVM Mode = Disabled
+    NUMA nodes per socket = NPS1
+    APBDIS = 1
+    Fix SOC P-state = P0
+    Engine Boost = Enabled
+    
+     Sysinfo program /spec2017B1/bin/sysinfo
+     Rev: r6538 of 2020-09-24 e8664e66d2d7080afeaa89d4b38e2f1c
+     running on localhost Fri Mar 12 17:43:33 2021
+    
+     SUT (System Under Test) info as seen by some common utilities.
+     For more information on this section, see
+        https://www.spec.org/cpu2017/Docs/config.html#sysinfo
+    
+     From /proc/cpuinfo
+        model name : AMD EPYC 7713 64-Core Processor
+           2  "physical id"s (chips)
+           256 "processors"
+        cores, siblings (Caution: counting these is hw and system dependent. The following
+        excerpts from /proc/cpuinfo might not be reliable.  Use with caution.)
+           cpu cores : 64
+           siblings  : 128
+           physical 0: cores 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+           25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52
+           53 54 55 56 57 58 59 60 61 62 63
+           physical 1: cores 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+           25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52
+           53 54 55 56 57 58 59 60 61 62 63
+    
+     From lscpu:
+          Architecture:        x86_64
+          CPU op-mode(s):      32-bit, 64-bit
+          Byte Order:          Little Endian
+          Address sizes:       48 bits physical, 48 bits virtual
+          CPU(s):              256
+          On-line CPU(s) list: 0-255
+          Thread(s) per core:  2
+          Core(s) per socket:  64
+          Socket(s):           2
+          NUMA node(s):        2
+          Vendor ID:           AuthenticAMD
+          CPU family:          25
+          Model:               1
+          Model name:          AMD EPYC 7713 64-Core Processor
+          Stepping:            1
+          CPU MHz:             2487.638
+          CPU max MHz:         2000.0000
+          CPU min MHz:         1500.0000
+          BogoMIPS:            3992.43
+          Virtualization:      AMD-V
+          L1d cache:           32K
+          L1i cache:           32K
+          L2 cache:            512K
+          L3 cache:            32768K
+          NUMA node0 CPU(s):   0-63,128-191
+          NUMA node1 CPU(s):   64-127,192-255
+          Flags:               fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov
+          pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm
+          constant_tsc rep_good nopl nonstop_tsc cpuid extd_apicid aperfmperf pni pclmulqdq
+          monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c
+          rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch
+          osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpb
+          cat_l3 cdp_l3 invpcid_single hw_pstate ssbd mba ibrs ibpb stibp vmmcall fsgsbase
+          bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a rdseed adx smap clflushopt clwb sha_ni
+          xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local
+          clzero irperf xsaveerptr wbnoinvd arat npt lbrv svm_lock nrip_save tsc_scale
+          vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload vgif
+          umip pku ospke vaes vpclmulqdq rdpid overflow_recov succor smca
+    
+     /proc/cpuinfo cache data
+        cache size : 512 KB
+    
+     From numactl --hardware  WARNING: a numactl 'node' might or might not correspond to a
+     physical chip.
+       available: 2 nodes (0-1)
+       node 0 cpus: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27
+       28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56
+       57 58 59 60 61 62 63 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143
+       144 145 146 152 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165
+       166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187
+       188 189 190 191
+       node 0 size: 515807 MB
+       node 0 free: 515200 MB
+       node 1 cpus: 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88
+       89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112
+       113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 192 193 194 195 196 197 198
+       199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220
+       221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242
+       243 244 245 246 247 248 249 250 251 252 253 254 255
+       node 1 size: 516060 MB
+       node 1 free: 515449 MB
+       node distances:
+       node   0   1
+         0:  10  32
+         1:  32  10
+    
+     From /proc/meminfo
+        MemTotal:       1056632696 kB
+        HugePages_Total:       0
+        Hugepagesize:       2048 kB
+    
+     /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor has
+        performance
+    
+     From /etc/*release* /etc/*version*
+        os-release:
+           NAME="SLES"
+           VERSION="15-SP2"
+           VERSION_ID="15.2"
+           PRETTY_NAME="SUSE Linux Enterprise Server 15 SP2"
+           ID="sles"
+           ID_LIKE="suse"
+           ANSI_COLOR="0;32"
+           CPE_NAME="cpe:/o:suse:sles:15:sp2"
+    
+     uname -a:
+        Linux localhost 5.3.18-22-default #1 SMP Wed Jun 3 12:16:43 UTC 2020 (720aeba) x86_64
+        x86_64 x86_64 GNU/Linux
+    
+     Kernel self-reported vulnerability status:
+    
+     CVE-2018-12207 (iTLB Multihit):                        Not affected
+     CVE-2018-3620 (L1 Terminal Fault):                     Not affected
+     Microarchitectural Data Sampling:                      Not affected
+     CVE-2017-5754 (Meltdown):                              Not affected
+     CVE-2018-3639 (Speculative Store Bypass):              Mitigation: Speculative Store
+                                                            Bypass disabled via prctl and
+                                                            seccomp
+     CVE-2017-5753 (Spectre variant 1):                     Mitigation: usercopy/swapgs
+                                                            barriers and __user pointer
+                                                            sanitization
+     CVE-2017-5715 (Spectre variant 2):                     Mitigation: Full AMD retpoline,
+                                                            IBPB: conditional, IBRS_FW, STIBP:
+                                                            always-on, RSB filling
+     CVE-2020-0543 (Special Register Buffer Data Sampling): Not affected
+     CVE-2019-11135 (TSX Asynchronous Abort):               Not affected
+    
+     run-level 3 Mar 12 13:52
+    
+     SPEC is set to: /spec2017B1
+        Filesystem     Type  Size  Used Avail Use% Mounted on
+        /dev/sda4      xfs   199G   37G  163G  19% /
+    
+     From /sys/devices/virtual/dmi/id
+         Product Family: Server
+    
+     Additional information from dmidecode follows.  WARNING: Use caution when you interpret
+     this section. The 'dmidecode' program reads system data which is "intended to allow
+     hardware to be accurately determined", but the intent may not be met, as there are
+     frequent changes to hardware, firmware, and the "DMTF SMBIOS" standard.
+       Memory:
+         16x Samsung M393A8G40AB2-CWE 64 GB 2 rank 3200
+         16x Unknown Unknown
+    
+     BIOS:
+        BIOS Vendor:       American Megatrends Inc.
+        BIOS Version:      0404
+        BIOS Date:         02/02/2021
+        BIOS Revision:     4.4
+    
+     (End of data from sysinfo program)
+
+                                                      Compiler Version Notes
+                                                      ----------------------
+    ==============================================================================
+    C               | 619.lbm_s(base, peak) 638.imagick_s(base, peak)
+                    | 644.nab_s(base, peak)
+    ------------------------------------------------------------------------------
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    ------------------------------------------------------------------------------
+    
+    ==============================================================================
+    C++, C, Fortran | 607.cactuBSSN_s(base, peak)
+    ------------------------------------------------------------------------------
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    ------------------------------------------------------------------------------
+    
+    ==============================================================================
+    Fortran         | 603.bwaves_s(base, peak) 649.fotonik3d_s(base, peak)
+                    | 654.roms_s(base, peak)
+    ------------------------------------------------------------------------------
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    ------------------------------------------------------------------------------
+    
+    ==============================================================================
+    Fortran, C      | 621.wrf_s(base, peak) 627.cam4_s(base, peak)
+                    | 628.pop2_s(base, peak)
+    ------------------------------------------------------------------------------
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    AMD clang version 12.0.0 (CLANG: AOCC_3.0.0-Build#78 2020_12_10) (based on
+      LLVM Mirror.Version.12.0.0)
+    Target: x86_64-unknown-linux-gnu
+    Thread model: posix
+    InstalledDir: /opt/AMD/aocc-compiler-3.0.0/bin
+    ------------------------------------------------------------------------------
+
+                                                     Base Compiler Invocation
+                                                     ------------------------
+C benchmarks: 
+     clang
+
+Fortran benchmarks: 
+     flang
+
+Benchmarks using both Fortran and C: 
+     flang clang
+
+Benchmarks using Fortran, C, and C++: 
+     clang++ clang flang
+
+
+                                                      Base Portability Flags
+                                                      ----------------------
+    603.bwaves_s: -DSPEC_LP64
+ 607.cactuBSSN_s: -DSPEC_LP64
+       619.lbm_s: -DSPEC_LP64
+       621.wrf_s: -DSPEC_CASE_FLAG -Mbyteswapio -DSPEC_LP64
+      627.cam4_s: -DSPEC_CASE_FLAG -DSPEC_LP64
+      628.pop2_s: -DSPEC_CASE_FLAG -Mbyteswapio -DSPEC_LP64
+   638.imagick_s: -DSPEC_LP64
+       644.nab_s: -DSPEC_LP64
+ 649.fotonik3d_s: -DSPEC_LP64
+      654.roms_s: -DSPEC_LP64
+
+
+                                                     Base Optimization Flags
+                                                     -----------------------
+C benchmarks: 
+     -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-region-vectorize -Wl,-mllvm -Wl,-function-specialize
+     -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6 -Wl,-mllvm -Wl,-reduce-array-computations=3 -O3 -march=znver3 -fveclib=AMDLIBM
+     -ffast-math -flto -fstruct-layout=5 -mllvm -unroll-threshold=50 -mllvm -inline-threshold=1000 -fremap-arrays
+     -mllvm -function-specialize -flv-function-specialization -mllvm -enable-gvn-hoist -mllvm -global-vectorize-slp=true
+     -mllvm -enable-licm-vrp -mllvm -reduce-array-computations=3 -z muldefs -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp
+     -lamdlibm -ljemalloc -lflang -lflangrti
+
+Fortran benchmarks: 
+     -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-enable-X86-prefetching -Wl,-mllvm -Wl,-enable-licm-vrp
+     -Wl,-mllvm -Wl,-region-vectorize -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+     -Wl,-mllvm -Wl,-reduce-array-computations=3 -Hz,1,0x1 -O3 -march=znver3 -fveclib=AMDLIBM -ffast-math -Mrecursive
+     -mllvm -fuse-tile-inner-loop -funroll-loops -mllvm -extra-vectorizer-passes -mllvm -lsr-in-nested-loop
+     -mllvm -enable-licm-vrp -mllvm -reduce-array-computations=3 -mllvm -global-vectorize-slp=true -z muldefs -DSPEC_OPENMP
+     -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang -lflangrti
+
+Benchmarks using both Fortran and C: 
+     -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-enable-X86-prefetching -Wl,-mllvm -Wl,-enable-licm-vrp
+     -Wl,-mllvm -Wl,-region-vectorize -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+     -Wl,-mllvm -Wl,-reduce-array-computations=3 -O3 -march=znver3 -fveclib=AMDLIBM -ffast-math -flto -fstruct-layout=5
+     -mllvm -unroll-threshold=50 -mllvm -inline-threshold=1000 -fremap-arrays -mllvm -function-specialize
+     -flv-function-specialization -mllvm -enable-gvn-hoist -mllvm -global-vectorize-slp=true -mllvm -enable-licm-vrp
+     -mllvm -reduce-array-computations=3 -Hz,1,0x1 -Mrecursive -mllvm -fuse-tile-inner-loop -funroll-loops
+     -mllvm -extra-vectorizer-passes -mllvm -lsr-in-nested-loop -z muldefs -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp -lamdlibm
+     -ljemalloc -lflang -lflangrti
+
+Benchmarks using Fortran, C, and C++: 
+     -m64 -mno-adx -mno-sse4a -std=c++98 -Wl,-mllvm -Wl,-x86-use-vzeroupper=false -Wl,-mllvm -Wl,-region-vectorize
+     -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+     -Wl,-mllvm -Wl,-reduce-array-computations=3 -O3 -march=znver3 -fveclib=AMDLIBM -ffast-math -flto -fstruct-layout=5
+     -mllvm -unroll-threshold=50 -mllvm -inline-threshold=1000 -fremap-arrays -mllvm -function-specialize
+     -flv-function-specialization -mllvm -enable-gvn-hoist -mllvm -global-vectorize-slp=true -mllvm -enable-licm-vrp
+     -mllvm -reduce-array-computations=3 -mllvm -enable-partial-unswitch -mllvm -unroll-threshold=100 -finline-aggressive
+     -mllvm -loop-unswitch-threshold=200000 -mllvm -reroll-loops -mllvm -aggressive-loop-unswitch -mllvm -extra-vectorizer-passes
+     -mllvm -convert-pow-exp-to-int=false -Hz,1,0x1 -Mrecursive -mllvm -fuse-tile-inner-loop -funroll-loops
+     -mllvm -lsr-in-nested-loop -z muldefs -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang -lflangrti
+
+
+                                                         Base Other Flags
+                                                         ----------------
+C benchmarks: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Fortran benchmarks: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Benchmarks using both Fortran and C: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Benchmarks using Fortran, C, and C++: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+
+                                                     Peak Compiler Invocation
+                                                     ------------------------
+C benchmarks: 
+     clang
+
+Fortran benchmarks: 
+     flang
+
+Benchmarks using both Fortran and C: 
+     flang clang
+
+Benchmarks using Fortran, C, and C++: 
+     clang++ clang flang
+
+
+                                                      Peak Portability Flags
+                                                      ----------------------
+Same as Base Portability Flags
+
+
+                                                     Peak Optimization Flags
+                                                     -----------------------
+C benchmarks:
+
+       619.lbm_s: basepeak = yes
+
+   638.imagick_s: basepeak = yes
+
+       644.nab_s: -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-region-vectorize -Wl,-mllvm -Wl,-function-specialize -Ofast
+                  -march=znver3 -fveclib=AMDLIBM -ffast-math -flto -fstruct-layout=5 -mllvm -unroll-threshold=50 -fremap-arrays
+                  -flv-function-specialization -mllvm -inline-threshold=1000 -mllvm -enable-gvn-hoist
+                  -mllvm -global-vectorize-slp=true -mllvm -function-specialize -mllvm -enable-licm-vrp
+                  -mllvm -reduce-array-computations=3 -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang
+
+Fortran benchmarks:
+
+    603.bwaves_s: -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-enable-X86-prefetching -Wl,-mllvm -Wl,-enable-licm-vrp
+                  -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+                  -Wl,-mllvm -Wl,-reduce-array-computations=3 -Ofast -march=znver3 -fveclib=AMDLIBM -ffast-math -Mrecursive
+                  -mllvm -reduce-array-computations=3 -mllvm -global-vectorize-slp=true -mllvm -enable-licm-vrp -DSPEC_OPENMP
+                  -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang
+
+ 649.fotonik3d_s: basepeak = yes
+
+      654.roms_s: Same as 603.bwaves_s
+
+Benchmarks using both Fortran and C:
+
+       621.wrf_s: basepeak = yes
+
+      627.cam4_s: basepeak = yes
+
+      628.pop2_s: -m64 -mno-adx -mno-sse4a -Wl,-mllvm -Wl,-enable-X86-prefetching -Wl,-mllvm -Wl,-enable-licm-vrp
+                  -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+                  -Wl,-mllvm -Wl,-reduce-array-computations=3 -Ofast -march=znver3 -fveclib=AMDLIBM -ffast-math -flto
+                  -fstruct-layout=5 -mllvm -unroll-threshold=50 -fremap-arrays -flv-function-specialization
+                  -mllvm -inline-threshold=1000 -mllvm -enable-gvn-hoist -mllvm -global-vectorize-slp=true
+                  -mllvm -function-specialize -mllvm -enable-licm-vrp -mllvm -reduce-array-computations=3 -Mrecursive
+                  -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang
+
+Benchmarks using Fortran, C, and C++: 
+     -m64 -mno-adx -mno-sse4a -std=c++98 -Wl,-mllvm -Wl,-x86-use-vzeroupper=false -Wl,-mllvm -Wl,-enable-licm-vrp
+     -Wl,-mllvm -Wl,-function-specialize -Wl,-mllvm -Wl,-align-all-nofallthru-blocks=6
+     -Wl,-mllvm -Wl,-reduce-array-computations=3 -Ofast -march=znver3 -fveclib=AMDLIBM -ffast-math -flto -fstruct-layout=5
+     -mllvm -unroll-threshold=50 -fremap-arrays -flv-function-specialization -mllvm -inline-threshold=1000
+     -mllvm -enable-gvn-hoist -mllvm -global-vectorize-slp=true -mllvm -function-specialize -mllvm -enable-licm-vrp
+     -mllvm -reduce-array-computations=3 -finline-aggressive -mllvm -unroll-threshold=100 -mllvm -reroll-loops
+     -mllvm -aggressive-loop-unswitch -Mrecursive -DSPEC_OPENMP -fopenmp -fopenmp=libomp -lomp -lamdlibm -ljemalloc -lflang
+
+
+                                                         Peak Other Flags
+                                                         ----------------
+C benchmarks: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Fortran benchmarks: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Benchmarks using both Fortran and C: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+Benchmarks using Fortran, C, and C++: 
+     -Wno-unused-command-line-argument -Wno-return-type
+
+
+The flags files that were used to format this result can be browsed at
+http://www.spec.org/cpu2017/flags/ASUSTekPlatform-Settings-AMD-Milan-V1.2.html
+http://www.spec.org/cpu2017/flags/aocc300-flags-A1.html
+
+You can also download the XML flags sources by saving the following links:
+http://www.spec.org/cpu2017/flags/ASUSTekPlatform-Settings-AMD-Milan-V1.2.xml
+http://www.spec.org/cpu2017/flags/aocc300-flags-A1.xml
+
+  SPEC CPU and SPECspeed are registered trademarks of the Standard Performance Evaluation Corporation.  All other brand and
+    product names appearing in this result are trademarks or registered trademarks of their respective holders.
+----------------------------------------------------------------------------------------------------------------------------------
+For questions about this result, please contact the tester.
+For other inquiries, please contact info@spec.org.
+Copyright 2017-2021 Standard Performance Evaluation Corporation
+Tested with SPEC CPU(R)2017 v1.1.5 on 2021-03-12 04:43:33-0500.
+Report generated on 2021-04-08 11:31:50 by CPU2017 text formatter v6255.
+Originally published on 2021-04-06.

@@ -323,7 +323,7 @@ to the Virtual Client in order to authenticate.
 
 ``` script
 # Supply the package store connection string or SAS URI like so:
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Juno --timeout=1440 --packageStore={BlobStoreConnectionString|SAS URI}
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=1440 --packageStore={BlobStoreConnectionString|SAS URI}
 ```
 </div>
 

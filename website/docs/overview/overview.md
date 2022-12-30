@@ -1,3 +1,10 @@
+---
+id: overview
+sidebar_position: 1
+keywords: [benchmark, automation, workload, monitoring, microsoft,
+    coremark,hpcg, lapack, openfoam,redis, memcached, specjvm] 
+---
+
 # Overview
 The Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud. 
 The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). 
