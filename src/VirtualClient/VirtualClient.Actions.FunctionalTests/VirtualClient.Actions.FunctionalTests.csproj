@@ -77,6 +77,9 @@
         <Content Include="..\TestResources\Results_RedisBenchmark.txt" Link="Resources\Results_RedisBenchmark.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\TestResources\Results_StressAppTest.txt" Link="Resources\Results_StressAppTest.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\TestResources\Results_SuperBenchmark.jsonl" Link="Resources\Results_SuperBenchmark.jsonl">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -170,6 +173,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-MEM-LMBENCH.json" Link="Profiles\PERF-MEM-LMBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-MEM-STRESSAPPTEST.json" Link="Profiles\PERF-MEM-STRESSAPPTEST.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-MEMCACHED.json" Link="Profiles\PERF-MEMCACHED.json">

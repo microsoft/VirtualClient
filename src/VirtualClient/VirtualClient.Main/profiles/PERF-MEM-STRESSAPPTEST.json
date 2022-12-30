@@ -1,0 +1,31 @@
+{
+    "Description": "StressAppTest Workload",
+    "Parameters": {
+        "TimeInSeconds": "60",
+        "UseCpuStressfulMemoryCopy": false
+    },
+    "Actions": [
+        {
+            "Type": "StressAppTestExecutor",
+            "Parameters": {
+                "Scenario": "ApplyStress",
+                "CommandLine": "",
+                "TimeInSeconds": "$.Parameters.TimeInSeconds",
+                "UseCpuStressfulMemoryCopy": "$.Parameters.UseCpuStressfulMemoryCopy",
+                "PackageName": "stressapptest"
+            }
+        }     
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallStressAppTestPackage",
+                "BlobContainer": "packages",
+                "BlobName": "stressapptest_20221115.zip",
+                "PackageName": "stressapptest",
+                "Extract": true
+            }
+        }
+    ]
+}
