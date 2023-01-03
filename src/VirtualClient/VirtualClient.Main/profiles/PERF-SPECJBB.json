@@ -1,0 +1,48 @@
+{
+  "Description": "SPECjbb2015 workload",
+  "MinimumExecutionInterval": "00:01:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Parameters": {
+    "JavaFlags": "-XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC"
+  },
+  "Actions": [
+    {
+      "Type": "SpecJbbExecutor",
+      "Parameters": {
+        "JavaFlags": "$.Parameters.JavaFlags",
+        "PackageName": "specjbb2015",
+        "JdkPackageName": "javadevelopmentkit",
+        "Tags": "Java"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "specjbb.2015.0.0.zip",
+        "PackageName": "specjbb2015",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallJavaSDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.3.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JavaDevelopmentKitInstallation",
+      "Parameters": {
+        "Scenario": "InstallJavaSDK",
+        "PackageName": "javadevelopmentkit"
+      }
+    }
+  ]
+}

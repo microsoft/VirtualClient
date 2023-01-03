@@ -1,0 +1,27 @@
+{
+    "Description": "GeekBench5 CPU Performance Workload",
+    "MinimumExecutionInterval": "00:10:00",
+    "Parameters": { },
+    "Actions": [
+        {
+            "Type": "GeekbenchExecutor",
+            "Parameters": {
+                "Scenario": "ScoreSystem",
+                "CommandLine": "--no-upload",
+                "PackageName": "geekbench5"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallGeekBench5WorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "geekbench5.1.0.0.zip",
+                "PackageName": "geekbench5",
+                "Extract": true
+            }
+        }
+    ]
+}
