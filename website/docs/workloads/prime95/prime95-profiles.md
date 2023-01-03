@@ -3,35 +3,37 @@ The following profiles run customer-representative or benchmarking scenarios usi
  Prime95 workload.
 
 * [Workload Details](./prime95.md)
-* [Workload Profile Metrics](./prime95-metrics.md)
 
-
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies
-from a package store. In order to download the workload packages, connection
-information must be supplied on the command line. See the 'Workload Packages'
-documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-CPU-PRIME95.json
-Runs the Prime95 workload which runs a continuous torture/stress test on system for given time.
+## PERF-CPU-PRIME95.json
+Runs the Prime95 workload for a specific period of time on the system. This profile is designed to allow the user to run the workload for the purpose of evaluating
+the performance of the CPU over various periods of time while also allowing the user to apply a longer-term stress to the system if desired.
 
 * **Supported Platform/Architectures**
   * linux-x64
   * win-x64
 
-* **Dependencies**
-  The following dependencies must be met to run this workload profile.
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+  * Windows 10
+  * Windows 11
+  * Windows Server 2016
+  * Windows Server 2019
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+* **Supports Disconnected Scenarios**  
+  * Yes. When the Prime95 package is included in 'packages' directory of the Virtual Client.
+    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**
-  The following parameters can be optionally supplied on the command line to modify the
-  behavior of the workload. See the 'Usage Scenarios/Examples' above for examples on
-  how to supply parameters to Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter | Purpose | Acceptable Range | Default Value |
   |-----------|---------|------------------|---------------|
@@ -42,20 +44,23 @@ Runs the Prime95 workload which runs a continuous torture/stress test on system 
   | FFTConfiguration | Sets FFT Size in certain range. 0: Custom/Default Value, 1: Smallest FFTs 4K-32K, 2: Small FFTs 32K-1024K, 3: Large FFTs 2048K-8192K | 0-3 | 0
   | NumberOfThreads | Limits the worker threads to specified value | 1 - Number Of Logical Cores in system | Number of logical cores in system |
 
-* **Workload Runtimes**
-  The Prime95 Workload Runtime can be set as an input parameter in Profile and commandLine. The default value is 60 minutes for a single round of tests run.
-  These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results.
+* **Profile Runtimes**
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. The runtime for
+  this particular profile is affected by the value of the 'TimeInMins' parameter above. The larger the value, the longer the runtime.
+
+  * (4-cores/vCPUs) = 1.5 hours
 
 * **Usage Examples**
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
+  The following section provides a few basic examples of how to use the workload profile.
 
   ```bash
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInMins=120,,,MinTortureFFT=1024,,,MaxTortureFFT=4096,,,TortureHyperthreading=0"
-  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInMins=240,,,FFTConfiguration=1"
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  ./VirtualClient --profile=PERF-CPU-PRIME95.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-CPU-PRIME95.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInMins=120,,,MinTortureFFT=1024,,,MaxTortureFFT=4096,,,TortureHyperthreading=0"
+  # Override the default parameters to run the workload for a longer period of time
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="TimeInMins=240,,,FFTConfiguration=1"
+
+  # Override the default parameters to change the "torture settings" when running the workload.
+  VirtualClient.exe --profile=PERF-CPU-PRIME95.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="MinTortureFFT=1024,,,MaxTortureFFT=4096,,,TortureHyperthreading=0"
   ```

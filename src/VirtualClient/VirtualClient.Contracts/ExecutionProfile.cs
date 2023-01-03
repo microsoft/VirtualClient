@@ -37,7 +37,9 @@ namespace VirtualClient.Contracts
             IEnumerable<ExecutionProfileElement> dependencies,
             IEnumerable<ExecutionProfileElement> monitors,
             IDictionary<string, IConvertible> metadata,
-            IDictionary<string, IConvertible> parameters)
+            IDictionary<string, IConvertible> parameters,
+            IEnumerable<string> supportedPlatforms = null,
+            IEnumerable<string> supportedOperatingSystems = null)
         {
             description.ThrowIfNullOrWhiteSpace(nameof(description));
 
@@ -110,6 +112,18 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "MinimumRequiredExecutionTime", Required = Required.Default, Order = 40)]
         public TimeSpan? MinimumRequiredExecutionTime { get; }
+
+        /// <summary>
+        /// The set of supported platform/architectures for the profile.
+        /// </summary>
+        [JsonProperty(PropertyName = "SupportedPlatforms", Required = Required.Default, Order = 45)]
+        public List<string> SupportedPlatforms { get; }
+
+        /// <summary>
+        /// The set of supported operating systems for the profile.
+        /// </summary>
+        [JsonProperty(PropertyName = "SupportedOperatingSystems", Required = Required.Default, Order = 50)]
+        public List<string> SupportedOperatingSystems { get; }
 
         /// <summary>
         /// Metadata properties associated with the profile.

@@ -1,225 +1,225 @@
 {
-  "Description": "Memcached Benchmark",
-  "Parameters": {
-    "ServerItemMemoryMB": 1024,
-    "Username": "username"
-  },
-  "Actions": [
-    {
-      "Type": "MemcachedServerExecutor",
-      "Parameters": {
-        "Scenario": "MemcachedServer",
-        "PackageName": "Memcached",
-        "Role": "Server",
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username",
-        "ServerItemMemoryMB": "$.Parameters.ServerItemMemoryMB"
-      }
+    "Description": "Memcached Benchmark",
+    "Parameters": {
+        "ServerItemMemoryMB": 1024,
+        "Username": "username"
     },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_4t_1c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 4,
-        "NumberOfClientsPerThread": 1,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_4t_2c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 4,
-        "NumberOfClientsPerThread": 2,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_4t_4c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 4,
-        "NumberOfClientsPerThread": 4,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_8t_2c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 8,
-        "NumberOfClientsPerThread": 2,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_8t_4c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 8,
-        "NumberOfClientsPerThread": 4,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_8t_8c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 8,
-        "NumberOfClientsPerThread": 8,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_16t_4c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 16,
-        "NumberOfClientsPerThread": 4,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_16t_8c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 16,
-        "NumberOfClientsPerThread": 8,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    },
-    {
-      "Type": "MemcachedMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_16t_16c",
-        "PackageName": "Memcached",
-        "Role": "Client",
-        "NumberOfThreads": 16,
-        "NumberOfClientsPerThread": 16,
-        "NumberOfRuns": 1,
-        "DurationInSecs": 180,
-        "PipelineDepth": 32,
-        "Port": "6379",
-        "Bind": 1,
-        "Protocol": "memcache_text",
-        "Username": "$.Parameters.Username"
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallRequiredLinuxPackagesForMemtier",
-        "Packages-Apt": "autoconf,automake,libpcre3-dev,libevent-dev,zlib1g-dev,libssl-dev,pkg-config,build-essential",
-        "Packages-Yum": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git",
-        "Packages-Dnf": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git"
-      }
-    },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallRequiredLinuxPackagesForMemcached",
-        "Packages-Apt": "wget,tcl-dev,numactl",
-        "Packages-Yum": "wget,tcl-devel,numactl",
-        "Packages-Dnf": "wget,tcl-devel,numactl"
-      }
-    },
-    {
-      "Type": "GitRepoClone",
-      "Parameters": {
-        "Scenario": "CloneMemtierBenchmarkRepo",
-        "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
-        "PackageName": "memtier"
-      }
-    },
-    {
-      "Type": "MemcachedInstallation",
-      "Parameters": {
-        "Scenario": "InstallMemcached",
-        "Version": "1.6.17",
-        "PackageName": "memcached"
-      }
-    },
-    {
-      "Type": "MemtierInstallation",
-      "Parameters": {
-        "Scenario": "InstallMemtier",
-        "Version": "1.4.0",
-        "PackageName": "memtier"
-      }
-    },
-    {
-      "Type": "ApiServer",
-      "Parameters": {
-        "Scenario": "StartAPIServer"
-      }
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "MemcachedServerExecutor",
+            "Parameters": {
+                "Scenario": "MemcachedServer",
+                "PackageName": "Memcached",
+                "Role": "Server",
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username",
+                "ServerItemMemoryMB": "$.Parameters.ServerItemMemoryMB"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_4t_1c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 4,
+                "NumberOfClientsPerThread": 1,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_4t_2c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 4,
+                "NumberOfClientsPerThread": 2,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_4t_4c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 4,
+                "NumberOfClientsPerThread": 4,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_8t_2c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 8,
+                "NumberOfClientsPerThread": 2,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_8t_4c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 8,
+                "NumberOfClientsPerThread": 4,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_8t_8c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 8,
+                "NumberOfClientsPerThread": 8,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_16t_4c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 16,
+                "NumberOfClientsPerThread": 4,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_16t_8c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 16,
+                "NumberOfClientsPerThread": 8,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        },
+        {
+            "Type": "MemcachedMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_16t_16c",
+                "PackageName": "Memcached",
+                "Role": "Client",
+                "NumberOfThreads": 16,
+                "NumberOfClientsPerThread": 16,
+                "NumberOfRuns": 1,
+                "DurationInSecs": 180,
+                "PipelineDepth": 32,
+                "Port": "6379",
+                "Bind": 1,
+                "Protocol": "memcache_text",
+                "Username": "$.Parameters.Username"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackagesForMemtier",
+                "Packages-Apt": "autoconf,automake,libpcre3-dev,libevent-dev,zlib1g-dev,libssl-dev,pkg-config,build-essential",
+                "Packages-Yum": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git",
+                "Packages-Dnf": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackagesForMemcached",
+                "Packages-Apt": "wget,tcl-dev,numactl",
+                "Packages-Yum": "wget,tcl-devel,numactl",
+                "Packages-Dnf": "wget,tcl-devel,numactl"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneMemtierBenchmarkRepo",
+                "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
+                "PackageName": "memtier"
+            }
+        },
+        {
+            "Type": "MemcachedInstallation",
+            "Parameters": {
+                "Scenario": "InstallMemcached",
+                "Version": "1.6.17",
+                "PackageName": "memcached"
+            }
+        },
+        {
+            "Type": "MemtierInstallation",
+            "Parameters": {
+                "Scenario": "InstallMemtier",
+                "Version": "1.4.0",
+                "PackageName": "memtier"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
 }

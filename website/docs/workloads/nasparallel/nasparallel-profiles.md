@@ -2,23 +2,18 @@
 The following profiles run customer-representative or benchmarking scenarios using the NAS Parallel toolset.
 
 * [Workload Details](./nasparallel.md)
-* [Workload Metrics](./nasparallel-metrics.md)
+* [Client/Server Workloads](../../guides/0020-client-server.md)
 
-
------------------------------------------------------------------------
-
-### Preliminaries
-
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### Topology Requirements 
-The NAS Parallel workload profiles can run both on single and multiple nodes within same subnet to run the workload. One system operates in the 'Client' role making calls to zero or more servers. zero or more systems operate in the 'Server' role. (1-N relation where N can be [0,1,2...])
+## Client/Server Topology Support
+NAS Parallel workload profiles support running the workload on both a single system as well as in an multi-system, client/server topology. This means that the workload supports
+operation on a single system or on N number of distinct systems. The client/server topology is typically used when it is desirable to include a network component in the
+overall performance evaluation. In a client/server topology, one system operates in the 'Client' role making calls to the system operating in the 'Server' role. 
+The Virtual Client instances running on the client and server systems will synchronize with each other before running the workload. In order to support a client/server topology,
+an environment layout file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. An
+environment layout file is not required for the single system topology.
 
 The Virtual Client running on the client and server systems will synchronize with each other before running each individual workload. An environment layout
-file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances. See 
-the section below on 'Client/Server Topologies'.
+file MUST be supplied to each instance of the Virtual Client on the command line to describe the IP address/location of other Virtual Client instances.
 
 [Environment Layouts](../../guides/0020-client-server.md)
 
@@ -27,44 +22,53 @@ The spelling of the roles must be exact. The IP addresses of the systems/VMs mus
 idea. The name of the client must match the name of the system or the value of the agent ID passed in on the command line.
 
 For different benchmarks with NAS Parallel we have various recommendation on number of nodes as mentioned below.
-* BT, SP         - a square number of processes (1, 4, 9, ...)
-* LU             - 2D (n1 * n2) process grid where n1/2 <= n2 <= n1
-* CG, FT, IS, MG - a power-of-two number of processes (1, 2, 4, ...)
-* EP         - no special requirement
-* DC,UA          - Run only on single machine.
-* DT             - Minimum 5 machines required.
+* BT, SP benchmarks  
+  A square number of processes (1, 4, 9, ...).
 
-So for the whole profile 1,4,16... are the recommended numbers.
+* LU benchmark  
+  2D (n1 * n2) process grid where n1/2 <= n2 <= n1.
 
+* CG, FT, IS, MG benchmarks  
+  a power-of-two number of processes (1, 2, 4, ...).
+
+* EP benchmark  
+  No special requirements.
+
+* DC,UA benchmarks  
+  Run only on single machine.
+
+* DT benchmark  
+  Minimum of 5 machines required.
 
 ```bash
-// Client role system (the controller)
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Azure --timeout=1440 --agentId=AnyVM01 --layoutPath=/any/path/to/layout.json
+# Single System (environment layout not required)
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440
 
-// Server role system #1
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Azure --timeout=1440 --agentId=AnyVM02 --layoutPath=/any/path/to/layout.json
+# Multi-System
+# On the Client role system (the controller)
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
 
-// Server role system #2
-./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Azure --timeout=1440 --agentId=AnyVM03 --layoutPath=/any/path/to/layout.json
+# On Server role system #1
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
 
-// Example contents of the 'layout.json' file below:
-```
+# On Server role system #2
+./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server02 --layoutPath=/any/path/to/layout.json
 
-```json
+# Example contents of the 'layout.json' file:
 {
     "clients": [
         {
-            "name": "AnyVM01",
+            "name": "Client01",
             "role": "Client",
             "privateIPAddress": "10.1.0.1"
         },
         {
-            "name": "AnyVM02",
+            "name": "Server01",
             "role": "Server",
             "privateIPAddress": "10.1.0.2"
         },
         {
-            "name": "AnyVM03",
+            "name": "Server02",
             "role": "Server",
             "privateIPAddress": "10.1.0.3"
         }
@@ -72,46 +76,7 @@ So for the whole profile 1,4,16... are the recommended numbers.
 }
 ```
 
------------------------------------------------------------------------
-
-### PERF-HPC-NASPARALLELBENCH.json
-Runs a set of HPC workloads using NAS Parallel Benchmarks to the parallel computing performance.
-This profile is designed to test both single and multiple nodes performance.
-
-* **Supported Platform/Architectures**
-  * linux-x64
-  * linux-arm64
-
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
-
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
-  * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
-  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
-    or must match the name of the system as defined by the operating system itself.
-
-* **Profile Parameters**  
-  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
-
-  | Parameter                 | Purpose                                                                         | Default Value |
-  |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Username                  | Required. See [SSH Requirements](#SSH-Requirements) | NULL |
-
-
-* **Recommended Configurations**  
-  
-* **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
-
-  ``` csharp
-  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Username=virtualcli..." --layoutPath="/any/path/to/layout.json"
-  ./VirtualClient --profile=PPERF-HPC-NASPARALLELBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Username=virtualcli..."
-  ```
-
-#### SSH Requirements
+## SSH Requirements
 OpenMPI sends messages over port 22 - as well as expects to send messages without having to supply a key or passsword. A secure and safe way is to register an SSH identity with the
 client machine. Here is an example [blog post](https://linuxize.com/post/how-to-setup-passwordless-ssh-login/) on how to do this. Although the basic steps are:
 - On client, store a private-public key pair under ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub
@@ -119,21 +84,61 @@ client machine. Here is an example [blog post](https://linuxize.com/post/how-to-
 - On client, store server fingprints in ~/.ssh/known_hosts 
 - Last when running the profile, supply the username whos .ssh directory contains all of the files just created/edited. 
 
------------------------------------------------------------------------
+## PERF-HPC-NASPARALLELBENCH.json
+Runs a set of HPC workloads using NAS Parallel Benchmarks to the parallel computing performance. This profile is designed to test both single and 
+multiple nodes performance.
 
-### Client/Server Topologies
-The NAS Parallel workload can be a client/server(It supports single machine scenario too) scenario whereby a controller/host makes SSH requests to target clients to distribute work. As such this workload
-is only valid when ran in some form of client/server topology. The requirement is that there must be at least 2 systems in order to create a proper
-client/server interaction. In Azure Cloud environments, these 2 systems may be 2 virtual machines that run on the same physical node/blade. This scenario
-will test performance that includes network performance aspects through a Hyper-V virtual switch. These 2 systems may also be 2 virtual machines that
-run on different physical nodes/blades. This scenario will test performance through the physical network of a data center rack or cluster. Data center
-racks have a top-of-rack network/T1 switch (TOR). Data center racks are connected by T2 network switches. The default production scenario targets the
-physical network systems and typically SameCluster/T2 network switches.
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-HPC-NASPARALLELBENCH.json) 
 
-The Virtual Client itself does not create these topologies or the virtual machines etc... within them. This is a feature expected of the user or
-the automation running the Virtual Client application. For example, at Azure, it has engineering system that is capable of creating advanced topologies into which the
-Virtual Client is deployed. Once the environment is setup, it is easy to provide topology/layout information to the Virtual Client so that each
-instance running on a given system knows about all of the other instances and additionally knows what its role to play in the client/server workload
-execution process is.
+* **Supported Platform/Architectures**
+  * linux-x64
+  * linux-arm64
 
-See [Environment Layouts](../../guides/0020-client-server.md) for more information.
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively. 
+  * Internet connection.
+  * For multi-system scenarios, communications over SSH port 22 must be allowed.
+  * The IP addresses defined in the environment layout (see above) for the Client and Server systems must be correct.
+  * The name of the Client and Server instances defined in the environment layout must match the agent/client IDs supplied on the command line (e.g. --agentId)
+    or must match the name of the system as defined by the operating system itself.
+    
+  Additional information on individual components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/).
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Username                  | Required. See 'SSH Requirements' above                                          | No default, must be supplied |
+
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
+
+  * (2-cores/vCPUs) = 4 - 5 hours
+
+* **Usage Examples**  
+  The following section provides a few basic examples of how to use the workload profile.
+
+  ``` bash
+  # When running on a single system (environment layout not required)
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --parameters="Username=testuser" --packageStore="{BlobConnectionString|SAS Uri}"
+
+   # When running in a client/server environment
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+
+  # When running in a client/server environment with additional systems
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server01 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-HPC-NASPARALLELBENCH.json --system=Demo --timeout=1440 --clientId=Server02 --parameters="Username=testuser" --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ```

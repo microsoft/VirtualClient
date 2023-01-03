@@ -5,7 +5,6 @@
         "ConfigureNetwork": true,
         "EnableBusyPoll": true,
         "DisableFirewall": true,
-        "ApiPort": 4500,
         "CpsPort": 7201,
         "LattePort": 6100,
         "NTttcpPort": 5500,
@@ -353,8 +352,7 @@
         {
             "Type": "ApiServer",
             "Parameters": {
-                "Scenario": "StartAPIServer",
-                "ApiPort": "$.Parameters.ApiPort"
+                "Scenario": "StartAPIServer"
             }
         }
     ]

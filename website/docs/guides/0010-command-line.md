@@ -29,30 +29,30 @@ on the system.
 
 ```bash
  # Run a workload profile
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}"
 
  # Include specific metadata in the telemetry output by the application.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
  # Include experiment/run IDs and agent IDs as correlation identifiers in addition to metadata output by the application.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
  # Upload telemetry output to a target Event Hub namespace.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{AccessPolicy}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --eventHub="{AccessPolicy}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 
  # Use the 'deterministic' instruction to ensure that an action/workload running is allowed
  # to complete before timing out.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180,deterministic --packages="{BlobStoreConnectionString|SAS URI}"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic --packages="{BlobStoreConnectionString|SAS URI}"
 
  # Use the 'deterministic*' instruction to ensure that all profile actions/workloads are allowed
  # to complete before timing out.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=180,deterministic* --packages="{BlobStoreConnectionString|SAS URI}"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=180,deterministic* --packages="{BlobStoreConnectionString|SAS URI}"
 
  # Run the actions in a profile a certain number of iterations/rounds before exiting.
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --iterations=3 --packages="{BlobStoreConnectionString|SAS URI}"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --iterations=3 --packages="{BlobStoreConnectionString|SAS URI}"
 
  # Install just the dependencies defined in the profile (but do not run the actions or monitors).
- VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
 ```
 
 ## Subcommands
@@ -85,7 +85,7 @@ VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload -
 
 # Run a bootstrap operation supplying a range of additional correlation identifiers and metadata
 # that can then be associated with subsequent profile execution operations.
-VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload --system=Azure --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --agentId=Agent01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
+VirtualClient.exe bootstrap --package=anyworkload.1.0.0.zip --name=anyworkload --system=Demo --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849 --agentId=Agent01 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,cluster=cluster01,,,nodeId=eb3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=5e66ecdf-575d-48b0-946f-5e6951545724,,,region=East US 2,,,vmName=VCTest4-01"
 ```
 
 * ### runapi
@@ -139,7 +139,7 @@ VirtualClient.exe @C:\VirtualClient\win-x64\CommandLineOptions.rsp
 # Inside the CommandLineOptions.rsp File:
 
 --profile=PERF-CPU-OPENSSL.json
---system=Azure
+--system=Demo
 --timeout=1440
 --experimentId=b9fd4dce-eb3b-455f-bc81-2a394d1ff849
 --clientId=cluster01,eb3fc2d9-157b-4efc-b39c-a454a0779a5b,VCTest4-01

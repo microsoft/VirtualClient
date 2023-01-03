@@ -1,12 +1,11 @@
-﻿# Running VC in container
+﻿# Building Docker Containers
+The following sections cover how to build a Docker image that will contain the Virtual Client.
 
----
 ## Installing Docker on your Windows Dev machine
 To run Docker on your presumeably Windows Dev Machine, you need to install both Docker and WSL. Reboots might be required.
 1. [Docker desktop for Windows](https://hub.docker.com/editions/community/docker-ce-desktop-windows)
 2. [Install Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10#manual-installation-steps)
 
----
 ## Building VC Container
 VC containers uses [official .NET Runtime docker images](https://hub.docker.com/_/microsoft-dotnet-runtime/) as base images. Specific tags are used match the OS/Architecture for the container. 
 For example, mcr.microsoft.com/dotnet/runtime:5.0.9-focal-arm64v8 will pull up the Ubuntu20.04-ARM64 image with .NET5.0.9. Please refer to the Official .NET Docker repository page if tags need to be updated in Dockerfile.
@@ -30,18 +29,14 @@ Select Switch to Windows containers to use Windows containers, or select Switch 
 
 
 ### Supported Platforms
-* Linux x64
-* Linux arm64
-* Windows x64
-* ~~Windows arm64~~ (Could be supported soon)
+* linux-x64
+* linux-arm64
+* win-x64
+* ~~win-arm64~~ (Working to add support)
 
 It is important to know that Container shares the OS with the host, so sometimes the container will not be able to run on your host even though both are running as win-x64.
 WindowsServerCore2022-Container is not able to run on Windows10-Host for example.
 
----
-
-
----
 ## Run VC Container
 The command to run docker container is ["docker run"](https://docs.docker.com/engine/reference/commandline/run/)
 

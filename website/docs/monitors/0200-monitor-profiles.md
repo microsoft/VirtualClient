@@ -8,7 +8,7 @@ Instructs the Virtual Client to not run any monitors at all.
 
 ``` bash
 // Do not run any background monitors.
-VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-NONE.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-NONE.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 ```
 
 ## MONITORS-DEFAULT.json
@@ -62,9 +62,9 @@ toolsets. This monitor profile will be used when no other monitor profiles are s
   VirtualClient.exe --profile=MONITORS-DEFAULT.json
 
   # Runs the default monitor profile.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Monitor profile explicitly defined.
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   ```

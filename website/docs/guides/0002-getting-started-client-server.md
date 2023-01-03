@@ -104,7 +104,7 @@ example with the Memtier + Redis workload, the network "throughput" or "bandwidt
     while the workload is running.
 
 - The Virtual Client captures quite a few metrics for the Memtier + Redis workload. Two most critical metrics for Redis are "throughput" and "P99 latency". The full
-  list of metrics captured are documented here: [Redis Workload Metrics](../workloads/redis/redis-metrics.md)
+  list of metrics captured are documented here: [Redis Workload Metrics](../workloads/redis/redis.md)
 
   - Example Throughput Metric Result  
     ```json {16-19}
@@ -178,4 +178,4 @@ The full profile (noted below) will take a few hours to complete.
 - [Example Profile from Above](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/GET-STARTED-REDIS.json)
 - [Redis Workload](../workloads/redis/redis.md)
 - [Redis Workload Profiles](../workloads/redis/redis-profiles.md)
-- [Redis Workload Metrics](../workloads/redis/redis-metrics.md)
+- [Redis Workload Metrics](../workloads/redis/redis.md)

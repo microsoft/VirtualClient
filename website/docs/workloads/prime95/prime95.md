@@ -1,54 +1,15 @@
 # Prime95
+Prime95 has been a popular choice for stress/torture testing a CPU since its introduction, especially with overclockers 
+and system builders. The software feeds the the processor a barrage of integer and floating-point calculations that can be
+consistently verified with the goal of testing the stability of the CPU and L1/L2/L3 processor caches. Additionally, it utilizes all of the cores
+on the system to ensure a consistently high stress test environment.
 
-Prime95 has been a popular choice for stress / torture testing a CPU since its introduction,
-especially with overclockers and system builders. Since the software makes heavy use of the processor's
-integer and floating point instructions, it feeds the processor a consistent and verifiable workload to
-test the stability of the CPU and the L1/L2/L3 processor cache. Additionally, it uses all of the cores
-of a multi-CPU / multi-core system to ensure a high-load stress test environment.
+Prime95 is designed to run indefinately on a system till any error is encountered. The workload is onboarded to the Virtual Client with the goal
+of supporting a dual-purpose: to test the performance/timing of the CPU in computing the calculations while also placing it under stress.
 
-Prime95 is designed to run indefinately on a system till any error is encountered. Prime95 in
-VirtualClient supports a parameter for custom timeout to stress test for requisite amount of time.
+* [Prime95 Documentation](https://www.mersenne.org/download/)
 
-### What metrics are being captured?
-
-The Prime95 Torture Test continuously stresses the system with calculations for primality testing with
-varying FFT size. It checks whether the calculations are within certain parameters while they are in progress
-and compares the computer's final results to results that are known to be correct.
-
-Any mismatch is treated as an error indicating Hardware issues.
-
-Prime95 gives a Pass/Fail verdict while testing with variations in FFT size. The metrics being captured
-in Virtual Client for Prime95 are the following:
-
-* Number of Tests passed with different FFT Sizes
-
-* Number of Tests failed with different FFT Sizes
-
-* Prime95 Test Runtime (Unit: seconds)
-
-Prime95 also supports some command line arguments for fine grained control stress testing. The details of parameters
-are mentioned in [Workload Profile Documentation](./prime95-profiles.md)
-
-The ScenarioName in results also captures the input parameters.
-
-Example ScenarioName: Prime95Workload_60mins_4K-8192K_8threads
-here, Prime95 Workload was supposed to run for 60 minutes on 8 threads, with FFT Size between 4K and 8192K.
-
-### Supported Platforms
-* linux-x64
-* win-x64
-
-### Package Dependencies
-Prime95 binary along with all required dlls are included in the package. There is no extra dependency.
-The binaries were downloaded from GIMPS Prime95 Documentation website, mentioned above.
-
-### Documentation
-[GIMPS Prime95 Documentation](https://www.mersenne.org/download/)
-
-### What to do if Prime95 finds a problem in system?
-
-The exact cause of a hardware problem will require a thorough diagnosis.
-
+## Reasons Why Prime95 Workload Might Find Problems?
 If system is not being overclocked, the most likely cause is memory. It is not uncommon
 for memory to not run correctly at its rated speed (incorrectly "binned").  This is
 most easily tested by swapping it with memory from another compatible computer and
@@ -70,3 +31,28 @@ The above are just some possible causes, and actual problem might require thorou
 
 It might be noted that the faster prime95 finds a hardware error the more likely it is
 that other programs running on the system will experience problems.
+
+## What is Being Measured?
+The Prime95 "torture test" continuously stresses the CPU on the system with calculations for primality across varying FFT size. It checks whether 
+the calculations are within certain parameters while they are in progress and compares the computer's final results to results that are known to be 
+correct. The time-to-compute the calculations is captured as well. Any mismatch is treated as an error indicating Hardware issues.
+
+The following list describes the measurements captured by the workload running across different FFT sizes:
+
+* Number of Tests passed.
+* Number of Tests failed.
+* Time-to-Compute the Tests (in seconds).
+
+## Workload Metrics
+The following metrics are examples of those captured by the Virtual Client when running the Prime95 workload.
+
+:::info
+*Note that if the failed test count is greater than 0, it denotes an overall Prime95 test failure and some harware error. The test time is the time 
+for which the system was stressed with torture test. A higher the test time without error typically indicates more confidence in Prime95 results.*
+:::
+
+| Metric Name  | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
+|--------------|---------------------|---------------------|---------------------|------|
+| failTestCount | 0.0 | 0.0 | 0.0 |  |
+| passTestCount | 32.0 | 192.0 | 115.45833333333333 |  |
+| testTime | 3600.0031989 | 3601.679443 | 3600.23347608125 | seconds |

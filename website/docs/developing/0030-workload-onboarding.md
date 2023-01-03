@@ -13,12 +13,11 @@ defined are not exactly the same every time; however, this gives a developer the
 * Try to get all questions that you have answered such that you have a sense of truly understanding what the workload software does and how to operate
   it for trustworthy results on the system.
 
-## Step 2: Create Dependency Packages and Uploading to Storage
+## Step 2: Create VC Packages and Uploading to Storage
 It is recommended that any workload software that can be packaged in a Virtual Client package (*.vcpkg) is packaged this way. There are a host of benefits
-to packaging workloads and dependencies in easy-to-consume Virtual Client packages. See the documentation on [dependency packages](https://microsoft.github.io/VirtualClient/docs/developing/dependency-packages) for 
-additional details and insights.
+to packaging workloads and dependencies in easy-to-consume Virtual Client packages.
 
-* [Dependency Packages](./0040-dependency-packages.md)
+* [VC Packages](./0040-vc-packages.md)
 * [Storage Account Support](../guides/0600-integration-blob-storage.md)
 
 ## Step 3: Create Parsers and Unit Tests
@@ -90,10 +89,9 @@ This should also and especially include information on pieces of the workload pa
 An example of this is the SPEC CPU workload requirements for an *.iso file. This file is over 2 GB in size and we do not keep it in source control. It exists ONLY in the package store.
 
 * **Workload Details, Profiles and Metrics**
-A standard pattern is in place for describing the details of the workload (what it is and what it does) as well as the different profiles that are offered to run that workload as well as what type of metrics to we capture when the workload is run. 
-This is very important for users of the Virtual Client to understand fine-grained details about these workloads and profile scenarios. This information is divided into 3 parts/documents. Use the examples below for reference.
-    * Examples: 
-        * [OpenSSL.md](../workloads/openssl/openssl.md)
-        * [OpenSSLMetrics.md](../workloads/openssl/openssl-metrics.md)
-        * [OpenSSLProfiles.md](../workloads/openssl/openssl-profiles.md)
+  A standard pattern is in place for describing the details of the workload (what it is and what it does) as well as the different profiles that are offered to run that workload as well as what type of metrics to we capture when the workload is run. 
+  This is very important for users of the Virtual Client to understand fine-grained details about these workloads and profile scenarios. This information is divided into 3 parts/documents. Use the examples below for reference.
+  
+  * [Example - OpenSSL Overview/Details](../workloads/openssl/openssl.md)
+  * [Example - OpenSSL Workload Profiles](../workloads/openssl/openssl-profiles.md)
 

@@ -52,7 +52,7 @@ regressions when compared against a baseline.
 
 
   ```bash
-  VirtualClient.exe --profile=PERF-MEM-LMBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-MEM-LMBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
 
   **Notes**

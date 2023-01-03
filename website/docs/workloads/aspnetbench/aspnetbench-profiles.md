@@ -2,19 +2,11 @@
 The following profiles run customer-representative or benchmarking scenarios using the AspNetBench workload.
 
 * [Workload Details](./aspnetbench.md)  
-* [Workload Profile Metrics](./aspnetbench-metrics.md)  
 
-
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-ASPNETBENCH.json
+## PERF-ASPNETBENCH.json
 Runs the AspNetBench benchmark workload to assess the performance of an ASP.NET Server.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-ASPNETBENCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -31,31 +23,37 @@ Runs the AspNetBench benchmark workload to assess the performance of an ASP.NET 
   * Windows Server 2016
   * Windows Server 2019
 
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
-  particular workload takes multiple days to complete the number of iterations required for valid results.
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
-  * Expected Runtime (8-core/vCPU VM) = 3 hours
+  | Parameter                 | Purpose                                                           | Default Value |
+  |---------------------------|-------------------------------------------------------------------|---------------|
+  | DotNetVersion             | Optional. The version of the [.NET SDK to download and install](https://dotnet.microsoft.com/en-us/download/visual-studio-sdks). | 6.0.100       |
+  | TargetFramework           | Optional. The [.NET target framework](https://learn.microsoft.com/en-us/dotnet/standard/frameworks) to run (e.g. net6.0, net7.0). | net6.0        |
+
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
+
+  * (8-cores/vCPUs) = 3 hours
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
-
+  The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+
+  # Override the profile default parameters to use a different .NET SDK version
+  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=6.0.307"
   ```
-
-
------------------------------------------------------------------------
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

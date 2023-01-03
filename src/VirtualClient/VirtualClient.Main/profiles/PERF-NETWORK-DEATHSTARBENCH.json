@@ -1,13 +1,11 @@
 {
     "Description": "DeathStarBench Network Performance workload",
     "Parameters": {
-        "AccountKey": "[secret:commandline]=StorageAccountKey",
         "NumberOfThreads": "20",
         "NumberOfConnections": "1000",
         "Duration": "300s",
         "RequestPerSec": "1000",
-        "GraphType": "socfb-Reed98",
-        "ApiPort": 4500
+        "GraphType": "socfb-Reed98"
     },
     "Actions": [
         {
@@ -80,8 +78,7 @@
         {
             "Type": "ApiServer",
             "Parameters": {
-                "Scenario": "StartAPIServer",
-                "ApiPort": "$.Parameters.ApiPort"
+                "Scenario": "StartAPIServer"
             }
         }
     ]

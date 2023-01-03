@@ -8,11 +8,11 @@ Install packages available in Chocolatey Package in Windows.
 This step depends on the [installation of Chocolatey](./0020-install-chocolatey.md).
 :::
 
-### Supported Platform/Architectures
+## Supported Platform/Architectures
 * win-x64
 * win-arm64
 
-## Component Parameters
+## Profile Component Parameters
 The following section describes the parameters used by the individual component in the profile.
 
 | **Parameter** | **Required** | **Description**                                                                                                 |

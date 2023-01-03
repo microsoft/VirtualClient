@@ -13,18 +13,16 @@ use in profiles.
 - [A Good Third-Party Intro](https://www.linode.com/docs/guides/linux-package-management-overview/)  
 - [Search for Packages](https://pkgs.org/)  
 
-### Supported Platform/Architectures
+## Supported Platform/Architectures
 * linux-x64
 * linux-arm64
 
-
-### .NET Supported Linux Distributions
+## .NET Supported Linux Distributions
 VirtualClient runs on .NET 6. It should run on any distribution supported by .NET 6.
 
 * [Supported Distros](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md)
 
-
-### Supported Package Managers and Distros
+## Supported Package Managers and Distros
 The following table shows the list of package managers and the Linux distros on which they are typically supported by default. Note that this list does not infer that 
 all Virtual Client workloads and profiles have been properly tested and confirmed working across all of these package managers and distros but is intended only
 to help users of the application make basic determinations on the likelihood that a particular profile will operate correctly on a given distro. It is entirely possible that 
@@ -40,7 +38,7 @@ to work on a particular distro, the profile may contain a **SupportedDistributio
 | None             | Flatcar                        |
 
 
-### Define LinuxPackageInstallation dependency
+## Define LinuxPackageInstallation dependency
 LinuxPackageInstallation is a dependency class that handles the complexity of installing different packages on different Linux distributions. The package installation scenarios given
 different Linux distros are as follows:
 
@@ -48,7 +46,7 @@ different Linux distros are as follows:
 - Packages with specific names depending upon the distro.
 - Packages with specific names dependending upon the package manager.
 
-### Example: Packages that have the same name across distros
+## Example: Packages that have the same name across distros
 This is the simplest case. The package is well-known and all package managers use the same name for the package.
 
 * [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GRAPH500.json)
@@ -66,7 +64,7 @@ This is the simplest case. The package is well-known and all package managers us
   ```
   </div>
 
-### Example: Packages that have different names across package managers
+## Example: Packages that have different names across package managers
 If the packages are directly available in the default repositories, users only need to fill in the corresponding package names, in the different package manager.
 You need to repeat it for other package management because the name could be different in different package manager.
 The following is example for libaio, which is used in FIO tests.
@@ -88,7 +86,7 @@ The following is example for libaio, which is used in FIO tests.
   ```
   </div>
 
-### Example: Packages that have different names across different Linux distros
+## Example: Packages that have different names across different Linux distros
 There are packages that has different names/paths in different distributions. It follows the convention of *Packages-Distro*.
 The following example is for Atop. Apt and Zypper have them in default repository, however Redhat decided to put them in EPEL repo and not as default.  
 However, please note that in actual installation, epel-release and atop can't be installed in the same command. 
@@ -114,7 +112,7 @@ Epel-release needs to be installed first, so this is separated into two LinuxPac
   ```
   </div>
 
-### Example: Packages that require specific repositories
+## Example: Packages that require specific repositories
 There are packages that are not available in the default repositories. Thus VC needs to add them to the system. Due to how package manager works, they are intrinsicly packageManager specific.
 It follows the convention of *Repositories-PackageManager*. 
 
@@ -136,7 +134,7 @@ It follows the convention of *Repositories-PackageManager*.
   ```
   </div>
 
-### Example: Packages that require repositories specific to a given Linux distro
+## Example: Packages that require repositories specific to a given Linux distro
 There are packages that are not available in the default repositories. Thus VC needs to add them to the system. What makes it worse is that those repository could be distro-version specific.
 For these scenarios, LinuxPackageInstallation class supports definition of distro-specific extra repository. It follows the convention of *Repositories-Distro*.
 Luckily so far VC does not use those packages in current workloads. However, those things do exist.
@@ -158,7 +156,7 @@ Luckily so far VC does not use those packages in current workloads. However, tho
 ```
 </div>
 
-### Mapping: Common Packages Used in Virtual Client Profiles
+## Mapping: Common Packages Used in Virtual Client Profiles
 
 | Package       | apt           | dnf                 | yum                 | zypper |
 |---------------|---------------|---------------------|---------------------|--------|

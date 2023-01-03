@@ -3,14 +3,20 @@ The Java JDK Virtual Client uses is [Microsoft Build of OpenJDK](https://docs.mi
 versions of OpenJDK, you need to use your own package store.
 
 :::info
-This dependency does not download the JDK itself. The JDK package can be installed using the basic [`dependency package installation`](./0001-install-dependency-packages.md).
+This dependency does not download the JDK itself. The JDK package can be installed using the basic [`dependency package installation`](./0001-install-vc-packages.md).
 :::
 
 - [MSFT OpenJDK Installation Guide](https://docs.microsoft.com/en-us/java/openjdk/install)
 - This dependency does not download the binary. It only finds the OpenJDK path and sets the Environment variable "JAVA_HOME" to that directory. This environment
   variable is used within the code/logic to execute Java binaries from the installed JDK.
 
-### Component Parameters
+## Supported Platform/Architectures
+* linux-x64
+* linux-arm64
+* win-x64
+* win-arm64
+
+## Profile Component Parameters
 The following section describes the parameters used by the individual component in the profile.
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
@@ -18,8 +24,7 @@ The following section describes the parameters used by the individual component 
 | PackageName   | Yes          | The name/identifier used to reference the OpenJDK package downloaded during the preliminary dependency package installation step (e.g. 'javadevelopmentkit'...see example below). |
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line).                                                      |
 
-
-### Example
+## Example
 The following section describes the parameters used by the individual component in the profile.
 
 * [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECJVM.json)

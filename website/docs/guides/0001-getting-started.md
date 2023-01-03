@@ -1,4 +1,9 @@
-﻿# Getting Started
+﻿---
+id: getting-started
+sidebar_position: 1
+---
+
+# Getting Started
 The sections below will help the user install the Virtual Client
 
 In this document, we are going to run a "hello world" version of VirtualClient: benchmark your system's crypotography performance, with OpenSSL Speed, using 

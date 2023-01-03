@@ -2,18 +2,8 @@
 The following profiles run customer-representative or benchmarking scenarios using the Graph500 workload.  
 
 * [Workload Details](./graph500.md)  
-* [Workload Profile Metrics](./graph500-metrics.md)  
 
-
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-GRAPH500.json
+## PERF-GRAPH500.json
 Runs a data-intensive workload using the Graph500 toolset to test the performance of underlying hardware.
 This profile is designed to identify general/broad regressions when compared against a baseline by validating the time taken to create a graph, perform 
 BFS(Breadth First Search) and SSSP(Single Source Shortest Path)
@@ -22,41 +12,44 @@ BFS(Breadth First Search) and SSSP(Single Source Shortest Path)
   * linux-x64
   * linux-arm64
 
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**  
-  The following parameters can be optionally supplied on the command line to change this default scale factor of the workload. See the 'Usage Scenarios/Examples' above for 
-  examples on how to supply parameters to Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | EdgeFactor                | Optional.EdgeFactor is ratio of the graph’s edge count to its vertex count (i.e., half the average degree of a vertex in the graph). EdgeFactor helps in determining the number of edges for the graph that this workload creates.  Number of edges = EdgeFactor * Number of vertices.  **Note:** Number of vertices is calculated from the following <b>Scale</b> parameter.| 16 |
   | Scale                     | Optional.Scale is logarithm base two of the number of vertices. Scale is used in determining Number of Vertices for the graph that this workload creates.  Scale = log<sub>2</sub> (Number of vertices). | 10 |
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. The runtime
+  for this particular profile is affected by the value of the 'Scale' factor. The larger the value, the longer the runtime.
 
-  * Expected Runtime on Linux Systems
-    * (16-core/vCPU VM) = 30 minutes (Depends on the value supplied for the profile 'Scale' parameter).
+  * (16-cores/vCPUs, Scale = 10) = 30 minutes.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-
   ``` bash
-  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  // Increase the scale factor.
-  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Scale=20
+   # Override the profile default parameters to use a different scale factor
+  VirtualClient.exe --profile=PERF-GRAPH500.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Scale=20"
   ```
-
------------------------------------------------------------------------
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

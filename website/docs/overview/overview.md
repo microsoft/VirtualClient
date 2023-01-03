@@ -1,11 +1,16 @@
-# Overview
+---
+id: overview
+sidebar_position: 1
+---
+
+# Platform Overview
 The Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud. 
 The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). 
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports all business-critical 
 Azure environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
 * [Platform Features](./0010-features.md)
-* [Platform Design](./0001-design.md)
+* [Platform Design](./0020-design.md)
 * [Usage](../guides/0010-command-line.md)
 * [Usage Examples](../guides/0200-usage-examples.md)  
 * [Developer Guide](../developing/0010-develop-guide.md)

@@ -225,5 +225,5 @@ can then produce valuable results at-scale in A/B experiments.
 
   <br/>
   
-  See [Dependency Packages](./0040-dependency-packages.md) for a more detailed description of how packages are 
-  expected to be defined for use with Virtual Client operations.
+  See [VC Packages](./0040-vc-packages.md) for a more detailed description of how packages are 
+  expected to be defined for integration with the Virtual Client.

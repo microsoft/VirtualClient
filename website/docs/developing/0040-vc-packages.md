@@ -1,4 +1,4 @@
-﻿# Dependency Packages
+﻿# VC Packages
 The following documentation covers the different package store options available in Virtual Client used for downloading and installing
 dependencies on the system. Virtual Client supports NuGet feeds as well as Azure Blob stores for hosting dependency packages that need
 to be downloaded to the system during the execution of a workload profile. The following sections describes how this works in the Virtual
@@ -15,22 +15,22 @@ process as well as the automated/Official build process. This folder schema allo
 in a single package. This consistency makes it easier to integrate these packages into the Virtual Client for just about any type of dependency. It is recommended
 that Virtual Client dependency packages be used whenever feasible because they offer the following benefits:
 
-* **Dependency packages ensure consistency in the versions of workloads and monitors to run.**  
+* **VC Packages ensure consistency in the versions of workloads and monitors to run.**  
   Self-contained packages ensure that it will be the same EXACT software running every single time. This is important to prevent variations in software versions
   causing variations in the results/measurements emitted by the software. This is especially important when running VC for longer periods of time with data analysis
   at the end...minimizing variables!
 
-* **Dependency packages simplify the coding/development requirements.**  
+* **VC Packages simplify the coding/development requirements.**  
   By pre-packaging dependencies, developers onboarding new features to the Virtual Client remove a significant amount of work that would otherwise need to be done
   in code. Writing additional code takes time and creates more places in the codes for bugs.
 
-* **Dependency packages make the runtime dependency installation process more reliable**  
+* **VC Packages help make the runtime dependency installation process more reliable**  
   Additional reliability at runtime is created when placing pre-packaged dependencies in storage locations for which the Virtual Client team or the individual developer own.
   This is because it reduces the number of dependencies on which the application must rely in order to install the dependencies it needs. Were the dependencies to be installed
   from a third-party location, the application is subject to the availability of those resource locations without an expedient recourse. The Virtual Client team for example uses Azure
   storage accounts to host dependency packages because they are highly reliable and can be easily replicated in the case of availability issues/outages.
 
-* **Dependency packages enable support for "disconnected" scenarios**  
+* **VC Packages enable support for "disconnected" scenarios**  
   Dependency packages can be included with the Virtual Client application (within the /packages directory). If the packages are included, the Virtual Client does
   not have to download the dependencies because they are already on the system. This allows the user to run the Virtual Client in scenarios whereby there may not be
   an internet connection (e.g. private/local network scenarios).

@@ -9,87 +9,39 @@ vs. multi-threaded I/O operations as well as the ability to control I/O queue de
 
 * [DiskSpd Documentation](https://github.com/microsoft/diskspd/blob/master/README.md)
 
------------------------------------------------------------------------
+## What is Being Measured?
+The DiskSpd workload measures disk I/O performance focusing on throughput, bandwidth and latencies.
 
-### What is Being Tested?
-The following metrics are captured from the results of the DiskSpd workload.
+## Workload Metrics
+The following metrics are examples of those captured by the Virtual Client when running the DiskSpd workload. This set of metrics 
+will be captured for each one of the distinct scenarios that are part of the profile (e.g. Random Write 4k block size, Random Read 4k block size). 
+It is a lot of data!!
 
-* Disk Operation Bandwidth
-* Disk I/O Operations/sec
-* Disk Operation Latencies
+| Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
+|-------------|---------------------|---------------------|---------------------|------|
+| avg. latency | 98.82 | 2642.103 | 595.8003536931818 | milliseconds |
+| iops stdev | 1.89 | 17063.0 | 1804.595497159091 | operations/sec |
+| latency stdev | 10.33 | 3735.78 | 425.85086221590907 | milliseconds |
+| read IO operations | 932417.0 | 24483796.0 | 19563267.372093023 | operations |
+| read avg. latency | 98.822 | 2589.675 | 591.2786279069768 | milliseconds |
+| read iops | 3108.04 | 81608.97 | 65209.23595930233 | operations/sec |
+| read iops stdev | 2.96 | 5394.54 | 1697.3215697674419 | operations/sec |
+| read latency stdev | 12.35 | 3603.306 | 607.8916889534884 | milliseconds |
+| read throughput | 312.29 | 3113.01 | 1243.1043895348835 | mebibytes/sec |
+| read total bytes | 98238738432.0 | 979291340800.0 | 391056506701.3953 | bytes |
+| total IO operations | 929378.0 | 24483796.0 | 19509977.224431818 | operations |
+| total bytes | 89273675776.0 | 979363692544.0 | 392139310382.5455 | bytes |
+| total iops | 3097.8 | 81608.97 | 65031.59069602272 | operations/sec |
+| total throughput | 283.78 | 3113.22 | 1246.5455397727274 | mebibytes/sec |
+| write IO operations | 929378.0 | 24480568.0 | 19459055.527777777 | operations |
+| write avg. latency | 98.82 | 2642.103 | 600.1211138888888 | milliseconds |
+| write iops | 3097.8 | 81601.41 | 64861.84077777777 | operations/sec |
+| write iops stdev | 1.89 | 17063.0 | 1907.1016944444444 | operations/sec |
+| write latency stdev | 10.33 | 3735.78 | 251.90073888888888 | milliseconds |
+| write throughput | 283.78 | 3113.22 | 1249.83375 | mebibytes/sec |
+| write total bytes | 89273675776.0 | 979363692544.0 | 393173989455.6445 | bytes |
 
-  | Name                                  | Description |
-  |---------------------------------------|-------------|
-| total bytes                           | Total number of bytes processed for all operations (read and write) during the DiskSpd test.               |
-| total IO operations                   | Total number of disk I/O operations processed for all operations (read and write) during the DiskSpd test. |
-| total throughput                      | The total throughput (in Mebibytes per second) for all operations (read and write) during the DiskSpd test.|
-| total iops                            | The disk I/O operations per second (IOPS) during the DiskSpd test (read and write).        |
-| avg. latency                          | The average latency for all disk operations (read and write) during the DiskSpd test.      |
-| iops stdev                            | The standard deviation for I/O operations per second measurements during the DiskSpd test. |
-| latency stdev                         | The standard deviation for disk operation latency during the DiskSpd test.                 |
-| read total bytes                      | The total number of bytes read during the DiskSpd test.                        |
-| read IO operations                    | The total number of disk read I/O operations process during the DiskSpd test.  |
-| read throughput                       | The total read throughput (in Mebibytes per second) during the DiskSpd test.   |
-| read iops                             | The disk read I/O operations per second (IOPS) during the DiskSpd test.        |
-| read avg. latency                     | The average disk read latency during the DiskSpd test.                         |
-| read iops stdev                       | The standard deviation for disk read I/O operations per second measurements during the DiskSpd test. |
-| read latency stdev                    | The standard deviation for disk read operation latency during the DiskSpd test.                      |
-| write total bytes                     | The total number of bytes written during the DiskSpd test.                     |
-| write IO operations                   | The total number of disk write I/O operations process during the DiskSpd test. |
-| write throughput                      | The total write throughput (in Mebibytes per second) during the DiskSpd test.  |
-| write iops                            | The disk write I/O operations per second (IOPS) during the DiskSpd test.       |
-| write avg. latency                    | The average disk write latency during the DiskSpd test.                        |
-| write iops stdev                      | The standard deviation for disk write I/O operations per second measurements during the DiskSpd test. |
-| write latency stdev                   | The standard deviation for disk write operation latency during the DiskSpd test.                      |
-| read latency/operation(P50)           | The 50th percentile latency for disk read operations during the DiskSpd test                  |
-| write latency/operation(P50)          | The 50th percentile latency for disk write operations during the DiskSpd test                 |
-| total latency/operation(P50)          | The 50th percentile latency for all disk operations (read and write) during the DiskSpd test  |
-| read latency/operation(P75)           | The 75th percentile latency for disk read operations during the DiskSpd test                  |
-| write latency/operation(P75)          | The 75th percentile latency for disk write operations during the DiskSpd test                 |
-| total latency/operation(P75)          | The 75th percentile latency for all disk operations (read and write) during the DiskSpd test  |
-| read latency/operation(P90)           | The 90th percentile latency for disk read operations during the DiskSpd test                  |
-| write latency/operation(P90)          | The 90th percentile latency for disk write operations during the DiskSpd test                 |
-| total latency/operation(P90)          | The 90th percentile latency for all disk operations (read and write) during the DiskSpd test  |
-| read latency/operation(P95)           | The 95th percentile latency for disk read operations during the DiskSpd test                  |
-| write latency/operation(P95)          | The 95th percentile latency for disk write operations during the DiskSpd test                 |
-| total latency/operation(P95)          | The 95th percentile latency for all disk operations (read and write) during the DiskSpd test  |
-| read latency/operation(P99)           | The 99th percentile latency for disk read operations during the DiskSpd test                  |
-| write latency/operation(P99)          | The 99th percentile latency for disk write operations during the DiskSpd test                 |
-| total latency/operation(P99)          | The 99th percentile latency for all disk operations (read and write) during the DiskSpd test  |
-
------------------------------------------------------------------------
-
-### Supported Platforms
-* Windows x64
-* Windows arm64
-
------------------------------------------------------------------------
-
-### Command Line Examples
-```
-// Random Write
-// 4GB test file, 4K block size, 1 thread, I/O depth = 1, 100% write, test runtime = 480 seconds, 15 second warmup
-DiskSpd.exe -c4G -b4K -r4K -t1 -o1 -w100 -d480 -Suw -W15 -D -L -Rtext testfile.dat
-
-// Random Write
-// 250MB test file, 64K block size, 32 threads, I/O depth = 16, 100% write, test runtime = 480 seconds, 15 second warmup
-DiskSpd.exe -c250M -b64K -r64K -t32 -o16 -w100 -d480 -Suw -W15 -D -L -Rtext testfile.dat
-
-// Random Read
-// 4GB test file, 4K block size, 1 thread, I/O depth = 1, 100% read, test runtime = 480 seconds, 15 second warmup
-DiskSpd.exe -c4G -b4K -r4K -t1 -o1 -w0 -d480 -Suw -W15 -D -L -Rtext
-
-// Random Read/Write: 4GB test file, 4K block size, 1 thread, I/O depth = 1, 30% write/70% read, test runtime = 480 seconds, 15 second warmup
-DiskSpd.exe -c4G -b4K -r4K -t1 -o1 -w30 -d480 -Suw -W15 -D -L -Rtext testfile.dat
-
-// Sequential Read/Write: 4GB test file, 4K block size, 1 thread, I/O depth = 1, 30% write/70% read, test runtime = 480 seconds, 15 second warmup
-DiskSpd.exe -c4G -b4K -si4K -t1 -o1 -w30 -d480 -Suw -W15 -D -L -Rtext testfile.dat
-
-```
-
------------------------------------------------------------------------
-
-### Resources
+## Resources
 * [Azure Stack: DiskSpd Overview](https://docs.microsoft.com/en-us/azure-stack/hci/manage/diskspd-overview)  
 * [DiskSpd Command Line Parameters](https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters)  
 * [Server Storage I/O Benchmark Tools: Microsoft Diskspd (Part I)](https://storageioblog.com/server-storage-io-benchmarking-tools-microsoft-diskspd-part/)  

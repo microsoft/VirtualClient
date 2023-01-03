@@ -9,27 +9,29 @@ This toolset was compiled from the official website and modified so that it is e
 * [LAPACK Github](https://github.com/Reference-LAPACK/lapack)
 * [LAPACK Installation Guide](http://www.netlib.org/lapack/lawnspdf/lawn41.pdf)
 
------------------------------------------------------------------------
-
-### What is Being Tested?
+## What is Being Measured?
 LAPACK is designed to be a very simple benchmarking tool. It produces the amount of time it takes to test a set of LAPACK driver routines
 under different precisions such as single precision, double, complex, complex double. 
 
-| Metric Name                          | Description                                                           |
-|--------------------------------------|----------------------------------------------------------------------|
-| compute_time_LIN_Single_Precision    | Time for testing Linear equation test routines under single precision|
-| compute_time_LIN_Double_Precision    | Time for testing Linear equation test routines under double precision    |
-| compute_time_LIN_Complex             | Time for testing Linear equation test routines under complex precision     |
-| compute_time_LIN_Complex_Double      | Time for testing Linear equation test routines under complex double precision    |
-| compute_time_EIG_Single_Precision    | Time for testing Eigensystem test routines under single precision     |
-| compute_time_EIG_Double_Precision    | Time for testing Eigensystem test routines under double precision   |
-| compute_time_EIG_Complex             | Time for testing Eigensystem test routines under complex precision      |
-| compute_time_EIG_Complex_Double      | Time for testing Eigensystem test routines under complex double precision    |
+* Compute times for linear algorithms (single-precision)
+* Compute times for linear algorithms (double-precision)
+* Compute times for linear algorithms (complex data type, single precision)
+* Compute times for linear algorithms (complex data type, double complex precision)
+* Compute times for Eigenvalue problems (single-precision)
+* Compute times for Eigenvalue problems (double-precision)
+* Compute times for Eigenvalue problems (complex data type, single precision)
+* Compute times for Eigenvalue problems (complex data type, double complex precision)
 
------------------------------------------------------------------------
+## Workload Metrics
+The following metrics are examples of those captured by the Virtual Client when running the LAPACK workload.
 
-### Supported Platforms
-* Linux x64
-* Linux arm64
-* Windows x64
-* Windows arm64
+| Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit | Description |
+|-------------|---------------------|---------------------|---------------------|------|-------------|
+| compute_time_EIG_Complex | 5.229999999999999 | 20.729999999999998 | 7.753214694064213 | seconds |
+| compute_time_EIG_Complex_Double | 7.029999999999999 | 32.39000000000001 | 10.280553078192105 | seconds |
+| compute_time_EIG_Double_Precision | 4.709999999999998 | 12.759999999999998 | 6.071805752927895 | seconds |
+| compute_time_EIG_Single_Precision | 3.3399999999999996 | 10.229999999999999 | 4.584710148478463 | seconds |
+| compute_time_LIN_Complex | 4.23 | 26.78 | 7.305731430530846 | seconds |
+| compute_time_LIN_Complex_Double | 5.22 | 42.89 | 9.374530150384569 | seconds |
+| compute_time_LIN_Double_Precision | 1.95 | 5.84 | 2.894817693450652 | seconds |
+| compute_time_LIN_Single_Precision | 1.92 | 6.67 | 2.8232810280358646 | seconds |

@@ -214,7 +214,7 @@ new component (workload, monitor) to the Virtual Client so as to cover the space
   This allows the user to run different workloads/tests on a system with different monitors as they require. 
 
   ```
-  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --timeout=1440 --system=Azure
+  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --profile=MONITORS-DEFAULT.json --timeout=1440 --system=Demo
   ```
   
   * [Existing Profiles](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles)

@@ -13,7 +13,9 @@ Reference the following documentation before proceeding.
 * win-x64
 * win-arm64
 
-## Parameters
+## Profile Component Parameters
+The following section describes the parameters used by the individual component in the profile.
+
 | **Parameter** | **Required** | **Description**                                                                                                 |
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
 | Action        | Yes          | Informs of action to take on server configuration.                                                              |
@@ -21,6 +23,8 @@ Reference the following documentation before proceeding.
 | Scenario      | No           | Name for telemetry purpose. Does not change functionality.                                                      |
 
 ## Actions
+The following section describes the different options for the 'Action' parameter noted above.
+
 | **Action**                 | **Description**                                                                                                 |
 |----------------------------|-----------------------------------------------------------------------------------------------------------------|
 | StartDatabaseServer        | Starts the MySQL server.                                                                                        |

@@ -4,11 +4,10 @@ toolset because it is compiled to be specialized for the exact physical characte
 
 * [CoreMark Documentation](https://www.eembc.org/coremark/)
 
------------------------------------------------------------------------
-
-### What is Being Tested?
+## What is Being Measured?
 CoreMark is designed to be a very simple benchmarking tool. It produces a single-number score that allows users to make quick comparisons
-between different processors. CoreMark is compiled on the system for which it will run in order to establish a precise test to evaluate the performance of the CPU.
+between different processors. CoreMark is compiled on the system for which it will run in order to establish a precise test to evaluate the performance
+of the CPU.
 
 CoreMark runs the following CPU-intensive algorithms in order to produce the single-number score. 
 
@@ -19,15 +18,14 @@ CoreMark runs the following CPU-intensive algorithms in order to produce the sin
 | State Machine         | Determine if an input stream contains valid numbers       |
 | CRC                   | Cyclic redundancy check                                   |
 
------------------------------------------------------------------------
+## Workload Metrics
+The following metrics are examples of those captured by the Virtual Client when running the CoreMark workload.
 
-### Supported Platforms
-* Linux x64
-* Linux arm64
-
-### Package Dependencies
-The following package dependencies are required to be installed on the Unix/Linux system in order to support the requirements
-of the LMbench workload. Note that the Virtual Client will handle the installation of any required dependencies.
-
-* gcc
-* make
+| Tool Name | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
+|-----------|-------------|---------------------|---------------------|---------------------|------|
+| CoreMark | CoreMark Size | 666.0 | 666.0 | 666.0 | bytes |
+| CoreMark | Iterations | 400000.0 | 800000.0 | 773160.1731601731 | iterations |
+| CoreMark | Iterations/Sec | 19968.051118 | 33889.689062 | 33081.75554433839 | iterations/sec |
+| CoreMark | Parallel PThreads | 2.0 | 2.0 | 2.0 | threads |
+| CoreMark | Total ticks | 12022.0 | 36126.0 | 23365.67617325762 | ticks |
+| CoreMark | Total time (secs) | 12.022 | 36.126 | 23.365676173257606 | secs |

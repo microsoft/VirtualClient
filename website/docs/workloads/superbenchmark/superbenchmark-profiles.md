@@ -2,20 +2,16 @@
 The following profiles run customer-representative or benchmarking scenarios using the SuperBenchmark workload.
 
 * [Workload Details](./superbenchmark.md)  
-* [Workload Profile Metrics](./superbenchmark-metrics.md)
 
+:::warn
+*Note that at the moment, the Virtual Client ONLY has support for Nvidia GPU systems. Work is underway to finalize support for the installation of drivers required in order to support AMD GPU systems.*
+:::
 
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-GPU-SUPERBENCH.json
+## PERF-GPU-SUPERBENCH.json
 Runs the SuperBenchmark benchmark workload to test GPU performance. <mark>This workload is <b>supported ONLY for systems that contain nVidia GPU
 hardware components</b>. Work is underway with partner teams in Azure to support additional GPU manufacturers.</mark>
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-SUPERBENCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -25,24 +21,28 @@ hardware components</b>. Work is underway with partner teams in Azure to support
   * Ubuntu 20
   * Ubuntu 22
 
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
   * The VM must run on hardware containing Nvidia GPU cards/components.
 
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
 * **Profile Parameters**  
-  The following parameters can be supplied on the command line. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter             | Purpose | Default Value |
   |-----------------------|---------|---------------|
   | ConfigurationFile     | Optional. The configuration file to use on the system providing all of the specifics required by Superbench for the particular GPU SKU. | default.yaml  |
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
-  particular workload takes multiple days to complete the number of iterations required for valid results.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. Although results
+  are produced in a relatively short period of time, this particular workload takes multiple days to complete the number of iterations required for valid results.
 
   * Expected Runtime = 4 hours
 
@@ -50,16 +50,7 @@ hardware components</b>. Work is underway with partner teams in Azure to support
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-
-
   ``` bash
-  VirtualClient.exe --profile=PERF-GPU-SUPERBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-GPU-SUPERBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
-
-
------------------------------------------------------------------------
-
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

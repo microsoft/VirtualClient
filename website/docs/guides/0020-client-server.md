@@ -18,7 +18,7 @@ information to the Virtual Client in support of the needs of the workload. The f
 
 ``` json
 # The layout file path is passed in on the command line.
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=180 --layout="C:\users\any\vc\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=180 --layout="C:\users\any\vc\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
 
 # Contents of the 'layout.json' file
 {
@@ -48,7 +48,7 @@ workload profile/workload and can be determined by looking at the documentation 
 
 # Example Environment Layout 1
 # Command line reference to the environment layout:
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
 
 # Contents of the 'layout.json' file:
 # In the PERF-NETWORKING.json workload profile, there are 2 roles: Client and Server. They must be named exactly that in
@@ -70,7 +70,7 @@ VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --la
 
 # Example Environment Layout 2
 # Command line reference to the environment layout:
-VirtualClient.exe --profile=PERF-WEB-NGINX.json --system=Azure --timeout=1440 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-WEB-NGINX.json --system=Demo --timeout=1440 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
 
 # Contents of the 'layout.json' file:
 # In the PERF-WEB-NGINX.json workload profile, there are 3 possible roles: Client, Server and ReverseProxy. They must be named exactly that in
@@ -127,8 +127,8 @@ port. The following examples illustrate how to use a different port:
 
 ``` bash
 # Use a different port by specifying the --api-port
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --api-port=4501 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --api-port=4501 --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
 
 # Use a different port for each of the workload roles
-VirtualClient.exe --profile=PERF-NETWORK.json --system=Azure --timeout=1440 --api-port=4501/Client,4502/Server --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
+VirtualClient.exe --profile=PERF-NETWORK.json --system=Demo --timeout=1440 --api-port=4501/Client,4502/Server --layoutPath="C:\any\path\to\layout.json" --packages="{BlobStoreConnectionString|SAS URI}"
 ```

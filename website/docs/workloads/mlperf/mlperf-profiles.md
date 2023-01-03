@@ -2,38 +2,37 @@
 The following profiles run customer-representative or benchmarking scenarios using the MLPerf workload.
 
 * [Workload Details](./mlperf.md)  
-* [Workload Profile Metrics](./mlperf-metrics.md)
 
-
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-GPU-MLPERF.json
+## PERF-GPU-MLPERF.json
 Runs the MLPerf benchmark workload to test GPU performance. 
 
 :::warn
-This workload is supported ONLY for systems that contain Nvidia GPU hardware components
+*This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.*
 :::
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-MLPERF.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
 
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
 
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
 
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
-
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
   * The VM must run on hardware containing Nvidia GPU cards/components.
 
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
 * **Profile Parameters**  
-  The following parameters can be supplied on the command line. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter             | Purpose | Default Value |
   |-----------------------|---------|---------------|
@@ -43,26 +42,17 @@ This workload is supported ONLY for systems that contain Nvidia GPU hardware com
   | DriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
   | LocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run  |
 
-
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
-  particular workload takes multiple days to complete the number of iterations required for valid results.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. Although results
+  are produced in a relatively short period of time, this particular workload takes multiple days to complete the number of iterations required for valid results.
 
   * Expected Runtime = 8 hours
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
+  The following section provides a few basic examples of how to use the workload profile.
 
   ```bash
-  ./VirtualClient --profile=PERF-GPU-MLPERF.json --system=Azure --timeout=1440
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-GPU-MLPERF.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
-
------------------------------------------------------------------------
-
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

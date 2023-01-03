@@ -2,60 +2,66 @@
 The following profiles run customer-representative or benchmarking scenarios using the Flexible I/O Tester (FIO) workload.  
 
 * [Workload Details](./fio.md)  
-* [Workload Profile Metrics](./fio-metrics.md)
+* [Testing Specific Disks](../../guides/0220-usage-testing-disks.md)
 
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
+## PERF-IO-FIO.json
+Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system. Although this profile
+can run on Windows, it is predominantly used on Linux systems. The profile runs the workload in-parallel on ALL disks that match the "DiskFilter" 
+parameter (see below) by default.
 
-### PERF-IO-FIO.json
-Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset to test performance of disks on the system as well as 
-(in VM scenarios) to cause significant CPU stress on an underlying physical host. This profile is typically used on Linux system scenarios as the
-FIO toolset is designed primarily for Linux systems. Depending upon the parameters defined (see above), this profile will run the FIO workload on
-each of the disks on the system that match the specification. For example if there are 16 remote/managed disks on the system and diskFilter
-is default, FIO will be ran on all 16 disks concurrently as part of the profile execution.
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-IO-FIO.json) 
 
-Note that this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
+Additonally this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
 aspects of the workload execution.
 
-1) Total number of jobs/threads = {# of logical cores} / 2
+* Total number of jobs/threads = {# of logical cores} / 2  
 
+  ``` script
+  Examples:
+  For a 16-core system:
+  16/2 = 16 concurrent jobs/threads per DiskSpd execution (i.e. # threads to run I/O operations against the test file concurrently).
+
+  For a 64-core system:
+  64/2 = 32 concurrent jobs/threads per DiskSpd execution (i.e. # threads to run I/O operations against the test file concurrently).
   ```
-   Examples:  
-     For a 16-core system:
-     16/2 = 8 concurrent jobs/threads per FIO execution (i.e. # threads to run I/O operations against the test file concurrently).
+* Total I/O depth =  512 / {Total number of jobs/threads}  
 
-     For a 64-core system:
-     64/2 = 32 concurrent jobs/threads per FIO execution (i.e. # threads to run I/O operations against the test file concurrently).
+  ``` script
+  Examples:
+  For a 16 core system:
+  total # jobs/threads = 16/2 (above) -> 512/16 = 32
+
+  For a 64 core system:
+  total # jobs/threads = 64/2 (above) -> 512/32 = 16
   ```
 
-2) Total I/O depth =  512 / {Total number of jobs/threads}
-
- ```
-   Examples:
-     For a 16 core system:
-     total # jobs/threads = 16/2 (above) -> 512/16 = 32
-
-     For a 64 core system:
-     total # jobs/threads = 64/2 (above) -> 512/32 = 16
-  ```
-
-* **Supported Platform/Architectures**
+* **Supported Platform/Architectures**  
   * linux-x64
   * linux-arm64
   * win-x64
 
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+* **Supported Operating Systems**  
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
+  * Windows 10
+  * Windows 11
+  * Windows Server 2016
+  * Windows Server 2019
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Scenarios**  
-  The following scenarios are covered by this workload profile. Note that the default disk fill size is 500GB and the default file size (drive space used)
-  is 496GB. Both of these defaults can be overridden on the command line with parameters as noted below. Note that the workload will be ran on ALL disks that
-  match the category (e.g. remote/managed, system disks) concurrently. For example if there are 16 remote/managed disks on the system when targeting these
-  types of disks, the workload will be ran on each of the 16 disks at the same time concurrently. See the 'Profile Parameters' section below for more information
-  on targeting specific types of disks on the system.
+  The following scenarios are covered by this workload profile. 
 
   * Random Write Operations
     * 4k block size, multiple jobs/threads per disk
@@ -81,142 +87,144 @@ aspects of the workload execution.
     * 12k block size, multiple jobs/threads per disk
     * 16k block size, multiple jobs/threads per disk
     * 1024k block size, multiple jobs/threads per disk
-  * Random Write Operation Disk/Data Integrity Verification
+  * Disk/Data Integrity Verification, Random Write Operations
     * 4k block size, queue depth of 1, single job/thread per disk
     * 16k block size, queue depth of 1, single job/thread per disk
     * 1024k block size, queue depth of 1, single job/thread per disk
-  * Sequential Write Operation Disk/Data Integrity Verification
+  * Disk/Data Integrity Verification, Sequential Write Operations
     * 4k block size, queue depth of 1, single job/thread per disk
     * 16k block size, queue depth of 1, single job/thread per disk
     * 1024k block size, queue depth of 1, single job/thread per disk
 
 * **Profile Parameters**  
-  Note that the default behavior of this workload is to test the remote/managed disks only. The following parameters can be optionally supplied
-  on the command line to change this default behavior. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details. | BiggestSize |
+  | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
 
-* **Testing Small-Size Disks (e.g. local/temp disk)**  
-  See the section below for important details to understand when testing local/temp disks.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-* **Workload Runtimes**  
-  * Expected Runtime on Linux systems 
-    * (64-core/vCPU VM) = 3 - 4 hours (including time required create initial 496GB file on each disk)
-  * Expected Runtimes on Windows systems
-    * (64-core/vCPU VM) = 4 - 5 hours (including time required create initial 496GB file on each disk)
+  * On Linux Systems:
+    * (16-cores/vCPUs) = 4 - 5 hours (including time required create initial 496GB file on each disk)
+    * (64-cores/vCPUs) = 3 - 4 hours (including time required create initial 496GB file on each disk)
+
+  * On Windows Systems:
+    * (16-cores/vCPUs) = 5 - 6 hours (including time required create initial 496GB file on each disk)
+    * (64-cores/vCPUs) = 4 - 5 hours (including time required create initial 496GB file on each disk)
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile.
+  The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'
+  for information on how to target select disks on the system.
 
   ``` bash
-  // Tests the remote/managed disks by default
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # Run the workload on the system (default = largest disks)
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  // Test other types of disks
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:true
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&biggestSize
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=SizeEqualTo:1TB
+  # The example above runs on the same disks as having DiskFilter=BiggestSize
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=BiggestSize
 
-  // Test specific Linux devices
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+  # Run the workload against the operating system disk
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk
 
-  // Test on the local/temp disk that is 32GB in total size. Override the default file size of 496G.
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26GB,,,FileSize=26GB
+  # Run the workload against all of the disks except the operating system disk.
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false
 
-  // Run specific scenarios only. Each action in a profile as a 'Scenario' name.
-  ./VirtualClient --profile=PERF-IO-FIO.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
+  # Run the workload on specific drives/disks
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+
+  # Run against smaller disks on the system
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
+
+  # Run specific scenarios only. Each action in a profile as a 'Scenario' name.
+  ./VirtualClient --profile=PERF-IO-FIO.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --scenarios=RandomWrite_4k_BlockSize,RandomWrite_8k_BlockSize,RandomRead_8k_BlockSize,RandomRead_4k_BlockSize
   ```
 
------------------------------------------------------------------------
+## PERF-IO-FIO-DISCOVERY.json
+Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. FIO Discovery measures throughput as a function of increasing queue depth for multiple operation 
+types(Random Read,Random Write,Sequential Write & Sequential Read) and block sizes. The workload runs directly against the raw disks without having the file system involved
+(e.g. /dev/sda, /dev/sdc). 
 
-### PERF-IO-FIO-DISCOVERY.json
-Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset. FIO Discovery measures throughput as a function of increasing queue depth for multiple operation types(Random Read,Random Write,Sequential Write & Sequential Read) and block sizes.
-The following workload runs on raw disks directly for example "/dev/sda","/dev/sdc",etc on linux. The disk I/O workload for this profile runs directly against the raw disk
-without using the OS file system.
+This profile uses an algorithm to determine the total number of jobs/threads as well as queue depth for each job/thread.
 
-Note that this profile uses a simple algorithm to determine the total number of jobs/threads & Queue Depth Per Thread. Shown below.
+* Total number of jobs/threads = Minimum(ScenarioQueueDepth, MaxThreadsThreshold). These 2 parameters are described below.
 
-1) Total number of jobs/threads = Minimum(ScenarioQueueDepth, MaxThreadsThreshold)
-Below in 'Profile Parameters' section below these 2 parameters are described.
+  ``` script
+  Examples:  
+  For ScenarioQueueDepth = 1, MaxThreadsThreshold = 4:
+  Total number of jobs/threads = Minimum(1,4) = 1
 
+  For ScenarioQueueDepth = 16, MaxThreadsThreshold = 4:
+  Total number of jobs/threads = Minimum(16,4) = 4 
+  ```
 
-```
-   Examples:  
-     For ScenarioQueueDepth = 1, MaxThreadsThreshold = 4:
-     Total number of jobs/threads = Minimum(1,4) = 1
+* Queue Depth per Thread = (ScenarioQueueDepth + Threads - 1) / Threads where Threads = Total number of jobs/threads
 
-     For ScenarioQueueDepth = 16, MaxThreadsThreshold = 4:
-     Total number of jobs/threads = Minimum(16,4) = 4 
-```
+  ``` script
+  Examples:  
+  For ScenarioQueueDepth = 16, Threads = 5:
+  Queue Depth per Thread = (16 + 5 -1)/5 = 4
 
-2) Queue Depth per Thread = (ScenarioQueueDepth + Threads - 1) / Threads
-Where Threads = Total number of jobs/threads
-
-
-```
-   Examples:  
-     For ScenarioQueueDepth = 16, Threads = 5:
-     Queue Depth per Thread = (16 + 5 -1)/5 = 4
-
-     For ScenarioQueueDepth = 16, MaxThreadsThreshold = 6:
-     Queue Depth per Thread = (16 + 6 -1)/6 ~= 3 [Round down to closest integer]
-```
+  For ScenarioQueueDepth = 16, MaxThreadsThreshold = 6:
+  Queue Depth per Thread = (16 + 6 -1)/6 ~= 3 [Round down to closest integer]
+  ```
 
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
 
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+* **Supported Operating Systems**
+  * Ubuntu 18
+  * Ubuntu 20
+  * Ubuntu 22
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
+
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Scenarios**  
-  The following scenarios are covered by this workload profile. Note that the default disk fill size is 134GB and the default file size (drive space used)
-  is 134GB. Both of these defaults can be overridden on the command line with parameters as noted below. Note that the workload will be ran on ALL disks that
-  match the "DiskFilter" paremeter concurrently. For example if there are 16 remote/managed disks on the system when targeting these
-  types of disks, the workload will be ran on each of the 16 disks at the same time concurrently. See the 'Profile Parameters' section below for more information
-  on targeting specific types of disks on the system.
+  The following scenarios are covered by this workload profile. For each one of the scenarios, the profile runs the workload through the range of
+  queue depths noted (by default) in sequence.
 
   * Random Write Operations
-    * 4k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 8k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 16k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 64k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 256k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 1024k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
+    * 4k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 8k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 16k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 64k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 256k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 1024k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
   * Random Read Operations
-    * 4k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 8k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 16k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 64k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 256k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 1024k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
+    * 4k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 8k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 16k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 64k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 256k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 1024k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
   * Sequential Write Operations
-    * 4k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 8k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 16k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 64k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 256k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 1024k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
+    * 4k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 8k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 16k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 64k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 256k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 1024k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
   * Sequential Read Operations
-    * 4k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 8k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 16k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 64k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 256k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
-    * 1024k block size, queue depths [1,4,16,64,256,1024] ,multiple jobs/threads per disk
+    * 4k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 8k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 16k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 64k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 256k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
+    * 1024k block size, queue depths [1,4,16,64,256,1024], multiple jobs/threads per disk
   
 * **Profile Parameters**  
-  Note that the default behavior of this workload is to test the remote/managed disks only. The following parameters can be optionally supplied
-  on the command line to change this default behavior. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
@@ -228,8 +236,8 @@ Where Threads = Total number of jobs/threads
   | QueueDepths                 | Optional. Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
   | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   
-* **Action Parameters** 
-  The following additional parameters are part of the individual profile actions.
+* **Profile Component Parameters**  
+  The following section describes the parameters used by the individual components in the profile.
 
   | Parameter                 | Purpose                                                                         | Accepted Values |
   |---------------------------|-------------------------------------------------------------------------------|-----------------|
@@ -243,107 +251,99 @@ Where Threads = Total number of jobs/threads
   | DeleteTestFilesOnFinish   | Not used. |  |
   | Tests                     | Not used. |  |
 
-* **Testing Small-Size Disks (e.g. local/temp disk)**  
-  See the section below for important details to understand when testing local/temp disks.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-* **Workload Runtimes**  
-  * Expected Runtime on Linux systems 
-    * (64-core/vCPU VM) = 13 - 14 hours (including time required create initial 496GB file on each disk)
+  * (64-cores/vCPUs) = 5 - 6 hours.
   
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  The following section provides a few basic examples of how to use the workload profile.
 
+  ``` bash
+  # Run the workload on the system (default = largest disks)
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  ``` csharp
-  // Tests the remote/managed disks by default
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # The example above runs on the same disks as having DiskFilter=BiggestSize
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=BiggestSize
 
-  // Test other types of disks
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:true
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&biggestSize
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=SizeEqualTo:1TB
+  # Run the workload against the operating system disk
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk
 
-  // Test specific Linux devices
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+  # Run the workload against all of the disks except the operating system disk.
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false
 
-  // Test on the local/temp disk that is 32GB in total size. Override the default file size of 496G.
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26GB,,,FileSize=26GB
+  # Run the workload on specific drives/disks
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
 
-  // Run specific queuedepths
-  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="DiskFilter=OSDisk:false&biggestSize,,,QueueDepths=\"4,16,256\""
+  # Run against smaller disks on the system
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
+  
+  # Override the default queue depths
+  ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="QueueDepths="4,16,256"
   ```
 
------------------------------------------------------------------------
+## PERF-IO-FIO-MULTITHROUGHPUT.json
+Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
+workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
+weight/percentage defined. A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
+The workload runs directly against the raw disks without having the file system involved (e.g. /dev/sda, /dev/sdc); however, ONLY 2 disks will
+be used regardless of how many are on the system.
 
-### PERF-IO-FIO-MULTITHROUGHPUT.json
+This profile uses an algorithm to determine the amount of IOPS to run against the disks.
 
-Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset.Multi-throughput OLTP-C emulates a SQL Server OLTP disk workload by running four concurrent workload Components: random reads and writes, sequential reads and writes. If weight provided to any of the component is 0 then it is absent from system.
-In the given profile
-The following workload runs on raw disks directly for example "/dev/sda","/dev/sdc",etc on linux.
+* Disk Used to Perform Random I/O = The biggest disk amongst the set matching the 'DisksFilter'.
+* Disk Used to Perform Sequential I/O = The next biggest disk amongst the set matching the 'DisksFilter'.
 
-Note that this profile uses a simple algorithm to determine the RandomIODisk(On which Random reads and writes components run Concurrently) & SequentialIODisk(On which Sequential reads and writes components run Concurrently), TotalIOPS, ComponentIOPS.
+  ``` script
+  Example 1:
+  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 1TB), (/dev/sdc1 = 64GB)]  
+  - Disk Used to Perform Random I/O = (/dev/sdc1 = 1TB)  
+  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 1TB)  
+  
+  Example 2:
+  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 2TB), (/dev/sdc1 = 4TB)]  
+  - Disk Used to Perform Random I/O = (/dev/sdc1 = 4TB)  
+  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 2TB)  
+  ```
 
-1) Random IO Disk and Sequential IO Disk
-Random IO Disk = Biggest Disk among the filtered disks.
-Sequential IO Disk = Second Biggest Disk among the filtered disks.
+* Total IOPS = (TargetIOPS * ScenarioTargetPercentage)/100 (parameters described below).
 
+  ``` script
+  Example 1:
+  For Target IOPS = 5000, Scenario Target Percentage = 10  
+  - Total IOPS = (5000 x 10)/100 = 500  
 
-```
-   Examples:  
-     
-     For FilteredDisks : [(/dev/sda1,1TB), (/dev/sdb1,2TB), (/dev/sdc1,4TB)]
-     Random IO Disk = (/dev/sdc1,4TB)
-     Sequential IO Disk = (/dev/sdb1,2TB)
-     NOTE: AT MAX 2 DISKS can be utilized by this profile.
+  Example 2:
+  For Target IOPS = 5555, Scenario Target Percentage = 10  
+  - Total IOPS = (5555 x 10)/100 = 555  
+  ```
 
-     For FilteredDisks : [(/dev/sda1,1TB), (/dev/sdb1,2TB), (/dev/sdc1,4TB)]
-     Random IO Disk = (/dev/sda1,1TB)
-     Sequential IO Disk = (/dev/sda1,1TB)
+* Component IOPS = ((Total IOPS) * (Component Weight))/(Total Weight)
 
-```
-
-2) Total IOPS = (TargetIOPS * ScenarioTargetPercentage)/100
-Below in 'Profile Parameters' section below these 2 parameters are described.
-
-
-```
-   Examples:  
-     
-     For Target IOPS = 5000, Scenario Target Percentage = 10
-     Total IOPS = (5000*10)/100 = 500
-
-     For Target IOPS = 5555, Scenario Target Percentage = 10
-     Total IOPS = (5555*10)/100 = 555
-
-```
-
-3) Component IOPS = ((Total IOPS) * (Component Weight))/(Total Weight)
-
-
-```
-   Examples:  
-     
-     For Total IOPS = 1200, Random Read Weight = 40, Random Write Weight = 40, Sequential Read Weight = 0 , Sequential Write Weight = 40
-     Random Read IOPS = (1200 * 40)/(40+40+0+40) = 400
-     Random Write IOPS = (1200 * 40)/(40+40+0+40) = 400
-     Sequential Read IOPS = (1200 * 0)/(40+40+0+40) = 0
-     Sequential Write IOPS = (1200 * 40)/(40+40+0+40) = 400
-
-```
+  ``` script
+  Examples:
+  For Total IOPS = 1200, Random Read Weight = 40, Random Write Weight = 40, Sequential Read Weight = 0 , Sequential Write Weight = 40
+  - Random Read IOPS = (1200 * 40)/(40+40+0+40) = 400
+  - Random Write IOPS = (1200 * 40)/(40+40+0+40) = 400
+  - Sequential Read IOPS = (1200 * 0)/(40+40+0+40) = 0
+  - Sequential Write IOPS = (1200 * 40)/(40+40+0+40) = 400
+  ```
 
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
 
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
+  * Any 'DiskFilter' parameter value used should match the set of disks desired. See the link for 'Testing Specific Disks' above.
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Scenarios**  
-  The following scenarios are covered by this workload profile. Note that the default random IO fill size is 124GB and the default sequential IO fill size is 20GB. Both of these defaults can be overridden on the command line with parameters as noted below.
+  The following scenarios are covered by this workload profile.
 
   * 10 target percentage, totalIOPS 500, Random read & write jobs on RandomIODisk & Sequential read & write jobs on SequentialIODisk
   * 40 target percentage, totalIOPS 2000, Random read & write jobs on RandomIODisk & Sequential read & write jobs on SequentialIODisk
@@ -353,11 +353,8 @@ Below in 'Profile Parameters' section below these 2 parameters are described.
   * 102 target percentage, totalIOPS 5100, Random read & write jobs on RandomIODisk & Sequential read & write jobs on SequentialIODisk
   * 110 target percentage, totalIOPS 5100, Random read & write jobs on RandomIODisk & Sequential read & write jobs on SequentialIODisk
 
-
 * **Profile Parameters**  
-  Note that the default behavior of this workload is to test the remote/managed disks only. The following parameters can be optionally supplied
-  on the command line to change this default behavior. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
@@ -370,9 +367,8 @@ Below in 'Profile Parameters' section below these 2 parameters are described.
   | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   
   
-* **FIO Multi Throughput Executor Parameters** 
-Note these can't be changed from command line. Also the above parameters are also part of these paramters.
-
+* **Profile Component Parameters** 
+  The following section describes the parameters used by the individual components in the profile.
 
   | Parameter                 | Purpose                                                                         | Profile Values |
   |---------------------------|---------------------------------------------------------------------------------|-----------------|
@@ -403,45 +399,34 @@ Note these can't be changed from command line. Also the above parameters are als
   | Scenario                  | Scenario use to define the given action of profile  | fio_multithroughput |
   | Tags                      | Tags usefull for telemetry data | IO,FIO,MultiThroughput,OLTP |
 
-* **Testing Small-Size Disks (e.g. local/temp disk)**  
-  See the section below for important details to understand when testing local/temp disks.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-* **Workload Runtimes**  
-  * Expected Runtime on Linux systems 
-    * (64-core/vCPU VM) = 2-3 hours (including time required create initial 496GB file on each disk)
+  * (64-cores/vCPUs) = 2 - 3 hours.
   
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  The following section provides a few basic examples of how to use the workload profile.
 
+  ``` bash
+  # Run the workload on the system (default = largest disks)
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
-  ``` csharp
-  // Tests the remote/managed disks by default
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  # The example above runs on the same disks as having DiskFilter=BiggestSize
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=BiggestSize
 
-  // Test other types of disks
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:true
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&biggestSize
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=SizeEqualTo:1TB
+  # Run the workload against the operating system disk
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk
 
-  // Test specific Linux devices
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+  # Run the workload against all of the disks except the operating system disk.
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false
 
-  // Run specific queuedepths
-  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="DiskFilter=OSDisk:false&biggestSize,,,TargetPercents=\"40,80,120\""
+  # Run the workload on specific drives/disks
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=DiskPath:/dev/sdc1,/dev/sdd1
+
+  # Run against smaller disks on the system
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=DiskFilter=OSDisk:false&smallestSize,,,DiskFillSize=26G,,,FileSize=26G
+  
+  # Override the default target percentages
+  ./VirtualClient --profile=PERF-IO-FIO-MULTITHROUGHPUT.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="TargetPercents="40,80,120"
   ```
-
------------------------------------------------------------------------
-
-### Disk Testing Scenarios
-The Virtual Client supports a range of different disk testing scenarios on both VMs as well as physical hosts. The following
-documentation provides context into how to run disk performance tests for these scenarios.
-
-* [Disk Testing Scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)
-
------------------------------------------------------------------------
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)

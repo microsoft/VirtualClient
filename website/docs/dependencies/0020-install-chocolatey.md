@@ -5,11 +5,11 @@ details for integrating this into the profile.
 - [Chocolatey Official Page](https://chocolatey.org/)
 - [Chocolatey Packages](https://community.chocolatey.org/packages)
 
-### Supported Platform/Architectures
+## Supported Platform/Architectures
 * win-x64
 * win-arm64
 
-### Component Parameters
+## Profile Component Parameters
 The following section describes the parameters used by the individual component in the profile.
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
@@ -18,7 +18,7 @@ The following section describes the parameters used by the individual component 
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line). |
 
 
-### Example
+## Example
 The following sections provides examples for how to integrate the component into a profile.
 
 * [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-LAPACK.json)

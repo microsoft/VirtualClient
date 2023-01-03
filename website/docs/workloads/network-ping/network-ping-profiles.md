@@ -2,13 +2,12 @@
 The following profiles run customer-representative or benchmarking scenarios using basic network pings/ICMP protocol.  
 
 * [Workload Details](./network-ping.md)  
-* [Workload Profile Metrics](./network-ping-metrics.md)
 
------------------------------------------------------------------------
-
-### PERF-NETWORK-PING.json
+## PERF-NETWORK-PING.json
 Runs a basis network ping test given an IP address target. Note that the target must have the ICMP protocol enabled in order to
 respond to network ping requests.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-NETWORK-PING.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -25,38 +24,36 @@ respond to network ping requests.
   * Windows Server 2016
   * Windows Server 2019
 
-* **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+* **Supports Disconnected Scenarios**  
+  * Yes. If the system local/loopback address (127.0.0.1) is used as the target IP address.
 
+* **Dependencies**  
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
   * The IP address specified on the command line (see 'Parameters' below) must be related to a valid system/node/VM that is online with firewall open
     to receive ICMP ping requests.
 
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
 * **Profile Parameters**  
-  The following parameters can be supplied on the command line. See the 'Usage Scenarios/Examples' above for examples on how to supply parameters to 
-  Virtual Client profiles.
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   | Parameter   | Purpose |
   |-------------|---------|
-  | IPAddress   | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. This is a required parameter for this profile execution.  |
+  | IPAddress   | Required. The IP address of the target endpoint to which to send network pings and measure round trip response times. Loopback address can be used: 127.0.0.1.  |
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-  * Expected Runtime (2-core/vCPU VM) = 5 - 10 minutes
-  * Expected Runtime (4-core/vCPU VM) = 5 - 10 minutes
+  * (2-core/vCPU VM) = 5 - 10 minutes
+  * (4-core/vCPU VM) = 5 - 10 minutes
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
-
+  The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Azure --timeout=1440 --parameters=IPAddress=1.2.3.4
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-NETWORK-PING.json --system=Demo --timeout=1440 --parameters=IPAddress=1.2.3.4
   ```
-
------------------------------------------------------------------------
-
-### Resources
-* [Azure VM Sizes](https://docs.microsoft.com/en-us/azure/virtual-machines/sizes)
-* [Azure Managed Disks](https://azure.microsoft.com/en-us/pricing/details/managed-disks/)
