@@ -1,23 +1,14 @@
 ﻿# GeekBench5 Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the GeekBench5 workload.
 
-* [Workload Details](./GeekBench.md)  
-* [Workload Profile Metrics](./GeekBenchMetrics.md)
-* [Workload Packages](./DependencyPackages.md)
-* [Usage Scenarios/Examples](./UsageScenarios.md)
+* [Workload Details](./geekbench.md)  
 
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-CPU-GEEKBENCH.json
+## PERF-CPU-GEEKBENCH.json
 Runs a CPU-intensive workload using the GeekBench5 toolset to test the performance of the CPU across various types of common application algorithms 
 (e.g. Gaussian Blur, AES-XTS, Text Compression, Image Compression). This profile is designed to identify general/broad regressions when compared 
 against a baseline. GeekBench is an industry standard benchmarking toolset.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -25,25 +16,28 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
   * win-x64
   * win-arm64
 
+* **Supports Disconnected Scenarios**  
+  * Yes. When the GeekBench5 package is included in 'packages' directory of the Virtual Client.
+    * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md). 
+
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs.
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-  * Expected Runtime on Linux Systems
-    * (2-core/vCPU VM) = 2 - 3 minutes
-  * Expected Runtime on Windows Systems
-    * (2-core/vCPU VM) = 2 - 4 minutes
+  * (2-cores/vCPUs) = 2 - 4 minutes
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
   'Usage Scenarios/Examples' link at the top.
 
-
-``` csharp
-VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
-```
+  ``` bash
+  # Execute the workload profile
+  VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  ```

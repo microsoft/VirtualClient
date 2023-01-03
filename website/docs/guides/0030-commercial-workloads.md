@@ -1,14 +1,29 @@
-﻿---
-id: commercial-workloads
-sidebar_position: 4
----
-
-# Run Commercial Workloads: Bring Your Own Package
+﻿# Run Commercial Workloads: Bring Your Own Package
 Virtual Client supports running commercial workloads. However, we can not distribute the binary and licenses for the commercial workloads. In those cases, users need to "bring their own binary and license".
 
-## VirtualClient downloads your package
-#### .vcpkg file
-.vcpkg is just a json file in vcpkg extension, that VC uses to register package information. While in many cases this file is optional, it is highly recommended to make a .vcpkg file when preparing your own package. The file has one required property `name`, and optional properties
+:::warn
+*The Virtual Client team is currently working to define and document the process for integration of commercial workloads into the Virtual Client.
+The contents of this document are NOT complete and are meant only to illustrate the basic concepts. Please bear with us while we are figuring this
+process out.*
+:::
+
+## Supported commercial workloads
+The following workloads are commercial (requiring purchase and/or license) software supported by the Virtual Client.
+
+* **[Geekbench](../workloads/geekbench/geekbench.md)**
+* **[SPECcpu](../workloads/speccpu/speccpu.md)**
+* **[SPECjbb](../workloads/specjbb/specjbb.md)**
+* **[SPECpower](../workloads/specpower/specpower.md)**  
+
+## Supporting Commercial Workloads
+The following sections describe how the process of integrating commercial workloads into the Virtual Client works. With commercial workloads, the user must
+have purchased the software or the license and have created a VC package for integration with the runtime platform. The following steps describe how this typically
+comes together.
+
+## Step 1: VirtualClient Downloads Your Package
+### .vcpkg file
+.vcpkg is just a json file in vcpkg extension, that VC uses to register package information. While in many cases this file is optional, it is 
+highly recommended to make a .vcpkg file when preparing your own package. The file has one required property `name`, and optional properties
 
 This example vcpkg file 
 ```json
@@ -23,17 +38,16 @@ This example vcpkg file
 }
 ```
 
-
-#### Prepare your package
+### Prepare your package
 - There are generally two types of packages: Post-compile, and others (pre-compile/no-compile-needed).
 - Post-compile packages are generally OS or architecture specific, they need to be in their 
 - The package structure could be workload-specific, refer to the workload documentation to see the packaging instructions.
 
-#### Upload your package to some storage
+### Upload your package to some storage
 - Right now VC only supports Azure Storage Account
 - We are open to support other major storage services. **Contributions welcomed!**
 
-#### Add package download to your VC profile
+### Add package download to your VC profile
 
     ```json
     {
@@ -50,10 +64,10 @@ This example vcpkg file
 
 ## Let VirtualClient discover your local packages
 
-#### Put packages in the packages directory with .vcpkg file.
+### Put packages in the packages directory with .vcpkg file.
 User also have the option to put in workload packages under `virtualclient/packages` directory. Any directory with a `.vcpkg` inside will be registered as a VC package.
 
-#### Define alternative package directory using environment variable
+### Define alternative package directory using environment variable
 A user of the Virtual Client can define an environment variable called **VCDependenciesPath**. This directory will be used
   to discover packages with the highest priority. If a package is not defined here, the Virtual Client will look for the package in the 
   locations noted below. If a package is found in this location, Virtual Client will not search for other locations. The package found
@@ -72,10 +86,3 @@ A user of the Virtual Client can define an environment variable called **VCDepen
   C:\any\custom\packages\location\geekbench5\win-x64
   C:\any\custom\packages\location\geekbench5\win-arm64
   ```
-
-## List of supported commercial workloads
-
-#### [SPECcpu](../../workloads/speccpu/speccpu.md)
-#### [SPECjbb](../../workloads/specjbb/specjbb.md)
-#### [SPECpower](../../workloads/specpower/specpower.md)
-#### [Geekbench](../../workloads/geekbench/geekbench.md)

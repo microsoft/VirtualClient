@@ -8,13 +8,13 @@
         "win-arm64"
     ],
     "SupportedOperatingSystems": [
-        "Ubuntu 18.04",
-        "Ubuntu 20.04",
-        "Ubuntu 22.04",
-        "Windows 10",
-        "Windows 11",
-        "Windows Server 2016",
-        "Windows Server 2019"
+        "CBL-Mariner",
+        "CentOS",
+        "Debian",
+        "RedHat",
+        "Suse",
+        "Ubuntu",
+        "Windows"
     ],
     "Parameters": {
         "DotNetVersion": "6.0.100",

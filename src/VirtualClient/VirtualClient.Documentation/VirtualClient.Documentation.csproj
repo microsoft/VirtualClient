@@ -16,6 +16,10 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Remove="..\..\..\website\docs\workloads\geekbench\geekbench-metrics.md" />
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

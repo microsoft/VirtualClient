@@ -8,8 +8,7 @@ Bombardier binaries could be downloaded from Github release, or directly compile
 * [Bombardier Release](https://github.com/codesenberg/bombardier/releases/tag/v1.2.5)
 
 ## Workload Metrics
-The following document illustrates the type of results that are emitted by the AspNetBench workload and captured by the
-Virtual Client for net impact analysis.
+The following metrics are examples of those captured by the Virtual Client when running the AspNetBenchmark workload.
 
 [Bombardier output example](https://github.com/codesenberg/bombardier#examples)
 

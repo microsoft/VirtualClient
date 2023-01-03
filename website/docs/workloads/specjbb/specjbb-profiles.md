@@ -2,18 +2,11 @@
 The following profiles run customer-representative or benchmarking scenarios using the SPECjbb workload.
 
 * [Workload Details](./specjbb.md)  
-* [Workload Profile Metrics](./specjbb-metrics.md)
 
------------------------------------------------------------------------
-
-### Preliminaries
-The profiles below require the ability to download workload packages and dependencies from a package store. In order to download the workload packages, connection information 
-must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
-
------------------------------------------------------------------------
-
-### PERF-SPECJBB.json
+## PERF-SPECJBB.json
 Runs the SPECjbb benchmark workload to assess the performance of a Java Server.
+
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECJBB.json)
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -30,24 +23,26 @@ Runs the SPECjbb benchmark workload to assess the performance of a Java Server.
   * Windows Server 2016
   * Windows Server 2019
 
+* **Supports Disconnected Scenarios**  
+  * No. Internet connection required.
+
 * **Dependencies**  
-  The following dependencies must be met to run this workload profile.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
 
-  * Workload package must exist in the 'packages' directory or connection information for the package store supplied on the command line (see 'Workload Packages' link above).
+  Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
+  * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
+* **Profile Runtimes**  
+  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
+  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
 
-* **Workload Runtimes**  
-  The following timings represent the length of time required to run a single round of tests ran. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the use of prescribed VM SKUs. This
-  particular workload takes multiple days to complete the number of iterations required for valid results.
-
-  * Expected Runtime (8-core/vCPU VM) = 3 hours
+  * (8-cores/vCPUs) = 3 hours
 
 * **Usage Examples**  
-  The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
-  'Usage Scenarios/Examples' link at the top.
+  The following section provides a few basic examples of how to use the workload profile.
 
-
-  ``` csharp
+  ``` bash
+  # Execute the workload profile
   VirtualClient.exe --profile=PERF-SPECJBB.json --system=Azure --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
