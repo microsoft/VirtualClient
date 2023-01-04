@@ -33,7 +33,6 @@
                 "BufferSizeServer": "4K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -52,7 +51,6 @@
                 "BufferSizeServer": "64K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -71,7 +69,6 @@
                 "BufferSizeServer": "256K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -90,7 +87,6 @@
                 "BufferSizeServer": "4K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -109,7 +105,6 @@
                 "BufferSizeServer": "64K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -128,7 +123,6 @@
                 "BufferSizeServer": "256K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -147,7 +141,6 @@
                 "BufferSizeServer": "4K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_4K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -166,7 +159,6 @@
                 "BufferSizeServer": "64K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_64K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -185,7 +177,6 @@
                 "BufferSizeServer": "256K",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_TCP_256K_Buffer_T256",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -204,7 +195,6 @@
                 "BufferSizeServer": "1400",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T1",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -223,7 +213,6 @@
                 "BufferSizeServer": "1400",
                 "TestDuration": 60,
                 "Port": "$.Parameters.NTttcpPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "NTttcp_UDP_1400B_Buffer_T32",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -238,7 +227,6 @@
                 "PackageName": "networking",
                 "Protocol": "TCP",
                 "Port": "$.Parameters.LattePort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "Latte_TCP",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -253,7 +241,6 @@
                 "PackageName": "networking",
                 "Protocol": "UDP",
                 "Port": "$.Parameters.LattePort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "Latte_UDP",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -270,7 +257,6 @@
                 "TestDuration": 300,
                 "WarmupTime": 60,
                 "Port": "$.Parameters.CpsPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "ProfilingScenario": "CPS_T16",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
                 "ProfilingMode": "$.Parameters.ProfilingMode"
@@ -288,7 +274,6 @@
                 "MessageSize": 64,
                 "TestDuration": 60,
                 "Port": "$.Parameters.SockPerfPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "MessagesPerSecond": "max",
                 "ProfilingScenario": "SockPerf_TCP_Ping_Pong",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -307,7 +292,6 @@
                 "MessageSize": 64,
                 "TestDuration": 60,
                 "Port": "$.Parameters.SockPerfPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "MessagesPerSecond": "max",
                 "ProfilingScenario": "SockPerf_UDP_Ping_Pong",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -326,7 +310,6 @@
                 "MessageSize": 64,
                 "TestDuration": 60,
                 "Port": "$.Parameters.SockPerfPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "MessagesPerSecond": "max",
                 "ProfilingScenario": "SockPerf_TCP_Under_Load",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -345,7 +328,6 @@
                 "MessageSize": 64,
                 "TestDuration": 60,
                 "Port": "$.Parameters.SockPerfPort",
-                "ApiPort": "$.Parameters.ApiPort",
                 "MessagesPerSecond": "max",
                 "ProfilingScenario": "SockPerf_UDP_Under_Load",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
