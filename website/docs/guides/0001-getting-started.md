@@ -45,13 +45,13 @@ programs such as 'unzip' or '7zip'.
   ``` treeview
   VirtualClient/
   ├── content/
-  |   ├── linux-arm64
+  |   ├── linux-arm64/
   |   |   └── VirtualClient
-  |   ├── linux-x64
+  |   ├── linux-x64/
   |   |   └── VirtualClient
-  |   ├── win-arm64
+  |   ├── win-arm64/
   |   |   └── VirtualClient.exe
-  |   └── win-x64
+  |   └── win-x64/
   |       └── VirtualClient.exe
   └── etc.
   ```

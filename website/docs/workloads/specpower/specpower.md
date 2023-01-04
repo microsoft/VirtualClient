@@ -1,13 +1,48 @@
-﻿# SPECpower (coming soon...)
+﻿# SPECpower
 SPEC Power is a workload created and licensed by the Standard Performance Evalution Corporation and is an industry standard benchmark
 toolset for measuring power/energy consumption on a system.
 
 * [SPEC Power Documentation](https://www.spec.org/power_ssj2008/#:~:text=The%20SPEC%20Power%20benchmark%20is%20the%20first%20industry-standard,a%20toolset%20for%20use%20in%20improving%20server%20efficiency.)
 
-:::caution Not Supported Yet...
-*This workload is supported but not yet made available in the Virtual Client package store. The Virtual Client team is currently working to define and document the process for integration 
-of commercial workloads into the Virtual Client that require purchase and/or license. Please bear with us while we are figuring this process out.*
+## How to package SPECpower
+:::info
+SPECpower2008 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
 :::
+
+1. SPECpower can be downloaded here https://pro.spec.org/private/osg/power/, with SPEC credentials. Download ISO file with desired version like `SPECpower_ssj2008-1.12.iso`.
+
+
+2. Mount or extract to get the content. Please preserve the file structure, except insert one `specpower2008.vcpkg` json file.
+  ```treeview {5}
+    specpower
+    ├───ccs/
+    ├───ssj/
+    ├───LICENSE.txt
+    └───specpower2008.vcpkg
+  ```
+
+  `specpower2008.vcpkg` json example
+  ```json
+  {
+    "name": "specpower2008",
+    "description": "SPEC Power 2008 workload toolsets.",
+    "version": "2008",
+    "metadata": {}
+  }
+  ```
+
+
+3. Zip the specpower-1.1.8 directory content directly into `specpower-1.1.8.zip`, make sure that no extra `/specpower-1.1.8/` top directory is created.
+  ```bash
+  7z a specpower-1.1.8.zip ./specpower-1.1.8/*
+  ```
+    or 
+  ```bash
+  cd specpower-1.1.8; zip -r ../specpower-1.1.8.zip *
+  ```
+
+4. Modify the [SPECpower profiles](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/POWER-SPEC50.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
+
 
 ## What is Being Measured?
 The SPECpower workload is configured to utilize a specific percentage of the resources on a system. It will utilize the CPU, memory and
