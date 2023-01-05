@@ -12,6 +12,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient;
@@ -27,6 +28,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     public class NetworkingWorkloadExecutor : VirtualClientComponent
     {
         private static readonly object LockObject = new object();
+        private static Task heartbeatTask;
 
         // Contains the background running process for the server-side
         // networking workload tool.
@@ -537,6 +539,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // Emit heartbeats on the system so that we can determine if the workload
+            // is online and running.
+            if (NetworkingWorkloadExecutor.heartbeatTask == null)
+            {
+                NetworkingWorkloadExecutor.heartbeatTask = this.StartHeartbeatTask(TimeSpan.FromMinutes(2), telemetryContext, cancellationToken);
+            }
+
             ClientInstance clientInstance = this.GetLayoutClientInstance(this.AgentId);
             string layoutIPAddress = clientInstance.IPAddress;
 
@@ -872,13 +881,17 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                         // 1) Confirm server is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken)
+                        HttpResponseMessage heartbeatResponse = await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken)
                             .ConfigureAwait(false);
+
+                        this.Logger.LogMessage($"{this.TypeName}.HeartbeatResponse", LogLevel.Information, telemetryContext.Clone().AddResponseContext(heartbeatResponse));
 
                         // 2) Wait for the server to signal the eventing API is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken)
+                        HttpResponseMessage apiOnlineResponse = await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken)
                             .ConfigureAwait(false);
+
+                        this.Logger.LogMessage($"{this.TypeName}.ServerOnlineResponse", LogLevel.Information, telemetryContext.Clone().AddResponseContext(heartbeatResponse));
 
                         // 3) Request the server to stop ALL workload processes
                         // ===========================================================================

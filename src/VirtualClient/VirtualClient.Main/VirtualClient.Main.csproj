@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -124,7 +124,7 @@
         Below we have targets that copy the relevant profiles to the target platform/arch folders based upon the
         supported operating system.
         -->
-        <Content Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
+        <None Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
     </ItemGroup>
 
     <ItemGroup>

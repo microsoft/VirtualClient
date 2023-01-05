@@ -7,7 +7,9 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -43,17 +45,33 @@ namespace VirtualClient.Dependencies
             {
                 ClientInstance client = this.GetLayoutClientInstance();
                 apiPort = clientManager.GetApiPort(client);
+                telemetryContext.AddContext(nameof(client), client);
             }
 
-            ApiServer.apiHostingTask = apiManager.StartApiHostAsync(this.Dependencies, apiPort, cancellationToken);
-            await Task.Delay(5000).ConfigureAwait(false);
+            telemetryContext.AddContext(nameof(apiPort), apiPort);
 
-            if (ApiServer.apiHostingTask.IsFaulted)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                throw new DependencyException(
-                    $"Virtual Client API host failed to start.",
-                    apiHostingTask.Exception,
-                    ErrorReason.ApiStartupFailed);
+                try
+                {
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.RunApiServer", telemetryContext, async () =>
+                    {
+                        ApiServer.apiHostingTask = apiManager.StartApiHostAsync(this.Dependencies, apiPort, cancellationToken);
+                        await Task.Delay(5000).ConfigureAwait(false);
+                        ApiServer.apiHostingTask.ThrowIfErrored();
+
+                    }).ConfigureAwait(false);
+
+                    break;
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogErrorMessage(exc, telemetryContext.Clone().AddError(exc), LogLevel.Error);
+                }
+                finally
+                {
+                    await Task.Delay(1000).ConfigureAwait(false);
+                }
             }
         }
     }

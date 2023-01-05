@@ -87,7 +87,7 @@ namespace VirtualClient
         /// <param name="telemetryContext">The telemetry context object.</param>
         /// <param name="response">The HTTP action response.</param>
         /// <param name="propertyName">Optional property allows the caller to define the name of the telemetry context property.</param>
-        public static void AddResponseContext(this EventContext telemetryContext, HttpResponseMessage response, string propertyName = "response")
+        public static EventContext AddResponseContext(this EventContext telemetryContext, HttpResponseMessage response, string propertyName = "response")
         {
             response.ThrowIfNull(nameof(response));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -112,6 +112,8 @@ namespace VirtualClient
                 requestUri = $"{response?.RequestMessage?.RequestUri}",
                 content = responseContent
             });
+
+            return telemetryContext;
         }
 
         /// <summary>

@@ -18,7 +18,6 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
-                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "socialNetwork,CPU,DeathStarBench,DeathStarBenchServices"
             }
         },
@@ -31,7 +30,6 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
-                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "mediaMicroservices,CPU,DeathStarBench,DeathStarBenchServices"
             }
         },
@@ -44,7 +42,6 @@
                 "Duration": "$.Parameters.Duration",
                 "RequestPerSec": "$.Parameters.RequestPerSec",
                 "PackageName": "deathstarbench",
-                "ApiPort": "$.Parameters.ApiPort",
                 "Tags": "hotelReservation,CPU,DeathStarBench,DeathStarBenchServices"
             }
         }
@@ -57,7 +54,6 @@
                 "BlobContainer": "packages",
                 "BlobName": "deathstarbench.1.0.3.zip",
                 "PackageName": "deathstarbench",
-                "AccountKey": "$.Parameters.AccountKey",
                 "Extract": true
             }
         },

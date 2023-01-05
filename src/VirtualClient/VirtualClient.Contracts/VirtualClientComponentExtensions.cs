@@ -11,7 +11,9 @@ namespace VirtualClient.Contracts
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -211,6 +213,44 @@ namespace VirtualClient.Contracts
         public static void SetServerOnline(this VirtualClientComponent component, bool isOnline)
         {
             VirtualClientEventing.SetEventingApiOnline(isOnline);
+        }
+
+        /// <summary>
+        /// Creates a background task that emits heartbeat notices/telemetry on an interval.
+        /// </summary>
+        /// <param name="component">The component requesting heartbeats.</param>
+        /// <param name="interval">The interval on which the heartbeat notices/telemetry should be emitted.</param>
+        /// <param name="telemetryContext">Provides context information to include with the heartbeat telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static Task StartHeartbeatTask(this VirtualClientComponent component, TimeSpan interval, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            interval.ThrowIfNull(nameof(interval));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            return Task.Run(async () =>
+            {
+                DateTime nextHeartbeatTime = DateTime.UtcNow.AddMilliseconds(-5);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        if (DateTime.UtcNow >= nextHeartbeatTime)
+                        {
+                            component.Logger.LogMessage($"{component.TypeName}.Heartbeat", LogLevel.Information, telemetryContext);
+                            nextHeartbeatTime = nextHeartbeatTime.Add(interval);
+                        }
+                    }
+                    catch (Exception exc)
+                    {
+                        component.Logger.LogErrorMessage(exc, telemetryContext.Clone().AddError(exc), LogLevel.Warning);
+                    }
+                    finally
+                    {
+                        await Task.Delay(10).ConfigureAwait(false);
+                    }
+                }
+            });
         }
 
         /// <summary>
