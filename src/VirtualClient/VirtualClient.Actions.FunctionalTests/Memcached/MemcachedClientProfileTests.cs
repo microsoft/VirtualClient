@@ -83,6 +83,7 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
+
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }

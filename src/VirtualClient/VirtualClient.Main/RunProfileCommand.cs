@@ -167,6 +167,8 @@ namespace VirtualClient
                 }
 
                 Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", EventContext.Persisted());
+                Program.LogMessage(Program.Logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
+
                 DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(60));
                 SystemManagement.Cleanup();
 
