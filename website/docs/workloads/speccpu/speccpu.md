@@ -1,4 +1,4 @@
-﻿# SPECcpu (coming soon...)
+﻿# SPECcpu
 SPEC CPU is a workload created and licensed by the Standard Performance Evalution Corporation. The SPEC CPU® 2017 benchmark package contains SPEC's 
 next-generation, industry-standardized, CPU intensive suites for measuring and comparing compute intensive performance, stressing a system's processor, 
 memory subsystem and compiler.
@@ -8,10 +8,6 @@ memory subsystem and compiler.
 * [SPEC CPU Download](https://pro.spec.org/private/osg/cpu/cpu2017/src/)  
 * [SPEC CPU Benchmarks](https://www.spec.org/cpu2017/Docs/overview.html#Q13)
 
-:::caution Not Supported Yet...
-*This workload is supported but not yet made available in the Virtual Client package store. The Virtual Client team is currently working to define and document the process for integration 
-of commercial workloads into the Virtual Client that require purchase and/or license. Please bear with us while we are figuring this process out.*
-:::
 
 ## System Requirements
 The following section provides special considerations required for the system on which the SPEC CPU workload will be run.
@@ -20,6 +16,43 @@ https://spec.org/cpu2017/Docs/system-requirements.html
 
 * Physical Memory = 16 GB minimum  
 * Disk Space = 250 GB minimum on the OS disk
+
+## How to package SPECcpu
+:::info
+SPECcpu2017 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
+:::
+1. SPECcpu can be downloaded here https://pro.spec.org/private/osg/cpu/cpu2017/src/, with SPEC credentials. Download ISO file cpu2017-1.1.8.iso.
+
+2. Please create a new directory `speccpu` (flexible), and insert one `speccpu2017.vcpkg` json file.
+  ```treeview {3}
+    speccpu
+    ├───cpu2017-1.1.8.iso
+    └───speccpu2017.vcpkg
+  ```
+
+  `speccpu2017.vcpkg` json example
+  ```json
+  {
+    "name": "speccpu2017",
+    "description": "SPEC CPU 2017 benchmark toolsets.",
+    "version": "1.1.8",
+    "metadata": {
+        "isoName": "cpu2017-1.1.8.iso"
+    }
+  }
+  ```
+
+
+  
+3. Zip the speccpu-1.1.8 directory into `speccpu-1.1.8.zip`, make sure that no extra `/speccpu-1.1.8/` top directory is created.
+  ```bash
+  7z a speccpu-1.1.8.zip ./speccpu-1.1.8/*
+  ```
+    or 
+  ```bash
+  cd speccpu-1.1.8; zip -r ../speccpu-1.1.8.zip *
+  ```
+4. Modify the [SPECcpu profiles](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECCPU-INTRATE.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
 
 ## What is Being Measured?
 SPEC teams designed these suites to provide a comparative measure of compute-intensive performance across the widest practical range of hardware 
