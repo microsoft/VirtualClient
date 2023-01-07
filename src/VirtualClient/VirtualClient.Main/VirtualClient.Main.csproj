@@ -41,76 +41,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\system_list.py" Link="scripts\mlperf\GPUConfigFiles\system_list.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Offline\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\Server\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\bert\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\bert\SingleStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Offline\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\Server\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\rnnt\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\rnnt\SingleStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\Offline\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\MultiStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-mobilenet\SingleStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Offline\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\MultiStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\SingleStream\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\MLPerf\GPUConfigFiles\ssd-resnet34\Server\__init__.py" Link="scripts\mlperf\GPUConfigFiles\ssd-resnet34\Server\__init__.py">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\SuperBenchmark\default.yaml" Link="scripts\superbenchmark\default.yaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\SuperBenchmark\1xM60.yaml" Link="scripts\superbenchmark\1xM60.yaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\SuperBenchmark\8xA100.yaml" Link="scripts\superbenchmark\8xA100.yaml">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\SuperBenchmark\local.ini" Link="scripts\superbenchmark\local.ini">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\SuperBenchmark\initialize.sh" Link="scripts\superbenchmark\initialize.sh">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.sh" Link="scripts\dotnet\dotnet-install.sh">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.ps1" Link="scripts\dotnet\dotnet-install.ps1">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="..\VirtualClient.Actions\Lzbench\lzbenchexecutor.sh" Link="scripts\lzbench\lzbenchexecutor.sh">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Include="..\VirtualClient.Core\Scripts\RefreshEnv.cmd" Link="scripts\RefreshEnv.cmd">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Actions\FIO\oltp-c.fio.jobfile" Link="scripts\fio\oltp-c.fio.jobfile">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
