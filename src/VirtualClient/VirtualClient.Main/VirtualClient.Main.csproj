@@ -41,18 +41,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.sh" Link="scripts\dotnet\dotnet-install.sh">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Dependencies\DotNet\dotnet-install.ps1" Link="scripts\dotnet\dotnet-install.ps1">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="..\VirtualClient.Core\Scripts\RefreshEnv.cmd" Link="scripts\RefreshEnv.cmd">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-    <ItemGroup>
         <!--
         This prevents having ALL profiles published to the win-x64, win-arm64, linux-x64 and linux-arm64 directories
         during the publish phase. We DO NOT want all profiles in each of those directories because certain profiles and
@@ -158,6 +146,17 @@
 
         <!-- Monitoring profiles -->
         <Copy SourceFiles="@(MonitorProfiles)" DestinationFiles="@(MonitorProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
+    </Target>
+
+    <!--
+    Copy the script/content files into the target runtime publish directory.
+    -->
+    <Target Name="CopyInScriptsToPublishDirectory" AfterTargets="Publish">
+        <ItemGroup>
+            <ScriptFiles Include="$(RepoPath)\out\scripts\**\*.*" />
+        </ItemGroup>
+
+        <Copy Condition="'$(RuntimeIdentifier)' != ''" SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)publish\scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

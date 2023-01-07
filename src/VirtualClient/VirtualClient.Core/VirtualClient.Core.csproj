@@ -18,6 +18,25 @@
       <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <!--
+        Scripts/content that needs to be copied into the build output 'scripts' directory.
+        -->
+        <ScriptFiles Include="refreshenv\*.*" />
+    </ItemGroup>
+
+    <Target Name="CopyScriptsToOutput" AfterTargets="Build">
+        <Message Importance="high" Text="Publish scripts/content..." />
+
+        <ItemGroup>
+            <Scripts Include="@(ScriptFiles)">
+                <ScriptDirLc>$([System.String]::new('%(ScriptFiles.RelativeDir)').ToLower())</ScriptDirLc>
+            </Scripts>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(Scripts)" DestinationFiles="@(Scripts->'$(RepoPath)\out\scripts\%(ScriptDirLc)%(Filename)%(Extension)')" />
+    </Target>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

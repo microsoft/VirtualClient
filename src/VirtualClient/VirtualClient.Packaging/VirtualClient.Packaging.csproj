@@ -10,17 +10,6 @@
         <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
     </PropertyGroup>
 
-    <!--
-    Copy the script/content files into the target runtime publish directory.
-    -->
-    <Target Name="CopyInScriptsToPublishDirectory" AfterTargets="Publish">
-        <ItemGroup>
-            <ScriptFiles Include="$(RepoPath)\out\scripts\**\*.*" />
-        </ItemGroup>
-
-        <Copy Condition="'$(RuntimeIdentifier)' != ''" SourceFiles="@(ScriptFiles)" DestinationFiles="@(ScriptFiles->'$(OutputPath)publish\scripts\%(RecursiveDir)%(Filename)%(Extension)')" />
-    </Target>
-
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
 
