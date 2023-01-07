@@ -161,11 +161,11 @@ namespace VirtualClient
         /// <returns></returns>
         public async Task RefreshEnvironmentVariableAsync(CancellationToken cancellationToken)
         {
-            string scriptPath = this.PlatformSpecifics.GetScriptPath();
+            string scriptPath = this.PlatformSpecifics.GetScriptPath("refreshenv");
             if (this.Platform == PlatformID.Win32NT)
             {
                 using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(
-                        this.Platform, "RefreshEnv.cmd", scriptPath))
+                        this.Platform, "refreshenv.cmd", scriptPath))
                 {
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
