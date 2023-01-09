@@ -62,7 +62,6 @@ namespace VirtualClient.Actions
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if ($"{exe} {arguments}".Contains(expectedCommand))
-                    //if (expectedCommand == $"{exe} {arguments}")
                     {
                         commandExecuted = true;
                     }
@@ -150,8 +149,6 @@ namespace VirtualClient.Actions
 
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
-
-                // Assert.AreEqual(exception.Message, "The StressAppTest results file was not found at required path '" + this.mockPackage.Path + resultsPath + "'.");
             }
         }
 

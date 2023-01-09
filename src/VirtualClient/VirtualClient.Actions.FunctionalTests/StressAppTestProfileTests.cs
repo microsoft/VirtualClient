@@ -68,7 +68,7 @@
                 commands = new List<string>
                 {
                     $"sudo chmod +x \"{this.fixture.GetPackagePath()}/stressapptest/linux-x64/stressapptest\"",
-                    @$"{this.fixture.GetPackagePath()}/stressapptest/linux-x64/stressapptest -s 60 -l stressapptestLogs_1.txt"
+                    @$"{this.fixture.GetPackagePath()}/stressapptest/linux-x64/stressapptest -s 60 -l stressapptestLogs.*\.txt"
                 };
             }
 
