@@ -88,10 +88,8 @@ namespace VirtualClient.Proxy
                 blobDescriptor.ContentEncoding.WebName,
                 blobPath);
 
-            HttpResponseMessage response = await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
+            await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
                 .ConfigureAwait(true);
-
-            response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
 
             return descriptor;
         }

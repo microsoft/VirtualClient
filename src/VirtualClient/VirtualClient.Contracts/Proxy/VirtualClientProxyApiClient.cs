@@ -26,11 +26,7 @@ namespace VirtualClient.Contracts.Proxy
     {
         private const string BlobsApiRoute = "/api/blobs";
         private const string TelemetryApiRoute = "/api/telemetry";
-
-        /// <summary>
-        /// The size of an individual chunk of a blob to be downloaded.
-        /// </summary>
-        private static readonly int BlobChunkSize = 1024 * 1024;
+        private const int DefaultBlobChunkSize = 1024 * 1024;
 
         private static IAsyncPolicy<HttpResponseMessage> defaultHttpGetRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(
            (retries) => TimeSpan.FromMilliseconds(retries * 500));
@@ -69,6 +65,11 @@ namespace VirtualClient.Contracts.Proxy
         protected IRestClient RestClient { get; }
 
         /// <summary>
+        /// The size of an individual chunk of a blob to be downloaded.
+        /// </summary>
+        protected virtual int BlobChunkSize { get; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
+
+        /// <summary>
         /// Creates an URI route for the proxy API blob endpoints based on the information defined
         /// in the descriptor.
         /// </summary>
@@ -104,23 +105,35 @@ namespace VirtualClient.Contracts.Proxy
 
             Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
             HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            
+            // If range is not enabled download the file as usual.
+            if (!VirtualClientProxyApiClient.IsRangeEnabled(headResponse))
+            {
+                HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
+                response.EnsureSuccessStatusCode();
+
+                Stream httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                await httpStream.CopyToAsync(downloadStream, cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
             long? fileLength = headResponse.Content.Headers.ContentLength;
             if (!fileLength.HasValue)
             {
                 throw new ApiException($"The 'Content-Length' header was not present in the HTTP Response from: '{requestUri}'", ErrorReason.ApiRequestFailed);
             }
 
-            using (HttpRequestMessage request = new HttpRequestMessage())
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri))
             {
-                request.RequestUri = requestUri;
                 for (int latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
                 {
-                    request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + VirtualClientProxyApiClient.BlobChunkSize);
+                    request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.BlobChunkSize);
                     HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
                     response.EnsureSuccessStatusCode();
 
                     byte[] currentContent = await response.Content.ReadAsByteArrayAsync();
                     await downloadStream.WriteAsync(currentContent, cancellationToken);
+                    latestRequestLength = currentContent.Length;
                 }
             }
 
@@ -223,6 +236,11 @@ namespace VirtualClient.Contracts.Proxy
                 bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientErrorCodes.Contains(response.StatusCode);
                 return shouldRetry;
             }).WaitAndRetryAsync(10, retryWaitInterval);
+        }
+
+        private static bool IsRangeEnabled(HttpResponseMessage response)
+        {
+            return response.IsSuccessStatusCode && response.Headers.AcceptRanges != null;
         }
     }
 }

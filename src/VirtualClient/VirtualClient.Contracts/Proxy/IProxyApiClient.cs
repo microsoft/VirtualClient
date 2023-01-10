@@ -30,7 +30,7 @@ namespace VirtualClient.Contracts.Proxy
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="retryPolicy">A policy to use for handling retries when transient errors/failures happen.</param>
         /// <returns>Full details for the blob as it exists in the store (e.g. name, content encoding, content type).</returns>
-        Task<HttpResponseMessage> DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
+        Task DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
 
         /// <summary>
         /// Uploads a blob from the stream provided into the store.
