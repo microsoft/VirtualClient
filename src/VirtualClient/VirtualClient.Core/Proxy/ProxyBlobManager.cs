@@ -50,6 +50,26 @@ namespace VirtualClient.Proxy
         }
 
         /// <summary>
+        /// Event is invoked whenever a blob is uploaded.
+        /// </summary>
+        public event EventHandler<ProxyBlobEventArgs> BlobUpload;
+
+        /// <summary>
+        ///  Event is invoked whenever a blob upload fails.
+        /// </summary>
+        public event EventHandler<ProxyBlobEventArgs> BlobUploadError;
+
+        /// <summary>
+        /// Event is invoked whenever a blob is downloaded.
+        /// </summary>
+        public event EventHandler<ProxyBlobEventArgs> BlobDownload;
+
+        /// <summary>
+        ///  Event is invoked whenever a blob download fails.
+        /// </summary>
+        public event EventHandler<ProxyBlobEventArgs> BlobDownloadError;
+
+        /// <summary>
         /// Represents the store description/details.
         /// </summary>
         public DependencyStore StoreDescription { get; }
@@ -88,8 +108,20 @@ namespace VirtualClient.Proxy
                 blobDescriptor.ContentEncoding.WebName,
                 blobPath);
 
-            await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
+            this.BlobDownload?.Invoke(this, new ProxyBlobEventArgs(info));
+            HttpResponseMessage response = await this.ApiClient.DownloadBlobAsync(info, downloadStream, cancellationToken)
                 .ConfigureAwait(true);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                this.BlobDownloadError?.Invoke(this, new ProxyBlobEventArgs(info, new
+                {
+                    httpStatus = response.StatusCode.ToString(),
+                    httpStatusCode = response.StatusCode
+                }));
+            }
+
+            response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
 
             return descriptor;
         }
@@ -118,8 +150,18 @@ namespace VirtualClient.Proxy
                 blobDescriptor.ContentEncoding.WebName,
                 blobPath);
 
+            this.BlobUpload?.Invoke(this, new ProxyBlobEventArgs(info));
             HttpResponseMessage response = await this.ApiClient.UploadBlobAsync(info, uploadStream, cancellationToken)
                 .ConfigureAwait(true);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                this.BlobUploadError?.Invoke(this, new ProxyBlobEventArgs(info, new
+                {
+                    httpStatus = response.StatusCode.ToString(),
+                    httpStatusCode = response.StatusCode
+                }));
+            }
 
             response.ThrowOnError<DependencyException>(ErrorReason.ApiRequestFailed);
 

@@ -98,23 +98,23 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         /// <inheritdoc />
-        public async Task DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        public async Task<HttpResponseMessage> DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
             downloadStream.ThrowIfNull(nameof(downloadStream));
 
             Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
+            HttpResponseMessage response = null; 
             HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken).ConfigureAwait(false);
             
             // If range is not enabled download the file as usual.
             if (!VirtualClientProxyApiClient.IsRangeEnabled(headResponse))
             {
-                HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
-                response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
+                response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
 
                 Stream httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await httpStream.CopyToAsync(downloadStream, cancellationToken).ConfigureAwait(false);
-                return;
+                return response;
             }
 
             long? fileLength = headResponse.Content.Headers.ContentLength;
@@ -128,9 +128,12 @@ namespace VirtualClient.Contracts.Proxy
                 for (int latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
                 {
                     request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.BlobChunkSize);
-                    HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
-                    response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
-
+                    response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return response;
+                    }
+                    
                     byte[] currentContent = await response.Content.ReadAsByteArrayAsync();
                     await downloadStream.WriteAsync(currentContent, cancellationToken);
                     latestRequestLength = currentContent.Length;
@@ -138,6 +141,7 @@ namespace VirtualClient.Contracts.Proxy
             }
 
             downloadStream.Position = 0;
+            return response;
         }
 
         /// <inheritdoc />

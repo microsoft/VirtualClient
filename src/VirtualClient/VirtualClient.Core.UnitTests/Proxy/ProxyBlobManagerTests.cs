@@ -83,7 +83,7 @@ namespace VirtualClient.Proxy
                 {
                     Assert.IsNotNull(blobDescriptor);
                     Assert.AreEqual(expectedSource, blobDescriptor.Source);
-                });
+                }).ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -113,7 +113,7 @@ namespace VirtualClient.Proxy
                 {
                     Assert.IsNotNull(blobDescriptor);
                     Assert.AreEqual(ProxyBlobDescriptor.DefaultSource, blobDescriptor.Source);
-                });
+                }).ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -147,7 +147,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("packages", blobDescriptor.ContainerName);
                     Assert.AreEqual(Encoding.UTF8.WebName, blobDescriptor.ContentEncoding);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
-                });
+                }).ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }
@@ -182,7 +182,7 @@ namespace VirtualClient.Proxy
                     Assert.AreEqual("anypackage.1.0.0.zip", blobDescriptor.BlobName);
                     Assert.AreEqual("application/octet-stream", blobDescriptor.ContentType);
                     Assert.AreEqual(Encoding.ASCII.WebName, blobDescriptor.ContentEncoding);
-                });
+                }).ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
                 return blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None);
             }

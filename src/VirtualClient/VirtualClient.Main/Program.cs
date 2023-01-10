@@ -108,11 +108,6 @@ namespace VirtualClient
                 exitCode = 1;
                 Console.Error.WriteLine(exc.StackTrace);
             }
-            finally
-            {
-                Program.LogMessage(Program.Logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
-                DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(20));
-            }
 
             return exitCode;
          }

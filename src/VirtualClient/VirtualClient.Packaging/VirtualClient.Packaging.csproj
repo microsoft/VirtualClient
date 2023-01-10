@@ -8,7 +8,6 @@
 
     <PropertyGroup>
         <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
-        
     </PropertyGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
