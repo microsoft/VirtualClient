@@ -189,6 +189,32 @@ namespace VirtualClient.Proxy
         }
 
         [Test]
+        public void ProxyBlobManagerThrowsIfTheBlobDownloadFails()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                DependencyDescriptor descriptor = new DependencyDescriptor(new Dictionary<string, IConvertible>
+                {
+                    ["Name"] = "anypackage.1.0.0.zip",
+                    ["ContainerName"] = "packages"
+                });
+
+                ProxyBlobManager blobManager = new ProxyBlobManager(this.mockPackagesStore, this.mockProxyApiClient.Object);
+
+                this.mockProxyApiClient
+                .Setup(client => client.DownloadBlobAsync(
+                    It.IsAny<ProxyBlobDescriptor>(),
+                    It.IsAny<Stream>(),
+                    It.IsAny<CancellationToken>(),
+                    It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.Forbidden));
+
+                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => blobManager.DownloadBlobAsync(descriptor, this.mockStream, CancellationToken.None));
+                Assert.AreEqual(ErrorReason.DependencyInstallationFailed, error.Reason);
+            }
+        }
+
+    [Test]
         public Task ProxyBlobManagerUploadsUseTheExpectedSourceWhenAnExplicitSourceIsSupplied()
         {
             using (MemoryStream stream = new MemoryStream())
