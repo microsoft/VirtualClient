@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Threading.Tasks;
@@ -103,7 +104,7 @@ namespace VirtualClient
         /// </summary>
         /// <param name="eventHubConnectionString">The connection string to the Event Hub namespace.</param>
         /// <param name="eventHubName">The name of the Event Hub within the namespace (e.g. telemetry-logs, telemetry-metrics).</param>
-        public static EventHubTelemetryChannel CreateEventHubChannel(string eventHubConnectionString, string eventHubName)
+        public static EventHubTelemetryChannel CreateEventHubTelemetryChannel(string eventHubConnectionString, string eventHubName)
         {
             var client = new EventHubProducerClient(eventHubConnectionString, eventHubName);
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
@@ -125,7 +126,7 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(eventHubConnectionString) && settings != null)
             {
                 // Logs/Traces
-                EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubChannel(
+                EventHubTelemetryChannel tracesChannel = DependencyFactory.CreateEventHubTelemetryChannel(
                 eventHubConnectionString,
                 settings.TracesHubName);
 
@@ -140,7 +141,7 @@ namespace VirtualClient
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Test Metrics/Results
-                EventHubTelemetryChannel metricsChannel = DependencyFactory.CreateEventHubChannel(
+                EventHubTelemetryChannel metricsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
                     eventHubConnectionString,
                     settings.MetricsHubName);
 
@@ -155,7 +156,7 @@ namespace VirtualClient
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // System Events
-                EventHubTelemetryChannel systemEventsChannel = DependencyFactory.CreateEventHubChannel(
+                EventHubTelemetryChannel systemEventsChannel = DependencyFactory.CreateEventHubTelemetryChannel(
                     eventHubConnectionString,
                     settings.EventsHubName);
 
@@ -176,13 +177,42 @@ namespace VirtualClient
         /// <summary>
         /// Creates logger providers for writing telemetry to local log files.
         /// </summary>
+        /// <param name="logFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\traces.log).</param>
+        /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
+        /// <param name="excludes">Properties to exclude from JSON structured output.</param>
+        public static ILoggerProvider CreateFileLoggerProvider(string logFilePath, TimeSpan flushInterval, IEnumerable<string> excludes = null)
+        {
+            logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
+
+            // 100MB
+            const long maxFileSizeBytes = 100000000;
+
+            ILoggerProvider loggerProvider = null;
+
+            if (!string.IsNullOrWhiteSpace(logFilePath))
+            {
+                LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    new JsonTextFormatter(excludes),
+                    logFilePath,
+                    fileSizeLimitBytes: maxFileSizeBytes,
+                    retainedFileCountLimit: 10,
+                    flushToDiskInterval: flushInterval);
+
+                loggerProvider = new SerilogFileLoggerProvider(logConfiguration);
+
+                SystemManagement.CleanupTasks.Add(() => loggerProvider.Dispose());
+            }
+
+            return loggerProvider;
+        }
+
+        /// <summary>
+        /// Creates logger providers for writing telemetry to local log files.
+        /// </summary>
         /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
         /// <param name="settings">Defines the settings for each log file that will be written.</param>
         public static IEnumerable<ILoggerProvider> CreateFileLoggerProviders(string logFileDirectory, FileLogSettings settings)
         {
-            // 100MB
-            const long maxFileSizeBytes = 100000000;
-
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
             List<string> excludes = new List<string>
             {
@@ -205,56 +235,28 @@ namespace VirtualClient
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
-                LoggerConfiguration tracesLogConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new JsonTextFormatter(excludes),
-                    Path.Combine(logFileDirectory, settings.TracesFileName),
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: TimeSpan.FromSeconds(10));
-
-                ILoggerProvider tracesLoggerProvider = new SerilogFileLoggerProvider(tracesLogConfiguration)
+                ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleTraceEvents();
 
                 SystemManagement.CleanupTasks.Add(() => tracesLoggerProvider.Dispose());
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                LoggerConfiguration metricsLogConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new JsonTextFormatter(metricsExcludes),
-                    Path.Combine(logFileDirectory, settings.MetricsFileName),
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: TimeSpan.FromSeconds(5));
-
-                ILoggerProvider metricsLoggerProvider = new SerilogFileLoggerProvider(metricsLogConfiguration)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(5), metricsExcludes)
                     .HandleMetricsEvents();
 
                 SystemManagement.CleanupTasks.Add(() => metricsLoggerProvider.Dispose());
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Performance Counters
-                LoggerConfiguration countersLogConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new JsonTextFormatter(metricsExcludes),
-                    Path.Combine(logFileDirectory, settings.CountersFileName),
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: TimeSpan.FromSeconds(5));
-
-                ILoggerProvider countersLoggerProvider = new SerilogFileLoggerProvider(countersLogConfiguration)
+                ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
                     .HandlePerformanceCounterEvents();
 
                 SystemManagement.CleanupTasks.Add(() => countersLoggerProvider.Dispose());
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                LoggerConfiguration eventsLogConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new JsonTextFormatter(excludes),
-                    Path.Combine(logFileDirectory, settings.EventsFileName),
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: TimeSpan.FromSeconds(5));
-
-                ILoggerProvider eventsLoggerProvider = new SerilogFileLoggerProvider(eventsLogConfiguration)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleSystemEvents();
 
                 SystemManagement.CleanupTasks.Add(() => eventsLoggerProvider.Dispose());
@@ -293,12 +295,189 @@ namespace VirtualClient
         /// </summary>
         /// <param name="storeDescription">Describes the type of blob store (e.g. Content, Packages).</param>
         /// <param name="source">An explicit source to use for blob uploads/downloads through the proxy API.</param>
-        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null)
+        /// <param name="logger">A logger to use for capturing information related to blob upload/download operations.</param>
+        public static IBlobManager CreateProxyBlobManager(DependencyProxyStore storeDescription, string source = null, Microsoft.Extensions.Logging.ILogger logger = null)
         {
             storeDescription.ThrowIfNull(nameof(storeDescription));
 
             VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(storeDescription.ProxyApiUri, TimeSpan.FromHours(6));
-            return new ProxyBlobManager(storeDescription, proxyApiClient, source);
+            ProxyBlobManager blobManager = new ProxyBlobManager(storeDescription, proxyApiClient, source);
+
+            if (logger != null)
+            {
+                blobManager.BlobDownload += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("blob", args.Descriptor)
+                            .AddContext("context", args.Context);
+
+                        logger?.LogMessage($"{nameof(ProxyBlobManager)}.BlobDownload", LogLevel.Information, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                blobManager.BlobDownloadError += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("blob", args.Descriptor)
+                            .AddContext("context", args.Context)
+                            .AddError(args.Error);
+
+                        logger?.LogMessage($"{nameof(ProxyBlobManager)}.BlobDownloadError", LogLevel.Error, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                blobManager.BlobUpload += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("blob", args.Descriptor)
+                            .AddContext("context", args.Context);
+
+                        logger?.LogMessage($"{nameof(ProxyBlobManager)}.BlobUpload", LogLevel.Information, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                blobManager.BlobUploadError += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("blob", args.Descriptor)
+                            .AddContext("context", args.Context)
+                            .AddError(args.Error);
+
+                        logger?.LogMessage($"{nameof(ProxyBlobManager)}.BlobUploadError", LogLevel.Error, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+            }
+
+            return blobManager;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="ProxyTelemetryChannel"/> for uploading telemetry to a Proxy API endpoint.
+        /// </summary>
+        /// <param name="proxyApiClient">Proxy API client for uploading telemetry.</param>
+        /// <param name="logger">A logger to use for capturing information related to channel/message operations.</param>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Not relevant here.")]
+        public static ProxyTelemetryChannel CreateProxyTelemetryChannel(IProxyApiClient proxyApiClient, Microsoft.Extensions.Logging.ILogger logger = null)
+        {
+            ProxyTelemetryChannel channel = new ProxyTelemetryChannel(proxyApiClient);
+
+            if (logger != null)
+            {
+                channel.MessagesDropped += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("messages", args.Messages)
+                            .AddContext("context", args.Context)
+                            .AddError(args.Error);
+
+                        logger?.LogMessage($"{nameof(ProxyTelemetryChannel)}.MessagesDropped", LogLevel.Error, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                channel.MessageTransmissionError += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("messages", args.Messages)
+                            .AddContext("context", args.Context)
+                            .AddError(args.Error);
+
+                        logger?.LogMessage($"{nameof(ProxyTelemetryChannel)}.MessageTransmissionError", LogLevel.Error, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                channel.MessagesTransmitted += (sender, args) =>
+                {
+                    try
+                    {
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("messages", args.Messages?.Select(msg => new
+                            {
+                                message = msg.Message,
+                                severityLevel = msg.SeverityLevel.ToString(),
+                                operationId = msg.OperationId
+                            }))
+                            .AddContext("context", args.Context);
+
+                        logger?.LogMessage($"{nameof(ProxyTelemetryChannel)}.MessagesTransmitted", LogLevel.Information, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+
+                channel.FlushMessages += (sender, args) =>
+                {
+                    try
+                    {
+                        // While flushing, let's lower the wait time in between failed Proxy API calls.
+                        (sender as ProxyTelemetryChannel).TransmissionFailureWaitTime = TimeSpan.FromMilliseconds(500);
+
+                        EventContext telemetryContext = EventContext.Persisted()
+                            .AddContext("messages", args.Messages?.Select(msg => new
+                            {
+                                message = msg.Message,
+                                severityLevel = msg.SeverityLevel.ToString(),
+                                operationId = msg.OperationId
+                            }))
+                            .AddContext("context", args.Context);
+
+                        logger?.LogMessage($"{nameof(ProxyTelemetryChannel)}.FlushingMessages", LogLevel.Information, telemetryContext);
+                    }
+                    catch
+                    {
+                        // Best effort. Should not cause errors for the callers/invokers of the
+                        // event handler.
+                    }
+                };
+            }
+
+            DependencyFactory.telemetryChannels.Add(channel);
+
+            return channel;
         }
 
         /// <summary>
@@ -403,7 +582,7 @@ namespace VirtualClient
         public static void FlushTelemetry(TimeSpan? timeout = null)
         {
             Parallel.ForEach(DependencyFactory.telemetryChannels, channel => channel.Flush(timeout));
-        }
+         }
 
         /// <summary>
         /// Applies a filter to the logger generated by the provider that will handle the logging
