@@ -32,8 +32,6 @@ namespace VirtualClient.Contracts.Proxy
     {
         private TestProxyClient apiClient;
         private Mock<IRestClient> mockRestClient;
-        private ProxyBlobDescriptor mockPackageDescriptor;
-        private ProxyBlobDescriptor mockContentDescriptor;
         private Fixture fixture;
 
         [SetUp]
@@ -43,23 +41,6 @@ namespace VirtualClient.Contracts.Proxy
             this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"));
             this.fixture = new Fixture();
             this.fixture.Register(VirtualClientProxyApiClientTests.CreateMockProxyTelemetryMessage);
-
-            this.mockContentDescriptor = new ProxyBlobDescriptor(
-                "VirtualClient",
-                "Content",
-                "blobname.txt",
-                Guid.NewGuid().ToString(),
-                "application/octet-stream",
-                Encoding.UTF8.WebName,
-                "/any/path/in/the/container");
-
-            this.mockPackageDescriptor = new ProxyBlobDescriptor(
-                "VirtualClient",
-                "Packages",
-                "blobname.1.0.0.zip",
-                "packages",
-                "application/octet-stream",
-                Encoding.UTF8.WebName);
         }
 
         [Test]
@@ -210,7 +191,7 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
-        public async Task VirtualClientProxyApiClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToDownloadBlobs()
+        public void VirtualClientProxyApiClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToDownloadBlobs()
         {
             using (Stream stream = new InMemoryStream())
             {
@@ -230,8 +211,7 @@ namespace VirtualClient.Contracts.Proxy
                     // Apply the same default policy used by the client (differing only in the retry wait time).
                     IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(retries => TimeSpan.Zero);
 
-                    await this.apiClient.DownloadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
-                        .ConfigureAwait(false);
+                    Assert.ThrowsAsync<DependencyException>(() => this.apiClient.DownloadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy));
 
                     Assert.IsTrue(attempts == expectedRetries + 1);
                 }
@@ -245,7 +225,7 @@ namespace VirtualClient.Contracts.Proxy
         [TestCase(HttpStatusCode.NotFound)]
         [TestCase(HttpStatusCode.HttpVersionNotSupported)]
         [TestCase(HttpStatusCode.Unauthorized)]
-        public async Task VirtualClientProxyApiClientDoesNotRetryOnExpectedNonTransientFailuresToDownloadBlobs(HttpStatusCode statusCode)
+        public void VirtualClientProxyApiClientDoesNotRetryOnExpectedNonTransientFailuresToDownloadBlobs(HttpStatusCode statusCode)
         {
             using (Stream stream = new InMemoryStream())
             {
@@ -264,8 +244,8 @@ namespace VirtualClient.Contracts.Proxy
                     // Apply the same default policy used by the client (differing only in the retry wait time).
                     IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(retries => TimeSpan.Zero);
 
-                    await this.apiClient.DownloadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
-                       .ConfigureAwait(false);
+                    DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.apiClient.DownloadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy));
+                    Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
 
                     Assert.IsTrue(attempts == 1);
                 }
@@ -291,7 +271,7 @@ namespace VirtualClient.Contracts.Proxy
                         })
                         .Returns(Task.FromResult(response));
 
-                    await this.apiClient.UploadBlobAsync(this.mockContentDescriptor, stream, CancellationToken.None)
+                    await this.apiClient.UploadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None)
                         .ConfigureAwait(false);
 
                     this.mockRestClient.Verify(client => client.GetAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>(), It.IsAny<HttpCompletionOption>()), Times.Once());
@@ -319,7 +299,7 @@ namespace VirtualClient.Contracts.Proxy
                     // Apply the same default policy used by the client (differing only in the retry wait time).
                     IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
 
-                    await this.apiClient.UploadBlobAsync(this.mockContentDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
+                    await this.apiClient.UploadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
                         .ConfigureAwait(false);
 
                     Assert.IsTrue(attempts == expectedRetries + 1);
@@ -352,7 +332,7 @@ namespace VirtualClient.Contracts.Proxy
                     // Apply the same default policy used by the client (differing only in the retry wait time).
                     IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
 
-                    await this.apiClient.UploadBlobAsync(this.mockContentDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
+                    await this.apiClient.UploadBlobAsync(this.mockPackageDescriptor, stream, CancellationToken.None, defaultRetryPolicy)
                         .ConfigureAwait(false);
 
                     Assert.IsTrue(attempts == 1);
@@ -541,22 +521,34 @@ namespace VirtualClient.Contracts.Proxy
             };
         }
 
-        private string GetExpectedBlobPathAndQuery(bool includeBlobPath = false)
+        private static ProxyBlobDescriptor GetBlobDescriptor(bool withPath = false)
         {
-            string expectedSource = this.mockPackageDescriptor.Source;
-            string expectedStoreType = this.mockPackageDescriptor.StoreType;
-            string expectedBlobName = this.mockPackageDescriptor.BlobName;
-            string expectedContainerName = this.mockPackageDescriptor.ContainerName;
-            string expectedContentType = this.mockPackageDescriptor.ContentType;
-            string expectedContentEncoding = this.mockPackageDescriptor.ContentEncoding;
-            string expectedBlobPath = this.mockPackageDescriptor.BlobPath;
+            return new ProxyBlobDescriptor(
+                "VirtualClient",
+                "Packages",
+                "blobname.1.0.0.zip",
+                "packages",
+                "application/octet-stream",
+                Encoding.UTF8.WebName,
+                withPath ? "/path/to/blob" : null);
+        }
+
+        private string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor)
+        {
+            string expectedSource = descriptor.Source;
+            string expectedStoreType = descriptor.StoreType;
+            string expectedBlobName = descriptor.BlobName;
+            string expectedContainerName = descriptor.ContainerName;
+            string expectedContentType = descriptor.ContentType;
+            string expectedContentEncoding = descriptor.ContentEncoding;
+            string expectedBlobPath = descriptor.BlobPath;
 
             return $"/api/blobs/{expectedBlobName}?source={expectedSource}" +
                 $"&storeType={expectedStoreType}" +
                 $"&containerName={expectedContainerName}" +
                 $"&contentType={expectedContentType}" +
                 $"&contentEncoding={expectedContentEncoding}" +
-                $"{(includeBlobPath ? $"&blobPath={expectedBlobPath}" : string.Empty)}";
+                $"{(!string.IsNullOrEmpty(expectedBlobPath) ? $"&blobPath={expectedBlobPath}" : string.Empty)}";
         }
 
         private class TestProxyClient : VirtualClientProxyApiClient

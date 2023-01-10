@@ -110,7 +110,7 @@ namespace VirtualClient.Contracts.Proxy
             if (!VirtualClientProxyApiClient.IsRangeEnabled(headResponse))
             {
                 HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
-                response.EnsureSuccessStatusCode();
+                response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
 
                 Stream httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await httpStream.CopyToAsync(downloadStream, cancellationToken).ConfigureAwait(false);
@@ -129,7 +129,7 @@ namespace VirtualClient.Contracts.Proxy
                 {
                     request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.BlobChunkSize);
                     HttpResponseMessage response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
-                    response.EnsureSuccessStatusCode();
+                    response.ThrowOnError<DependencyException>(ErrorReason.DependencyInstallationFailed);
 
                     byte[] currentContent = await response.Content.ReadAsByteArrayAsync();
                     await downloadStream.WriteAsync(currentContent, cancellationToken);
@@ -240,7 +240,7 @@ namespace VirtualClient.Contracts.Proxy
 
         private static bool IsRangeEnabled(HttpResponseMessage response)
         {
-            return response.IsSuccessStatusCode && response.Headers.AcceptRanges != null;
+            return response != null && response.IsSuccessStatusCode && response.Headers.AcceptRanges != null;
         }
     }
 }
