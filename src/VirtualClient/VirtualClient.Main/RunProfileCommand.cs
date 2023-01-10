@@ -146,30 +146,30 @@ namespace VirtualClient
             }
             catch (NotSupportedException exc)
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
                 exitCode = (int)ErrorReason.NotSupported;
             }
             catch (VirtualClientException exc)
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
                 exitCode = (int)exc.Reason;
             }
             catch (Exception exc)
             {
-                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
+                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
                 exitCode = 1;
             }
             finally
             {
                 if (SystemManagement.IsRebootRequested)
                 {
-                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", EventContext.Persisted());
+                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", Program.ApplicationContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", EventContext.Persisted());
-                Program.LogMessage(Program.Logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
+                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", Program.ApplicationContext);
+                Program.LogMessage(logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
 
-                DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(60));
+                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(2));
                 SystemManagement.Cleanup();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures

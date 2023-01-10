@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
@@ -29,6 +30,8 @@ namespace VirtualClient
     /// </summary>
     public abstract class CommandBase
     {
+        private static List<ILogger> proxyApiDebugLoggers = new List<ILogger>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CommandBase"/> class.
         /// </summary>
@@ -118,6 +121,7 @@ namespace VirtualClient
 
             PlatformSpecifics.ThrowIfNotSupported(osPlatform);
             PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
             this.InitializeGlobalTelemetryProperties(args);
 
@@ -128,6 +132,7 @@ namespace VirtualClient
 
             ILogger logger = CommandBase.CreateLogger(
                 configuration,
+                platformSpecifics,
                 this.EventHubConnectionString,
                 this.ProxyApiUri,
                 this.Debug,
@@ -147,8 +152,13 @@ namespace VirtualClient
                 this.Parameters?.TryGetValue(GlobalParameter.ContestStoreSource, out contentSource);
                 this.Parameters?.TryGetValue(GlobalParameter.PackageStoreSource, out packageSource);
 
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString()));
-                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString()));
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(platformSpecifics.GetLogsPath("proxy-traces-blobs.log"), TimeSpan.FromSeconds(5))
+                    .CreateLogger("Proxy");
+
+                CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Content, this.ProxyApiUri), contentSource?.ToString(), debugLogger));
+                blobStores.Add(DependencyFactory.CreateProxyBlobManager(new DependencyProxyStore(DependencyBlobStore.Packages, this.ProxyApiUri), packageSource?.ToString(), debugLogger));
             }
             else
             {
@@ -167,7 +177,7 @@ namespace VirtualClient
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
-            dependencies.AddSingleton<PlatformSpecifics>(new PlatformSpecifics(osPlatform, cpuArchitecture));
+            dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
 
             return dependencies;
@@ -217,16 +227,23 @@ namespace VirtualClient
             }
         }
 
-        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, Uri proxyApiUri, string source = null)
+        private static void AddProxyApiLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration, PlatformSpecifics specifics, Uri proxyApiUri, string source = null)
         {
             if (proxyApiUri != null)
             {
+                ILogger debugLogger = DependencyFactory.CreateFileLoggerProvider(specifics.GetLogsPath("proxy-traces.log"), TimeSpan.FromSeconds(5))
+                    .CreateLogger("Proxy");
+
+                CommandBase.proxyApiDebugLoggers.Add(debugLogger);
+
                 VirtualClientProxyApiClient proxyApiClient = DependencyFactory.CreateVirtualClientProxyApiClient(proxyApiUri);
-                loggingProviders.Add(new ProxyLoggerProvider(proxyApiClient, source));
+                ProxyTelemetryChannel telemetryChannel = DependencyFactory.CreateProxyTelemetryChannel(proxyApiClient, debugLogger);
+
+                loggingProviders.Add(new ProxyLoggerProvider(telemetryChannel, source));
             }
         }
 
-        private static ILogger CreateLogger(IConfiguration configuration, string eventHubConnectionString, Uri proxyApiUri, bool debugMode, string source = null)
+        private static ILogger CreateLogger(IConfiguration configuration, PlatformSpecifics specifics, string eventHubConnectionString, Uri proxyApiUri, bool debugMode, string source = null)
         {
             // Application loggers. Events are routed to different loggers based upon
             // the EventId defined when the message is logged (e.g. Trace, Error, SystemEvent, TestMetrics).
@@ -237,7 +254,7 @@ namespace VirtualClient
 
             if (proxyApiUri != null)
             {
-                CommandBase.AddProxyApiLogging(loggingProviders, configuration, proxyApiUri, source);
+                CommandBase.AddProxyApiLogging(loggingProviders, configuration, specifics, proxyApiUri, source);
             }
             else
             {

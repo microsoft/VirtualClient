@@ -5,22 +5,21 @@ namespace VirtualClient.Proxy
 {
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts.Proxy;
 
     internal class ProxyLoggerProvider : ILoggerProvider
     {
-        private IProxyApiClient proxyApiClient;
+        private ProxyTelemetryChannel telemetryChannel;
         private string source;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProxyLoggerProvider"/> class.
         /// </summary>
-        /// <param name="apiClient">A client to the proxy API service including its port (e.g. http://any.proxy.uri:5000).</param>
+        /// <param name="channel">The background channel used to upload logged telemetry messages through a proxy endpoint.</param>
         /// <param name="source">The source to use when uploading telemetry through the proxy API.</param>
-        public ProxyLoggerProvider(IProxyApiClient apiClient, string source = null)
+        public ProxyLoggerProvider(ProxyTelemetryChannel channel, string source = null)
         {
-            apiClient.ThrowIfNull(nameof(apiClient));
-            this.proxyApiClient = apiClient;
+            channel.ThrowIfNull(nameof(channel));
+            this.telemetryChannel = channel;
             this.source = source;
         }
 
@@ -29,9 +28,7 @@ namespace VirtualClient.Proxy
         /// </summary>
         public ILogger CreateLogger(string categoryName)
         {
-            ProxyLogger logger = new ProxyLogger(this.proxyApiClient, this.source);
-            logger.BeginMessageTransmission();
-            return logger;
+            return new ProxyLogger(this.telemetryChannel, this.source);
         }
 
         /// <summary>

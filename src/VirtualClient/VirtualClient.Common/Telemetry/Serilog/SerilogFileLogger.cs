@@ -19,6 +19,16 @@ namespace VirtualClient.Common.Telemetry
     /// </summary>
     public class SerilogFileLogger : ILogger
     {
+        private static readonly IDictionary<LogLevel, LogEventLevel> LevelMappings = new Dictionary<LogLevel, LogEventLevel>
+        {
+            { LogLevel.Trace, LogEventLevel.Verbose },
+            { LogLevel.Debug, LogEventLevel.Verbose },
+            { LogLevel.Information, LogEventLevel.Information },
+            { LogLevel.Warning, LogEventLevel.Warning },
+            { LogLevel.Error, LogEventLevel.Error },
+            { LogLevel.Critical, LogEventLevel.Fatal }
+        };
+
         private Logger logger;
 
         /// <summary>
@@ -49,42 +59,45 @@ namespace VirtualClient.Common.Telemetry
         /// <inheritdoc />
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            string eventMessage = null;
-            EventContext eventContext = state as EventContext;
-
-            if (!string.IsNullOrWhiteSpace(eventId.Name))
+            if (SerilogFileLogger.LevelMappings.TryGetValue(logLevel, out LogEventLevel level))
             {
-                // Use the explicitly defined event name.
-                eventMessage = eventId.Name;
-            }
-            else if (eventContext == null)
-            {
-                if (state != null && exception != null && formatter != null)
-                {
-                    // A formatted error message is expected.
-                    eventMessage = formatter.Invoke(state, exception);
-                }
-                else if (exception != null && state != null)
-                {
-                    // State context and an exception were provided.
-                    eventMessage = $"{exception.ToString(withCallStack: false, withErrorTypes: true)} {state}";
-                }
-                else if (exception != null)
-                {
-                    // An exception was provided by itself.
-                    eventMessage = exception.ToString(withCallStack: false, withErrorTypes: true);
-                }
-                else
-                {
-                    // State context was provided by itself.
-                    eventMessage = state.ToString();
-                }
-            }
+                string eventMessage = null;
+                EventContext eventContext = state as EventContext;
 
-            MessageTemplate template = new MessageTemplateParser().Parse(eventMessage);
-            List<LogEventProperty> properties = this.GetEventProperties(eventContext);
-            LogEvent logEvent = new LogEvent(DateTime.Now, LogEventLevel.Information, exception, template, properties);
-            this.logger.Write(logEvent);
+                if (!string.IsNullOrWhiteSpace(eventId.Name))
+                {
+                    // Use the explicitly defined event name.
+                    eventMessage = eventId.Name;
+                }
+                else if (eventContext == null)
+                {
+                    if (state != null && exception != null && formatter != null)
+                    {
+                        // A formatted error message is expected.
+                        eventMessage = formatter.Invoke(state, exception);
+                    }
+                    else if (exception != null && state != null)
+                    {
+                        // State context and an exception were provided.
+                        eventMessage = $"{exception.ToString(withCallStack: false, withErrorTypes: true)} {state}";
+                    }
+                    else if (exception != null)
+                    {
+                        // An exception was provided by itself.
+                        eventMessage = exception.ToString(withCallStack: false, withErrorTypes: true);
+                    }
+                    else
+                    {
+                        // State context was provided by itself.
+                        eventMessage = state.ToString();
+                    }
+                }
+
+                MessageTemplate template = new MessageTemplateParser().Parse(eventMessage);
+                List<LogEventProperty> properties = this.GetEventProperties(eventContext);
+                LogEvent logEvent = new LogEvent(DateTime.Now, level, exception, template, properties);
+                this.logger.Write(logEvent);
+            }
         }
 
         private List<LogEventProperty> GetEventProperties(EventContext context)

@@ -30,43 +30,45 @@ namespace VirtualClient.Common.Telemetry
         public static EventContext AddError(this EventContext context, Exception error, bool withCallStack = false, int maxCallStackLength = EventContextExtensions.MaxCallStackLength)
         {
             context.ThrowIfNull(nameof(context));
-            error.ThrowIfNull(nameof(error));
 
-            List<object> errors = new List<object>();
-            Exception currentError = error;
-            while (currentError != null)
+            if (error != null)
             {
-                errors.Add(new
+                List<object> errors = new List<object>();
+                Exception currentError = error;
+                while (currentError != null)
                 {
-                    errorType = currentError.GetType().FullName,
-                    errorMessage = currentError.Message
-                });
+                    errors.Add(new
+                    {
+                        errorType = currentError.GetType().FullName,
+                        errorMessage = currentError.Message
+                    });
 
-                currentError = currentError.InnerException;
-            }
-
-            if (context.Properties.ContainsKey(EventContextExtensions.ErrorProperty))
-            {
-                // Retain any errors that already exist.
-                List<object> existingErrors = context.Properties[EventContextExtensions.ErrorProperty] as List<object>;
-                if (existingErrors != null)
-                {
-                    existingErrors.AddRange(errors);
-                    errors = existingErrors;
+                    currentError = currentError.InnerException;
                 }
-            }
 
-            context.Properties[EventContextExtensions.ErrorProperty] = errors;
-
-            if (withCallStack && error.StackTrace != null)
-            {
-                if (error.StackTrace.Length > maxCallStackLength)
+                if (context.Properties.ContainsKey(EventContextExtensions.ErrorProperty))
                 {
-                    context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace.Substring(0, maxCallStackLength);
+                    // Retain any errors that already exist.
+                    List<object> existingErrors = context.Properties[EventContextExtensions.ErrorProperty] as List<object>;
+                    if (existingErrors != null)
+                    {
+                        existingErrors.AddRange(errors);
+                        errors = existingErrors;
+                    }
                 }
-                else
+
+                context.Properties[EventContextExtensions.ErrorProperty] = errors;
+
+                if (withCallStack && error.StackTrace != null)
                 {
-                    context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace;
+                    if (error.StackTrace.Length > maxCallStackLength)
+                    {
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace.Substring(0, maxCallStackLength);
+                    }
+                    else
+                    {
+                        context.Properties[EventContextExtensions.ErrorCallstackProperty] = error.StackTrace;
+                    }
                 }
             }
 

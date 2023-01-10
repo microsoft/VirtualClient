@@ -12,6 +12,7 @@ namespace VirtualClient.Common.Telemetry
     using System.Threading.Tasks;
     using global::Azure.Messaging.EventHubs;
     using global::Azure.Messaging.EventHubs.Producer;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
