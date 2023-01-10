@@ -96,5 +96,13 @@ namespace VirtualClient.Common.Rest
         /// <param name="cancellationToken">Request cancellation token.</param>
         /// <returns>Http response message.</returns>
         Task<HttpResponseMessage> PutAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// REST call defined by the <see cref="HttpRequestMessage"/>
+        /// </summary>
+        /// <param name="request">The details of the Http request.</param>
+        /// <param name="cancellationToken">Request cancellation token.</param>
+        /// <returns>Http response message.</returns>
+        Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken);
     }
 }

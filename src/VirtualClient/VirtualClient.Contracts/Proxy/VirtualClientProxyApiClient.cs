@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts.Proxy
     using System.IO;
     using System.Net;
     using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace VirtualClient.Contracts.Proxy
     {
         private const string BlobsApiRoute = "/api/blobs";
         private const string TelemetryApiRoute = "/api/telemetry";
+        private const int DefaultBlobChunkSize = 1024 * 1024;
 
         private static IAsyncPolicy<HttpResponseMessage> defaultHttpGetRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(
            (retries) => TimeSpan.FromMilliseconds(retries * 500));
@@ -63,6 +65,11 @@ namespace VirtualClient.Contracts.Proxy
         protected IRestClient RestClient { get; }
 
         /// <summary>
+        /// The size of an individual chunk of a blob to be downloaded.
+        /// </summary>
+        protected virtual int BlobChunkSize { get; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
+
+        /// <summary>
         /// Creates an URI route for the proxy API blob endpoints based on the information defined
         /// in the descriptor.
         /// </summary>
@@ -91,26 +98,50 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        public async Task<HttpResponseMessage> DownloadBlobAsync(ProxyBlobDescriptor descriptor, Stream downloadStream, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
             downloadStream.ThrowIfNull(nameof(downloadStream));
 
             Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
-
-            return (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(async () =>
+            HttpResponseMessage response = null; 
+            HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken).ConfigureAwait(false);
+            
+            // If range is not enabled download the file as usual.
+            if (!VirtualClientProxyApiClient.IsRangeEnabled(headResponse))
             {
-                HttpResponseMessage response = await this.RestClient.GetAsync(requestUri, cancellationToken, HttpCompletionOption.ResponseHeadersRead)
-                    .ConfigureAwait(false);
+                response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
 
-                if (response.IsSuccessStatusCode)
-                {
-                    await response.Content.CopyToAsync(downloadStream)
-                        .ConfigureAwait(false);
-                }
-
+                Stream httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                await httpStream.CopyToAsync(downloadStream, cancellationToken).ConfigureAwait(false);
                 return response;
-            });
+            }
+
+            long? fileLength = headResponse.Content.Headers.ContentLength;
+            if (!fileLength.HasValue)
+            {
+                throw new ApiException($"The 'Content-Length' header was not present in the HTTP Response from: '{requestUri}'", ErrorReason.ApiRequestFailed);
+            }
+
+            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+            {
+                for (int latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
+                {
+                    request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.BlobChunkSize);
+                    response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return response;
+                    }
+                    
+                    byte[] currentContent = await response.Content.ReadAsByteArrayAsync();
+                    await downloadStream.WriteAsync(currentContent, cancellationToken);
+                    latestRequestLength = currentContent.Length;
+                }
+            }
+
+            downloadStream.Position = 0;
+            return response;
         }
 
         /// <inheritdoc />
@@ -209,6 +240,11 @@ namespace VirtualClient.Contracts.Proxy
                 bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientErrorCodes.Contains(response.StatusCode);
                 return shouldRetry;
             }).WaitAndRetryAsync(10, retryWaitInterval);
+        }
+
+        private static bool IsRangeEnabled(HttpResponseMessage response)
+        {
+            return response != null && response.IsSuccessStatusCode && response.Headers.AcceptRanges != null;
         }
     }
 }

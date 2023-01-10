@@ -7,6 +7,7 @@ namespace VirtualClient.Common.Rest
     using System.Collections.Generic;
     using System.Net.Http;
     using System.Net.Http.Headers;
+    using System.Reflection.Metadata;
     using System.Threading;
     using System.Threading.Tasks;
     using Polly;
@@ -200,6 +201,18 @@ namespace VirtualClient.Common.Rest
             {
                 await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
                 HttpResponseMessage responseMessage = await this.Client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
+                this.ResetAuthenticationOnUnauthorized(responseMessage);
+                return responseMessage;
+            });
+        }
+
+        /// <inheritdoc/>
+        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return this.retryPolicy.ExecuteAsync(async () =>
+            {
+                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, cancellationToken).ConfigureAwait(false);
                 this.ResetAuthenticationOnUnauthorized(responseMessage);
                 return responseMessage;
             });
