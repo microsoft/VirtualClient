@@ -69,6 +69,41 @@ namespace VirtualClient.Contracts
         /// Convert text into data table based on cell position. Suitable for formatted table with cells of equal lengths.
         /// </summary>
         /// <param name="text">Input text.</param>
+        /// <param name="columnNames">The column names of the cells. Count needs to match the cellIndexAndLength.</param>
+        /// <param name="tableName">If not supplied, tablename will be the first row of the text.</param>
+        /// <returns>Converted DataTable.</returns>
+        public static DataTable DataTableFromCsv(string text, IList<string> columnNames = null, string tableName = null)
+        {
+            List<string> rows = text.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            DataTable result = new DataTable(tableName);
+
+            // If column names are supplied, use it, otherwise use the first row as column names.
+            if (columnNames == null)
+            {
+                columnNames = Regex.Split(rows.First(), ",", RegexOptions.ExplicitCapture);
+                rows.RemoveAt(0);
+            }
+
+            foreach (string column in columnNames)
+            {
+                result.Columns.Add(new DataColumn(column.Trim(), typeof(IConvertible)));
+            }
+
+            foreach (string row in rows)
+            {
+                string[] values = Regex.Split(row, ",", RegexOptions.ExplicitCapture);
+                values = values.Select(v => v.Trim()).ToArray();
+                result.Rows.Add(values);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Convert text into data table based on cell position. Suitable for formatted table with cells of equal lengths.
+        /// </summary>
+        /// <param name="text">Input text.</param>
         /// <param name="cellIndexAndLength">The starting index and the length of each cell needed. List(startIndex, length).</param>
         /// <param name="columnNames">The column names of the cells. Count needs to match the cellIndexAndLength.</param>
         /// <param name="tableName">If not supplied, tablename will be the first row of the text.</param>
