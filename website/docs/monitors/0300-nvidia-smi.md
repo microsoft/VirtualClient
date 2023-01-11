@@ -8,6 +8,9 @@ NVIDIA-smi ships with NVIDIA GPU display drivers on Linux, and with 64bit Window
 * [NVIDIA System Management Interface](https://developer.nvidia.com/nvidia-system-management-interface)
 * [nvidia-smi manual](https://developer.download.nvidia.com/compute/DCGM/docs/nvidia-smi-367.38.pdf)
 
+## Dependency
+This monitor has dependency on nvidia-smi. Please use [Nvidia Driver Installation] dependency first to make sure nvidia-smi is present on the system.
+
 ## Supported Platforms
 * linux-x64
 * linux-arm64
@@ -26,3 +29,30 @@ The following section describes the various counters/metrics that are available 
 | memory.total [MiB] | Total GPU Memory in MiB. |
 | memory.free [MiB] | Free GPU Memory in MiB. |
 | memory.used [MiB] | Used GPU Memory in MiB. |
+
+### Example
+This is an example of the minimum profile to run NvidiaSmiMonitor.
+
+```json
+{
+    "Description": "Default Monitors",
+    "Parameters": {
+      "MonitorFrequency": "00:01:00",
+      "MonitorWarmupPeriod": "00:01:00"
+    },
+    "Actions": [
+    ],
+    "Dependencies": [
+    ],
+    "Monitors": [
+      {
+        "Type": "NvidiaSmiMonitor",
+        "Parameters": {
+          "Scenario": "CaptureNvidiaGpuCounters",
+          "MonitorFrequency": "$.Parameters.MonitorFrequency",
+          "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+        }
+      }
+    ]
+  }
+```
