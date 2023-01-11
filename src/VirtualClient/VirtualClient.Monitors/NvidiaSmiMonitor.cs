@@ -120,6 +120,8 @@ namespace VirtualClient.Monitors
                                 throw;
                             }
                         }
+
+                        await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
