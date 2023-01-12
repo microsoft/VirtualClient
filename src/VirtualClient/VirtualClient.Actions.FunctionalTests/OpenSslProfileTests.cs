@@ -170,13 +170,25 @@ namespace VirtualClient.Actions
                         $"openssl.exe speed -elapsed -seconds 100 sha1",
                         $"openssl.exe speed -elapsed -seconds 100 sha256",
                         $"openssl.exe speed -elapsed -seconds 100 sha512",
+                        $"openssl.exe speed -elapsed -seconds 100 sha3-256",
+                        $"openssl.exe speed -elapsed -seconds 100 sha3-512",
                         $"openssl.exe speed -elapsed -seconds 100 des-ede3",
                         $"openssl.exe speed -elapsed -seconds 100 aes-128-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aes-128-cfb",
                         $"openssl.exe speed -elapsed -seconds 100 aes-192-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aes-192-cfb",
                         $"openssl.exe speed -elapsed -seconds 100 aes-256-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aes-256-cfb",
                         $"openssl.exe speed -elapsed -seconds 100 camellia-128-cbc",
                         $"openssl.exe speed -elapsed -seconds 100 camellia-192-cbc",
-                        $"openssl.exe speed -elapsed -seconds 100 camellia-256-cbc"
+                        $"openssl.exe speed -elapsed -seconds 100 camellia-256-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aria-128-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aria-192-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 aria-256-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 idea",
+                        $"openssl.exe speed -elapsed -seconds 100 blowfish",
+                        $"openssl.exe speed -elapsed -seconds 100 rsa2048",
+                        $"openssl.exe speed -elapsed -seconds 100 rsa4096"
                     };
                     break;
 
@@ -187,13 +199,25 @@ namespace VirtualClient.Actions
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 sha1",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 sha256",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 sha512",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 sha3-256",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 sha3-512",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 des-ede3",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-128-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-128-cfb",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-192-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-192-cfb",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-256-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-256-cfb",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-128-cbc",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-192-cbc",
-                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-256-cbc"
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-256-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aria-128-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aria-192-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aria-256-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 idea",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 blowfish",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 rsa2048",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 rsa4096",
                     };
                     break;
             }

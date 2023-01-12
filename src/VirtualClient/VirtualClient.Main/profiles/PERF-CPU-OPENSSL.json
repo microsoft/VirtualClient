@@ -1,117 +1,225 @@
 {
-    "Description": "OpenSSL 3.0 CPU Performance Workload",
-    "Parameters": { },
-    "Actions": [
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "MD5",
-                "CommandArguments": "speed -elapsed -seconds 100 md5",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "SHA1",
-                "CommandArguments": "speed -elapsed -seconds 100 sha1",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "SHA256",
-                "CommandArguments": "speed -elapsed -seconds 100 sha256",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "SHA512",
-                "CommandArguments": "speed -elapsed -seconds 100 sha512",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "DES-EDE3",
-                "CommandArguments": "speed -elapsed -seconds 100 des-ede3",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "AES-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-128-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "AES-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-192-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "AES-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-256-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "CAMELLIA-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-128-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "CAMELLIA-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-192-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        },
-        {
-            "Type": "OpenSslExecutor",
-            "Parameters": {
-                "Scenario": "CAMELLIA-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-256-cbc",
-                "PackageName": "openssl",
-                "Tags": "CPU,OpenSSL,Cryptography"
-            }
-        }
-    ],
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallOpenSSLWorkloadPackage",
-                "BlobContainer": "packages",
-                "BlobName": "openssl.3.0.0.zip",
-                "PackageName": "openssl",
-                "Extract": true
-            }
-        }
-    ]
+  "Description": "OpenSSL 3.0 CPU Performance Workload",
+  "Parameters": {},
+  "Actions": [
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "MD5",
+        "CommandArguments": "speed -elapsed -seconds 100 md5",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "SHA1",
+        "CommandArguments": "speed -elapsed -seconds 100 sha1",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "SHA256",
+        "CommandArguments": "speed -elapsed -seconds 100 sha256",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "SHA512",
+        "CommandArguments": "speed -elapsed -seconds 100 sha512",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "SHA3-256",
+        "CommandArguments": "speed -elapsed -seconds 100 sha3-256",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "SHA3-512",
+        "CommandArguments": "speed -elapsed -seconds 100 sha3-512",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "DES-EDE3",
+        "CommandArguments": "speed -elapsed -seconds 100 des-ede3",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-128-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-128-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-128-CFB",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-128-cfb",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-192-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-192-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-192-CFB",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-192-cfb",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-256-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-256-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "AES-256-CFB",
+        "CommandArguments": "speed -elapsed -seconds 100 aes-256-cfb",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "CAMELLIA-128-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 camellia-128-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "CAMELLIA-192-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 camellia-192-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "CAMELLIA-256-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 camellia-256-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "ARIA-128-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aria-128-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "ARIA-192-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aria-192-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "ARIA-256-CBC",
+        "CommandArguments": "speed -elapsed -seconds 100 aria-256-cbc",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "idea",
+        "CommandArguments": "speed -elapsed -seconds 100 idea",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "blowfish",
+        "CommandArguments": "speed -elapsed -seconds 100 blowfish",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "RSA2048",
+        "CommandArguments": "speed -elapsed -seconds 100 rsa2048",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    },
+    {
+      "Type": "OpenSslExecutor",
+      "Parameters": {
+        "Scenario": "RSA4096",
+        "CommandArguments": "speed -elapsed -seconds 100 rsa4096",
+        "PackageName": "openssl",
+        "Tags": "CPU,OpenSSL,Cryptography"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallOpenSSLWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "openssl.3.0.0.zip",
+        "PackageName": "openssl",
+        "Extract": true
+      }
+    }
+  ]
 }
