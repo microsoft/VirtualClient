@@ -75,13 +75,13 @@ the server between applications in a Docker swarm environment.
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   :::caution
-  > The value for parameter 'NumberOfConnections' should be greater than or equals to the value for parameter 'NumberOfThreads'.
+  > The value for parameter 'ConnectionCount' should be greater than or equals to the value for parameter 'ThreadCount'.
   :::
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | NumberOfThreads           | Optional. This specifies the number of threads to be created to send http load for each workload scenario. | 20
-  | NumberOfConnections        | Optional. This specifies the number of connections to be created to send http load for each workload scenario that we can have. | 1000
+  | ThreadCount          | Optional. This specifies the number of threads to be created to send http load for each workload scenario. | 20
+  | ConnectionCount        | Optional. This specifies the number of connections to be created to send http load for each workload scenario that we can have. | 1000
   | Duration                   | Optional. This specifies the time for which the http load will be sent. | 300s
   | RequestPerSec          | Optional. This specifies the constant throughput load. | 1000 
   | GraphType           | Optional. This specifies the type of graph to be used in **socialNetwork** scenario. | socfb-Reed98 [Allowed values : socfb-Reed98, ego-twitter] |
@@ -103,7 +103,7 @@ the server between applications in a Docker swarm environment.
   ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Override the profile default parameters
-  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=60s,,,NumberOfThreads=2,,,NumberOfConnections=100"
+  ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="Duration=60s,,,ThreadCount=2,,,ConnectionCount=100"
 
    # When running in a client/server environment
   ./VirtualClient --profile=PERF-NETWORK-DEATHSTARBENCH.json --system=Demo --timeout=1440 --clientId=Client01 --packageStore="{BlobConnectionString|SAS Uri}" --layoutPath="/any/path/to/layout.json"

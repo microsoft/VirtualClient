@@ -20,9 +20,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "4",
-        "NumberOfClients": "1",
-        "NumberOfRuns": "1",
+        "ThreadCount": "4",
+        "ClientCount": "1",
+        "RunCount": "1",
         "DurationInSecs": "60",
         "PipelineDepth": "32",
         "Bind": 1

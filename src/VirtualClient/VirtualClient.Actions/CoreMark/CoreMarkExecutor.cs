@@ -36,6 +36,19 @@ namespace VirtualClient.Actions
         {
         }
 
+        /// <summary>
+        /// Allos overwrite to Coremark process thread count. 
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                // Default to system core count, but overwritable with parameters.
+                int coreCount = this.Dependencies.GetService<ISystemManagement>().GetSystemCoreCount();
+                return this.Parameters.GetValue<int>(nameof(CoreMarkExecutor.ThreadCount), coreCount);
+            }
+        }
+
         private string CoreMarkDirectory
         {
             get
@@ -93,7 +106,7 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            return @$"XCFLAGS=""-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
+            return @$"XCFLAGS=""-DMULTITHREAD={this.ThreadCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
         }
 
         private void LogCoreMarkOutput(string filePath, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)

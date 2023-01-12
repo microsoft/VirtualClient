@@ -43,7 +43,8 @@ compared against a baseline. CoreMark is an industry standard benchmarking tools
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc
-  | CompilerVersion           | Optional. The version of the compiler to use.  | 10 
+  | CompilerVersion           | Optional. The version of the compiler to use.                                   | 10 
+  | ThreadCount               | Optional. Overwrites the default -DMULTITHREAD                                  | System Core Count  
 
 * **Profile Runtimes**  
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine

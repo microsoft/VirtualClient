@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters["TestDuration"] = "300";
             this.mockFixture.Parameters["WarmupTime"] = "300";
             this.mockFixture.Parameters["Protocol"] = "TCP";
-            this.mockFixture.Parameters["ConcurrentThreads"] = "1";
+            this.mockFixture.Parameters["ThreadCount"] = "1";
             this.mockFixture.Parameters["BufferSizeClient"] = "4k";
             this.mockFixture.Parameters["BufferSizeServer"] = "4k";
             this.mockFixture.Parameters["Port"] = 5500;

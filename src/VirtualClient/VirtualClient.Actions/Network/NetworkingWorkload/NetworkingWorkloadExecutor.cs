@@ -100,16 +100,16 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// Parameter defines the number of concurrent threads to use in the execution of the
         /// networking workload toolset tests.
         /// </summary>
-        public int ConcurrentThreads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.ConcurrentThreads), 1);
+                return this.Parameters.GetValue<int>(nameof(NetworkingWorkloadExecutor.ThreadCount), 1);
             }
 
             set
             {
-                this.Parameters[nameof(NetworkingWorkloadExecutor.ConcurrentThreads)] = value;
+                this.Parameters[nameof(NetworkingWorkloadExecutor.ThreadCount)] = value;
             }
         }
 
@@ -752,7 +752,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     this.ToolName = serverInstructions.Tool.ToString();
                                     this.Scenario = serverInstructions.Scenario;
                                     this.Protocol = serverInstructions.Protocol;
-                                    this.ConcurrentThreads = serverInstructions.ConcurrentThreads;
+                                    this.ThreadCount = serverInstructions.ThreadCount;
                                     this.BufferSizeClient = serverInstructions.BufferSizeClient;
                                     this.BufferSizeServer = serverInstructions.BufferSizeServer;
                                     this.TestMode = serverInstructions.TestMode;
@@ -908,7 +908,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                             toolName,
                             NetworkingWorkloadToolState.Start,
                             this.Protocol,
-                            this.ConcurrentThreads,
+                            this.ThreadCount,
                             this.BufferSizeClient,
                             this.BufferSizeServer,
                             this.Connections,

@@ -98,7 +98,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             NetworkingWorkloadTool tool,
             NetworkingWorkloadToolState toolState,
             string protocol = null,
-            int? concurrentThreads = null,
+            int? threadCount = null,
             string bufferSizeClient = null,
             string bufferSizeServer = null,
             int? connections = null,
@@ -130,7 +130,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.Tool)] = tool.ToString();
             this.Properties[nameof(this.ToolState)] = toolState.ToString();
             this.Properties[nameof(this.Protocol)] = protocol;
-            this.Properties[nameof(this.ConcurrentThreads)] = concurrentThreads;
+            this.Properties[nameof(this.ThreadCount)] = threadCount;
             this.Properties[nameof(this.BufferSizeClient)] = bufferSizeClient;
             this.Properties[nameof(this.BufferSizeServer)] = bufferSizeServer;
             this.Properties[nameof(this.Connections)] = connections;
@@ -237,11 +237,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Concurrent Threads (Parameter for Tools: NTttcp).
         /// </summary>
-        public int ConcurrentThreads
+        public int ThreadCount
         {
             get
             {
-                return this.Properties.GetValue<int>(nameof(this.ConcurrentThreads), 0);
+                return this.Properties.GetValue<int>(nameof(this.ThreadCount), 0);
             }
         }
 

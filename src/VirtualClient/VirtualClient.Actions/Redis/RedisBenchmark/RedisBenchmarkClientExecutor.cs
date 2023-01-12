@@ -36,24 +36,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of requests from client.
         /// </summary>
-        public string NumberOfRequests
+        public string RequestCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.NumberOfRequests), out IConvertible numberOfRequests);
-                return numberOfRequests?.ToString();
+                this.Parameters.TryGetValue(nameof(this.RequestCount), out IConvertible requestCount);
+                return requestCount?.ToString();
             }
         }
 
         /// <summary>
         /// Number of clients per thread.
         /// </summary>
-        public string NumberOfClients
+        public string ClientCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.NumberOfClients), out IConvertible numberOfClients);
-                return numberOfClients?.ToString();
+                this.Parameters.TryGetValue(nameof(this.ClientCount), out IConvertible clientCount);
+                return clientCount?.ToString();
             }
         }
 
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
-                string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.NumberOfClients} -n {this.NumberOfRequests} -P {this.PipelineDepth} -q --csv""";
+                string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.ClientCount} -n {this.RequestCount} -P {this.PipelineDepth} -q --csv""";
 
                 this.StartTime = DateTime.Now;
                 string results = await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), cancellationToken)

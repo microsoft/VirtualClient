@@ -20,9 +20,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "4",
-        "NumberOfClients": "1",
-        "NumberOfRuns": "1",
+        "ThreadCount": "4",
+        "ClientCount": "1",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -35,9 +35,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "4",
-        "NumberOfClients": "2",
-        "NumberOfRuns": "1",
+        "ThreadCount": "4",
+        "ClientCount": "2",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -50,9 +50,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "4",
-        "NumberOfClients": "4",
-        "NumberOfRuns": "1",
+        "ThreadCount": "4",
+        "ClientCount": "4",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -65,9 +65,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "4",
-        "NumberOfClients": "8",
-        "NumberOfRuns": "1",
+        "ThreadCount": "4",
+        "ClientCount": "8",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -80,9 +80,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "16",
-        "NumberOfClients": "1",
-        "NumberOfRuns": "1",
+        "ThreadCount": "16",
+        "ClientCount": "1",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -95,9 +95,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "16",
-        "NumberOfClients": "2",
-        "NumberOfRuns": "1",
+        "ThreadCount": "16",
+        "ClientCount": "2",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -110,9 +110,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "16",
-        "NumberOfClients": "4",
-        "NumberOfRuns": "1",
+        "ThreadCount": "16",
+        "ClientCount": "4",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -125,9 +125,9 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfThreads": "16",
-        "NumberOfClients": "8",
-        "NumberOfRuns": "1",
+        "ThreadCount": "16",
+        "ClientCount": "8",
+        "RunCount": "1",
         "DurationInSecs": "180",
         "PipelineDepth": "32",
         "Bind": 1
@@ -140,8 +140,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "1",
-        "NumberOfRequests": "10000",
+        "ClientCount": "1",
+        "RequestCount": "10000",
         "PipelineDepth": "32"
       }
     },
@@ -152,8 +152,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "2",
-        "NumberOfRequests": "10000",
+        "ClientCount": "2",
+        "RequestCount": "10000",
         "PipelineDepth": "32"
       }
     },
@@ -164,8 +164,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "4",
-        "NumberOfRequests": "10000",
+        "ClientCount": "4",
+        "RequestCount": "10000",
         "PipelineDepth": "32"
       }
     },
@@ -176,8 +176,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "8",
-        "NumberOfRequests": "10000",
+        "ClientCount": "8",
+        "RequestCount": "10000",
         "PipelineDepth": "32"
       }
     },
@@ -188,8 +188,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "1",
-        "NumberOfRequests": "50000",
+        "ClientCount": "1",
+        "RequestCount": "50000",
         "PipelineDepth": "32"
       }
     },
@@ -200,8 +200,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "2",
-        "NumberOfRequests": "50000",
+        "ClientCount": "2",
+        "RequestCount": "50000",
         "PipelineDepth": "32"
       }
     },
@@ -212,8 +212,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "4",
-        "NumberOfRequests": "50000",
+        "ClientCount": "4",
+        "RequestCount": "50000",
         "PipelineDepth": "32"
       }
     },
@@ -224,8 +224,8 @@
         "Role": "Client",
         "Port": "6379",
         "PackageName": "Redis",
-        "NumberOfClients": "8",
-        "NumberOfRequests": "50000",
+        "ClientCount": "8",
+        "RequestCount": "50000",
         "PipelineDepth": "32"
       }
     }
