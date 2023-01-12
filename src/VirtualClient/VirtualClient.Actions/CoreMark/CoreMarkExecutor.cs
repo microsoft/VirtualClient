@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            return @$"XCFLAGS=""-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
+            return @$"XCFLAGS=""-DMULTITHREAD={this.ThreadCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
         }
 
         private void LogCoreMarkOutput(string filePath, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
