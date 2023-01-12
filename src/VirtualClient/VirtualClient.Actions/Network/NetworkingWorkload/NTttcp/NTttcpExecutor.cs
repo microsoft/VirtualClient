@@ -42,7 +42,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.ProcessStartRetryPolicy = Policy.Handle<Exception>(exc => exc.Message.Contains("sockwiz_tcp_listener_open bind"))
                .WaitAndRetryAsync(5, retries => TimeSpan.FromSeconds(retries * 3));
 
-            this.Parameters.SetIfNotDefined(nameof(this.ConcurrentThreads), 1);
+            this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
             this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
             this.Parameters.SetIfNotDefined(nameof(this.Port), 5001);
         }
@@ -74,11 +74,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// get number of concurrent threads to use.
         /// </summary>
-        public int ConcurrentThreads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConcurrentThreads), 1);
+                return this.Parameters.GetValue<int>(nameof(this.ThreadCount), 1);
             }
         }
 
@@ -406,7 +406,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{(this.IsInClientRole ? "-s" : "-r")} " +
-                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration} " +
@@ -422,7 +422,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{(this.IsInClientRole ? "-s" : "-r")} " +
                 $"-V " +
-                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration} " +

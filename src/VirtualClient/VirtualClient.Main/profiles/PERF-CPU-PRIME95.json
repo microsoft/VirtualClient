@@ -6,7 +6,7 @@
         "MaxTortureFFT": "8192",
         "TortureHyperthreading": "1",
         "FFTConfiguration": "0",
-        "NumberOfThreads": ""
+        "ThreadCount": ""
     },
     "Actions": [
         {
@@ -19,7 +19,7 @@
                 "MaxTortureFFT": "$.Parameters.MaxTortureFFT",
                 "TortureHyperthreading": "$.Parameters.TortureHyperthreading",
                 "FFTConfiguration": "$.Parameters.FFTConfiguration",
-                "NumberOfThreads":  "$.Parameters.NumberOfThreads",
+                "ThreadCount":  "$.Parameters.ThreadCount",
                 "PackageName": "prime95"
             }
         }     

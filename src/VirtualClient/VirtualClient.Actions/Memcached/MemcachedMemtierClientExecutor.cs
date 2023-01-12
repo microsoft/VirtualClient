@@ -36,24 +36,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of clients.
         /// </summary>
-        public string NumberOfClientsPerThread
+        public string ClientCountPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.NumberOfClientsPerThread), out IConvertible numberOfClientsPerThread);
-                return numberOfClientsPerThread?.ToString();
+                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.ClientCountPerThread), out IConvertible clientCountPerThread);
+                return clientCountPerThread?.ToString();
             }
         }
 
         /// <summary>
         /// Number of threads to be created at client side.
         /// </summary>
-        public string NumberOfThreads
+        public string ThreadCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.NumberOfThreads), out IConvertible numberOfThreads);
-                return numberOfThreads?.ToString();
+                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.ThreadCount), out IConvertible threadCount);
+                return threadCount?.ToString();
             }
         }
 
@@ -84,12 +84,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of runs the client executes load on server.
         /// </summary>
-        public string NumberOfRuns
+        public string RunCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.NumberOfRuns), out IConvertible numberOfRuns);
-                return numberOfRuns?.ToString();
+                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.RunCount), out IConvertible runCount);
+                return runCount?.ToString();
             }
         }
 
@@ -234,7 +234,7 @@ namespace VirtualClient.Actions
                     int port = int.Parse(this.Port) + i;
                     string command = $"-u {this.Username} {this.ClientExecutorPath}";
 
-                    string commandArguments = $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.NumberOfClientsPerThread} --threads {this.NumberOfThreads} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.NumberOfRuns} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
+                    string commandArguments = $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
 
                     results += await this.ExecuteCommandAsync<MemcachedMemtierClientExecutor>(command, commandArguments, this.MemtierPackagePath, cancellationToken)
                             .ConfigureAwait(false) + Environment.NewLine;

@@ -36,6 +36,19 @@ namespace VirtualClient.Actions
         {
         }
 
+        /// <summary>
+        /// Allos overwrite to Coremark process thread count. 
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                // Default to system core count, but overwritable with parameters.
+                int coreCount = this.Dependencies.GetService<ISystemManagement>().GetSystemCoreCount();
+                return this.Parameters.GetValue<int>(nameof(CoreMarkExecutor.ThreadCount), coreCount);
+            }
+        }
+
         private string CoreMarkDirectory
         {
             get

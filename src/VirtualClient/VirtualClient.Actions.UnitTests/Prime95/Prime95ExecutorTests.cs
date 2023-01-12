@@ -208,7 +208,7 @@ namespace VirtualClient.Actions
                 { nameof(Prime95Executor.MinTortureFFT), "4" },
                 { nameof(Prime95Executor.MaxTortureFFT), "8192" },
                 { nameof(Prime95Executor.TortureHyperthreading), "1" },
-                { nameof(Prime95Executor.NumberOfThreads), "" },
+                { nameof(Prime95Executor.ThreadCount), "" },
                 { nameof(Prime95Executor.FFTConfiguration), "0" }
             };
 

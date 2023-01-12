@@ -66,22 +66,22 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The number of Threads for running DeathStarBench workload.
         /// </summary>
-        public string NumberOfThreads
+        public string ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DeathStarBenchClientExecutor.NumberOfThreads));
+                return this.Parameters.GetValue<string>(nameof(DeathStarBenchClientExecutor.ThreadCount));
             }
         }
 
         /// <summary>
-        /// The number of Connections for running DeathStarBench workload. NumberOfConnections should be greater than NumberOfThreads.
+        /// The number of Connections for running DeathStarBench workload. ConnectionCount should be greater than ThreadCount.
         /// </summary>
-        public string NumberOfConnections
+        public string ConnectionCount
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DeathStarBenchClientExecutor.NumberOfConnections));
+                return this.Parameters.GetValue<string>(nameof(DeathStarBenchClientExecutor.ConnectionCount));
             }
         }
 
@@ -295,7 +295,7 @@ namespace VirtualClient.Actions
                 this.ResetFile(resultsPath, telemetryContext);
 
                 await this.ExecuteCommandAsync<DeathStarBenchClientExecutor>(
-                    @$"bash -c ""./wrk -D exp -t {this.NumberOfThreads} -c {this.NumberOfConnections} -d {this.Duration} -L -s {this.actionScript[this.ServiceName.ToLower()][action]} -R {this.RequestPerSec} >> results.txt""",
+                    @$"bash -c ""./wrk -D exp -t {this.ThreadCount} -c {this.ConnectionCount} -d {this.Duration} -L -s {this.actionScript[this.ServiceName.ToLower()][action]} -R {this.RequestPerSec} >> results.txt""",
                     this.workPath,
                     cancellationToken)
                 .ConfigureAwait(false);

@@ -42,7 +42,7 @@ the performance of the CPU over various periods of time while also allowing the 
   | MaxTortureFFT | MaxTortureFFT Size passed to Prime95. This is valid only for default FFTConfiguration (0) | 1-8192 | 8192 |
   | TortureHyperthreading | Switch to toggle Prime95 built-in hyperthreading option. If enabled (1), number of worker threads will be halved. | 0-1 | 1 |
   | FFTConfiguration | Sets FFT Size in certain range. 0: Custom/Default Value, 1: Smallest FFTs 4K-32K, 2: Small FFTs 32K-1024K, 3: Large FFTs 2048K-8192K | 0-3 | 0
-  | NumberOfThreads | Limits the worker threads to specified value | 1 - Number Of Logical Cores in system | Number of logical cores in system |
+  | ThreadCount| Limits the worker threads to specified value | 1 - Number Of Logical Cores in system | Number of logical cores in system |
 
 * **Profile Runtimes**
   The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
