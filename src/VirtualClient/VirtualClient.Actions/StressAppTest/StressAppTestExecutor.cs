@@ -243,17 +243,27 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadResultsNotFound);
                 }
 
-                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(rawText);                
-                this.Logger.LogMetrics(
-                    toolName: "StressAppTest",
-                    scenarioName: this.Scenario,
-                    startTime,
-                    endTime,
-                    parser.Parse(),
-                    metricCategorization: "StressAppTest",
-                    scenarioArguments: commandLineArguments,
-                    this.Tags,
-                    telemetryContext);
+                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(rawText);
+                IList<Metric> workloadMetrics = parser.Parse();
+
+                foreach (Metric metric in workloadMetrics)
+                {
+                    telemetryContext
+                        .AddContext("testRunResult", metric.Tags[0] ?? string.Empty);
+
+                    this.Logger.LogMetrics(
+                        toolName: "StressAppTest",
+                        scenarioName: this.Scenario,
+                        startTime,
+                        endTime,
+                        metric.Name,
+                        metric.Value,
+                        metric.Unit,
+                        metricCategorization: "StressAppTest",
+                        scenarioArguments: commandLineArguments,
+                        metric.Tags,
+                        telemetryContext);
+                }
             }
         }
     }

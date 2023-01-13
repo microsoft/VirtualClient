@@ -3,10 +3,10 @@
 2022/12/28-08:08:19(UTC) Log: username @ system-name on Fri Jan 01 00:00:00 UTC 2000 from open source release
 2022/12/28-08:08:19(UTC) Log: 1 nodes, 16 cpus.
 2022/12/28-08:08:19(UTC) Log: Defaulting to 16 copy threads
-2022/12/28-08:08:19(UTC) Log: Total 64318 MB. Free 62124 MB. Hugepages 0 MB. Targeting 60910 MB (94%)
+2022/12/28-08:08:19(UTC) Log: Total 11111 MB. Free 11111 MB. Hugepages 0 MB. Targeting 11111 MB (94%)
 2022/12/28-08:08:19(UTC) Log: Prefer plain malloc memory allocation.
-2022/12/28-08:08:19(UTC) Log: Using mmap() allocation at 0x7f03ceb97000.
-2022/12/28-08:08:19(UTC) Stats: Starting SAT, 60910M, 30 seconds
+2022/12/28-08:08:19(UTC) Log: Using mmap() allocation at 0x00000000000.
+2022/12/28-08:08:19(UTC) Stats: Starting SAT, 11111M, 30 seconds
 2022/12/28-08:08:23(UTC) Log: Region mask: 0x1
 2022/12/28-08:08:25(UTC) Report Error: miscompare : DIMM Unknown : 1 : 6s
 2022/12/28-08:08:25(UTC) Hardware Error: miscompare on CPU 0(<-6) at 0x00000000000(0x82:DIMM Unknown): read:0xffffffffffbaffff, reread:0xffffffffffbaffff expected:0xffffffffffffffff. 'OneZero~256'.
@@ -50,8 +50,8 @@
 2022/12/28-08:08:54(UTC) Log: Thread 12 found 2 hardware incidents
 2022/12/28-08:08:54(UTC) Log: Thread 13 found 1 hardware incidents
 2022/12/28-08:08:54(UTC) Stats: Found 15 hardware incidents
-2022/12/28-08:08:54(UTC) Stats: Completed: 2278756.00M in 30.00s 75952.34MB/s, with 15 hardware incidents, 0 errors
-2022/12/28-08:08:54(UTC) Stats: Memory Copy: 2278756.00M at 75956.11MB/s
+2022/12/28-08:08:54(UTC) Stats: Completed: 111111.11M in 30.00s 11111.11MB/s, with 15 hardware incidents, 0 errors
+2022/12/28-08:08:54(UTC) Stats: Memory Copy: 111111.11M at 11111.11MB/s
 2022/12/28-08:08:54(UTC) Stats: File Copy: 0.00M at 0.00MB/s
 2022/12/28-08:08:54(UTC) Stats: Net Copy: 0.00M at 0.00MB/s
 2022/12/28-08:08:54(UTC) Stats: Data Check: 0.00M at 0.00MB/s

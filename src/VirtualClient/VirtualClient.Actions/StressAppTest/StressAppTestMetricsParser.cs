@@ -23,7 +23,8 @@
         public override IList<Metric> Parse()
         {
             this.Preprocess();
-            List<Metric> metrics = new List<Metric>();            
+            List<Metric> metrics = new List<Metric>();
+            string hardwareErrors = string.Empty;
 
             // Add count of Hardware Failure Error Incidents
             int hardwareErrorCount = -1;
@@ -33,6 +34,11 @@
                 {
                     throw new WorkloadResultsException($"The StressAppTest Workload did not generate valid metrics! " +
                         $"The process got killed, possibly due to low memory exception.");
+                }
+
+                if (Regex.IsMatch(line, @".*Hardware Error:.*"))
+                {
+                    hardwareErrors += line + "\n";
                 }
 
                 if (Regex.IsMatch(line, @".*Stats: Found .* hardware incidents.*"))
@@ -48,7 +54,7 @@
                         throw new WorkloadResultsException($"Error while parsing the hardware error count in StressAppTest Workload logs.");
                     }
                 }
-            }
+            }            
 
             if (hardwareErrorCount == -1)
             {
@@ -56,7 +62,10 @@
                     $"No data on hardware failures captured. ");
             }
 
-            metrics.Add(new Metric("hardwareErrorCount", hardwareErrorCount, MetricRelativity.LowerIsBetter));
+            Metric metric = new Metric("hardwareErrorCount", hardwareErrorCount, MetricRelativity.LowerIsBetter);
+            metric.Tags.Add(hardwareErrors);
+
+            metrics.Add(metric);
             return metrics;
         }
 
@@ -65,9 +74,6 @@
         {
             // Converting all CRLF(Windows EOL) to LF(Unix EOL).
             this.PreprocessedText = Regex.Replace(this.RawText, "\r\n", "\n");
-
-            // Converting all LF to CRLF.
-            // this.PreprocessedText = Regex.Replace(this.PreprocessedText, "\n", "\r\n");
 
             // Removing unnecessary starting and ending space.
             this.PreprocessedText = this.PreprocessedText.Trim();
