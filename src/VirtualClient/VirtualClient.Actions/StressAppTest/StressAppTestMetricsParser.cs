@@ -6,7 +6,7 @@
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Parser for Prime95 Workload.
+    /// Parser for StressAppTest Workload.
     /// </summary>
     public class StressAppTestMetricsParser : MetricsParser
     {
@@ -67,7 +67,7 @@
             this.PreprocessedText = Regex.Replace(this.RawText, "\r\n", "\n");
 
             // Converting all LF to CRLF.
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, "\n", "\r\n");
+            // this.PreprocessedText = Regex.Replace(this.PreprocessedText, "\n", "\r\n");
 
             // Removing unnecessary starting and ending space.
             this.PreprocessedText = this.PreprocessedText.Trim();

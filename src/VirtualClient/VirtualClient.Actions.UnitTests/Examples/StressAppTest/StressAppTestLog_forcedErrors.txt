@@ -1,6 +1,6 @@
 2022/12/28-08:08:19(UTC) Log: Commandline - ./stressapptest --force_errors -s 30 -l logfile_v8_forcedErrors.txt
-2022/12/28-08:08:19(UTC) Stats: SAT revision 1.0.9_autoconf, 64 bit binary
-2022/12/28-08:08:19(UTC) Log: adityaa @ adityaa-vm-lin-ubu20-d4 on Fri Oct 21 08:05:58 UTC 2022 from open source release
+2022/12/28-08:08:19(UTC) Stats: SAT revision 1.0.0_autoconf, 64 bit binary
+2022/12/28-08:08:19(UTC) Log: username @ system-name on Fri Jan 01 00:00:00 UTC 2000 from open source release
 2022/12/28-08:08:19(UTC) Log: 1 nodes, 16 cpus.
 2022/12/28-08:08:19(UTC) Log: Defaulting to 16 copy threads
 2022/12/28-08:08:19(UTC) Log: Total 64318 MB. Free 62124 MB. Hugepages 0 MB. Targeting 60910 MB (94%)
@@ -9,37 +9,37 @@
 2022/12/28-08:08:19(UTC) Stats: Starting SAT, 60910M, 30 seconds
 2022/12/28-08:08:23(UTC) Log: Region mask: 0x1
 2022/12/28-08:08:25(UTC) Report Error: miscompare : DIMM Unknown : 1 : 6s
-2022/12/28-08:08:25(UTC) Hardware Error: miscompare on CPU 0(<-6) at 0x7f0b700fa080(0x82:DIMM Unknown): read:0xffffffffffbaffff, reread:0xffffffffffbaffff expected:0xffffffffffffffff. 'OneZero~256'.
+2022/12/28-08:08:25(UTC) Hardware Error: miscompare on CPU 0(<-6) at 0x00000000000(0x82:DIMM Unknown): read:0xffffffffffbaffff, reread:0xffffffffffbaffff expected:0xffffffffffffffff. 'OneZero~256'.
 2022/12/28-08:08:29(UTC) Report Error: miscompare : DIMM Unknown : 1 : 10s
-2022/12/28-08:08:29(UTC) Hardware Error: miscompare on CPU 9(<-13) at 0x7f04003b0f20(0xf22:DIMM Unknown): read:0x0000002000ba0020, reread:0x0000002000ba0020 expected:0x0000002000000020. 'walkingInvOnes128'.
+2022/12/28-08:08:29(UTC) Hardware Error: miscompare on CPU 9(<-13) at 0x00000000000(0xf22:DIMM Unknown): read:0x0000002000ba0020, reread:0x0000002000ba0020 expected:0x0000002000000020. 'walkingInvOnes128'.
 2022/12/28-08:08:31(UTC) Report Error: miscompare : DIMM Unknown : 1 : 12s
-2022/12/28-08:08:31(UTC) Hardware Error: miscompare on CPU 7(<-11) at 0x7f0daad73e88(0xe88:DIMM Unknown): read:0x00000000000000ba, reread:0x00000000000000ba expected:0x0000000000000000. 'OneZero128'.
+2022/12/28-08:08:31(UTC) Hardware Error: miscompare on CPU 7(<-11) at 0x00000000000(0xe88:DIMM Unknown): read:0x00000000000000ba, reread:0x00000000000000ba expected:0x0000000000000000. 'OneZero128'.
 2022/12/28-08:08:32(UTC) Report Error: miscompare : DIMM Unknown : 1 : 13s
-2022/12/28-08:08:32(UTC) Hardware Error: miscompare on CPU 3(<-14) at 0x7f09303b43e8(0x3ef:DIMM Unknown): read:0xbafdfffdfffdfffd, reread:0xbafdfffdfffdfffd expected:0xfffdfffdfffdfffd. 'Zero2fd64'.
+2022/12/28-08:08:32(UTC) Hardware Error: miscompare on CPU 3(<-14) at 0x00000000000(0x3ef:DIMM Unknown): read:0xbafdfffdfffdfffd, reread:0xbafdfffdfffdfffd expected:0xfffdfffdfffdfffd. 'Zero2fd64'.
 2022/12/28-08:08:33(UTC) Log: Seconds remaining: 20
 2022/12/28-08:08:34(UTC) Report Error: miscompare : DIMM Unknown : 1 : 15s
-2022/12/28-08:08:34(UTC) Hardware Error: miscompare on CPU 4(<-15) at 0x7f10f2de5bc8(0xbc8:DIMM Unknown): read:0xfffffffbffffffba, reread:0xfffffffbffffffba expected:0xfffffffbfffffffb. 'walkingInvOnes64'.
+2022/12/28-08:08:34(UTC) Hardware Error: miscompare on CPU 4(<-15) at 0x00000000000(0xbc8:DIMM Unknown): read:0xfffffffbffffffba, reread:0xfffffffbffffffba expected:0xfffffffbfffffffb. 'walkingInvOnes64'.
 2022/12/28-08:08:35(UTC) Report Error: miscompare : DIMM Unknown : 1 : 16s
-2022/12/28-08:08:35(UTC) Hardware Error: miscompare on CPU 3(<-8) at 0x7f1091e1c800(0x805:DIMM Unknown): read:0x1616ba1616161616, reread:0x1616ba1616161616 expected:0x1616161616161616. 'Long8b10b32'.
+2022/12/28-08:08:35(UTC) Hardware Error: miscompare on CPU 3(<-8) at 0x00000000000(0x805:DIMM Unknown): read:0x1616ba1616161616, reread:0x1616ba1616161616 expected:0x1616161616161616. 'Long8b10b32'.
 2022/12/28-08:08:37(UTC) Report Error: miscompare : DIMM Unknown : 1 : 18s
-2022/12/28-08:08:37(UTC) Hardware Error: miscompare on CPU 12(<-6) at 0x7f11c3bd0898(0x89e:DIMM Unknown): read:0xffbafffffff7ffff, reread:0xffbafffffff7ffff expected:0xfff7fffffff7ffff. 'walkingOnes~64'.
+2022/12/28-08:08:37(UTC) Hardware Error: miscompare on CPU 12(<-6) at 0x00000000000(0x89e:DIMM Unknown): read:0xffbafffffff7ffff, reread:0xffbafffffff7ffff expected:0xfff7fffffff7ffff. 'walkingOnes~64'.
 2022/12/28-08:08:38(UTC) Report Error: miscompare : DIMM Unknown : 1 : 19s
-2022/12/28-08:08:38(UTC) Hardware Error: miscompare on CPU 8(<-2) at 0x7f11dc1c4b60(0xb63:DIMM Unknown): read:0xffffffffbaffffff, reread:0xffffffffbaffffff expected:0xffffffffffffffff. 'JustOne32'.
+2022/12/28-08:08:38(UTC) Hardware Error: miscompare on CPU 8(<-2) at 0x00000000000(0xb63:DIMM Unknown): read:0xffffffffbaffffff, reread:0xffffffffbaffffff expected:0xffffffffffffffff. 'JustOne32'.
 2022/12/28-08:08:39(UTC) Report Error: miscompare : DIMM Unknown : 1 : 20s
-2022/12/28-08:08:39(UTC) Hardware Error: miscompare on CPU 12(<-15) at 0x7f0ecb708218(0x21e:DIMM Unknown): read:0x00ba000000000000, reread:0x00ba000000000000 expected:0x0000000000000000. 'OneZero~128'.
+2022/12/28-08:08:39(UTC) Hardware Error: miscompare on CPU 12(<-15) at 0x00000000000(0x21e:DIMM Unknown): read:0x00ba000000000000, reread:0x00ba000000000000 expected:0x0000000000000000. 'OneZero~128'.
 2022/12/28-08:08:41(UTC) Report Error: miscompare : DIMM Unknown : 1 : 22s
-2022/12/28-08:08:41(UTC) Hardware Error: miscompare on CPU 7(<-15) at 0x7f067d98b6c0(0x6c1:DIMM Unknown): read:0xffffffffffffbaff, reread:0xffffffffffffbaff expected:0xffffffffffffffff. 'JustZero~32'.
+2022/12/28-08:08:41(UTC) Hardware Error: miscompare on CPU 7(<-15) at 0x00000000000(0x6c1:DIMM Unknown): read:0xffffffffffffbaff, reread:0xffffffffffffbaff expected:0xffffffffffffffff. 'JustZero~32'.
 2022/12/28-08:08:43(UTC) Log: Seconds remaining: 10
 2022/12/28-08:08:44(UTC) Report Error: miscompare : DIMM Unknown : 1 : 25s
-2022/12/28-08:08:44(UTC) Hardware Error: miscompare on CPU 2(<-10) at 0x7f0d9664bed0(0xed7:DIMM Unknown): read:0xbab5b5b5b5b5b5b5, reread:0xbab5b5b5b5b5b5b5 expected:0xb5b5b5b5b5b5b5b5. 'Short8b10b32'.
+2022/12/28-08:08:44(UTC) Hardware Error: miscompare on CPU 2(<-10) at 0x00000000000(0xed7:DIMM Unknown): read:0xbab5b5b5b5b5b5b5, reread:0xbab5b5b5b5b5b5b5 expected:0xb5b5b5b5b5b5b5b5. 'Short8b10b32'.
 2022/12/28-08:08:47(UTC) Report Error: miscompare : DIMM Unknown : 1 : 28s
-2022/12/28-08:08:47(UTC) Hardware Error: miscompare on CPU 2(<-10) at 0x7f0f6c972118(0x119:DIMM Unknown): read:0xb5b5b5b5b5b5bab5, reread:0xb5b5b5b5b5b5bab5 expected:0xb5b5b5b5b5b5b5b5. 'Checker8b10b256'.
+2022/12/28-08:08:47(UTC) Hardware Error: miscompare on CPU 2(<-10) at 0x00000000000(0x119:DIMM Unknown): read:0xb5b5b5b5b5b5bab5, reread:0xb5b5b5b5b5b5bab5 expected:0xb5b5b5b5b5b5b5b5. 'Checker8b10b256'.
 2022/12/28-08:08:50(UTC) Report Error: miscompare : DIMM Unknown : 1 : 31s
-2022/12/28-08:08:50(UTC) Hardware Error: miscompare on CPU 3(<-7) at 0x7f03e5b23df8(0xdf9:DIMM Unknown): read:0x800000008000ba00, reread:0x800000008000ba00 expected:0x8000000080000000. 'walkingInvOnes~64'.
+2022/12/28-08:08:50(UTC) Hardware Error: miscompare on CPU 3(<-7) at 0x00000000000(0xdf9:DIMM Unknown): read:0x800000008000ba00, reread:0x800000008000ba00 expected:0x8000000080000000. 'walkingInvOnes~64'.
 2022/12/28-08:08:52(UTC) Report Error: miscompare : DIMM Unknown : 1 : 33s
-2022/12/28-08:08:52(UTC) Hardware Error: miscompare on CPU 1(<-2) at 0x7f093f5ab3f0(0x3f3:DIMM Unknown): read:0x80000000ba000000, reread:0x80000000ba000000 expected:0x8000000080000000. 'walkingInvOnes~128'.
+2022/12/28-08:08:52(UTC) Hardware Error: miscompare on CPU 1(<-2) at 0x00000000000(0x3f3:DIMM Unknown): read:0x80000000ba000000, reread:0x80000000ba000000 expected:0x8000000080000000. 'walkingInvOnes~128'.
 2022/12/28-08:08:52(UTC) Report Error: miscompare : DIMM Unknown : 1 : 33s
-2022/12/28-08:08:52(UTC) Hardware Error: miscompare on CPU 3(<-14) at 0x7f101482ab38(0xb3d:DIMM Unknown): read:0x5555ba5555555555, reread:0x5555ba5555555555 expected:0x5555555555555555. 'FiveA~64'.
+2022/12/28-08:08:52(UTC) Hardware Error: miscompare on CPU 3(<-14) at 0x00000000000(0xb3d:DIMM Unknown): read:0x5555ba5555555555, reread:0x5555ba5555555555 expected:0x5555555555555555. 'FiveA~64'.
 2022/12/28-08:08:54(UTC) Log: Thread 1 found 1 hardware incidents
 2022/12/28-08:08:54(UTC) Log: Thread 2 found 2 hardware incidents
 2022/12/28-08:08:54(UTC) Log: Thread 3 found 1 hardware incidents
