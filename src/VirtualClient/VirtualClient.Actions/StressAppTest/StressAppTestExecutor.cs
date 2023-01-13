@@ -164,7 +164,7 @@ namespace VirtualClient.Actions
             commandLineArguments += " -l " + resultsFileName;
             commandLineArguments = commandLineArguments.Trim();
 
-            // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_20230111000000.txt
+            // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
 
             await this.ExecuteCommandAsync(
                 this.ExecutableName, commandLineArguments, this.PackageDirectory, cancellationToken)
