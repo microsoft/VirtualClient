@@ -1,0 +1,57 @@
+{
+  "Description": "Postgresql Benchmark",
+  "Parameters": {
+  },
+  "Actions": [
+    {
+      "Type": "PostgreSQLExecutor",
+      "Parameters": {
+        "Scenario": "PostgresqlServer",
+        "PackageName": "postgresql"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPostgresqlWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "postgresql.2.0.0.zip",
+        "PackageName": "postgresql",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackagesForHammerDb",
+        "Packages-Apt": "libxft-dev",
+        "Packages-Yum": "libxft-devel,libXft"
+      }
+    },
+    {
+      "Type": "PostgresqlInstallation",
+      "Parameters": {
+        "Scenario": "InstallPostgresqlServer",
+        "PostgresqlPackage": "Postgreqsql",
+        "PackageName": "postgresql",
+        "Version": 14
+        // "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
+        // "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
+        // "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
+      }
+    },
+    {
+      "Type": "HammerDbInstallation",
+      "Parameters": {
+        "Scenario": "InstallHammerDb",
+        "Version": "4.5",
+        "PackageName": "postgresql"
+      }
+    },
+    {
+      "Type": "ApiServer"
+    }
+  ]
+}
