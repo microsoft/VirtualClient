@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
             this.CalculateThroughputResult();
 
             List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(this.PostgreSQLResult.GetMetric(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.PostgreSQLResult.GetMetrics(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
             return metrics;
         }
 
