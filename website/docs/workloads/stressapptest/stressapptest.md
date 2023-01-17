@@ -1,7 +1,7 @@
 # StressAppTest
 Stressful Application Test (or stressapptest, its unix name) is a memory interface test.
 It tries to maximize randomized traffic to memory from processor and I/O, with the intent of creating a realistic high load situation in order
-to test the existing hardware devices in a computer. It has been used at Google for some time and now it is available under the apache 2.0 license.
+to test the existing hardware devices in a computer. It is available under the apache 2.0 license.
 
 * [StressAppTest Official Documentation](https://github.com/stressapptest/stressapptest/blob/master/README.md)
 
