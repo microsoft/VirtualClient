@@ -154,7 +154,7 @@ namespace VirtualClient.Actions
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.PrivateIPAddress, out IPAddress serverIPAddress);
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
                 this.ServerIpAddress = serverIPAddress.ToString();
             }
             else
