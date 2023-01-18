@@ -120,30 +120,6 @@ namespace VirtualClient.Actions
             Assert.IsTrue(!component.IsPostgreSQLServerExecuted);
         }
 
-        /*[Test]
-        public void PostgreSQLExecutorExecutesAsExpectedOnInstructionsReceived()
-        {
-            using TestPostgreSQLExecutor component = new TestPostgreSQLExecutor(this.fixture.Dependencies, this.parameters);
-            component.ServerCancellationSource = new CancellationTokenSource();
-            Mock<object> sender = new Mock<object>();
-
-           *//* PerformanceTrackerState performanceTrackerState = new PerformanceTrackerState();
-            performanceTrackerState.State = SQLTPCCState.PerformanceTrackerStart;
-            Item<PerformanceTrackerState> instructions = new Item<PerformanceTrackerState>(nameof(PerformanceTrackerState), performanceTrackerState);*//*
-
-            // component.OnInstructionsReceivedExecutes(sender.Object, JObject.FromObject(instructions));
-
-            // Assert.IsTrue(component.PerformanceTrackingTask != null);
-            Assert.IsTrue(!component.ServerCancellationSource.IsCancellationRequested);
-
-            *//*performanceTrackerState.State = SQLTPCCState.PerformanceTrackerStop;
-            instructions = new Item<PerformanceTrackerState>(nameof(PerformanceTrackerState), performanceTrackerState);*//*
-
-            // component.OnInstructionsReceivedExecutes(sender.Object, JObject.FromObject(instructions));
-
-            Assert.IsTrue(component.ServerCancellationSource.IsCancellationRequested);
-        }*/
-
         protected class TestPostgreSQLExecutor : PostgreSQLExecutor
         {
             public TestPostgreSQLExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)

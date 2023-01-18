@@ -39,7 +39,6 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Win32NT, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-            // this.mockFixture.Setup(PlatformID.Win32NT, Architecture.X64);
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
@@ -137,43 +136,14 @@ namespace VirtualClient.Actions
 
         private void SetupApiClient(string serverIPAddress)
         {
-            // this.SetupApiClient(serverIPAddress: "1.2.3.5");
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-
-            // IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
-
-            /*State expectedState = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(PostgreSQLState)] = PostgreSQLState.DBCreated
-            });*/
-
-            /*State expectedPostgresqlParameterState = new State(new Dictionary<string, IConvertible>
-            {
-                
-            });*/
-            /*apiClient.DeleteStateAsync(nameof(PostgreSQLState), CancellationToken.None)
-                .GetAwaiter().GetResult();*/
-
             InMemoryApiClient inMemApiClient = (InMemoryApiClient)apiClient;
-
-            // apiClient.DeleteStateAsync(nameof(PostgreSQLState), CancellationToken.None).Wait();
 
             inMemApiClient.OnDeleteState = (stateId) =>
             {
                 return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             };
-
-            /*apiClient.GetStateAsync(nameof(PostgreSQLParameters), CancellationToken.None)
-                .GetAwaiter().GetResult();*/
-
-            /*State swarmCommand = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(DeathStarBenchExecutor.SwarmCommand)] = "mock command"
-            });
-
-            apiClient.CreateStateAsync(nameof(DeathStarBenchExecutor.SwarmCommand), swarmCommand, CancellationToken.None)
-                .GetAwaiter().GetResult();*/
         }
     }
 }

@@ -37,10 +37,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-POSTGRESQL.json")]
         public void POSTGRESQLWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
         {
-            // Setup disks the expected scenarios:
-            // - Disks are formatted and ready
             this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.SetupDisks(withRemoteDisks: false);
 
             // We ensure the workload package does not exist.
             this.mockFixture.PackageManager.Clear();

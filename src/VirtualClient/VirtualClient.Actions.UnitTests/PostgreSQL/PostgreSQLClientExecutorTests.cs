@@ -32,10 +32,6 @@ namespace VirtualClient.Actions
     {
         private const string MockUserName = "MockUserName";
         private const string MockPassword = "MockPassword";
-        private const long WarehouseCount = 1000;
-        private const int NumOfUsersForTransactions = 100;
-        private const int UserTransactions = 50;
-        // private const int Iterations = 100;
         private MockFixture fixture;
         private DependencyPath mockPath;
         private string apiClientId;
@@ -78,34 +74,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        /*[Test]
-        public async Task SQLTPCCClientExecutorGetsExpectedParameters()
-        {
-            using (TestPostgreSQLClientExecutor executor = new TestPostgreSQLClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                await executor.OnInitialize(EventContext.None, CancellationToken.None);
-                var parameters = await executor.OnGetTpcCClientParameters(CancellationToken.None);
-                string[] param = parameters.Split(" -");
-
-                Dictionary<string, string> paramdict = new Dictionary<string, string>();
-                foreach (string s in param)
-                {
-                    string[] keyval = s.Split(" ");
-                    if (keyval.Length >= 2)
-                    {
-                        paramdict.Add(keyval[0], keyval[1]);
-                    }
-                }
-
-                Assert.IsTrue(MockHostName.Equals(paramdict.GetValueOrDefault("HostName")));
-                Assert.IsTrue(MockPassword.Equals(paramdict.GetValueOrDefault("Password")));
-                Assert.IsTrue(WarehouseCount.ToString().Equals(paramdict.GetValueOrDefault("WarehouseCount")));
-                Assert.IsTrue(NumOfUsersForTransactions.ToString().Equals(paramdict.GetValueOrDefault("NumOfUsersForTransactions")));
-                Assert.IsTrue(UserTransactions.ToString().Equals(paramdict.GetValueOrDefault("UserTransactions")));
-                Assert.IsTrue(Iterations.ToString().Equals(paramdict.GetValueOrDefault("Iterations")));
-            }
-        }*/
-
         [Test]
         public async Task PostgreSQLClientExecutorThrowsOnFailingToGetParameters()
         {
@@ -137,17 +105,12 @@ namespace VirtualClient.Actions
             using (TestPostgreSQLClientExecutor executor = new TestPostgreSQLClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 int processExecuted = 0;
-                // this.SetupDefaultPlatform(platformID);
 
                 List<string> expectedCommands;
-                // string expectedFile = "powershell";
-                // string expectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, PlatformID.Win32NT, Architecture.X64).Path;
 
                 await executor.OnInitialize(EventContext.None, CancellationToken.None);
                 await executor.OnSetClientParameters(CancellationToken.None);
-                // string expectedClientScriptPath = Path.Combine(expectedPath, "Client.ps1");
-                // string expectedArguments = string.Format($"-ExecutionPolicy unrestricted -File \"{expectedClientScriptPath}\" {expectedParameters}");
-
+            
                 if (platformID == PlatformID.Unix) 
                 {
                    expectedCommands = new List<string>()
@@ -161,13 +124,7 @@ namespace VirtualClient.Actions
                     expectedCommands = new List<string>()
                     {
                         $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "hammerdbcli.bat")} auto runTransactions.tcl",
-                        /*$"powershell -Command \"& {{Add-Content -Path '{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
-                        // $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "bin", "pg_ctl.exe")} restart -D \"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "data")}\"",
-                        $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "bin", "psql.exe")} -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
-                        // $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "bin", "psql.exe")} -U postgres psql -c \"DROP ROLE IF EXISTS {executor.PsqlUserName};\"",
-                        // $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "bin", "psql.exe")} -U postgres psql -c \"CREATE USER {executor.PsqlUserName} PASSWORD '{executor.PsqlPassword}';\"",
-                        $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "hammerdbcli.bat")} auto createDB.tcl"*/
-
+    
                     };
                 }
                 else
@@ -181,10 +138,7 @@ namespace VirtualClient.Actions
                     {
                         processExecuted++;
                     }
-                    // processExecuted++;
-                    // Assert.AreEqual(expectedFile, file);
-                    // Assert.AreEqual(expectedClientScriptPath, executor.ClientScriptPath);
-                    // Assert.AreEqual(expectedArguments, arguments);
+                    
                     this.fixture.Process.RedirectStandardOutput= true;
                     this.fixture.Process.StandardOutput.Append(this.rawString);
                     return this.fixture.Process;
@@ -214,9 +168,7 @@ namespace VirtualClient.Actions
             DependencyPath currentDirectoryPath = new DependencyPath("postgresql", currentDirectory);
             string outputPath = Path.Combine(currentDirectory, @"Examples\PostgreSQL\PostgresqlresultsExample.txt");
             this.rawString = File.ReadAllText(outputPath);
-            // string mockResultsPath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "win-x64", "logs", "hammerdbresults.txt");
-            /*this.fixture.File.Setup(rt => rt.ReadAllTextAsync(mockResultsPath, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(resultsContent);*/
+      
         }
 
         private void SetupDefaultBehaviour(PlatformID platformID = PlatformID.Win32NT) 
