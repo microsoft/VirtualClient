@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,9 +9,6 @@ using NUnit.Framework;
 using VirtualClient.Contracts;
 using VirtualClient.Common.Contracts;
 using VirtualClient.Actions;
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
