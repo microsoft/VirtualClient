@@ -4,15 +4,15 @@ sidebar_position: 1
 ---
 
 # Platform Overview
-The Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud. 
-The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption). 
-The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports all business-critical 
+The Virtual Client is a unified workload and system monitoring platform for running customer-representative scenarios on virtual machines or physical hosts/blades in the Azure Cloud.
+The platform supports a wide range of different industry standard/benchmark workloads used to measuring various aspects of the system under test (e.g. CPU, I/O, network performance, power consumption).
+The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. The platform supports all business-critical
 Azure environments including guest/VM systems, host/blade systems and data center/DC lab systems. The platform additionally supports both x64 and ARM64 compute architectures.
 
 * [Platform Features](./0010-features.md)
 * [Platform Design](./0020-design.md)
 * [Usage](../guides/0010-command-line.md)
-* [Usage Examples](../guides/0200-usage-examples.md)  
+* [Usage Examples](../guides/0200-usage-examples.md)
 * [Developer Guide](../developing/0010-develop-guide.md)
 
 ## Team Contacts
@@ -30,18 +30,18 @@ The following release versions of the Virtual Client are available and confirmed
 
 ## Platform/Architectures
 In the workload and profile sections below, the following designations are used to indicate the OS platform and CPU architecture on which the workloads are supported:
-* **linux-x64**  
+* **linux-x64**
   The workload is supported on the Linux operating system for Intel and AMD x64 architectures.<br/><br/>
-* **linux-arm64**  
+* **linux-arm64**
   The workload is supported on the Linux operating system for ARM64/AARCH64 architectures.<br/><br/>
-* **win-x64**  
+* **win-x64**
   The workload is supported on the Windows operating system for Intel and AMD x64 architectures.<br/><br/>
-* **win-arm64**  
+* **win-arm64**
   The workload is supported on the Windows operating system for ARM64/AARCH64 architectures.
 
 
 ## Supported Benchmark Workloads
-The following list of workloads are used by Virtual Client profiles to exercise the system components in a consistent way required to measure performance baselines and differences. 
+The following list of workloads are used by Virtual Client profiles to exercise the system components in a consistent way required to measure performance baselines and differences.
 
 :::caution Comply to licenses you are using
 VirtualClient handles the installation and execution of various tools. Individual license files are not prompted for each workload. By using VirtualClient, users accept the license of each of the benchmarks individually, comply to the terms for the tool you are using, and take responsibility for using them.
@@ -75,12 +75,13 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [Redis](../workloads/redis/redis.md) | Redis Performance | linux-x64, linux-arm64 | [**Redis**:BSD-3](https://github.com/redis/redis/blob/unstable/COPYING)<br/>[**Memtier**:GPL-2.0](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
 | [SockPerf](../workloads/network-suite/network-suite.md) | Network latency | linux-x64, linux-arm64 | [Custom](https://github.com/Mellanox/sockperf/blob/sockperf_v2/copying)  |
 | [SPECjvm](../workloads/specjvm/specjvm.md) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
+| [stressapptest](../workloads/stressapptest/stressapptest.md) | Fault Tolerance | linux-x64, linux-arm64 | [Apache-2.0](https://github.com/stressapptest/stressapptest/blob/master/NOTICE)  |
 | [stress-ng](../workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](../workloads/superbenchmark/superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
 | [Sysbench OLTP](../workloads/sysbench-oltp/sysbench-oltp.md) | MySQL Server Performance | linux-x64, linux-arm64 | [**Sysbench**:GPL-2.0](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[**MySQL**:GPL-2.0](https://www.mysql.com/about/legal/licensing/oem/) |
 
 ## System Monitoring Facilities
-The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client. 
+The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client.
 
 :::info
 Certain monitoring facilities are only available on specific hardware because they expect specific tools/hardware on the system (e.g. ipmiutil, nvidia monitors).
@@ -91,17 +92,17 @@ Certain monitoring facilities are only available on specific hardware because th
 | Performance/Reliability      | Performance Counters    | None     | linux-x64, linux-arm64, win-x64, win-arm64 | A standard set of performance counters is captured for all executions of the application: [Counters Captured](../monitors/0100-perf-counter-metrics.md) |
 
 :::tip More workloads and monitors are coming
-VirtualClient is just migrated from MSFT inner-source to GitHub. We are still reviewing the feasibility of some internal workloads and monitors. We are also 
+VirtualClient is just migrated from MSFT inner-source to GitHub. We are still reviewing the feasibility of some internal workloads and monitors. We are also
 implementing a way to safely release automation for paid/commercial workloads (SPECcpu, SPECjbb, GeekBench5, 3DMark). They will come to VC in the future.
 :::
 
 
 ## Data Collection Notice
-The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services 
-and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may 
-enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing 
-appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located 
-at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement. 
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services
+and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may
+enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing
+appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located
+at https://go.microsoft.com/fwlink/?LinkID=824704. You can learn more about data collection and use in the help documentation and our privacy statement.
 Your use of the software operates as your consent to these practices.
 
 ## Trademarks
