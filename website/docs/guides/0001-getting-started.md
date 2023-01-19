@@ -25,7 +25,7 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 
   ```powershell
   # Example
-  PM> NuGet\Install-Package VirtualClient -Version 0.0.5
+  PM> NuGet\Install-Package VirtualClient -Version 0.3.2
   ```
 
 - If you are on a Windows system, you can download from the command line using the NuGet.exe:
@@ -33,7 +33,7 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 
   ``` bash
   # Example
-  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 0.0.12 -Source nuget.org
+  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 0.3.2 -Source nuget.org
   ```
 
 ### NuGet Package Contents
