@@ -1,0 +1,62 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Monitors
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using VirtualClient.Contracts;
+
+    /// <summary>
+    /// Data contract for PciDevice parsed from lsPci.
+    /// </summary>
+    public class PciDevice
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Address { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public Dictionary<string, string> Properties { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<PciDeviceCapability> Capabilities { get; set; }
+
+        /// <summary>
+        /// Data contract for capabiilities in lspci output.
+        /// -------------------------------Example---------------------------------
+        /// Capabilities: [80] MSI-X: Enable- Count=1 Masked-
+        ///     Vector table: BAR=0 offset=00002000
+        ///     PBA: BAR=0 offset=00003000
+        /// -------------------------------Example---------------------------------
+        /// </summary>
+        public class PciDeviceCapability
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public string Id { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public Dictionary<string, string> Properties { get; set; }
+        }
+    }
+}
