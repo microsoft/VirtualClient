@@ -90,6 +90,12 @@ namespace VirtualClient.Common
         void Kill();
 
         /// <summary>
+        /// Promptly terminates/kills the underlying process along with entire 
+        /// processtree without waiting for a graceful exit.
+        /// </summary>
+        void Kill(bool entireprocessTree);
+
+        /// <summary>
         /// Starts the underlying process.
         /// </summary>
         bool Start();

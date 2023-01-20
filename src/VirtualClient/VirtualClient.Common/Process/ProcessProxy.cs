@@ -196,6 +196,12 @@ namespace VirtualClient.Common
         }
 
         /// <inheritdoc />
+        public virtual void Kill(bool entireProcessTree)
+        {
+            this.UnderlyingProcess.Kill(entireProcessTree);
+        }
+
+        /// <inheritdoc />
         public virtual bool Start()
         {
             bool processStarted = this.UnderlyingProcess.Start();
