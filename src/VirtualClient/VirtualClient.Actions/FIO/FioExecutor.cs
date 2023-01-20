@@ -88,6 +88,7 @@ namespace VirtualClient.Actions
                     case "Stress":
                         int logicalCores = Environment.ProcessorCount;
                         int threads = logicalCores / 2;
+                        threads = (threads == 0) ? 1 : threads;
                         int queueDepth = 512 / threads;
 
                         this.CommandLine = this.ApplyParameters(
