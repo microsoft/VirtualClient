@@ -37,6 +37,8 @@ namespace VirtualClient.Actions
         public FioDiscoveryExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Since in this case we are testing on raw disks, we are not cleaning up test files
+            this.DeleteTestFilesOnFinish = false;
         }
 
         /// <summary>
@@ -324,8 +326,6 @@ namespace VirtualClient.Actions
         protected override DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
             string[] testFiles = disksToTest.Select(disk => disk.DevicePath).ToArray();
-            // Since in this case we are testing on raw disks, we are not cleaning up test files
-            this.DeleteTestFilesOnFinish = false;
             string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={file}"))}".Trim();
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);

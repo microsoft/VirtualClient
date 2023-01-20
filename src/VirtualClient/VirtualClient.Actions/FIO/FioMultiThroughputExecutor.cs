@@ -48,6 +48,8 @@ namespace VirtualClient.Actions
         public FioMultiThroughputExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Since in this case we are testing on raw disks, we are not cleaning up test files
+            this.DeleteTestFilesOnFinish = false;
         }
 
         /// <summary>
