@@ -1,0 +1,26 @@
+2022/12/28-08:15:00(UTC) Log: Commandline - ./stressapptest -s 60 -l logfile_v8_pass.txt
+2022/12/28-08:15:00(UTC) Stats: SAT revision 1.0.0_autoconf, 64 bit binary
+2022/12/28-08:15:00(UTC) Log: username @ system-name on Fri Jan 01 00:00:00 UTC 2000 from open source release
+2022/12/28-08:15:00(UTC) Log: 1 nodes, 16 cpus.
+2022/12/28-08:15:00(UTC) Log: Defaulting to 16 copy threads
+2022/12/28-08:15:00(UTC) Log: Total 11111 MB. Free 11111 MB. Hugepages 0 MB. Targeting 11111 MB (94%)
+2022/12/28-08:15:00(UTC) Log: Prefer plain malloc memory allocation.
+2022/12/28-08:15:00(UTC) Log: Using mmap() allocation at 0x0000000.
+2022/12/28-08:15:00(UTC) Stats: Starting SAT, 60910M, 60 seconds
+2022/12/28-08:15:03(UTC) Log: Region mask: 0x1
+2022/12/28-08:15:13(UTC) Log: Seconds remaining: 50
+2022/12/28-08:15:23(UTC) Log: Seconds remaining: 40
+2022/12/28-08:15:33(UTC) Log: Seconds remaining: 30
+2022/12/28-08:15:43(UTC) Log: Seconds remaining: 20
+2022/12/28-08:15:53(UTC) Log: Seconds remaining: 10
+2022/12/28-08:16:04(UTC) Stats: Found 0 hardware incidents
+2022/12/28-08:16:04(UTC) Stats: Completed: 1111111.11M in 60.00s 11111.11MB/s, with 0 hardware incidents, 0 errors
+2022/12/28-08:16:04(UTC) Stats: Memory Copy: 1111111.11M at 11111.11MB/s
+2022/12/28-08:16:04(UTC) Stats: File Copy: 0.00M at 0.00MB/s
+2022/12/28-08:16:04(UTC) Stats: Net Copy: 0.00M at 0.00MB/s
+2022/12/28-08:16:04(UTC) Stats: Data Check: 0.00M at 0.00MB/s
+2022/12/28-08:16:04(UTC) Stats: Invert Data: 0.00M at 0.00MB/s
+2022/12/28-08:16:04(UTC) Stats: Disk: 0.00M at 0.00MB/s
+2022/12/28-08:16:04(UTC) 
+2022/12/28-08:16:04(UTC) Status: PASS - please verify no corrected errors
+2022/12/28-08:16:04(UTC) 

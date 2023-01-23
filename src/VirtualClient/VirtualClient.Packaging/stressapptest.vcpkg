@@ -1,0 +1,9 @@
+﻿{
+  "name": "stressapptest",
+  "description": "StressAppTest Memory Stress Workload",
+  "version": "2022-11-15",
+  "metadata": {
+    "originalSource": "https://github.com/stressapptest/stressapptest",
+    "licenseFile": "https://github.com/stressapptest/stressapptest/blob/master/NOTICE"
+  }
+}
