@@ -192,7 +192,7 @@ namespace VirtualClient.Common
         /// <inheritdoc />
         public virtual void Kill()
         {
-            this.UnderlyingProcess.Kill();
+            this.UnderlyingProcess.Kill(true);
         }
 
         /// <inheritdoc />
