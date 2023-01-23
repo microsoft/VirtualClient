@@ -147,6 +147,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Kills the fake process, and associated child processes.
+        /// </summary>
+        public void Kill(bool entireProcessTree)
+        {
+            this.OnKill?.Invoke();
+        }
+
+        /// <summary>
         /// Starts the fake process.
         /// </summary>
         public bool Start()
