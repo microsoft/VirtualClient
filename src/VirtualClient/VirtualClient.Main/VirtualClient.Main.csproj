@@ -136,6 +136,7 @@
         <MonitorProfiles Include="profiles\MONITORS-DEFAULT.json" />
         <MonitorProfiles Include="profiles\MONITORS-GPU-NVIDIA.json" />
         <MonitorProfiles Include="profiles\MONITORS-NONE.json" />
+      <MonitorProfiles Include="profiles\MONITOR-DCGMI.json" />
     </ItemGroup>
 
     <ItemGroup>

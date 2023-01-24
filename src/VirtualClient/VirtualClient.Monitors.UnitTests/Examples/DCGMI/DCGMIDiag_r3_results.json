@@ -1,5 +1,7 @@
 {
 	"DCGM GPU Diagnostic" : 
+	{
+		"test_categories" : 
 		[
 			{
 				"category" : "Deployment",
@@ -28,8 +30,7 @@
 						"results" : 
 						[
 							{
-								"status" : "Fail",
-								"warnings" : "Cannot open library libcuda.so: 'libcuda.so: cannot open shared object file: No such file or directory' Check for the existence of the library and set LD_LIBRARY_PATH if needed."
+								"status": "Pass"
 							}
 						]
 					},
@@ -99,7 +100,7 @@
 						[
 							{
 								"gpu_ids" : "0",
-								"info" : "GPU 0 GPU 0 GPU to Host bandwidth:\t\t13.15 GB/s, GPU 0 GPU 0 Host to GPU bandwidth:\t\t13.11 GB/s, GPU 0 GPU 0 bidirectional bandwidth:\t22.49 GB/s, GPU 0 GPU 0 GPU to Host latency:\t\t2.287 us, GPU 0 GPU 0 Host to GPU latency:\t\t2.370 us, GPU 0 GPU 0 bidirectional latency:\t\t4.532 us",
+								"info" : "GPU 0 GPU 0 GPU to Host bandwidth:\t\t13.15 GB/s, GPU 0 GPU 0 Host to GPU bandwidth:\t\t13.11 GB/s, GPU 0 GPU 0 bidirectional bandwidth:\t22.48 GB/s, GPU 0 GPU 0 GPU to Host latency:\t\t2.309 us, GPU 0 GPU 0 Host to GPU latency:\t\t2.401 us, GPU 0 GPU 0 bidirectional latency:\t\t4.621 us",
 								"status" : "Pass"
 							}
 						]
@@ -120,8 +121,68 @@
 								"status" : "Pass"
 							}
 						]
+					},
+					{
+						"name" : "Diagnostic",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"info" : "GPU 0 Allocated space for 408 output matricies from 13826359296 bytes available., GPU 0 Running with precisions: FP64 0, FP32 1, FP16 1, GPU 0 GPU 0 calculated at approximately 11103.02 gigaflops during this test",
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "EUD Test",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"status" : "Skip"
+							}
+						]
+					}
+				]
+			},
+			{
+				"category" : "Stress",
+				"tests" : 
+				[
+					{
+						"name" : "Targeted Stress",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"info" : "GPU 0 GPU 0 relative stress level\t3184",
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Targeted Power",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"info" : "GPU 0 GPU 0 power average:\t70 W",
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Memory Bandwidth",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"status" : "Pass"
+							}
+						]
 					}
 				]
 			}
 		]
+	}
 }
