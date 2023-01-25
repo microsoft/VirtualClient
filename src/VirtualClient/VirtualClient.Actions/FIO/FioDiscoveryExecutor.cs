@@ -264,9 +264,9 @@ namespace VirtualClient.Actions
                                                 [nameof(filePath).CamelCased()] = filePath
                                             };
 
-                                            this.WorkloadProcesses.Clear();
                                             await fioDiscoveryRetryPolicy.ExecuteAsync(async () =>
                                             {
+                                                this.WorkloadProcesses.Clear();
                                                 this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
 
                                                 foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
