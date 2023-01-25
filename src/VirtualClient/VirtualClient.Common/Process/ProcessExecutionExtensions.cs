@@ -63,7 +63,7 @@ namespace VirtualClient.Common
 
             if (process.Start())
             {
-                await process.WaitAsync(cancellationToken, timeout).ConfigureAwait(false);
+                await process.WaitForExitAsync(cancellationToken, timeout).ConfigureAwait(false);
             }
         }
 
@@ -87,44 +87,6 @@ namespace VirtualClient.Common
                     throw new MissingMethodException(
                         $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in a single 'message' parameter.");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Starts the underlying process and monitors it for completion.
-        /// </summary>
-        /// <param name="process">Represents a process on the system.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="timeout">
-        /// An absolute timeout to apply for the case that the process does not finish in the amount of time expected. If the
-        /// timeout is reached a <see cref="TimeoutException"/> exception will be thrown.
-        /// </param>
-        public static async Task WaitAsync(this IProcessProxy process, CancellationToken cancellationToken, TimeSpan? timeout = null)
-        {
-            process.ThrowIfNull(nameof(process));
-
-            DateTime startTime = DateTime.Now;
-            DateTime endTime = DateTime.MaxValue;
-            if (timeout != null)
-            {
-                endTime = startTime.Add(timeout.Value);
-            }
-
-            while (!process.HasExited)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                if (timeout != null && DateTime.Now > endTime)
-                {
-                    throw new TimeoutException(
-                        $"The process did not complete within the specified timeout " +
-                        $"(timeout={timeout.ToString()}, command={process.StartInfo.FileName} {process.StartInfo.Arguments}).");
-                }
-
-                await Task.Delay(10).ConfigureAwait(false);
             }
         }
 
