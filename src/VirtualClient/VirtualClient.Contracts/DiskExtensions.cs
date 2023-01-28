@@ -33,7 +33,6 @@ namespace VirtualClient.Contracts
             string path = string.Empty;
             List<string> forbiddenPaths = new List<string>()
             {
-                "/mnt",
                 "/boot/efi"
             };
 
@@ -53,6 +52,12 @@ namespace VirtualClient.Contracts
             {
                 // If it is not OS disk, test on biggest partition that's not in forbidden path.
                 IEnumerable<DiskVolume> eligibleVolumes = disk.Volumes.Where(v => !v.AccessPaths.Any(p => forbiddenPaths.Contains(p.ToLower())));
+
+                if (eligibleVolumes.Count() == 0)
+                {
+                    throw new WorkloadException($"There is no eligible volume in {disk.DevicePath} that can run IO workloads.", ErrorReason.EnvironmentIsInsufficent);
+                }
+
                 long biggestSize = eligibleVolumes.Max(v => v.SizeInBytes(platform));
                 path = eligibleVolumes.Where(v => v.SizeInBytes(platform) == biggestSize).FirstOrDefault().AccessPaths.FirstOrDefault();
             }
