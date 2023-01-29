@@ -168,13 +168,16 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
-                string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.NumberOfClients} -n {this.NumberOfRequests} -P {this.PipelineDepth} -q --csv""";
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.NumberOfClients} -n {this.NumberOfRequests} -P {this.PipelineDepth} -q --csv""";
 
-                this.StartTime = DateTime.Now;
-                string results = await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), cancellationToken)
-                                .ConfigureAwait(false);
+                    this.StartTime = DateTime.Now;
+                    string results = await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), cancellationToken)
+                        .ConfigureAwait(false);
 
-                this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+                    this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+                }
 
             });
         }

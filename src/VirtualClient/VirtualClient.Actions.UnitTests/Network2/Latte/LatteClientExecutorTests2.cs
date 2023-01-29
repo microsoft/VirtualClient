@@ -38,41 +38,6 @@ namespace VirtualClient.Actions
 
         }
 
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 300;
-            this.mockFixture.Parameters["Protocol"] = "Tcp";
-
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
-            string results = File.ReadAllText(resultsPath);
-
-            LatteWorkloadState executionStartedState = new LatteWorkloadState(ClientServerStatus.ExecutionStarted);
-            Item<LatteWorkloadState> expectedStateItem = new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState);
-
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
-
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(LatteWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState)))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState)));
-        }
-
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
@@ -143,6 +108,41 @@ namespace VirtualClient.Actions
                 this.mockFixture.Combine(expectedPath, exe) + " -so -c -a 1.2.3.5:6100 -rio -i 100100 -riopoll 100000 -tcp -hist -hl 1 -hc 9998 -bl 1.2.3.4"
             },
             commandsExecuted);
+        }
+
+        private void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
+        {
+            this.mockFixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 300;
+            this.mockFixture.Parameters["Protocol"] = "Tcp";
+
+            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string resultsPath = Path.Combine(currentDirectory, "Examples", "Latte", "Latte_Results_Example.txt");
+            string results = File.ReadAllText(resultsPath);
+
+            LatteWorkloadState executionStartedState = new LatteWorkloadState(ClientServerStatus.ExecutionStarted);
+            Item<LatteWorkloadState> expectedStateItem = new Item<LatteWorkloadState>(nameof(LatteWorkloadState), executionStartedState);
+
+            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(results);
+
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(LatteWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
 
         private class TestLatteClientExecutor : LatteClientExecutor2

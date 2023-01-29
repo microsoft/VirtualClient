@@ -39,49 +39,6 @@ namespace VirtualClient.Actions
 
         }
 
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.Parameters["PackageName"] = "Networking";
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 300;
-            this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
-            this.mockFixture.Parameters["ConcurrentThreads"] = 1;
-            this.mockFixture.Parameters["ClientBufferSize"] = "4k";
-            this.mockFixture.Parameters["Port"] = 5500;
-            this.mockFixture.Parameters["ReceiverMultiClientMode"] = true;
-            this.mockFixture.Parameters["SenderLastClient"] = true;
-            this.mockFixture.Parameters["ThreadsPerServerPort"] = 2;
-            this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
-            this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
-
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "NTttcp", "ClientOutput.xml");
-            string results = File.ReadAllText(resultsPath);
-
-            NTttcpWorkloadState executionStartedState = new NTttcpWorkloadState(ClientServerStatus.ExecutionStarted);
-            Item<NTttcpWorkloadState> expectedStateItem = new Item<NTttcpWorkloadState>(nameof(NTttcpWorkloadState), executionStartedState);
-
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
-
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(NTttcpWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<NTttcpWorkloadState>(nameof(NTttcpWorkloadState), executionStartedState)))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
-        }
-
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
@@ -175,6 +132,49 @@ namespace VirtualClient.Actions
                 },
                 commandsExecuted);
             }
+        }
+
+        private void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
+        {
+            this.mockFixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.Parameters["PackageName"] = "Networking";
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 300;
+            this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
+            this.mockFixture.Parameters["ConcurrentThreads"] = 1;
+            this.mockFixture.Parameters["ClientBufferSize"] = "4k";
+            this.mockFixture.Parameters["Port"] = 5500;
+            this.mockFixture.Parameters["ReceiverMultiClientMode"] = true;
+            this.mockFixture.Parameters["SenderLastClient"] = true;
+            this.mockFixture.Parameters["ThreadsPerServerPort"] = 2;
+            this.mockFixture.Parameters["ConnectionsPerThread"] = 2;
+            this.mockFixture.Parameters["DevInterruptsDifferentiator"] = "mlx";
+
+            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string resultsPath = Path.Combine(currentDirectory, "Examples", "NTttcp", "ClientOutput.xml");
+            string results = File.ReadAllText(resultsPath);
+
+            NTttcpWorkloadState executionStartedState = new NTttcpWorkloadState(ClientServerStatus.ExecutionStarted);
+            Item<NTttcpWorkloadState> expectedStateItem = new Item<NTttcpWorkloadState>(nameof(NTttcpWorkloadState), executionStartedState);
+
+            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(results);
+
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(NTttcpWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 
         private class TestNTttcpClientExecutor : NTttcpClientExecutor2

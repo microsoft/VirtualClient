@@ -57,59 +57,65 @@ namespace VirtualClient.Actions
         public async Task DeathStarBenchClientExecutorIntializeLocalAPIClientOnSingleVMSetup()
         {
             this.fixture.Dependencies.RemoveAll<EnvironmentLayout>();
-            using TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-            await executor.OnInitialize(EventContext.None, CancellationToken.None);
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
-            Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
-            Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+            }
         }
 
         [Test]
         public async Task DeathStarBenchClientExecutorIntializeServerAPIClientOnMultiVMSetup()
         {
-            using TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-            await executor.OnInitialize(EventContext.None, CancellationToken.None);
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await executor.OnInitialize(EventContext.None, CancellationToken.None);
 
-            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+                ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-            Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
-            Assert.AreEqual(this.ipAddress, serverIPAddress);
+                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                Assert.AreEqual(this.ipAddress, serverIPAddress);
+            }
         }
 
         [Test]
         [TestCase("socialNetwork")]
         [TestCase("mediaMicroservices")]
         [TestCase("hotelReservation")]
-        public async Task DeathStarBenchClientExecutorExecutesExpectedProcessMultiVM(string ServiceName)
+        public async Task DeathStarBenchClientExecutorExecutesExpectedProcessMultiVM(string serviceName)
         {
             int processExecuted = 0;
-            string binaryPath = this.fixture.PlatformSpecifics.Combine("linux-x64", ServiceName, "wrk2");
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.Scenario)] = ServiceName;
+            string binaryPath = this.fixture.PlatformSpecifics.Combine("linux-x64", serviceName, "wrk2");
+            this.fixture.Parameters[nameof(DeathStarBenchExecutor.Scenario)] = serviceName;
             string expectedWorkingDirectory = this.fixture.PlatformSpecifics.Combine(mockPath.Path, binaryPath);
-            using TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
-            this.SetupDefaultMockApiBehavior(ServiceName);
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+            using (TestDeathStarBenchClientExecutor executor = new TestDeathStarBenchClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                if (workingDirectory == expectedWorkingDirectory)
+                this.SetupDefaultMockApiBehavior(serviceName);
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
-                    processExecuted++;
+                    if (workingDirectory == expectedWorkingDirectory)
+                    {
+                        processExecuted++;
+                    }
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                if (serviceName == "socialNetwork")
+                {
+                    Assert.AreEqual(5, processExecuted);
                 }
-                return this.fixture.Process;
-            };
-
-            await executor.ExecuteAsync(CancellationToken.None)
-                .ConfigureAwait(false);
-            if (ServiceName == "socialNetwork")
-            {
-                Assert.AreEqual(5, processExecuted);
+                else
+                {
+                    Assert.AreEqual(2, processExecuted);
+                }
             }
-            else
-            {
-                Assert.AreEqual(2, processExecuted);
-            }
-
         }
 
         private void SetUpDefaultParameters()
@@ -159,11 +165,10 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedCommand));
         }
 
-        private void SetupDefaultMockApiBehavior(string ServiceName)
+        private void SetupDefaultMockApiBehavior(string serviceName)
         {
-            DeathStarBenchState expectedState = new DeathStarBenchState(ServiceName, true);
-
-            Item<JObject> expectedStateItem = new Item<JObject>(nameof(DeathStarBenchState), JObject.FromObject(expectedState));
+            DeathStarBenchState expectedState = new DeathStarBenchState(serviceName, true);
+            Item<DeathStarBenchState> expectedStateItem = new Item<DeathStarBenchState>(nameof(DeathStarBenchState), expectedState);
 
             this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem));
@@ -176,7 +181,7 @@ namespace VirtualClient.Actions
 
             this.fixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<DeathStarBenchState>(nameof(DeathStarBenchState), expectedState)))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 

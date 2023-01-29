@@ -15,6 +15,7 @@
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="$(Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="$(Swashbuckle_AspNetCore_PackageVersion)" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
         <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
         <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
@@ -133,6 +134,13 @@
 
     <ItemGroup>
         <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="profiles\PERF-API.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </None>
     </ItemGroup>
 
     <Target Name="PublishProfiles" AfterTargets="Publish">

@@ -112,13 +112,16 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync("sb", this.GetCommandLineArguments(), this.SuperBenchmarkDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteCommandAsync("sb", this.GetCommandLineArguments(), this.SuperBenchmarkDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
+                DateTime endTime = DateTime.UtcNow;
 
-            this.LogSuperBenchmarkOutput(startTime, endTime);
+                this.LogSuperBenchmarkOutput(startTime, endTime);
+            }
         }
 
         /// <summary>

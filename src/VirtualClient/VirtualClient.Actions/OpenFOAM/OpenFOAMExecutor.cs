@@ -138,16 +138,20 @@ namespace VirtualClient.Actions
                         .ConfigureAwait(false);
                 }
 
-                foreach (var command in this.executionCommands)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    startTime = DateTime.UtcNow;
-                    await this.ExecuteWorkloadAsync("sudo", command, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    endTime = DateTime.UtcNow;
-                }
+                    foreach (var command in this.executionCommands)
+                    {
+                        startTime = DateTime.UtcNow;
+                        await this.ExecuteWorkloadAsync("sudo", command, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
 
-                await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                        endTime = DateTime.UtcNow;
+                    }
+
+                    await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
 
@@ -300,6 +304,7 @@ namespace VirtualClient.Actions
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateProcess(command, arguments))
             {
                 SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
                 await process.StartAndWaitAsync(cancellationToken)
                     .ConfigureAwait(false);
 

@@ -3,25 +3,23 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using VirtualClient.Actions.NetworkPerformance;
-    using VirtualClient.Contracts;
-    using Polly;
-    using System.Net.Http;
-    using System.Net;
     using System.IO;
+    using System.Net.Http;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
     using Newtonsoft.Json.Linq;
-    using static VirtualClient.Actions.CPSExecutor2;
+    using NUnit.Framework;
+    using Polly;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+    using static VirtualClient.Actions.CPSExecutor2;
 
     [TestFixture]
     [Category("Unit")]
@@ -30,50 +28,16 @@ namespace VirtualClient.Actions
         private MockFixture mockFixture;
         private DependencyPath mockPath;
 
+        [OneTimeSetUp]
+        public void SetupFixture()
+        {
+            VirtualClientApiClient.DefaultPollingWaitTime = TimeSpan.Zero;
+        }
+
         [SetUp]
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-
-        }
-
-        public void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
-        {
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.Parameters["Port"] = 3001;
-            this.mockFixture.Parameters["Connections"] = 256;
-            this.mockFixture.Parameters["TestDuration"] = 300;
-            this.mockFixture.Parameters["WarmupTime"] = 44;
-            this.mockFixture.Parameters["Delaytime"] = 30;
-            this.mockFixture.Parameters["ConfidenceLevel"] = "99";
-
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
-            string results = File.ReadAllText(resultsPath);
-
-            this.mockFixture.Process.StandardOutput.Append(results);
-
-            CPSWorkloadState executionStartedState = new CPSWorkloadState(ClientServerStatus.ExecutionStarted);
-            Item<CPSWorkloadState> expectedStateItem = new Item<CPSWorkloadState>(nameof(CPSWorkloadState), executionStartedState);
-
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(results);
-
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(CPSWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, new Item<CPSWorkloadState>(nameof(CPSWorkloadState), executionStartedState)))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
         }
 
         [Test]
@@ -101,13 +65,13 @@ namespace VirtualClient.Actions
                         Assert.AreEqual(sendInstructionsExecuted, 1);
                         sendInstructionsExecuted++;
                     }
+
                     Assert.AreEqual(stateItem.Definition.Properties["Scenario"], "AnyScenario");
                     Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(CPSServerExecutor2).Name);
                     Assert.AreEqual(stateItem.Definition.Properties["Connections"], 256);
                     Assert.AreEqual(stateItem.Definition.Properties["Port"], 3001);
                     Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
                     Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 44);
-                    
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -144,7 +108,6 @@ namespace VirtualClient.Actions
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
 
-
             string exe = platformID == PlatformID.Win32NT ? "cps.exe" : "cps";
             if (platformID == PlatformID.Win32NT)
             {
@@ -168,6 +131,46 @@ namespace VirtualClient.Actions
                 commandsExecuted);
             }
         }
+
+        private void SetupDefaultMockApiBehavior(PlatformID platformID, Architecture architecture)
+        {
+            this.mockFixture.Setup(platformID, architecture);
+            this.mockPath = new DependencyPath("NetworkingWorkload", this.mockFixture.PlatformSpecifics.GetPackagePath("networkingworkload"));
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.Parameters["Port"] = 3001;
+            this.mockFixture.Parameters["Connections"] = 256;
+            this.mockFixture.Parameters["TestDuration"] = 300;
+            this.mockFixture.Parameters["WarmupTime"] = 44;
+            this.mockFixture.Parameters["Delaytime"] = 30;
+            this.mockFixture.Parameters["ConfidenceLevel"] = "99";
+
+            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string resultsPath = Path.Combine(currentDirectory, "Examples", "CPS", "CPS_Example_Results_Server.txt");
+            string results = File.ReadAllText(resultsPath);
+
+            this.mockFixture.Process.StandardOutput.Append(results);
+
+            CPSWorkloadState executionStartedState = new CPSWorkloadState(ClientServerStatus.ExecutionStarted);
+            Item<CPSWorkloadState> expectedStateItem = new Item<CPSWorkloadState>(nameof(CPSWorkloadState), executionStartedState);
+
+            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(results);
+
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetEventingOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(CPSWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
+        }
+
 
         private class TestCPSClientExecutor : CPSClientExecutor2
         {

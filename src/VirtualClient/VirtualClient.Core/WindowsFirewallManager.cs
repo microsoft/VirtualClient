@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common;
@@ -45,15 +46,6 @@ namespace VirtualClient
         public async override Task EnableInboundConnectionAsync(FirewallEntry firewallEntry, CancellationToken cancellationToken)
         {
             firewallEntry.ThrowIfNull(nameof(firewallEntry));
-            try
-            {
-                await this.DeleteFirewallRuleAsync(firewallEntry.Name, cancellationToken).ConfigureAwait(false);
-            }
-            catch 
-            {
-                // Attempted to delete if already exists.
-                // Should not block VC on failure.
-            }
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -67,16 +59,49 @@ namespace VirtualClient
                     ports = $"{firewallEntry.PortRange.Start.Value}-{firewallEntry.PortRange.End.Value}";
                 }
 
-                string netshCommandArguments = $"advfirewall firewall add rule name=\"{firewallEntry.Name}\" dir=in protocol={firewallEntry.Protocol} localport={ports} action=allow";
+                bool ruleAlreadyExists = false;
 
-                using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "netsh", netshCommandArguments))
+                // This command DOES NOT require administrative privilege
+                string netshCommandArguments = $"advfirewall firewall show rule name=\"{firewallEntry.Name}\"";
+
+                using (IProcessProxy process = this.ProcessManager.CreateProcess("netsh", netshCommandArguments))
                 {
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (!cancellationToken.IsCancellationRequested)
+                    if (process.ExitCode == 0)
                     {
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        ruleAlreadyExists = Regex.IsMatch(process.StandardOutput.ToString(), $@"LocalPort:\s*{ports}", RegexOptions.IgnoreCase);
+
+                        if (!ruleAlreadyExists)
+                        {
+                            try
+                            {
+                                await this.DeleteFirewallRuleAsync(firewallEntry.Name, cancellationToken).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                                // Attempted to delete if already exists.
+                                // Should not block VC on failure.
+                            }
+                        }
+                    }
+                }
+
+                if (!ruleAlreadyExists)
+                {
+                    // This command DOES require administrative privilege
+                    netshCommandArguments = $"advfirewall firewall add rule name=\"{firewallEntry.Name}\" dir=in protocol={firewallEntry.Protocol} localport={ports} action=allow";
+
+                    using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "netsh", netshCommandArguments))
+                    {
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        }
                     }
                 }
             }
@@ -86,28 +111,52 @@ namespace VirtualClient
         public async override Task EnableInboundAppAsync(FirewallEntry firewallEntry, CancellationToken cancellationToken)
         {
             firewallEntry.ThrowIfNull(nameof(firewallEntry));
-            try
-            {
-                await this.DeleteFirewallRuleAsync(firewallEntry.Name, cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                // Attempted to delete if already exists.
-                // Should not block VC on failure.
-            }
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                string netshCommandArguments = $"advfirewall firewall add rule name=\"{firewallEntry.Name}\" dir=in action=allow program=\"{firewallEntry.AppPath}\" enable=yes";
+                bool ruleAlreadyExists = false;
 
-                using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "netsh", netshCommandArguments))
+                // This command DOES NOT require administrative privilege
+                string netshCommandArguments = $"advfirewall firewall show rule name=\"{firewallEntry.Name}\" verbose";
+
+                using (IProcessProxy process = this.ProcessManager.CreateProcess("netsh", netshCommandArguments))
                 {
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (!cancellationToken.IsCancellationRequested)
+                    if (process.ExitCode == 0)
                     {
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        ruleAlreadyExists = Regex.IsMatch(process.StandardOutput.ToString(), $@"Program:\s*{Regex.Escape(firewallEntry.AppPath)}", RegexOptions.IgnoreCase);
+
+                        if (!ruleAlreadyExists)
+                        {
+                            try
+                            {
+                                await this.DeleteFirewallRuleAsync(firewallEntry.Name, cancellationToken).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                                // Attempted to delete if already exists.
+                                // Should not block VC on failure.
+                            }
+                        }
+                    }
+                }
+
+                if (!ruleAlreadyExists)
+                {
+                    // This command DOES require administrative privilege
+                    netshCommandArguments = $"advfirewall firewall add rule name=\"{firewallEntry.Name}\" dir=in action=allow program=\"{firewallEntry.AppPath}\" enable=yes";
+
+                    using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "netsh", netshCommandArguments))
+                    {
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        }
                     }
                 }
             }

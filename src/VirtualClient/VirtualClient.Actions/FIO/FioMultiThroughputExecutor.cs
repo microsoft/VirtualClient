@@ -542,8 +542,11 @@ namespace VirtualClient.Actions
                 DiskPerformanceWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
                 metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
-                await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
                     .ConfigureAwait(false);
+                }
             }
         }
 

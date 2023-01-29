@@ -88,15 +88,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string commandLineArguments = this.GetCommandLineArguments();
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string commandLineArguments = this.GetCommandLineArguments();
 
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
+                DateTime endTime = DateTime.UtcNow;
 
-            this.LogSPECJbbOutput(startTime, endTime, telemetryContext, cancellationToken);
+                this.LogSPECJbbOutput(startTime, endTime, telemetryContext, cancellationToken);
+            }
 
             // If the content blob store is not defined, the monitor does nothing and exits.
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))

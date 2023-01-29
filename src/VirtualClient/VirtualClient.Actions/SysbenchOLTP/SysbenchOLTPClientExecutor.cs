@@ -258,19 +258,22 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
-                this.StartTime = DateTime.UtcNow;
-                this.sysbenchExecutionArguments = $@"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress}";
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    this.StartTime = DateTime.UtcNow;
+                    this.sysbenchExecutionArguments = $@"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress}";
 
-                DateTime startTime = DateTime.UtcNow;
-                // gets executor arguments, combines with path & directory to get full command; metrics are stdout
-                string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-                string results = await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                    DateTime startTime = DateTime.UtcNow;
+                    // gets executor arguments, combines with path & directory to get full command; metrics are stdout
+                    string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
+                    string results = await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, cancellationToken)
+                        .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, cancellationToken)
+                        .ConfigureAwait(false);
 
-                this.CaptureMetrics(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                }
             });
         }
 

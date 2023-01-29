@@ -53,23 +53,26 @@ namespace VirtualClient.Actions
 
             this.CheckPlatformSupport();
 
-            this.StartTime = DateTime.UtcNow;
-            await this.StartCoreMarkProcessAsync(CoreMarkExecutor.CoreMarkRunCommand, commandLineArguments, telemetryContext, cancellationToken);
-            this.EndTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                this.StartTime = DateTime.UtcNow;
+                await this.StartCoreMarkProcessAsync(CoreMarkExecutor.CoreMarkRunCommand, commandLineArguments, telemetryContext, cancellationToken);
+                this.EndTime = DateTime.UtcNow;
 
-            this.LogCoreMarkOutput(
-                this.Combine(this.CoreMarkDirectory, CoreMarkExecutor.CoreMarkOutputFile1),
-                this.StartTime,
-                this.EndTime,
-                telemetryContext,
-                cancellationToken);
+                this.LogCoreMarkOutput(
+                    this.Combine(this.CoreMarkDirectory, CoreMarkExecutor.CoreMarkOutputFile1),
+                    this.StartTime,
+                    this.EndTime,
+                    telemetryContext,
+                    cancellationToken);
 
-            this.LogCoreMarkOutput(
-                this.Combine(this.CoreMarkDirectory, CoreMarkExecutor.CoreMarkOutputFile2),
-                this.StartTime,
-                this.EndTime,
-                telemetryContext,
-                cancellationToken);
+                this.LogCoreMarkOutput(
+                    this.Combine(this.CoreMarkDirectory, CoreMarkExecutor.CoreMarkOutputFile2),
+                    this.StartTime,
+                    this.EndTime,
+                    telemetryContext,
+                    cancellationToken);
+            }
         }
 
         private async Task StartCoreMarkProcessAsync(string pathToExe, string commandLineArguments, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -78,7 +81,6 @@ namespace VirtualClient.Actions
             using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, this.CoreMarkDirectory))
             {
                 SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-
                 await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                 if (!cancellationToken.IsCancellationRequested)

@@ -135,9 +135,13 @@ namespace VirtualClient
             {
                 TError exception = default(TError);
                 string error = null;
-                string command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
+                string command = string.Empty;
+                if (process.StartInfo != null)
+                {
+                    command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
                     ? $"{process.StartInfo.FileName} {process.StartInfo.Arguments}"
                     : $"{process.StartInfo.FileName}";
+                }
 
                 if (errorMessage != null)
                 {

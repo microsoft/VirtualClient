@@ -6,7 +6,6 @@ namespace VirtualClient.Api
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Net;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -14,8 +13,6 @@ namespace VirtualClient.Api
     using Microsoft.Extensions.Logging.Abstractions;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides generic exception response handling functionality for VC API
@@ -51,17 +48,6 @@ namespace VirtualClient.Api
         /// <param name="context">Provides the context of the HTTP request and response.</param>
         public async Task InvokeAsync(HttpContext context)
         {
-            EventContext requestContext = EventContext.Persist(Guid.NewGuid())
-                .AddContext("request", new
-                {
-                    protocol = context.Request.Protocol,
-                    scheme = context.Request.Scheme,
-                    method = context.Request.Method,
-                    path = context.Request.Path.Value,
-                    queryString = context.Request.QueryString.Value,
-                    contentType = context.Request.ContentType
-                });
-
             try
             {
                 if (this.nextMiddlewareComponent != null)

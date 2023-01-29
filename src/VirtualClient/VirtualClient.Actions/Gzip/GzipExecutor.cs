@@ -80,17 +80,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                string commandLineArguments = this.GetCommandLineArguments();
 
-            string commandLineArguments = this.GetCommandLineArguments();
+                // Execute Gzip
+                string results = await this.ExecuteCommandAsync("bash", $"-c \"gzip {commandLineArguments}\"", this.GzipDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            // Execute Gzip
-            string results = await this.ExecuteCommandAsync("bash", $"-c \"gzip {commandLineArguments}\"", this.GzipDirectory, cancellationToken)
-                .ConfigureAwait(false);
-
-            DateTime endTime = DateTime.UtcNow;
-
-            this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+                DateTime endTime = DateTime.UtcNow;
+                this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>

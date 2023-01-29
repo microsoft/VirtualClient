@@ -72,8 +72,11 @@ namespace VirtualClient.Actions
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 
-                    await process.StartAndWaitAsync(cancellationToken)
+                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                    {
+                        await process.StartAndWaitAsync(cancellationToken)
                            .ConfigureAwait(false);
+                    }
 
                     if (!cancellationToken.IsCancellationRequested)
                     {

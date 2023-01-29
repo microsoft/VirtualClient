@@ -132,17 +132,20 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(SpecJvmExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                         {
-                            this.Logger.LogProcessDetails<SpecJvmExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            this.CleanupTasks.Add(() => process.SafeKill());
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                            await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
+
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                this.Logger.LogProcessDetails<SpecJvmExecutor>(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            }
                         }
                     }
                 }).ConfigureAwait(false);

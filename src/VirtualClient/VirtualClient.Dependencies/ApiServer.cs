@@ -7,9 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -32,12 +30,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// The time to wait in-between subsequent restart attempts of the API service.
+        /// </summary>
+        protected TimeSpan RestartAttemptWaitTime { get; set; } = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// Starts the Virtual Client API server.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IApiManager apiManager = this.Dependencies.GetService<IApiManager>();
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
+            EventContext relatedContext = telemetryContext.Clone();
 
             // Default port
             int apiPort = clientManager.GetApiPort();
@@ -45,34 +49,25 @@ namespace VirtualClient.Dependencies
             {
                 ClientInstance client = this.GetLayoutClientInstance();
                 apiPort = clientManager.GetApiPort(client);
-                telemetryContext.AddContext(nameof(client), client);
+                relatedContext.AddContext(nameof(client), client);
             }
 
-            telemetryContext.AddContext(nameof(apiPort), apiPort);
+            relatedContext.AddContext(nameof(apiPort), apiPort);
 
-            while (!cancellationToken.IsCancellationRequested)
+            ApiServer.apiHostingTask = this.Logger.LogMessageAsync($"{this.TypeName}.StartupApiServer", telemetryContext, async () =>
             {
                 try
                 {
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.RunApiServer", telemetryContext, async () =>
-                    {
-                        ApiServer.apiHostingTask = apiManager.StartApiHostAsync(this.Dependencies, apiPort, cancellationToken);
-                        await Task.Delay(5000).ConfigureAwait(false);
-                        ApiServer.apiHostingTask.ThrowIfErrored();
-
-                    }).ConfigureAwait(false);
-
-                    break;
+                    await apiManager.StartApiHostAsync(this.Dependencies, apiPort, cancellationToken)
+                        .ConfigureAwait(false);
                 }
-                catch (Exception exc)
+                catch (VirtualClientException exc)
                 {
-                    this.Logger.LogErrorMessage(exc, telemetryContext.Clone().AddError(exc), LogLevel.Error);
+                    throw new DependencyException("Virtual Client API host service failed to start.", exc, ErrorReason.ApiStartupFailed);
                 }
-                finally
-                {
-                    await Task.Delay(1000).ConfigureAwait(false);
-                }
-            }
+            });
+
+            return Task.CompletedTask;
         }
     }
 }

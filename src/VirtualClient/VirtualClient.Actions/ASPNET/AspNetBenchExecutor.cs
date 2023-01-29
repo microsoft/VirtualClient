@@ -181,7 +181,10 @@ namespace VirtualClient.Actions
             // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
             this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:{this.Port}/json --print r --format json";
 
-            return this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, cancellationToken);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                return this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, cancellationToken);
+            }
         }
 
         private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, bool isServer = false)

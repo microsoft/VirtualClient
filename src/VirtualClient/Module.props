@@ -56,8 +56,8 @@
         <!-- Microsoft.AspNetCore.Mvc.Versioning -->
         <Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>5.0.0</Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>
 
-        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson -->
-        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>6.0.0</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
+        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson 6.0.0 -->
+        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>5.0.4</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
 
         <!-- Microsoft_Azure_Profiling_PackageVersion -->
         <Microsoft_Azure_Profiling_PackageVersion>1.0.30</Microsoft_Azure_Profiling_PackageVersion>
@@ -122,6 +122,9 @@
         <!-- Serilog.Sinks.RollingFile -->
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
+        <!-- Swashbuckle.AspNetCore -->
+        <Swashbuckle_AspNetCore_PackageVersion>6.1.1</Swashbuckle_AspNetCore_PackageVersion>
+
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
 
@@ -167,7 +170,7 @@
     *****************************************************************************
     -->
     <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <RuntimeFrameworkVersion>6.0.0</RuntimeFrameworkVersion>
+        <RuntimeFrameworkVersion>6.0.13</RuntimeFrameworkVersion>
     </PropertyGroup>
 
     <!--

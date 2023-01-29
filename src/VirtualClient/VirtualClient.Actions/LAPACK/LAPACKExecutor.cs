@@ -90,52 +90,53 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            if (this.Platform == PlatformID.Unix)
-            { 
-                // Run make to generate all object files for fortran subroutines.
-                await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                if (this.Platform == PlatformID.Unix)
+                {
+                    // Run make to generate all object files for fortran subroutines.
+                    await this.ExecuteCommandAsync("make", null, this.packageDirectory, cancellationToken)
+                            .ConfigureAwait(false);
+
+                    // Delete results file that gets generated.
+                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                    {
+                        await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                    }
+
+                    string executeScriptCommandArguments = "bash " + this.ScriptFilePath;
+
+                    // Run script to start testing the routines.
+                    await this.ExecuteCommandAsync("sudo", executeScriptCommandArguments, this.packageDirectory, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (this.Platform == PlatformID.Win32NT)
+                {
+                    string bashPath = this.PlatformSpecifics.Combine(this.cygwinPackageDirectory, "bin", "bash");
+                    string packageDirectoryPath = Regex.Replace(this.packageDirectory, @"\\", "/");
+                    packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
+
+                    string makeCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./cmakescript.sh'";
+                    await this.ExecuteCommandAsync(bashPath, makeCommand, this.packageDirectory, cancellationToken)
                         .ConfigureAwait(false);
 
-                // Delete results file that gets generated.
-                if (this.fileSystem.File.Exists(this.ResultsFilePath))
-                {
-                    await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                    // Delete results file that gets generated.
+                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                    {
+                        await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                    }
+
+                    string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./LapackTestScript.sh'";
+                    await this.ExecuteCommandAsync(bashPath, executeScriptCommandArguments, this.packageDirectory, cancellationToken)
+                        .ConfigureAwait(false);
                 }
 
-                string executeScriptCommandArguments = "bash " + this.ScriptFilePath;
-                // Run script to start testing the routines.
-                await this.ExecuteCommandAsync("sudo", executeScriptCommandArguments, this.packageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                DateTime endTime = DateTime.UtcNow;
+
+                this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
+                this.CaptureWorkloadResults(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken);
             }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                string bashPath = this.PlatformSpecifics.Combine(this.cygwinPackageDirectory, "bin", "bash");
-                string packageDirectoryPath = Regex.Replace(this.packageDirectory, @"\\", "/");
-                packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
-                
-                string makeCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./cmakescript.sh'";
-                await this.ExecuteCommandAsync(bashPath, makeCommand, this.packageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                // Delete results file that gets generated.
-                if (this.fileSystem.File.Exists(this.ResultsFilePath))
-                {
-                    await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
-                }
-
-                string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./LapackTestScript.sh'";
-                await this.ExecuteCommandAsync(bashPath, executeScriptCommandArguments, this.packageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-            }
-
-            DateTime endTime = DateTime.UtcNow;
-
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
-
-            this.CaptureWorkloadResults(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken);
-            
         }
 
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)

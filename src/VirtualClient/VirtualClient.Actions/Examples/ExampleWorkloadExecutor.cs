@@ -344,7 +344,7 @@ namespace VirtualClient.Actions
                 // This example shows how to integrate with monitors that run "on-demand" to do background profiling
                 // work while the workload is running. To integrate with any one or more of these monitors (defined in monitor profiles),
                 // simply wrap the logic for running the workload in a 'BackgroundProfiling' block.
-                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     // We create a operating system process to host the executing workload, start it and
                     // wait for it to exit.

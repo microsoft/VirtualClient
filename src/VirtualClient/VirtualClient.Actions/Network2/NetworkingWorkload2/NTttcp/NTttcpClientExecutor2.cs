@@ -24,6 +24,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.LatteExecutor2;
 
     /// <summary>
     /// Executes the client side of NTttcp.
@@ -360,12 +361,9 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
-                NTttcpWorkloadState expectedServerState = new NTttcpWorkloadState(ClientServerStatus.ExecutionStarted);
-                Item<NTttcpWorkloadState> expectedServerStateInstance = new Item<NTttcpWorkloadState>(nameof(NTttcpWorkloadState), expectedServerState);
-
-                await this.ServerApiClient.SynchronizeStateAsync(
-                    expectedServerStateInstance, NTttcpWorkloadStateEqualityComparer.Instance, cancellationToken, this.StateConfirmationPollingTimeout)
-                    .ConfigureAwait(false);
+                await this.ServerApiClient.PollForExpectedStateAsync<NTttcpWorkloadState>(
+                    nameof(NTttcpWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
+                   .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                 this.Logger.LogTraceMessage("Synchronization: Start client workload...");
@@ -420,28 +418,6 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
             }
 
-        }
-
-        private class NTttcpWorkloadStateEqualityComparer : IEqualityComparer<JObject>
-        {
-            private NTttcpWorkloadStateEqualityComparer()
-            {
-            }
-
-            public static NTttcpWorkloadStateEqualityComparer Instance { get; } = new NTttcpWorkloadStateEqualityComparer();
-
-            public bool Equals(JObject x, JObject y)
-            {
-                NTttcpWorkloadState xState = x.ToObject<NTttcpWorkloadState>();
-                NTttcpWorkloadState yState = y.ToObject<NTttcpWorkloadState>();
-
-                return string.Equals(xState.Status.ToString(), yState.Status.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode(JObject obj)
-            {
-                return obj.GetHashCode();
-            }
         }
     }
 }

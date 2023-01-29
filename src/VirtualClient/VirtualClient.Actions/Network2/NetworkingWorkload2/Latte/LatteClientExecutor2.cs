@@ -226,11 +226,8 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
-                LatteWorkloadState expectedServerState = new LatteWorkloadState(ClientServerStatus.ExecutionStarted);
-                Item<LatteWorkloadState> expectedServerStateInstance = new Item<LatteWorkloadState>(nameof(LatteWorkloadState), expectedServerState);
-
-                await this.ServerApiClient.SynchronizeStateAsync(
-                    expectedServerStateInstance, LatteWorkloadStateEqualityComparer.Instance, cancellationToken, this.StateConfirmationPollingTimeout)
+                await this.ServerApiClient.PollForExpectedStateAsync<LatteWorkloadState>(
+                    nameof(LatteWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
                     .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
@@ -339,7 +336,7 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
             {
-                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
@@ -414,28 +411,6 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
                 }
-            }
-        }
-
-        private class LatteWorkloadStateEqualityComparer : IEqualityComparer<JObject>
-        {
-            private LatteWorkloadStateEqualityComparer()
-            {
-            }
-
-            public static LatteWorkloadStateEqualityComparer Instance { get; } = new LatteWorkloadStateEqualityComparer();
-
-            public bool Equals(JObject x, JObject y)
-            {
-                LatteWorkloadState xState = x.ToObject<LatteWorkloadState>();
-                LatteWorkloadState yState = y.ToObject<LatteWorkloadState>();
-
-                return string.Equals(xState.Status.ToString(), yState.Status.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode(JObject obj)
-            {
-                return obj.GetHashCode();
             }
         }
     }

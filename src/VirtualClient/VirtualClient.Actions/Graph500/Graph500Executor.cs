@@ -105,19 +105,22 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            
-            await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+
+                await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken)
+                        .ConfigureAwait(false);
+
+                string executeScriptCommandArguments = this.Scale + " " + this.EdgeFactor;
+                await this.ExecuteCommandAsync(this.ExecutableFilePath, executeScriptCommandArguments, this.PackageDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
-            string executeScriptCommandArguments = this.Scale + " " + this.EdgeFactor;
-            await this.ExecuteCommandAsync(this.ExecutableFilePath, executeScriptCommandArguments, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
-
-            DateTime endTime = DateTime.UtcNow;
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
-            await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+                DateTime endTime = DateTime.UtcNow;
+                this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
+                await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
         private void ThrowIfPlatformIsNotSupported()

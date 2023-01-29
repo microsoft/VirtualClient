@@ -201,15 +201,12 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
-                // We can directly poll for the expected state. Do this.Most probably will work because we don't have different tools.
-                DeathStarBenchState expectedServerState = new DeathStarBenchState(this.ServiceName, true);
-
-                await this.ServerApiClient.PollForExpectedStateAsync(
+                await this.ServerApiClient.PollForExpectedStateAsync<DeathStarBenchState>(
                     nameof(DeathStarBenchState),
-                    JObject.FromObject(expectedServerState),
+                    (state) => state.ServiceName == this.ServiceName && state.ServiceState == true,
                     DeathStarBenchExecutor.StateConfirmationPollingTimeout,
-                    DefaultStateComparer.Instance,
-                    cancellationToken).ConfigureAwait(false);
+                    cancellationToken,
+                    this.Logger).ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                 this.Logger.LogTraceMessage("Synchronization: Start client workload...");
@@ -272,6 +269,7 @@ namespace VirtualClient.Actions
             {
                 string joinSwarmCommand = await this.GetJoinSwarmCommand(cancellationToken)
                     .ConfigureAwait(false);
+
                 await this.ExecuteCommandAsync<DeathStarBenchClientExecutor>(joinSwarmCommand, this.ServiceDirectory, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -294,11 +292,13 @@ namespace VirtualClient.Actions
                 string resultsPath = this.PlatformSpecifics.Combine(this.workPath, $"results.txt");
                 this.ResetFile(resultsPath, telemetryContext);
 
-                await this.ExecuteCommandAsync<DeathStarBenchClientExecutor>(
-                    @$"bash -c ""./wrk -D exp -t {this.NumberOfThreads} -c {this.NumberOfConnections} -d {this.Duration} -L -s {this.actionScript[this.ServiceName.ToLower()][action]} -R {this.RequestPerSec} >> results.txt""",
-                    this.workPath,
-                    cancellationToken)
-                .ConfigureAwait(false);
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    await this.ExecuteCommandAsync<DeathStarBenchClientExecutor>(
+                        @$"bash -c ""./wrk -D exp -t {this.NumberOfThreads} -c {this.NumberOfConnections} -d {this.Duration} -L -s {this.actionScript[this.ServiceName.ToLower()][action]} -R {this.RequestPerSec} >> results.txt""",
+                        this.workPath,
+                        cancellationToken).ConfigureAwait(false);
+                }
 
                 await this.CaptureWorkloadResultsAsync(resultsPath, $"{this.ServiceName}_{action}", this.StartTime, DateTime.Now, telemetryContext)
                     .ConfigureAwait(false);
@@ -320,16 +320,17 @@ namespace VirtualClient.Actions
 
             DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(resultsContent);
             IList<Metric> metrics = deathStarBenchMetricsParser.Parse();
+
             this.Logger.LogMetrics(
-                        "DeathStarBench",
-                        scenarioName,
-                        startTime,
-                        endTime,
-                        metrics,
-                        string.Empty,
-                        this.Parameters.ToString(),
-                        this.Tags,
-                        telemetryContext);
+                "DeathStarBench",
+                scenarioName,
+                startTime,
+                endTime,
+                metrics,
+                string.Empty,
+                this.Parameters.ToString(),
+                this.Tags,
+                telemetryContext);
         }
 
         /// <summary>
