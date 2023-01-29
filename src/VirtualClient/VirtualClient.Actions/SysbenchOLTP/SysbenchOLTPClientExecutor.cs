@@ -65,12 +65,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of runs the client executes load on server.
         /// </summary>
-        public string NumberOfRuns
+        public string RunCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumberOfRuns), out IConvertible numberOfRuns);
-                return numberOfRuns?.ToString();
+                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RunCount), out IConvertible runCount);
+                return runCount?.ToString();
             }
         }
 

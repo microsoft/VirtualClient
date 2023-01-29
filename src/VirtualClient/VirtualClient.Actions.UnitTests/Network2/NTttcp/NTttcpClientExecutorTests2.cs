@@ -69,7 +69,7 @@ namespace VirtualClient.Actions
                     Assert.AreEqual(notification.Definition.Properties["Type"], typeof(NTttcpServerExecutor2).Name);
                     Assert.AreEqual(notification.Definition.Properties["Scenario"], "AnyScenario");
                     Assert.AreEqual(notification.Definition.Properties["Protocol"], ProtocolType.Tcp.ToString());
-                    Assert.AreEqual(notification.Definition.Properties["ConcurrentThreads"], 1);
+                    Assert.AreEqual(notification.Definition.Properties["ThreadCount"], 1);
                     Assert.AreEqual(notification.Definition.Properties["ClientBufferSize"], "4k");
                     Assert.AreEqual(notification.Definition.Properties["TestDuration"], 300);
                     Assert.AreEqual(notification.Definition.Properties["Port"], 5500);

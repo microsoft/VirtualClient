@@ -7,14 +7,16 @@
     },
     "Parameters": {
         "CompilerName": "gcc",
-        "CompilerVersion": "10"
+        "CompilerVersion": "10",
+        "ThreadCount": null
     },
     "Actions": [
         {
             "Type": "CoreMarkExecutor",
             "Parameters": {
                 "Scenario": "ScoreSystem",
-                "PackageName": "coremark"
+                "PackageName": "coremark",
+                "ThreadCount":"$.Parameters.ThreadCount"
             }
         }
     ],

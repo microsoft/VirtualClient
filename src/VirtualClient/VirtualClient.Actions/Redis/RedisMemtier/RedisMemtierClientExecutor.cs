@@ -45,24 +45,24 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of clients per thread.
         /// </summary>
-        public string NumberOfClients
+        public string ClientCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.NumberOfClients), out IConvertible numberOfClients);
-                return numberOfClients?.ToString();
+                this.Parameters.TryGetValue(nameof(this.ClientCount), out IConvertible clientCount);
+                return clientCount?.ToString();
             }
         }
 
         /// <summary>
         /// Number of threads.
         /// </summary>
-        public string NumberOfThreads
+        public string ThreadCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.NumberOfThreads), out IConvertible numberOfThreads);
-                return numberOfThreads?.ToString();
+                this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible threadCount);
+                return threadCount?.ToString();
             }
         }
 
@@ -93,12 +93,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of runs the client executes load on server.
         /// </summary>
-        public string NumberOfRuns
+        public string RunCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.NumberOfRuns), out IConvertible numberOfRuns);
-                return numberOfRuns?.ToString();
+                this.Parameters.TryGetValue(nameof(this.RunCount), out IConvertible runCount);
+                return runCount?.ToString();
             }
         }
 
@@ -215,11 +215,11 @@ namespace VirtualClient.Actions
                     for (int i = 1; i <= int.Parse(this.Copies); i++)
                     {
                         int port = int.Parse(this.Port) + i - 1;
-                        string clientCommand = $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.NumberOfClients} --threads {this.NumberOfThreads} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.NumberOfRuns} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
+                        string clientCommand = $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
 
                         this.Logger.LogTraceMessage($"Executing process '{clientCommand}'  at directory '{this.MemtierPackagePath}'.");
                         results += await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.MemtierPackagePath, cancellationToken)
-                                .ConfigureAwait(false) + Environment.NewLine;
+                            .ConfigureAwait(false) + Environment.NewLine;
                     }
 
                     this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);

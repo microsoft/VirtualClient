@@ -120,8 +120,8 @@ namespace VirtualClient.Actions
 
         private void SetUpDefaultParameters()
         {
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.NumberOfThreads)] = "20";
-            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.NumberOfConnections)] = "1000";
+            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.ThreadCount)] = "20";
+            this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.ConnectionCount)] = "1000";
             this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.Duration)] = "600s";
             this.fixture.Parameters[nameof(DeathStarBenchClientExecutor.RequestPerSec)] = "1000";
             this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = "socfb-Reed98";

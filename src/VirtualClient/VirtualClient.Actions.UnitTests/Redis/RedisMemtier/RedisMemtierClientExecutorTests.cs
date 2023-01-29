@@ -125,10 +125,10 @@ namespace VirtualClient.Actions
                 ["PackageName"] = this.mockPath.Name,
                 ["Copies"] = "4",
                 ["Bind"] = "1",
-                ["NumberOfClients"] = "2",
-                ["NumberOfThreads"] = "1",
+                ["ClientCount"] = "2",
+                ["ThreadCount"] = "1",
                 ["PipelineDepth"] = "32",
-                ["NumberOfRuns"] = "1",
+                ["RunCount"] = "1",
                 ["DurationInSecs"] = "30",
                 ["Port"] = "6379",
                 [nameof(RedisExecutor.Scenario)] = "Memtier"

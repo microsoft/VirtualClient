@@ -113,19 +113,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The NumberOfThreads argument defined in the profile.
+        /// The ThreadCountargument defined in the profile.
         /// </summary>
-        public int NumberOfThreads
+        public int ThreadCount
         {
             get
             {
-                string numThread = this.Parameters.GetValue<string>(nameof(Prime95Executor.NumberOfThreads));
+                string numThread = this.Parameters.GetValue<string>(nameof(Prime95Executor.ThreadCount));
                 return string.IsNullOrWhiteSpace(numThread) ? 0 : int.Parse(numThread);
             }
 
             set
             {
-                this.Parameters[nameof(this.NumberOfThreads)] = value;
+                this.Parameters[nameof(this.ThreadCount)] = value;
             }
         }
 
@@ -204,17 +204,17 @@ namespace VirtualClient.Actions
 
             // SetDefaultThreadValue if not set and Validate Parameter
             int numberOfLogicalCores = Environment.ProcessorCount;
-            if (this.NumberOfThreads <= 0 ||
-                this.NumberOfThreads > numberOfLogicalCores ||
-                (this.NumberOfThreads > numberOfLogicalCores / 2 && this.TortureHyperthreading == 1))
+            if (this.ThreadCount <= 0 ||
+                this.ThreadCount > numberOfLogicalCores ||
+                (this.ThreadCount > numberOfLogicalCores / 2 && this.TortureHyperthreading == 1))
             {
                 switch (this.TortureHyperthreading)
                 {
                     case 0:
-                        this.NumberOfThreads = numberOfLogicalCores;
+                        this.ThreadCount = numberOfLogicalCores;
                         break;
                     case 1:
-                        this.NumberOfThreads = numberOfLogicalCores / 2;
+                        this.ThreadCount = numberOfLogicalCores / 2;
                         break;
                 }
             }
@@ -356,7 +356,7 @@ namespace VirtualClient.Actions
                 $"V24OptionsConverted=1\n" +
                 $"TortureHyperthreading={this.TortureHyperthreading}\n" +
                 $"StressTester=1\n" +
-                $"TortureThreads={this.NumberOfThreads}\n" +
+                $"TortureThreads={this.ThreadCount}\n" +
                 $"MinTortureFFT={this.MinTortureFFT}\n" +
                 $"MaxTortureFFT={this.MaxTortureFFT}\n" +
                 $"TortureTime=5\n" +
@@ -438,7 +438,7 @@ namespace VirtualClient.Actions
                     this.Logger.LogMetrics(
                         "Prime95",
                         // example Scenario: ApplyStress_60mins_4K-8192K_8threads
-                        scenarioName: this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.NumberOfThreads + "threads",
+                        scenarioName: this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
                         startTime,
                         endTime,
                         metric.Name,

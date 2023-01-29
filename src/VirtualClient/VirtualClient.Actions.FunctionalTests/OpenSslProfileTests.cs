@@ -176,7 +176,9 @@ namespace VirtualClient.Actions
                         $"openssl.exe speed -elapsed -seconds 100 aes-256-cbc",
                         $"openssl.exe speed -elapsed -seconds 100 camellia-128-cbc",
                         $"openssl.exe speed -elapsed -seconds 100 camellia-192-cbc",
-                        $"openssl.exe speed -elapsed -seconds 100 camellia-256-cbc"
+                        $"openssl.exe speed -elapsed -seconds 100 camellia-256-cbc",
+                        $"openssl.exe speed -elapsed -seconds 100 rsa2048",
+                        $"openssl.exe speed -elapsed -seconds 100 rsa4096"
                     };
                     break;
 
@@ -193,7 +195,9 @@ namespace VirtualClient.Actions
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-256-cbc",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-128-cbc",
                         $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-192-cbc",
-                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-256-cbc"
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 camellia-256-cbc",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 rsa2048",
+                        $"openssl speed -multi [0-9]+ -elapsed -seconds 100 rsa4096",
                     };
                     break;
             }

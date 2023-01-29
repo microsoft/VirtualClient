@@ -1,0 +1,5 @@
+timestamp, name, pci.bus_id, driver_version, pstate, pcie.link.gen.max, pcie.link.gen.current, temperature.gpu, utilization.gpu [%], utilization.memory [%], memory.total [MiB], memory.free [MiB], memory.used [MiB]
+2023/01/11 00:06:01.255, Tesla T4, 00000001:00:00.0, 510.108.03, P8, 3, 1, 48, 0, 0, 16384, 15670, 257
+2023/01/11 00:06:01.261, Tesla T4, 00000002:00:00.0, 510.108.03, P8, 3, 1, 51, 0, 0, 16384, 15913, 14
+2023/01/11 00:06:01.266, Tesla T4, 00000003:00:00.0, 510.108.03, P8, 3, 1, 53, 0, 0, 16384, 15913, 14
+2023/01/11 00:06:01.271, Tesla T4, 00000004:00:00.0, 510.108.03, P8, 3, 1, 53, 0, 0, 16384, 15913, 14

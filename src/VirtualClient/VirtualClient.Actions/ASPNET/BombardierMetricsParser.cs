@@ -151,8 +151,8 @@ namespace VirtualClient.Actions
 
         private class Spec
         {
-            [JsonPropertyName("numberOfConnections")]
-            public int NumberOfConnections { get; set; }
+            [JsonPropertyName("ConnectionCount")]
+            public int ConnectionCount { get; set; }
 
             [JsonPropertyName("testType")]
             public string TestType { get; set; }

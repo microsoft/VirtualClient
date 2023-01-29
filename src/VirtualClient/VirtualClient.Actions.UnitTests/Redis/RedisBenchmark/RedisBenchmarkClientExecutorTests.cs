@@ -101,9 +101,9 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["PackageName"] = this.mockPath.Name,
-                ["NumberOfClients"] = "2",
+                ["ClientCount"] = "2",
                 ["PipelineDepth"] = "32",
-                ["NumberOfRequests"] = "1",
+                ["RequestCount"] = "1",
                 ["Port"] = "6379",
                 [nameof(RedisExecutor.Scenario)] = "RedisBenchmark"
             };

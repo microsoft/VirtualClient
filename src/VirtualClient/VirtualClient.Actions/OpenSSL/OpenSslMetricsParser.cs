@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Text.RegularExpressions;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -20,6 +21,8 @@ namespace VirtualClient.Actions
         private const string ColumnCipher = "Cipher";
         private const string ColumnBytes = "Bytes";
         private const string ColumnKilobytesPerSec = "KilobytesPerSec";
+        private const string ColumnUnit = "Unit";
+        private const string ColumnValue = "Value";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenSslMetricsParser"/> class.
@@ -44,6 +47,11 @@ namespace VirtualClient.Actions
         /// The parsed results of the cipher/crypto algorithm performance output.
         /// </summary>
         protected DataTable CipherResults { get; private set; }
+
+        /// <summary>
+        /// The parsed results of the rsa algorithm performance output.
+        /// </summary>
+        protected DataTable RSAResults { get; private set; }
 
         /// <summary>
         /// True if the results have been parsed.
@@ -98,16 +106,23 @@ namespace VirtualClient.Actions
         /// </returns>
         public override IList<Metric> Parse()
         {
-            bool resultsValid = false;
+            bool cipherResultsValid = false;
+            bool rsaResultsValid = false;
 
             IEnumerable<int> bufferByteSizes = this.GetCipherBufferByteSizes();
             if (this.TryParseCipherPerformanceResults(bufferByteSizes, out DataTable cipherResults))
             {
-                resultsValid = true;
+                cipherResultsValid = true;
                 this.CipherResults = cipherResults;
             }
 
-            if (!resultsValid)
+            if (this.TryParseRSAPerformanceResults(out DataTable rsaResults))
+            {
+                rsaResultsValid = true;
+                this.RSAResults = rsaResults;
+            }
+
+            if (!cipherResultsValid && !rsaResultsValid)
             {
                 throw new SchemaException(
                     $"Invalid results format. The results provided to the parser are not valid/complete OpenSSL speed workload results. Results: {Environment.NewLine}" +
@@ -115,22 +130,46 @@ namespace VirtualClient.Actions
             }
 
             List<Metric> metrics = new List<Metric>();
-            foreach (DataRow row in this.CipherResults.Rows)
+            if (cipherResultsValid)
             {
-                // Ex: aes-256-cbc (8192 bytes)
-                string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnBytes]}-byte".ToLowerInvariant();
-                double metricValue = (double)row[OpenSslMetricsParser.ColumnKilobytesPerSec];
-
-                // There is an anomaly that sometimes happens where the result is a negative number. It indicates
-                // some type of issue in the OpenSSL speed test itself and the result is not valid. We exclude these
-                // results.
-                //
-                // Example:
-                // type             16 bytes      64 bytes     256 bytes    1024 bytes    8192 bytes     16384 bytes
-                // aes-128-cbc   -1040172814.93   1589805.17k  1657786.91k  1674053.70k   1677365.52k    1633415.99k
-                if (metricValue >= 0)
+                foreach (DataRow row in this.CipherResults.Rows)
                 {
-                    metrics.Add(new Metric(metricName, metricValue, MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter));
+                    // Ex: aes-256-cbc (8192 bytes)
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnBytes]}-byte".ToLowerInvariant();
+                    double metricValue = (double)row[OpenSslMetricsParser.ColumnKilobytesPerSec];
+
+                    // There is an anomaly that sometimes happens where the result is a negative number. It indicates
+                    // some type of issue in the OpenSSL speed test itself and the result is not valid. We exclude these
+                    // results.
+                    //
+                    // Example:
+                    // type             16 bytes      64 bytes     256 bytes    1024 bytes    8192 bytes     16384 bytes
+                    // aes-128-cbc   -1040172814.93   1589805.17k  1657786.91k  1674053.70k   1677365.52k    1633415.99k
+                    if (metricValue >= 0)
+                    {
+                        metrics.Add(new Metric(metricName, metricValue, MetricUnit.KilobytesPerSecond, MetricRelativity.HigherIsBetter));
+                    }
+                }
+            }
+
+            if (rsaResultsValid)
+            {
+                foreach (DataRow row in this.RSAResults.Rows)
+                {
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}".ToLowerInvariant();
+                    double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
+
+                    if (metricValue >= 0)
+                    {
+                        if (metricName.Contains("/"))
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, $"row[OpenSslMetricsParser.ColumnUnit]", MetricRelativity.HigherIsBetter));
+                        }
+                        else
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter));
+                        }
+                    }
                 }
             }
 
@@ -229,6 +268,65 @@ namespace VirtualClient.Actions
                 if (parsedSuccessfully)
                 {
                     results = cipherResults;
+                }
+            }
+
+            return parsedSuccessfully;
+        }
+
+        private bool TryParseRSAPerformanceResults(out DataTable results)
+        {
+            results = null;
+            bool parsedSuccessfully = false;
+
+            IEnumerable<string> rsaColumns = new List<string>()
+            {
+                "sign",
+                "verify",
+                "sign/s",
+                "verify/s"
+            };
+
+            // Example:
+            //                    sign verify    sign/s verify/s
+            //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
+            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"(rsa\s*[0-9\.]+\s*bits)(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase);
+            if (rsaPerformanceResults?.Any() == true)
+            {
+                // return datatable with rsa name, column, value per row
+                DataTable rsaResults = new DataTable();
+                rsaResults.Columns.AddRange(new DataColumn[]
+                {
+                    new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
+                });
+
+                foreach (Match match in rsaPerformanceResults)
+                {
+                    if (match.Groups.Count == 6
+                        && match.Groups[2].Captures?.Any() == true)
+                    {
+                        int typeIndex = 0;
+                        string rsaAlgorithm = match.Groups[1].Value.Trim();
+                        for (int i = 2; i < 6; i++)
+                        {
+                            Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
+                            if (numericMatch.Success)
+                            {
+                                parsedSuccessfully = true;
+                                double value = double.Parse(numericMatch.Value.Trim());
+                                rsaResults.Rows.Add(rsaAlgorithm, rsaColumns.ElementAt(typeIndex), value);
+                            }
+
+                            typeIndex++;
+                        }
+                    }
+                }
+
+                if (parsedSuccessfully)
+                {
+                    results = rsaResults;
                 }
             }
 

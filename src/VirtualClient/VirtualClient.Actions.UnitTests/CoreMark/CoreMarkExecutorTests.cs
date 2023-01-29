@@ -48,10 +48,12 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CoreMarkExecutorExcutesAsExpected()
         {
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
+                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=71 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
                 return this.mockFixture.Process;
             };
 
@@ -61,5 +63,25 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        public async Task CoreMarkExecutorExcutesAllowsThreadOverWrite()
+        {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CoreMarkExecutor.ThreadCount), 789 }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual("sudo", cmd);
+                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
+                return this.mockFixture.Process;
+            };
+
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
     }
 }

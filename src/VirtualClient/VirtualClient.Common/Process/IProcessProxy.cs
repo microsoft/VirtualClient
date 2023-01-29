@@ -8,6 +8,8 @@ namespace VirtualClient.Common
     using System.Diagnostics;
     using System.IO;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Acts as a limited proxy to provide information about a process running
@@ -90,9 +92,25 @@ namespace VirtualClient.Common
         void Kill();
 
         /// <summary>
+        /// Promptly terminates/kills the underlying process along with entire 
+        /// processtree without waiting for a graceful exit.
+        /// </summary>
+        void Kill(bool entireprocessTree);
+
+        /// <summary>
         /// Starts the underlying process.
         /// </summary>
         bool Start();
+
+        /// <summary>
+        /// Wait for process to exit.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="timeout">
+        /// An absolute timeout to apply for the case that the process does not finish in the amount of time expected. If the
+        /// timeout is reached a <see cref="TimeoutException"/> exception will be thrown.
+        /// </param>
+        Task WaitForExitAsync(CancellationToken cancellationToken, TimeSpan? timeout = null);
 
         /// <summary>
         /// Writes input to the standard input stream.

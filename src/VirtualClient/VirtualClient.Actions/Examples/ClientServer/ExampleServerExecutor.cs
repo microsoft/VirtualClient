@@ -86,7 +86,7 @@ namespace VirtualClient.Actions
                     // resiliency in the face of transient errors.
                     this.SetServerOnline(true);
 
-                    await webHostProcess.WaitAsync(cancellationToken)
+                    await webHostProcess.WaitForExitAsync(cancellationToken)
                         .ConfigureAwait(false);
                 }
 

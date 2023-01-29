@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
             this.StateConfirmationPollingTimeout = TimeSpan.FromMinutes(5);
             this.ClientExecutionRetryPolicy = Policy.Handle<Exception>().RetryAsync(3);
 
-            this.Parameters.SetIfNotDefined(nameof(this.ConcurrentThreads), 1);
+            this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
             this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
             this.Parameters.SetIfNotDefined(nameof(this.Port), 5001);
         }
@@ -51,11 +51,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// get number of concurrent threads to use.
         /// </summary>
-        public int ConcurrentThreads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ConcurrentThreads), 1);
+                return this.Parameters.GetValue<int>(nameof(this.ThreadCount), 1);
             }
         }
 
@@ -265,7 +265,7 @@ namespace VirtualClient.Actions
             string clientIPAddress = this.GetLayoutClientInstances(ClientRole.Client).First().IPAddress;
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{((this.Role == ClientRole.Client) ? "-s" : "-r")} " +
-                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-wu {NTttcpExecutor2.DefaultWarmupTime.TotalSeconds} " +
                 $"-cd {NTttcpExecutor2.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration} " +
@@ -281,7 +281,7 @@ namespace VirtualClient.Actions
             string serverIPAddress = this.GetLayoutClientInstances(ClientRole.Server).First().IPAddress;
             return $"{((this.Role == ClientRole.Client) ? "-s" : "-r")} " +
                 $"-V " +
-                $"-m {this.ConcurrentThreads},*,{serverIPAddress} " +
+                $"-m {this.ThreadCount},*,{serverIPAddress} " +
                 $"-W {NTttcpExecutor2.DefaultWarmupTime.TotalSeconds} " +
                 $"-C {NTttcpExecutor2.DefaultCooldownTime.TotalSeconds} " +
                 $"-t {this.TestDuration} " +
