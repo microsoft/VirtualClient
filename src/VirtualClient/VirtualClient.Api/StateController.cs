@@ -356,6 +356,13 @@ namespace VirtualClient.Api
                     else
                     {
                         string stateFilePath = this.GetStateFilePath(stateId);
+                        string stateFileDirectory = Path.GetDirectoryName(stateFilePath);
+
+                        if (!this.FileSystem.Directory.Exists(stateFileDirectory))
+                        {
+                            this.FileSystem.Directory.CreateDirectory(stateFileDirectory).Create();
+                        }
+
                         state.LastModified = DateTime.UtcNow;
 
                         // The file cannot be access by anything else during the time it is being written to. This is purposeful
@@ -368,6 +375,8 @@ namespace VirtualClient.Api
                             response = this.Ok(state);
                         }
                     }
+
+                    telemetryContext.AddResponseContext(response);
                 }
                 catch (IOException exc) when (exc.Message.Contains("used by another process"))
                 {
@@ -375,10 +384,11 @@ namespace VirtualClient.Api
                         StatusCodes.Status409Conflict,
                         "Conflict",
                         $"The state object/definition with ID '{stateId}' was updated concurrently by another process."));
+
+                    telemetryContext.AddResponseContext(response);
                 }
                 finally
                 {
-                    telemetryContext.AddResponseContext(response);
                     StateController.Semaphore.Release();
                 }
 

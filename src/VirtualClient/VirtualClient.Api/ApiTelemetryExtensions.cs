@@ -21,8 +21,8 @@ namespace VirtualClient.Api
         /// <param name="response">The HTTP action response.</param>
         public static void AddResponseContext(this EventContext telemetryContext, IActionResult response)
         {
-            response.ThrowIfNull(nameof(response));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
+            response.ThrowIfNull(nameof(response));
 
             ObjectResult objectResult = response as ObjectResult;
             if (objectResult != null)

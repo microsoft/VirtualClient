@@ -9,6 +9,8 @@ namespace VirtualClient.Contracts
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
@@ -132,130 +134,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Polls the API targeted by the client to determine when server-side has signaled it is online and ready.
-        /// </summary>
-        /// <param name="client">The API client instance.</param>
-        /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForServerOnlineAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
-        {
-            client.ThrowIfNull(nameof(client));
-
-            DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
-            bool apiOnline = false;
-
-            List<object> responses = new List<object>();
-            EventContext telemetryContext = EventContext.Persisted()
-                .AddContext("uri", client.BaseUri.ToString())
-                .AddContext(nameof(timeout), pollingTimeout);
-
-            return (logger ?? defaultLogger).LogMessageAsync("ClientServer.PollForServerOnline", telemetryContext, async () =>
-            {
-                telemetryContext.AddContext(nameof(responses), responses);
-
-                do
-                {
-                    try
-                    {
-                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for server online.");
-                        using (HttpResponseMessage response = await client.GetEventingOnlineStatusAsync(cancellationToken).ConfigureAwait(false))
-                        {
-                            responses.Add(new
-                            {
-                                httpStatusCode = (int)response.StatusCode,
-                                httpStatus = response.StatusCode.ToString()
-                            });
-
-                            apiOnline = response.IsSuccessStatusCode;
-                        }
-                    }
-                    catch
-                    {
-                        // API service may not be online yet.
-                    }
-                    finally
-                    {
-                        if (!apiOnline)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException(
-                                    $"Polling for server online signal timed out (timeout={timeout}).",
-                                    ErrorReason.ApiStatePollingTimeout);
-                            }
-
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
-                        }
-                    }
-                }
-                while (!apiOnline && !cancellationToken.IsCancellationRequested);
-            });
-        }
-
-        /// <summary>
-        /// Polls the API targeted by the client for a heartbeat.
-        /// </summary>
-        /// <param name="client">The API client instance.</param>
-        /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForHeartbeatAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
-        {
-            client.ThrowIfNull(nameof(client));
-
-            DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
-            bool heartbeatConfirmed = false;
-
-            List<object> responses = new List<object>();
-            EventContext telemetryContext = EventContext.Persisted()
-                .AddContext("uri", client.BaseUri.ToString())
-                .AddContext(nameof(timeout), pollingTimeout);
-
-            return (logger ?? defaultLogger).LogMessageAsync("ClientServer.PollForHeartbeat", telemetryContext, async () =>
-            {
-                telemetryContext.AddContext(nameof(responses), responses);
-
-                do
-                {
-                    try
-                    {
-                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for heartbeat.");
-                        using (HttpResponseMessage response = await client.GetHeartbeatAsync(cancellationToken).ConfigureAwait(false))
-                        {
-                            responses.Add(new
-                            {
-                                httpStatusCode = (int)response.StatusCode,
-                                httpStatus = response.StatusCode.ToString()
-                            });
-
-                            heartbeatConfirmed = response.IsSuccessStatusCode;
-                        }
-                    }
-                    catch
-                    {
-                        // State not available on server yet.
-                    }
-                    finally
-                    {
-                        if (!heartbeatConfirmed)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException($"Polling for an API heartbeat timed out (timeout={timeout}).", ErrorReason.ApiStatePollingTimeout);
-                            }
-
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
-                        }
-                    }
-                }
-                while (!heartbeatConfirmed && !cancellationToken.IsCancellationRequested);
-            });
-        }
-
-        /// <summary>
         /// Poll the server till there exists the expected state.
         /// </summary>
         /// <param name="client">The API client instance.</param>
@@ -307,6 +185,16 @@ namespace VirtualClient.Contracts
                                 stateFound = comparer.Equals(currentState, state);
                             }
                         }
+                    }
+                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // API itself is offline.
+                        responses.Add(new
+                        {
+                            apiOnline = false,
+                            httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
+                            httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
+                        });
                     }
                     catch
                     {
@@ -384,6 +272,16 @@ namespace VirtualClient.Contracts
                             }
                         }
                     }
+                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // API itself is offline.
+                        responses.Add(new
+                        {
+                            apiOnline = false,
+                            httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
+                            httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
+                        });
+                    }
                     catch
                     {
                         // State not available on server yet.
@@ -406,6 +304,149 @@ namespace VirtualClient.Contracts
                     }
                 }
                 while (!stateFound && !cancellationToken.IsCancellationRequested);
+            });
+        }
+
+        /// <summary>
+        /// Polls the API targeted by the client for a heartbeat.
+        /// </summary>
+        /// <param name="client">The API client instance.</param>
+        /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="logger">A logger to capture the responses from the server-side.</param>
+        public static Task PollForHeartbeatAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            client.ThrowIfNull(nameof(client));
+
+            DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
+            bool heartbeatConfirmed = false;
+
+            List<object> responses = new List<object>();
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("uri", client.BaseUri.ToString())
+                .AddContext(nameof(timeout), pollingTimeout);
+
+            return (logger ?? defaultLogger).LogMessageAsync("ClientServer.PollForHeartbeat", telemetryContext, async () =>
+            {
+                telemetryContext.AddContext(nameof(responses), responses);
+
+                do
+                {
+                    try
+                    {
+                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for heartbeat.");
+                        using (HttpResponseMessage response = await client.GetHeartbeatAsync(cancellationToken).ConfigureAwait(false))
+                        {
+                            responses.Add(new
+                            {
+                                httpStatusCode = (int)response.StatusCode,
+                                httpStatus = response.StatusCode.ToString()
+                            });
+
+                            heartbeatConfirmed = response.IsSuccessStatusCode;
+                        }
+                    }
+                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // API itself is offline.
+                        responses.Add(new
+                        {
+                            httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
+                            httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
+                        });
+                    }
+                    catch
+                    {
+                        // State not available on server yet.
+                    }
+                    finally
+                    {
+                        if (!heartbeatConfirmed)
+                        {
+                            if (DateTime.UtcNow >= pollingTimeout)
+                            {
+                                throw new WorkloadException($"Polling for an API heartbeat timed out (timeout={timeout}).", ErrorReason.ApiStatePollingTimeout);
+                            }
+
+                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                    }
+                }
+                while (!heartbeatConfirmed && !cancellationToken.IsCancellationRequested);
+            });
+        }
+
+        /// <summary>
+        /// Polls the API targeted by the client to determine when server-side has signaled it is online and ready.
+        /// </summary>
+        /// <param name="client">The API client instance.</param>
+        /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="logger">A logger to capture the responses from the server-side.</param>
+        public static Task PollForServerOnlineAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        {
+            client.ThrowIfNull(nameof(client));
+
+            DateTime pollingTimeout = DateTime.UtcNow.Add(timeout);
+            bool apiOnline = false;
+
+            List<object> responses = new List<object>();
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("uri", client.BaseUri.ToString())
+                .AddContext(nameof(timeout), pollingTimeout);
+
+            return (logger ?? defaultLogger).LogMessageAsync("ClientServer.PollForServerOnline", telemetryContext, async () =>
+            {
+                telemetryContext.AddContext(nameof(responses), responses);
+
+                do
+                {
+                    try
+                    {
+                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for server online.");
+                        using (HttpResponseMessage response = await client.GetEventingOnlineStatusAsync(cancellationToken).ConfigureAwait(false))
+                        {
+                            responses.Add(new
+                            {
+                                httpStatusCode = (int)response.StatusCode,
+                                httpStatus = response.StatusCode.ToString()
+                            });
+
+                            apiOnline = response.IsSuccessStatusCode;
+                        }
+                    }
+                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // API itself is offline.
+                        responses.Add(new
+                        {
+                            apiOnline = false,
+                            httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
+                            httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
+                        });
+                    }
+                    catch
+                    {
+                        // API service may not be online yet.
+                    }
+                    finally
+                    {
+                        if (!apiOnline)
+                        {
+                            if (DateTime.UtcNow >= pollingTimeout)
+                            {
+                                throw new WorkloadException(
+                                    $"Polling for server online signal timed out (timeout={timeout}).",
+                                    ErrorReason.ApiStatePollingTimeout);
+                            }
+
+                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                    }
+                }
+                while (!apiOnline && !cancellationToken.IsCancellationRequested);
             });
         }
 
@@ -452,6 +493,16 @@ namespace VirtualClient.Contracts
 
                             stateExists = response.StatusCode == HttpStatusCode.OK;
                         }
+                    }
+                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // API itself is offline.
+                        responses.Add(new
+                        {
+                            apiOnline = false,
+                            httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
+                            httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
+                        });
                     }
                     catch
                     {
