@@ -72,12 +72,15 @@ namespace VirtualClient.Actions
             this.DeleteResultsFile(telemetryContext);
             string commandLineArguments = this.GetCommandLineArguments();
 
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteWorkloadAsync(this.ExecutablePath, commandLineArguments, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteWorkloadAsync(this.ExecutablePath, commandLineArguments, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-            this.CaptureWorkloadResults(this.ResultsFilePath, commandLineArguments, startTime, endTime, telemetryContext, cancellationToken);
+                DateTime endTime = DateTime.UtcNow;
+                this.CaptureWorkloadResults(this.ResultsFilePath, commandLineArguments, startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>
@@ -206,6 +209,7 @@ namespace VirtualClient.Actions
                     try
                     {
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             this.Logger.LogProcessDetails<GeekbenchExecutor>(process, telemetryContext);

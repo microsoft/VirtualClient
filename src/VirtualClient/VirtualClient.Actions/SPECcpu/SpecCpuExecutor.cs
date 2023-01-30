@@ -118,13 +118,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string commandLineArguments = this.GetCommandLineArguments();
-
             DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
             DateTime endTime = DateTime.UtcNow;
+
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string commandLineArguments = this.GetCommandLineArguments();
+
+                await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                endTime = DateTime.UtcNow;
+            }
 
             if (!cancellationToken.IsCancellationRequested)
             {

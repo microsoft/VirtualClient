@@ -1,21 +1,10 @@
 {
     "Description": ".NET benchmarking Workload",
     "MinimumExecutionInterval": "00:01:00",
-    "SupportedPlatforms": [
-        "linux-x64",
-        "linux-arm64",
-        "win-x64",
-        "win-arm64"
-    ],
-    "SupportedOperatingSystems": [
-        "CBL-Mariner",
-        "CentOS",
-        "Debian",
-        "RedHat",
-        "Suse",
-        "Ubuntu",
-        "Windows"
-    ],
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
     "Parameters": {
         "DotNetVersion": "6.0.100",
         "TargetFramework": "net6.0"

@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.LatteExecutor2;
 
     /// <summary>
     /// Executes client side of CPS.
@@ -347,11 +348,8 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
-                CPSWorkloadState expectedServerState = new CPSWorkloadState(ClientServerStatus.ExecutionStarted);
-                Item<CPSWorkloadState> expectedServerStateInstance = new Item<CPSWorkloadState>(nameof(CPSWorkloadState), expectedServerState);
-
-                await this.ServerApiClient.SynchronizeStateAsync(
-                    expectedServerStateInstance, CPSWorkloadStateEqualityComparer.Instance, cancellationToken, this.StateConfirmationPollingTimeout)
+                await this.ServerApiClient.PollForExpectedStateAsync<CPSWorkloadState>(
+                    nameof(CPSWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
                     .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");

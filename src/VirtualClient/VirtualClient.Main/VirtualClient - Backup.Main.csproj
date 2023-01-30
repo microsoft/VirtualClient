@@ -112,6 +112,7 @@
         <LinuxProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
         <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-MEM-STRESSAPPTEST.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
@@ -134,6 +135,13 @@
 
     <ItemGroup>
         <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="profiles\PERF-API.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </None>
     </ItemGroup>
 
     <Target Name="PublishProfiles" AfterTargets="Publish">

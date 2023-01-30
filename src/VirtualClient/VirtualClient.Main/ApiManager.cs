@@ -3,18 +3,23 @@
 
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
-    using System.Security.Cryptography.X509Certificates;
-    using System.Security.Cryptography;
+    using System.IO.Abstractions;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using System;
-    using System.Diagnostics.Metrics;
-    using System.Net;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.OpenApi.Models;
+    using Swashbuckle.AspNetCore.SwaggerUI;
+    using VirtualClient.Api;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Rest;
+    using VirtualClient.Contracts;
 
     /// <summary>
     /// Provides methods for managing the Virtual Client API service and hosting
@@ -40,12 +45,49 @@ namespace VirtualClient
         /// <inheritdoc />
         public async Task StartApiHostAsync(IServiceCollection dependencies, int port, CancellationToken cancellationToken)
         {
-            X509Certificate2 cert = RsaCrypto.CreateSelfSignedCertificate("cn=virtualclient.com", 2048);
-
             IWebHostBuilder webHostBuilder = new WebHostBuilder();
 
+            this.ConfigureServices(webHostBuilder, dependencies);
+            this.ConfigureApplication(webHostBuilder, dependencies);
+            this.ConfigureHosting(webHostBuilder, port);
+
+            await this.OpenFirewallPortAsync(port).ConfigureAwait(false);
+
+            using (IWebHost webHost = webHostBuilder.Build())
+            {
+                await webHost.RunAsync().ConfigureAwait(false);
+            }
+        }
+
+        private void ConfigureApplication(IWebHostBuilder hostBuilder, IServiceCollection dependencies)
+        {
+            hostBuilder.Configure(apiService =>
+            {
+                // Enable middleware to serve generated Swagger as a JSON endpoint.
+                apiService.UseSwagger();
+
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+                // specifying the Swagger JSON endpoint.
+                apiService.UseSwaggerUI(doc =>
+                {
+                    doc.SwaggerEndpoint("/swagger/v1/swagger.json", "Virtual Client API (v1)");
+
+                    // "Try it Out" only for GET methods.
+                    doc.SupportedSubmitMethods(SubmitMethod.Delete, SubmitMethod.Get, SubmitMethod.Head, SubmitMethod.Post, SubmitMethod.Put);
+                    doc.RoutePrefix = string.Empty;
+                    doc.ConfigObject.DefaultModelRendering = ModelRendering.Example;
+                });
+
+                apiService.UseApiVersioning();
+                apiService.UseMiddleware<ApiExceptionMiddleware>(dependencies.GetService<ILogger>());
+                apiService.UseMvc();
+            });
+        }
+
+        private void ConfigureHosting(IWebHostBuilder hostBuilder, int apiPort)
+        {
             // When hosting locally, we use the Kestrel HTTP server.
-            webHostBuilder.UseKestrel(options =>
+            hostBuilder.UseKestrel(options =>
             {
                 // IMPORTANT:
                 // You have to configure the HTTPS server to listen for TCP requests on both the local/loopback
@@ -62,7 +104,8 @@ namespace VirtualClient
                 // Profiles: Domain, Private, Public
 
                 // 1) Listen for TCP requests for any IP address.
-
+                // X509Certificate2 cert = RsaCrypto.CreateSelfSignedCertificate("cn=virtualclient.com", 2048);
+                //
                 // ************ HTTPS change doesn't work on Windows, pending research ****************
                 ////options.Listen(IPAddress.Any, port, listenOptions =>
                 ////{
@@ -73,17 +116,66 @@ namespace VirtualClient
                 ////});
                 // ************ HTTPS change doesn't work on Windows, pending research ****************
 
-                options.ListenAnyIP(port);
+                options.ListenAnyIP(apiPort);
             });
+        }
 
-            webHostBuilder.UseStartup<ApiServerStartup>(context => new ApiServerStartup(dependencies));
-
-            await this.OpenFirewallPortAsync(port).ConfigureAwait(false);
-
-            using (IWebHost webHost = webHostBuilder.Build())
+        private void ConfigureServices(IWebHostBuilder hostBuilder, IServiceCollection dependencies)
+        {
+            hostBuilder.ConfigureServices((services) =>
             {
-                await webHost.RunAsync(cancellationToken).ConfigureAwait(false);
-            }
+                services.AddSingleton<IConfiguration>(dependencies.GetService<IConfiguration>());
+                services.AddSingleton<ILogger>(dependencies.GetService<ILogger>());
+                services.AddSingleton<IStateManager>(dependencies.GetService<IStateManager>());
+                services.AddSingleton<IFileSystem>(dependencies.GetService<IFileSystem>());
+                services.AddSingleton<PlatformSpecifics>(dependencies.GetService<PlatformSpecifics>());
+
+                // Add ASP.NET Core MVC Dependency Injection Middleware
+                // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.1
+                services.AddMvc(options =>
+                {
+                    options.EnableEndpointRouting = false;
+                })
+                .AddNewtonsoftJson()
+                .AddApplicationPart(Assembly.GetAssembly(typeof(HeartbeatController)))
+                .AddControllersAsServices();
+
+                // Add support for controller versioning (e.g. controllers that support different versions of API methods).
+                services.AddApiVersioning(options =>
+                {
+                    options.ReportApiVersions = true;
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.DefaultApiVersion = new ApiVersion(1, 0);
+                });
+
+                // Add OpenAPI/Swagger definition.
+                // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio
+                // https://github.com/domaindrivendev/Swashbuckle.AspNetCore
+                // https://idratherbewriting.com/learnapidoc
+                services.AddSwaggerGen(doc =>
+                {
+                    doc.SwaggerDoc("v1", new OpenApiInfo
+                    {
+                        Version = "v1",
+                        Title = "Virtual Client API",
+                        Description = "Virtual Client REST API/service.",
+                        Contact = new OpenApiContact()
+                        {
+                            Name = "Virtual Client Team",
+                            Email = "crc_vc_fte@microsoft.com",
+                            Url = new Uri("https://microsoft.github.io/VirtualClient/")
+                        },
+                        License = new OpenApiLicense
+                        {
+                            Name = "API License",
+                            Url = new Uri("https://github.com/microsoft/VirtualClient/blob/main/LICENSE")
+                        },
+                    });
+
+                    // All JSON input and output objects are expected to be in camel-case.
+                    doc.DescribeAllParametersInCamelCase();
+                });
+            });
         }
 
         private Task OpenFirewallPortAsync(int apiPort)

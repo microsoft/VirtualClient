@@ -271,12 +271,14 @@ namespace VirtualClient.Actions
             this.ApplyFFTConfiguration();
             this.ValidateParameters();
 
-            await this.ExecuteCommandAsync(
-                this.ExecutableName, commandLineArguments, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments, this.PackageDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-            this.LogPrime95Output(startTime, endTime, telemetryContext, cancellationToken);
+                DateTime endTime = DateTime.UtcNow;
+                this.LogPrime95Output(startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>

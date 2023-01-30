@@ -194,7 +194,7 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         this.Copies = await this.GetServerCopiesCount(this.ServerApiClient, cancellationToken)
-                                                        .ConfigureAwait(false);
+                            .ConfigureAwait(false);
 
                         await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
@@ -208,20 +208,22 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
-                string results = string.Empty;
-                this.StartTime = DateTime.Now;
-                for (int i = 1; i <= int.Parse(this.Copies); i++)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    int port = int.Parse(this.Port) + i - 1;
-                    string clientCommand = $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
+                    string results = string.Empty;
+                    this.StartTime = DateTime.Now;
+                    for (int i = 1; i <= int.Parse(this.Copies); i++)
+                    {
+                        int port = int.Parse(this.Port) + i - 1;
+                        string clientCommand = $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
 
-                    this.Logger.LogTraceMessage($"Executing process '{clientCommand}'  at directory '{this.MemtierPackagePath}'.");
-                    results += await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.MemtierPackagePath, cancellationToken)
+                        this.Logger.LogTraceMessage($"Executing process '{clientCommand}'  at directory '{this.MemtierPackagePath}'.");
+                        results += await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.MemtierPackagePath, cancellationToken)
                             .ConfigureAwait(false) + Environment.NewLine;
+                    }
+
+                    this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
                 }
-
-                this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
-
             });
         }
 

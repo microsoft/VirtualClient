@@ -133,6 +133,7 @@ namespace VirtualClient.Dependencies
 
             setup.Returns(CUDAAndNvidiaGPUDriverInstallationTests.GetProcessProxy(1));
 
+            this.component.RetryPolicy = Policy.NoOpAsync();
             DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
         }

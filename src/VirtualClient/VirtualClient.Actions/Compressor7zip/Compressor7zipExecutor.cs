@@ -81,16 +81,19 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             DateTime startTime = DateTime.UtcNow;
+            DateTime endTime = DateTime.UtcNow;
 
             string commandLineArguments = this.GetCommandLineArguments();
 
-            // Execute Compressor7zip
-            string results = await this.ExecuteCommandAsync("7z", $"{commandLineArguments}", this.Compressor7zipDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                // Execute Compressor7zip
+                string results = await this.ExecuteCommandAsync("7z", $"{commandLineArguments}", this.Compressor7zipDirectory, cancellationToken)
+                   .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-
-            this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);            
+                endTime = DateTime.UtcNow;
+                this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>

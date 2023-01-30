@@ -186,26 +186,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Extension requests background profiler/profiling components to profile the system for the period
-        /// of time defined.
-        /// </summary>
-        /// <param name="component">The component requesting the background system profiling.</param>
-        /// <param name="cancellationToken">A token that can be used to gracefully terminate the profiler processes.</param>
-        public static Task RequestProfilingAsync(this VirtualClientComponent component, CancellationToken cancellationToken)
-        {
-            return Task.Run(() =>
-            {
-                // Invokes the SendReceiveInstructions event to enable any subscribers of the event (1 or more, e.g. Azure Profiler)
-                // to begin profiling.
-                Instructions instructions = new ProfilerInstructions(
-                    InstructionsType.Profiling,
-                    component.Parameters);
-
-                VirtualClientEventing.OnSendReceiveInstructions(component, new InstructionsEventArgs(instructions, cancellationToken));
-            });
-        }
-
-        /// <summary>
         /// Extension signals that the server-side is online and ready to receive requests from clients.
         /// </summary>
         /// <param name="component">The component signalling server-side readiness.</param>

@@ -120,6 +120,7 @@ namespace VirtualClient.Dependencies
             var setup = this.SetupProcessManager("sudo", RestartDockerCommand, Environment.CurrentDirectory);
             setup.Returns(NvidiaContainerToolkitInstallationTests.GetProcessProxy(1));
 
+            this.component.RetryPolicy = Policy.NoOpAsync();
             DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
         }

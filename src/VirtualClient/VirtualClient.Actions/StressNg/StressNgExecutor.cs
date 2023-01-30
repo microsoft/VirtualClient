@@ -62,15 +62,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string commandLineArguments = this.GetCommandLineArguments();
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string commandLineArguments = this.GetCommandLineArguments();
 
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
+                DateTime endTime = DateTime.UtcNow;
 
-            this.LogStressNgOutput(startTime, endTime, telemetryContext);
+                this.LogStressNgOutput(startTime, endTime, telemetryContext);
+            }
         }
 
         /// <summary>

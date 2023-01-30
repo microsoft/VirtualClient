@@ -32,6 +32,7 @@ namespace VirtualClient.Api
     /// https://www.skylinetechnologies.com/Blog/Skyline-Blog/December_2018/async-await-configureawait
     /// </remarks>
     [ApiController]
+    [Route("/api/heartbeat")]
     public class HeartbeatController : ControllerBase
     {
         private const string ApiName = "HeartbeatApi";
@@ -56,7 +57,7 @@ namespace VirtualClient.Api
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <response code="200">OK. The API is online.</response>
         /// <response code="500">Internal Server Error. An unexpected error occurred on the server.</response>
-        [HttpGet("/api/heartbeat")]
+        [HttpGet]
         [Produces("application/json")]
         [Description("Returns a heartbeat response to the caller to indicate the API is online.")]
         [ProducesResponseType(typeof(JObject), StatusCodes.Status200OK)]

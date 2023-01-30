@@ -228,19 +228,21 @@ namespace VirtualClient.Actions
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
                 string results = string.Empty;
-                this.StartTime = DateTime.UtcNow;
-                for (int i = 0; i < int.Parse(this.Copies); i++)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    int port = int.Parse(this.Port) + i;
-                    string command = $"-u {this.Username} {this.ClientExecutorPath}";
+                    this.StartTime = DateTime.UtcNow;
+                    for (int i = 0; i < int.Parse(this.Copies); i++)
+                    {
+                        int port = int.Parse(this.Port) + i;
+                        string command = $"-u {this.Username} {this.ClientExecutorPath}";
+                        string commandArguments = $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
 
-                    string commandArguments = $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
-
-                    results += await this.ExecuteCommandAsync<MemcachedMemtierClientExecutor>(command, commandArguments, this.MemtierPackagePath, cancellationToken)
+                        results += await this.ExecuteCommandAsync<MemcachedMemtierClientExecutor>(command, commandArguments, this.MemtierPackagePath, cancellationToken)
                             .ConfigureAwait(false) + Environment.NewLine;
-                }
+                    }
 
-                this.CaptureMetricsAsync(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    this.CaptureMetricsAsync(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                }
             });
         }
 

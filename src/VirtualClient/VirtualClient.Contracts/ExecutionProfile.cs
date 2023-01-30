@@ -37,9 +37,7 @@ namespace VirtualClient.Contracts
             IEnumerable<ExecutionProfileElement> dependencies,
             IEnumerable<ExecutionProfileElement> monitors,
             IDictionary<string, IConvertible> metadata,
-            IDictionary<string, IConvertible> parameters,
-            IEnumerable<string> supportedPlatforms = null,
-            IEnumerable<string> supportedOperatingSystems = null)
+            IDictionary<string, IConvertible> parameters)
         {
             description.ThrowIfNullOrWhiteSpace(nameof(description));
 

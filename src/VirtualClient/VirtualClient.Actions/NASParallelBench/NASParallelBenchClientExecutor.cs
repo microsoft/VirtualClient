@@ -113,32 +113,34 @@ namespace VirtualClient.Actions
                 process.RedirectStandardOutput = true;
 
                 DateTime startTime = DateTime.UtcNow;
-
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-
-                if (!cancellationToken.IsCancellationRequested)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.Logger.LogProcessDetails<NASParallelBenchExecutor>(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
-                    NASParallelBenchMetricsParser parser = new NASParallelBenchMetricsParser(process.StandardOutput.ToString());
-                    IList<Metric> metrics = parser.Parse().ToList();
+                    DateTime endTime = DateTime.UtcNow;
 
-                    string computingMethod = this.IsMultiRoleLayout() ? "MPI" : "OMP";
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        this.Logger.LogProcessDetails<NASParallelBenchExecutor>(process, telemetryContext);
+                        process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
-                    this.Logger.LogMetrics(
-                        "NASParallelBench",
-                        computingMethod + " " + this.Benchmark,
-                        startTime,
-                        endTime,
-                        metrics,
-                        null,
-                        scenarioArguments,
-                        this.Tags,
-                        telemetryContext);
+                        NASParallelBenchMetricsParser parser = new NASParallelBenchMetricsParser(process.StandardOutput.ToString());
+                        IList<Metric> metrics = parser.Parse().ToList();
+
+                        string computingMethod = this.IsMultiRoleLayout() ? "MPI" : "OMP";
+
+                        this.Logger.LogMetrics(
+                            "NASParallelBench",
+                            computingMethod + " " + this.Benchmark,
+                            startTime,
+                            endTime,
+                            metrics,
+                            null,
+                            scenarioArguments,
+                            this.Tags,
+                            telemetryContext);
+                    }
                 }
             });
         }

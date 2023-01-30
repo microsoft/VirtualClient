@@ -44,7 +44,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {

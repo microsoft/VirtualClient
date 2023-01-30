@@ -71,9 +71,12 @@ namespace VirtualClient.Actions
             int megaBytesPerInstance = (int)(((totalMemoryKiloBytes * .9D) / instanceCount) / (1024));
             this.Logger.LogTraceMessage($"Total Memory {totalMemoryKiloBytes}KB. Running {instanceCount} SSJ instance(s) with {megaBytesPerInstance} megabytes of memory each.");
 
-            for (int i = 0; i < instanceCount; i++)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                this.StartClientSSJInstanceAsync(megaBytesPerInstance, instanceCount, telemetryContext, cancellationToken);
+                for (int i = 0; i < instanceCount; i++)
+                {
+                    this.StartClientSSJInstanceAsync(megaBytesPerInstance, instanceCount, telemetryContext, cancellationToken);
+                }
             }
 
             return Task.CompletedTask;

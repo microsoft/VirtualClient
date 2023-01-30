@@ -5,9 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -300,6 +298,7 @@ namespace VirtualClient.Dependencies
 
             commands.Add($"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"");
+
             commands.Add($"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"");
             

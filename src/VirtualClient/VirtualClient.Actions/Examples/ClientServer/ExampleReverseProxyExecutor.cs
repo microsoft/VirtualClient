@@ -209,7 +209,7 @@ namespace VirtualClient.Actions
                 await this.StateManager.SaveStateAsync(ExampleClientServerExecutor.ServerReadyState, serverOnline, cancellationToken)
                     .ConfigureAwait(false);
 
-                await webHostProcess.WaitAsync(cancellationToken)
+                await webHostProcess.WaitForExitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
 

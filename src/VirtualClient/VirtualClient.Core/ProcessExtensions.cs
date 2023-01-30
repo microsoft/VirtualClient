@@ -81,6 +81,29 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Kills the associated process and it's child/dependent processes if it is still running and 
+        /// handles any errors that can occurs if the process has gone out of scope.
+        /// </summary>
+        /// <param name="process">The process to kill.</param>
+        /// <param name="entireProcessTree">true to kill asociated process and it's descendents, false to only kill the process.</param>
+        /// <param name="logger">The logger to use to write trace information.</param>
+        public static void SafeKill(this IProcessProxy process, bool entireProcessTree, ILogger logger = null)
+        {
+            if (process != null)
+            {
+                try
+                {
+                    process.Kill(entireProcessTree);
+                }
+                catch (Exception exc)
+                {
+                    // Best effort here.
+                    logger?.LogTraceMessage($"Kill Process Failure. Error = {exc.Message}");
+                }
+            }
+        }
+
+        /// <summary>
         /// Kills any processes that are defined and handles any errors that
         /// can occurs if the process has gone out of scope.
         /// </summary>
@@ -135,9 +158,13 @@ namespace VirtualClient
             {
                 TError exception = default(TError);
                 string error = null;
-                string command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
+                string command = string.Empty;
+                if (process.StartInfo != null)
+                {
+                    command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
                     ? $"{process.StartInfo.FileName} {process.StartInfo.Arguments}"
                     : $"{process.StartInfo.FileName}";
+                }
 
                 if (errorMessage != null)
                 {

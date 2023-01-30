@@ -59,11 +59,13 @@ namespace VirtualClient
             if (this.ApiPorts?.Any() == true)
             {
                 // Examples:
-                // --port=4500      -> both client and server will use the same port. This is OK so long as they are
-                //                     on different systems.
+                // --api-port=4500
+                //               -> both client and server will use the same port. This is OK so long as they are
+                //                  on different systems.
                 //
-                // --port=4500,4501 -> client will use 4500, server will use 4501. This allows both the client and
-                //                     the server to run on the same system.
+                // --port=4500/Client,4501/Server
+                //               -> client will use 4500, server will use 4501. This allows both the client and
+                //                  the server to run on the same system.
                 serverPort = apiClientManager.GetApiPort(new ClientInstance(
                     Environment.MachineName,
                     System.Net.IPAddress.Loopback.ToString(),

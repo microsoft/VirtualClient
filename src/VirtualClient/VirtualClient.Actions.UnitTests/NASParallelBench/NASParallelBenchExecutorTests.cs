@@ -168,6 +168,8 @@ namespace VirtualClient.Actions
             {
                 ["NpbBuildState"] = "completed"
             });
+
+            this.fixture.ApiClient.OnGetState().ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, this.expectedState));
         }
 
         private class TestNASParallelBenchExecutor : NASParallelBenchExecutor

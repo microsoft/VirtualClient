@@ -88,6 +88,7 @@ namespace VirtualClient.Actions
                     case "Stress":
                         int logicalCores = Environment.ProcessorCount;
                         int threads = logicalCores / 2;
+                        threads = (threads == 0) ? 1 : threads;
                         int queueDepth = 512 / threads;
 
                         this.CommandLine = this.ApplyParameters(
@@ -273,14 +274,17 @@ namespace VirtualClient.Actions
                     List<Task> fioProcessTasks = new List<Task>();
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, this.CommandLine, disksToTest, this.ProcessModel));
 
-                    foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
-                        fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.TestName, telemetryContext, cancellationToken));
-                    }
+                        foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                        {
+                            fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.TestName, telemetryContext, cancellationToken));
+                        }
 
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                        }
                     }
                 }
                 finally

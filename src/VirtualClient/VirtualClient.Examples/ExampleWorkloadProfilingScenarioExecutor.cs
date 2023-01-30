@@ -60,7 +60,7 @@ namespace VirtualClient
 
                 // Mimic a long-running workload. We are using the profiling period here for the
                 // case where the profiler would be running as long as the workload runs.
-                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     DateTime workloadFinishTime = DateTime.UtcNow.Add(this.WorkloadRuntime);
                     while (DateTime.UtcNow < workloadFinishTime)

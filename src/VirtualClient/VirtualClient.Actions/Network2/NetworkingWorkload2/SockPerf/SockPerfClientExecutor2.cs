@@ -26,6 +26,8 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.LatteExecutor2;
+    using static VirtualClient.Actions.NTttcpExecutor2;
 
     /// <summary>
     /// Executes the client side of SockPerf.
@@ -257,12 +259,9 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
-                SockPerfWorkloadState expectedServerState = new SockPerfWorkloadState(ClientServerStatus.ExecutionStarted);
-                Item<SockPerfWorkloadState> expectedServerStateInstance = new Item<SockPerfWorkloadState>(nameof(SockPerfWorkloadState), expectedServerState);
-
-                await this.ServerApiClient.SynchronizeStateAsync(
-                    expectedServerStateInstance, SockPerfWorkloadStateEqualityComparer.Instance, cancellationToken, this.StateConfirmationPollingTimeout)
-                    .ConfigureAwait(false);
+                await this.ServerApiClient.PollForExpectedStateAsync<SockPerfWorkloadState>(
+                    nameof(SockPerfWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
+                   .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                 this.Logger.LogTraceMessage("Synchronization: Start client workload...");
@@ -325,7 +324,7 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
             {
-                using (BackgroundProfiling profiling = BackgroundProfiling.Begin(this, cancellationToken))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ProcessStartRetryPolicy.ExecuteAsync(async () =>
                     {
@@ -452,28 +451,6 @@ namespace VirtualClient.Actions
                         this.Tags,
                         EventContext.Persisted());
                 }
-            }
-        }
-
-        private class SockPerfWorkloadStateEqualityComparer : IEqualityComparer<JObject>
-        {
-            private SockPerfWorkloadStateEqualityComparer()
-            {
-            }
-
-            public static SockPerfWorkloadStateEqualityComparer Instance { get; } = new SockPerfWorkloadStateEqualityComparer();
-
-            public bool Equals(JObject x, JObject y)
-            {
-                SockPerfWorkloadState xState = x.ToObject<SockPerfWorkloadState>();
-                SockPerfWorkloadState yState = y.ToObject<SockPerfWorkloadState>();
-
-                return string.Equals(xState.Status.ToString(), yState.Status.ToString(), StringComparison.OrdinalIgnoreCase);
-            }
-
-            public int GetHashCode(JObject obj)
-            {
-                return obj.GetHashCode();
             }
         }
     }

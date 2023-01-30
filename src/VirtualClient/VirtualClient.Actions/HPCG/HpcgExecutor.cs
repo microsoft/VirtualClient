@@ -88,13 +88,15 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync("bash", this.hpcgRunShellPath, this.hpcgDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteCommandAsync("bash", this.hpcgRunShellPath, this.hpcgDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-
-            this.LogHpcgOutput(startTime, endTime, telemetryContext, cancellationToken);
+                DateTime endTime = DateTime.UtcNow;
+                this.LogHpcgOutput(startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>

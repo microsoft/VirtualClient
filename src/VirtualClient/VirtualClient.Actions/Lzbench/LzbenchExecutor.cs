@@ -93,17 +93,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                DateTime startTime = DateTime.UtcNow;
+                string commandLineArguments = this.GetCommandLineArguments();
 
-            string commandLineArguments = this.GetCommandLineArguments();
-
-            // Execute Lzbench
-            await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, cancellationToken)
+                // Execute Lzbench
+                await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-
-            this.LogMetrics(startTime, endTime, telemetryContext, cancellationToken);
+                DateTime endTime = DateTime.UtcNow;
+                this.LogMetrics(startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         /// <summary>

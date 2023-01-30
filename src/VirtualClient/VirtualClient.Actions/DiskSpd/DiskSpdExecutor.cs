@@ -309,14 +309,17 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the workload operations.</param>
         protected Task ExecuteWorkloadsAsync(IEnumerable<DiskPerformanceWorkloadProcess> workloads, CancellationToken cancellationToken)
         {
-            // Execute processes and cleanup residuals if required.
-            List<Task> workloadTasks = new List<Task>();
-            foreach (DiskPerformanceWorkloadProcess workload in workloads)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                workloadTasks.Add(this.ExecuteWorkloadAsync(workload, cancellationToken));
-            }
+                // Execute processes and cleanup residuals if required.
+                List<Task> workloadTasks = new List<Task>();
+                foreach (DiskPerformanceWorkloadProcess workload in workloads)
+                {
+                    workloadTasks.Add(this.ExecuteWorkloadAsync(workload, cancellationToken));
+                }
 
-            return Task.WhenAll(workloadTasks);
+                return Task.WhenAll(workloadTasks);
+            }
         }
 
         /// <summary>

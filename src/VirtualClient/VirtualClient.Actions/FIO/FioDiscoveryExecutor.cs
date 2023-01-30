@@ -37,6 +37,8 @@ namespace VirtualClient.Actions
         public FioDiscoveryExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Since in this case we are testing on raw disks, we are not cleaning up test files
+            this.DeleteTestFilesOnFinish = false;
         }
 
         /// <summary>
@@ -181,7 +183,6 @@ namespace VirtualClient.Actions
                     commandLine = commandLine + $" --ioengine={ioEngine}";
 
                     this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
-
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
 
                     foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
@@ -262,19 +263,22 @@ namespace VirtualClient.Actions
                                                 [nameof(filePath).CamelCased()] = filePath
                                             };
 
-                                            this.WorkloadProcesses.Clear();
                                             await fioDiscoveryRetryPolicy.ExecuteAsync(async () =>
                                             {
-                                                this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
-
-                                                foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                                                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                                                 {
-                                                    fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, testName, variationContext, cancellationToken, metricsMetadata));
-                                                }
+                                                    this.WorkloadProcesses.Clear();
+                                                    this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
 
-                                                if (!cancellationToken.IsCancellationRequested)
-                                                {
-                                                    await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                                                    foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                                                    {
+                                                        fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, testName, variationContext, cancellationToken, metricsMetadata));
+                                                    }
+
+                                                    if (!cancellationToken.IsCancellationRequested)
+                                                    {
+                                                        await Task.WhenAll(fioProcessTasks).ConfigureAwait(false);
+                                                    }
                                                 }
                                             }).ConfigureAwait(false);
 

@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
                                 foreach (IProcessProxy process in processProxyList)
                                 {
                                     this.CleanupTasks.Add(() => process.SafeKill());
-                                    await process.WaitAsync(cancellationToken)
+                                    await process.WaitForExitAsync(cancellationToken)
                                         .ConfigureAwait(false);
                                 }
                             }

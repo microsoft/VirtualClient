@@ -10,6 +10,8 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
     using VirtualClient.Common;
 
     /// <summary>
@@ -147,12 +149,25 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Kills the fake process, and associated child processes.
+        /// </summary>
+        public void Kill(bool entireProcessTree)
+        {
+            this.OnKill?.Invoke();
+        }
+
+        /// <summary>
         /// Starts the fake process.
         /// </summary>
         public bool Start()
         {
             this.Executed = true;
             return this.OnStart?.Invoke() ?? true;
+        }
+
+        public Task WaitForExitAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
+        {
+            return Task.CompletedTask;
         }
 
         /// <summary>

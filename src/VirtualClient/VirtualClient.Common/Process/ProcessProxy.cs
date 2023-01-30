@@ -8,6 +8,8 @@ namespace VirtualClient.Common
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -192,24 +194,39 @@ namespace VirtualClient.Common
         /// <inheritdoc />
         public virtual void Kill()
         {
-            this.UnderlyingProcess.Kill();
+            this.UnderlyingProcess.Kill(true);
+        }
+
+        /// <inheritdoc />
+        public virtual void Kill(bool entireProcessTree)
+        {
+            this.UnderlyingProcess.Kill(entireProcessTree);
         }
 
         /// <inheritdoc />
         public virtual bool Start()
         {
+            if (this.RedirectStandardError)
+            {
+                this.UnderlyingProcess.ErrorDataReceived += this.OnStandardErrorReceived;
+            }
+
+            if (this.RedirectStandardOutput)
+            {
+                this.UnderlyingProcess.OutputDataReceived += this.OnStandardOutputReceived;
+            }
+
             bool processStarted = this.UnderlyingProcess.Start();
+
             if (processStarted)
             {
                 if (this.RedirectStandardError)
                 {
-                    this.UnderlyingProcess.ErrorDataReceived += this.OnStandardErrorReceived;
                     this.UnderlyingProcess.BeginErrorReadLine();
                 }
 
                 if (this.RedirectStandardOutput)
                 {
-                    this.UnderlyingProcess.OutputDataReceived += this.OnStandardOutputReceived;
                     this.UnderlyingProcess.BeginOutputReadLine();
                 }
             }
@@ -232,6 +249,21 @@ namespace VirtualClient.Common
 
             this.StandardInput.WriteLine(input);
             return this;
+        }
+
+        /// <summary>
+        /// Wait for process to exit
+        /// </summary>
+        public virtual async Task WaitForExitAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
+        {
+            if (timeout == null)
+            {
+                await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
+            }
         }
 
         /// <summary>

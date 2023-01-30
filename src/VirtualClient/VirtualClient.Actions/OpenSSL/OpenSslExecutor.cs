@@ -131,31 +131,35 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(OpenSslExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.SetEnvironmentVariables(process);
-
-                    DateTime startTime = DateTime.UtcNow;
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-
-                    try
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                     {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                        DateTime endTime = DateTime.UtcNow;
+                        this.SetEnvironmentVariables(process);
 
-                        if (!cancellationToken.IsCancellationRequested)
+                        DateTime startTime = DateTime.UtcNow;
+                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
+                        try
                         {
-                            this.Logger.LogProcessDetails<OpenSslExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                            this.CaptureResults(process, commandArguments, startTime, endTime, telemetryContext);
+                            DateTime endTime = DateTime.UtcNow;
+
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                this.Logger.LogProcessDetails<OpenSslExecutor>(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+
+                                this.CaptureResults(process, commandArguments, startTime, endTime, telemetryContext);
+                            }
                         }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
+                        finally
                         {
-                            process.Kill();
+                            if (!process.HasExited)
+                            {
+                                process.Kill();
+                            }
                         }
                     }
                 }

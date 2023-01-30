@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
@@ -147,9 +148,8 @@ namespace VirtualClient.Actions
             }
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(
-                                                    this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                                                    .ConfigureAwait(false);
+            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                .ConfigureAwait(false);
 
             this.PackageDirectory = workloadPackage.Path;
             this.ScriptsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "Scripts");
@@ -357,8 +357,8 @@ namespace VirtualClient.Actions
             return this.Logger.LogMessageAsync($"{nameof(DeathStarBenchExecutor)}.ResetState", telemetryContext, async () =>
             {
                 HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(
-                                                            nameof(DeathStarBenchState),
-                                                            cancellationToken).ConfigureAwait(false);
+                    nameof(DeathStarBenchState),
+                    cancellationToken).ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.NoContent)
                 {
@@ -366,8 +366,8 @@ namespace VirtualClient.Actions
                 }
 
                 HttpResponseMessage swarmCommandResponse = await this.LocalApiClient.DeleteStateAsync(
-                                                                       nameof(DeathStarBenchExecutor.SwarmCommand),
-                                                                       cancellationToken).ConfigureAwait(false);
+                    nameof(DeathStarBenchExecutor.SwarmCommand),
+                    cancellationToken).ConfigureAwait(false);
 
                 if (swarmCommandResponse.StatusCode != HttpStatusCode.NoContent)
                 {
@@ -602,20 +602,19 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="DeathStarBenchState"/> class.
         /// </summary>
-        public DeathStarBenchState(
-            string scenario,
-            bool serviceState)
+        public DeathStarBenchState(string serviceName, bool serviceState)
         {
-            scenario.ThrowIfNull(nameof(scenario));
+            serviceName.ThrowIfNull(nameof(serviceName));
             serviceState.ThrowIfNull(nameof(serviceState));
 
-            this.Properties[nameof(this.ServiceName)] = scenario;
+            this.Properties[nameof(this.ServiceName)] = serviceName;
             this.Properties[nameof(this.ServiceState)] = serviceState;
         }
 
         /// <summary>
         /// Workload/action scenario/Service Name
         /// </summary>
+        [JsonProperty(PropertyName = "serviceName", Required = Required.Always)]
         public string ServiceName
         {
             get
@@ -632,6 +631,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Workload/action scenario/Service State(True or False representing Start or stop respectively).
         /// </summary>
+        [JsonProperty(PropertyName = "serviceState", Required = Required.Always)]
         public bool ServiceState
         {
             get

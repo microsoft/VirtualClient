@@ -48,6 +48,8 @@ namespace VirtualClient.Actions
         public FioMultiThroughputExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Since in this case we are testing on raw disks, we are not cleaning up test files
+            this.DeleteTestFilesOnFinish = false;
         }
 
         /// <summary>
@@ -542,8 +544,11 @@ namespace VirtualClient.Actions
                 DiskPerformanceWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
                 metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
-                await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
                     .ConfigureAwait(false);
+                }
             }
         }
 

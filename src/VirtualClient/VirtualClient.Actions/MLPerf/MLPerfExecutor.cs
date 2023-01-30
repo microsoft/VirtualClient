@@ -129,22 +129,23 @@ namespace VirtualClient.Actions
 
             this.PrepareBenchmarkConfigsAndScenarios();
 
-            foreach (string config in this.benchmarkConfigs[this.Scenario])
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string perfModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
-                    $"sudo bash -c \"{this.ExportScratchSpace} && " +
-                    $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
-                    $"--config_ver={config} --test_mode=PerformanceOnly --fast\'\"";
+                foreach (string config in this.benchmarkConfigs[this.Scenario])
+                {
+                    string perfModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
+                        $"sudo bash -c \"{this.ExportScratchSpace} && " +
+                        $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
+                        $"--config_ver={config} --test_mode=PerformanceOnly --fast\'\"";
 
-                string accuracyModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
-                    $"sudo bash -c \"{this.ExportScratchSpace} && " +
-                    $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
-                    $"--config_ver={config} --test_mode=AccuracyOnly --fast\'\"";
+                    string accuracyModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
+                        $"sudo bash -c \"{this.ExportScratchSpace} && " +
+                        $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
+                        $"--config_ver={config} --test_mode=AccuracyOnly --fast\'\"";
 
-                await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, cancellationToken);
-
-                await this.ExecuteCommandAsync("sudo", accuracyModeExecCommand, this.NvidiaDirectory, cancellationToken);
-
+                    await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, cancellationToken);
+                    await this.ExecuteCommandAsync("sudo", accuracyModeExecCommand, this.NvidiaDirectory, cancellationToken);
+                }
             }
 
             DateTime endTime = DateTime.UtcNow;

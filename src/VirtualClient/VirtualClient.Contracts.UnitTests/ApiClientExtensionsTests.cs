@@ -5,10 +5,8 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -22,6 +20,12 @@ namespace VirtualClient.Contracts
     public class ApiClientExtensionsTests
     {
         private MockFixture fixture;
+
+        [OneTimeSetUp]
+        public void SetupFixture()
+        {
+            VirtualClientApiClient.DefaultPollingWaitTime = TimeSpan.Zero;
+        }
 
         [SetUp]
         public void SetupTest()
@@ -55,7 +59,7 @@ namespace VirtualClient.Contracts
                     })
                     .ReturnsAsync(response);
 
-                HttpResponseMessage actualResponse = await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
+                await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
                     expectedStateId,
                     JObject.FromObject(expectedState),
                     TimeSpan.Zero,
@@ -68,7 +72,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task PollForExpectedStateExtensionCorrectlyIdentifiesWhenTheTargetStateMatchesTheExpectedState()
+        public void PollForExpectedStateExtensionCorrectlyIdentifiesWhenTheTargetStateMatchesTheExpectedState()
         {
             string expectedStateId = "State1234";
             object expectedState = new
@@ -85,15 +89,12 @@ namespace VirtualClient.Contracts
                     .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                     .ReturnsAsync(response);
 
-                HttpResponseMessage actualResponse = await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
+                Assert.DoesNotThrowAsync(() => this.fixture.ApiClient.Object.PollForExpectedStateAsync(
                     expectedStateId,
                     JObject.FromObject(expectedState),
                     TimeSpan.Zero,
                     DefaultStateComparer.Instance,
-                    CancellationToken.None).ConfigureAwait(false);
-
-                Assert.IsNotNull(actualResponse);
-                Assert.IsTrue(actualResponse.StatusCode == HttpStatusCode.OK);
+                    CancellationToken.None));
             }
         }
 
@@ -343,7 +344,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task SynchronizeStateExtensionRequestsTheCorrectStateObject()
+        public async Task PollForExpectedStateAsyncExtensionRequestsTheCorrectStateObject()
         {
             bool expectedCallMade = false;
             string expectedStateId = "State1234";
@@ -369,7 +370,7 @@ namespace VirtualClient.Contracts
                     })
                     .ReturnsAsync(response);
 
-                HttpResponseMessage actualResponse = await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
+                await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
                     expectedStateId,
                     JObject.FromObject(expectedState),
                     TimeSpan.Zero,
@@ -382,7 +383,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task SynchronizeStateExtensionCorrectlyIdentifiesWhenTheTargetStateMatchesTheExpectedState()
+        public void PollForExpectedStateAsyncExtensionCorrectlyIdentifiesWhenTheTargetStateMatchesTheExpectedState()
         {
             string expectedStateId = "State1234";
 
@@ -400,50 +401,13 @@ namespace VirtualClient.Contracts
                     .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                     .ReturnsAsync(response);
 
-                HttpResponseMessage actualResponse = await this.fixture.ApiClient.Object.PollForExpectedStateAsync(
+                Assert.DoesNotThrowAsync(() => this.fixture.ApiClient.Object.PollForExpectedStateAsync(
                     expectedStateId,
                     JObject.FromObject(expectedState),
                     TimeSpan.Zero,
                     DefaultStateComparer.Instance,
-                    CancellationToken.None).ConfigureAwait(false);
-
-                Assert.IsNotNull(actualResponse);
-                Assert.IsTrue(actualResponse.StatusCode == HttpStatusCode.OK);
-            }
-        }
-
-        [Test]
-        public void SynchronizeStateExtensionThrowsWhenAnAttemptToPollForAMatchingStateTimesOut()
-        {
-            string expectedStateId = "State1234";
-
-            IDictionary<string, IConvertible> expectedProperties = new Dictionary<string, IConvertible>();
-            expectedProperties.Add("Property1", "value1");
-            expectedProperties.Add("Property2", "value2");
-
-            IDictionary<string, IConvertible> someOtherProperties = new Dictionary<string, IConvertible>();
-            someOtherProperties.Add("Property1", "value1");
-            someOtherProperties.Add("Property2", "value3");
-
-            var expectedState = new ClientServerState(ClientServerStatus.Ready, expectedProperties);
-            var someOtherState = new ClientServerState(ClientServerStatus.Ready, someOtherProperties);
-
-            Item<ClientServerState> expectedStateInstance = new Item<ClientServerState>(expectedStateId, expectedState);
-            Item<ClientServerState> responseStateItem = new Item<ClientServerState>(expectedStateId, someOtherState);
-
-            // The target state exists, but it does not match the desired/expected state.
-            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, responseStateItem))
-            {
-                this.fixture.ApiClient
-                   .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                   .ReturnsAsync(response);
-
-                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
-                    () => this.fixture.ApiClient.Object.SynchronizeStateAsync(expectedStateInstance, DefaultStateComparer.Instance, CancellationToken.None, TimeSpan.Zero));
-
-                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+                    CancellationToken.None));
             }
         }
     }
-
 }

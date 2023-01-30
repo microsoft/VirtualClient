@@ -7,7 +7,6 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Net;
     using System.Net.Http;
-    using System.Runtime.Intrinsics.Arm;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -82,6 +81,12 @@ namespace VirtualClient
             this.RestClient = restClient;
             this.BaseUri = baseUri;
         }
+
+        /// <summary>
+        /// The default amount of time to wait in-between polling operations before making subsequent
+        /// calls.
+        /// </summary>
+        public static TimeSpan DefaultPollingWaitTime { get; set; } = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// Gets the base URI to the server hosting the API.
