@@ -1,79 +1,83 @@
 {
-  "Description": "Redis Benchmark",
-  "Parameters": {
-  },
-  "Actions": [
-    {
-      "Type": "RedisServerExecutor",
-      "Parameters": {
-        "Scenario": "RedisServer",
-        "Role": "Server",
-        "Port": "6379",
-        "PackageName": "Redis",
-        "Bind": 1
-      }
+    "Description": "Redis Benchmark",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Ubuntu"
     },
-    {
-      "Type": "RedisMemtierClientExecutor",
-      "Parameters": {
-        "Scenario": "Memtier_4t_1c",
-        "Role": "Client",
-        "Port": "6379",
-        "PackageName": "Redis",
-        "ThreadCount": "4",
-        "ClientCount": "1",
-        "RunCount": "1",
-        "DurationInSecs": "60",
-        "PipelineDepth": "32",
-        "Bind": 1
-      }
-    }
-  ],
-  "Dependencies": [
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallRequiredLinuxPackagesForMemtier",
-        "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
-        "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-        "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
-      }
+    "Parameters": {
     },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallRequiredLinuxPackagesForRedis",
-        "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
-        "Packages-Yum": "wget,numactl,tcl-devel",
-        "Packages-Dnf": "wget,numactl,tcl-devel"
-      }
-    },
-    {
-      "Type": "GitRepoClone",
-      "Parameters": {
-        "Scenario": "CloneMemtierBenchmarkRepo",
-        "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
-        "PackageName": "memtier"
-      }
-    },
-    {
-      "Type": "RedisInstallation",
-      "Parameters": {
-        "Scenario": "InstallRedis",
-        "Version": "6.2.1",
-        "PackageName": "redis"
-      }
-    },
-    {
-      "Type": "MemtierInstallation",
-      "Parameters": {
-        "Scenario": "InstallMemtier",
-        "Version": "1.4.0",
-        "PackageName": "memtier"
-      }
-    },
-    {
-      "Type": "ApiServer"
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "RedisServerExecutor",
+            "Parameters": {
+                "Scenario": "RedisServer",
+                "Role": "Server",
+                "Port": "6379",
+                "PackageName": "Redis",
+                "Bind": 1
+            }
+        },
+        {
+            "Type": "RedisMemtierClientExecutor",
+            "Parameters": {
+                "Scenario": "Memtier_4t_1c",
+                "Role": "Client",
+                "Port": "6379",
+                "PackageName": "Redis",
+                "ThreadCount": "4",
+                "ClientCount": "1",
+                "RunCount": "1",
+                "DurationInSecs": "60",
+                "PipelineDepth": "32",
+                "Bind": 1
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackagesForMemtier",
+                "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
+                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
+                "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRequiredLinuxPackagesForRedis",
+                "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
+                "Packages-Yum": "wget,numactl,tcl-devel",
+                "Packages-Dnf": "wget,numactl,tcl-devel"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneMemtierBenchmarkRepo",
+                "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
+                "PackageName": "memtier"
+            }
+        },
+        {
+            "Type": "RedisInstallation",
+            "Parameters": {
+                "Scenario": "InstallRedis",
+                "Version": "6.2.1",
+                "PackageName": "redis"
+            }
+        },
+        {
+            "Type": "MemtierInstallation",
+            "Parameters": {
+                "Scenario": "InstallMemtier",
+                "Version": "1.4.0",
+                "PackageName": "memtier"
+            }
+        },
+        {
+            "Type": "ApiServer"
+        }
+    ]
 }

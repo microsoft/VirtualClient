@@ -93,6 +93,52 @@ namespace VirtualClient.Actions
             }
         }
 
+        [Test]
+        [TestCase("PERF-COMPRESSION-LZBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-COMPRESSION-LZBENCH.json", PlatformID.Unix, Architecture.Arm64)]
+        public void CompressionWorkloadProfileParametersAreInlinedCorrectly_LZbench(string profile, PlatformID platformID, Architecture architecture)
+        {
+            this.mockFixture.Setup(platformID, architecture);
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                WorkloadAssert.ParameterReferencesInlined(executor.Profile);
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-COMPRESSION-LZBENCH.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-COMPRESSION-LZBENCH.json", PlatformID.Unix, Architecture.Arm64)]
+        public async Task CompressionWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform_LZbench(string profile, PlatformID platformID, Architecture architecture)
+        {
+            IEnumerable<string> expectedCommands = this.GetLZBenchProfileExpectedCommands(platformID, architecture);
+
+            // Setup the expectations for the workload
+            // - Workload package is installed and exists.
+            // - Workload is built.
+            // - The workload generates valid results.
+            this.mockFixture.Setup(platformID, architecture);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+
+                if (arguments.Contains("lzbenchexecutor.sh", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("LzbenchResults.csv"));
+                }
+
+                return process;
+            };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteDependencies = false;
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform, Architecture architecture)
         {
             List<string> commands = null;
@@ -141,6 +187,18 @@ namespace VirtualClient.Actions
             }
 
             return commands;
+        }
+
+        private IEnumerable<string> GetLZBenchProfileExpectedCommands(PlatformID platform, Architecture architecture)
+        {
+            return new List<string>
+            {
+                $"sudo git clone -b v1.8.1 https://github.com/inikep/lzbench.git",
+                $"sudo make",
+                $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
+                $"sudo unzip silesia.zip -d silesia",
+                $"sudo bash lzbenchexecutor.sh \"-t16,16 -eall -o4 -r /home/user/tools/VirtualClient/packages/lzbench/silesia\""
+            };
         }
     }
 }

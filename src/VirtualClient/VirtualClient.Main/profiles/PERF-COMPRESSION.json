@@ -1,162 +1,146 @@
 ﻿{
     "Description": "Compression Workloads",
     "Metadata": {
+        "RecommendedMinimumExecutionTime": "04:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "InputFilesOrDirs": "",
-        "InputFiles": "",
         "CompilerName": "gcc",
         "CompilerVersion": "10"
     },
     "Actions": [
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zLZMAFastestMode",
                 "Options": "a -bt -mx1 -mmt -mm=LZMA -r 7zLZMAFastestMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zLZMAMaximumMode",
                 "Options": "a -bt -mx7 -mmt -mm=LZMA -r 7zLZMAMaximumMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zLZMAUltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=LZMA -r 7zLZMAUltraMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zBZIP2FastestMode",
                 "Options": "a -bt -mx1 -mmt -mm=BZIP2 -r 7zBZIP2FastestMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zBZIP2MaximumMode",
                 "Options": "a -bt -mx7 -mmt -mm=BZIP2 -r 7zBZIP2MaximumMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zBZIP2UltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=BZIP2 -r 7zBZIP2UltraMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zPPMdFastestMode",
                 "Options": "a -bt -mx1 -mmt -mm=PPMd -r 7zPPMdFastestMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zPPMdMaximumMode",
                 "Options": "a -bt -mx7 -mmt -mm=PPMd -r 7zPPMdMaximumMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "7zPPMdUltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=PPMd -r 7zPPMdUltraMode.7z",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "tarMode",
                 "Options": "a -bt -r tarMode.tar",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "zipDeflateUltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=Deflate -r zipDeflateUltraMode.zip",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "zipDeflate64UltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=Deflate64 -r zipDeflate64UltraMode.zip",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "zipBZIP2UltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=BZIP2 -r zipBZIP2UltraMode.zip",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "zipLZMAUltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=LZMA -r zipLZMAUltraMode.zip",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
         },
         {
-            "Type": "Compressor7zipExecutor",
+            "Type": "Compression7zipExecutor",
             "Parameters": {
                 "Scenario": "zipPPMdUltraMode",
                 "Options": "a -bt -mx9 -mmt -mm=PPMd -r zipPPMdUltraMode.zip",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "7zip",
                 "SupportedOn": "Windows"
             }
@@ -166,7 +150,6 @@
             "Parameters": {
                 "Scenario": "Pbzip2Compression",
                 "Options": "-fv",
-                "InputFiles": "$.Parameters.InputFiles",
                 "PackageName": "pbzip2",
                 "SupportedOn": "Unix"
             }
@@ -176,7 +159,6 @@
             "Parameters": {
                 "Scenario": "Pbzip2Decompression",
                 "Options": "-fvd",
-                "InputFiles": "$.Parameters.InputFiles",
                 "PackageName": "pbzip2",
                 "SupportedOn": "Unix"
             }
@@ -186,7 +168,6 @@
             "Parameters": {
                 "Scenario": "GzipCompression",
                 "Options": "-rvf",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "gzip",
                 "SupportedOn": "Unix"
             }
@@ -196,7 +177,6 @@
             "Parameters": {
                 "Scenario": "GzipDecompression",
                 "Options": "-rvfd",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "gzip",
                 "SupportedOn": "Unix"
             }
@@ -206,7 +186,6 @@
             "Parameters": {
                 "Version": "1.8.1",
                 "Options": "-eall -o4 -r",
-                "InputFilesOrDirs": "$.Parameters.InputFilesOrDirs",
                 "PackageName": "lzbench",
                 "SupportedOn": "Unix"
             }

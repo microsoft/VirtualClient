@@ -1,5 +1,10 @@
 {
     "Description": "Prime95 Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
     "Parameters": {
         "TimeInMins": "60",
         "MinTortureFFT": "4",
@@ -19,10 +24,10 @@
                 "MaxTortureFFT": "$.Parameters.MaxTortureFFT",
                 "TortureHyperthreading": "$.Parameters.TortureHyperthreading",
                 "FFTConfiguration": "$.Parameters.FFTConfiguration",
-                "ThreadCount":  "$.Parameters.ThreadCount",
+                "ThreadCount": "$.Parameters.ThreadCount",
                 "PackageName": "prime95"
             }
-        }     
+        }
     ],
     "Dependencies": [
         {

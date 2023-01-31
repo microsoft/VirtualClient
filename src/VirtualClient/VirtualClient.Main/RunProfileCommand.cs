@@ -96,7 +96,7 @@ namespace VirtualClient
 
             try
             {
-                this.InitializeGlobalTelemetryProperties();
+                this.SetGlobalTelemetryProperties();
 
                 // When timing constraints/hints are not provided on the command line, we run the
                 // application until it is explicitly stopped by the user or automation.
@@ -106,10 +106,13 @@ namespace VirtualClient
                 }
 
                 // 1) Setup any dependencies required to execute the workload profile.
-                this.InitializeBackwardsCompatibilityRequirements();
+                this.ApplyBackwardsCompatibilityRequirements();
                 dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
+
+                IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
+                this.SetGlobalTelemetryProperties(profileNames, dependencies);
 
                 // Extracts and registers any packages that are pre-existing on the system (e.g. they exist in
                 // the 'packages' directory already).
@@ -124,10 +127,8 @@ namespace VirtualClient
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
 
-                IEnumerable<string> effectiveProfiles = await this.GetProfilesAsync(dependencies, cancellationToken)
+                IEnumerable<string> effectiveProfiles = await this.InitializeProfilesAsync(dependencies, cancellationToken)
                     .ConfigureAwait(false);
-
-                this.InitializeGlobalTelemetryProperties(effectiveProfiles, dependencies);
 
                 if (this.InstallDependencies)
                 {
@@ -185,76 +186,11 @@ namespace VirtualClient
             return exitCode;
         }
 
-        protected async Task<IEnumerable<string>> GetProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
-        {
-            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-            IFileSystem fileSystem = systemManagement.FileSystem;
-
-            List<string> effectiveProfiles = new List<string>();
-            foreach (string path in this.Profiles)
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    // Virtual Client profiles can be downloaded from a cloud storage location using a simple URI reference. This reference
-                    // can additionally include a SAS URI for authentication where desired.
-                    // 
-                    // e.g.
-                    // Anonymous Read: https://any.blob.core.windows.net/profiles/ANY-PROFILE.json
-                    // Authenticated:  https://any.blob.core.windows.net/profiles/ANY-PROFILE.json?sp=r&st=2022-09-11T19:28:36Z&se=2022-09-12T03:28:36Z&spr=https&sv=2021-06-08&sr=c&...
-
-                    string profileFullPath = null;
-                    if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var profileUri = new Uri(path);
-                        string profileName = Path.GetFileName(profileUri.AbsolutePath);
-                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
-
-                        using (var client = new HttpClient())
-                        {
-                            await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
-                            {
-                                var response = await client.GetAsync(profileUri);
-                                using (var fs = new FileStream(profileFullPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
-                                {
-                                    await response.Content.CopyToAsync(fs);
-                                }
-                            }).ConfigureAwait(false);
-                        }
-                    }
-                    else
-                    {
-                        profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(path);
-
-                        if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
-                        {
-                            profileFullPath = remappedProfile;
-                        }
-
-                        if (!fileSystem.File.Exists(profileFullPath))
-                        {
-                            // If the profile defined is not a full path to a profile located on the system, then we
-                            // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
-                            // parent directory itself.
-                            profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(path);
-                            if (!fileSystem.File.Exists(profileFullPath))
-                            {
-                                throw new DependencyException($"Profile does not exist at the path '{path}'.", ErrorReason.ProfileNotFound);
-                            }
-                        }
-                    }
-
-                    effectiveProfiles.Add(profileFullPath);
-                }
-            }
-
-            return effectiveProfiles;
-        }
-
         /// <summary>
         /// Performs any changes that need to be made to support backwards compatibility
         /// requirements for the application.
         /// </summary>
-        protected void InitializeBackwardsCompatibilityRequirements()
+        protected void ApplyBackwardsCompatibilityRequirements()
         {
             this.AgentId = BackwardsCompatibility.GetAgentId(this.AgentId, this.Metadata);
             this.ExperimentId = BackwardsCompatibility.GetExperimentId(this.ExperimentId, this.Metadata);
@@ -276,6 +212,48 @@ namespace VirtualClient
                     this.PackageStore = new DependencyBlobStore(DependencyStore.Packages, connectionToken);
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the full paths to the profiles specified on the command line.
+        /// </summary>
+        protected IEnumerable<string> GetProfilePaths(IServiceCollection dependencies)
+        {
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            IFileSystem fileSystem = systemManagement.FileSystem;
+
+            List<string> effectiveProfiles = new List<string>();
+            foreach (string path in this.Profiles)
+            {
+                string profileFullPath = null;
+                if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    var profileUri = new Uri(path);
+                    string profileName = Path.GetFileName(profileUri.AbsolutePath);
+                    profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
+                }
+                else
+                {
+                    profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(path);
+
+                    if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
+                    {
+                        profileFullPath = remappedProfile;
+                    }
+
+                    if (!fileSystem.File.Exists(profileFullPath))
+                    {
+                        // If the profile defined is not a full path to a profile located on the system, then we
+                        // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
+                        // parent directory itself.
+                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(path);
+                    }
+                }
+
+                effectiveProfiles.Add(profileFullPath);
+            }
+
+            return effectiveProfiles;
         }
 
         /// <summary>
@@ -345,89 +323,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Initializes the global/persistent telemetry properties that will be included
-        /// with all telemetry emitted from the Virtual Client.
-        /// </summary>
-        protected void InitializeGlobalTelemetryProperties()
-        {
-            // Additional persistent/global telemetry properties in addition to the ones
-            // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
-            {
-                ["experimentId"] = this.ExperimentId.ToLowerInvariant(),
-                ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
-            });
-
-            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
-
-            if (this.Metadata?.Any() == true)
-            {
-                this.Metadata.ToList().ForEach(entry =>
-                {
-                    string key = entry.Key.CamelCased();
-                    this.Metadata[key] = entry.Value;
-                });
-
-                metadata.AddRange(this.Metadata.ObscureSecrets());
-            }
-
-            // For backwards compatibility, ensure that the experiment ID and agent ID
-            // values are a part of the metadata. This is required for the original VC table
-            // JSON mappings that expect these properties to exist in the metadata supplied to
-            // VC on the command line.
-            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
-            metadata["agentId"] = this.AgentId;
-
-            EventContext.PersistentProperties["metadata"] = metadata;
-        }
-
-        /// <summary>
-        /// Initializes the global/persistent telemetry properties that will be included
-        /// with all telemetry emitted from the Virtual Client.
-        /// </summary>
-        protected void InitializeGlobalTelemetryProperties(ExecutionProfile profile)
-        {
-            // Additional persistent/global telemetry properties in addition to the ones
-            // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
-            {
-                ["executionProfileDescription"] = profile.Description,
-                ["profileFriendlyName"] = profile.Description,
-            });
-        }
-
-        /// <summary>
-        /// Initializes the global/persistent telemetry properties that will be included
-        /// with all telemetry emitted from the Virtual Client.
-        /// </summary>
-        protected void InitializeGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
-        {
-            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-
-            string profile = profiles.First();
-            string profileName = Path.GetFileName(profile);
-            string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
-            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, systemManagement.Platform, systemManagement.CpuArchitecture);
-
-            // Additional persistent/global telemetry properties in addition to the ones
-            // added on application startup.
-            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
-            {
-                // Ex: PERF-CPU-OPENSSL (win-x64)
-                ["executionProfile"] = platformSpecificProfileName,
-
-                // Ex: PERF-CPU-OPENSSL.json
-                ["executionProfileName"] = profileName,
-                ["executionProfilePath"] = profileFullPath
-            });
-
-            IDictionary<string, IConvertible> systemInfo = systemManagement.GetSystemMetadataAsync(CancellationToken.None)
-                .GetAwaiter().GetResult();
-
-            EventContext.PersistentProperties["systemInfo"] = systemInfo;
-        }
-
-        /// <summary>
         /// Initializes the profile that will be executed.
         /// </summary>
         protected async Task<ExecutionProfile> InitializeProfileAsync(IEnumerable<string> profiles, IServiceCollection dependencies, CancellationToken cancellationToken)
@@ -469,6 +364,77 @@ namespace VirtualClient
             }
 
             return profile;
+        }
+
+        /// <summary>
+        /// Validates the existence of the profiles specified downloading them as needed.
+        /// </summary>
+        protected async Task<IEnumerable<string>> InitializeProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken, bool pathsOnly = false)
+        {
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            IFileSystem fileSystem = systemManagement.FileSystem;
+
+            List<string> effectiveProfiles = new List<string>();
+            foreach (string path in this.Profiles)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    // Virtual Client profiles can be downloaded from a cloud storage location using a simple URI reference. This reference
+                    // can additionally include a SAS URI for authentication where desired.
+                    // 
+                    // e.g.
+                    // Anonymous Read: https://any.blob.core.windows.net/profiles/ANY-PROFILE.json
+                    // Authenticated:  https://any.blob.core.windows.net/profiles/ANY-PROFILE.json?sp=r&st=2022-09-11T19:28:36Z&se=2022-09-12T03:28:36Z&spr=https&sv=2021-06-08&sr=c&...
+
+                    string profileFullPath = null;
+                    if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var profileUri = new Uri(path);
+                        string profileName = Path.GetFileName(profileUri.AbsolutePath);
+                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
+
+                        if (!pathsOnly)
+                        {
+                            using (var client = new HttpClient())
+                            {
+                                await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
+                                {
+                                    var response = await client.GetAsync(profileUri);
+                                    using (var fs = new FileStream(profileFullPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
+                                    {
+                                        await response.Content.CopyToAsync(fs);
+                                    }
+                                }).ConfigureAwait(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(path);
+
+                        if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
+                        {
+                            profileFullPath = remappedProfile;
+                        }
+
+                        if (!fileSystem.File.Exists(profileFullPath))
+                        {
+                            // If the profile defined is not a full path to a profile located on the system, then we
+                            // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
+                            // parent directory itself.
+                            profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(path);
+                            if (!pathsOnly && !fileSystem.File.Exists(profileFullPath))
+                            {
+                                throw new DependencyException($"Profile does not exist at the path '{path}'.", ErrorReason.ProfileNotFound);
+                            }
+                        }
+                    }
+
+                    effectiveProfiles.Add(profileFullPath);
+                }
+            }
+
+            return effectiveProfiles;
         }
 
         /// <summary>
@@ -528,6 +494,89 @@ namespace VirtualClient
             return profile;
         }
 
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        protected void SetGlobalTelemetryProperties()
+        {
+            // Additional persistent/global telemetry properties in addition to the ones
+            // added on application startup.
+            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            {
+                ["experimentId"] = this.ExperimentId.ToLowerInvariant(),
+                ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
+            });
+
+            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+
+            if (this.Metadata?.Any() == true)
+            {
+                this.Metadata.ToList().ForEach(entry =>
+                {
+                    string key = entry.Key.CamelCased();
+                    this.Metadata[key] = entry.Value;
+                });
+
+                metadata.AddRange(this.Metadata.ObscureSecrets());
+            }
+
+            // For backwards compatibility, ensure that the experiment ID and agent ID
+            // values are a part of the metadata. This is required for the original VC table
+            // JSON mappings that expect these properties to exist in the metadata supplied to
+            // VC on the command line.
+            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
+            metadata["agentId"] = this.AgentId;
+
+            EventContext.PersistentProperties["metadata"] = metadata;
+        }
+
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        protected void SetGlobalTelemetryProperties(ExecutionProfile profile)
+        {
+            // Additional persistent/global telemetry properties in addition to the ones
+            // added on application startup.
+            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            {
+                ["executionProfileDescription"] = profile.Description,
+                ["profileFriendlyName"] = profile.Description,
+            });
+        }
+
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        protected void SetGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
+        {
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
+            string profile = profiles.First();
+            string profileName = Path.GetFileName(profile);
+            string profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(Path.GetFullPath(profile));
+            string platformSpecificProfileName = PlatformSpecifics.GetProfileName(profileName, systemManagement.Platform, systemManagement.CpuArchitecture);
+
+            // Additional persistent/global telemetry properties in addition to the ones
+            // added on application startup.
+            EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
+            {
+                // Ex: PERF-CPU-OPENSSL (win-x64)
+                ["executionProfile"] = platformSpecificProfileName,
+
+                // Ex: PERF-CPU-OPENSSL.json
+                ["executionProfileName"] = profileName,
+                ["executionProfilePath"] = profileFullPath
+            });
+
+            IDictionary<string, IConvertible> systemInfo = systemManagement.GetSystemMetadataAsync(CancellationToken.None)
+                .GetAwaiter().GetResult();
+
+            EventContext.PersistentProperties["systemInfo"] = systemInfo;
+        }
+
         private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)
         {
             try
@@ -570,7 +619,7 @@ namespace VirtualClient
             ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
-            this.InitializeGlobalTelemetryProperties(profile);
+            this.SetGlobalTelemetryProperties(profile);
 
             await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
                 .ConfigureAwait(false);
@@ -632,7 +681,7 @@ namespace VirtualClient
                 logger.LogTraceMessage($"Duration: {this.Timeout.Duration}");
             }
 
-            this.InitializeGlobalTelemetryProperties(profile);
+            this.SetGlobalTelemetryProperties(profile);
 
             await this.CaptureSystemInfoAsync(dependencies, cancellationToken)
                 .ConfigureAwait(false);

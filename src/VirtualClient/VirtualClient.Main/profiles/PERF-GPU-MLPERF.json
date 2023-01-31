@@ -1,82 +1,88 @@
 {
     "Description": "MLPerf GPU Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "10:00:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
+    },
     "Parameters": {
-      "Username": "testuser",
-      "DiskFilter": "SizeGreaterThan:1000gb",
-      "CudaVersion": "11.6",
-      "DriverVersion": "510",
-      "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
+        "Username": "testuser",
+        "DiskFilter": "SizeGreaterThan:1000gb",
+        "CudaVersion": "11.6",
+        "DriverVersion": "510",
+        "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
     },
     "Actions": [
-      {
-        "Type": "MLPerfExecutor",
-        "Parameters": {
-          "Scenario": "bert",
-          "Username": "$.Parameters.Username",
-          "DiskFilter": "$.Parameters.DiskFilter"
+        {
+            "Type": "MLPerfExecutor",
+            "Parameters": {
+                "Scenario": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
+            "Type": "MLPerfExecutor",
+            "Parameters": {
+                "Scenario": "rnnt",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
+            "Type": "MLPerfExecutor",
+            "Parameters": {
+                "Scenario": "ssd-mobilenet",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
+        },
+        {
+            "Type": "MLPerfExecutor",
+            "Parameters": {
+                "Scenario": "ssd-resnet34",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter"
+            }
         }
-      },
-      {
-        "Type": "MLPerfExecutor",
-        "Parameters": {
-          "Scenario": "rnnt",
-          "Username": "$.Parameters.Username",
-          "DiskFilter": "$.Parameters.DiskFilter"
-        }
-      },
-      {
-        "Type": "MLPerfExecutor",
-        "Parameters": {
-          "Scenario": "ssd-mobilenet",
-          "Username": "$.Parameters.Username",
-          "DiskFilter": "$.Parameters.DiskFilter"
-        }
-      },
-      {
-        "Type": "MLPerfExecutor",
-        "Parameters": {
-          "Scenario": "ssd-resnet34",
-          "Username": "$.Parameters.Username",
-          "DiskFilter": "$.Parameters.DiskFilter"
-        }
-      }
     ],
-  "Dependencies": [
-    {
-      "Type": "FormatDisks",
-      "Parameters": {
-        "Scenario": "InitializeDisks"
-      }
-    },
-    {
-      "Type": "GitRepoClone",
-      "Parameters": {
-        "Scenario": "CloneMLPerfRepo",
-        "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
-        "PackageName": "mlperf"
-      }
-    },
-    {
-      "Type": "CudaAndNvidiaGPUDriverInstallation",
-      "Parameters": {
-        "Scenario": "InstallCudaAndNvidiaGPUDriver",
-        "CudaVersion": "$.Parameters.CudaVersion",
-        "DriverVersion": "$.Parameters.DriverVersion",
-        "Username": "$.Parameters.Username",
-        "LocalRunFile": "$.Parameters.LocalRunFile"
-      }
-    },
-    {
-      "Type": "DockerInstallation",
-      "Parameters": {
-        "Scenario": "InstallDocker"
-      }
-    },
-    {
-      "Type": "NvidiaContainerToolkitInstallation",
-      "Parameters": {
-        "Scenario": "InstallNvidiaContainerToolkit"
-      }
-    }
-  ]
+    "Dependencies": [
+        {
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneMLPerfRepo",
+                "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
+                "PackageName": "mlperf"
+            }
+        },
+        {
+            "Type": "CudaAndNvidiaGPUDriverInstallation",
+            "Parameters": {
+                "Scenario": "InstallCudaAndNvidiaGPUDriver",
+                "CudaVersion": "$.Parameters.CudaVersion",
+                "DriverVersion": "$.Parameters.DriverVersion",
+                "Username": "$.Parameters.Username",
+                "LocalRunFile": "$.Parameters.LocalRunFile"
+            }
+        },
+        {
+            "Type": "DockerInstallation",
+            "Parameters": {
+                "Scenario": "InstallDocker"
+            }
+        },
+        {
+            "Type": "NvidiaContainerToolkitInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        }
+    ]
 }

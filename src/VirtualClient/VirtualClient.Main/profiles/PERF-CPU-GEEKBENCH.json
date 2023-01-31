@@ -1,7 +1,11 @@
 {
     "Description": "GeekBench5 CPU Performance Workload",
     "MinimumExecutionInterval": "00:10:00",
-    "Parameters": { },
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:05:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
     "Actions": [
         {
             "Type": "GeekbenchExecutor",

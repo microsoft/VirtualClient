@@ -48,10 +48,10 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(Compressor7zipExecutor.Options), "testOption1 testOption2" },
-                { nameof(Compressor7zipExecutor.InputFilesOrDirs), "Test1.zip Test2.txt" },
-                { nameof(Compressor7zipExecutor.PackageName), "7zip" },
-                { nameof(Compressor7zipExecutor.Scenario), "mockScenario"}
+                { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
+                { nameof(Compression7zipExecutor.InputFilesOrDirs), "Test1.zip Test2.txt" },
+                { nameof(Compression7zipExecutor.PackageName), "7zip" },
+                { nameof(Compression7zipExecutor.Scenario), "mockScenario"}
             };
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
             string serializedState = state.ToJson();
             JObject deserializedState = JObject.Parse(serializedState);
 
-            Compressor7zipExecutor.Compressor7zipState result = deserializedState?.ToObject<Compressor7zipExecutor.Compressor7zipState>();
+            Compression7zipExecutor.Compression7zipState result = deserializedState?.ToObject<Compression7zipExecutor.Compression7zipState>();
             Assert.AreEqual(true, result.Compressor7zipStateInitialized);
         }
 
@@ -82,10 +82,10 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(Compressor7zipExecutor.Options), "testOption1 testOption2" },
-                { nameof(Compressor7zipExecutor.InputFilesOrDirs), "" },
-                { nameof(Compressor7zipExecutor.PackageName), "7zip" },
-                { nameof(Compressor7zipExecutor.Scenario), "mockScenario" }
+                { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
+                { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
+                { nameof(Compression7zipExecutor.PackageName), "7zip" },
+                { nameof(Compression7zipExecutor.Scenario), "mockScenario" }
             };
             string expectedCommand = $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip";
 
@@ -125,10 +125,10 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(Compressor7zipExecutor.Options), "testOption1 testOption2" },
-                { nameof(Compressor7zipExecutor.InputFilesOrDirs), "" },
-                { nameof(Compressor7zipExecutor.PackageName), "7zip" },
-                { nameof(Compressor7zipExecutor.Scenario), "mockScenario" }
+                { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
+                { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
+                { nameof(Compression7zipExecutor.PackageName), "7zip" },
+                { nameof(Compression7zipExecutor.Scenario), "mockScenario" }
             };
             string mockPackagePath = this.mockPackage.Path;
 
@@ -170,10 +170,10 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(Compressor7zipExecutor.Options), "testOption1 testOption2" },
-                { nameof(Compressor7zipExecutor.InputFilesOrDirs), "" },
-                { nameof(Compressor7zipExecutor.PackageName), "7zip" },
-                { nameof(Compressor7zipExecutor.Scenario), "mockScenario"}
+                { nameof(Compression7zipExecutor.Options), "testOption1 testOption2" },
+                { nameof(Compression7zipExecutor.InputFilesOrDirs), "" },
+                { nameof(Compression7zipExecutor.PackageName), "7zip" },
+                { nameof(Compression7zipExecutor.Scenario), "mockScenario"}
             };
 
             string mockPackagePath = this.mockPackage.Path;
@@ -204,7 +204,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compressor7zipExecutor.Compressor7zipState()
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = false
             }));
@@ -247,7 +247,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compressor7zipExecutor.Compressor7zipState()
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = false
             }));
@@ -290,7 +290,7 @@ namespace VirtualClient.Actions
                 };
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compressor7zipExecutor.Compressor7zipState()
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new Compression7zipExecutor.Compression7zipState()
             {
                 Compressor7zipStateInitialized = true
             }));
@@ -303,7 +303,7 @@ namespace VirtualClient.Actions
             Assert.IsTrue(processCount == 1);
         }
 
-        private class TestCompressor7zipExecutor : Compressor7zipExecutor
+        private class TestCompressor7zipExecutor : Compression7zipExecutor
         {
             public TestCompressor7zipExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)

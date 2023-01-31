@@ -121,6 +121,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-COMPRESSION.json" Link="Profiles\PERF-COMPRESSION.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-COMPRESSION-LZBENCH.json" Link="Profiles\PERF-COMPRESSION-LZBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-COREMARK.json" Link="Profiles\PERF-CPU-COREMARK.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -167,9 +170,6 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-IO-FIO-DISCOVERY.json" Link="Profiles\PERF-IO-FIO-DISCOVERY.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="..\VirtualClient.Main\profiles\PERF-LZBENCH.json" Link="Profiles\PERF-LZBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-MEM-LMBENCH.json" Link="Profiles\PERF-MEM-LMBENCH.json">

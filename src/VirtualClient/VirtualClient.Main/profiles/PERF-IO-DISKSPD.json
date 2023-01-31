@@ -1,5 +1,10 @@
 {
     "Description": "DiskSpd I/O Stress Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "win-x64,win-arm64",
+        "SupportedOperatingSystems": "Windows"
+    },
     "Parameters": {
         "DiskFillSize": "500G",
         "FileSize": "496G",

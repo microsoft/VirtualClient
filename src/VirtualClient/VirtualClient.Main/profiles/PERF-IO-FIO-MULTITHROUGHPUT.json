@@ -1,5 +1,10 @@
 {
     "Description": "FIO Multi Throughput (OLTP-C) Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+    },
     "Parameters": {
         "DiskFilter": "BiggestSize",
         "RandomIOFileSize": "124G",
