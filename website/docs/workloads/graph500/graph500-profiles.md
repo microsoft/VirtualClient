@@ -6,16 +6,11 @@ The following profiles run customer-representative or benchmarking scenarios usi
 ## PERF-GRAPH500.json
 Runs a data-intensive workload using the Graph500 toolset to test the performance of underlying hardware.
 This profile is designed to identify general/broad regressions when compared against a baseline by validating the time taken to create a graph, perform 
-BFS(Breadth First Search) and SSSP(Single Source Shortest Path)
+BFS(Breadth First Search) and SSSP(Single Source Shortest Path).
 
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
-
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -36,11 +31,9 @@ BFS(Breadth First Search) and SSSP(Single Source Shortest Path)
   | Scale                     | Optional.Scale is logarithm base two of the number of vertices. Scale is used in determining Number of Vertices for the graph that this workload creates.  Scale = log<sub>2</sub> (Number of vertices). | 10 |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. The runtime
-  for this particular profile is affected by the value of the 'Scale' factor. The larger the value, the longer the runtime.
-
-  * (16-cores/vCPUs, Scale = 10) = 30 minutes.
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the

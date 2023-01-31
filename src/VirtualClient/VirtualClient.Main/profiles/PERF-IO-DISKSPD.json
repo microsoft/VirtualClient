@@ -8,8 +8,7 @@
     "Parameters": {
         "DiskFillSize": "500G",
         "FileSize": "496G",
-        "DiskFilter": null,
-        "Tests": null
+        "DiskFilter": "BiggestSize"
     },
     "Actions": [
         {
@@ -24,8 +23,7 @@
                 "DiskFill": true,
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
-                "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests"
+                "DeleteTestFilesOnFinish": false
             }
         },
         {
@@ -41,7 +39,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randwrite"
             }
         },
@@ -58,7 +55,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randwrite"
             }
         },
@@ -75,7 +71,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randwrite"
             }
         },
@@ -92,7 +87,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randwrite"
             }
         },
@@ -109,7 +103,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randwrite"
             }
         },
@@ -126,7 +119,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,write"
             }
         },
@@ -143,7 +135,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,write"
             }
         },
@@ -160,7 +151,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,write"
             }
         },
@@ -177,7 +167,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,write"
             }
         },
@@ -194,7 +183,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,write"
             }
         },
@@ -211,7 +199,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randread"
             }
         },
@@ -228,7 +215,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randread"
             }
         },
@@ -245,7 +231,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randread"
             }
         },
@@ -262,7 +247,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randread"
             }
         },
@@ -279,7 +263,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,randread"
             }
         },
@@ -296,7 +279,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,read"
             }
         },
@@ -313,7 +295,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,read"
             }
         },
@@ -330,7 +311,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,read"
             }
         },
@@ -347,7 +327,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,read"
             }
         },
@@ -364,7 +343,6 @@
                 "Configuration": "Stress",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,DiskSpd,read"
             }
         }

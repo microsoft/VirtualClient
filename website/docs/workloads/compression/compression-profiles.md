@@ -14,7 +14,7 @@ The profiles below require the ability to download workload packages and depende
 must be supplied on the command line. See the 'Workload Packages' documentation above for details on how that works.
 
 ## PERF-COMPRESSION.json
-Runs the compression/decompression workloads which measures performance in terms of compression and decompression speed.  
+Runs the compression/decompression workloads which measures performance in terms of compression and decompression speed.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION.json) 
 
@@ -51,10 +51,9 @@ Runs the compression/decompression workloads which measures performance in terms
   | CompilerVersion           | Optional. The version of the compiler.                                          | 10 |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (8-cores/vCPUs) = 3 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -68,7 +67,7 @@ Runs the compression/decompression workloads which measures performance in terms
   ```
 
   ## PERF-COMPRESSION-LZBENCH.json
-Runs the compression/decompression workloads which measures performance in terms of compression and decompression speed.  
+Runs the compression/decompression workloads which measures performance in terms of compression and decompression speed.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-COMPRESSION-LZBENCH.json) 
 
@@ -95,10 +94,9 @@ Runs the compression/decompression workloads which measures performance in terms
   | CompilerVersion           | Optional. The version of the compiler.                                          | 10 |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (8-cores/vCPUs) = 18 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.

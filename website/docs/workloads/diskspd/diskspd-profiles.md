@@ -94,11 +94,9 @@ aspects of the workload execution.
   | FileSize                  | Optional. Allows the user to override the default file size used in the DiskSpd profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). Note that this parameter is application ONLY on the Stress profile. | 496G |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (16-cores/vCPUs) = 4 - 5 hours (including time required create initial 496G/GB file)
-  * (64-cores/vCPUs) = 3 - 4 hours (including time required create initial 496G/GB file)
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'

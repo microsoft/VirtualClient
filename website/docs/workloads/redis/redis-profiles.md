@@ -57,11 +57,6 @@ the Redis benchmark itself can also be run to evaluate the performance of the Re
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -76,10 +71,9 @@ the Redis benchmark itself can also be run to evaluate the performance of the Re
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (2-core/vCPU VM) = 30 minutes.
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the
