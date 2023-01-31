@@ -480,30 +480,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns the set of tests defined by the 'Tests' instruction supplied on
-        /// the command line.
-        /// </summary>
-        /// <returns>Enumeration of specificed tests, after separated by delimiters.</returns>
-        protected IEnumerable<string> GetSpecificTests()
-        {
-            const string testsKey = "tests";
-            List<string> tests = new List<string>();
-            if (this.Parameters?.Any() == true && this.Parameters.ContainsKey(testsKey))
-            {
-                string[] fioTests = this.Parameters.GetValue<string>(testsKey)?.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries);
-                if (fioTests?.Any() == true)
-                {
-                    foreach (string test in fioTests)
-                    {
-                        tests.Add(test.Trim());
-                    }
-                }
-            }
-
-            return tests;
-        }
-
-        /// <summary>
         /// Returns true if the executor has registered that a disk fill was completed.
         /// </summary>
         protected async Task<bool> IsDiskFillCompleteAsync(CancellationToken cancellationToken)

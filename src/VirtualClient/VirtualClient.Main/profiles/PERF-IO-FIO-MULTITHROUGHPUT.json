@@ -26,7 +26,6 @@
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-                "Tags": "IO,FIO,MultiThroughput,OLTP",
                 "TemplateJobFile": "oltp-c.fio.jobfile"
             }
         },
@@ -60,7 +59,7 @@
                 "TargetIOPS": "$.Parameters.TargetIOPS",
                 "TargetPercents": "$.Parameters.TargetPercents",
                 "TemplateJobFile": "oltp-c.fio.jobfile",
-                "Tags": "IO,FIO,MultiThroughput,OLTP"
+                "Tags": "IO,FIO,Multi-Throughput,OLTP"
             }
         }
     ],

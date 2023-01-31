@@ -223,14 +223,6 @@ namespace VirtualClient.Actions
 
                     this.ApplyParameters(telemetryContext);
 
-                    IEnumerable<string> specificTests = this.GetSpecificTests();
-                    if (specificTests?.Any() == true && !specificTests.Contains(this.TestName, StringComparer.OrdinalIgnoreCase))
-                    {
-                        // If a set of specific tests are defined for execution within the profile, then we check
-                        // to see if the current test is in that list. If not, then we do not execute it.
-                        return;
-                    }
-
                     string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
 
                     IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)

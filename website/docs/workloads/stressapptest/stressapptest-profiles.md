@@ -12,10 +12,6 @@ to the system if desired.
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-
 * **Supports Disconnected Scenarios**
   * Yes. When the StressAppTest package is included in 'packages' directory of the Virtual Client.
     * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
@@ -35,12 +31,10 @@ to the system if desired.
   | TimeInSeconds | Time (in seconds) to run StressAppTest Memory Workload | >0 | 60 |
   | UseCpuStressfulMemoryCopy | Switch to toggle StressAppTest built-in CPU Stressful Memory Copy option. If enabled (true), CPU Usage should increase | true/false | false |
 
-* **Profile Runtimes**
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. The runtime for
-  this particular profile is affected by the value of the 'TimeInSeconds' parameter above. The larger the value, the longer the runtime.
-
-  * (4-cores/vCPUs) = 1.5 hours [Note that runtime period should depend on recommended time for stability testing on system ]
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**
   The following section provides a few basic examples of how to use the workload profile.

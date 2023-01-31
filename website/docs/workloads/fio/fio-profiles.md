@@ -40,15 +40,6 @@ aspects of the workload execution.
   * linux-arm64
   * win-x64
 
-* **Supported Operating Systems**  
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -106,16 +97,9 @@ aspects of the workload execution.
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * On Linux Systems:
-    * (16-cores/vCPUs) = 4 - 5 hours (including time required create initial 496GB file on each disk)
-    * (64-cores/vCPUs) = 3 - 4 hours (including time required create initial 496GB file on each disk)
-
-  * On Windows Systems:
-    * (16-cores/vCPUs) = 5 - 6 hours (including time required create initial 496GB file on each disk)
-    * (64-cores/vCPUs) = 4 - 5 hours (including time required create initial 496GB file on each disk)
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. See the documentation at the top on 'Testing Specific Disks'
@@ -147,7 +131,7 @@ aspects of the workload execution.
 ## PERF-IO-FIO-DISCOVERY.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. FIO Discovery measures throughput as a function of increasing queue depth for multiple operation 
 types(Random Read,Random Write,Sequential Write & Sequential Read) and block sizes. The workload runs directly against the raw disks without having the file system involved
-(e.g. /dev/sda, /dev/sdc). 
+(e.g. /dev/sda, /dev/sdc).
 
 This profile uses an algorithm to determine the total number of jobs/threads as well as queue depth for each job/thread.
 
@@ -252,10 +236,9 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   | Tests                     | Not used. |  |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (64-cores/vCPUs) = 5 - 6 hours.
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -400,10 +383,9 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   | Tags                      | Tags usefull for telemetry data | IO,FIO,MultiThroughput,OLTP |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * (64-cores/vCPUs) = 2 - 3 hours.
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.

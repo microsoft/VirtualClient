@@ -12,8 +12,7 @@
         "ProcessModel": "SingleProcess",
         "MaxThreads": "8",
         "QueueDepths": "1,4,16,64,256,1024",
-        "DirectIO": true,
-        "Tests": null
+        "DirectIO": true
     },
     "Actions": [
         {
@@ -25,10 +24,8 @@
                 "ProcessModel": "SingleProcess",
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "DiskFill": true,
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "DiskFilter": "$.Parameters.DiskFilter"
             }
         },
         {
@@ -45,10 +42,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -65,10 +61,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -87,7 +82,7 @@
                 "DirectIO": "$.Parameters.DirectIO",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tags": "IO,FIO,FIODISCOVERY"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -104,10 +99,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -124,10 +118,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -144,10 +137,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randread"
             }
         },
         {
@@ -164,10 +156,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -184,10 +175,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -204,10 +194,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -224,10 +213,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -244,10 +232,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -264,10 +251,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,randwrite"
             }
         },
         {
@@ -284,10 +270,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
         {
@@ -304,10 +289,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
 
@@ -325,10 +309,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
         {
@@ -345,10 +328,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
         {
@@ -365,10 +347,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
         {
@@ -385,10 +366,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,read"
             }
         },
         {
@@ -405,10 +385,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         },
         {
@@ -425,10 +404,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         },
         {
@@ -445,10 +423,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         },
         {
@@ -465,10 +442,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         },
         {
@@ -485,10 +461,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         },
         {
@@ -505,10 +480,9 @@
                 "ProcessModel": "$.Parameters.ProcessModel",
                 "QueueDepths": "$.Parameters.QueueDepths",
                 "DirectIO": "$.Parameters.DirectIO",
-                "Tags": "IO,FIO,FIODISCOVERY",
                 "DeleteTestFilesOnFinish": false,
                 "DiskFilter": "$.Parameters.DiskFilter",
-                "Tests": "$.Parameters.Tests"
+                "Tags": "IO,FIO,Discovery,write"
             }
         }
     ],
