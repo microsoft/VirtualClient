@@ -244,23 +244,29 @@ namespace VirtualClient
             this.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
                 .Returns(() => this.ApiClient.Object);
 
-            // API Client is returning HTTP Status OK by default.
+            // API Client is returning HTTP Status OK by default. Note that the returns for ALL DISPOSABLE OBJECTS
+            // should use the factory expression to ensure it is a new object each time. Developers can override this
+            // behavior in their testing scenarios if a different behavior is desired or it is necessary to use the same
+            // object for testing specifics.
             this.ApiClient.SetupGet(client => client.BaseUri).Returns(new Uri("http://1.2.3.5:4500"));
 
             this.ApiClient.Setup(client => client.CreateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
             this.ApiClient.Setup(client => client.DeleteStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
+
+            this.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
             this.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
             this.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
             this.ApiClient.Setup(client => client.UpdateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.CreateHttpResponse(HttpStatusCode.OK));
 
             // Processes created by the workload executor should mimic starting and finishing
             // by default.

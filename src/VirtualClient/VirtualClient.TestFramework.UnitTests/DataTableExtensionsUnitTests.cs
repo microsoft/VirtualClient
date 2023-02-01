@@ -1,13 +1,13 @@
-using System.IO;
-using System.Reflection;
-using NUnit.Framework;
-using VirtualClient.Actions;
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
 {
+    using System.IO;
+    using System.Reflection;
+    using NUnit.Framework;
+    using VirtualClient.Actions;
+
     [TestFixture]
     [Category("Unit")]
     public class DataTableExtensionsUnitTests
