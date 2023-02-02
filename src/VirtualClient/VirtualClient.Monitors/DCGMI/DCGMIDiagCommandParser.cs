@@ -39,8 +39,8 @@ namespace VirtualClient.Monitors
                     for (int j = 0; j < numberOfTests; j++)
                     {
                         string testName = dcgm.Diagname.Test_categories[i].Tests[j].Name;
-                        int numberOfResultsPerEachText = dcgm.Diagname.Test_categories[i].Tests[j].Results.Count;
-                        for (int k = 0; k < numberOfResultsPerEachText; k++)
+                        int numberOfResultsPerEachTest = dcgm.Diagname.Test_categories[i].Tests[j].Results.Count;
+                        for (int k = 0; k < numberOfResultsPerEachTest; k++)
                         {
                             string resultStatus = dcgm.Diagname.Test_categories[i].Tests[j].Results[k].Status;
                             string resultsInfo = dcgm.Diagname.Test_categories[i].Tests[j].Results[k].Info;
