@@ -37,9 +37,6 @@
         "PostgresqlPackage": "Postgreqsql",
         "PackageName": "postgresql",
         "Version": 14
-        // "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
-        // "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-        // "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
       }
     },
     {

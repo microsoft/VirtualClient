@@ -66,8 +66,8 @@
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
-      <WindowsProfiles Include="profiles\PERF-POSTGRESQL.json" />
-      <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
+        <WindowsProfiles Include="profiles\PERF-POSTGRESQL.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />

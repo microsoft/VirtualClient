@@ -31,6 +31,11 @@ namespace VirtualClient.Actions
     public class PostgreSQLExecutor : VirtualClientComponent
     {
         /// <summary>
+        /// Port number on which PostgreSQL server is hosted.
+        /// </summary>
+        protected const int PortNumber = 5432;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
@@ -108,7 +113,7 @@ namespace VirtualClient.Actions
 
             this.InitializeApiClients();
 
-            PostgreSQLExecutor.OpenFirewallPorts(this.SystemManager.FirewallManager, 5432, cancellationToken);
+            PostgreSQLExecutor.OpenFirewallPorts(this.SystemManager.FirewallManager, PortNumber, cancellationToken);
 
             this.FileSystem = this.Dependencies.GetService<IFileSystem>();
             ISystemManagement systemManager = this.Dependencies.GetService<ISystemManagement>();
@@ -327,25 +332,25 @@ namespace VirtualClient.Actions
         {
             if (this.Platform == PlatformID.Unix)
             {
-                string command0 = "sed -i \"s%host  all  all  0.0.0.0/0  md5%%g\" pg_hba.conf";
-                string command1 = @"sed ""1 a host  all  all  0.0.0.0/0  md5"" pg_hba.conf -i";
-                string command2 = "sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" postgresql.conf";
-                string command3 = "sed -i \"s/port = .*/port = 5432/g\" postgresql.conf";
-                string command4 = "-u postgres psql -c \"ALTER USER postgres PASSWORD 'postgres';\"";
+                string replaceConfigFileHostAddressWithEmptyString = "sed -i \"s%host  all  all  0.0.0.0/0  md5%%g\" pg_hba.conf";
+                string addAddressInConfigFile = @"sed ""1 a host  all  all  0.0.0.0/0  md5"" pg_hba.conf -i";
+                string changeListenAddressToAllAddresses = "sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" postgresql.conf";
+                string addPortNumberToConfigFile = $"sed -i \"s/port = .*/port = {PortNumber}/g\" postgresql.conf";
+                string changeUserPassword = "-u postgres psql -c \"ALTER USER postgres PASSWORD 'postgres';\"";
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>(command0, null, this.PostgreSQLInstallationPath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>(replaceConfigFileHostAddressWithEmptyString, null, this.PostgreSQLInstallationPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>(command1, null, this.PostgreSQLInstallationPath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>(addAddressInConfigFile, null, this.PostgreSQLInstallationPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>(command2, null, this.PostgreSQLInstallationPath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>(changeListenAddressToAllAddresses, null, this.PostgreSQLInstallationPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>(command3, null, this.PostgreSQLInstallationPath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>(addPortNumberToConfigFile, null, this.PostgreSQLInstallationPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>(command4, null, this.HammerDBPackagePath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>(changeUserPassword, null, this.HammerDBPackagePath, cancellationToken)
                     .ConfigureAwait(false);
 
                 await this.ExecuteCommandAsync<PostgreSQLExecutor>("systemctl restart postgresql", null, this.HammerDBPackagePath, cancellationToken)
@@ -353,14 +358,14 @@ namespace VirtualClient.Actions
             }
             else if (this.Platform == PlatformID.Win32NT)
             {
-                string command0arg = $" -Command \"& {{Add-Content -Path '{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"";
+                string addAddressInConfigFileCommandarg = $" -Command \"& {{Add-Content -Path '{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"";
 
-                string command1arg = $"restart -D \"{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "data")}\"";
+                string restartPostgresqlCommandarg = $"restart -D \"{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "data")}\"";
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>("powershell", command0arg, this.PostgreSQLInstallationPath, cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>("powershell", addAddressInConfigFileCommandarg, this.PostgreSQLInstallationPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync<PostgreSQLExecutor>($"{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "bin", "pg_ctl.exe")}", command1arg, this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "bin"), cancellationToken)
+                await this.ExecuteCommandAsync<PostgreSQLExecutor>($"{this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "bin", "pg_ctl.exe")}", restartPostgresqlCommandarg, this.PlatformSpecifics.Combine(this.PostgreSQLInstallationPath, "bin"), cancellationToken)
                     .ConfigureAwait(false);
             }
         }
@@ -374,7 +379,7 @@ namespace VirtualClient.Actions
                         "PostgreSQL: Allow Multiple Machines communications",
                         "Allows individual machine instances to communicate with other machine in client-server scenario",
                         "tcp",
-                        new List<int> { 5432 })
+                        new List<int> { PortNumber })
                 },
                 cancellationToken).GetAwaiter().GetResult();
         }
