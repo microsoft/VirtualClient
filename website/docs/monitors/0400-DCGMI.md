@@ -19,17 +19,29 @@ This monitor has dependency on Nvidia Driver Installation and nvidia-dcgm instal
 
 ## Supported Platforms
 * linux-x64
-* linux-arm64
+
+## Profile Parameters
+  The following parameters can be optionally supplied on the command line to change this default behavior.
+
+  | Parameter  |Purpose                | Default value |
+  |------------|--------------------------|---------------|
+  |  Username  | Optional. User which needs to be created in container to run MLPerf benchmarks. | testuser  |
+  | CudaVersion     | Optional. Version of CUDA that needs to be installed. | 11.6  |
+  | DriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
+  | LocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run  |
+  | Level | Optional. Which level of tests to run | 4 |
+
 
 ## Supported Command
-DCGM Diagnostics are designed to:
+DCGM Diagnostics are designed to: 
+
 Provide multiple test timeframes to facilitate different preparedness or failure conditions:
 
 * Level 1 tests to use as a readiness metric
 * Level 2 tests to use as an epilogue on failure
 * Level 3 and Level 4 tests to be run by an administrator as post-mortem.
 
-A single tool to discover deployment, system software and hardware configuration issues, basic diagnostics, integration issues, and relative system performance.
+It is a single tool to discover deployment, system software and hardware configuration issues, basic diagnostics, integration issues, and relative system performance.
 
 Right now the only command supported is 
 ```
@@ -37,6 +49,18 @@ dcgmi diag -r {level} -j
 ```
 
 Please create a feature request if you need support for other commands.
+
+## Usage Examples
+  The following section provides a few basic examples of how to use the monitor profile.
+
+  ```bash
+  # Execute the monitor profile
+  VirtualClient.exe --profile=MONITOR-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+
+
+  VirtualClient.exe --profile=MONITOR-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1
+  ```
+
 
 ## DCGMI Output Description
 The following section describes the various counters/metrics that are available with the dcgmi toolset.
