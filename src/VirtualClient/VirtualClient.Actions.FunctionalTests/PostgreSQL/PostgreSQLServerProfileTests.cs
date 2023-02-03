@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Moq;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using VirtualClient.Common.Contracts;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Actions
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Moq;
+    using Newtonsoft.Json.Linq;
+    using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Functional")]
     public class PostgreSQLServerProfileTests

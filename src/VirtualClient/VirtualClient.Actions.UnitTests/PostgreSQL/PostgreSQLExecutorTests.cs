@@ -132,9 +132,6 @@ namespace VirtualClient.Actions
             public bool IsPostgreSQLClientExecuted { get; set; } = false;
 
             public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
-
-            // public Action<object, JObject> OnInstructionsReceivedExecutes => base.OnInstructionsReceived;
-
             protected override VirtualClientComponent CreateClientExecutor()
             {
                 var mockTPCCClientExecutor = new MockPostgreSQLClientExecutor(this.Dependencies, this.Parameters);

@@ -12,7 +12,7 @@ namespace VirtualClient.Actions
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
-    /// Parser for SQLTPCC result document.
+    /// Parser for PostgreSQL result document.
     /// </summary>
     public class PostgreSQLMetricsParser : MetricsParser
     {
@@ -61,9 +61,6 @@ namespace VirtualClient.Actions
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"TEST RESULT : System achieved ", $"{Environment.NewLine}{Environment.NewLine}TEST RESULT{Environment.NewLine}");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"NOPM from ", $" Number Of Operations Per Minute{Environment.NewLine}");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"PostgreSQL TPM", $" Transactions Per Minute{Environment.NewLine}{Environment.NewLine}");
-
-            /* this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"PostgreSQL TPM", $" Transactions Per Minute{Environment.NewLine}");
-             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"NOPM", $" Number Of Operations Per Minute{Environment.NewLine}{Environment.NewLine}");*/
         }
 
         private void CalculateThroughputResult()
