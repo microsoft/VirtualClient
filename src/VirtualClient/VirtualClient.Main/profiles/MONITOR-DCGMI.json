@@ -23,8 +23,7 @@
     {
       "Type": "DCGMIInstallation",
       "Parameters": {
-        "Scenario": "InstallDCGMI",
-        "AllowUpgrades": true
+        "Scenario": "InstallDCGMI"
       }
     }
   ],
@@ -33,7 +32,7 @@
       "Type": "DCGMIDiagMonitor",
       "Parameters": {
         "Scenario": "Capture metrics",
-        "level": "$.Parameters.Level",
+        "Level": "$.Parameters.Level",
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }

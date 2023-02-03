@@ -1,23 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
-using Polly;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Common;
-using VirtualClient.Contracts;
-using System.Runtime.InteropServices;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
 {
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using Newtonsoft.Json.Linq;
+    using NUnit.Framework;
+    using Polly;
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Net.Http;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Common;
+    using VirtualClient.Contracts;
+    using System.Runtime.InteropServices;
     public class DCGMIDiagMonitorTests
     {
         private MockFixture mockFixture;

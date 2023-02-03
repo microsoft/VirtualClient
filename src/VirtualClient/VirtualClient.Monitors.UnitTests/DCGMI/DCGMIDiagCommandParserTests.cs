@@ -1,15 +1,18 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
 {
+    using NUnit.Framework;
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Text;
+    using System.Threading.Tasks;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Unit")]
     public class DCGMIDiagCommandParserTests

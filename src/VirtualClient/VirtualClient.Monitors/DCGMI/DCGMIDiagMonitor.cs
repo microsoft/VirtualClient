@@ -1,19 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Abstractions;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using VirtualClient.Common;
-using VirtualClient.Common.Extensions;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO.Abstractions;
+    using System.Linq;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     /// <summary>
     /// The DCGMI Diag Monitor for GPU
     /// </summary>

@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Monitors
 {
+    using System;
+    using System.Collections.Generic;
+    using Newtonsoft.Json;
+    using VirtualClient.Contracts;
+
     /// <summary>
     /// Parser for DCGMIDiag output document
     /// </summary>
@@ -30,7 +33,7 @@ namespace VirtualClient.Monitors
             double metricValue = 0;
             try
             {
-                DCGMDia dcgm = JsonConvert.DeserializeObject<DCGMDia>(this.PreprocessedText);
+                DCGMDiagCommandResult dcgm = JsonConvert.DeserializeObject<DCGMDiagCommandResult>(this.PreprocessedText);
                 int numberOfCategories = dcgm.Diagname.Test_categories.Count;
                 for (int i = 0; i < numberOfCategories; i++)
                 {
@@ -80,10 +83,10 @@ namespace VirtualClient.Monitors
     }
 
     /// <summary>
-    /// DiagJson Object
+    /// DiagCommandResult Json Object
     /// </summary>
     [JsonObject]
-    public class DCGMDia
+    public class DCGMDiagCommandResult
     {
         /// <summary>
         /// diag name with which the json starts
@@ -168,7 +171,7 @@ namespace VirtualClient.Monitors
         public string Info { get; set; }
 
         /// <summary>
-        /// Info if any
+        /// Gpu_Ids if any
         /// </summary>
         [JsonProperty(PropertyName = "gpu_ids", Required = Required.Default)]
         public string Gpu_Ids { get; set; }
