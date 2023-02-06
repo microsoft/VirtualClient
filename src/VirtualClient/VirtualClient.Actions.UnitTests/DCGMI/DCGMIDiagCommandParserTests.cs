@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors
+namespace VirtualClient.Actions
 {
     using NUnit.Framework;
     using System;

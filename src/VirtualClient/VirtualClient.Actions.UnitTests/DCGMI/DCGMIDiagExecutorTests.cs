@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors
+namespace VirtualClient.Actions
 {
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
@@ -20,7 +20,7 @@ namespace VirtualClient.Monitors
     using VirtualClient.Common;
     using VirtualClient.Contracts;
     using System.Runtime.InteropServices;
-    public class DCGMIDiagMonitorTests
+    public class DCGMIDiagExecutorTests
     {
         private MockFixture mockFixture;
         private State mockState;
@@ -79,13 +79,13 @@ namespace VirtualClient.Monitors
                     }
                     else if (arguments == $"nvidia-smi -e 1")
                     {
-                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIDiagMonitor)).ReturnsAsync(JObject.FromObject(this.mockState));
+                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIDiagExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
                     }
                 }
                 return process;
             };
 
-            using (TestDCGMIDiagMonitor testDCGMIInstallation = new TestDCGMIDiagMonitor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIDiagExecutor testDCGMIInstallation = new TestDCGMIDiagExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 await testDCGMIInstallation.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
             }
@@ -114,16 +114,14 @@ namespace VirtualClient.Monitors
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
-        private class TestDCGMIDiagMonitor : DCGMIDiagMonitor
+        private class TestDCGMIDiagExecutor : DCGMIDiagExecutor
         {
-            public TestDCGMIDiagMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            public TestDCGMIDiagExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }
 
-            public VirtualClientComponent InstantiatedInstaller { get; set; }
-
-            public new Task ExecuteAsync(EventContext context, CancellationToken cancellationToken)
+            public new Task ExecuteAsync(EventContext context,CancellationToken cancellationToken)
             {
                 return base.ExecuteAsync(context, cancellationToken);
             }

@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors
+namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
@@ -14,21 +14,23 @@ namespace VirtualClient.Monitors
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The DCGMI Diag Monitor for GPU
+    /// The DCGMI Diag Executor for GPU
     /// </summary>
-    public class DCGMIDiagMonitor : VirtualClientIntervalBasedMonitor
+    [UnixCompatible]
+    public class DCGMIDiagExecutor : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
         private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DCGMIDiagMonitor"/> class.
+        /// Initializes a new instance of the <see cref="DCGMIDiagExecutor"/> class.
         /// </summary>
-        public DCGMIDiagMonitor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public DCGMIDiagExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -42,13 +44,13 @@ namespace VirtualClient.Monitors
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DCGMIDiagMonitor.Level), out IConvertible level);
+                this.Parameters.TryGetValue(nameof(DCGMIDiagExecutor.Level), out IConvertible level);
                 return level?.ToString();
             }
         }
 
         /// <summary>
-        /// Initializes enviroment to run DCGMI Diag Monitor.
+        /// Initializes enviroment to run DCGMI Diag.
         /// </summary>
         /// <param name="telemetryContext"></param>
         /// <param name="cancellationToken"></param>
@@ -56,10 +58,10 @@ namespace VirtualClient.Monitors
         /// <exception cref="WorkloadException"></exception>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.ExecuteCommandAsync<DCGMIDiagMonitor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
+            await this.ExecuteCommandAsync<DCGMIDiagExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
                 .ConfigureAwait(false);
 
-            State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIDiagMonitor), cancellationToken)
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIDiagExecutor), cancellationToken)
                 .ConfigureAwait(false);
 
             if (installationState == null)
@@ -82,16 +84,16 @@ namespace VirtualClient.Monitors
 
                         default:
                             throw new WorkloadException(
-                                $"{nameof(DCGMIDiagMonitor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                                $"{nameof(DCGMIDiagExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
                                 $" Supported distros include:" +
                                 $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
 
-                    await this.ExecuteCommandAsync<DCGMIDiagMonitor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
+                    await this.ExecuteCommandAsync<DCGMIDiagExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.stateManager.SaveStateAsync(nameof(DCGMIDiagMonitor), new State(), cancellationToken)
+                    await this.stateManager.SaveStateAsync(nameof(DCGMIDiagExecutor), new State(), cancellationToken)
                     .ConfigureAwait(false);
 
                     SystemManagement.IsRebootRequested = true;
@@ -99,7 +101,7 @@ namespace VirtualClient.Monitors
                 else
                 {
                     throw new WorkloadException(
-                                $"{nameof(DCGMIDiagMonitor)} is not supported on the current platform {this.Platform} through VC." +
+                                $"{nameof(DCGMIDiagExecutor)} is not supported on the current platform {this.Platform} through VC." +
                                 $"Supported Platforms include:" +
                                 $" Unix ",
                                 ErrorReason.PlatformNotSupported);
@@ -112,7 +114,7 @@ namespace VirtualClient.Monitors
         {
             // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
             // logic will block without returning. Monitors are typically expected to be fire-and-forget.
-            State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIDiagMonitor), cancellationToken)
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIDiagExecutor), cancellationToken)
                 .ConfigureAwait(false);
             if (installationState != null)
             {
@@ -138,7 +140,7 @@ namespace VirtualClient.Monitors
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>Output of the workload command.</returns>
         protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientIntervalBasedMonitor
+            where TExecutor : VirtualClientComponent
         {
             string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
@@ -172,15 +174,17 @@ namespace VirtualClient.Monitors
             return output;
         }
 
+        // To-do : remove this method and call above method to run the command and get results that will be sent to parser.
+        // make a nuget package and run on a new VM or old VM by copying state object. check for r=2. And update the PR and also doc.
         private async Task ExecuteDCGMDiagCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi diag";
             string commandArguments = $"-r {this.Level} -j";
 
-            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);
+            /*await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
+                .ConfigureAwait(false);*/
 
-            while (!cancellationToken.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -199,9 +203,8 @@ namespace VirtualClient.Monitors
                         {
                             try
                             {
-                                // We cannot log the process details here. The output is too large.
-                                this.Logger.LogProcessDetails<DCGMIDiagMonitor>(process, EventContext.Persisted());
-                                process.ThrowIfErrored<MonitorException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.MonitorFailed);
+                                this.Logger.LogProcessDetails<DCGMIDiagExecutor>(process, EventContext.Persisted());
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
                                 if (process.StandardOutput.Length > 0)
                                 {
@@ -217,14 +220,12 @@ namespace VirtualClient.Monitors
                             }
                             catch
                             {
-                                // We cannot log the process details here. The output is too large. We will log on errors
-                                // though.
-                                this.Logger.LogProcessDetails<DCGMIDiagMonitor>(process, EventContext.Persisted());
+                                this.Logger.LogProcessDetails<DCGMIDiagExecutor>(process, EventContext.Persisted());
                                 throw;
                             }
                         }
 
-                        await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
+                        // await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

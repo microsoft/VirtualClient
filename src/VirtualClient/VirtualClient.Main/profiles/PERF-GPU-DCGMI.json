@@ -1,8 +1,6 @@
 ﻿{
   "Description": "DCGMI Monitor",
   "Parameters": {
-    "MonitorFrequency": "00:05:00",
-    "MonitorWarmupPeriod": "00:05:00",
     "Level": "4",
     "Username": "testuser",
     "CudaVersion": "11.6",
@@ -27,14 +25,12 @@
       }
     }
   ],
-  "Monitors": [
+  "Actions": [
     {
-      "Type": "DCGMIDiagMonitor",
+      "Type": "DCGMIDiagExecutor",
       "Parameters": {
         "Scenario": "Capture metrics",
-        "Level": "$.Parameters.Level",
-        "MonitorFrequency": "$.Parameters.MonitorFrequency",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+        "Level": "$.Parameters.Level"
       }
     }
   ]
