@@ -111,9 +111,7 @@ namespace VirtualClient.Actions
 
         /// <inheritdoc/>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
-            // logic will block without returning. Monitors are typically expected to be fire-and-forget.
+        { 
             State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIDiagExecutor), cancellationToken)
                 .ConfigureAwait(false);
             if (installationState != null)
@@ -174,15 +172,10 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        // To-do : remove this method and call above method to run the command and get results that will be sent to parser.
-        // make a nuget package and run on a new VM or old VM by copying state object. check for r=2. And update the PR and also doc.
         private async Task ExecuteDCGMDiagCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi diag";
             string commandArguments = $"-r {this.Level} -j";
-
-            /*await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);*/
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -224,8 +217,6 @@ namespace VirtualClient.Actions
                                 throw;
                             }
                         }
-
-                        // await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

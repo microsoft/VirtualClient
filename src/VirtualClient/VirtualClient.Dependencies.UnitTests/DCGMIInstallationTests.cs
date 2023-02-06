@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using NUnit.Framework;
-using VirtualClient.Common;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     public class DCGMIInstallationTests
     {
         private MockFixture mockFixture;

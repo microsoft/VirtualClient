@@ -1,19 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Polly;
-using VirtualClient.Common;
-using VirtualClient.Common.Extensions;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Polly;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     /// <summary>
     /// Installs DCGMI tool for capturing metrics on GPU
     /// </summary>
