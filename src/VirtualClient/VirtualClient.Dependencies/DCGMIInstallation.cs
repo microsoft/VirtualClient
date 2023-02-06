@@ -103,6 +103,7 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallDCGMIUbuntuOrDebianAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // DCGMI installation guide https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/getting-started.html
             List<string> commands = new List<string>();
 
             string delKeyCommand = "apt-key del 7fa2af80";

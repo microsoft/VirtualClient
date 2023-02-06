@@ -30,6 +30,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="DCGMIDiagExecutor"/> class.
         /// </summary>
+        /// /// <param name="dependencies">Provides required dependencies to the component.</param>
+        /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
         public DCGMIDiagExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
@@ -52,8 +54,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes enviroment to run DCGMI Diag.
         /// </summary>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

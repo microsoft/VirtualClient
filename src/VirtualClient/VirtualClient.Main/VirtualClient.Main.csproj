@@ -103,7 +103,6 @@
         <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
-        <LinuxProfiles Include="profiles\PERF-GPU-DCGMI.json" />
         <LinuxProfiles Include="profiles\PERF-GRAPH500.json" />
         <LinuxProfiles Include="profiles\PERF-HPC-NASPARALLELBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-IO-FIO.json" />
@@ -131,6 +130,7 @@
         <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
+        <LinuxProfiles Include="profiles\QUAL-GPU-DCGMI-DIAG.json" />
     </ItemGroup>
 
     <ItemGroup>
