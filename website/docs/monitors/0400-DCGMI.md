@@ -55,10 +55,10 @@ Please create a feature request if you need support for other commands.
 
   ```bash
   # Execute the monitor profile
-  VirtualClient.exe --profile=MONITOR-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
 
-  VirtualClient.exe --profile=MONITOR-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1
+  VirtualClient.exe --profile=PERF-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1
   ```
 
 
