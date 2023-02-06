@@ -1,23 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using AutoFixture;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using NUnit.Framework;
-using VirtualClient.Common;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using AutoFixture;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Unit")]
     public class HammerDbInstallationTests
@@ -30,9 +33,6 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture = new MockFixture();
             this.mockPath = this.mockFixture.Create<DependencyPath>();
-            // this.mockFixture.Setup(PlatformID.Unix);
-
-            // this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
         }
 
         [Test]
@@ -180,9 +180,6 @@ namespace VirtualClient.Dependencies
                 : base(dependencies, parameters)
             {
             }
-
-            /*
-                        public VirtualClientComponent InstantiatedInstaller { get; set; }*/
 
             public new Task InitializeAsync(EventContext context, CancellationToken cancellationToken)
             {

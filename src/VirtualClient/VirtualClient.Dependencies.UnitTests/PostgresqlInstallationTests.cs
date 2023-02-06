@@ -1,23 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using AutoFixture;
-using Microsoft.Extensions.DependencyInjection;
-using Moq;
-using NUnit.Framework;
-using VirtualClient.Common;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using AutoFixture;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Unit")]
     public class PostgresqlInstallationTests
@@ -30,9 +33,6 @@ namespace VirtualClient.Dependencies
         {
             this.mockFixture = new MockFixture();
             this.mockPath = this.mockFixture.Create<DependencyPath>();
-            // this.mockFixture.Setup(PlatformID.Unix);
-
-            // this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
         }
 
         [Test]
@@ -223,13 +223,7 @@ namespace VirtualClient.Dependencies
             };
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            // this.currentDirectoryPath = new DependencyPath("LAPACK", currentDirectory);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            // this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
-            /*resultsPath = this.mockFixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\LAPACK\LAPACKResultsExample.txt");
-            this.rawString = File.ReadAllText(resultsPath);
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
-                .Returns(this.rawString);*/
 
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
@@ -241,9 +235,6 @@ namespace VirtualClient.Dependencies
                 : base(dependencies, parameters)
             {
             }
-
-/*
-            public VirtualClientComponent InstantiatedInstaller { get; set; }*/
 
             public new Task InitializeAsync(EventContext context, CancellationToken cancellationToken)
             {
