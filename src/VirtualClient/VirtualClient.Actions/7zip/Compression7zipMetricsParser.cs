@@ -14,7 +14,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Parser for Compressor7zip output document.
     /// </summary>
-    public class Compressor7zipMetricsParser : MetricsParser
+    public class Compression7zipMetricsParser : MetricsParser
     {
         /// <summary>
         /// Identifies string not containing words 'bytes' and 'Time'.
@@ -37,10 +37,10 @@ namespace VirtualClient.Actions
         private static readonly Regex Compressor7zipDataTableDelimiter = new Regex(@"(:\s{1,})", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// constructor for <see cref="Compressor7zipMetricsParser"/>.
+        /// constructor for <see cref="Compression7zipMetricsParser"/>.
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public Compressor7zipMetricsParser(string rawText)
+        public Compression7zipMetricsParser(string rawText)
             : base(rawText)
         {
         }
@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
         protected override void Preprocess()
         {
             this.PreprocessedText = Regex.Replace(this.RawText, @"[\r\n|\n]+", $"{Environment.NewLine}");
-            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, Compressor7zipMetricsParser.BytesOrTimeLinesRegex);
+            this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, Compression7zipMetricsParser.BytesOrTimeLinesRegex);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, "Time =", "Time:");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, "=.*", "seconds");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"\(.*\)", string.Empty);
@@ -92,10 +92,10 @@ namespace VirtualClient.Actions
             string sectionName = "SizeAndTime";
             IList<string> columnNames = new List<string> { "Name", "Measurement" };
             this.SizeAndTime = DataTableExtensions.ConvertToDataTable(
-                this.Sections[sectionName], Compressor7zipMetricsParser.Compressor7zipDataTableDelimiter, sectionName, columnNames);
+                this.Sections[sectionName], Compression7zipMetricsParser.Compressor7zipDataTableDelimiter, sectionName, columnNames);
 
             IList<string> splitColumnNames = new List<string> { "Value", "Unit" };
-            this.SizeAndTime.SplitDataColumn(columnIndex: 1, Compressor7zipMetricsParser.ValueUnitSplitRegex, splitColumnNames);
+            this.SizeAndTime.SplitDataColumn(columnIndex: 1, Compression7zipMetricsParser.ValueUnitSplitRegex, splitColumnNames);
         }
 
         /// <inheritdoc/>

@@ -14,15 +14,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -38,10 +29,9 @@ system in a steady-state usage pattern.
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Expected Runtime (not dependent on VM SKU) = 2 - 3 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -62,15 +52,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-  **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -86,10 +67,9 @@ system in a steady-state usage pattern.
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Expected Runtime (not dependent on VM SKU) = 2 - 3 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -110,15 +90,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-  **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -134,10 +105,9 @@ system in a steady-state usage pattern.
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Expected Runtime (not dependent on VM SKU) = 2 - 3 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -158,15 +128,6 @@ system in a steady-state usage pattern.
   * win-x64
   * win-arm64
 
-**Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -182,10 +143,9 @@ system in a steady-state usage pattern.
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Expected Runtime (not dependent on VM SKU) = 2 - 3 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.

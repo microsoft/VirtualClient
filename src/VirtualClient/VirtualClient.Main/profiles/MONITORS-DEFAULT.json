@@ -1,48 +1,54 @@
 {
-  "Description": "Default Monitors",
-  "Parameters": {
-    "ProfilingEnabled": false,
-    "ProfilingMode": "Interval",
-    "SystemMonitoringEnabled": false,
-    "MonitorFrequency": "00:05:00",
-    "MonitorWarmupPeriod": "00:05:00"
-  },
-  "Dependencies": [
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallEpelPackageForRHELAndCentOS",
-        "Packages-Mariner": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
-        "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
-        "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
-        "Packages-CentOS7": "epel-release"
-      }
+    "Description": "Default Monitors",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallAtop",
-        "Packages": "atop",
-        "AllowUpgrades": true
-      }
-    }
-  ],
-  "Monitors": [
-    {
-      "Type": "PerfCounterMonitor",
-      "Parameters": {
-        "Scenario": "CaptureCounters",
-        "MonitorFrequency": "$.Parameters.MonitorFrequency",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
-      }
+    "Parameters": {
+        "ProfilingEnabled": false,
+        "ProfilingMode": "Interval",
+        "SystemMonitoringEnabled": false,
+        "MonitorFrequency": "00:05:00",
+        "MonitorWarmupPeriod": "00:05:00",
+        "MonitorFrequency_AzurePerfCollector": "00:05:00",
+        "MonitorWarmupPeriod_AzurePerfCollector": "00:05:00"
     },
-    {
-      "Type": "LspciMonitor",
-      "Parameters": {
-        "Scenario": "CaptureCounters",
-        "MonitorFrequency": "12:00:00",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
-      }
-    }
-  ]
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallEpelPackageForRHELAndCentOS",
+                "Packages-Mariner": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
+                "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
+                "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                "Packages-CentOS7": "epel-release"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallAtop",
+                "Packages": "atop",
+                "AllowUpgrades": true
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "PerfCounterMonitor",
+            "Parameters": {
+                "Scenario": "CaptureCounters",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+            }
+        },
+        {
+          "Type": "LspciMonitor",
+          "Parameters": {
+            "Scenario": "CaptureCounters",
+            "MonitorFrequency": "12:00:00",
+            "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+          }
+        }
+    ]
 }

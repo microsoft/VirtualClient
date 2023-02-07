@@ -1,5 +1,10 @@
 {
     "Description": "FIO Multi Throughput (OLTP-C) Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+    },
     "Parameters": {
         "DiskFilter": "BiggestSize",
         "RandomIOFileSize": "124G",
@@ -21,7 +26,6 @@
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-                "Tags": "IO,FIO,MultiThroughput,OLTP",
                 "TemplateJobFile": "oltp-c.fio.jobfile"
             }
         },
@@ -55,7 +59,7 @@
                 "TargetIOPS": "$.Parameters.TargetIOPS",
                 "TargetPercents": "$.Parameters.TargetPercents",
                 "TemplateJobFile": "oltp-c.fio.jobfile",
-                "Tags": "IO,FIO,MultiThroughput,OLTP"
+                "Tags": "IO,FIO,Multi-Throughput,OLTP"
             }
         }
     ],

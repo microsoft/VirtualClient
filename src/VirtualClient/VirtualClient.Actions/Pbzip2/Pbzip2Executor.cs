@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
                 }
 
                 // Choose default file for compression and decompression if files/dirs are not provided.
-                if (this.InputFiles == string.Empty)
+                if (string.IsNullOrWhiteSpace(this.InputFiles))
                 {
                     await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Pbzip2Directory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.Pbzip2Directory, cancellationToken);
@@ -190,7 +190,10 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string inputFiles = string.IsNullOrEmpty(this.InputFiles) ? this.PlatformSpecifics.Combine(this.Pbzip2Directory, "silesia/*") : this.InputFiles;
+            string inputFiles = string.IsNullOrEmpty(this.InputFiles)
+                ? this.PlatformSpecifics.Combine(this.Pbzip2Directory, "silesia/*")
+                : this.InputFiles;
+
             return @$"{this.Options} {inputFiles}";
         }
 

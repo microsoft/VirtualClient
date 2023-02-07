@@ -18,8 +18,10 @@ namespace VirtualClient
     /// <summary>
     /// An in-memory API Client
     /// </summary>
-    public class InMemoryApiClient : Dictionary<string, HttpResponseMessage>, IApiClient
+    public class InMemoryApiClient : IApiClient
     {
+        private Dictionary<string, HttpResponseInfo> responses;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryApiClient"/> class.
         /// </summary>
@@ -35,6 +37,7 @@ namespace VirtualClient
             }
 
             this.BaseUri = new Uri($"https://{address}:{port ?? ApiClientManager.DefaultApiPort}");
+            this.responses = new Dictionary<string, HttpResponseInfo>(StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -137,7 +140,7 @@ namespace VirtualClient
                 response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                 response.Content = new StringContent(stateItem.ToJson());
 
-                this[stateId] = response;
+                this.responses[stateId] = new HttpResponseInfo(HttpStatusCode.OK, stateItem);
             }
 
             return Task.FromResult(response);
@@ -163,11 +166,10 @@ namespace VirtualClient
             }
             else
             {
-                if (this.ContainsKey(stateId))
+                if (this.responses.ContainsKey(stateId))
                 {
                     response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-
-                    this.Remove(stateId);
+                    this.responses.Remove(stateId);
                 }
                 else
                 {
@@ -225,9 +227,13 @@ namespace VirtualClient
             }
             else
             {
-                if (this.ContainsKey(stateId))
+                if (this.responses.TryGetValue(stateId, out HttpResponseInfo responseInfo))
                 {
-                    response = this[stateId];
+                    response = new HttpResponseMessage(responseInfo.Status);
+                    if (responseInfo.Content != null)
+                    {
+                        response.Content = new StringContent(responseInfo.Content.ToJson());
+                    }
                 }
                 else
                 {
@@ -275,13 +281,13 @@ namespace VirtualClient
             }
             else
             {
-                if (this.ContainsKey(stateId))
+                if (this.responses.TryGetValue(stateId, out HttpResponseInfo responseInfo))
                 {
                     JObject stateItem = JObject.FromObject(state);
                     response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
                     response.Content = new StringContent(stateItem.ToJson());
 
-                    this[stateId] = response;
+                    this.responses[stateId] = new HttpResponseInfo(HttpStatusCode.OK, state);
                 }
                 else
                 {
@@ -297,6 +303,19 @@ namespace VirtualClient
             where TState : State
         {
             return this.UpdateStateAsync(stateId, JObject.FromObject(state), cancellationToken, retryPolicy);
+        }
+
+        private class HttpResponseInfo
+        {
+            public HttpResponseInfo(HttpStatusCode statusCode, object content = null)
+            {
+                this.Status = statusCode;
+                this.Content = content;
+            }
+
+            public HttpStatusCode Status { get; }
+
+            public object Content { get; }
         }
     }
 }

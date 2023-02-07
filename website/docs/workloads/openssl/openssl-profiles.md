@@ -23,15 +23,6 @@ system in-parallel.*
   * linux-arm64
   * win-x64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * Yes. When the OpenSSL package is included in 'packages' directory of the Virtual Client.
     * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
@@ -44,25 +35,26 @@ system in-parallel.*
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Scenarios**  
-  The following scenarios are covered by this workload profile.
+  The following algorithms are covered by this workload profile.
 
-  * MD5 algorithm
-  * SHA1 algorithm
-  * SHA256 algorithm
-  * SHA512 algorithm
-  * DES-EDE3 algorithm
-  * AES-128-CBC algorithm
-  * AES-192-CBC algorithm
-  * AES-256-CBC algorithm
-  * CAMELLIA-128-CBC algorithm
-  * CAMELLIA-192-CBC algorithm
-  * CAMELLIA-256-CBC algorithm
+  * MD5
+  * SHA1
+  * SHA256
+  * SHA512
+  * DES-EDE3
+  * AES-128-CBC
+  * AES-192-CBC
+  * AES-256-CBC
+  * CAMELLIA-128-CBC
+  * CAMELLIA-192-CBC
+  * CAMELLIA-256-CBC
+  * RSA2048
+  * RSA4096
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Expected Runtime (2-cores/vCPUs) = 2 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.

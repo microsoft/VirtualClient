@@ -18,11 +18,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -77,11 +72,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -110,11 +100,9 @@ for evaluating the performance of the CPU for processing calculations.
 
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Base scenario (8-cores/vCPUs) =~ 3 hours
-  * Peak scenario (8-cores/vCPUs) =~ 6 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
   
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -134,11 +122,6 @@ for evaluating the performance of the CPU for processing calculations.
   * linux-x64
   * linux-arm64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -166,11 +149,9 @@ for evaluating the performance of the CPU for processing calculations.
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Base scenario (8-cores/vCPUs) =~ 6 hours
-  * Peak scenario (8-cores/vCPUs) =~ 16 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
@@ -189,11 +170,6 @@ for evaluating the performance of the CPU for processing calculations.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
-
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -222,11 +198,9 @@ for evaluating the performance of the CPU for processing calculations.
   | PeakOptimizationFlags     | Optional. Optimization flags to pass to the GCC compiler when running the 'Peak' scenario | -g -Ofast -march=native -flto | 
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-
-  * Base scenario (8-core/vCPU system) =~ 4 hours
-  * Peak scenario (8-core/vCPU system) =~ 9 hours
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.

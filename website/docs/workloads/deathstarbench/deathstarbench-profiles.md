@@ -87,12 +87,9 @@ the server between applications in a Docker swarm environment.
   | GraphType           | Optional. This specifies the type of graph to be used in **socialNetwork** scenario. | socfb-Reed98 [Allowed values : socfb-Reed98, ego-twitter] |
 
 * **Profile Runtimes**  
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores.
-  This particular workload runtime is affected by the 'Duration' parameter of the profile noted in the profile parameters above. The larger the value, 
-  the longer the runtime.
-
-  * (16 cores/vCPUs, Duration = 300 seconds) = 45 mins
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile. Additional usage examples can be found in the

@@ -220,9 +220,9 @@ namespace VirtualClient
                 return base.InitializeProfileAsync(profiles, dependencies, cancellationToken);
             }
 
-            public new void InitializeGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
+            public new void SetGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
             {
-                base.InitializeGlobalTelemetryProperties(profiles, dependencies);
+                base.SetGlobalTelemetryProperties(profiles, dependencies);
             }
         }
 

@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", string.Empty, this.LzbenchDirectory, cancellationToken);
 
                 // Choose default file for compression and decompression if files/dirs are not provided.
-                if (this.InputFilesOrDirs == string.Empty)
+                if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
                     await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.LzbenchDirectory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.LzbenchDirectory, cancellationToken);
@@ -215,7 +215,10 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string inputFilesOrDirs = string.IsNullOrEmpty(this.InputFilesOrDirs) ? this.PlatformSpecifics.Combine(this.LzbenchDirectory, "silesia") : this.InputFilesOrDirs;
+            string inputFilesOrDirs = string.IsNullOrWhiteSpace(this.InputFilesOrDirs)
+                ? this.PlatformSpecifics.Combine(this.LzbenchDirectory, "silesia")
+                : this.InputFilesOrDirs;
+
             return @$"{this.Options} {inputFilesOrDirs}";
         }
 

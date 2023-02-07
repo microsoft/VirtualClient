@@ -1,11 +1,15 @@
 {
     "Description": "FIO I/O Stress Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
     "Parameters": {
         "DiskFillSize": "500G",
         "FileSize": "496G",
-        "DiskFilter": null,
-        "DataIntegrityFileSize": "4G",
-        "Tests": null
+        "DiskFilter": "BiggestSize",
+        "DataIntegrityFileSize": "4G"
     },
     "Actions": [
         {
@@ -20,8 +24,7 @@
                 "DiskFill": true,
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "ProcessModel": "SingleProcessPerDisk",
-                "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests"
+                "DeleteTestFilesOnFinish": false
             }
         },
         {
@@ -37,7 +40,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite"
             }
         },
@@ -54,7 +56,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite"
             }
         },
@@ -71,7 +72,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite"
             }
         },
@@ -88,7 +88,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite"
             }
         },
@@ -105,7 +104,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite"
             }
         },
@@ -122,7 +120,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write"
             }
         },
@@ -139,7 +136,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write"
             }
         },
@@ -156,7 +152,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write"
             }
         },
@@ -173,7 +168,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write"
             }
         },
@@ -190,7 +184,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write"
             }
         },
@@ -207,7 +200,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randread"
             }
         },
@@ -224,7 +216,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randread"
             }
         },
@@ -241,7 +232,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randread"
             }
         },
@@ -258,7 +248,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randread"
             }
         },
@@ -275,7 +264,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randread"
             }
         },
@@ -293,7 +281,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,read"
             }
         },
@@ -310,7 +297,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,read"
             }
         },
@@ -327,7 +313,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,read"
             }
         },
@@ -344,7 +329,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,read"
             }
         },
@@ -361,7 +345,6 @@
                 "ProcessModel": "SingleProcess",
                 "Configuration": "Stress",
                 "DeleteTestFilesOnFinish": false,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,read"
             }
         },
@@ -377,7 +360,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
         },
@@ -393,7 +375,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
         },
@@ -409,7 +390,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
         },
@@ -425,7 +405,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write,data integrity"
             }
         },
@@ -441,7 +420,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,write,data integrity"
             }
         },
@@ -457,7 +435,6 @@
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "SingleProcess",
                 "DeleteTestFilesOnFinish": true,
-                "Tests": "$.Parameters.Tests",
                 "Tags": "IO,FIO,randwrite,data integrity"
             }
         }

@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     class Compressor7zipMetricsParserTests
     {
         private string rawText;
-        private Compressor7zipMetricsParser testParser;
+        private Compression7zipMetricsParser testParser;
 
         [SetUp]
         public void Setup()
@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string outputPath = Path.Combine(workingDirectory, @"Examples\Compressor7zip\Compressor7zipResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new Compressor7zipMetricsParser(this.rawText);
+            this.testParser = new Compression7zipMetricsParser(this.rawText);
         }
 
         [Test]
@@ -54,7 +54,7 @@ namespace VirtualClient.Actions
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectCompressor7zipoutputPath = Path.Combine(workingDirectory, @"Examples\Compressor7zip\Compressor7zipResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(IncorrectCompressor7zipoutputPath);
-            this.testParser = new Compressor7zipMetricsParser(this.rawText);
+            this.testParser = new Compression7zipMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
             StringAssert.Contains("The Compressor7zip results file has incorrect data for parsing", exception.Message);
         }

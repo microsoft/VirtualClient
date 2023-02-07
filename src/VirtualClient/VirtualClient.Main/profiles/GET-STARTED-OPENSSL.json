@@ -1,6 +1,10 @@
 {
     "Description": "OpenSSL 3.0 CPU Performance Workload",
-    "Parameters": { },
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {},
     "Actions": [
         {
             "Type": "OpenSslExecutor",
@@ -10,7 +14,7 @@
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
-        }        
+        }
     ],
     "Dependencies": [
         {

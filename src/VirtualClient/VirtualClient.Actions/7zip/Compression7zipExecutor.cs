@@ -16,10 +16,10 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The Compressor7zip workload executor.
+    /// The 7zip compression workload executor.
     /// </summary>
     [WindowsCompatible]
-    public class Compressor7zipExecutor : VirtualClientComponent
+    public class Compression7zipExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -27,11 +27,11 @@ namespace VirtualClient.Actions
         private ISystemManagement systemManager;
 
         /// <summary>
-        /// Constructor for <see cref="Compressor7zipExecutor"/>
+        /// Constructor for <see cref="Compression7zipExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public Compressor7zipExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public Compression7zipExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
             this.systemManager = this.Dependencies.GetService<ISystemManagement>();
@@ -47,7 +47,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(Compressor7zipExecutor.Options), out IConvertible options);
+                this.Parameters.TryGetValue(nameof(Compression7zipExecutor.Options), out IConvertible options);
                 return options?.ToString();
             }
         }
@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(Compressor7zipExecutor.InputFilesOrDirs), out IConvertible inputFilesOrDirs);
+                this.Parameters.TryGetValue(nameof(Compression7zipExecutor.InputFilesOrDirs), out IConvertible inputFilesOrDirs);
                 return inputFilesOrDirs?.ToString();
             }
         }
@@ -101,8 +101,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            Compressor7zipState state = await this.stateManager.GetStateAsync<Compressor7zipState>($"{nameof(Compressor7zipState)}", cancellationToken)
-            ?? new Compressor7zipState();
+            Compression7zipState state = await this.stateManager.GetStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", cancellationToken)
+            ?? new Compression7zipState();
 
             if (!state.Compressor7zipStateInitialized)
             {
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
                 }
 
                 // Choose default file for compression and decompression if files/dirs are not provided.
-                if (this.InputFilesOrDirs == string.Empty)
+                if (string.IsNullOrWhiteSpace(this.InputFilesOrDirs))
                 {
                     await this.ExecuteCommandAsync("wget", $"https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip", this.Compressor7zipDirectory, cancellationToken);
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.Compressor7zipDirectory, cancellationToken);
@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
                 state.Compressor7zipStateInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<Compressor7zipState>($"{nameof(Compressor7zipState)}", state, cancellationToken);            
+            await this.stateManager.SaveStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", state, cancellationToken);            
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace VirtualClient.Actions
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
 
-                await this.Logger.LogMessageAsync($"{nameof(Compressor7zipExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{nameof(Compression7zipExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
                     DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<Compressor7zipExecutor>(process, telemetryContext);
+                            this.Logger.LogProcessDetails<Compression7zipExecutor>(process, telemetryContext);
                             process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         }
 
@@ -171,7 +171,7 @@ namespace VirtualClient.Actions
 
         private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            Compressor7zipMetricsParser parser = new Compressor7zipMetricsParser(results);
+            Compression7zipMetricsParser parser = new Compression7zipMetricsParser(results);
             IList<Metric> metrics = parser.Parse();
 
             this.Logger.LogMetrics(
@@ -188,13 +188,16 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            string inputFilesOrDirs = string.IsNullOrEmpty(this.InputFilesOrDirs) ? this.PlatformSpecifics.Combine(this.Compressor7zipDirectory, "silesia/*") : this.InputFilesOrDirs;
+            string inputFilesOrDirs = string.IsNullOrWhiteSpace(this.InputFilesOrDirs)
+                ? this.PlatformSpecifics.Combine(this.Compressor7zipDirectory, "silesia/*")
+                : this.InputFilesOrDirs;
+
             return @$"{this.Options} {inputFilesOrDirs}";
         }
 
-        internal class Compressor7zipState : State
+        internal class Compression7zipState : State
         {
-            public Compressor7zipState(IDictionary<string, IConvertible> properties = null)
+            public Compression7zipState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
             {
             }
@@ -203,12 +206,12 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(Compressor7zipState.Compressor7zipStateInitialized), false);
+                    return this.Properties.GetValue<bool>(nameof(Compression7zipState.Compressor7zipStateInitialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(Compressor7zipState.Compressor7zipStateInitialized)] = value;
+                    this.Properties[nameof(Compression7zipState.Compressor7zipStateInitialized)] = value;
                 }
             }
         }

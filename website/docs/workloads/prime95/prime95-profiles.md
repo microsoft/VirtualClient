@@ -12,15 +12,6 @@ the performance of the CPU over various periods of time while also allowing the 
   * linux-x64
   * win-x64
 
-* **Supported Operating Systems**
-  * Ubuntu 18
-  * Ubuntu 20
-  * Ubuntu 22
-  * Windows 10
-  * Windows 11
-  * Windows Server 2016
-  * Windows Server 2019
-
 * **Supports Disconnected Scenarios**  
   * Yes. When the Prime95 package is included in 'packages' directory of the Virtual Client.
     * [Installing VC Packages](../../dependencies/0001-install-vc-packages.md).
@@ -44,12 +35,10 @@ the performance of the CPU over various periods of time while also allowing the 
   | FFTConfiguration | Sets FFT Size in certain range. 0: Custom/Default Value, 1: Smallest FFTs 4K-32K, 2: Small FFTs 32K-1024K, 3: Large FFTs 2048K-8192K | 0-3 | 0
   | ThreadCount| Limits the worker threads to specified value | 1 - Number Of Logical Cores in system | Number of logical cores in system |
 
-* **Profile Runtimes**
-  The following timings represent the length of time required to run a single round of profile actions. These timings can be used to determine
-  minimum required runtimes for the Virtual Client in order to get results. These are estimates based on the number of system cores. The runtime for
-  this particular profile is affected by the value of the 'TimeInMins' parameter above. The larger the value, the longer the runtime.
-
-  * (4-cores/vCPUs) = 1.5 hours
+* **Profile Runtimes**  
+  See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
+  actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
+  number of system cores. 
 
 * **Usage Examples**
   The following section provides a few basic examples of how to use the workload profile.
