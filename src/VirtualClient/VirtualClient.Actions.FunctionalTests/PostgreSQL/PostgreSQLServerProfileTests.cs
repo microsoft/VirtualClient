@@ -36,7 +36,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public async Task POSTGRESQLWorkloadProfileInstallsTheExpectedDependenciesOfClientOnWindowsPlatform(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT, Architecture.X64, this.serverAgentId).SetupLayout(
@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public async Task POSTGRESQLWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatformOfClient(string profile)
         {
             // Setup the expectations for the workload
@@ -89,7 +89,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public async Task POSTGRESQLWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatformOfClient(string profile)
         {
             // Setup the expectations for the workload
@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public void POSTGRESQLWorkloadProfileActionsWillNotBeExecutedIfTheClientWorkloadPackageDoesNotExist(string profile)
         {
             this.mockFixture.PackageManager.Clear();

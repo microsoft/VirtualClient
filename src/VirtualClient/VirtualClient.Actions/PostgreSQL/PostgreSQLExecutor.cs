@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Provides features for management of the system/environment.
         /// </summary>
-        public ISystemManagement SystemManager
+        protected ISystemManagement SystemManager
         {
             get
             {
@@ -65,33 +65,33 @@ namespace VirtualClient.Actions
         /// Client used to communicate with the locally self-hosted instance of the
         /// Virtual Client API.
         /// </summary>
-        public IApiClient LocalApiClient { get; set; }
+        protected IApiClient LocalApiClient { get; set; }
 
         /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
-        public IApiClient ServerApiClient { get; set; }
+        protected IApiClient ServerApiClient { get; set; }
 
         /// <summary>
         /// The file path where logs will be written.
         /// </summary>
-        public string HammerDBPackagePath { get; set; }
+        protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
         /// Workload package path.
         /// </summary>
-        public string WorkloadPackagePath { get; set; }
+        protected string WorkloadPackagePath { get; set; }
 
         /// <summary>
         /// Workload package path.
         /// </summary>
-        public string PostgreSQLInstallationPath { get; set; }
+        protected string PostgreSQLInstallationPath { get; set; }
 
         /// <summary>
         /// Server's Cancellation Token Source.
         /// </summary>
-        public CancellationTokenSource ServerCancellationSource { get; set; }
+        protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
         /// Enables file system interactions.

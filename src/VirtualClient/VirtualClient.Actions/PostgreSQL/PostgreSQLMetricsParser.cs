@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Results for PostgreSQL.
         /// </summary>
-        public DataTable PostgreSQLResult { get; set; }
+        protected DataTable PostgreSQLResult { get; set; }
 
         /// <inheritdoc/>
         public override IList<Metric> Parse()

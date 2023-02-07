@@ -42,7 +42,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Path to client script
         /// </summary>
-        public string ClientScriptPath { get; set; }
+        protected string ClientScriptPath { get; set; }
 
         /// <summary>
         /// Server IpAddress(Ipaddress of the machine where postgreSQL server is hosted).

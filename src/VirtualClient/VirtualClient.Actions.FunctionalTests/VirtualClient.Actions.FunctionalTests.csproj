@@ -154,7 +154,7 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-OPENFOAM.json" Link="Profiles\PERF-OPENFOAM.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-      <Content Include="..\VirtualClient.Main\profiles\PERF-POSTGRESQL.json" Link="Profiles\PERF-POSTGRESQL.json">
+      <Content Include="..\VirtualClient.Main\profiles\PERF-SQL-POSTGRESQL.json" Link="Profiles\PERF-SQL-POSTGRESQL.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-STRESSNG.json" Link="Profiles\PERF-STRESSNG.json">

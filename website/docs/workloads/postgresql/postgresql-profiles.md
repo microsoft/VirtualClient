@@ -18,14 +18,14 @@ idea. The name of the client must match the name of the system or the value of t
 
 ``` bash
 # Single System (environment layout not required)
-./VirtualClient --profile=PERF-POSTGRESQL.json --system=Juno --timeout=1440
+./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Juno --timeout=1440
 
 # Multi-System
 # On Client Role System...
-./VirtualClient --profile=PERF-POSTGRESQL.json --system=Juno --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Juno --timeout=1440 --clientId=Client01 --layoutPath=/any/path/to/layout.json
 
 # On Server Role System...
-./VirtualClient --profile=PERF-POSTGRESQL.json --system=Juno --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
+./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Juno --timeout=1440 --clientId=Server01 --layoutPath=/any/path/to/layout.json
 
 # Example contents of the 'layout.json' file:
 {
@@ -44,10 +44,10 @@ idea. The name of the client must match the name of the system or the value of t
 }
 ```
 
-## PERF-POSTGRESQL.json
+## PERF-SQL-POSTGRESQL.json
 Runs the Postgresql workload against to HammerDB tool which generate various network traffic patterns against a Postgresql server. Although this is the default client workload.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-POSTGRESQL.json) 
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SQL-POSTGRESQL.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64
@@ -78,9 +78,9 @@ Runs the Postgresql workload against to HammerDB tool which generate various net
 
   ``` bash
   # When running on a single system (environment layout not required)
-  ./VirtualClient --profile=PERF-POSTGRESQL.json --system=Demo --timeout=250 --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Demo --timeout=250 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # When running in a client/server environment
-  ./VirtualClient --profile=PERF-POSTGRESQL.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
-  ./VirtualClient --profile=PERF-POSTGRESQL.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Demo --timeout=1440 --clientId=Client01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
+  ./VirtualClient --profile=PERF-SQL-POSTGRESQL.json --system=Demo --timeout=1440 --clientId=Server01 --layoutPath="/any/path/to/layout.json" --packageStore="{BlobConnectionString|SAS Uri}"
   ```

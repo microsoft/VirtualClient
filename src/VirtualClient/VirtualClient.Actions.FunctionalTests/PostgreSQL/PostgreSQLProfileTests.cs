@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public void POSTGRESQLWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-POSTGRESQL.json")]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
         public void POSTGRESQLWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT);

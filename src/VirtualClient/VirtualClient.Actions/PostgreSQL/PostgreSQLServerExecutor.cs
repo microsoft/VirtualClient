@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Path to server script
         /// </summary>
-        public string ServerScriptPath { get; set; }
+        protected string ServerScriptPath { get; set; }
 
         /// <summary>
         /// Number of Warehouses.
