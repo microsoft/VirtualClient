@@ -1,0 +1,21 @@
+{
+  "Description": "Default Monitors",
+  "Parameters": {
+    "MonitorFrequency": "00:01:00",
+    "MonitorWarmupPeriod": "00:01:00"
+  },
+  "Actions": [
+  ],
+  "Dependencies": [
+  ],
+  "Monitors": [
+    {
+      "Type": "NvidiaSmiMonitor",
+      "Parameters": {
+        "Scenario": "CaptureNvidiaGpuCounters",
+        "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+      }
+    }
+  ]
+}

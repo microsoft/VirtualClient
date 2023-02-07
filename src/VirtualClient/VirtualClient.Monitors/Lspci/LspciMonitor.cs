@@ -5,6 +5,7 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
+    using System.Drawing;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
@@ -22,6 +23,8 @@ namespace VirtualClient.Monitors
     /// </summary>
     public class LspciMonitor : VirtualClientIntervalBasedMonitor
     {
+        private static readonly string Lspci = "lspci";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LspciMonitor"/> class.
         /// </summary>
@@ -39,11 +42,17 @@ namespace VirtualClient.Monitors
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    // This is not supported on Windows, skipping
+                    if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
+                    {
+                        await this.ListPciAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                    }
+
+                    // skipping if running ARM64
                     break;
 
                 case PlatformID.Unix:
-                    await this.QueryGpuAsync(telemetryContext, cancellationToken)
+                    await this.ListPciAsync(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
                     break;
@@ -63,18 +72,13 @@ namespace VirtualClient.Monitors
             }
         }
 
-        private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ListPciAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             IFileSystem fileSystem = systemManagement.FileSystem;
 
-            // This is the Nvidia smi query gpu command
-            // e.g.
-            // nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv,nounits
-            int totalSamples = (int)this.MonitorFrequency.TotalSeconds;
-            string command = "nvidia-smi";
-            string commandArguments = "--query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used " +
-                "--format=csv,nounits";
+            string command = "lspci";
+            string commandArguments = "-vvv";
 
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
                 .ConfigureAwait(false);
@@ -83,7 +87,14 @@ namespace VirtualClient.Monitors
             {
                 try
                 {
-                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
+                    string workingDir = Environment.CurrentDirectory;
+                    if (this.Platform == PlatformID.Win32NT)
+                    {
+                        DependencyPath lspciPackage = await systemManagement.PackageManager.GetPackageAsync(LspciMonitor.Lspci, CancellationToken.None).ConfigureAwait(false);
+                        workingDir = this.PlatformSpecifics.ToPlatformSpecificPath(lspciPackage, this.Platform, this.CpuArchitecture).Path;
+                    }
+
+                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", workingDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -103,12 +114,18 @@ namespace VirtualClient.Monitors
 
                                 if (process.StandardOutput.Length > 0)
                                 {
-                                    NvidiaSmiQueryGpuParser parser = new NvidiaSmiQueryGpuParser(process.StandardOutput.ToString());
-                                    IList<Metric> metrics = parser.Parse();
+                                    LspciParser parser = new LspciParser(process.StandardOutput.ToString());
+                                    IList<PciDevice> pciDevices = parser.Parse();
 
-                                    if (metrics?.Any() == true)
+                                    foreach (PciDevice pciDevice in pciDevices)
                                     {
-                                        this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
+                                        string message = $"PCI Device: '{pciDevice.Name}'. Address: '{pciDevice.Address}'";
+                                        this.Logger.LogSystemEvents(message, pciDevice.Properties, telemetryContext);
+                                        foreach (PciDevice.PciDeviceCapability capability in pciDevice.Capabilities)
+                                        {
+                                            message = $"{message}. Capability: '{capability.Name}'";
+                                            this.Logger.LogSystemEvents(message, pciDevice.Properties, telemetryContext);
+                                        }
                                     }
                                 }
                             }
@@ -130,7 +147,6 @@ namespace VirtualClient.Monitors
                 }
                 catch (Exception exc)
                 {
-                    // This would be expected on new VM while nvidia-smi is still being installed.
                     this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
                 }
             }

@@ -5,9 +5,7 @@
     "ProfilingMode": "Interval",
     "SystemMonitoringEnabled": false,
     "MonitorFrequency": "00:05:00",
-    "MonitorWarmupPeriod": "00:05:00",
-    "MonitorFrequency_AzurePerfCollector": "00:05:00",
-    "MonitorWarmupPeriod_AzurePerfCollector": "00:05:00"
+    "MonitorWarmupPeriod": "00:05:00"
   },
   "Dependencies": [
     {
@@ -35,6 +33,14 @@
       "Parameters": {
         "Scenario": "CaptureCounters",
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+      }
+    },
+    {
+      "Type": "LspciMonitor",
+      "Parameters": {
+        "Scenario": "CaptureCounters",
+        "MonitorFrequency": "12:00:00",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
     }

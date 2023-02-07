@@ -26,12 +26,12 @@ namespace VirtualClient.Monitors
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string, string> Properties { get; set; }
+        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// 
         /// </summary>
-        public List<PciDeviceCapability> Capabilities { get; set; }
+        public List<PciDeviceCapability> Capabilities { get; set; } = new List<PciDeviceCapability> { };
 
         /// <summary>
         /// Data contract for capabiilities in lspci output.
@@ -51,12 +51,7 @@ namespace VirtualClient.Monitors
             /// <summary>
             /// 
             /// </summary>
-            public string Id { get; set; }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            public Dictionary<string, string> Properties { get; set; }
+            public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string> { };
         }
     }
 }
