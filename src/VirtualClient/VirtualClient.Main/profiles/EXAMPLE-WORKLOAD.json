@@ -68,17 +68,5 @@
                 }
             ]
         }
-    ],
-    "Dependencies": [
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallExampleWorkloadPackage",
-                "BlobContainer": "packages",
-                "BlobName": "exampleworkload.1.0.0.zip",
-                "PackageName": "exampleworkload",
-                "Extract": true
-            }
-        }
     ]
 }
