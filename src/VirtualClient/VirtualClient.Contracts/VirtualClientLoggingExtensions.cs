@@ -342,6 +342,34 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Extension logs system/OS event data to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The performance counter message/event name.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="events">The system events to log.</param>
+        public static void LogSystemEvents(this ILogger logger, string message, IEnumerable<KeyValuePair<string, string>> events, EventContext eventContext)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            message.ThrowIfNullOrWhiteSpace(nameof(message));
+
+            if (events?.Any() == true)
+            {
+                foreach (var systemEvent in events)
+                {
+                    // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
+                    // output. To enable a seamless transition, we are supporting the old and the new schema
+                    // until we have all systems using the latest version of the Virtual Client.
+                    EventContext systemEventContext = eventContext?.Clone();
+                    systemEventContext.Properties["eventType"] = systemEvent.Key;
+                    systemEventContext.Properties["eventInfo"] = systemEvent.Value;
+
+                    VirtualClientLoggingExtensions.LogMessage(logger, message, LogLevel.Information, LogType.SystemEvent, systemEventContext);
+                }
+            }
+        }
+
+        /// <summary>
         /// Logs the test metrics/results to the target telemetry data store(s).
         /// </summary>
         /// <param name="logger">The logger instance.</param>
