@@ -148,7 +148,7 @@ namespace VirtualClient.Dependencies
                 { "CudaVersion", "11.6" },
                 { "DriverVersion", "510" },
                 { "Username", "anyuser" },
-                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run" }
+                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" }
             };
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
