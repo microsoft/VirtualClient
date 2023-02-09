@@ -28,6 +28,7 @@ namespace VirtualClient.Proxy
         /// </summary>
         public ILogger CreateLogger(string categoryName)
         {
+            this.telemetryChannel.BeginMessageTransmission();
             return new ProxyLogger(this.telemetryChannel, this.source);
         }
 
