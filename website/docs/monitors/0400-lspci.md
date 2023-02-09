@@ -34,10 +34,6 @@ This is an example of the minimum profile to run LspciMonitor. The PCI devices i
       "MonitorFrequency": "12:00:00",
       "MonitorWarmupPeriod": "00:01:00"
     },
-    "Actions": [
-    ],
-    "Dependencies": [
-    ],
     "Monitors": [
       {
         "Type": "LspciMonitor",

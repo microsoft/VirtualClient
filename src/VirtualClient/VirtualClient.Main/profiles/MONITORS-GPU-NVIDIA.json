@@ -1,19 +1,23 @@
 {
-  "Description": "Default Monitors",
+  "Description": "Default Monitors for GPU systems.",
   "Parameters": {
     "MonitorFrequency": "00:01:00",
     "MonitorWarmupPeriod": "00:01:00"
   },
-  "Actions": [
-  ],
-  "Dependencies": [
-  ],
   "Monitors": [
     {
       "Type": "NvidiaSmiMonitor",
       "Parameters": {
         "Scenario": "CaptureNvidiaGpuCounters",
         "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+      }
+    },
+    {
+      "Type": "LspciMonitor",
+      "Parameters": {
+        "Scenario": "CaptureCounters",
+        "MonitorFrequency": "12:00:00",
         "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
     }
