@@ -116,7 +116,9 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<DotNetInstallation>(process, relatedContext);
+                    await this.LogProcessDetailsAsync(process, relatedContext)
+                        .ConfigureAwait(false);
+
                     process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }

@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private ISystemManagement systemManagement;
+        private List<int> successExitCodes;
 
         /// <summary>
         /// Constructor for <see cref="Prime95Executor"/>
@@ -34,6 +35,9 @@ namespace VirtualClient.Actions
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
+
+            // The exit code on SafeKill is -1 which is not a part of the default success codes.
+            this.successExitCodes = new List<int>(ProcessProxy.DefaultSuccessCodes) { -1 };
         }
 
         /// <summary>
@@ -137,7 +141,63 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path to the Prime95 executable file.
         /// </summary>
-        private string ExecutableName { get; set; }
+        private string ExecutablePath { get; set; }
+
+        /// <summary>
+        /// Initializes the environment for execution of the Prime95 workload.
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
+                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                .ConfigureAwait(false);
+
+            this.PackageDirectory = workloadPackage.Path;
+
+            switch (this.Platform)
+            {
+                case PlatformID.Win32NT:
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "prime95.exe");
+                    break;
+
+                case PlatformID.Unix:
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "mprime");
+                    break;
+
+                default:
+                    throw new WorkloadException(
+                        $"The Prime95 workload is not supported on the current platform/architecture " +
+                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
+                        ErrorReason.PlatformNotSupported);
+            }
+
+            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!this.fileSystem.File.Exists(this.ExecutablePath))
+            {
+                throw new DependencyException(
+                    $"The expected workload binary/executable was not found in the '{this.PackageName}' package. The workload cannot be executed " +
+                    $"successfully without this binary/executable. Check that the workload package was installed successfully and that the executable " +
+                    $"exists in the path expected '{this.ExecutablePath}'.",
+                    ErrorReason.DependencyNotFound);
+            }
+        }
+
+        /// <summary>
+        /// Executes the Prime95 workload.
+        /// </summary>
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.ApplyFFTConfiguration();
+            this.ValidateParameters();
+
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
 
         /// <summary>
         /// Validates the parameters provided to the profile.
@@ -221,123 +281,51 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes the environment for execution of the Prime95 workload.
-        /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
-
-            this.PackageDirectory = workloadPackage.Path;
-
-            switch (this.Platform)
-            {
-                case PlatformID.Win32NT:
-                    this.ExecutableName = this.PlatformSpecifics.Combine(this.PackageDirectory, "prime95.exe");
-                    break;
-
-                case PlatformID.Unix:
-                    this.ExecutableName = this.PlatformSpecifics.Combine(this.PackageDirectory, "mprime");
-                    break;
-
-                default:
-                    throw new WorkloadException(
-                        $"The Prime95 workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        ErrorReason.PlatformNotSupported);
-            }
-
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutableName, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (!this.fileSystem.File.Exists(this.ExecutableName))
-            {
-                throw new DependencyException(
-                    $"The expected workload binary/executable was not found in the '{this.PackageName}' package. The workload cannot be executed " +
-                    $"successfully without this binary/executable. Check that the workload package was installed successfully and that the executable " +
-                    $"exists in the path expected '{this.ExecutableName}'.",
-                    ErrorReason.DependencyNotFound);
-            }
-        }
-
-        /// <summary>
-        /// Executes the Prime95 workload.
-        /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string commandLineArguments = this.CommandLine;
-            DateTime startTime = DateTime.UtcNow;
-            this.ApplyFFTConfiguration();
-            this.ValidateParameters();
-
-            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-            {
-                await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-                this.LogPrime95Output(startTime, endTime, telemetryContext, cancellationToken);
-            }
-        }
-
-        /// <summary>
         /// Executes the Prime95 workload command and generates the results file for the logs
         /// </summary>
-        private async Task ExecuteCommandAsync(
-            string pathToExe,
-            string commandLineArguments,
-            string workingDirectory,
-            CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
+                string commandArguments = this.CommandLine;
 
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
+                EventContext relatedContext = telemetryContext.Clone()
+                    .AddContext("command", this.ExecutablePath)
+                    .AddContext("commandArguments", commandArguments);
 
                 string prime95ParameterFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "prime.txt");
                 this.CreateFileForPrime95Parameters(prime95ParameterFilePath);
 
                 await this.Logger.LogMessageAsync($"{nameof(Prime95Executor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(
-                        pathToExe,
-                        commandLineArguments,
-                        workingDirectory))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.PackageDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
                         System.TimeSpan timeSpanInMins = TimeSpan.FromMinutes(this.TimeInMins);
 
-                        bool procSafelyStopped = false;
                         try
                         {
-                            await process.StartAndWaitAsync(cancellationToken, timeSpanInMins)
-                                .ConfigureAwait(false);
+                            await process.StartAndWaitAsync(cancellationToken, timeSpanInMins);
                         }
                         catch (System.TimeoutException)
+                        {
+                            // Expected if the process does not exit as expected.
+                        }
+                        finally
                         {
                             if (!process.HasExited)
                             {
                                 process.SafeKill();
-                                procSafelyStopped = true;
                             }
-                        }
-                        finally
-                        {
-                            process.SafeKill();
                         }
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<Prime95Executor>(process, telemetryContext);
-                            // ExitCode for SafeKill is -1, not a part of DefaultSuccessCodes
-                            if (!procSafelyStopped)
-                            {
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                            }
+                            this.LogProcessDetailsAsync(process, telemetryContext);
+
+                            // The exit code on SafeKill is -1 which is not a part of the default success codes.
+                            process.ThrowIfErrored<WorkloadException>(successCodes: this.successExitCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         }
                     }
                 }).ConfigureAwait(false);
@@ -403,11 +391,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Logs the Prime95 workload metrics.
         /// </summary>
-        private void LogPrime95Output(
-            DateTime startTime,
-            DateTime endTime,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -419,18 +403,23 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadResultsNotFound);
                 }
 
-                string rawText = this.fileSystem.File.ReadAllText(resultsPath);
+                string results = await this.fileSystem.File.ReadAllTextAsync(resultsPath)
+                    .ConfigureAwait();
 
-                if (string.IsNullOrWhiteSpace(rawText))
+                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results, logToFile: true)
+                    .ConfigureAwait();
+
+                if (string.IsNullOrWhiteSpace(results))
                 {
                     throw new WorkloadResultsException(
                         "The Prime95 workload did not produce valid results.",
                         ErrorReason.WorkloadResultsNotFound);
                 }
 
-                Prime95MetricsParser parser = new Prime95MetricsParser(rawText);
+                double runTimeInSeconds = process.ExitTime.Subtract(process.StartTime).TotalSeconds;
+
+                Prime95MetricsParser parser = new Prime95MetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
-                double runTimeInSeconds = endTime.Subtract(startTime).TotalSeconds;
                 workloadMetrics.Add(new Metric("testTime", runTimeInSeconds, "seconds", MetricRelativity.HigherIsBetter));
 
                 foreach (Metric metric in workloadMetrics)
@@ -439,8 +428,8 @@ namespace VirtualClient.Actions
                         "Prime95",
                         // example Scenario: ApplyStress_60mins_4K-8192K_8threads
                         scenarioName: this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
-                        startTime,
-                        endTime,
+                        process.StartTime,
+                        process.ExitTime,
                         metric.Name,
                         metric.Value,
                         metric.Unit,
@@ -451,7 +440,7 @@ namespace VirtualClient.Actions
                         metric.Relativity);
                 }
 
-                this.fileSystem.File.Delete(resultsPath);
+                await this.fileSystem.File.DeleteAsync(resultsPath).ConfigureAwait();
             }
         }
     }

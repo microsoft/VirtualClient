@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -97,7 +98,7 @@ namespace VirtualClient.Actions
 
             this.ClientExecutablePath = this.PlatformSpecifics.Combine(this.RedisPackagePath, "src", "redis-benchmark");
             await this.SystemManager.MakeFileExecutableAsync(this.ClientExecutablePath, this.Platform, cancellationToken)
-            .ConfigureAwait(false);
+                .ConfigureAwait(false);
         }
 
         /// <summary>
@@ -172,34 +173,42 @@ namespace VirtualClient.Actions
                 {
                     string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.ClientCount} -n {this.RequestCount} -P {this.PipelineDepth} -q --csv""";
 
-                    this.StartTime = DateTime.Now;
-                    string results = await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), telemetryContext, cancellationToken, runElevated: true)
+                        .ConfigureAwait())
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true)
+                                .ConfigureAwait();
 
-                    this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                        }
+                    }
                 }
 
             });
         }
 
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(results);
+                    RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(process.StandardOutput.ToString());
                     IList<Metric> metrics = redisBenchmarkMetricsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "RedisBenchmark",
-                                scenarioName: this.Scenario,
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "Redis-Benchmark",
+                        scenarioName: this.Scenario,
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        string.Empty,
+                        null,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {

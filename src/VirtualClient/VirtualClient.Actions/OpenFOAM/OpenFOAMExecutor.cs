@@ -126,12 +126,10 @@ namespace VirtualClient.Actions
         {
             if (this.CpuArchitecture == Architecture.Arm64 && this.SimulationFolder.Equals("motorBike"))
             {
-                this.Logger.LogMessage($"{nameof(OpenFOAMExecutor)}.MotorBikeTemporarilyDisabled", telemetryContext);
+                this.Logger.LogMessage($"{nameof(OpenFOAMExecutor)}.MotorBikeNotSupported", telemetryContext);
             }
             else
             {
-                DateTime startTime = DateTime.UtcNow, endTime = DateTime.UtcNow;
-
                 foreach (var command in this.executables)
                 {
                     await this.SystemManager.MakeFileExecutableAsync(command, this.Platform, cancellationToken)
@@ -142,15 +140,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (var command in this.executionCommands)
                     {
-                        startTime = DateTime.UtcNow;
                         await this.ExecuteWorkloadAsync("sudo", command, telemetryContext, cancellationToken)
                             .ConfigureAwait(false);
-
-                        endTime = DateTime.UtcNow;
                     }
-
-                    await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
                 }
             }
         }
@@ -303,40 +295,46 @@ namespace VirtualClient.Actions
         {
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateProcess(command, arguments))
             {
-                SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill());
 
                 await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<OpenFOAMExecutor>(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM");
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken)
+                        .ConfigureAwait();
                 }
             }
         }
 
-        private async Task CaptureWorkloadResultsAsync(string resultsFilePath, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (!this.fileSystem.File.Exists(resultsFilePath))
+                if (!this.fileSystem.File.Exists(this.ResultsFilePath))
                 {
                     throw new WorkloadException(
-                        $"The OpenFOAM results file was not found at path '{resultsFilePath}'.",
+                        $"The OpenFOAM results file was not found at path '{this.ResultsFilePath}'.",
                         ErrorReason.WorkloadFailed);
                 }
 
-                string resultsContent = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath, cancellationToken)
-                    .ConfigureAwait(false);
+                string results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath, cancellationToken)
+                    .ConfigureAwait();
 
-                OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(resultsContent);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results, logToFile: true)
+                    .ConfigureAwait();
+
+                OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();
+
                 this.Logger.LogMetrics(
                         "OpenFOAM",
                         this.SimulationFolder,
-                        startTime,
-                        endTime,
+                        process.StartTime,
+                        process.ExitTime,
                         metrics,
                         null,
                         this.Parameters.ToString(),

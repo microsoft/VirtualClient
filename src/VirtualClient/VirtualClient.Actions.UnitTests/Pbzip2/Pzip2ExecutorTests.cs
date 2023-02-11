@@ -107,7 +107,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -200,7 +200,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -243,7 +243,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -286,7 +286,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 

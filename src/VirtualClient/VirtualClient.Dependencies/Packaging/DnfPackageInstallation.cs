@@ -108,7 +108,8 @@ namespace VirtualClient.Dependencies
                 foreach (string repo in repos)
                 {
                     // https://dnf-plugins-core.readthedocs.io/en/latest/config_manager.html
-                    await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"config-manager --add-repo {repo} -y", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"config-manager --add-repo {repo} -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -137,17 +138,21 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Dnf update first.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(DnfPackageInstallation.DnfCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+
             }).ConfigureAwait(false);
 
             this.Logger.LogTraceMessage($"VirtualClient installed Dnf package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
 
             // Then, confirms that the packages were installed.
             List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
+
             if (failedPackages?.Count > 0)
             {
                 throw new ProcessException(
@@ -181,8 +186,10 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<DnfPackageInstallation>(process, EventContext.Persisted());
-                    process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Dnf")
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
 
                 return process.ExitCode == 0;
@@ -197,15 +204,17 @@ namespace VirtualClient.Dependencies
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill());
                     this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<DnfPackageInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Dnf")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

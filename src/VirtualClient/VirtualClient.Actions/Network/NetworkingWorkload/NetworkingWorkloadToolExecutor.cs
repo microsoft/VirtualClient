@@ -124,6 +124,14 @@ namespace VirtualClient.Actions.NetworkPerformance
         protected bool IsInServerRole { get; set; }
 
         /// <summary>
+        /// Logs the workload metrics to the telemetry.
+        /// </summary>
+        protected virtual Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         /// Executes the tool.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -172,14 +180,17 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 DateTime endTime = DateTime.UtcNow;
 
-                // There is sometimes a delay in the output of the results to the results
-                // file. We will poll for the results for a period of time before giving up.
-                await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken)
-                    .ConfigureAwait(false);
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    // There is sometimes a delay in the output of the results to the results
+                    // file. We will poll for the results for a period of time before giving up.
+                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogMetricsAsync(commandArguments, startTime, endTime, relatedContext)
+                    await this.CaptureMetricsAsync(commandArguments, startTime, endTime, relatedContext)
                         .ConfigureAwait(false);
                 }
             }
@@ -234,7 +245,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogMetricsAsync(commandArguments, startTime, endTime, relatedContext)
+                                await this.CaptureMetricsAsync(commandArguments, startTime, endTime, relatedContext)
                                     .ConfigureAwait(false);
                             }
                         }
@@ -273,14 +284,6 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <param name="telemetryContext">Provides context information to include with telemetry events emitted.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected virtual Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Logs the workload metrics to the telemetry.
-        /// </summary>
-        protected virtual Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             throw new NotImplementedException();
         }

@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -110,8 +111,8 @@ namespace VirtualClient.Dependencies
             {
                 if (this.Platform == PlatformID.Unix)
                 {
-                    var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                                                    .ConfigureAwait(false);
+                    LinuxDistributionInfo linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
 
@@ -135,10 +136,10 @@ namespace VirtualClient.Dependencies
                     }
 
                     await this.CudaAndNvidiaGPUDriverInstallationAsync(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
-                    .ConfigureAwait(false);
+                        .ConfigureAwait(false);
 
                     SystemManagement.IsRebootRequested = true;
                 }
@@ -146,10 +147,10 @@ namespace VirtualClient.Dependencies
                 {
                     // CUDA and Nvidia driver installation for other platforms to be added.
                     throw new WorkloadException(
-                                $"CUDA and Nvidia GPU Driver Installtion is not supported on the current platform {this.Platform} through VC." +
-                                $"Supported Platforms include:" +
-                                $" Unix ",
-                                ErrorReason.PlatformNotSupported);
+                        $"CUDA and Nvidia GPU Driver Installtion is not supported on the current platform {this.Platform} through VC." +
+                        $"Supported Platforms include:" +
+                        $" Unix ",
+                        ErrorReason.PlatformNotSupported);
                 }
             }
 
@@ -158,7 +159,7 @@ namespace VirtualClient.Dependencies
 
         private async Task CudaAndNvidiaGPUDriverInstallationAsync(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            List<string> cleanupCommands = this.CleanupCommands(linuxDistribution);
+            // List<string> cleanupCommands = this.CleanupCommands(linuxDistribution);
             List<string> prerequisiteCommands = this.PrerequisiteCommands(linuxDistribution);
             List<string> installationCommands = this.VersionSpecificInstallationCommands(linuxDistribution);
             List<string> postInstallationCommands = this.PostInstallationCommands();
@@ -239,7 +240,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Debian:
 
                     commands.Add("apt update");
-                    commands.Add("apt install build-essential -yq");             
+                    commands.Add("apt install build-essential -yq");
                     break;
 
                 case LinuxDistribution.CentOS7:
@@ -261,11 +262,12 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            List<string> commands = new List<string>();
-
-            commands.Add($"wget {this.LocalRunFile}");
             string runFileName = this.LocalRunFile.Split('/').Last();
-            commands.Add($"sh {runFileName} --silent");
+            List<string> commands = new List<string>
+            {
+                $"wget {this.LocalRunFile}",
+                $"sh {runFileName} --silent"
+            };
 
             switch (linuxDistribution)
             {
@@ -294,35 +296,35 @@ namespace VirtualClient.Dependencies
 
         private List<string> PostInstallationCommands()
         {
-            List<string> commands = new List<string>();
+            return new List<string>
+            {
+                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
+                $"sudo tee -a /home/{this.Username}/.bashrc\"",
 
-            commands.Add($"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
-                $"sudo tee -a /home/{this.Username}/.bashrc\"");
-
-            commands.Add($"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
-                $"sudo tee -a /home/{this.Username}/.bashrc\"");
-            
-            return commands;
+                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+                $"sudo tee -a /home/{this.Username}/.bashrc\""
+            };
         }
 
         private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
-
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{commandLine}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<CudaAndNvidiaGPUDriverInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

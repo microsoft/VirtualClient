@@ -24,6 +24,8 @@ namespace VirtualClient.Common
              new Regex(@"AccessKey[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
              new Regex(@"AccountKey[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
              new Regex(@"Token[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
+             new Regex(@"Password[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
+             new Regex(@"Pwd[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
              new Regex(@"sig[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase)
         };
 

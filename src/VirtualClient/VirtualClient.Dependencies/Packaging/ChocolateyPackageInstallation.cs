@@ -110,14 +110,17 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<ChocolateyPackageInstallation>(process, EventContext.Persisted());
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Chocolatey")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             }).ConfigureAwait(false);
 
             // The environment variable needs to be reloaded after installation. There is a script that comes with chocolatey(RefreshEnv.cmd)
-            await this.systemManagement.RefreshEnvironmentVariableAsync(cancellationToken).ConfigureAwait(false);
+            await this.systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             // Directly adding the packages to path in here.
             foreach (string package in packages)

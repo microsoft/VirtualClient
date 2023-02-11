@@ -14,6 +14,7 @@ namespace VirtualClient
     using NUnit.Framework;
     using Polly;
     using VirtualClient.TestExtensions;
+    using VirtualClient.Common.Extensions;
 
     [TestFixture]
     [Category("Unit")]

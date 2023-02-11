@@ -91,7 +91,7 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
-        private void CaptureResults(IProcessProxy workloadProcess, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
             {
@@ -103,8 +103,8 @@ namespace VirtualClient.Actions
                     this.Logger.LogMetrics(
                         "OpenSSL",
                         "OpenSSL Speed",
-                        startTime,
-                        endTime,
+                        workloadProcess.StartTime,
+                        workloadProcess.ExitTime,
                         metrics,
                         null,
                         commandArguments,
@@ -136,22 +136,19 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                     {
                         this.SetEnvironmentVariables(process);
-
-                        DateTime startTime = DateTime.UtcNow;
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
                         try
                         {
-                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                            DateTime endTime = DateTime.UtcNow;
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.Logger.LogProcessDetails<OpenSslExecutor>(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true)
+                                    .ConfigureAwait();
 
-                                this.CaptureResults(process, commandArguments, startTime, endTime, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                this.CaptureMetrics(process, commandArguments, telemetryContext);
                             }
                         }
                         finally

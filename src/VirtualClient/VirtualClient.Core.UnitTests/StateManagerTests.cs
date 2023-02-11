@@ -13,6 +13,7 @@ namespace VirtualClient
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Polly;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.TestExtensions;
 
     [TestFixture]

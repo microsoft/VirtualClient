@@ -141,7 +141,7 @@ namespace VirtualClient.Actions
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
 
             DependencyPath memtierPackage = await packageManager.GetPackageAsync(MemtierInstallation.MemtierPackage, CancellationToken.None)
-                    .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             if (memtierPackage != null)
             {
@@ -155,7 +155,7 @@ namespace VirtualClient.Actions
             }
 
             DependencyPath redisPackage = await packageManager.GetPackageAsync(RedisInstallation.RedisPackage, CancellationToken.None)
-                    .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             if (redisPackage != null)
             {
@@ -208,10 +208,8 @@ namespace VirtualClient.Actions
         /// <param name="workingDirectory">The directory where we want to execute the command</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>String output of the command.</returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
+        protected async Task ExecuteCommandAsync(string command, string workingDirectory, CancellationToken cancellationToken)
         {
-            string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDirectory}'.");
@@ -219,28 +217,21 @@ namespace VirtualClient.Actions
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("command", command);
 
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
                 {
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        process.RedirectStandardOutput = true;
+                        this.CleanupTasks.Add(() => process.SafeKill());
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<TExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
-
-                        output = process.StandardOutput.ToString();
                     }
-
-                    return output;
                 }).ConfigureAwait(false);
             }
-
-            return output;
         }
 
         private void CheckPlatformSupport()

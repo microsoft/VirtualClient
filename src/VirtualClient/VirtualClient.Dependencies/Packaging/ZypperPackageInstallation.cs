@@ -121,7 +121,7 @@ namespace VirtualClient.Dependencies
             {
                 if (!this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
                 {
-                    this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.", EventContext.Persisted());
+                    this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.");
                 }
                 else
                 {
@@ -140,17 +140,21 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Zypper update first.
-                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
             }).ConfigureAwait(false);
 
-            this.Logger.LogTraceMessage($"VirtualClient installed Zypper package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
+            this.Logger.LogTraceMessage($"Installed Zypper package(s): '[{string.Join(' ', toInstall)}]'.");
 
             // Then, confirms that the packages were installed.
             List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
+
             if (failedPackages?.Count > 0)
             {
                 throw new ProcessException(
@@ -184,8 +188,10 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<ZypperPackageInstallation>(process, EventContext.Persisted());
-                    process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Zypper")
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
 
                 return process.ExitCode == 0;
@@ -194,21 +200,23 @@ namespace VirtualClient.Dependencies
 
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
             return this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<ZypperPackageInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Zypper")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

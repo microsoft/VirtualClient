@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -379,7 +380,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureMetrics(DiskPerformanceWorkloadProcess workload, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        private void CaptureMetrics(DiskPerformanceWorkloadProcess workload, EventContext telemetryContext)
         {
             string result = workload.StandardOutput.ToString();
             IList<Metric> metrics = new List<Metric>()
@@ -389,8 +390,8 @@ namespace VirtualClient.Actions
             this.Logger.LogMetrics(
                 "DiskSpd",
                 this.TestName,
-                startTime,
-                endTime,
+                workload.Process.StartTime,
+                workload.Process.ExitTime,
                 metrics,
                 workload.Categorization,
                 workload.CommandArguments,
@@ -416,19 +417,17 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<DiskSpdExecutor>(workload.Process, telemetryContext);
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true)
+                            .ConfigureAwait(false);
 
                         if (this.DiskFill)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
+                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                         else if (!cancellationToken.IsCancellationRequested)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(
-                                ProcessProxy.DefaultSuccessCodes,
-                                errorReason: ErrorReason.WorkloadFailed);
-
-                            this.CaptureMetrics(workload, start, end, telemetryContext);
+                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            this.CaptureMetrics(workload, telemetryContext);
                         }
                     }
                 }).ConfigureAwait(false);

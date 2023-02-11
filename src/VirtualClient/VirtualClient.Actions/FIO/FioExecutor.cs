@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -435,17 +436,15 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(FioExecutor)}.ExecuteProcess", relatedContext, async () =>
                 {
-                    DateTime startTime = DateTime.UtcNow;
-                    await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                    DateTime endTime = DateTime.UtcNow;
+                    await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<FioExecutor>(workload.Process, telemetryContext);
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true).ConfigureAwait();
 
                         if (this.DiskFill)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
+                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                         else if (!cancellationToken.IsCancellationRequested)
                         {
@@ -455,18 +454,10 @@ namespace VirtualClient.Actions
                                 // data integrity/file verification errors. These are expected errors for tests
                                 // that are running verifications. We only want to throw if there are not any verification
                                 // errors and the exit code indicates error.
-                                workload.Process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                             }
 
-                            this.LogMetrics(
-                                workload.Process,
-                                testName,
-                                workload.Categorization,
-                                workload.CommandArguments,
-                                startTime,
-                                endTime,
-                                telemetryContext,
-                                metricMetadata);
+                            this.CaptureMetrics(workload.Process, testName, workload.Categorization, workload.CommandArguments, telemetryContext, metricMetadata);
                         }
                     }
                 });
@@ -476,7 +467,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Log Metrics to Kusto Cluster.
         /// </summary>
-        protected virtual void LogMetrics(IProcessProxy workloadProcess, string testName, string metricCategorization, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        protected virtual void CaptureMetrics(
+            IProcessProxy workloadProcess, string testName, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             FioMetricsParser parser = null;
             if (this.TestFocus == FioExecutor.TestFocusDataIntegrity)
@@ -509,8 +501,8 @@ namespace VirtualClient.Actions
             this.Logger.LogMetrics(
                "FIO",
                testName,
-               startTime,
-               endTime,
+               workloadProcess.StartTime,
+               workloadProcess.ExitTime,
                metrics,
                metricCategorization,
                commandArguments,

@@ -82,14 +82,18 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                string results = await this.ExecuteCommandAsync("bash", $"-c \"pbzip2 {commandLineArguments}\"", this.Pbzip2Directory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-                this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"-c \"pbzip2 {commandLineArguments}\"", this.Pbzip2Directory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait())
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "PBZip2", logToFile: true);
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process, commandLineArguments, telemetryContext, cancellationToken);
+                    }
+                }
             }
         }
 
@@ -135,10 +139,30 @@ namespace VirtualClient.Actions
             return isSupported;
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string output = string.Empty;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                bool compression = this.Scenario.Contains("Decompression") ? false : true;
 
+                Pbzip2MetricsParser parser = new Pbzip2MetricsParser(process.StandardOutput.ToString(), compression);
+                IList<Metric> metrics = parser.Parse();
+
+                this.Logger.LogMetrics(
+                    "Pbzip2",
+                    this.Scenario,
+                    process.StartTime,
+                    process.ExitTime,
+                    metrics,
+                    null,
+                    commandArguments,
+                    this.Tags,
+                    telemetryContext);
+            }
+        }
+
+        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        {
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
@@ -157,35 +181,14 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<Pbzip2Executor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
+                            this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
 
-                        output = process.StandardError.ToString();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        }
                     }
                 }).ConfigureAwait(false);
             }
-
-            return output;
-        }
-
-        private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            bool compression = this.Scenario.Contains("Decompression") ? false : true;
-
-            Pbzip2MetricsParser parser = new Pbzip2MetricsParser(results, compression);
-            IList<Metric> metrics = parser.Parse();
-
-            this.Logger.LogMetrics(
-                "Pbzip2",
-                this.Scenario,
-                startTime,
-                endTime,
-                metrics,
-                null,
-                this.GetCommandLineArguments(),
-                this.Tags,
-                EventContext.Persisted());
         }
 
         private string GetCommandLineArguments()

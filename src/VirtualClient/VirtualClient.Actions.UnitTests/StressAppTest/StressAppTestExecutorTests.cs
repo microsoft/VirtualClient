@@ -161,8 +161,10 @@ namespace VirtualClient.Actions
             this.fixture.File.Reset();
             this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))
                 .Returns(true);
-            this.fixture.File.Setup(fe => fe.ReadAllText(It.IsAny<string>()))
-                .Returns(this.rawText);
+
+            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.rawText);
+
             this.fixture.FileSystem.SetupGet(fs => fs.File)
                 .Returns(this.fixture.File.Object);
 

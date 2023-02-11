@@ -7,6 +7,7 @@ namespace VirtualClient.TestExtensions
     using System.Text.RegularExpressions;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Contains assertions related to the serialization of objects.

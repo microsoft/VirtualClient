@@ -60,11 +60,11 @@ namespace VirtualClient.Dependencies
 
             if (systemManagement.FileSystem.Directory.Exists(cloneDirectory))
             {
-                this.Logger.LogTraceMessage($"Git repo: '{this.PackageName}' already exist on directory '{cloneDirectory}'.", EventContext.Persisted());
+                this.Logger.LogTraceMessage($"Git repo: '{this.PackageName}' already exist in directory '{cloneDirectory}'.", telemetryContext);
             }
             else
             {
-                this.Logger.LogTraceMessage($"Beginning Git clone repo: '{this.RepoUri}' to directory '{cloneDirectory}'.", EventContext.Persisted());
+                this.Logger.LogTraceMessage($"Beginning Git clone repo: '{this.RepoUri}' to directory '{cloneDirectory}'.", telemetryContext);
 
                 if (!systemManagement.FileSystem.Directory.Exists(this.PlatformSpecifics.PackagesDirectory))
                 {
@@ -81,8 +81,10 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<GitRepoClone>(process, EventContext.Persisted());
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Git")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
 
                     await systemManagement.PackageManager.RegisterPackageAsync(
@@ -96,7 +98,8 @@ namespace VirtualClient.Dependencies
                 }
 
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(this.PlatformSpecifics.PackagesDirectory, this.PackageName));
-                await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken).ConfigureAwait(false);
+                await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
     }

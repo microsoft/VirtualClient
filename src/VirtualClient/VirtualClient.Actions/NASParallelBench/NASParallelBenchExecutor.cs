@@ -156,16 +156,23 @@ namespace VirtualClient.Actions
 
             if (!response.IsSuccessStatusCode)
             {
-                IProcessProxy makeProcess = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"make suite\"", this.GetBenchmarkDirectory());
+                using (IProcessProxy makeProcess = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"make suite\"", this.GetBenchmarkDirectory()))
+                {
+                    await makeProcess.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
-                await makeProcess.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(makeProcess, telemetryContext)
+                            .ConfigureAwait();
 
-                this.Logger.LogProcessDetails<NASParallelBenchExecutor>(makeProcess, telemetryContext);
-                makeProcess.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        makeProcess.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    }
+                }
 
                 response = await apiClient.CreateStateAsync(nameof(this.NpbBuildState), JObject.FromObject(this.NpbBuildState), cancellationToken)
                     .ConfigureAwait(false);
+
                 response.ThrowOnError<WorkloadException>();
             }
         }

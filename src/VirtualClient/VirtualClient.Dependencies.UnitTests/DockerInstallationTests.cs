@@ -46,7 +46,8 @@ namespace VirtualClient.Dependencies
                 List<string> expectedCommands = new List<string>()
                 {
                     $"sudo {RequiredPackagesCommand}",
-                    $"sudo {AddOfficialGPGKeyCommand}", $"sudo {SetUpRepositoryCommand}",
+                    $"sudo {AddOfficialGPGKeyCommand}", 
+                    $"sudo {SetUpRepositoryCommand}",
                     @$"sudo bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {dockerInstallation.Version} | awk '{{print $3}}') docker-ce-cli=$(apt-cache madison docker-ce | grep {dockerInstallation.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""",
                     @$"sudo bash -c ""apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin --yes --quiet"""
                 };

@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -90,12 +91,7 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync("bash", this.hpcgRunShellPath, this.hpcgDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-                this.LogHpcgOutput(startTime, endTime, telemetryContext, cancellationToken);
+                await this.ExecuteWorkloadAsync(cancellationToken).ConfigureAwait();
             }
         }
 
@@ -122,74 +118,82 @@ namespace VirtualClient.Actions
                 this.fileSystem.Directory.CreateDirectory(this.hpcgDirectory);
             }
 
-            await this.WriteHpcgDatFileAsync(cancellationToken).ConfigureAwait(false);
-            await this.WriteHpcgRunShellAsync(cancellationToken).ConfigureAwait(false);
-            await this.systemManagement.MakeFileExecutableAsync(this.hpcgRunShellPath, this.Platform, cancellationToken).ConfigureAwait(false);
+            await this.WriteHpcgDatFileAsync(cancellationToken).ConfigureAwait();
+            await this.WriteHpcgRunShellAsync(cancellationToken).ConfigureAwait();
+
+            await this.systemManagement.MakeFileExecutableAsync(this.hpcgRunShellPath, this.Platform, cancellationToken)
+                .ConfigureAwait();
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
+                IEnumerable<string> outputFiles = this.GetHpcgResultsFiles();
 
+                if (outputFiles?.Any() == true)
+                {
+                    foreach (string file in outputFiles)
+                    {
+                        string contents = await this.fileSystem.File.ReadAllTextAsync(file)
+                            .ConfigureAwait();
+
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", contents, logToFile: true)
+                            .ConfigureAwait();
+
+                        HpcgMetricsParser parser = new HpcgMetricsParser(contents);
+                        IList<Metric> metrics = parser.Parse();
+
+                        this.Logger.LogMetrics(
+                            toolName: "Hpcg",
+                            scenarioName: "Hpcg",
+                            process.StartTime,
+                            process.ExitTime,
+                            metrics,
+                            null,
+                            scenarioArguments: $"{this.runShellText}|{this.hpcgDatText}",
+                            this.Tags,
+                            telemetryContext);
+
+                        await this.fileSystem.File.DeleteAsync(file)
+                            .ConfigureAwait();
+                    }
+                }
+            }
+        }
+
+        private async Task ExecuteWorkloadAsync(CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
                 EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
+                    .AddContext("command", "bash")
+                    .AddContext("commandArguments", this.hpcgRunShellPath);
 
                 await this.Logger.LogMessageAsync($"{nameof(HpcgExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, "bash", this.hpcgRunShellPath, this.hpcgDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<HpcgExecutor>(process, telemetryContext);
-                            output = process.StandardOutput.ToString();
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg")
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken).ConfigureAwait();
                         }
                     }
-                }).ConfigureAwait(false);
+                }).ConfigureAwait();
             }
-
-            return output;
         }
 
-        private void LogHpcgOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private IEnumerable<string> GetHpcgResultsFiles()
         {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                // HPCG-Benchmark_3.1_2022-04-26_04-49-59.txt
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(this.hpcgDirectory, "HPCG-Benchmark*.txt", SearchOption.TopDirectoryOnly);
-
-                foreach (string file in outputFiles)
-                {
-                    string text = this.fileSystem.File.ReadAllText(file);
-                    try
-                    {
-                        HpcgMetricsParser parser = new HpcgMetricsParser(text);
-                        this.Logger.LogMetrics(
-                            toolName: "Hpcg",
-                            scenarioName: "Hpcg",
-                            startTime,
-                            endTime,
-                            parser.Parse(),
-                            metricCategorization: "Hpcg",
-                            scenarioArguments: $"{this.runShellText}|{this.hpcgDatText}",
-                            this.Tags,
-                            telemetryContext);
-
-                        this.fileSystem.File.Delete(file);
-                    }
-                    catch (Exception exc)
-                    {
-                        throw new WorkloadException($"Failed to parse file at '{file}' with text '{text}'.", exc, ErrorReason.InvalidResults);
-                    }
-                }
-            }
+            // HPCG-Benchmark_3.1_2022-04-26_04-49-59.txt
+            return this.fileSystem.Directory.GetFiles(this.hpcgDirectory, "HPCG-Benchmark*.txt", SearchOption.TopDirectoryOnly);
         }
 
         private async Task WriteHpcgDatFileAsync(CancellationToken cancellationToken)

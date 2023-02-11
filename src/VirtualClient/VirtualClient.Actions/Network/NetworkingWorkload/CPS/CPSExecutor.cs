@@ -5,6 +5,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -273,8 +274,14 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 await process.StartAndWaitAsync(cancellationToken, timeout)
                                     .ConfigureAwait(false);
 
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                this.results = process.StandardOutput.ToString();
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true)
+                                       .ConfigureAwait();
+
+                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    this.results = process.StandardOutput.ToString();
+                                }
                             }
                             catch (TimeoutException exc)
                             {
@@ -290,17 +297,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 throw new WorkloadException($"CPS workload failed to start successfully", exc, ErrorReason.WorkloadFailed);
                             }
-                            finally
-                            {
-                                if (this.IsInClientRole)
-                                {
-                                    this.Logger.LogProcessDetails<CPSClientExecutor>(process, relatedContext);
-                                }
-                                else
-                                {
-                                    this.Logger.LogProcessDetails<CPSServerExecutor>(process, relatedContext);
-                                }
-                            }
                         }
                     }).ConfigureAwait(false);
                 }
@@ -312,7 +308,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             if (!string.IsNullOrWhiteSpace(this.results))
             {

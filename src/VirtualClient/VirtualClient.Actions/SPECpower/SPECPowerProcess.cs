@@ -81,8 +81,8 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogProcessDetails<SPECPowerExecutor>(process, EventContext.Persisted());
-                process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "SPECpower", logToFile: true);
+                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
             }
         }
     }

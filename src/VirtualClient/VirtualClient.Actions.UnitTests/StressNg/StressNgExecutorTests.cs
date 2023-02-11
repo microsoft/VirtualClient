@@ -34,7 +34,7 @@ namespace VirtualClient.Actions
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string expectedCommand = @$"sudo stress-ng --cpu 71 --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedCommand = @$"stress-ng --cpu 71 --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -86,13 +86,17 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string resultsPath = Path.Combine(currentDirectory,"Examples", "StressNg", "StressNgCpuExample.yaml");
             string results = File.ReadAllText(resultsPath);
-            this.mockFixture.File.Setup(f => f.ReadAllText(It.IsAny<string>())).Returns(results);
+
+            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(results);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {

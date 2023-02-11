@@ -322,7 +322,11 @@ namespace VirtualClient.Actions
         {
             IProcessProxy process = null;
 
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+               .AddContext("command", this.ExecutablePath)
+               .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -333,28 +337,30 @@ namespace VirtualClient.Actions
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);                               
+                                    string results = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results, logToFile: true);
+                                }
                             }
                             catch (TimeoutException exc)
                             {
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<SockPerfClientExecutor2>(process, telemetryContext);
                             }
                         }
                     }).ConfigureAwait(false);

@@ -15,7 +15,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies;
 
     /// <summary>
     /// The SuperBenchmark workload executor.
@@ -114,13 +113,17 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync("sb", this.GetCommandLineArguments(), this.SuperBenchmarkDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                string commandArguments = this.GetCommandLineArguments();
 
-                DateTime endTime = DateTime.UtcNow;
-
-                this.LogSuperBenchmarkOutput(startTime, endTime);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
+                    }
+                }
             }
         }
 
@@ -159,52 +162,55 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
 
                 await this.Logger.LogMessageAsync($"{nameof(SuperBenchmarkExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.LogProcessTrace(process);
+                        await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<SuperBenchmarkExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
-                }).ConfigureAwait(false);
+                });
             }
         }
 
-        private void LogSuperBenchmarkOutput(DateTime startTime, DateTime endTime)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string[] outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "results-summary.jsonl", SearchOption.AllDirectories);
-
-            foreach (string file in outputFiles)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                string text = this.fileSystem.File.ReadAllText(file);
-                SuperBenchmarkMetricsParser parser = new SuperBenchmarkMetricsParser(text);
-                parser.Parse();
-                Console.WriteLine(parser.Parse().Count);
-                this.Logger.LogMetrics(
-                    toolName: "SuperBenchmark",
-                    scenarioName: "SuperBenchmark",
-                    startTime,
-                    endTime,
-                    parser.Parse(),
-                    metricCategorization: $"{this.ConfigurationFile}",
-                    scenarioArguments: this.GetCommandLineArguments(),
-                    this.Tags,
-                    EventContext.Persisted());
+                string[] outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "results-summary.jsonl", SearchOption.AllDirectories);
 
-                this.fileSystem.File.Delete(file);
+                foreach (string file in outputFiles)
+                {
+                    string results = this.fileSystem.File.ReadAllText(file);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench", logToFile: true);
+
+                    SuperBenchmarkMetricsParser parser = new SuperBenchmarkMetricsParser(results);
+                    IList<Metric> metrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        toolName: "SuperBenchmark",
+                        scenarioName: "SuperBenchmark",
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        metricCategorization: $"{this.ConfigurationFile}",
+                        scenarioArguments: commandArguments,
+                        this.Tags,
+                        EventContext.Persisted());
+
+                    await this.fileSystem.File.DeleteAsync(file);
+                }
             }
         }
 

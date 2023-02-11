@@ -150,82 +150,47 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the StressAppTest workload.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.ValidateParameters();
-            DateTime startTime = DateTime.UtcNow;
 
-            string commandLineArguments = this.CommandLine;
-            commandLineArguments += " -s " + this.TimeInSeconds;
-            if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
-            {
-                commandLineArguments += " -W";
-            }
-
-            string currentTimestamp = startTime.ToString("yyyyMMddHHmmssffff");
-            string resultsFileName = "stressapptestLogs_" + currentTimestamp + ".txt";
-            commandLineArguments += " -l " + resultsFileName;
-            commandLineArguments = commandLineArguments.Trim();
-
-            // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
-
-            await this.ExecuteCommandAsync(
-                this.ExecutableName, commandLineArguments, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
-
-            DateTime endTime = DateTime.UtcNow;
-            this.LogStressAppTestOutput(startTime, endTime, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
+            return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
         }
 
         /// <summary>
         /// Executes the StressAppTest workload command and generates the results file for the logs
         /// </summary>
-        private async Task ExecuteCommandAsync(
-            string pathToExe,
-            string commandLineArguments,
-            string workingDirectory,
-            CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(StressAppTestExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                string commandLineArguments = this.CommandLine;
+                commandLineArguments += " -s " + this.TimeInSeconds;
+                if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(
-                        pathToExe,
-                        commandLineArguments,
-                        workingDirectory))
+                    commandLineArguments += " -W";
+                }
+
+                // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
+                string resultsFileName = $"stressapptestLogs_{DateTime.UtcNow.ToString("yyyyMMddHHmmssffff")}.txt";
+                commandLineArguments += " -l " + resultsFileName;
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments.Trim(), this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.Logger.LogProcessDetails<StressAppTestExecutor>(process, telemetryContext);
-                            // process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
                     }
-                }).ConfigureAwait(false);
+                }
             }
         }
 
         /// <summary>
         /// Logs the StressAppTest workload metrics.
         /// </summary>
-        private void LogStressAppTestOutput(
-            DateTime startTime,
-            DateTime endTime,
-            string commandLineArguments,
-            string resultsFileName,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandLineArguments, string resultsFileName, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -233,32 +198,32 @@ namespace VirtualClient.Actions
                 if (!this.fileSystem.File.Exists(resultsPath))
                 {
                     throw new WorkloadResultsException(
-                        $"The StressAppTest results file was not found at path '{resultsPath}'.",
+                        $"The StressAppTest results file was not found at the expected path '{resultsPath}'.",
                         ErrorReason.WorkloadResultsNotFound);
                 }
 
-                string rawText = this.fileSystem.File.ReadAllText(resultsPath);
+                string results = await this.fileSystem.File.ReadAllTextAsync(resultsPath);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results, logToFile: true);
 
-                if (string.IsNullOrWhiteSpace(rawText))
+                if (string.IsNullOrWhiteSpace(results))
                 {
                     throw new WorkloadResultsException(
                         "The StressAppTest workload did not produce valid results. The results file is blank",
                         ErrorReason.WorkloadResultsNotFound);
                 }
 
-                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(rawText);
+                StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
 
                 foreach (Metric metric in workloadMetrics)
                 {
-                    telemetryContext
-                        .AddContext("testRunResult", metric.Tags[0] ?? string.Empty);
+                    telemetryContext.AddContext("testRunResult", metric.Tags[0] ?? string.Empty);
 
                     this.Logger.LogMetrics(
                         toolName: "StressAppTest",
                         scenarioName: this.Scenario,
-                        startTime,
-                        endTime,
+                        process.StartTime,
+                        process.ExitTime,
                         metric.Name,
                         metric.Value,
                         metric.Unit,

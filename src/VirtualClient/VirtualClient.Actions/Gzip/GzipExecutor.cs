@@ -67,13 +67,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The name of the directory where the Gzip is executed.
         /// </summary>
-        protected string GzipDirectory
-        {
-            get
-            {
-                return this.GetPackagePath(this.PackageName);
-            }
-        }
+        protected string GzipDirectory { get; set; }
 
         /// <summary>
         /// Executes the Gzip workload.
@@ -82,15 +76,20 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
                 string commandLineArguments = this.GetCommandLineArguments();
 
                 // Execute Gzip
-                string results = await this.ExecuteCommandAsync("bash", $"-c \"gzip {commandLineArguments}\"", this.GzipDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"-c \"gzip {commandLineArguments}\"", this.GzipDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "GZip", logToFile: true)
+                            .ConfigureAwait();
 
-                DateTime endTime = DateTime.UtcNow;
-                this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process, commandLineArguments, telemetryContext);
+                    }
+                }
             }
         }
 
@@ -100,7 +99,9 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-            .ConfigureAwait(false);
+                .ConfigureAwait(false);
+
+            this.GzipDirectory = this.GetPackagePath(this.PackageName);
 
             GzipState state = await this.stateManager.GetStateAsync<GzipState>($"{nameof(GzipState)}", cancellationToken)
                 ?? new GzipState();
@@ -122,7 +123,7 @@ namespace VirtualClient.Actions
                 state.GzipStateInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<GzipState>($"{nameof(GzipState)}", state, cancellationToken);            
+            await this.stateManager.SaveStateAsync<GzipState>($"{nameof(GzipState)}", state, cancellationToken);
         }
 
         /// <summary>
@@ -131,9 +132,7 @@ namespace VirtualClient.Actions
         /// <returns>Returns True or false</returns>
         protected override bool IsSupported()
         {
-            bool isSupported = this.Platform == PlatformID.Unix;
-
-            return isSupported;
+            return this.Platform == PlatformID.Unix;
         }
 
         private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
@@ -154,37 +153,37 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<GzipExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
 
-                        output = process.StandardError.ToString();
+                        output = process.StandardOutput.ToString();
                     }
-                }).ConfigureAwait(false);
+                }).ConfigureAwait();
             }
 
             return output;
         }
 
-        private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)
         {
-            GzipMetricsParser parser = new GzipMetricsParser(results);
+            GzipMetricsParser parser = new GzipMetricsParser(process.StandardOutput.ToString());
             IList<Metric> metrics = parser.Parse();
 
             this.Logger.LogMetrics(
                 "Gzip",
                 this.Scenario,
-                startTime,
-                endTime,
+                process.StartTime,
+                process.ExitTime,
                 metrics,
                 null,
-                this.GetCommandLineArguments(),
+                commandArguments,
                 this.Tags,
-                EventContext.Persisted());
+                telemetryContext);
         }
 
         private string GetCommandLineArguments()
@@ -215,9 +214,7 @@ namespace VirtualClient.Actions
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The Gzip benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()} through Virtual Client.  Supported distros include:" +
-                            $" Ubuntu, Debian, CentOS8,RHEL8,Mariner,CentOS7,RHEL7. ",
+                            $"The Gzip benchmark workload is not supported on the current Linux distro.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }

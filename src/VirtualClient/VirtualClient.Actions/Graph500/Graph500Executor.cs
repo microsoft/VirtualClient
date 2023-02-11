@@ -96,7 +96,7 @@ namespace VirtualClient.Actions
 
             if (this.fileSystem.File.Exists(this.ResultsFilePath))
             {
-                await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
+                await this.fileSystem.File.DeleteAsync(this.ResultsFilePath).ConfigureAwait();
             }
         }
 
@@ -107,19 +107,22 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
-
                 await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                    .ConfigureAwait();
 
-                string executeScriptCommandArguments = this.Scale + " " + this.EdgeFactor;
-                await this.ExecuteCommandAsync(this.ExecutableFilePath, executeScriptCommandArguments, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait())
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
 
-                DateTime endTime = DateTime.UtcNow;
-                this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
-                await this.CaptureWorkloadResultsAsync(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
+                            .ConfigureAwait();
+
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    }
+                }
             }
         }
 
@@ -148,24 +151,26 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
-                        this.fileSystem.File.WriteAllText(this.ResultsFilePath, process.StandardOutput.ToString());
+                        await this.fileSystem.File.WriteAllTextAsync(this.ResultsFilePath, process.StandardOutput.ToString())
+                            .ConfigureAwait();
 
-                        await this.WaitAsync(TimeSpan.FromMinutes(1), cancellationToken).ConfigureAwait(false);
+                        await this.WaitAsync(TimeSpan.FromMinutes(1), cancellationToken)
+                            .ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<Graph500Executor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
-                }).ConfigureAwait(false);
+                }).ConfigureAwait();
             }
         }
 
-        private async Task CaptureWorkloadResultsAsync(string resultsFilePath, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -177,7 +182,10 @@ namespace VirtualClient.Actions
                 }
 
                 string resultsContent = await this.WaitForResultsAsync(resultsFilePath, TimeSpan.FromMinutes(30), cancellationToken)
-                    .ConfigureAwait(false);
+                    .ConfigureAwait();
+
+                await this.LogProcessDetailsAsync(process, telemetryContext, "Graph500", resultsContent, logToFile: true)
+                    .ConfigureAwait();
 
                 if (!string.IsNullOrWhiteSpace(resultsContent))
                 {
@@ -185,13 +193,14 @@ namespace VirtualClient.Actions
                     {
                         Graph500MetricsParser graph500Parser = new Graph500MetricsParser(resultsContent);
                         IList<Metric> metrics = graph500Parser.Parse();
+
                         foreach (Metric result in metrics)
                         {
                             this.Logger.LogMetrics(
                                 "Graph500",
                                 "Graph500",
-                                startTime,
-                                endTime,
+                                process.StartTime,
+                                process.ExitTime,
                                 result.Name,
                                 result.Value,
                                 result.Unit,
@@ -212,8 +221,8 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         throw new WorkloadException(
-                                $"Missing results. Workload results were not emitted by the workload.",
-                                ErrorReason.WorkloadFailed);
+                            $"Missing results. Workload results were not emitted by the workload.",
+                            ErrorReason.WorkloadFailed);
                     }
                 }
             }
@@ -227,7 +236,7 @@ namespace VirtualClient.Actions
             while (!cancellationToken.IsCancellationRequested && DateTime.UtcNow < waitTimeout)
             {
                 results = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath, cancellationToken)
-                    .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 if (!string.IsNullOrWhiteSpace(results))
                 {

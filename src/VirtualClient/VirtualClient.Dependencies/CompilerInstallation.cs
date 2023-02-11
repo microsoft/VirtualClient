@@ -113,8 +113,11 @@ namespace VirtualClient.Dependencies
                         string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
-                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken).ConfigureAwait(false);
-                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                     }
 
                     break;
@@ -122,7 +125,8 @@ namespace VirtualClient.Dependencies
                 case "aocc":
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                     }
 
                     break;
@@ -147,12 +151,22 @@ namespace VirtualClient.Dependencies
                 {
                     this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
                     Console.WriteLine(compiler + "1");
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                    Console.WriteLine(compiler + "2" + process.StandardOutput.ToString());
-                    if (versionConfirmationExpression.IsMatch(process.StandardOutput.ToString()))
+
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        confirmedCompilers++;
-                        this.Logger.LogTraceMessage($"Compiler {compiler} confirmed for version {this.CompilerVersion}.");
+                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion")
+                            .ConfigureAwait(false);
+
+                        ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());
+
+                        if (versionConfirmationExpression.IsMatch(process.StandardOutput.ToString()))
+                        {
+                            confirmedCompilers++;
+                            this.Logger.LogTraceMessage($"Compiler {compiler} confirmed for version {this.CompilerVersion}.");
+                        }
                     }
                 }
             }
@@ -163,8 +177,8 @@ namespace VirtualClient.Dependencies
         private Task InstallCygwinAsync(DependencyPath cygwinInstallationPath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string cygwinCommandArguments;
+            string cygwinInstallerPath = this.Combine(cygwinInstallationPath.Path, "cygwinsetup.exe");
 
-            string cygwinInstallerPath = this.PlatformSpecifics.Combine(cygwinInstallationPath.Path, "cygwinsetup.exe");
             if (!string.IsNullOrEmpty(this.CygwinPackages))
             {
                 cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake,gcc-fortran,{this.CygwinPackages}";
@@ -233,21 +247,23 @@ namespace VirtualClient.Dependencies
 
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
             return this.RetryPolicy.ExecuteAsync(async () =>
              {
                  string output = string.Empty;
                  using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                  {
-                     SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                     this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                     this.CleanupTasks.Add(() => process.SafeKill());
+                     this.LogProcessTrace(process);
 
-                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                     await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                      if (!cancellationToken.IsCancellationRequested)
                      {
-                         this.Logger.LogProcessDetails<CompilerInstallation>(process, relatedContext);
-                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                         await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                      }
                  }
             });

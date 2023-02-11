@@ -92,22 +92,21 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-
-                this.LogSPECJbbOutput(startTime, endTime, telemetryContext, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                    }
+                }
             }
 
             // If the content blob store is not defined, the monitor does nothing and exits.
             if (this.TryGetContentStoreManager(out IBlobManager blobManager))
             {
-                DateTime logTime = DateTime.UtcNow;
-
-                await this.UploadGcLogAsync(blobManager, this.gcLogPath, logTime, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.UploadGcLogAsync(blobManager, this.gcLogPath, DateTime.UtcNow, cancellationToken);
             }
         }
 
@@ -117,8 +116,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // No initiation needed, just check if the packages and JDK is there.
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             if (workloadPackage == null)
             {
@@ -129,8 +127,7 @@ namespace VirtualClient.Actions
 
             this.packageDirectory = workloadPackage.Path;
 
-            DependencyPath javaExecutable = await this.packageManager.GetPackageAsync(this.JdkPackageName, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath javaExecutable = await this.packageManager.GetPackageAsync(this.JdkPackageName, CancellationToken.None);
 
             if (javaExecutable == null || !javaExecutable.Metadata.ContainsKey(PackageMetadata.ExecutablePath))
             {
@@ -143,12 +140,48 @@ namespace VirtualClient.Actions
             this.gcLogPath = this.PlatformSpecifics.Combine(this.packageDirectory, SpecJbbExecutor.GcLogName);
         }
 
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                // specjbb2015-C-20220301-00002-reporter.out
+                string resultsDirectory = this.PlatformSpecifics.Combine(this.packageDirectory, "result");
+                string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "specjbb2015*-reporter.out", SearchOption.AllDirectories);
+
+                foreach (string file in outputFiles)
+                {
+                    string results = this.fileSystem.File.ReadAllText(file);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", results, logToFile: true);
+
+                    try
+                    {
+                        SpecJbbMetricsParser parser = new SpecJbbMetricsParser(results);
+
+                        this.Logger.LogMetrics(
+                            toolName: "SPECjbb",
+                            scenarioName: "SPECjbb",
+                            process.StartTime,
+                            process.ExitTime,
+                            parser.Parse(),
+                            null,
+                            commandArguments,
+                            this.Tags,
+                            telemetryContext);
+
+                        await this.fileSystem.File.DeleteAsync(file);
+                    }
+                    catch (Exception exc)
+                    {
+                        throw new WorkloadException($"Failed to parse file at '{file}' with text '{results}'.", exc, ErrorReason.InvalidResults);
+                    }
+                }
+            }
+        }
+
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
@@ -158,53 +191,18 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        this.LogProcessTrace(process);
+                        await process.StartAndWaitAsync(cancellationToken);
 
                         await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<SpecJbbExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb");
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
-                }).ConfigureAwait(false);
-            }
-        }
-
-        private void LogSPECJbbOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                // specjbb2015-C-20220301-00002-reporter.out
-                string results = this.PlatformSpecifics.Combine(this.packageDirectory, "result");
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(results, "specjbb2015*-reporter.out", SearchOption.AllDirectories);
-
-                foreach (string file in outputFiles)
-                {
-                    string text = this.fileSystem.File.ReadAllText(file);
-                    try
-                    {
-                        SpecJbbMetricsParser parser = new SpecJbbMetricsParser(text);
-
-                        this.Logger.LogMetrics(
-                            toolName: "SPECjbb",
-                            scenarioName: "SPECjbb",
-                            startTime,
-                            endTime,
-                            parser.Parse(),
-                            metricCategorization: "SPECjbb",
-                            scenarioArguments: this.GetCommandLineArguments(),
-                            this.Tags,
-                            telemetryContext);
-
-                        this.fileSystem.File.Delete(file);
-                    }
-                    catch (Exception exc)
-                    {
-                        throw new WorkloadException($"Failed to parse file at '{file}' with text '{text}'.", exc, ErrorReason.InvalidResults);
-                    }
-                }
+                });
             }
         }
 
@@ -256,11 +254,10 @@ namespace VirtualClient.Actions
                 BlobDescriptor resultsBlob = BlobDescriptor.ToBlobDescriptor(
                     this.ExperimentId, this.AgentId, "specjbb", "gc.log", DateTime.UtcNow);
 
-                await blobManager.UploadBlobAsync(resultsBlob, uploadStream, cancellationToken)
-                    .ConfigureAwait(false);
+                await blobManager.UploadBlobAsync(resultsBlob, uploadStream, cancellationToken);
             }
 
-            await this.fileSystem.File.DeleteAsync(gcLogPath).ConfigureDefaults();
+            await this.fileSystem.File.DeleteAsync(gcLogPath);
         }
 
         private async Task ValidateProcessExitedAsync(int processId, TimeSpan timeout, CancellationToken cancellationToken)
@@ -276,7 +273,7 @@ namespace VirtualClient.Actions
                     break;
                 }
 
-                await Task.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(1000);
             }
         }
     }

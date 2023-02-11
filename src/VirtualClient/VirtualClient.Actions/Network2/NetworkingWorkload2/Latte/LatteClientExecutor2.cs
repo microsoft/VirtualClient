@@ -279,7 +279,7 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                await this.LogMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
+                await this.CaptureMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
                     .ConfigureAwait(false);
             }
 
@@ -334,7 +334,11 @@ namespace VirtualClient.Actions
         {
             IProcessProxy process = null;
 
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+              .AddContext("command", this.ExecutablePath)
+              .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -345,29 +349,27 @@ namespace VirtualClient.Actions
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
-
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                this.SystemManager.FileSystem.File.WriteAllText(this.ResultsPath, process.StandardOutput.ToString());
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    await this.SystemManager.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());
+                                }
                             }
                             catch (TimeoutException exc)
                             {
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<LatteClientExecutor2>(process, telemetryContext);
                             }
                         }
                     }).ConfigureAwait(false);
@@ -386,7 +388,7 @@ namespace VirtualClient.Actions
             $"-hist -hl 1 -hc 9998 -bl {clientIPAddress}";
         }
 
-        private async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        private async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             IFile fileAccess = this.SystemManager.FileSystem.File;
 

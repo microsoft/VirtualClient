@@ -95,7 +95,7 @@ namespace VirtualClient
                     // API is acting in server-mode where it will serve the requests directly.
                     int responseFile = this.randomGen.Next(0, 4);
                     string responseContent = ApiController.responseFiles[responseFile];
-                    response = this.Ok(responseContent.RemoveWhitespaces());
+                    response = this.Ok(responseContent.RemoveWhitespace());
                 }
                 else
                 {

@@ -53,29 +53,25 @@ namespace VirtualClient.Actions.NetworkPerformance
                             {
                                 if (!process.Start())
                                 {
-                                    this.Logger.LogProcessDetails<LatteServerExecutor>(process, relatedContext);
-                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                                 }
 
                                 this.CleanupTasks.Add(() => process.SafeKill());
 
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromMilliseconds(this.Iterations * .5);
-                                await this.WaitAsync(serverWaitTime, cancellationToken)
-                                    .ConfigureAwait(false);
+                                await this.WaitAsync(serverWaitTime, cancellationToken);
+                                await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
                             }
                         }
                         catch (Exception exc)
                         {
-                            this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
+                            this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                             process.SafeKill();
                             throw;
                         }
-                        finally
-                        {
-                            this.Logger.LogProcessDetails<LatteServerExecutor>(process, relatedContext);
-                        }
-                    }).ConfigureAwait(false);
+                    });
                 }
 
                 return process;
@@ -95,7 +91,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Not applicable on the server-side
         /// </summary>
-        protected override Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             // Latte server-side does not generate results.
             return Task.CompletedTask;

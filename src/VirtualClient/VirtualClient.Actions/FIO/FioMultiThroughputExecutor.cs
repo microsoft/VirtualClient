@@ -484,7 +484,8 @@ namespace VirtualClient.Actions
         }
 
         /// <inheritdoc/>
-        protected override void LogMetrics(IProcessProxy workloadProcess, string testName, string testedInstance, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
+        protected override void CaptureMetrics(
+            IProcessProxy workloadProcess, string testName, string metricCategorization, string commandArguments, EventContext telemetryContext, Dictionary<string, IConvertible> metricMetadata = null)
         {
             this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
             FioMetricsParser parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
@@ -509,10 +510,10 @@ namespace VirtualClient.Actions
             this.Logger.LogMetrics(
                "FIO",
                testName,
-               startTime,
-               endTime,
+               workloadProcess.StartTime,
+               workloadProcess.ExitTime,
                this.GetSectionizedMetrics(metrics),
-               testedInstance,
+               metricCategorization,
                commandArguments,
                this.Tags,
                telemetryContext);

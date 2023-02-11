@@ -80,19 +80,22 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            DateTime endTime = DateTime.UtcNow;
-
-            string commandLineArguments = this.GetCommandLineArguments();
-
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                // Execute Compressor7zip
-                string results = await this.ExecuteCommandAsync("7z", $"{commandLineArguments}", this.Compressor7zipDirectory, cancellationToken)
-                   .ConfigureAwait(false);
+                string commandLineArguments = this.GetCommandLineArguments();
 
-                endTime = DateTime.UtcNow;
-                this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("7z", commandLineArguments, this.Compressor7zipDirectory, telemetryContext, cancellationToken)
+                   .ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "7Zip", logToFile: true)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process, telemetryContext, commandLineArguments);
+                    }
+                }
             }
         }
 
@@ -102,7 +105,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             Compression7zipState state = await this.stateManager.GetStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", cancellationToken)
-            ?? new Compression7zipState();
+                ?? new Compression7zipState();
 
             if (!state.Compressor7zipStateInitialized)
             {
@@ -121,7 +124,7 @@ namespace VirtualClient.Actions
                 state.Compressor7zipStateInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", state, cancellationToken);            
+            await this.stateManager.SaveStateAsync<Compression7zipState>($"{nameof(Compression7zipState)}", state, cancellationToken);
         }
 
         /// <summary>
@@ -135,10 +138,27 @@ namespace VirtualClient.Actions
             return isSupported;
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, string commandArguments)
         {
-            string output = string.Empty;
+            process.ThrowIfNull(nameof(process));
 
+            Compression7zipMetricsParser parser = new Compression7zipMetricsParser(process.StandardOutput.ToString());
+            IList<Metric> metrics = parser.Parse();
+
+            this.Logger.LogMetrics(
+                "7zip",
+                this.Scenario,
+                process.StartTime,
+                process.ExitTime,
+                metrics,
+                null,
+                commandArguments,
+                this.Tags,
+                telemetryContext);
+        }
+
+        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        {
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
@@ -153,37 +173,19 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<Compression7zipExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
 
-                        output = process.StandardOutput.ToString();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        }
                     }
                 }).ConfigureAwait(false);
             }
-
-            return output;
-        }
-
-        private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            Compression7zipMetricsParser parser = new Compression7zipMetricsParser(results);
-            IList<Metric> metrics = parser.Parse();
-
-            this.Logger.LogMetrics(
-                "7zip",
-                this.Scenario,
-                startTime,
-                endTime,
-                metrics,
-                null,
-                this.GetCommandLineArguments(),
-                this.Tags,
-                EventContext.Persisted());
         }
 
         private string GetCommandLineArguments()

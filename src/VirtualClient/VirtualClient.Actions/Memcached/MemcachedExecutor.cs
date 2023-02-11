@@ -258,10 +258,8 @@ namespace VirtualClient.Actions
         /// <param name="workingDir">The working directory for the command.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns></returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string arguments, string workingDir, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
+        protected async Task ExecuteCommandAsync(string command, string arguments, string workingDir, CancellationToken cancellationToken)
         {
-            string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process '{command}' '{arguments}' at directory '{workingDir}'.");
@@ -272,28 +270,23 @@ namespace VirtualClient.Actions
                     .AddContext("command", command)
                     .AddContext("commandArguments", arguments);
 
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
                 {
                     using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        process.RedirectStandardOutput = true;
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<TExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
-
-                        output = process.StandardOutput.ToString();
                     }
-
-                    return output;
                 }).ConfigureAwait(false);
             }
-
-            return output;
         }
 
         /// <summary>

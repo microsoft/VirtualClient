@@ -134,7 +134,7 @@ namespace VirtualClient.Actions
             this.ThrowIfPlatformIsNotSupported();
 
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait();
 
             this.InitializeApiClients();
 
@@ -149,13 +149,13 @@ namespace VirtualClient.Actions
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait();
 
             this.PackageDirectory = workloadPackage.Path;
             this.ScriptsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "Scripts");
 
             await this.InstallDependenciesAsync(cancellationToken)
-                .ConfigureAwait(false);
+                .ConfigureAwait();
 
             this.ServiceDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, this.ServiceName);
         }
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
                                 VirtualClientEventing.SetEventingApiOnline(true);
 
                                 await this.WaitAsync(this.ServerCancellationSource.Token)
-                                    .ConfigureAwait(false);
+                                    .ConfigureAwait();
                             }
                             catch (OperationCanceledException)
                             {
@@ -204,7 +204,7 @@ namespace VirtualClient.Actions
                             using (var serverExecutor = this.CreateWorkloadServer())
                             {
                                 await serverExecutor.ExecuteAsync(this.ServerCancellationSource.Token)
-                                    .ConfigureAwait(false);
+                                    .ConfigureAwait();
 
                                 this.Logger.LogMessage($"{nameof(DeathStarBenchExecutor)}.ServerExecutionCompleted", telemetryContext);
                             }
@@ -216,7 +216,7 @@ namespace VirtualClient.Actions
                         using (var clientExecutor = this.CreateWorkloadClient())
                         {
                             await clientExecutor.ExecuteAsync(this.ServerCancellationSource.Token)
-                                .ConfigureAwait(false);
+                                .ConfigureAwait();
 
                             this.Logger.LogMessage($"{nameof(DeathStarBenchExecutor)}.ClientExecutionCompleted", telemetryContext);
                         }
@@ -261,27 +261,33 @@ namespace VirtualClient.Actions
                             if (workloadInstructions.Type == InstructionsType.ClientServerReset)
                             {
                                 this.Logger.LogTraceMessage($"Synchronization: Stopping all workloads...");
-                                await this.StopDockerAsync(CancellationToken.None).ConfigureAwait(false);
 
-                                this.DeleteWorkloadStateAsync(relatedContext, cancellationToken).GetAwaiter().GetResult();
+                                await this.StopDockerAsync(CancellationToken.None)
+                                    .ConfigureAwait();
+
+                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken)
+                                    .ConfigureAwait();
                             }
                             else if (workloadInstructions.Type == InstructionsType.ClientServerStartExecution)
                             {
-                                await this.StopDockerAsync(CancellationToken.None).ConfigureAwait(false);
+                                await this.StopDockerAsync(CancellationToken.None)
+                                    .ConfigureAwait();
 
-                                this.DeleteWorkloadStateAsync(relatedContext, cancellationToken).GetAwaiter().GetResult();
+                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken)
+                                    .ConfigureAwait();
 
                                 this.Parameters["Scenario"] = workloadInstructions.Properties["ServiceName"];
 
                                 var serverExecutor = this.CreateWorkloadServer();
                                 this.Logger.LogTraceMessage($"Synchronization: Starting {this.ServiceName} workload...");
 
-                                await serverExecutor.ExecuteAsync(cancellationToken);
+                                await serverExecutor.ExecuteAsync(cancellationToken)
+                                    .ConfigureAwait();
 
                                 // create the state here.
                                 DeathStarBenchState expectedServerState = new DeathStarBenchState(this.ServiceName, true);
                                 await this.LocalApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), expectedServerState, cancellationToken)
-                                        .ConfigureAwait(false);
+                                    .ConfigureAwait();
                             }
                         });
                     }
@@ -316,7 +322,7 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    response = await client.GetStateAsync(stateId, cancellationToken).ConfigureAwait(false);
+                    response = await client.GetStateAsync(stateId, cancellationToken).ConfigureAwait();
                     if (response.StatusCode == HttpStatusCode.NotFound)
                     {
                         stateStillExists = false;
@@ -337,7 +343,7 @@ namespace VirtualClient.Actions
                                 ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
+                        await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait();
                     }
                 }
             }
@@ -356,18 +362,16 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{nameof(DeathStarBenchExecutor)}.ResetState", telemetryContext, async () =>
             {
-                HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(
-                    nameof(DeathStarBenchState),
-                    cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(DeathStarBenchState), cancellationToken)
+                    .ConfigureAwait();
 
                 if (response.StatusCode != HttpStatusCode.NoContent)
                 {
                     response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
                 }
 
-                HttpResponseMessage swarmCommandResponse = await this.LocalApiClient.DeleteStateAsync(
-                    nameof(DeathStarBenchExecutor.SwarmCommand),
-                    cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage swarmCommandResponse = await this.LocalApiClient.DeleteStateAsync(nameof(DeathStarBenchExecutor.SwarmCommand), cancellationToken)
+                    .ConfigureAwait();
 
                 if (swarmCommandResponse.StatusCode != HttpStatusCode.NoContent)
                 {
@@ -410,8 +414,7 @@ namespace VirtualClient.Actions
         /// <param name="workingDirectory">The directory where we want to execute the command</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>Output of the workload command.</returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
+        protected async Task<string> ExecuteCommandAsync(string command, string workingDirectory, CancellationToken cancellationToken)
         {
             string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
@@ -421,25 +424,27 @@ namespace VirtualClient.Actions
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("command", command);
 
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
                 {
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        process.RedirectStandardOutput = true;
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<TExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
 
                         output = process.StandardOutput.ToString();
                     }
 
                     return output;
-                }).ConfigureAwait(false);
+                }).ConfigureAwait();
             }
 
             return output;
@@ -473,21 +478,22 @@ namespace VirtualClient.Actions
             {
                 string isSwarmNodeScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "isSwarmNode.sh");
                 string isSwarmNodeCommand = "bash " + isSwarmNodeScriptPath;
-                string isSwarmNode = await this.ExecuteCommandAsync<DeathStarBenchExecutor>(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                string isSwarmNode = await this.ExecuteCommandAsync(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
+                    .ConfigureAwait();
+
                 if (isSwarmNode.Trim('\n') == "true")
                 {
                     this.Logger.LogTraceMessage($"{isSwarmNode.Trim('\n')} is equal to true");
                     if (this.IsInRole(ClientRole.Client))
                     {
-                        await this.ExecuteCommandAsync<DeathStarBenchExecutor>("docker swarm leave", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.ExecuteCommandAsync("docker swarm leave", this.ServiceDirectory, cancellationToken)
+                            .ConfigureAwait();
                     }
 
                     if (this.IsInRole(ClientRole.Server))
                     {
-                        await this.ExecuteCommandAsync<DeathStarBenchExecutor>("docker swarm leave --force", this.ServiceDirectory, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.ExecuteCommandAsync("docker swarm leave --force", this.ServiceDirectory, cancellationToken)
+                            .ConfigureAwait();
                     }
                 }
 
@@ -495,23 +501,24 @@ namespace VirtualClient.Actions
                 do
                 {
                     await this.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
-                    isSwarmNode = await this.ExecuteCommandAsync<DeathStarBenchExecutor>(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                    isSwarmNode = await this.ExecuteCommandAsync(isSwarmNodeCommand, this.PackageDirectory, cancellationToken)
+                        .ConfigureAwait();
                 }
                 while (isSwarmNode.Trim('\n') == "true");
             }
             else
             {
                 string dockerProcessCountCommand = @"bash -c ""docker ps | wc -l""";
-                string numberOfDockerProcess = await this.ExecuteCommandAsync<DeathStarBenchExecutor>(dockerProcessCountCommand, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                string numberOfDockerProcess = await this.ExecuteCommandAsync(dockerProcessCountCommand, this.PackageDirectory, cancellationToken)
+                    .ConfigureAwait();
 
                 if (int.Parse(numberOfDockerProcess) > 1)
                 {
                     string stopContainersScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "stopContainers.sh");
                     string stopContainersCommand = "bash " + stopContainersScriptPath;
-                    await this.ExecuteCommandAsync<DeathStarBenchExecutor>(stopContainersCommand, this.ServiceDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(stopContainersCommand, this.ServiceDirectory, cancellationToken)
+                        .ConfigureAwait();
                 }
             }
         }
@@ -544,21 +551,21 @@ namespace VirtualClient.Actions
         {
             string dockerComposeScriptPath = this.PlatformSpecifics.Combine(this.ScriptsDirectory, "dockerComposeScript.sh");
             string dockerComposeCommand = "bash " + dockerComposeScriptPath;
-            await this.ExecuteCommandAsync<DeathStarBenchExecutor>(dockerComposeCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync(dockerComposeCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
 
             string dockerComposeFilePath = "/usr/local/bin/docker-compose";
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
-                    .ConfigureAwait(false);
+                .ConfigureAwait();
 
             // python3-pip installs pip3 and not pip, better to leave it on python which version of pip to use
             string pipInstallPackagesCommand = "python3 -m pip install aiohttp asyncio";
-            await this.ExecuteCommandAsync<DeathStarBenchExecutor>(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
 
             string luarocksCommand = "luarocks install luasocket";
-            await this.ExecuteCommandAsync<DeathStarBenchExecutor>(luarocksCommand, this.PackageDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync(luarocksCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
 
         }
 
@@ -576,17 +583,17 @@ namespace VirtualClient.Actions
         {
             if (this.Platform == PlatformID.Unix)
             {
-                var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
+                LinuxDistributionInfo distroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait();
 
-                switch (linuxDistributionInfo.LinuxDistribution)
+                switch (distroInfo.LinuxDistribution)
                 {
                     case LinuxDistribution.Ubuntu:
                         break;
                     default:
                         throw new WorkloadException(
                             $"The DeathStarBench benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()} through Virtual Client.  Supported distros include:" +
+                            $"{distroInfo.LinuxDistribution.ToString()} through Virtual Client.  Supported distros include:" +
                             $" Ubuntu ",
                             ErrorReason.LinuxDistributionNotSupported);
                 }

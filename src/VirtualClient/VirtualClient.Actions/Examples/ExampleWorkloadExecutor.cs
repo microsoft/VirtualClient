@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -359,7 +360,8 @@ namespace VirtualClient.Actions
                         {
                             // ALWAYS log the details for the process. This helper method will ensure we capture the exit code, standard output, standard
                             // error etc... This is very helpful for triage/debugging.
-                            this.Logger.LogProcessDetails<ExampleWorkloadExecutor>(workloadProcess, relatedContext);
+                            await this.LogProcessDetailsAsync(workloadProcess, telemetryContext, "ExampleWorkload")
+                                .ConfigureAwait(false);
 
                             // If the workload process returned a non-success exit code, we throw an exception typically. The ErrorReason used here
                             // will NOT cause VC to crash.

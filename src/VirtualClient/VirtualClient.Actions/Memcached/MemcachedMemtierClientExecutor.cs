@@ -5,12 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -189,14 +191,11 @@ namespace VirtualClient.Actions
             this.InitializeApiClients();
         }
 
-        private Task CaptureMetricsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 results.ThrowIfNullOrWhiteSpace(nameof(results));
-
-                this.Logger.LogMessage($"{nameof(MemcachedMemtierClientExecutor)}.CaptureMetrics", telemetryContext.Clone()
-                    .AddContext("results", results));
 
                 try
                 {
@@ -204,13 +203,13 @@ namespace VirtualClient.Actions
                     IList<Metric> workloadMetrics = resultsParser.Parse();
 
                     this.Logger.LogMetrics(
-                        "MemcachedMemtier",
+                        "Memcached-Memtier",
                         this.Scenario,
                         startTime,
                         endTime,
                         workloadMetrics,
                         string.Empty,
-                        this.Parameters.ToString(),
+                        null,
                         this.Tags,
                         telemetryContext);
                 }
@@ -219,29 +218,40 @@ namespace VirtualClient.Actions
                     throw new WorkloadResultsException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadResultsParsingFailed);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         private Task ExecuteWorkloadAsync(IPAddress serverIpAddress, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
+                DateTime startTime = DateTime.UtcNow;
                 string results = string.Empty;
+
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.StartTime = DateTime.UtcNow;
                     for (int i = 0; i < int.Parse(this.Copies); i++)
                     {
                         int port = int.Parse(this.Port) + i;
                         string command = $"-u {this.Username} {this.ClientExecutorPath}";
-                        string commandArguments = $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
+                        string commandArguments = 
+                            $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 " +
+                            $"--pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
 
-                        results += await this.ExecuteCommandAsync<MemcachedMemtierClientExecutor>(command, commandArguments, this.MemtierPackagePath, cancellationToken)
-                            .ConfigureAwait(false) + Environment.NewLine;
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.MemtierPackagePath, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results, logToFile: true)
+                                    .ConfigureAwait();
+
+                                results += $"{process.StandardOutput.ToString()}{Environment.NewLine}";
+
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            }
+                        }
                     }
 
-                    this.CaptureMetricsAsync(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                 }
             });
         }

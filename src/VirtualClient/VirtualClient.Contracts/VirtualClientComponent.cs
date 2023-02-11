@@ -13,6 +13,8 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -86,6 +88,11 @@ namespace VirtualClient.Contracts
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
         /// </summary>
         public string AgentId { get; }
+
+        /// <summary>
+        /// Cleanup tasks to execute when the component operations complete.
+        /// </summary>
+        public IList<Action> CleanupTasks { get; }
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
@@ -375,11 +382,6 @@ namespace VirtualClient.Contracts
         /// Returns the data type name for the component (e.g. GeekbenchExecutor).
         /// </summary>
         public string TypeName { get; protected set; }
-
-        /// <summary>
-        /// Cleanup tasks to execute when the component operations complete.
-        /// </summary>
-        protected IList<Action> CleanupTasks { get; }
 
         /// <summary>
         /// Disposes of resources used by the instance.

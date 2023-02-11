@@ -12,6 +12,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -22,6 +23,8 @@ namespace VirtualClient.Actions.NetworkPerformance
     [UnixCompatible]
     public class SockPerfClientExecutor : SockPerfExecutor
     {
+        private IFileSystem fileSystem;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SockPerfClientExecutor"/> class.
         /// </summary>
@@ -31,6 +34,7 @@ namespace VirtualClient.Actions.NetworkPerformance
            : base(dependencies, parameters)
         {
             this.WorkloadEmitsResults = true;
+            this.fileSystem = dependencies.GetService<IFileSystem>();
         }
 
         /// <inheritdoc/>
@@ -53,28 +57,30 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "SockPerf");
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    string results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsPath);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "SockPerf", results, logToFile: true);
+                                }
                             }
                             catch (TimeoutException exc)
                             {
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<SockPerfClientExecutor>(process, relatedContext);
                             }
                         }
                     }).ConfigureAwait(false);
@@ -107,7 +113,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             IFile fileAccess = this.SystemManagement.FileSystem.File;
 

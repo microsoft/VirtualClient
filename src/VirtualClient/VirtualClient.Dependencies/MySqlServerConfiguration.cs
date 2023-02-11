@@ -77,13 +77,18 @@ namespace VirtualClient.Dependencies
                 switch (this.Action)
                 {
                     case ConfigurationAction.StartServer:
-                        await this.StartMySQLServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.StartMySQLServerAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                         break;
+
                     case ConfigurationAction.CreateDatabase:
-                        await this.CreateMySQLDatabase(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.CreateMySQLDatabase(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                         break;
+
                     case ConfigurationAction.RaisedStatementCount:
-                        await this.RaiseMySQLMaximumStatementLimit(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.RaiseMySQLMaximumStatementLimit(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                         break;
                 }
 
@@ -98,12 +103,12 @@ namespace VirtualClient.Dependencies
             {
                 // path to file when chocolatey installation of mysql
                 await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysqld.exe", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
             else if (this.Platform == PlatformID.Unix)
             {
                 await this.ExecuteCommandAsync(manager, "systemctl start mysql.service", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
         }
 
@@ -149,22 +154,18 @@ namespace VirtualClient.Dependencies
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments))
             {
                 this.CleanupTasks.Add(() => process.SafeKill());
+
                 await process.StartAndWaitAsync(cancellationToken, null)
                     .ConfigureAwait(false);
 
-                // process.ThrowIfErrored<WorkloadException>(
-                //        ProcessProxy.DefaultSuccessCodes,
-                //        $"SQL Server installation action '{this.Action}' failed. {process.StandardError}",
-                //        ErrorReason.DependencyInstallationFailed);
-
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<MySQLServerConfiguration>(process, telemetryContext);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MySqlConfiguration")
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
-
-                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
             }
-
         }
 
         /// <summary>

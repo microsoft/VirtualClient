@@ -79,10 +79,15 @@ namespace VirtualClient.Monitors
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
                 .ConfigureAwait(false);
 
+            DateTime nextIteration = DateTime.UtcNow;
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    await this.WaitAsync(nextIteration, cancellationToken);
+                    nextIteration = DateTime.UtcNow.Add(this.MonitorFrequency);
+
                     using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
@@ -95,33 +100,21 @@ namespace VirtualClient.Monitors
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            try
+                            // We cannot log the process details here. The output is too large.
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Nvidia-Smi", logToFile: true);
+                            process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
+
+                            if (process.StandardOutput.Length > 0)
                             {
-                                // We cannot log the process details here. The output is too large.
-                                // this.Logger.LogProcessDetails<NvidiaSmiMonitor>(process, EventContext.Persisted());
-                                process.ThrowIfErrored<MonitorException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.MonitorFailed);
+                                NvidiaSmiQueryGpuParser parser = new NvidiaSmiQueryGpuParser(process.StandardOutput.ToString());
+                                IList<Metric> metrics = parser.Parse();
 
-                                if (process.StandardOutput.Length > 0)
+                                if (metrics?.Any() == true)
                                 {
-                                    NvidiaSmiQueryGpuParser parser = new NvidiaSmiQueryGpuParser(process.StandardOutput.ToString());
-                                    IList<Metric> metrics = parser.Parse();
-
-                                    if (metrics?.Any() == true)
-                                    {
-                                        this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
-                                    }
+                                    this.Logger.LogPerformanceCounters("nvidia", metrics, startTime, endTime, telemetryContext);
                                 }
                             }
-                            catch
-                            {
-                                // We cannot log the process details here. The output is too large. We will log on errors
-                                // though.
-                                this.Logger.LogProcessDetails<NvidiaSmiMonitor>(process, EventContext.Persisted());
-                                throw;
-                            }
                         }
-
-                        await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)

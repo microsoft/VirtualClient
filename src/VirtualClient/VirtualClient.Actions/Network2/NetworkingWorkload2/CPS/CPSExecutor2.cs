@@ -335,7 +335,11 @@ namespace VirtualClient.Actions
         {
             IProcessProxy process = null;
 
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+               .AddContext("command", this.ExecutablePath)
+               .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -345,37 +349,29 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
+                                this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                this.Results = process.StandardOutput.ToString();
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "CPS", logToFile: true);
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    this.Results = process.StandardOutput.ToString();
+                                }
                             }
                             catch (TimeoutException exc)
                             {
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
 
                                 throw new WorkloadException($"CPS workload did not exit within the timeout period defined (timeout={timeout}).", exc, ErrorReason.WorkloadFailed);
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 throw new WorkloadException($"CPS workload failed to start successfully", exc, ErrorReason.WorkloadFailed);
-                            }
-                            finally
-                            {
-                                if (this.IsInRole(ClientRole.Client))
-                                {
-                                    this.Logger.LogProcessDetails<CPSClientExecutor2>(process, telemetryContext);
-                                }
-                                else
-                                {
-                                    this.Logger.LogProcessDetails<CPSServerExecutor2>(process, telemetryContext);
-                                }
-
-                                this.CleanupTasks.Add(() => process.SafeKill());
                             }
                         }
                     }).ConfigureAwait(false);

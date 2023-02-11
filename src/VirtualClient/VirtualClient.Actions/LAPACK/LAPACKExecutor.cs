@@ -60,28 +60,27 @@ namespace VirtualClient.Actions
         {
             if (this.Platform != PlatformID.Win32NT && this.Platform != PlatformID.Unix)
             {
-                throw new NotSupportedException($"'{this.Platform.ToString()}' is not currently supported");
+                throw new NotSupportedException($"'{this.Platform}' is not currently supported");
             }
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                                                    .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             this.packageDirectory = workloadPackage.Path;
 
             if (this.Platform == PlatformID.Win32NT)
             {
                 DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
-                                                    .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 this.cygwinPackageDirectory = cygwinPackage.Path;
             }
 
             await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.packageDirectory, @"lapack_testing.py"), this.Platform, cancellationToken)
-                        .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             this.ScriptFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "LapackTestScript.sh");
-
             this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
         }
 
@@ -92,7 +91,6 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
                 if (this.Platform == PlatformID.Unix)
                 {
                     // Run make to generate all object files for fortran subroutines.
@@ -105,11 +103,18 @@ namespace VirtualClient.Actions
                         await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
                     }
 
-                    string executeScriptCommandArguments = "bash " + this.ScriptFilePath;
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", this.ScriptFilePath, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK")
+                                .ConfigureAwait();
 
-                    // Run script to start testing the routines.
-                    await this.ExecuteCommandAsync("sudo", executeScriptCommandArguments, this.packageDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
+                                .ConfigureAwait();
+                        }
+                    }
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
@@ -128,14 +133,19 @@ namespace VirtualClient.Actions
                     }
 
                     string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./LapackTestScript.sh'";
-                    await this.ExecuteCommandAsync(bashPath, executeScriptCommandArguments, this.packageDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(bashPath, executeScriptCommandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK")
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
+                                .ConfigureAwait();
+                        }
+                    }
                 }
-
-                DateTime endTime = DateTime.UtcNow;
-
-                this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "testing_results.txt");
-                this.CaptureWorkloadResults(this.ResultsFilePath, startTime, endTime, telemetryContext, cancellationToken);
             }
         }
 
@@ -153,20 +163,22 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<LAPACKExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
-                }).ConfigureAwait(false);
+                }).ConfigureAwait();
             }
         }
 
-        private void CaptureWorkloadResults(string resultsFilePath, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -177,24 +189,29 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
+                string content = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath)
+                    .ConfigureAwait();
 
-                if (!string.IsNullOrWhiteSpace(resultsContent))
+                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", content, logToFile: true)
+                    .ConfigureAwait();
+
+                if (!string.IsNullOrWhiteSpace(content))
                 {
                     try
                     {
-                        LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(resultsContent);
+                        LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(content);
                         IList<Metric> metrics = lapackParser.Parse();
+
                         this.Logger.LogMetrics(
-                        "LAPACK",
-                        "LAPACK",
-                        startTime,
-                        endTime,
-                        metrics,
-                        metricCategorization: string.Empty,
-                        scenarioArguments: string.Empty,
-                        this.Tags,
-                        telemetryContext);
+                            "LAPACK",
+                            "LAPACK",
+                            process.StartTime,
+                            process.ExitTime,
+                            metrics,
+                            null,
+                            null,
+                            this.Tags,
+                            telemetryContext);
                     }
                     catch (SchemaException exc)
                     {

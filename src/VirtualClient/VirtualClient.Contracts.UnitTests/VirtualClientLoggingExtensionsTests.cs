@@ -5,25 +5,32 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Newtonsoft.Json;
     using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.TestExtensions;
 
     [TestFixture]
     [Category("Unit")]
     public class VirtualClientLoggingExtensionsTests
     {
+        private MockFixture mockFixture;
         private Mock<ILogger> mockLogger;
         private EventContext mockEventContext;
 
         [SetUp]
         public void SetupTest()
         {
+            this.mockFixture = new MockFixture();
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
         }
@@ -433,6 +440,422 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsAsyncExtensionEmitsTheExpectedProcessInformationAsTelemetry(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            bool expectedInfoCaptured = false;
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
+                {
+                    Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
+                    Assert.IsInstanceOf<EventContext>(state);
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        standardOutput = expectedStandardOutput ?? string.Empty,
+                        standardError = expectedStandardError ?? string.Empty
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedInfoCaptured = true;
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
+                .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedInfoCaptured);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsExtensionEmitsTheExpectedProcessInformationAsTelemetryWhenTheToolsetNameIsProvided(
+           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            string expectedToolset = "AnyWorkloadToolset";
+            bool expectedInfoCaptured = false;
+
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessDetails")
+                {
+                    Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
+                    Assert.IsInstanceOf<EventContext>(state);
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        standardOutput = expectedStandardOutput ?? string.Empty,
+                        standardError = expectedStandardError ?? string.Empty
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedInfoCaptured = true;
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedInfoCaptured);
+        }
+
+        [Test]
+        [TestCase("<AnyToolset<")]
+        [TestCase(">AnyToolset>")]
+        [TestCase(":AnyToolset:")]
+        [TestCase("\"AnyToolset\"")]
+        [TestCase("/AnyToolset/")]
+        [TestCase("\\AnyToolset\\")]
+        [TestCase("|AnyToolset|")]
+        [TestCase("?AnyToolset?")]
+        [TestCase("*AnyToolset*")]
+        public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenEmittingTelemetry(string toolsetName)
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.AnyToolset.ProcessDetails")
+                {
+                    confirmed = true;
+                }
+            };
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase("AccessKey", "AnyKey123")]
+        [TestCase("AccessToken", "AnyToken123")]
+        [TestCase("Password", "AnyPass123")]
+        [TestCase("Pwd", "AnyPass123")]
+        public async Task LogProcessDetailsExtensionRemovesSensitiveDataFromTheProcessCommandDetailsInTelemetry(string sensitiveDataReference, string sensitiveData)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "C:\\any\\anyworkload.exe",
+                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
+                {
+                    Assert.IsInstanceOf<EventContext>(state);
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                    string actualProcessInfo = processContext.ToJson();
+                    Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
+                    confirmed = true;
+                }
+            };
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsToFileSystemAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
+                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
+                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Delimiter missing");
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
+                    }
+
+                    expectedLogFileWritten = true;
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsToFileAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenTheToolsetNameIsProvided(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            string expectedToolset = "AnyWorkloadToolset";
+            bool expectedLogFileWritten = false;
+
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{expectedToolset}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
+                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
+                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Delimiter missing");
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
+                    }
+
+                    expectedLogFileWritten = true;
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExist()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+ 
+            string expectedLogPath = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            string expectedToolset = "AnyWorkloadToolset";
+            string expectedLogPath = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+        }
+
+        [Test]
+        [TestCase("AccessKey", "AnyKey123")]
+        [TestCase("AccessToken", "AnyToken123")]
+        [TestCase("Password", "AnyPass123")]
+        [TestCase("Pwd", "AnyPass123")]
+        public async Task LogProcessDetailsToFileAsyncExtensionRemovesSensitiveDataFromTheProcessCommandDetailsWhenLoggingToFile(string sensitiveDataReference, string sensitiveData)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "C:\\any\\anyworkload.exe",
+                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    Assert.IsFalse(content.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+
+                    Assert.IsTrue(path.StartsWith(expectedLogPath));
+                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), "AnyToolset", logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase("<anytoolset<")]
+        [TestCase(">anytoolset>")]
+        [TestCase(":anytoolset:")]
+        [TestCase("\"anytoolset\"")]
+        [TestCase("/anytoolset/")]
+        [TestCase("\\anytoolset\\")]
+        [TestCase("|anytoolset|")]
+        [TestCase("?anytoolset?")]
+        [TestCase("*anytoolset*")]
+        public async Task LogProcessDetailsToFileAsyncExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+
+                    Assert.IsTrue(path.StartsWith(expectedLogPath));
+                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
         public void LogSystemEventsExtensionLogsTheExpectedEvents()
         {
             string expectedMessage = "RealtimeDataMonitorCounters";
@@ -522,7 +945,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogTestMetricsExtensionLogsTheExpectedEvents_Scenario1()
+        public void LogMetricsExtensionLogsTheExpectedEvents_Scenario1()
         {
             string expectedScenarioName = "AnyTestName";
             string expectedMetricName = "AnyMetric";
@@ -585,7 +1008,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogTestMetricsExtensionLogsTheExpectedEvents_Scenario2()
+        public void LogMetricsExtensionLogsTheExpectedEvents_Scenario2()
         {
             string expectedScenarioName = "AnyTestName";
             string expectedMetricName = "AnyMetric";
@@ -664,7 +1087,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogTestMetricsExtensionHandlesOptionalArgumentsNotProvided()
+        public void LogMetricsExtensionHandlesOptionalArgumentsNotProvided()
         {
             string expectedScenarioName = "AnyTestName";
             string expectedMetricName = "AnyMetric";
@@ -708,7 +1131,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogTestMetricsExtensionHandlesOptionalArgumentsNotProvided_2()
+        public void LogMetricsExtensionHandlesOptionalArgumentsNotProvided_2()
         {
             string expectedScenarioName = "AnyTestName";
             string expectedMetricName = "AnyMetric";
@@ -752,7 +1175,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogTestMetricsExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
+        public void LogMetricsExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
         {
             EventContext originalContext = new EventContext(Guid.NewGuid(), new Dictionary<string, object>
             {

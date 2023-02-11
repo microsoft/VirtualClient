@@ -54,11 +54,11 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallOpenFOAM(CancellationToken cancellationToken, EventContext telemetryContext)
         {
-            LinuxDistributionInfo linuxDistroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+            LinuxDistributionInfo linuxDistroInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                .ConfigureAwait(false);
 
             if (linuxDistroInfo.LinuxDistribution == LinuxDistribution.Ubuntu)
             {
-                ProcessManager manager = this.SystemManager.ProcessManager;
                 List<string> installationCommands = new List<string>();
 
                 if (this.CpuArchitecture == Architecture.X64)
@@ -76,30 +76,32 @@ namespace VirtualClient.Dependencies
 
                 foreach (var command in installationCommands)
                 {
-                    await this.ExecuteCommandAsync(manager, command, null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(command, null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
             else
             {
                 throw new DependencyException(
-                           $"You are on Linux distrubution {linuxDistroInfo.LinuxDistribution.ToString()}, which is not supported by OpenFOAM.",
-                           ErrorReason.LinuxDistributionNotSupported);
+                    $"Linux distrubution {linuxDistroInfo.LinuxDistribution.ToString()} is not supported with OpenFOAM.",
+                    ErrorReason.LinuxDistributionNotSupported);
             }
         }
 
-        private async Task ExecuteCommandAsync(ProcessManager manager, string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteCommandAsync(string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments))
             {
-                SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill());
                 await process.StartAndWaitAsync(cancellationToken, null)
                     .ConfigureAwait(false);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<OpenFOAMInstallation>(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, telemetryContext)
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
         }

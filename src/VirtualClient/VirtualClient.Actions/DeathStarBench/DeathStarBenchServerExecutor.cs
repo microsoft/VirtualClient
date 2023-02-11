@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -72,15 +73,14 @@ namespace VirtualClient.Actions
                                 this.ServerApiClient,
                                 nameof(DeathStarBenchState),
                                 DeathStarBenchExecutor.StateConfirmationPollingTimeout,
-                                cancellationToken).ConfigureAwait(false);
+                                cancellationToken).ConfigureAwait();
 
-                            await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait(false);
-
-                            await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                            await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait();
+                            await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait();
 
                             DeathStarBenchState serverState = new DeathStarBenchState(this.ServiceName, true);
                             HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), serverState, cancellationToken)
-                                                                        .ConfigureAwait(false);
+                                .ConfigureAwait();
 
                             response.ThrowOnError<WorkloadException>();
 
@@ -92,7 +92,8 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.ExecuteServerAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait();
                     }
                 }
             });
@@ -117,42 +118,42 @@ namespace VirtualClient.Actions
                     this.ServerIpAddress = clientInstance.IPAddress;
 
                     string swarmHostCommand = $@"bash -c ""docker swarm init --advertise-addr {this.ServerIpAddress} | grep ' docker swarm join' >> token.txt""";
-                    await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>(swarmHostCommand, this.ServiceDirectory, cancellationToken)
-                           .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(swarmHostCommand, this.ServiceDirectory, cancellationToken)
+                           .ConfigureAwait();
 
                     await this.SetOrUpdateClientCommandLine(cancellationToken)
-                           .ConfigureAwait(false);
+                        .ConfigureAwait();
 
                     if (!string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
                     {
-                        await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>(@$"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
-                                .ConfigureAwait(false);
+                        await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
+                            .ConfigureAwait();
                     }
                     else
                     {
-                        await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>(@$"bash -c ""docker stack deploy --compose-file=docker-compose.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
-                                .ConfigureAwait(false);
+                        await this.ExecuteCommandAsync(@$"bash -c ""docker stack deploy --compose-file=docker-compose.yml {this.ServiceName}""", this.ServiceDirectory, cancellationToken)
+                            .ConfigureAwait();
                     }
                 }
                 else
                 {
-                    await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>($"docker-compose -f docker-compose.yml up -d", this.ServiceDirectory, cancellationToken)
-                              .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"docker-compose -f docker-compose.yml up -d", this.ServiceDirectory, cancellationToken)
+                        .ConfigureAwait();
                 }
 
                 // wait for docker services to be up and running.
                 await this.WaitAsync(DeathStarBenchExecutor.ServerWarmUpTime, cancellationToken)
-                          .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 if (string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>("python3 scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, cancellationToken)
-                              .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("python3 scripts/write_movie_info.py -c datasets/tmdb/casts.json -m datasets/tmdb/movies.json", this.ServiceDirectory, cancellationToken)
+                        .ConfigureAwait();
                 }
                 else if (string.Equals(this.ServiceName, DeathStarBenchExecutor.SocialNetwork, StringComparison.OrdinalIgnoreCase))
                 {
-                    await this.ExecuteCommandAsync<DeathStarBenchServerExecutor>(@$"bash -c ""python3 scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, cancellationToken)
-                              .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(@$"bash -c ""python3 scripts/init_social_graph.py --graph={this.GraphType} --limit=1000""", this.ServiceDirectory, cancellationToken)
+                        .ConfigureAwait();
                 }
             }
             catch
@@ -184,7 +185,7 @@ namespace VirtualClient.Actions
             ISystemManagement systemManager = this.Dependencies.GetService<ISystemManagement>();
 
             string clientCommand = await systemManager.FileSystem.File.ReadAllTextAsync(this.TokenFilePath, cancellationToken)
-                                .ConfigureDefaults();
+                .ConfigureAwait();
 
             this.SwarmCommand = new State(new Dictionary<string, IConvertible>
             {
@@ -192,12 +193,12 @@ namespace VirtualClient.Actions
             });
 
             HttpResponseMessage response = await this.LocalApiClient.GetStateAsync(nameof(this.SwarmCommand), cancellationToken)
-                   .ConfigureAwait(false);
+                .ConfigureAwait();
 
             if (!response.IsSuccessStatusCode)
             {
                 response = await this.LocalApiClient.CreateStateAsync(nameof(this.SwarmCommand), JObject.FromObject(this.SwarmCommand), cancellationToken)
-                    .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 response.ThrowOnError<WorkloadException>();
             }
@@ -206,14 +207,13 @@ namespace VirtualClient.Actions
                 this.Logger.LogTraceMessage($"Updating Deathstarcommand state ");
 
                 string responseContent = await response.Content.ReadAsStringAsync()
-                                                    .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 Item<State> stateItem = responseContent.FromJson<Item<State>>();
-
                 stateItem.Definition.Properties[nameof(this.SwarmCommand)] = clientCommand;
 
                 response = await this.LocalApiClient.UpdateStateAsync(stateItem.Id, JObject.FromObject(stateItem), cancellationToken)
-                                    .ConfigureAwait(false);
+                    .ConfigureAwait();
 
                 response.ThrowOnError<WorkloadException>();
             }

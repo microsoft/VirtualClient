@@ -297,6 +297,7 @@ namespace VirtualClient
                 .AddSingleton<EnvironmentLayout>((provider) => this.Layout)
                 .AddSingleton<ISystemInfo>((provider) => this.SystemManagement.Object)
                 .AddSingleton<ISystemManagement>((provider) => this.SystemManagement.Object)
+                .AddSingleton<PlatformSpecifics>((provider) => this.PlatformSpecifics)
                 .AddSingleton<ProcessManager>(this.ProcessManager)
                 .AddSingleton<IDiskManager>(this.DiskManager)
                 .AddSingleton<IFileSystem>(this.FileSystem)

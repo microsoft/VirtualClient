@@ -17,7 +17,6 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
-    using global::VirtualClient.Core;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -118,24 +117,21 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            DateTime endTime = DateTime.UtcNow;
-
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
 
-                endTime = DateTime.UtcNow;
-            }
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.LogSpecCpuOutput(startTime, endTime, telemetryContext);
-
-                await this.UploadSpecCpuLogsAsync(cancellationToken).ConfigureAwait(false);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                        await this.UploadSpecCpuLogsAsync(cancellationToken);
+                    }
+                }
             }
         }
 
@@ -144,8 +140,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             if (workloadPackage == null)
             {
@@ -159,7 +154,7 @@ namespace VirtualClient.Actions
             string imageFile = this.GetIsoFilePath(workloadPackage);
             telemetryContext.AddContext(nameof(imageFile), imageFile);
 
-            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
         }
 
         private string GetConfigurationFileName()
@@ -181,6 +176,7 @@ namespace VirtualClient.Actions
         private string GetIsoFilePath(DependencyPath workloadPackage)
         {
             string[] isoFiles = this.fileSystem.Directory.GetFiles(workloadPackage.Path, "*.iso", SearchOption.TopDirectoryOnly);
+
             if (isoFiles?.Any() != true)
             {
                 throw new DependencyException(
@@ -207,11 +203,11 @@ namespace VirtualClient.Actions
                 string mountPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.GetPackagePath(), "speccpu_mount");
                 this.fileSystem.Directory.CreateDirectory(mountPath);
 
-                await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, cancellationToken);
                 await this.WriteSpecCpuConfigAsync(cancellationToken);
-                await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, cancellationToken);
 
                 state.SpecCpuInitialized = true;
             }
@@ -219,48 +215,56 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", state, cancellationToken);
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteCommandAsync(string command, string commandArguments, string workingDirectory, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext(nameof(command), command)
+                .AddContext(nameof(commandArguments), commandArguments);
 
-            string output = string.Empty;
-            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+            using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, commandArguments, workingDirectory))
             {
-                SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                this.CleanupTasks.Add(() => process.SafeKill());
+                this.LogProcessTrace(process);
 
-                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                await process.StartAndWaitAsync(cancellationToken);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<SpecCpuExecutor>(process, relatedContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                    await this.LogProcessDetailsAsync(process, telemetryContext);
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                 }
             }
         }
 
-        private void LogSpecCpuOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // CPU2017.008.intrate.txt
-            string results = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
-            string[] outputFiles = this.fileSystem.Directory.GetFiles(results, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
-
-            foreach (string file in outputFiles)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                string text = this.fileSystem.File.ReadAllText(file);
-                SpecCpuMetricsParser parser = new SpecCpuMetricsParser(text);
-                this.Logger.LogMetrics(
-                    toolName: "SPECcpu",
-                    scenarioName: "SPECcpu",
-                    startTime,
-                    endTime,
-                    parser.Parse(),
-                    metricCategorization: $"{this.SpecProfile}-{this.tuning}",
-                    scenarioArguments: this.GetCommandLineArguments(),
-                    this.Tags,
-                    telemetryContext);
+                // CPU2017.008.intrate.txt
+                string resultsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
+                string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);
 
-                this.fileSystem.File.Delete(file);
+                foreach (string file in outputFiles)
+                {
+                    string results = await this.fileSystem.File.ReadAllTextAsync(file);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results, logToFile: true);
+
+                    SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
+                    IList<Metric> metrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        toolName: "SPECcpu",
+                        scenarioName: "SPECcpu",
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        metricCategorization: $"{this.SpecProfile}-{this.tuning}",
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
+
+                    await this.fileSystem.File.DeleteAsync(file);
+                }
             }
         }
 
@@ -278,7 +282,7 @@ namespace VirtualClient.Actions
                     "speccpu",
                     outputFiles);
 
-                await this.UploadFilesAsync(blobManager, this.fileSystem, fileBlobDescriptorPairs, cancellationToken).ConfigureAwait(false);
+                await this.UploadFilesAsync(blobManager, this.fileSystem, fileBlobDescriptorPairs, cancellationToken);
             }
         }
 
@@ -309,7 +313,7 @@ namespace VirtualClient.Actions
                 Convert.ToInt32(this.CompilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                 StringComparison.OrdinalIgnoreCase);
 
-            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken).ConfigureAwait(false);
+            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
         }
 
         internal class SpecCpuState : State

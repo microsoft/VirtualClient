@@ -66,15 +66,17 @@ namespace VirtualClient.Dependencies
         {
             if (this.Platform == PlatformID.Unix)
             {
-                var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                                                .ConfigureAwait(false);
+                LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
-                switch (linuxDistributionInfo.LinuxDistribution)
+                switch (distroInfo.LinuxDistribution)
                 {
                     case LinuxDistribution.Ubuntu:
                         if (this.Version != string.Empty)
                         {
-                            this.installDockerCommand = @$"bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {this.Version} | awk '{{print $3}}') docker-ce-cli=$(apt-cache madison docker-ce | grep {this.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""";
+                            this.installDockerCommand = 
+                                @$"bash -c ""apt-get install docker-ce=$(apt-cache  madison docker-ce | grep {this.Version} | awk '{{print $3}}') " +
+                                @$"docker-ce-cli=$(apt-cache madison docker-ce | grep {this.Version} | awk '{{print $3}}') containerd.io docker-compose-plugin --yes --quiet""";
                         }
 
                         // installs latest version if no version is provided.
@@ -84,10 +86,11 @@ namespace VirtualClient.Dependencies
                         }
 
                         break;
+
                     default:
                         // different distro installation to be addded.
                         throw new WorkloadException(
-                            $"Docker Installtion is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                            $"Docker Installtion is not supported on the current Linux distro - {distroInfo.LinuxDistribution.ToString()}.  through VC " +
                             $" Supported distros include:" +
                             $" Ubuntu ",
                             ErrorReason.LinuxDistributionNotSupported);
@@ -97,10 +100,10 @@ namespace VirtualClient.Dependencies
             {
                 // docker installation for windows to be added.
                 throw new WorkloadException(
-                            $"Docker Installtion is not supported on the current platform {this.Platform} through VC." +
-                            $"Supported Platforms include:" +
-                            $" Unix ",
-                            ErrorReason.PlatformNotSupported);
+                    $"Docker Installtion is not supported on the current platform {this.Platform} through VC." +
+                    $"Supported Platforms include:" +
+                    $" Unix ",
+                    ErrorReason.PlatformNotSupported);
             }
 
         }
@@ -113,12 +116,15 @@ namespace VirtualClient.Dependencies
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                                                .ConfigureAwait(false);
-            switch (linuxDistributionInfo.LinuxDistribution)
+            LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            switch (distroInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
-                    await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.DockerInstallInUbuntuAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
                     break;
             }
         }
@@ -128,40 +134,51 @@ namespace VirtualClient.Dependencies
             string updateAptPackageCommand = "apt update";
             string requiredPackagesCommand = "apt-get install ca-certificates curl gnupg lsb-release";
             string addOfficialGPGKeyCommand = @"bash -c ""curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --batch --yes""";
-            string setUpRepositoryCommand = @"bash -c ""echo """"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"""" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null""";
+            string setUpRepositoryCommand = 
+                @"bash -c ""echo """"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"""" " +
+                @"| sudo tee /etc/apt/sources.list.d/docker.list > /dev/null""";
+
             await this.ExecuteCommandAsync(updateAptPackageCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync(requiredPackagesCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync("mkdir -p /etc/apt/keyrings", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync(addOfficialGPGKeyCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync(setUpRepositoryCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync(updateAptPackageCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync(this.installDockerCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
         }
 
         private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{commandLine}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<DockerInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

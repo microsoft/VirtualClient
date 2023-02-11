@@ -107,7 +107,8 @@ namespace VirtualClient.Dependencies
                 foreach (string repo in repos)
                 {
                     // https://www.redhat.com/sysadmin/add-yum-repository
-                    await this.ExecuteCommandAsync("yum-config-manager", $"--enable {repo} -y", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("yum-config-manager", $"--enable {repo} -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -117,7 +118,7 @@ namespace VirtualClient.Dependencies
             {
                 if (!this.AllowUpgrades && await this.IsPackageInstalledAsync(package, cancellationToken))
                 {
-                    this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.", EventContext.Persisted());
+                    this.Logger.LogTraceMessage($"Package '{package}' is already installed, skipping.");
                 }
                 else
                 {
@@ -136,17 +137,21 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs Yum update first.
-                await this.ExecuteCommandAsync(YumPackageInstallation.YumCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(YumPackageInstallation.YumCommand, $"update -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(YumPackageInstallation.YumCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(YumPackageInstallation.YumCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
             }).ConfigureAwait(false);
 
-            this.Logger.LogTraceMessage($"VirtualClient installed Yum package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
+            this.Logger.LogTraceMessage($"VirtualClient installed Yum package(s): '[{string.Join(' ', toInstall)}]'.");
 
             // Then, confirms that the packages were installed.
             List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
+
             if (failedPackages?.Count > 0)
             {
                 throw new ProcessException(
@@ -180,7 +185,9 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<YumPackageInstallation>(process, EventContext.Persisted());
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Yum")
+                        .ConfigureAwait(false);
+
                     process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                 }
 
@@ -197,13 +204,15 @@ namespace VirtualClient.Dependencies
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
                     SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.LogProcessTrace(process);
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<YumPackageInstallation>(process, relatedContext);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Yum")
+                            .ConfigureAwait(false);
+
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }

@@ -118,7 +118,8 @@ namespace VirtualClient.Dependencies
                 // Repo could only be add one by one
                 foreach (string repo in repos)
                 {
-                    await this.ExecuteCommandAsync("add-apt-repository", $"\"{repo}\" -y", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("add-apt-repository", $"\"{repo}\" -y", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -147,14 +148,16 @@ namespace VirtualClient.Dependencies
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs apt update first.
-                await this.ExecuteCommandAsync(AptPackageInstallation.AptCommand, $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(AptPackageInstallation.AptCommand, $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // append DEBIAN_FRONTEND=noninteractive if installation is required to be non-interactive.
                 string command = this.Interactive ? AptPackageInstallation.AptCommand : $"DEBIAN_FRONTEND=noninteractive {AptPackageInstallation.AptCommand}";
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(command, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(command, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
 
             }).ConfigureAwait(false);
 
@@ -193,8 +196,10 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<AptPackageInstallation>(process, EventContext.Persisted());
-                    process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Apt")
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
 
                 return process.ExitCode == 0;
@@ -209,15 +214,17 @@ namespace VirtualClient.Dependencies
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<AptPackageInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Apt")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

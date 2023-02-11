@@ -148,7 +148,7 @@ namespace VirtualClient.Common.Rest
             JToken responseObject = null;
             if (content != null)
             {
-                string result = await content.ReadAsStringAsync().ConfigureDefaults();
+                string result = await content.ReadAsStringAsync().ConfigureAwait();
                 responseObject = JToken.Parse(result);
             }
 

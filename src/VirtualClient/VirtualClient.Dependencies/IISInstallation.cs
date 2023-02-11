@@ -83,8 +83,10 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<IISInstallation>(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, telemetryContext)
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
         }

@@ -142,6 +142,20 @@ namespace VirtualClient
 
         /// <summary>
         /// Throws an exception if the process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfErrored<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
+            where TError : VirtualClientException
+        {
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<TError>(ProcessProxy.DefaultSuccessCodes, errorMessage, errorReason);
+        }
+
+        /// <summary>
+        /// Throws an exception if the process has exited and the exit code does not match
         /// one of the success exit codes provided.
         /// </summary>
         /// <param name="process">Represents a process running on the system.</param>

@@ -191,8 +191,10 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<NetworkConfigurationSetup>(process, telemetryContext.Clone());
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "NetworkConfiguration")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
 
@@ -234,7 +236,7 @@ namespace VirtualClient.Dependencies
                 // Reboots happen out of context of the executors because they must be synchronized in relation to
                 // all other components that might be running as part of a profile. Thus the profile execution
                 // handler itself is responsible for handling reboots.
-                this.Logger.LogMessage($"{nameof(NetworkConfigurationSetup)}.RequestReboot", LogLevel.Information, EventContext.Persisted());
+                this.Logger.LogMessage($"{nameof(NetworkConfigurationSetup)}.RequestReboot", LogLevel.Information, telemetryContext);
                 SystemManagement.IsRebootRequested = true;
             }
             else
@@ -249,8 +251,10 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<NetworkConfigurationSetup>(process, telemetryContext.Clone());
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "NetworkConfiguration")
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             }

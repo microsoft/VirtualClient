@@ -52,12 +52,12 @@ namespace VirtualClient.Api
             {
                 if (this.nextMiddlewareComponent != null)
                 {
-                    await this.nextMiddlewareComponent.Invoke(context).ConfigureDefaults();
+                    await this.nextMiddlewareComponent.Invoke(context);
                 }
             }
             catch (Exception exc)
             {
-                await ApiExceptionMiddleware.HandleResponse(context, exc).ConfigureDefaults();
+                await ApiExceptionMiddleware.HandleResponse(context, exc);
             }
         }
 

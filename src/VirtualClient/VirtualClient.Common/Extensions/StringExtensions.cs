@@ -14,6 +14,8 @@ namespace VirtualClient.Common.Extensions
     /// </summary>
     public static class StringExtensions
     {
+        private static Regex whitespaceExpression = new Regex(@"\s+", RegexOptions.Compiled);
+
         /// <summary>
         /// Return true/false whether the string value contains text.
         /// </summary>
@@ -33,9 +35,9 @@ namespace VirtualClient.Common.Extensions
         /// </summary>
         /// <param name="value">Original value</param>
         /// <returns>Value after spaces removed.</returns>
-        public static string RemoveWhitespaces(this string value)
+        public static string RemoveWhitespace(this string value)
         {
-            return Regex.Replace(value, @"\s+", string.Empty);
+            return StringExtensions.whitespaceExpression.Replace(value, string.Empty);
         }
 
         /// <summary>

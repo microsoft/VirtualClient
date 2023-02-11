@@ -5,12 +5,16 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
     [TestFixture]

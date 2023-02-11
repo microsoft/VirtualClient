@@ -94,7 +94,7 @@ namespace VirtualClient.Dependencies
                 setup.Returns(OpenFOAMInstallationTests.GetProcessProxy(1));
             }
 
-            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
+            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
         }
 

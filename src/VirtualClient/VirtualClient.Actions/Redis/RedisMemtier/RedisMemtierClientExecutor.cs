@@ -5,23 +5,15 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
-    using System.IO.Pipelines;
-    using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient;
-    using VirtualClient.Actions;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -168,20 +160,16 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
 
                             this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
-
                             this.Logger.LogTraceMessage("Synchronization: Start client workload...");
 
                             // 3) Get Parameters required.
 
-                            this.Copies = await this.GetServerCopiesCount(serverApiClient, cancellationToken)
-                                                        .ConfigureAwait(false);
+                            this.Copies = await this.GetServerCopiesCount(serverApiClient, cancellationToken);
 
                             // 4) Execute the client workload.
                             // ===========================================================================
                             ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
-
+                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
                         }
                     }));
                 }
@@ -211,18 +199,31 @@ namespace VirtualClient.Actions
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     string results = string.Empty;
-                    this.StartTime = DateTime.Now;
+                    DateTime startTime = DateTime.UtcNow;
+
                     for (int i = 1; i <= int.Parse(this.Copies); i++)
                     {
                         int port = int.Parse(this.Port) + i - 1;
-                        string clientCommand = $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
 
-                        this.Logger.LogTraceMessage($"Executing process '{clientCommand}'  at directory '{this.MemtierPackagePath}'.");
-                        results += await this.ExecuteCommandAsync<RedisMemtierClientExecutor>(clientCommand, this.MemtierPackagePath, cancellationToken)
-                            .ConfigureAwait(false) + Environment.NewLine;
+                        string clientCommand = 
+                        $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 " +
+                            $"--data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
+
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(clientCommand, this.MemtierPackagePath, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Memtier", results, logToFile: true)
+                                    .ConfigureAwait();
+
+                                results += $"{process.StandardOutput.ToString()}{Environment.NewLine}";
+
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            }
+                        }
                     }
 
-                    this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                 }
             });
         }
@@ -245,7 +246,7 @@ namespace VirtualClient.Actions
             return state.Properties[nameof(this.ServerCopiesCount)].ToString();
         }
 
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -253,16 +254,17 @@ namespace VirtualClient.Actions
                 {
                     MemtierMetricsParser memtierMetricsParser = new MemtierMetricsParser(results);
                     IList<Metric> metrics = memtierMetricsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "RedisMemtier",
-                                scenarioName: this.Scenario,
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "Redis-Memtier",
+                        scenarioName: this.Scenario,
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        null,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {

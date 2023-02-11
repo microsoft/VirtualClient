@@ -53,12 +53,14 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
-
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                this.SystemManagement.FileSystem.File.WriteAllText(this.ResultsPath, process.StandardOutput.ToString());
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Latte", logToFile: true);
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    await this.SystemManagement.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());
+                                }
                             }
                             catch (TimeoutException exc)
                             {
@@ -72,10 +74,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<LatteClientExecutor>(process, relatedContext);
                             }
                         }
                     }).ConfigureAwait(false);
@@ -100,7 +98,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected override async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             IFile fileAccess = this.SystemManagement.FileSystem.File;
 

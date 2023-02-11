@@ -22,6 +22,8 @@ namespace VirtualClient.Actions
     [UnixCompatible]
     public class LzbenchExecutor : VirtualClientComponent
     {
+        private const string LzBench = nameof(LzbenchExecutor.LzBench);
+
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private IStateManager stateManager;
@@ -95,15 +97,26 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                // Execute Lzbench
-                await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, cancellationToken)
-                .ConfigureAwait(false);
+                // Note:
+                // We are attempting to add in a common method for execution of commands as we have seen throughout many executors.
+                // In the near term, we are going to add this in slowly and incrementally in order to avoid raising the likelihood
+                // of regressions.
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait())
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench")
+                            .ConfigureAwait();
 
-                DateTime endTime = DateTime.UtcNow;
-                this.LogMetrics(startTime, endTime, telemetryContext, cancellationToken);
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken)
+                            .ConfigureAwait();
+                    }
+                }
             }
         }
 
@@ -130,13 +143,8 @@ namespace VirtualClient.Actions
                     await this.ExecuteCommandAsync("unzip", "silesia.zip -d silesia", this.LzbenchDirectory, cancellationToken);
                 }
 
-                // Copy script to run Lzbench from script folder to Lzbench folder.
-                Console.WriteLine(this.PlatformSpecifics.GetScriptPath("lzbench"));
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("lzbench")))
                 {
-                    Console.WriteLine(file);
-                    Console.WriteLine(this.LzbenchDirectory);
-                    Console.WriteLine(Path.GetFileName(file));
                     this.fileSystem.File.Copy(
                         file,
                         this.Combine(this.LzbenchDirectory, Path.GetFileName(file)),
@@ -160,6 +168,40 @@ namespace VirtualClient.Actions
             return isSupported;
         }
 
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.LzbenchDirectory, "results-summary.csv", SearchOption.AllDirectories);
+
+                foreach (string file in resultsFiles)
+                {
+                    string contents = await this.fileSystem.File.ReadAllTextAsync(file)
+                        .ConfigureAwait(false);
+
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents, logToFile: true)
+                       .ConfigureAwait(false);
+
+                    LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
+                    IList<Metric> metrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        "Lzbench",
+                        "Lzbench",
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        null,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
+
+                    await this.fileSystem.File.DeleteAsync(file)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
@@ -172,44 +214,22 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(LzbenchExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<LzbenchExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
                 }).ConfigureAwait(false);
-            }
-        }
-
-        private void LogMetrics(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string[] outputFiles = this.fileSystem.Directory.GetFiles(this.LzbenchDirectory, "results-summary.csv", SearchOption.AllDirectories);
-
-            foreach (string file in outputFiles)
-            {
-                string text = this.fileSystem.File.ReadAllText(file);
-                LzbenchMetricsParser parser = new LzbenchMetricsParser(text);
-                IList<Metric> metrics = parser.Parse();
-
-                this.Logger.LogMetrics(
-                    "Lzbench",
-                    "Lzbench",
-                    startTime,
-                    endTime,
-                    metrics,
-                    null,
-                    this.GetCommandLineArguments(),
-                    this.Tags,
-                    EventContext.Persisted());
-                
-                this.fileSystem.File.Delete(file);
             }
         }
 

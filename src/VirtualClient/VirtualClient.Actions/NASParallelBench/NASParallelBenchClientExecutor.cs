@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
             if (this.IsBenchmarkSupported())
             {
                 await this.WaitForClientsOnlineAsync(cancellationToken)
-                                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
@@ -109,40 +109,43 @@ namespace VirtualClient.Actions
                 telemetryContext.AddContext("command", "bash");
                 telemetryContext.AddContext("commandArguments", $"-c \"{command}\"");
 
-                IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"{command}\"");
-                process.RedirectStandardOutput = true;
-
-                DateTime startTime = DateTime.UtcNow;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    DateTime endTime = DateTime.UtcNow;
-
-                    if (!cancellationToken.IsCancellationRequested)
+                    using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"{command}\""))
                     {
-                        this.Logger.LogProcessDetails<NASParallelBenchExecutor>(process, telemetryContext);
-                        process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
-                        NASParallelBenchMetricsParser parser = new NASParallelBenchMetricsParser(process.StandardOutput.ToString());
-                        IList<Metric> metrics = parser.Parse().ToList();
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
-                        string computingMethod = this.IsMultiRoleLayout() ? "MPI" : "OMP";
-
-                        this.Logger.LogMetrics(
-                            "NASParallelBench",
-                            computingMethod + " " + this.Benchmark,
-                            startTime,
-                            endTime,
-                            metrics,
-                            null,
-                            scenarioArguments,
-                            this.Tags,
-                            telemetryContext);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "NASParallelBench", logToFile: true);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            this.CaptureMetrics(process, scenarioArguments, telemetryContext);
+                        }
                     }
                 }
             });
+        }
+
+        private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)
+        {
+            NASParallelBenchMetricsParser parser = new NASParallelBenchMetricsParser(process.StandardOutput.ToString());
+            IList<Metric> metrics = parser.Parse().ToList();
+
+            string computingMethod = this.IsMultiRoleLayout() ? "MPI" : "OMP";
+
+            this.Logger.LogMetrics(
+                "NASParallelBench",
+                computingMethod + " " + this.Benchmark,
+                process.StartTime,
+                process.ExitTime,
+                metrics,
+                null,
+                commandArguments,
+                this.Tags,
+                telemetryContext);
         }
 
         /// <summary>

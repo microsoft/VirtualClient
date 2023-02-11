@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -224,32 +225,29 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", state, cancellationToken);
         }
 
-        private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                results.ThrowIfNullOrWhiteSpace(nameof(results));
-
-                this.Logger.LogMessage($"{nameof(SysbenchOLTPClientExecutor)}.CaptureMetrics", telemetryContext.Clone()
-                    .AddContext("results", results));
-
                 try
                 {
-                    SysbenchOLTPMetricsParser parser = new SysbenchOLTPMetricsParser(results);
+                    SysbenchOLTPMetricsParser parser = new SysbenchOLTPMetricsParser(process.StandardOutput.ToString());
+                    IList<Metric> metrics = parser.Parse();
+
                     this.Logger.LogMetrics(
                         toolName: "Sysbench",
                         scenarioName: "OLTP",
-                        startTime,
-                        endTime,
-                        parser.Parse(),
-                        metricCategorization: "Sysbench",
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        null,
                         scenarioArguments: this.sysbenchExecutionArguments,
                         this.Tags,
                         telemetryContext);
                 }
                 catch (Exception exc)
                 {
-                    throw new WorkloadException($"Failed to parse sysbench output: {results}.", exc, ErrorReason.InvalidResults);
+                    throw new WorkloadException($"Failed to parse sysbench output.", exc, ErrorReason.InvalidResults);
                 }
             }
         }
@@ -260,19 +258,30 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.StartTime = DateTime.UtcNow;
-                    this.sysbenchExecutionArguments = $@"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress}";
+                    this.sysbenchExecutionArguments = 
+                    $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} " +
+                    $"--mysql-host={this.ServerIpAddress}";
 
-                    DateTime startTime = DateTime.UtcNow;
                     // gets executor arguments, combines with path & directory to get full command; metrics are stdout
                     string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-                    string results = await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, cancellationToken)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                        }
 
-                    await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    this.CaptureMetrics(results, this.StartTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(cleanupProcess, telemetryContext, "Sysbench");
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                cleanupProcess.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                            }
+                        }
+                    }
                 }
             });
         }

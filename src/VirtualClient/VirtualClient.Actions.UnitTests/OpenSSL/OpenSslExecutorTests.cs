@@ -167,7 +167,7 @@ namespace VirtualClient.Actions.CpuPerformance
                 await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.IsNotEmpty(this.fixture.Logger.MessagesLogged($"{nameof(OpenSslExecutor)}.ProcessDetails"));
+                Assert.IsNotEmpty(this.fixture.Logger.MessagesLogged($"{nameof(TestOpenSslExecutor)}.OpenSSL.ProcessDetails"));
             }
         }
 

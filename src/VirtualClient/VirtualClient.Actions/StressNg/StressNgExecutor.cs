@@ -66,13 +66,15 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-
-                this.LogStressNgOutput(startTime, endTime, telemetryContext);
+                using (IProcessProxy process = await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, telemetryContext, cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng");
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                    }
+                }
             }
         }
 
@@ -92,56 +94,34 @@ namespace VirtualClient.Actions
             return Task.CompletedTask;
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(StressNgExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                try
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                        
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.Logger.LogProcessDetails<StressNgExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
-        }
+                    string results = await this.fileSystem.File.ReadAllTextAsync(this.stressNgOutputFilePath);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", results, logToFile: true);
 
-        private void LogStressNgOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext)
-        {
-            string text = this.fileSystem.File.ReadAllText(this.stressNgOutputFilePath);
-            try
-            {
-                StressNgMetricsParser parser = new StressNgMetricsParser(text);
+                    StressNgMetricsParser parser = new StressNgMetricsParser(results);
 
-                this.Logger.LogMetrics(
-                    toolName: "StressNg",
-                    scenarioName: "StressNg",
-                    startTime,
-                    endTime,
-                    parser.Parse(),
-                    metricCategorization: "StressNg",
-                    scenarioArguments: this.GetCommandLineArguments(),
-                    this.Tags,
-                    telemetryContext);
+                    this.Logger.LogMetrics(
+                        toolName: "StressNg",
+                        scenarioName: "StressNg",
+                        process.StartTime,
+                        process.ExitTime,
+                        parser.Parse(),
+                        metricCategorization: "StressNg",
+                        scenarioArguments: commandArguments,
+                        this.Tags,
+                        telemetryContext);
 
-                this.fileSystem.File.Delete(this.stressNgOutputFilePath);
-            }
-            catch (Exception exc)
-            {
-                throw new WorkloadException($"Failed to parse file at '{this.stressNgOutputFilePath}' with text '{text}'.", exc, ErrorReason.InvalidResults);
+                    await this.fileSystem.File.DeleteAsync(this.stressNgOutputFilePath);
+                }
+                catch (Exception exc)
+                {
+                    throw new WorkloadException($"Failed to parse file at '{this.stressNgOutputFilePath}'.", exc, ErrorReason.InvalidResults);
+                }
             }
         }
 

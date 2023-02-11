@@ -74,14 +74,17 @@ namespace VirtualClient.Dependencies
         {
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments))
             {
-                SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill());
+
                 await process.StartAndWaitAsync(cancellationToken, null)
                     .ConfigureAwait(false);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<SpackInstallation>(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                    await this.LogProcessDetailsAsync(process, telemetryContext)
+                        .ConfigureAwait(false);
+
+                    process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
         }

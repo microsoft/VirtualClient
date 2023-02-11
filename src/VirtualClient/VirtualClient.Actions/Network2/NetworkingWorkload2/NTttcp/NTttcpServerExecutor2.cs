@@ -355,7 +355,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
+                            await this.CaptureMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
                                 .ConfigureAwait(false);
                         }
                     }

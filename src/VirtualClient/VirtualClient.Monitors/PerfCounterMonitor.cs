@@ -201,8 +201,7 @@ namespace VirtualClient.Monitors
             string command = "atop";
             string commandArguments = $"-j 1 {totalSamples}";
 
-            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);
+            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -213,8 +212,7 @@ namespace VirtualClient.Monitors
                         this.CleanupTasks.Add(() => process.SafeKill());
 
                         DateTime startTime = DateTime.UtcNow;
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken);
 
                         DateTime endTime = DateTime.UtcNow;
 
@@ -224,7 +222,7 @@ namespace VirtualClient.Monitors
                             {
                                 // We cannot log the process details here. The output is too large.
                                 // this.Logger.LogProcessDetails<PerfCounterMonitor>(process, EventContext.Persisted());
-                                process.ThrowIfErrored<MonitorException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.MonitorFailed);
+                                process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
 
                                 if (process.StandardOutput.Length > 0)
                                 {
@@ -241,7 +239,7 @@ namespace VirtualClient.Monitors
                             {
                                 // We cannot log the process details here. The output is too large. We will log on errors
                                 // though.
-                                this.Logger.LogProcessDetails<PerfCounterMonitor>(process, EventContext.Persisted());
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Atop");
                                 throw;
                             }
                         }

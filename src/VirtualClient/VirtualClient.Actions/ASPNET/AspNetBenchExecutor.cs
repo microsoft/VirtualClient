@@ -8,7 +8,9 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -28,7 +30,6 @@ namespace VirtualClient.Actions
         private string aspnetBenchDirectory;
         private string aspnetBenchDllPath;
         private string bombardierFilePath;
-
         private string serverArgument;
         private string clientArgument;
 
@@ -100,13 +101,10 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             Task serverTask = this.StartAspNetServerAsync(cancellationToken);
-
-            DateTime startTime = DateTime.UtcNow;
-            string output = await this.RunBombardierAsync(cancellationToken).ConfigureAwait(false);
-            DateTime endTime = DateTime.UtcNow;
+            await this.RunBombardierAsync(telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
 
             this.killServer.Invoke();
-            this.LogAspNetBenchOutput(output, startTime, endTime, telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -130,15 +128,15 @@ namespace VirtualClient.Actions
 
             DependencyPath bombardierPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.BombardierPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
-            string bombardierDirectory = bombardierPackage.Path;
 
-            this.bombardierFilePath = this.Combine(
-                bombardierDirectory, 
-                this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
-            await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken).ConfigureAwait(false);
+            this.bombardierFilePath = this.Combine(bombardierPackage.Path, this.Platform == PlatformID.Unix ? "bombardier" : "bombardier.exe");
+
+            await this.systemManagement.MakeFileExecutableAsync(this.bombardierFilePath, this.Platform, cancellationToken)
+                .ConfigureAwait(false);
 
             DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(this.DotNetSdkPackageName, CancellationToken.None)
                 .ConfigureAwait(false);
+
             if (dotnetSdkPackage == null)
             {
                 throw new DependencyException(
@@ -146,9 +144,7 @@ namespace VirtualClient.Actions
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            this.dotnetExePath = this.Combine(
-                dotnetSdkPackage.Path, 
-                this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
+            this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
 
             // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net6.0
             // Build the aspnetbenchmark project
@@ -165,31 +161,67 @@ namespace VirtualClient.Actions
                 "Benchmarks.dll");
         }
 
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext)
+        {
+            try
+            {
+                BombardierMetricsParser parser = new BombardierMetricsParser(process.StandardOutput.ToString());
+
+                this.Logger.LogMetrics(
+                    toolName: "AspNetBench",
+                    scenarioName: $"ASP.NET_{this.TargetFramework}_Performance",
+                    process.StartTime,
+                    process.ExitTime,
+                    parser.Parse(),
+                    metricCategorization: "json",
+                    scenarioArguments: $"Client: {this.clientArgument} | Server: {this.serverArgument}",
+                    this.Tags,
+                    telemetryContext);
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException($"Failed to parse bombardier output.", exc, ErrorReason.InvalidResults);
+            }
+        }
+
         private Task StartAspNetServerAsync(CancellationToken cancellationToken)
         {
-            // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http --header "Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7" --header "Connection: keep-alive" 
+            // Example:
+            // dotnet <path_to_binary>\Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:5000 --server Kestrel --kestrelTransport Sockets --protocol http
+            // --header "Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7" --header "Connection: keep-alive" 
+
             string options = $"--nonInteractive true --scenarios json --urls http://localhost:{this.Port} --server Kestrel --kestrelTransport Sockets --protocol http";
             string headers = @"--header ""Accept: application/json,text/html;q=0.9,application/xhtml+xml;q=0.9,application/xml;q=0.8,*/*;q=0.7"" --header ""Connection: keep-alive""";
             this.serverArgument = $"{this.aspnetBenchDllPath} {options} {headers}";
 
-            return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, cancellationToken, true);
+            return this.ExecuteCommandAsync(this.dotnetExePath, this.serverArgument, this.aspnetBenchDirectory, cancellationToken, isServer: true);
         }
 
-        private Task<string> RunBombardierAsync(CancellationToken cancellationToken)
+        private async Task RunBombardierAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // https://pkg.go.dev/github.com/codesenberg/bombardier
-            // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
-            this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:{this.Port}/json --print r --format json";
-
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                return this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, cancellationToken);
+                // https://pkg.go.dev/github.com/codesenberg/bombardier
+                // ./bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:5000/json --print r --format json
+                this.clientArgument = $"--duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:{this.Port}/json --print r --format json";
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.bombardierFilePath, this.clientArgument, this.aspnetBenchDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process, telemetryContext);
+                    }
+                }
             }
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, bool isServer = false)
+        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken, bool isServer = false)
         {
-            string output = string.Empty;
             if (!cancellationToken.IsCancellationRequested)
             {
                 this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
@@ -198,59 +230,27 @@ namespace VirtualClient.Actions
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
 
-                await this.Logger.LogMessageAsync($"{nameof(AspNetBenchExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
+                    if (isServer)
                     {
-                        if (isServer)
-                        {
-                            this.killServer = () => process.SafeKill();
-                        }
+                        this.killServer = () => process.SafeKill();
+                    }
 
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                         
-                        if (!cancellationToken.IsCancellationRequested)
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                        if (!isServer)
                         {
-                            this.Logger.LogProcessDetails<AspNetBenchExecutor>(process, telemetryContext);
-
-                            if (!isServer)
-                            {
-                                // We will kill the server at the end, exit code is -1, and we don't want it to log as failure.
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                            }
-
-                            output = process.StandardOutput.ToString();
+                            // We will kill the server at the end, exit code is -1, and we don't want it to log as failure.
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
-                }).ConfigureAwait(false);
-            }
-
-            return output;
-        }
-
-        private void LogAspNetBenchOutput(string text, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // Unfortunately bombardier is transiently flaky and returns empty output.
-            if (!cancellationToken.IsCancellationRequested && !string.IsNullOrWhiteSpace(text))
-            {
-                try
-                {
-                    BombardierMetricsParser parser = new BombardierMetricsParser(text);
-                    this.Logger.LogMetrics(
-                        toolName: "AspNetBench",
-                        scenarioName: $"ASP.NET {this.TargetFramework} Performance",
-                        startTime,
-                        endTime,
-                        parser.Parse(),
-                        metricCategorization: "json",
-                        scenarioArguments: $"Client: {this.clientArgument} | Server: {this.serverArgument}",
-                        this.Tags,
-                        telemetryContext);
-                }
-                catch (Exception exc)
-                {
-                    throw new WorkloadException($"Failed to parse bombardier output '{text}'.", exc, ErrorReason.InvalidResults);
                 }
             }
         }

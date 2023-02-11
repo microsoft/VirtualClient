@@ -50,6 +50,9 @@ namespace VirtualClient.Common
         public virtual int ExitCode => this.UnderlyingProcess.ExitCode;
 
         /// <inheritdoc />
+        public DateTime ExitTime => this.UnderlyingProcess.ExitTime.ToUniversalTime();
+
+        /// <inheritdoc />
         public IntPtr? Handle => this.UnderlyingProcess?.Handle;
 
         /// <inheritdoc />
@@ -122,6 +125,9 @@ namespace VirtualClient.Common
 
         /// <inheritdoc />
         public ProcessStartInfo StartInfo => this.UnderlyingProcess.StartInfo;
+
+        /// <inheritdoc />
+        public DateTime StartTime => this.UnderlyingProcess.StartTime.ToUniversalTime();
 
         /// <summary>
         /// Gets the underlying process itself.

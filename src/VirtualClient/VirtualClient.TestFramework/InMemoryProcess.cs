@@ -44,6 +44,11 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// The exit time for the process.
+        /// </summary>
+        public DateTime ExitTime { get; private set; }
+
+        /// <summary>
         /// The fake process ID.
         /// </summary>
         public int Id { get; set; }
@@ -76,7 +81,19 @@ namespace VirtualClient
         /// <summary>
         /// Has the fake process exited?
         /// </summary>
-        public bool HasExited => this.OnHasExited?.Invoke() ?? false;
+        public bool HasExited
+        {
+            get
+            {
+                bool hasExited = this.OnHasExited?.Invoke() ?? false;
+                if (hasExited)
+                {
+                    this.ExitTime = DateTime.UtcNow;
+                }
+
+                return hasExited;
+            }
+        }
 
         /// <summary>
         /// Redirect standard error for the fake process.
@@ -106,6 +123,11 @@ namespace VirtualClient
         /// The start info for the fake process.
         /// </summary>
         public ProcessStartInfo StartInfo { get; set; }
+
+        /// <summary>
+        /// The start time for the process.
+        /// </summary>
+        public DateTime StartTime { get; private set; }
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 
@@ -162,6 +184,7 @@ namespace VirtualClient
         public bool Start()
         {
             this.Executed = true;
+            this.StartTime = DateTime.UtcNow;
             return this.OnStart?.Invoke() ?? true;
         }
 

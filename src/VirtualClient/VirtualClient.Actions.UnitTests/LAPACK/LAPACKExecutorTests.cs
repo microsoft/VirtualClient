@@ -154,10 +154,12 @@ namespace VirtualClient.Actions
             this.currentDirectoryPath = new DependencyPath("LAPACK", currentDirectory);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
+
             resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\LAPACK\LAPACKResultsExample.txt");
             this.rawString = File.ReadAllText(resultsPath);
-            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
-                .Returns(this.rawString);
+
+            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.rawString);
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;

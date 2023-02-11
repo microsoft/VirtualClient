@@ -53,6 +53,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             {
                                 if (!process.Start())
                                 {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+
                                     // ************** Server will throw 137 sometimes
                                     // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
                                     // ************** Need investigation
@@ -64,8 +66,8 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromSeconds(this.TestDuration + 10);
-                                await this.WaitAsync(serverWaitTime, cancellationToken)
-                                    .ConfigureAwait(false);
+                                await this.WaitAsync(serverWaitTime, cancellationToken);
+                                await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
                             }
                         }
                         catch (Exception exc)
@@ -73,10 +75,6 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                             process.SafeKill();
                             throw;
-                        }
-                        finally
-                        {
-                            this.Logger.LogProcessDetails<LatteServerExecutor>(process, relatedContext);
                         }
                     }).ConfigureAwait(false);
                 }
@@ -100,7 +98,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// <summary>
         /// Not applicable on the server-side
         /// </summary>
-        protected override Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected override Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             // Sockperf server-side does not generate results.
             return Task.CompletedTask;

@@ -192,37 +192,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the timeout to use when confirming the server is online.
         /// </summary>
-        protected TimeSpan ServerOnlinePollingTimeout { get; set; }                 
+        protected TimeSpan ServerOnlinePollingTimeout { get; set; }
 
         /// <summary>
         /// The retry policy to apply to the client-side execution workflow.
         /// </summary>
         private IAsyncPolicy ClientExecutionRetryPolicy { get; set; }
-
-        /// <inheritdoc/>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            await base.InitializeAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            // Validating CPS parameters
-            if (this.TestDuration <= 0)
-            {
-                throw new WorkloadException("Test duration cannot be equal or less than zero for CPS workload", ErrorReason.InstructionsNotValid);
-            }
-            else if (this.WarmupTime >= this.TestDuration)
-            {
-                throw new WorkloadException("WarmpUp time must be less than test duration for CPS workload", ErrorReason.InstructionsNotValid);
-            }
-            else if (this.DelayTime >= this.TestDuration)
-            {
-                throw new WorkloadException("Delay time must be less than test duration for CPS workload", ErrorReason.InstructionsNotValid);
-            }
-            else if ((this.DelayTime + this.WarmupTime) >= this.TestDuration)
-            {
-                throw new WorkloadException("Sum of delay time and WarmUp time must be less than test duration for CPS workload", ErrorReason.InstructionsNotValid);
-            }
-        }
 
         /// <summary>
         /// Executes client side of workload
@@ -246,7 +221,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             if (!string.IsNullOrWhiteSpace(this.Results))
             {
@@ -271,6 +246,31 @@ namespace VirtualClient.Actions
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Validates the parameters provided to the executor.
+        /// </summary>
+        protected override void ValidateParameters()
+        {
+            base.ValidateParameters();
+
+            if (this.TestDuration <= 0)
+            {
+                throw new WorkloadException($"'{nameof(this.TestDuration)}' cannot be less than or equal to zero.", ErrorReason.InstructionsNotValid);
+            }
+            else if (this.WarmupTime >= this.TestDuration)
+            {
+                throw new WorkloadException($"'{nameof(this.WarmupTime)}' must be less than '{nameof(this.TestDuration)}'.", ErrorReason.InstructionsNotValid);
+            }
+            else if (this.DelayTime >= this.TestDuration)
+            {
+                throw new WorkloadException($"'{nameof(this.DelayTime)}' must be less than '{nameof(this.TestDuration)}'.", ErrorReason.InstructionsNotValid);
+            }
+            else if ((this.DelayTime + this.WarmupTime) >= this.TestDuration)
+            {
+                throw new WorkloadException($"The sum of the time ranges for '{nameof(this.DelayTime)}' and '{nameof(this.WarmupTime)}' time must be less than '{nameof(this.TestDuration)}',", ErrorReason.InstructionsNotValid);
+            }
         }
 
         private async Task ResetServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -401,7 +401,7 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                await this.LogMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
+                await this.CaptureMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
                     .ConfigureAwait(false);
             }
 

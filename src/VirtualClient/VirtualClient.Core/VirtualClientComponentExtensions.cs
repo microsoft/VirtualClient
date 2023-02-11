@@ -1,20 +1,20 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Core
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Polly;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.BlobDescriptor;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -24,6 +24,81 @@ namespace VirtualClient.Core
     {
         private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
             .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(100 * retries));
+
+        /// <summary>
+        /// Executes a command within an isolated process.
+        /// </summary>
+        /// <param name="component">The component that is executing the process/command.</param>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <returns>The process that executed the command.</returns>
+        public static Task<IProcessProxy> ExecuteCommandAsync(
+            this VirtualClientComponent component,
+            string command,
+            string workingDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            bool runElevated = false)
+        {
+            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated);
+        }
+
+        /// <summary>
+        /// Executes a command within an isolated process.
+        /// </summary>
+        /// <param name="component">The component that is executing the process/command.</param>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="commandArguments">The arguments to supply to the command.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <returns>The process that executed the command.</returns>
+        public static async Task<IProcessProxy> ExecuteCommandAsync(
+            this VirtualClientComponent component,
+            string command,
+            string commandArguments,
+            string workingDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            bool runElevated = false)
+        {
+            component.ThrowIfNull(nameof(component));
+            command.ThrowIfNullOrWhiteSpace(nameof(command));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext(nameof(command), command)
+                .AddContext(nameof(commandArguments), commandArguments)
+                .AddContext(nameof(workingDirectory), workingDirectory)
+                .AddContext(nameof(runElevated), runElevated);
+
+            IProcessProxy process = null;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                ProcessManager processManager = component.Dependencies.GetService<ProcessManager>();
+
+                if (!runElevated)
+                {
+                    process = processManager.CreateProcess(command, commandArguments, workingDirectory);
+                }
+                else
+                {
+                    process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory);
+                }
+
+                component.CleanupTasks.Add(() => process.SafeKill());
+                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
+
+                await process.StartAndWaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return process;
+        }
 
         /// <summary>
         /// Upload a single file with defined BlobDescriptor.

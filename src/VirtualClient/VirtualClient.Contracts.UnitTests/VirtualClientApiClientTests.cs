@@ -15,6 +15,7 @@ namespace VirtualClient
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
     using VirtualClient.TestExtensions;
 

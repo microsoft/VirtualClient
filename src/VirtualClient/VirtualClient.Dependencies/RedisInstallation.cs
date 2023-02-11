@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Polly;
-using VirtualClient.Common;
-using VirtualClient.Common.Extensions;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
-
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Polly;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     /// <summary>
     /// Provides functionality for installing specific version of Redis on linux.
     /// </summary>
@@ -102,11 +102,11 @@ namespace VirtualClient.Dependencies
             else
             {
                 throw new WorkloadException(
-                            $"Redis Installation is not supported on the current platform '{this.Platform}'." +
-                            $"Supported Platforms include:" +
-                            $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                            $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                            ErrorReason.PlatformNotSupported);
+                    $"Redis Installation is not supported on the current platform '{this.Platform}'." +
+                    $"Supported Platforms include:" +
+                    $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
+                    $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
+                    ErrorReason.PlatformNotSupported);
             }
 
         }
@@ -130,33 +130,35 @@ namespace VirtualClient.Dependencies
             await this.ExecuteCommandAsync("tar", $"-xvzf {this.Version}.tar.gz", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
-            string redisInstallationPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"redis-{this.Version}");
+            string redisInstallationPath = this.Combine(this.PlatformSpecifics.PackagesDirectory, $"redis-{this.Version}");
 
             DependencyPath redisPackage = new DependencyPath(RedisInstallation.RedisPackage, redisInstallationPath);
 
-            await this.systemManager.PackageManager.RegisterPackageAsync(redisPackage, cancellationToken).ConfigureAwait(false);
+            await this.systemManager.PackageManager.RegisterPackageAsync(redisPackage, cancellationToken)
+                .ConfigureAwait(false);
 
             await this.ExecuteCommandAsync("make", null, redisPackage.Path, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                .ConfigureAwait(false);
         }
 
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
-                string output = string.Empty;
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<RedisInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

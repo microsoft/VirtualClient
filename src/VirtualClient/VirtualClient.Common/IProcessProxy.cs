@@ -7,7 +7,6 @@ namespace VirtualClient.Common
     using System.Collections.Specialized;
     using System.Diagnostics;
     using System.IO;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -36,6 +35,11 @@ namespace VirtualClient.Common
         /// Gets the exit code for the underlying process.
         /// </summary>
         int ExitCode { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        DateTime ExitTime { get; }
 
         /// <summary>
         /// A pointer to the process module control handle.
@@ -68,22 +72,27 @@ namespace VirtualClient.Common
         /// <summary>
         /// Standard error stream for the process.
         /// </summary>
-        public ConcurrentBuffer StandardError { get; }
+        ConcurrentBuffer StandardError { get; }
 
         /// <summary>
         /// Standard error stream for the process.
         /// </summary>
-        public ConcurrentBuffer StandardOutput { get; }
+        ConcurrentBuffer StandardOutput { get; }
 
         /// <summary>
         /// Standard input for the process.
         /// </summary>
-        public StreamWriter StandardInput { get; }
+        StreamWriter StandardInput { get; }
 
         /// <summary>
         /// Gets the process start information.
         /// </summary>
         ProcessStartInfo StartInfo { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        DateTime StartTime { get; }
 
         /// <summary>
         /// Promptly terminates/kills the underlying process without waiting for a

@@ -9,17 +9,14 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// The MLPerf workload executor.
@@ -27,6 +24,9 @@ namespace VirtualClient.Actions
     [UnixCompatible]
     public class MLPerfExecutor : VirtualClientComponent
     {
+        private const string AccuracySummary = nameof(MLPerfExecutor.AccuracySummary);
+        private const string PerformanceSummary = nameof(MLPerfExecutor.PerformanceSummary);
+
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private IStateManager stateManager;
@@ -124,9 +124,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
-
             this.PrepareBenchmarkConfigsAndScenarios();
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -143,14 +140,36 @@ namespace VirtualClient.Actions
                         $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
                         $"--config_ver={config} --test_mode=AccuracyOnly --fast\'\"";
 
-                    await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, cancellationToken);
-                    await this.ExecuteCommandAsync("sudo", accuracyModeExecCommand, this.NvidiaDirectory, cancellationToken);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait())
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.PerformanceSummary)
+                                .ConfigureAwait();
+                        }
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", accuracyModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken)
+                       .ConfigureAwait())
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.AccuracySummary)
+                                .ConfigureAwait();
+                        }
+                    }
                 }
             }
-
-            DateTime endTime = DateTime.UtcNow;
-            this.LogOutput(startTime, endTime, telemetryContext);
-            this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionCompleted", telemetryContext);
         }
 
         /// <summary>
@@ -184,7 +203,7 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                     makefileFilePath, "DOCKER_INTERACTIVE_FLAGS = -it", "DOCKER_INTERACTIVE_FLAGS = -i -d", cancellationToken);
 
-                await this.CreateSetUp(cancellationToken);
+                await this.SetupEnvironmentAsync(cancellationToken);
                 state.Initialized = true;
                 await this.stateManager.SaveStateAsync<MLPerfState>($"{nameof(MLPerfState)}", state, cancellationToken);
             }
@@ -270,7 +289,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns></returns>
-        protected async Task CreateSetUp(CancellationToken cancellationToken)
+        protected async Task SetupEnvironmentAsync(CancellationToken cancellationToken)
         {
             string dockerExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()}";
 
@@ -332,6 +351,70 @@ namespace VirtualClient.Actions
                 this.NvidiaDirectory, 
                 cancellationToken);
 
+        }
+
+        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
+        {
+            if (context == MLPerfExecutor.AccuracySummary)
+            {
+                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "accuracy_summary.json", SearchOption.AllDirectories);
+
+                foreach (string file in resultsFiles)
+                {
+                    string results = await this.fileSystem.File.ReadAllTextAsync(file)
+                        .ConfigureAwait(false);
+
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
+                    IList<Metric> metrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        "MLPerf",
+                        this.Scenario,
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        "AccuracyMode",
+                        null,
+                        this.Tags,
+                        telemetryContext);
+
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results, logToFile: true)
+                        .ConfigureAwait(false);
+
+                    await this.fileSystem.File.DeleteAsync(file)
+                        .ConfigureAwait(false);
+                }
+            }
+            else if (context == MLPerfExecutor.PerformanceSummary)
+            {
+                string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "perf_harness_summary.json", SearchOption.AllDirectories);
+
+                foreach (string file in resultsFiles)
+                {
+                    string results = await this.fileSystem.File.ReadAllTextAsync(file)
+                        .ConfigureAwait(false);
+
+                    MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
+                    IList<Metric> metrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        "MLPerf",
+                        this.Scenario,
+                        process.StartTime,
+                        process.ExitTime,
+                        metrics,
+                        "AccuracyMode",
+                        null,
+                        this.Tags,
+                        telemetryContext);
+
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results, logToFile: true)
+                        .ConfigureAwait(false);
+
+                    await this.fileSystem.File.DeleteAsync(file)
+                        .ConfigureAwait(false);
+                }
+            }
         }
 
         private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
@@ -414,17 +497,15 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(MLPerfExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    DateTime start = DateTime.Now;
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(
-                        this.Platform, pathToExe, commandLineArguments, workingDirectory))
+                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<MLPerfExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
                 }).ConfigureAwait(false);
@@ -474,57 +555,6 @@ namespace VirtualClient.Actions
             filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, System.PlatformID.Unix).ToList();
 
             return filteredDisks;
-        }
-
-        private void LogOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext)
-        {
-            string[] outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "accuracy_summary.json", SearchOption.AllDirectories);
-
-            foreach (string file in outputFiles)
-            {
-                string text = this.fileSystem.File.ReadAllText(file);
-                bool accuracyMode = true;
-
-                MLPerfMetricsParser parser = new MLPerfMetricsParser(text, accuracyMode);
-                IList<Metric> metrics = parser.Parse();
-
-                this.Logger.LogMetrics(
-                    "MLPerf",
-                    this.Scenario,
-                    startTime,
-                    endTime,
-                    metrics,
-                    "AccuracyMode",
-                    null,
-                    this.Tags,
-                    telemetryContext);
-
-                this.fileSystem.File.Delete(file);
-            }
-
-            outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "perf_harness_summary.json", SearchOption.AllDirectories);
-
-            foreach (string file in outputFiles)
-            {
-                string text = this.fileSystem.File.ReadAllText(file);
-                bool accuracyMode = false;
-
-                MLPerfMetricsParser parser = new MLPerfMetricsParser(text, accuracyMode);
-                IList<Metric> metrics = parser.Parse();
-
-                this.Logger.LogMetrics(
-                    "MLPerf",
-                    this.Scenario,
-                    startTime,
-                    endTime,
-                    metrics,
-                    "PerformanceMode",
-                    null,
-                    this.Tags,
-                    telemetryContext);
-
-                this.fileSystem.File.Delete(file);
-            }
         }
 
         internal class MLPerfState : State

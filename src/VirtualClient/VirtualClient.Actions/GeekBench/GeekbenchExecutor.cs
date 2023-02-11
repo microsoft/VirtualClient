@@ -74,12 +74,7 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteWorkloadAsync(this.ExecutablePath, commandLineArguments, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                DateTime endTime = DateTime.UtcNow;
-                this.CaptureWorkloadResults(this.ResultsFilePath, commandLineArguments, startTime, endTime, telemetryContext, cancellationToken);
+                await this.ExecuteWorkloadAsync(this.ExecutablePath, commandLineArguments, telemetryContext, cancellationToken);
             }
         }
 
@@ -88,8 +83,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             if (workloadPackage == null)
             {
@@ -121,8 +115,7 @@ namespace VirtualClient.Actions
                     {
                         if (this.fileSystem.File.Exists(path))
                         {
-                            await this.systemManagement.MakeFileExecutableAsync(path, this.Platform, CancellationToken.None)
-                                .ConfigureAwait(false);
+                            await this.systemManagement.MakeFileExecutableAsync(path, this.Platform, CancellationToken.None);
                         }
                     }
 
@@ -139,8 +132,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureWorkloadResults(
-            string resultsFilePath, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -151,8 +143,8 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string json = this.fileSystem.File.ReadAllText(resultsFilePath);
-                if (!GeekbenchResult.TryParseGeekbenchResult(json, out GeekbenchResult geekbenchResult))
+                string resultsJson = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath);
+                if (!GeekbenchResult.TryParseGeekbenchResult(resultsJson, out GeekbenchResult geekbenchResult))
                 {
                     throw new WorkloadException(
                         $"The content of the GeekBench results file at path '{resultsFilePath}' content could not be parsed as valid JSON.",
@@ -167,8 +159,8 @@ namespace VirtualClient.Actions
                     this.Logger.LogMetrics(
                         "Geekbench5",
                         result.Key,
-                        startTime,
-                        endTime,
+                        process.StartTime,
+                        process.ExitTime,
                         metric.Name,
                         metric.Value,
                         metric.Unit,
@@ -208,15 +200,13 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Geekbench5");
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<GeekbenchExecutor>(process, telemetryContext);
-
-                            process.ThrowIfErrored<WorkloadException>(
-                                ProcessProxy.DefaultSuccessCodes,
-                                errorReason: ErrorReason.WorkloadFailed);
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
                     finally

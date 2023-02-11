@@ -5,9 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Text.RegularExpressions;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -31,16 +29,25 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Metrics = new List<Metric>();
-            Regex resultRegex = new Regex($@"Final Summary::HPCG result is VALID with a GFLOP\/s rating of={TextParsingExtensions.DoubleTypeRegex}", RegexOptions.Multiline);
-            Match match = Regex.Match(this.PreprocessedText, resultRegex.ToString(), resultRegex.Options);
-            if (match.Success)
+            try
             {
-                this.Metrics.Add(new Metric($"Total {Gflops}", Convert.ToDouble(match.Groups[1].Value), HpcgMetricsParser.Gflops, MetricRelativity.HigherIsBetter));
-            }
+                this.Preprocess();
 
-            return this.Metrics;
+                this.Metrics = new List<Metric>();
+                Regex resultRegex = new Regex($@"Final Summary::HPCG result is VALID with a GFLOP\/s rating of={TextParsingExtensions.DoubleTypeRegex}", RegexOptions.Multiline);
+                Match match = Regex.Match(this.PreprocessedText, resultRegex.ToString(), resultRegex.Options);
+
+                if (match.Success)
+                {
+                    this.Metrics.Add(new Metric($"Total {Gflops}", Convert.ToDouble(match.Groups[1].Value), HpcgMetricsParser.Gflops, MetricRelativity.HigherIsBetter));
+                }
+
+                return this.Metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse the HPCG metrics from the results.", exc, ErrorReason.InvalidResults);
+            }
         }
     }
 }

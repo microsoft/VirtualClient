@@ -257,7 +257,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             if (!string.IsNullOrWhiteSpace(this.Results))
             {
@@ -348,7 +348,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
+                            await this.CaptureMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
                                 .ConfigureAwait(false);
                         }
                     }

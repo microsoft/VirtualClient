@@ -70,6 +70,7 @@ namespace VirtualClient.Actions
                 {
                     await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     await this.SetOrUpdateServerCopiesParameter(cancellationToken).ConfigureAwait(false);
+
                     if (!this.IsMultiRoleLayout())
                     {
                         await this.ExecuteServerWorkload(cancellationToken).ConfigureAwait(false);
@@ -144,6 +145,7 @@ namespace VirtualClient.Actions
             {
                 int port = int.Parse(this.Port) + i;
                 string precommand = string.Empty;
+
                 if (long.Parse(this.Bind) == 1)
                 {
                     int core = i;
@@ -154,9 +156,10 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogTraceMessage($"Executing process '{startservercommand}'  at directory '{this.PackagePath}'.");
                 this.process = this.ProcessManager.CreateElevatedProcess(this.Platform, startservercommand, null, this.PackagePath);
+
                 if (!this.process.Start())
                 {
-                    throw new WorkloadException($"The API server workload did not start as expected.", ErrorReason.WorkloadFailed);
+                    throw new WorkloadException($"The Memcached server workload did not start as expected.", ErrorReason.WorkloadFailed);
                 }
 
                 await this.WarmUpServer(port, cancellationToken).ConfigureAwait(false);
@@ -168,9 +171,12 @@ namespace VirtualClient.Actions
         {
             await this.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
 
-            string warmupservercommand = $"-u {this.Username} {this.MemtierPackagePath}/memtier_benchmark --protocol={this.Protocol} --server localhost --port={port} -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys";
-            await this.ExecuteCommandAsync<MemcachedServerExecutor>(warmupservercommand, null, this.PackagePath, cancellationToken)
-            .ConfigureAwait(false);
+            string warmupservercommand = 
+                $"-u {this.Username} {this.MemtierPackagePath}/memtier_benchmark --protocol={this.Protocol} --server localhost --port={port} -c 1 -t 1 " +
+                $"--pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys";
+
+            await this.ExecuteCommandAsync(warmupservercommand, null, this.PackagePath, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private async Task SetOrUpdateServerCopiesParameter(CancellationToken cancellationToken)
@@ -182,7 +188,7 @@ namespace VirtualClient.Actions
             });
 
             HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(this.ServerCopiesCount), JObject.FromObject(this.ServerCopiesCount), cancellationToken)
-                   .ConfigureAwait(false);
+                .ConfigureAwait(false);
 
             response.ThrowOnError<WorkloadException>();
         }
@@ -197,9 +203,8 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{nameof(MemcachedServerExecutor)}.ResetState", telemetryContext, async () =>
             {
-                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(
-                                                            nameof(this.ServerCopiesCount),
-                                                            cancellationToken).ConfigureAwait(false);
+                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(nameof(this.ServerCopiesCount), cancellationToken)
+                    .ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.NoContent)
                 {

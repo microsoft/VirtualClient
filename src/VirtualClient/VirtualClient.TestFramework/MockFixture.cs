@@ -183,6 +183,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Combines the path segments into a valid log file path.
+        /// </summary>
+        public string GetLogsPath(params string[] pathSegments)
+        {
+            return this.PlatformSpecifics.GetLogsPath(pathSegments);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid default packages path.
         /// </summary>
         public string GetPackagePath(params string[] pathSegments)
@@ -290,6 +298,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(() => this.FileSystem.Object);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(() => this.FirewallManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
+            this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
@@ -310,6 +319,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<ISystemInfo>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
+            this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);

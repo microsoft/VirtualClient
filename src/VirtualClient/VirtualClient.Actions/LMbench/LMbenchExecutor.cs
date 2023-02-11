@@ -63,29 +63,23 @@ namespace VirtualClient.Actions
             try
             {
                 this.Cleanup();
-
-                DateTime startTime = DateTime.UtcNow;
-                await this.ExecuteWorkloadAsync("make", "results", telemetryContext, cancellationToken).ConfigureAwait(false);
-                DateTime endTime = DateTime.UtcNow;
+                await this.ExecuteWorkloadAsync("make", "results", telemetryContext, cancellationToken).ConfigureAwait();
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", "see", this.LMbenchDirectory))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
-
-                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-                    {
-                        await process.StartAndWaitAsync(cancellationToken)
-                           .ConfigureAwait(false);
-                    }
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<LMbenchExecutor>(process, telemetryContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
+                            .ConfigureAwait();
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.WorkloadFailed);
 
                         if (process.StandardOutput.Length > 0)
                         {
-                            this.CaptureWorkloadResults(process.StandardOutput.ToString(), startTime, endTime, telemetryContext, cancellationToken);
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
                         }
                     }
                 }
@@ -126,18 +120,18 @@ namespace VirtualClient.Actions
             this.resultsDirectory = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results");
         }
 
-        private void CaptureWorkloadResults(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                LMbenchMetricsParser parser = new LMbenchMetricsParser(results);
+                LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(
                     toolName: "LMbench",
                     scenarioName: "LMbench",
-                    startTime,
-                    endTime,
+                    process.StartTime,
+                    process.ExitTime,
                     metrics,
                     metricCategorization: null,
                     scenarioArguments: "make results",
@@ -175,15 +169,21 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(LMbenchExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, this.LMbenchDirectory))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                    if (!cancellationToken.IsCancellationRequested)
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, this.LMbenchDirectory))
                     {
-                        this.Logger.LogProcessDetails<LMbenchExecutor>(process, telemetryContext);
-                        process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        this.CleanupTasks.Add(() => process.SafeKill());
+
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
+                                .ConfigureAwait(false);
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        }
                     }
                 }
             });

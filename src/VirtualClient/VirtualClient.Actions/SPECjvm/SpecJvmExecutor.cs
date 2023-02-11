@@ -76,17 +76,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the SPECjvm workload.
         /// </summary>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string commandLineArguments = this.GetCommandLineArguments();
-            
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, cancellationToken)
-                .ConfigureAwait(false);
 
-            DateTime endTime = DateTime.UtcNow;
-
-            this.LogSPECjvmOutput(startTime, endTime, telemetryContext, cancellationToken);
+            return this.ExecuteWorkloadAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, cancellationToken);
         }
 
         /// <summary>
@@ -120,12 +114,10 @@ namespace VirtualClient.Actions
             this.javaExecutableDirectory = javaExecutable.Metadata[PackageMetadata.ExecutablePath].ToString();
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
                 EventContext telemetryContext = EventContext.Persisted()
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
@@ -137,14 +129,16 @@ namespace VirtualClient.Actions
                         using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                         {
                             this.CleanupTasks.Add(() => process.SafeKill());
+                            this.LogProcessTrace(process);
                             await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                             await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.Logger.LogProcessDetails<SpecJvmExecutor>(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm");
+                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                             }
                         }
                     }
@@ -152,30 +146,33 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void LogSPECjvmOutput(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 // SPECjvm2008.012.txt
-                string results = this.PlatformSpecifics.Combine(this.packageDirectory, "results");
-                string[] outputFiles = this.fileSystem.Directory.GetFiles(results, "SPECjvm2008.*.txt", SearchOption.AllDirectories);
+                string resultsDirectory = this.PlatformSpecifics.Combine(this.packageDirectory, "results");
+                string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "SPECjvm2008.*.txt", SearchOption.AllDirectories);
 
                 foreach (string file in outputFiles)
                 {
-                    string text = this.fileSystem.File.ReadAllText(file);
-                    SpecJvmMetricsParser parser = new SpecJvmMetricsParser(text);
+                    string results = await this.fileSystem.File.ReadAllTextAsync(file);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results, logToFile: true);
+
+                    SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results);
+
                     this.Logger.LogMetrics(
                         toolName: "SPECjvm",
                         scenarioName: "SPECjvm",
-                        startTime,
-                        endTime,
+                        process.StartTime,
+                        process.ExitTime,
                         parser.Parse(),
                         metricCategorization: "SPECjvm",
-                        scenarioArguments: this.GetCommandLineArguments(),
+                        scenarioArguments: commandArguments,
                         this.Tags,
                         telemetryContext);
 
-                    this.fileSystem.File.Delete(file);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
         }

@@ -1,20 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Polly;
-using VirtualClient.Common;
-using VirtualClient.Common.Extensions;
-using VirtualClient.Common.Telemetry;
-using VirtualClient.Contracts;
-
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Polly;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
     /// <summary>
     /// Provides functionality for installing specific version of memtier on linux.
     /// </summary>
@@ -124,32 +124,38 @@ namespace VirtualClient.Dependencies
 
             await this.ExecuteCommandAsync("git", $"checkout {this.Version}", memtierPackage.Path, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync("autoreconf -ivf", null, memtierPackage.Path, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync("./configure", null, memtierPackage.Path, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
             await this.ExecuteCommandAsync("make", null, memtierPackage.Path, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
-            await this.systemManager.PackageManager.RegisterPackageAsync(memtierPackage, cancellationToken).ConfigureAwait(false);
+
+            await this.systemManager.PackageManager.RegisterPackageAsync(memtierPackage, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone();
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
                     SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                    this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
+                    this.LogProcessTrace(process);
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<MemtierInstallation>(process, relatedContext);
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                            .ConfigureAwait(false);
+
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
             });

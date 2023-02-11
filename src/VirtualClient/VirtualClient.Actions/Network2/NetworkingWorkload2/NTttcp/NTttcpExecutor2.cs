@@ -348,7 +348,11 @@ namespace VirtualClient.Actions
         {
             IProcessProxy process = null;
 
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("command", this.ExecutablePath)
+                .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -358,36 +362,32 @@ namespace VirtualClient.Actions
                         {
                             try
                             {
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
+                                this.CleanupTasks.Add(() => process.SafeKill());
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp");
+                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                                    await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
+
+                                    string results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsPath);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", logToFile: true);
+                                }
                             }
                             catch (TimeoutException exc)
                             {
                                 // We give this a best effort but do not want it to prevent the next workload
                                 // from executing.
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadTimeout", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadTimeout", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                if (this.Role == ClientRole.Client)
-                                {
-                                    this.Logger.LogProcessDetails<NTttcpClientExecutor2>(process, telemetryContext);
-                                }
-                                else
-                                {
-                                    this.Logger.LogProcessDetails<NTttcpServerExecutor2>(process, telemetryContext);
-                                }
-
-                                this.CleanupTasks.Add(() => process.SafeKill());
                             }
                         }
                     }).ConfigureAwait(false);
@@ -400,7 +400,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Logs the workload metrics to the telemetry.
         /// </summary>
-        protected async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
             IFile fileAccess = this.SystemManager.FileSystem.File;
             EventContext relatedContext = telemetryContext.Clone();
@@ -434,8 +434,61 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         relatedContext);
+
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        string sysctlResults = await this.GetSysctlOutputAsync(CancellationToken.None);
+
+                        if (!string.IsNullOrWhiteSpace(sysctlResults))
+                        {
+                            SysctlParser sysctlParser = new SysctlParser(sysctlResults);
+                            string parsedSysctlResults = sysctlParser.Parse();
+
+                            relatedContext.AddContext("sysctlResults", parsedSysctlResults);
+                        }
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the Sysctl command output.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
+        protected Task<string> GetSysctlOutputAsync(CancellationToken cancellationToken)
+        {
+            string sysctlCommand = "sysctl";
+            string sysctlArguments = "net.ipv4.tcp_rmem net.ipv4.tcp_wmem";
+
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("command", sysctlCommand)
+                .AddContext("commandArguments", sysctlArguments);
+
+            return this.Logger.LogMessageAsync($"{nameof(NTttcpExecutor)}.GetSysctlOutput", telemetryContext, async () =>
+            {
+                string results = null;
+                using (IProcessProxy process = this.SystemManager.ProcessManager.CreateProcess(sysctlCommand, sysctlArguments))
+                {
+                    try
+                    {
+                        await process.StartAndWaitAsync(CancellationToken.None);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysctl", logToFile: true);
+                            process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
+
+                            results = process.StandardOutput.ToString();
+                        }
+                    }
+                    finally
+                    {
+                        process.SafeKill();
+                    }
+                }
+
+                return results;
+            });
         }
 
         /// <summary>

@@ -41,6 +41,7 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
@@ -107,7 +108,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -152,7 +153,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -200,7 +201,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -243,7 +244,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 
@@ -286,7 +287,7 @@ namespace VirtualClient.Actions
                     ExitCode = 0,
                     OnStart = () => true,
                     OnHasExited = () => true,
-                    StandardError = this.defaultOutput
+                    StandardOutput = this.defaultOutput
                 };
             };
 

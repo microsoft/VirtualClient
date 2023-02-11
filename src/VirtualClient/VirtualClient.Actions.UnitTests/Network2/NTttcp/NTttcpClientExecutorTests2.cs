@@ -123,12 +123,13 @@ namespace VirtualClient.Actions
             }
             else
             {
-                Assert.AreEqual(2, processExecuted);
+                Assert.AreEqual(3, processExecuted);
                 CollectionAssert.AreEqual(
                 new List<string>
                 {
                     "sudo chmod +x \"" + this.mockFixture.Combine(expectedPath, exe) + "\"",
-                    this.mockFixture.Combine(expectedPath, exe) + " -s -V -m 1,*,1.2.3.5 -W 10 -C 10 -t 300 -b  -x " + this.mockFixture.Combine(expectedPath, "AnyScenario", "ntttcp-results.xml") + " -p 5500  -L -M -n 2 -l 2 --show-dev-interrupts mlx"
+                    this.mockFixture.Combine(expectedPath, exe) + " -s -V -m 1,*,1.2.3.5 -W 10 -C 10 -t 300 -b  -x " + this.mockFixture.Combine(expectedPath, "AnyScenario", "ntttcp-results.xml") + " -p 5500  -L -M -n 2 -l 2 --show-dev-interrupts mlx",
+                    "sysctl net.ipv4.tcp_rmem net.ipv4.tcp_wmem"
                 },
                 commandsExecuted);
             }

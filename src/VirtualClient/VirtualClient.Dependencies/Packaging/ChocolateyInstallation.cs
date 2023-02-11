@@ -63,7 +63,9 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<ChocolateyInstallation>(process, EventContext.Persisted());
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Chocolatey")
+                            .ConfigureAwait(false);
+
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
@@ -71,11 +73,14 @@ namespace VirtualClient.Dependencies
                 // It will install to "%programdata%\chocolatey\bin\choco.exe"
                 string programDataPath = this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramData");
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(programDataPath, "chocolatey", "bin"));
-                await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken).ConfigureAwait(false);
+
+                await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
+                    .ConfigureAwait(false);
 
                 systemManagement.AddDirectoryToPath(this.Combine(programDataPath, "chocolatey", "bin"));
 
-                await systemManagement.RefreshEnvironmentVariableAsync(cancellationToken).ConfigureAwait(false);
+                await systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
     }

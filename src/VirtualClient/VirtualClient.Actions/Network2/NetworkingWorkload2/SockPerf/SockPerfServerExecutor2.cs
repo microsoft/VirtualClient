@@ -252,21 +252,14 @@ namespace VirtualClient.Actions
                     {
                         await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
-                        // Note:
-                        // We found that certain of the workloads do not exit when they are supposed to. We enforce an
-                        // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-                        // Update based on if we want to get it from client
-                        TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
-
                         string commandArguments = this.GetCommandLineArguments();
-
                         this.Logger.LogTraceMessage($"Command: {commandArguments}");
 
                         DateTime startTime = DateTime.UtcNow;
                         List<Task> workloadTasks = new List<Task>
                         {
                             this.ConfirmProcessRunningAsync(state, telemetryContext, cancellationToken),
-                            this.ExecuteWorkloadAsync(commandArguments, workloadTimeout, telemetryContext, cancellationToken)
+                            this.ExecuteWorkloadAsync(commandArguments, telemetryContext, cancellationToken)
                         };
 
                         await Task.WhenAll(workloadTasks).ConfigureAwait(false);
@@ -343,11 +336,15 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IProcessProxy process = null;
 
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+               .AddContext("command", this.ExecutablePath)
+               .AddContext("commandArguments", commandArguments);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -359,6 +356,8 @@ namespace VirtualClient.Actions
                             {
                                 if (!process.Start())
                                 {
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+
                                     // ************** Server will throw 137 sometimes
                                     // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
                                     // ************** Need investigation
@@ -366,21 +365,18 @@ namespace VirtualClient.Actions
                                     process.ThrowIfErrored<WorkloadException>(successCodes, errorReason: ErrorReason.WorkloadFailed);
                                 }
 
+                                this.CleanupTasks.Add(() => process.SafeKill());
+
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromSeconds(this.TestDuration + 10);
-                                await this.WaitAsync(serverWaitTime, cancellationToken)
-                                    .ConfigureAwait(false);
+                                await this.WaitAsync(serverWaitTime, cancellationToken);
+                                await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
                             }
                             catch (Exception exc)
                             {
-                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, telemetryContext.AddError(exc));
+                                this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<SockPerfServerExecutor2>(process, telemetryContext);
-                                this.CleanupTasks.Add(() => process.SafeKill());
                             }
                         }
                     }).ConfigureAwait(false);

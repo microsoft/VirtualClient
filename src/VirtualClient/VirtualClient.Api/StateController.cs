@@ -134,7 +134,7 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30)).ConfigureDefaults();
+                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30));
 
                     Item<JObject> stateInstance = new Item<JObject>(stateId, state);
 
@@ -153,7 +153,7 @@ namespace VirtualClient.Api
                     using (Stream stream = this.FileSystem.FileStream.Create(stateFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                     {
                         byte[] fileContent = Encoding.UTF8.GetBytes(stateInstance.ToJson(StateController.StateSerializationSettings));
-                        await stream.WriteAsync(fileContent, 0, fileContent.Length).ConfigureDefaults();
+                        await stream.WriteAsync(fileContent, 0, fileContent.Length);
 
                         string stateObjectUri = this.Request != null
                             ? $"{this.Request?.Scheme}://{this.Request?.Host}{this.Request?.Path}"
@@ -205,7 +205,7 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30)).ConfigureDefaults();
+                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30));
                     string stateFilePath = this.GetStateFilePath(stateId);
 
                     // We want to handle the case where the state file is being created or updated. During these points
@@ -215,14 +215,14 @@ namespace VirtualClient.Api
                         {
                             try
                             {
-                                await this.FileSystem.File.DeleteAsync(stateFilePath).ConfigureDefaults();
+                                await this.FileSystem.File.DeleteAsync(stateFilePath);
                             }
                             catch (FileNotFoundException)
                             {
                                 // This is ok. So long as the file no longer exists at the end of this API
                                 // call, we've accomplished the desired outcome.
                             }
-                        }).ConfigureDefaults();
+                        });
 
                     response = this.NoContent();
                 }
@@ -276,11 +276,10 @@ namespace VirtualClient.Api
                         .WaitAndRetryAsync(20, (retries) => TimeSpan.FromSeconds(2 * retries)).ExecuteAsync(async () =>
                         {
                             string stateFilePath = this.GetStateFilePath(stateId);
-                            string stateInstance = await this.FileSystem.File.ReadAllTextAsync(stateFilePath, cancellationToken)
-                                .ConfigureDefaults();
+                            string stateInstance = await this.FileSystem.File.ReadAllTextAsync(stateFilePath, cancellationToken);
 
                             response = this.Ok(JObject.Parse(stateInstance));
-                        }).ConfigureDefaults();
+                        });
                 }
                 catch (DirectoryNotFoundException)
                 {
@@ -344,7 +343,7 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30)).ConfigureDefaults();
+                    await StateController.Semaphore.WaitAsync(TimeSpan.FromSeconds(30));
 
                     if (stateId != state.Id)
                     {
@@ -371,7 +370,7 @@ namespace VirtualClient.Api
                         {
                             byte[] fileContent = Encoding.UTF8.GetBytes(state.ToJson(StateController.StateSerializationSettings));
                             stream.SetLength(0);
-                            await stream.WriteAsync(fileContent, 0, fileContent.Length).ConfigureDefaults();
+                            await stream.WriteAsync(fileContent, 0, fileContent.Length);
                             response = this.Ok(state);
                         }
                     }

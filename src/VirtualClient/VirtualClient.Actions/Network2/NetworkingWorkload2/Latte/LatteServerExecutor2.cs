@@ -255,21 +255,14 @@ namespace VirtualClient.Actions
                     {
                         await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
-                        // Note:
-                        // We found that certain of the workloads do not exit when they are supposed to. We enforce an
-                        // absolute timeout to ensure we do not waste too much time with a workload that is stuck.
-                        // Update based on if we want to get it from client
-                        TimeSpan workloadTimeout = TimeSpan.FromSeconds(this.WarmupTime + (this.TestDuration * 2));
-
                         string commandArguments = this.GetCommandLineArguments();
-
                         this.Logger.LogTraceMessage($"Command: {commandArguments}");
 
                         DateTime startTime = DateTime.UtcNow;
                         List<Task> workloadTasks = new List<Task>
                         {
                             this.ConfirmProcessRunningAsync(state, relatedContext, cancellationToken),
-                            this.ExecuteWorkloadAsync(commandArguments, workloadTimeout, relatedContext, cancellationToken)
+                            this.ExecuteWorkloadAsync(commandArguments, relatedContext, cancellationToken)
                         };
 
                         await Task.WhenAll(workloadTasks).ConfigureAwait(false);
@@ -346,7 +339,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, TimeSpan timeout, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task<IProcessProxy> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IProcessProxy process = null;
 
@@ -368,14 +361,16 @@ namespace VirtualClient.Actions
                                 {
                                     if (!process.Start())
                                     {
-                                        this.Logger.LogProcessDetails<LatteServerExecutor2>(process, relatedContext);
-                                        process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+                                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                                     }
+
+                                    this.CleanupTasks.Add(() => process.SafeKill());
 
                                     // Run the server slightly longer than the test duration.
                                     TimeSpan serverWaitTime = TimeSpan.FromMilliseconds(this.Iterations * .5);
-                                    await this.WaitAsync(serverWaitTime, cancellationToken)
-                                        .ConfigureAwait(false);
+                                    await this.WaitAsync(serverWaitTime, cancellationToken);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
                                 }
                             }
                             catch (Exception exc)
@@ -383,12 +378,6 @@ namespace VirtualClient.Actions
                                 this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
                                 process.SafeKill();
                                 throw;
-                            }
-                            finally
-                            {
-                                this.Logger.LogProcessDetails<LatteServerExecutor2>(process, relatedContext);
-
-                                this.CleanupTasks.Add(() => process.SafeKill());
                             }
                         }
                     }).ConfigureAwait(false);
