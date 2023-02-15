@@ -33,7 +33,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallPrime95Package",
+                "Scenario": "InstallPrime95",
                 "BlobContainer": "packages",
                 "BlobName": "prime95-v308b16.zip",
                 "PackageName": "prime95",

@@ -107,12 +107,13 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK")
-                                .ConfigureAwait();
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
-                                .ConfigureAwait();
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
                         }
                     }
                 }
@@ -137,12 +138,13 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK")
-                                .ConfigureAwait();
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
-                                .ConfigureAwait();
+                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
                         }
                     }
                 }
@@ -189,41 +191,22 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string content = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath)
-                    .ConfigureAwait();
+                string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", results.AsArray(), logToFile: true);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", content, logToFile: true)
-                    .ConfigureAwait();
+                LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results);
+                IList<Metric> metrics = lapackParser.Parse();
 
-                if (!string.IsNullOrWhiteSpace(content))
-                {
-                    try
-                    {
-                        LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(content);
-                        IList<Metric> metrics = lapackParser.Parse();
-
-                        this.Logger.LogMetrics(
-                            "LAPACK",
-                            "LAPACK",
-                            process.StartTime,
-                            process.ExitTime,
-                            metrics,
-                            null,
-                            null,
-                            this.Tags,
-                            telemetryContext);
-                    }
-                    catch (SchemaException exc)
-                    {
-                        throw new WorkloadException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadFailed);
-                    }
-                }
-                else
-                {
-                    throw new WorkloadException(
-                        $"Missing results. Workload results were not emitted by the workload.",
-                        ErrorReason.WorkloadFailed);
-                }
+                this.Logger.LogMetrics(
+                    "LAPACK",
+                    "LAPACK",
+                    process.StartTime,
+                    process.ExitTime,
+                    metrics,
+                    null,
+                    null,
+                    this.Tags,
+                    telemetryContext);
             }
         }
     }

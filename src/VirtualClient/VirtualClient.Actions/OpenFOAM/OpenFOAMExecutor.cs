@@ -302,10 +302,13 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM");
-                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                    await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken)
-                        .ConfigureAwait();
+                    if (process.IsErrored())
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
+
+                    await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                 }
             }
         }
@@ -321,11 +324,8 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadFailed);
                 }
 
-                string results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath, cancellationToken)
-                    .ConfigureAwait();
-
-                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results, logToFile: true)
-                    .ConfigureAwait();
+                string results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results: results.AsArray(), logToFile: true);
 
                 OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();

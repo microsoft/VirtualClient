@@ -25,13 +25,15 @@
         {
             "Type": "CompilerInstallation",
             "Parameters": {
+                "Scenario": "InstallCompiler",
                 "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
+                "Scenario": "CloneRepo",
                 "RepoUri": "https://github.com/eembc/coremark.git",
                 "PackageName": "coremark"
             }

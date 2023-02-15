@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
     using VirtualClient.Contracts;
@@ -24,34 +25,41 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            List<Metric> metrics = new List<Metric>();            
-
-            // Add count of Self-Tests
-            int selfTestPassCount = 0;
-            int fatalErrorsCount = 0;
-            foreach (string line in this.PreprocessedText.Split("\n"))
+            try
             {
-                if (Regex.IsMatch(line, @"Self-test.*K.*passed.*"))
+                this.Preprocess();
+                List<Metric> metrics = new List<Metric>();
+
+                // Add count of Self-Tests
+                int selfTestPassCount = 0;
+                int fatalErrorsCount = 0;
+                foreach (string line in this.PreprocessedText.Split("\n"))
                 {
-                    selfTestPassCount++;
+                    if (Regex.IsMatch(line, @"Self-test.*K.*passed.*"))
+                    {
+                        selfTestPassCount++;
+                    }
+
+                    if (Regex.IsMatch(line, @"FATAL ERROR.*"))
+                    {
+                        fatalErrorsCount++;
+                    }
                 }
 
-                if (Regex.IsMatch(line, @"FATAL ERROR.*"))
+                metrics.Add(new Metric("passTestCount", selfTestPassCount, MetricRelativity.HigherIsBetter));
+                metrics.Add(new Metric("failTestCount", fatalErrorsCount, MetricRelativity.LowerIsBetter));
+
+                if (metrics.Count != 2)
                 {
-                    fatalErrorsCount++;
+                    throw new WorkloadResultsException($"The Prime95 Workload did not generate valid metrics! ");
                 }
+
+                return metrics;
             }
-
-            metrics.Add(new Metric("passTestCount", selfTestPassCount, MetricRelativity.HigherIsBetter));
-            metrics.Add(new Metric("failTestCount", fatalErrorsCount, MetricRelativity.LowerIsBetter));
-
-            if (metrics.Count != 2)
+            catch (Exception exc)
             {
-                throw new WorkloadResultsException($"The Prime95 Workload did not generate valid metrics! ");
+                throw new WorkloadResultsException("Failed to parse Prime95 metrics from results.", exc, ErrorReason.InvalidResults);
             }
-
-            return metrics;
         }
 
         /// <inheritdoc/>

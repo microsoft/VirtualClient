@@ -29,58 +29,64 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Metrics = new List<Metric>();
-            MemoryStream mStrm = new MemoryStream(Encoding.UTF8.GetBytes(this.PreprocessedText));
-            using (var reader = new StreamReader(mStrm))
+            try
             {
-                var header = true;
-
-                while (!reader.EndOfStream)
+                this.Preprocess();
+                this.Metrics = new List<Metric>();
+                MemoryStream mStrm = new MemoryStream(Encoding.UTF8.GetBytes(this.PreprocessedText));
+                using (var reader = new StreamReader(mStrm))
                 {
-                    var line = reader.ReadLine();
-                    var values = line.Split(',');
-                    if (header)
-                    {
-                        header = false;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            // Compression speed
-                            this.Metrics.Add(new Metric($"Compression Speed({values[0].Trim()})", Convert.ToDouble(values[1]), "MB/s", MetricRelativity.HigherIsBetter));
-                        }
-                        catch
-                        {
-                            // do nothing as this result file has non-double values.
-                        }
+                    var header = true;
 
-                        try
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(',');
+                        if (header)
                         {
-                            // Decompression speed
-                            this.Metrics.Add(new Metric($"Decompression Speed({values[0].Trim()})", Convert.ToDouble(values[2]), "MB/s", MetricRelativity.HigherIsBetter));
+                            header = false;
                         }
-                        catch
+                        else
                         {
-                            // do nothing as this result file has non-double values.
-                        }
+                            try
+                            {
+                                // Compression speed
+                                this.Metrics.Add(new Metric($"Compression Speed({values[0].Trim()})", Convert.ToDouble(values[1]), "MB/s", MetricRelativity.HigherIsBetter));
+                            }
+                            catch
+                            {
+                                // do nothing as this result file has non-double values.
+                            }
 
-                        try
-                        {
-                            // Compressed size/Original size
-                            this.Metrics.Add(new Metric($"Compressed size and Original size ratio({values[0].Trim()})", Convert.ToDouble(values[5]), null, MetricRelativity.LowerIsBetter));
-                        }
-                        catch
-                        {
-                            // do nothing as this result file has non-double values.
+                            try
+                            {
+                                // Decompression speed
+                                this.Metrics.Add(new Metric($"Decompression Speed({values[0].Trim()})", Convert.ToDouble(values[2]), "MB/s", MetricRelativity.HigherIsBetter));
+                            }
+                            catch
+                            {
+                                // do nothing as this result file has non-double values.
+                            }
+
+                            try
+                            {
+                                // Compressed size/Original size
+                                this.Metrics.Add(new Metric($"Compressed size and Original size ratio({values[0].Trim()})", Convert.ToDouble(values[5]), null, MetricRelativity.LowerIsBetter));
+                            }
+                            catch
+                            {
+                                // do nothing as this result file has non-double values.
+                            }
                         }
                     }
                 }
 
+                return this.Metrics;
             }
-
-            return this.Metrics;
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse LZbench metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
     }
 }

@@ -27,7 +27,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallSPECWorkloadPackage",
+                "Scenario": "InstallSPECpower",
                 "BlobContainer": "packages",
                 "BlobName": "specpower2008.0.0.zip",
                 "PackageName": "specpower",
@@ -37,7 +37,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallJavaSDKPackage",
+                "Scenario": "InstallJavaSDK",
                 "BlobContainer": "packages",
                 "BlobName": "microsoft-jdk-17.0.3.zip",
                 "PackageName": "javadevelopmentkit",
@@ -47,7 +47,7 @@
         {
             "Type": "JavaDevelopmentKitInstallation",
             "Parameters": {
-                "Scenario": "InstallJavaSDK",
+                "Scenario": "InstallJdk",
                 "PackageName": "javadevelopmentkit"
             }
         }

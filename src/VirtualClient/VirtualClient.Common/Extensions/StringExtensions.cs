@@ -4,6 +4,7 @@
 namespace VirtualClient.Common.Extensions
 {
     using System;
+    using System.Collections;
     using System.Diagnostics.CodeAnalysis;
     using System.Runtime.InteropServices;
     using System.Security;
@@ -15,6 +16,16 @@ namespace VirtualClient.Common.Extensions
     public static class StringExtensions
     {
         private static Regex whitespaceExpression = new Regex(@"\s+", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Returns an array with the individual string value as an item within.
+        /// </summary>
+        /// <param name="value">The value to insert into the array.</param>
+        /// <returns>A string array containing the string value.</returns>
+        public static string[] AsArray(this string value)
+        {
+            return new string[] { value };
+        }
 
         /// <summary>
         /// Return true/false whether the string value contains text.

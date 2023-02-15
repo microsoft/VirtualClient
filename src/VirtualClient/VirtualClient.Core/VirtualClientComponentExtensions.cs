@@ -23,7 +23,7 @@ namespace VirtualClient
     public static class VirtualClientComponentExtensions
     {
         private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(100 * retries));
+            .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
         /// Executes a command within an isolated process.
@@ -101,6 +101,79 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Loads results from the file system for the file provided.
+        /// </summary>
+        /// <param name="component">The component that is loading the results.</param>
+        /// <param name="filePath">A paths to the results file to load.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <returns>The contents of the results file.</returns>
+        public static async Task<string> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
+
+            string results = null;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
+                {
+                    throw new DependencyException(
+                        $"Missing file operations dependency. To load results requires a dependency of type '{typeof(IFileSystem).FullName}' to be provided to the component instances.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                if (!fileSystem.File.Exists(filePath))
+                {
+                    throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
+                }
+
+                results = await fileSystem.File.ReadAllTextAsync(filePath);
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Loads results from the file system for the files provided.
+        /// </summary>
+        /// <param name="component">The component that is loading the results.</param>
+        /// <param name="filePaths">A set of one or more paths to results files to load.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <returns>The contents of the results files.</returns>
+        public static async Task<IEnumerable<string>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            filePaths.ThrowIfNullOrEmpty(nameof(filePaths));
+
+            List<string> results = null;
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
+                {
+                    throw new DependencyException(
+                        $"Missing file operations dependency. To load results requires a dependency of type '{typeof(IFileSystem).FullName}' to be provided to the component instances.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                results = new List<string>();
+                foreach (string filePath in filePaths)
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        if (!fileSystem.File.Exists(filePath))
+                        {
+                            throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
+                        }
+
+                        results.Add(await fileSystem.File.ReadAllTextAsync(filePath));
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
         /// Upload a single file with defined BlobDescriptor.
         /// </summary>
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
@@ -149,13 +222,14 @@ namespace VirtualClient
 
             try
             {
-                IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
                 bool uploaded = false;
-                await asyncPolicy.ExecuteAsync(async () =>
+
+                await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
                 {
                     try
                     {
                         IFileInfo fileInfo = fileSystem.FileInfo.FromFileName(filePath);
+
                         // Some processes creat the files up front before writing content to them. These files will
                         // be 0 bytes in size.
                         if (fileInfo.Length > 0)
@@ -164,34 +238,32 @@ namespace VirtualClient
                             {
                                 if (uploadStream.Length > 0)
                                 {
-                                    string fileName = Path.GetFileName(filePath);
-
                                     EventContext telemetryContext = EventContext.Persisted()
-                                        .AddContext("file", filePath)
+                                        .AddContext("file", fileInfo.Name)
                                         .AddContext("blobContainer", blobDescriptor.ContainerName)
                                         .AddContext("blobName", blobDescriptor.Name);
 
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
                                     {
-                                        await blobManager.UploadBlobAsync(blobDescriptor, uploadStream, cancellationToken).ConfigureAwait(false);
+                                        await blobManager.UploadBlobAsync(blobDescriptor, uploadStream, cancellationToken);
                                         uploaded = true;
-                                    }).ConfigureAwait(false);
+                                    });
                                 }
                             }
                         }
                     }
                     catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
                     {
-                        // The Azure blob upload could fail often. We skip it and we will pick it up on next iteration.
+                        // The blob upload could fail often. We skip it and we will pick it up on next iteration.
                     }
-                }).ConfigureAwait(false);
+                });
 
                 // Delete ONLY if uploaded successfully. We DO use the cancellation token supplied to the method
                 // here to ensure we cycle around quickly to uploading files while Virtual Client is trying to shut
                 // down to have the best chance of getting them off the system.
                 if (deleteFile && uploaded)
                 {
-                    await fileSystem.File.DeleteAsync(filePath).ConfigureAwait(false);
+                    await fileSystem.File.DeleteAsync(filePath);
                 }
             }
             catch (Exception exc)

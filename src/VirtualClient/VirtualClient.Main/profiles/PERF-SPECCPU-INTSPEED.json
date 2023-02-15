@@ -10,7 +10,6 @@
     "Parameters": {
         "CompilerName": "gcc",
         "CompilerVersion": "10",
-        "SpecProfile": "intspeed",
         "RunPeak": false,
         "BaseOptimizingFlags": "-g -O3 -march=native",
         "PeakOptimizingFlags": "-g -Ofast -march=native -flto"
@@ -20,8 +19,8 @@
             "Type": "SpecCpuExecutor",
             "Parameters": {
                 "CompilerVersion": "$.Parameters.CompilerVersion",
-                "Scenario": "ScoreSystem",
-                "SpecProfile": "$.Parameters.SpecProfile",
+                "Scenario": "SPECspeed_Integer",
+                "SpecProfile": "intspeed",
                 "PackageName": "speccpu2017",
                 "RunPeak": "$.Parameters.RunPeak",
                 "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
@@ -41,7 +40,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallSPECcpuWorkloadPackage",
+                "Scenario": "InstallSPECcpu",
                 "BlobContainer": "packages",
                 "BlobName": "speccpu.2017.1.1.8.zip",
                 "PackageName": "speccpu2017",

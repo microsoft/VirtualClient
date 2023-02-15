@@ -449,7 +449,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libaio1,libaio-dev",
                 "Packages-Dnf": "libaio,libaio-devel",
                 "Packages-Yum": "libaio,libaio-devel",
@@ -459,7 +459,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallFIOWorkloadPackage",
+                "Scenario": "InstallFIO",
                 "BlobContainer": "packages",
                 "BlobName": "fio.3.30.0.zip",
                 "PackageName": "fio",

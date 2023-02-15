@@ -17,6 +17,8 @@ namespace VirtualClient
     /// </summary>
     public static class ProcessExtensions
     {
+        private static readonly Type WorkloadExceptionType = typeof(WorkloadException);
+
         /// <summary>
         /// Creates process that can be run with elevated privileges.
         /// </summary>
@@ -56,6 +58,17 @@ namespace VirtualClient
         public static string FullCommand(this IProcessProxy process)
         {
             return $"{process.StartInfo.FileName} {process.StartInfo.Arguments}".Trim();
+        }
+
+        /// <summary>
+        /// True if the process returned a non-success exit code.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="successCodes">The set of exit codes that indicate success.</param>
+        public static bool IsErrored(this IProcessProxy process, IEnumerable<int> successCodes = null)
+        {
+            process.ThrowIfNull(nameof(process));
+            return process.HasExited && !(successCodes ?? ProcessProxy.DefaultSuccessCodes).Contains(process.ExitCode);
         }
 
         /// <summary>
@@ -170,7 +183,6 @@ namespace VirtualClient
 
             if (process.HasExited && !successCodes.Contains(process.ExitCode))
             {
-                TError exception = default(TError);
                 string error = null;
                 string command = string.Empty;
                 if (process.StartInfo != null)
@@ -201,7 +213,7 @@ namespace VirtualClient
 
                 try
                 {
-                    exception = (TError)Activator.CreateInstance(typeof(TError), error, errorReason);
+                    TError exception = (TError)Activator.CreateInstance(typeof(TError), error, errorReason);
                     throw exception;
                 }
                 catch (MissingMethodException)
@@ -210,6 +222,34 @@ namespace VirtualClient
                         $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in the parameters supplied.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Throws an exception when a workload process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfWorkloadFailed(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.WorkloadFailed)
+        {
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorMessage ?? "Workload process execution failed.", errorReason);
+        }
+
+        /// <summary>
+        /// Throws an exception when a workload process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="successCodes">The set of exit codes that indicate success.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfWorkloadFailed(this IProcessProxy process, IEnumerable<int> successCodes, string errorMessage = null, ErrorReason errorReason = ErrorReason.WorkloadFailed)
+        {
+            successCodes.ThrowIfNullOrEmpty(nameof(successCodes));
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<WorkloadException>(successCodes, errorMessage ?? "Workload process execution failed.", errorReason);
         }
     }
 }

@@ -25,51 +25,58 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            List<Metric> metrics = new List<Metric>();
-            string hardwareErrors = string.Empty;
-
-            // Add count of Hardware Failure Error Incidents
-            int hardwareErrorCount = -1;
-            foreach (string line in this.PreprocessedText.Split("\n"))
+            try
             {
-                if (line == "Killed")
-                {
-                    throw new WorkloadResultsException($"The StressAppTest Workload did not generate valid metrics! " +
-                        $"The process got killed, possibly due to low memory exception.");
-                }
+                this.Preprocess();
+                List<Metric> metrics = new List<Metric>();
+                string hardwareErrors = string.Empty;
 
-                if (Regex.IsMatch(line, @".*Hardware Error:.*"))
+                // Add count of Hardware Failure Error Incidents
+                int hardwareErrorCount = -1;
+                foreach (string line in this.PreprocessedText.Split("\n"))
                 {
-                    hardwareErrors += line + "\n";
-                }
-
-                if (Regex.IsMatch(line, @".*Stats: Found .* hardware incidents.*"))
-                {
-                    try
+                    if (line == "Killed")
                     {
-                        hardwareErrorCount = Convert.ToInt16(
-                        line.Substring(
-                            line.IndexOf("Found") + 6, line.IndexOf("hardware incident") - line.IndexOf("Found") - 7));
+                        throw new WorkloadResultsException($"The StressAppTest Workload did not generate valid metrics! " +
+                            $"The process got killed, possibly due to low memory exception.");
                     }
-                    catch
+
+                    if (Regex.IsMatch(line, @".*Hardware Error:.*"))
                     {
-                        throw new WorkloadResultsException($"Error while parsing the hardware error count in StressAppTest Workload logs.");
+                        hardwareErrors += line + "\n";
+                    }
+
+                    if (Regex.IsMatch(line, @".*Stats: Found .* hardware incidents.*"))
+                    {
+                        try
+                        {
+                            hardwareErrorCount = Convert.ToInt16(
+                            line.Substring(
+                                line.IndexOf("Found") + 6, line.IndexOf("hardware incident") - line.IndexOf("Found") - 7));
+                        }
+                        catch
+                        {
+                            throw new WorkloadResultsException($"Error while parsing the hardware error count in StressAppTest Workload logs.");
+                        }
                     }
                 }
-            }            
 
-            if (hardwareErrorCount == -1)
-            {
-                throw new WorkloadResultsException($"The StressAppTest Workload did not generate valid metrics. " +
-                    $"No data on hardware failures captured. ");
+                if (hardwareErrorCount == -1)
+                {
+                    throw new WorkloadResultsException($"The StressAppTest Workload did not generate valid metrics. " +
+                        $"No data on hardware failures captured. ");
+                }
+
+                Metric metric = new Metric("hardwareErrorCount", hardwareErrorCount, MetricRelativity.LowerIsBetter);
+                metric.Tags.Add(hardwareErrors);
+                metrics.Add(metric);
+
+                return metrics;
             }
-
-            Metric metric = new Metric("hardwareErrorCount", hardwareErrorCount, MetricRelativity.LowerIsBetter);
-            metric.Tags.Add(hardwareErrors);
-
-            metrics.Add(metric);
-            return metrics;
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse StressAppTest metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

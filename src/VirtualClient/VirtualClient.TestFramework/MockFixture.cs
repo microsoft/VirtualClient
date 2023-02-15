@@ -42,6 +42,11 @@ namespace VirtualClient
         /// </summary>
         public static readonly string TestAssemblyDirectory = Path.GetDirectoryName(MockFixture.TestAssembly.Location);
 
+        static MockFixture()
+        {
+            VirtualClientComponent.LogToFile = true;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MockFixture"/> class.
         /// </summary>

@@ -440,11 +440,11 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true).ConfigureAwait();
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "FIO", logToFile: true);
 
                         if (this.DiskFill)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
+                            workload.Process.ThrowIfWorkloadFailed(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                         else if (!cancellationToken.IsCancellationRequested)
                         {
@@ -454,7 +454,7 @@ namespace VirtualClient.Actions
                                 // data integrity/file verification errors. These are expected errors for tests
                                 // that are running verifications. We only want to throw if there are not any verification
                                 // errors and the exit code indicates error.
-                                workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                workload.Process.ThrowIfWorkloadFailed();
                             }
 
                             this.CaptureMetrics(workload.Process, testName, workload.Categorization, workload.CommandArguments, telemetryContext, metricMetadata);

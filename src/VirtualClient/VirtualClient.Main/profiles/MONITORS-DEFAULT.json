@@ -7,17 +7,14 @@
     "Parameters": {
         "ProfilingEnabled": false,
         "ProfilingMode": "Interval",
-        "SystemMonitoringEnabled": false,
         "MonitorFrequency": "00:05:00",
-        "MonitorWarmupPeriod": "00:05:00",
-        "MonitorFrequency_AzurePerfCollector": "00:05:00",
-        "MonitorWarmupPeriod_AzurePerfCollector": "00:05:00"
+        "MonitorWarmupPeriod": "00:05:00"
     },
     "Dependencies": [
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallEpelPackageForRHELAndCentOS",
+                "Scenario": "InstallEpelPackage",
                 "Packages-Mariner": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
                 "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
                 "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",

@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -144,10 +143,9 @@ namespace VirtualClient.Actions
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true)
-                                    .ConfigureAwait();
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenSSL", logToFile: true);
 
-                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                process.ThrowIfWorkloadFailed();
                                 this.CaptureMetrics(process, commandArguments, telemetryContext);
                             }
                         }

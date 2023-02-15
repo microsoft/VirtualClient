@@ -40,6 +40,11 @@ namespace VirtualClient
         /// </summary>
         public static readonly string TestAssemblyDirectory = Path.GetDirectoryName(DependencyFixture.TestAssembly.Location);
 
+        static DependencyFixture()
+        {
+            VirtualClientComponent.LogToFile = true;
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DependencyFixture"/> class.
         /// </summary>

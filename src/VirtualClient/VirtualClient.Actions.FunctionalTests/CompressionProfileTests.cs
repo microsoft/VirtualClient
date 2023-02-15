@@ -61,24 +61,17 @@ namespace VirtualClient.Actions
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
 
-                if (arguments.Contains("lzbenchexecutor.sh", StringComparison.OrdinalIgnoreCase))
-                {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("LzbenchResults.csv"));
-                }
-
                 if (arguments.Contains("7z", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Compressor7zipResults.txt"));
                 }
-
-                if (arguments.Contains("gzip", StringComparison.OrdinalIgnoreCase))
+                else if (arguments.Contains("gzip", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardError.Append(TestDependencies.GetResourceFileContents("GzipResults.txt"));
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("GzipResults.txt"));
                 }
-
-                if (arguments.Contains("pbzip2", StringComparison.OrdinalIgnoreCase))
+                else if (arguments.Contains("pbzip2", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardError.Append(TestDependencies.GetResourceFileContents("Pbzip2Results.txt"));
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Pbzip2Results.txt"));
                 }
 
                 return process;
@@ -154,12 +147,7 @@ namespace VirtualClient.Actions
                     $"sudo wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
                     $"sudo unzip silesia.zip -d silesia",
                     $"sudo bash -c \"gzip -rvf /home/user/tools/VirtualClient/packages/gzip/silesia\"",
-                    $"sudo bash -c \"gzip -rvfd /home/user/tools/VirtualClient/packages/gzip/silesia\"",
-                    $"sudo git clone -b v1.8.1 https://github.com/inikep/lzbench.git",
-                    $"sudo make",
-                    $"wget https://sun.aei.polsl.pl//~sdeor/corpus/silesia.zip",
-                    $"sudo unzip silesia.zip -d silesia",
-                    $"sudo bash lzbenchexecutor.sh \"-eall -o4 -r /home/user/tools/VirtualClient/packages/lzbench/silesia\""
+                    $"sudo bash -c \"gzip -rvfd /home/user/tools/VirtualClient/packages/gzip/silesia\""
                 };
             }
             else

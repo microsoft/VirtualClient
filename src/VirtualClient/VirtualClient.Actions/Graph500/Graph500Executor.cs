@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -67,12 +66,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path to the Graph500 executable file.
         /// </summary>
-        public string ExecutableFilePath { get; set; }
-
-        /// <summary>
-        /// Path to the results file after executing Graph500 workload.
-        /// </summary>
-        public string ResultsFilePath { get; set; }
+        protected string ExecutableFilePath { get; set; }
 
         /// <summary>
         /// The path to the Graph500 package.
@@ -92,12 +86,6 @@ namespace VirtualClient.Actions
 
             this.PackageDirectory = this.PlatformSpecifics.Combine(workloadPackage.Path, "src");
             this.ExecutableFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "graph500_reference_bfs_sssp");
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
-
-            if (this.fileSystem.File.Exists(this.ResultsFilePath))
-            {
-                await this.fileSystem.File.DeleteAsync(this.ResultsFilePath).ConfigureAwait();
-            }
         }
 
         /// <summary>
@@ -107,20 +95,16 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken)
-                    .ConfigureAwait();
+                await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait())
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken))
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken)
-                            .ConfigureAwait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Graph500", logToFile: true);
 
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        process.ThrowIfWorkloadFailed();
+                        this.CaptureMetrics(process, telemetryContext, cancellationToken);
                     }
                 }
             }
@@ -154,99 +138,47 @@ namespace VirtualClient.Actions
                         this.CleanupTasks.Add(() => process.SafeKill());
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
 
-                        await this.fileSystem.File.WriteAllTextAsync(this.ResultsFilePath, process.StandardOutput.ToString())
-                            .ConfigureAwait();
-
-                        await this.WaitAsync(TimeSpan.FromMinutes(1), cancellationToken)
-                            .ConfigureAwait();
-
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            process.ThrowIfWorkloadFailed();
                         }
                     }
                 }).ConfigureAwait();
             }
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (!this.fileSystem.File.Exists(resultsFilePath))
+                try
                 {
-                    throw new WorkloadException(
-                        $"The Graph500 results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
-                }
+                    Graph500MetricsParser graph500Parser = new Graph500MetricsParser(process.StandardOutput.ToString());
+                    IList<Metric> metrics = graph500Parser.Parse();
 
-                string resultsContent = await this.WaitForResultsAsync(resultsFilePath, TimeSpan.FromMinutes(30), cancellationToken)
-                    .ConfigureAwait();
-
-                await this.LogProcessDetailsAsync(process, telemetryContext, "Graph500", resultsContent, logToFile: true)
-                    .ConfigureAwait();
-
-                if (!string.IsNullOrWhiteSpace(resultsContent))
-                {
-                    try
+                    foreach (Metric result in metrics)
                     {
-                        Graph500MetricsParser graph500Parser = new Graph500MetricsParser(resultsContent);
-                        IList<Metric> metrics = graph500Parser.Parse();
-
-                        foreach (Metric result in metrics)
-                        {
-                            this.Logger.LogMetrics(
-                                "Graph500",
-                                "Graph500",
-                                process.StartTime,
-                                process.ExitTime,
-                                result.Name,
-                                result.Value,
-                                result.Unit,
-                                null,
-                                null,
-                                this.Tags,
-                                telemetryContext,
-                                result.Relativity);
-                        }
-                    }
-                    catch (SchemaException exc)
-                    {
-                        throw new WorkloadException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadFailed);
+                        this.Logger.LogMetrics(
+                            "Graph500",
+                            "Graph500",
+                            process.StartTime,
+                            process.ExitTime,
+                            result.Name,
+                            result.Value,
+                            result.Unit,
+                            null,
+                            null,
+                            this.Tags,
+                            telemetryContext,
+                            result.Relativity);
                     }
                 }
-                else
+                catch (SchemaException exc)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        throw new WorkloadException(
-                            $"Missing results. Workload results were not emitted by the workload.",
-                            ErrorReason.WorkloadFailed);
-                    }
+                    throw new WorkloadException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadResultsParsingFailed);
                 }
             }
-        }
-
-        private async Task<string> WaitForResultsAsync(string resultsFilePath, TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            string results = null;
-            DateTime waitTimeout = DateTime.UtcNow.Add(timeout);
-
-            while (!cancellationToken.IsCancellationRequested && DateTime.UtcNow < waitTimeout)
-            {
-                results = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath, cancellationToken)
-                    .ConfigureAwait();
-
-                if (!string.IsNullOrWhiteSpace(results))
-                {
-                    break;
-                }
-
-                await Task.Delay(500).ConfigureAwait(false);
-            }
-
-            return results;
         }
     }
 }

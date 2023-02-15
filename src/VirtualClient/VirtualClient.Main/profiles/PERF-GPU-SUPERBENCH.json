@@ -18,7 +18,7 @@
         {
             "Type": "SuperBenchmarkExecutor",
             "Parameters": {
-                "Scenario": "GPUBenchmark",
+                "Scenario": "Models",
                 "Username": "$.Parameters.Username",
                 "Version": "0.5.0",
                 "ConfigurationFile": "$.Parameters.ConfigurationFile",
@@ -28,9 +28,9 @@
     ],
     "Dependencies": [
         {
-            "Type": "CudaAndNvidiaGPUDriverInstallation",
+            "Type": "NvidiaCudaInstallation",
             "Parameters": {
-                "Scenario": "InstallCudaAndNvidiaGPUDriver",
+                "Scenario": "InstallNvidiaCuda",
                 "CudaVersion": "$.Parameters.CudaVersion",
                 "DriverVersion": "$.Parameters.DriverVersion",
                 "Username": "$.Parameters.Username",
@@ -52,7 +52,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages": "sshpass,python3-pip",
                 "Packages-Apt": "nvidia-common",
                 "Packages-Dnf": "nvidia-driver",

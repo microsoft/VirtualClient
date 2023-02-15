@@ -90,7 +90,8 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, "PBZip2", logToFile: true);
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                        process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, commandLineArguments, telemetryContext, cancellationToken);
                     }
                 }
@@ -173,7 +174,6 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(Pbzip2Executor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
@@ -219,9 +219,8 @@ namespace VirtualClient.Actions
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The Gzip benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()} through Virtual Client.  Supported distros include:" +
-                            $" Ubuntu, Debian, CentOS8,RHEL8,Mariner,CentOS7,RHEL7. ",
+                            $"The PBZip2 benchmark workload is not supported on the current Linux distro - " +
+                            $"{linuxDistributionInfo.LinuxDistribution.ToString()} through Virtual Client.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }

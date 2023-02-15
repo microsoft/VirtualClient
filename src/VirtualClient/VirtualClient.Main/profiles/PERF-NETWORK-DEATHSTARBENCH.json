@@ -16,7 +16,8 @@
         {
             "Type": "DeathStarBenchExecutor",
             "Parameters": {
-                "Scenario": "socialNetwork",
+                "Scenario": "SocialNetwork",
+                "ServiceName": "socialnetwork",
                 "GraphType": "$.Parameters.GraphType",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "ConnectionCount": "$.Parameters.ConnectionCount",
@@ -29,7 +30,8 @@
         {
             "Type": "DeathStarBenchExecutor",
             "Parameters": {
-                "Scenario": "mediaMicroservices",
+                "Scenario": "MediaMicroservices",
+                "ServiceName": "mediamicroservices",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "ConnectionCount": "$.Parameters.ConnectionCount",
                 "Duration": "$.Parameters.Duration",
@@ -41,7 +43,8 @@
         {
             "Type": "DeathStarBenchExecutor",
             "Parameters": {
-                "Scenario": "hotelReservation",
+                "Scenario": "HotelReservation",
+                "ServiceName": "hotelreservation",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "ConnectionCount": "$.Parameters.ConnectionCount",
                 "Duration": "$.Parameters.Duration",
@@ -55,9 +58,9 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallDeathStarBenchWorkloadPackage",
+                "Scenario": "InstallDeathStarBench",
                 "BlobContainer": "packages",
-                "BlobName": "deathstarbench.1.0.3.zip",
+                "BlobName": "deathstarbench.1.0.4.zip",
                 "PackageName": "deathstarbench",
                 "Extract": true
             }
@@ -71,7 +74,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Repositories-Apt": "deb http://security.ubuntu.com/ubuntu xenial-security main",
                 "Packages-Apt": "python3-pip,libssl-dev,libz-dev,luarocks,libssl1.0.0"
             }

@@ -12,7 +12,7 @@
         {
             "Type": "NetworkPingExecutor",
             "Parameters": {
-                "Scenario": "ICMPCommunications",
+                "Scenario": "ICMP",
                 "IPAddress": "$.Parameters.IPAddress",
                 "PingIterations": 300,
                 "Tags": "Performance,Networking,Ping"

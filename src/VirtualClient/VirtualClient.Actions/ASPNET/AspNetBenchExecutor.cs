@@ -210,10 +210,9 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "AspNetBench", logToFile: true);
 
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext);
                     }
                 }
@@ -242,13 +241,12 @@ namespace VirtualClient.Actions
                         
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
 
                         if (!isServer)
                         {
                             // We will kill the server at the end, exit code is -1, and we don't want it to log as failure.
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            process.ThrowIfWorkloadFailed();
                         }
                     }
                 }

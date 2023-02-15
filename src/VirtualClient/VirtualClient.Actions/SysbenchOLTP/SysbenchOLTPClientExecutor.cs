@@ -275,9 +275,10 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(cleanupProcess, telemetryContext, "Sysbench");
-                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                                cleanupProcess.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                await this.LogProcessDetailsAsync(cleanupProcess, telemetryContext, "Sysbench", logToFile: true);
+
+                                process.ThrowIfWorkloadFailed();
+                                cleanupProcess.ThrowIfWorkloadFailed();
                                 this.CaptureMetrics(process, telemetryContext, cancellationToken);
                             }
                         }

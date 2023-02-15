@@ -72,10 +72,8 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
-                            .ConfigureAwait();
-
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.WorkloadFailed);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
 
                         if (process.StandardOutput.Length > 0)
                         {

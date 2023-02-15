@@ -11,6 +11,7 @@
         {
             "Type": "StressNgExecutor",
             "Parameters": {
+                "Scenario": "ApplyStress",
                 "DurationInSecond": 60,
                 "Tags": "Stress"
             }
@@ -20,7 +21,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallStressNGLinuxPackage",
+                "Scenario": "InstallStressNG",
                 "Packages": "stress-ng"
             }
         }

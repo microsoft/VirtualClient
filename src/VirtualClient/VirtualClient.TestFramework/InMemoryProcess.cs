@@ -46,7 +46,18 @@ namespace VirtualClient
         /// <summary>
         /// The exit time for the process.
         /// </summary>
-        public DateTime ExitTime { get; private set; }
+        public DateTime ExitTime
+        {
+            get
+            {
+                if (this.HasExited)
+                {
+                    return DateTime.UtcNow;
+                }
+
+                return DateTime.MinValue;
+            }
+        }
 
         /// <summary>
         /// The fake process ID.
@@ -81,19 +92,7 @@ namespace VirtualClient
         /// <summary>
         /// Has the fake process exited?
         /// </summary>
-        public bool HasExited
-        {
-            get
-            {
-                bool hasExited = this.OnHasExited?.Invoke() ?? false;
-                if (hasExited)
-                {
-                    this.ExitTime = DateTime.UtcNow;
-                }
-
-                return hasExited;
-            }
-        }
+        public bool HasExited => this.OnHasExited?.Invoke() ?? false;
 
         /// <summary>
         /// Redirect standard error for the fake process.

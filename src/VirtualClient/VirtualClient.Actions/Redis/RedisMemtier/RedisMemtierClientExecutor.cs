@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -205,20 +206,18 @@ namespace VirtualClient.Actions
                     {
                         int port = int.Parse(this.Port) + i - 1;
 
-                        string clientCommand = 
-                        $"{this.ClientExecutorPath} --server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 " +
+                        string commandArguments = 
+                            $"--server {ipAddress} --port {port} --protocol redis --clients {this.ClientCount} --threads {this.ThreadCount} --ratio 1:9 " +
                             $"--data-size 32 --pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentile 50,90,95,99,99.9 --random-data";
 
-                        using (IProcessProxy process = await this.ExecuteCommandAsync(clientCommand, this.MemtierPackagePath, telemetryContext, cancellationToken, runElevated: true))
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(this.ClientExecutorPath, commandArguments, this.MemtierPackagePath, telemetryContext, cancellationToken, runElevated: true))
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Memtier", results, logToFile: true)
-                                    .ConfigureAwait();
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Memtier", results: process.StandardOutput.ToString().AsArray(), logToFile: true);
+                                process.ThrowIfWorkloadFailed();
 
                                 results += $"{process.StandardOutput.ToString()}{Environment.NewLine}";
-
-                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                             }
                         }
                     }

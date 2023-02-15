@@ -64,7 +64,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallOpenFOAMWorkloadPackage",
+                "Scenario": "InstallOpenFOAM",
                 "BlobContainer": "packages",
                 "BlobName": "openfoam.1.4.0.zip",
                 "PackageName": "openfoam",
@@ -74,8 +74,8 @@
         {
             "Type": "OpenFOAMInstallation",
             "Parameters": {
-                "Scenario": "InstallOpenFOAM",
-                "PackageName": "OpenFOAM"
+                "Scenario": "InstallToolsets",
+                "PackageName": "openfoam"
             }
         }
     ]

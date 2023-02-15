@@ -119,8 +119,12 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench");
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        if (process.IsErrored())
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+                        }
+
                         await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
                     }
                 }

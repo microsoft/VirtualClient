@@ -114,14 +114,13 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, "bash", $"-c \"{command}\""))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "NASParallelBench", logToFile: true);
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                            process.ThrowIfWorkloadFailed();
                             this.CaptureMetrics(process, scenarioArguments, telemetryContext);
                         }
                     }

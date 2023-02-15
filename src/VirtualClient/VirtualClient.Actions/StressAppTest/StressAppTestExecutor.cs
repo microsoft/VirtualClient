@@ -179,8 +179,12 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        if (process.IsErrored())
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
+                            process.ThrowIfWorkloadFailed();
+                        }
+
                         await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
                     }
                 }
@@ -195,21 +199,13 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
-                if (!this.fileSystem.File.Exists(resultsPath))
-                {
-                    throw new WorkloadResultsException(
-                        $"The StressAppTest results file was not found at the expected path '{resultsPath}'.",
-                        ErrorReason.WorkloadResultsNotFound);
-                }
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                string results = await this.fileSystem.File.ReadAllTextAsync(resultsPath);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results, logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results.AsArray(), logToFile: true);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {
-                    throw new WorkloadResultsException(
-                        "The StressAppTest workload did not produce valid results. The results file is blank",
-                        ErrorReason.WorkloadResultsNotFound);
+                    throw new WorkloadResultsException($"Invalid results. The StressAppTest workload did not produce valid results.", ErrorReason.InvalidResults);
                 }
 
                 StressAppTestMetricsParser parser = new StressAppTestMetricsParser(results);

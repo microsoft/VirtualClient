@@ -31,34 +31,41 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Metrics = new List<Metric>();
-
-            // If the line doesn't have column, it's individual result.
-            // If the line has column, it's the summary line.
-            List<string> lines = this.PreprocessedText.Split(Environment.NewLine).ToList();
-            foreach (string line in lines)
+            try
             {
-                if (line.Contains(":"))
-                {
-                    Regex columnRegex = new Regex(@$":", RegexOptions.ExplicitCapture);
-                    string[] nameAndValue = Regex.Split(line, columnRegex.ToString(), columnRegex.Options);
-                    string metricName = nameAndValue[0].Trim();
-                    double metricValue = Convert.ToDouble(nameAndValue[1].Replace(SpecJvmMetricsParser.operationPerSecond, string.Empty));
-                    this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
-                }
-                else
-                {
-                    Regex whiteSpaceRegex = new Regex(@$"(\s){{2,}}", RegexOptions.ExplicitCapture);
-                    string[] nameAndValue = Regex.Split(line, whiteSpaceRegex.ToString(), whiteSpaceRegex.Options);
-                    string metricName = nameAndValue[0].Trim();
-                    string[] a = line.Split(" ");
-                    double metricValue = Convert.ToDouble(nameAndValue[1]);
-                    this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
-                }
-            }
+                this.Preprocess();
+                this.Metrics = new List<Metric>();
 
-            return this.Metrics;
+                // If the line doesn't have column, it's individual result.
+                // If the line has column, it's the summary line.
+                List<string> lines = this.PreprocessedText.Split(Environment.NewLine).ToList();
+                foreach (string line in lines)
+                {
+                    if (line.Contains(":"))
+                    {
+                        Regex columnRegex = new Regex(@$":", RegexOptions.ExplicitCapture);
+                        string[] nameAndValue = Regex.Split(line, columnRegex.ToString(), columnRegex.Options);
+                        string metricName = nameAndValue[0].Trim();
+                        double metricValue = Convert.ToDouble(nameAndValue[1].Replace(SpecJvmMetricsParser.operationPerSecond, string.Empty));
+                        this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                    }
+                    else
+                    {
+                        Regex whiteSpaceRegex = new Regex(@$"(\s){{2,}}", RegexOptions.ExplicitCapture);
+                        string[] nameAndValue = Regex.Split(line, whiteSpaceRegex.ToString(), whiteSpaceRegex.Options);
+                        string metricName = nameAndValue[0].Trim();
+                        string[] a = line.Split(" ");
+                        double metricValue = Convert.ToDouble(nameAndValue[1]);
+                        this.Metrics.Add(new Metric(metricName, metricValue, SpecJvmMetricsParser.operationPerSecond, MetricRelativity.HigherIsBetter));
+                    }
+                }
+
+                return this.Metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse SPECjvm metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

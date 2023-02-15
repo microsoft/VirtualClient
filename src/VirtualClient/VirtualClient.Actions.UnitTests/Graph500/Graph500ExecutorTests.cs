@@ -29,9 +29,6 @@ namespace VirtualClient.Actions
         private DependencyPath mockPath;
         private DependencyPath currentDirectoryPath;
 
-        private string resultsPath;
-        private string rawString;
-
         [SetUp]
         public void SetUpTests()
         {
@@ -86,6 +83,7 @@ namespace VirtualClient.Actions
                         executed++;
                         Assert.AreEqual($"{command} {arguments}", $"{executor.ExecutableFilePath} {executor.Scale} {executor.EdgeFactor}");
                     }
+
                     return this.fixture.Process;
                 };
 
@@ -115,25 +113,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void Graph500ExecutorThrowsWhenTheResultsFileIsNotGenerated()
-        {
-            this.SetupDefaultMockBehavior();
-            using (TestGraph500Executor executor = new TestGraph500Executor(this.fixture))
-            {
-                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-                {
-                    this.fixture.FileSystem.Setup(fe => fe.File.Exists(executor.ResultsFilePath)).Returns(false);
-                    return this.fixture.Process;
-                };
-
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
-            }
-        }
-
-        [Test]
         public async Task Graph500ExecutorLogsTheExpectedWorkloadMetrics()
         {
             this.SetupDefaultMockBehavior();
@@ -154,21 +133,16 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.fixture.Setup(platform, architecture);
+            this.fixture.Parameters["PackageName"] = "Graph500";
+
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             this.currentDirectoryPath = new DependencyPath("Graph500", currentDirectory);
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\Graph500\Graph500ResultsExample.txt");
-            this.rawString = File.ReadAllText(resultsPath);
-            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
-                .Returns(this.rawString);
-            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawString);
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
-            this.fixture.Parameters["PackageName"] = "Graph500";
+            this.fixture.Process.StandardOutput.Append(
+                File.ReadAllText(this.fixture.Combine(this.currentDirectoryPath.Path, @"Examples\Graph500\Graph500ResultsExample.txt")));
         }
 
         private class TestGraph500Executor : Graph500Executor
@@ -181,6 +155,14 @@ namespace VirtualClient.Actions
             public TestGraph500Executor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
+            }
+
+            public new string ExecutableFilePath
+            {
+                get
+                {
+                    return base.ExecutableFilePath;
+                }
             }
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

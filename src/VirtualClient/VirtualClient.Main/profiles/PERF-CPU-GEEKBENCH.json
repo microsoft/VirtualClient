@@ -20,7 +20,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGeekBench5WorkloadPackage",
+                "Scenario": "InstallGeekBench5",
                 "BlobContainer": "packages",
                 "BlobName": "geekbench5.1.0.0.zip",
                 "PackageName": "geekbench5",

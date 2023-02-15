@@ -118,17 +118,15 @@ namespace VirtualClient.Actions
         public void StressAppTestExecutorThrowsWhenTheWorkloadDoesNotProduceValidResults(PlatformID platform)
         {
             this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.ReadAllText(It.IsAny<string>()))
-                .Returns("");
+            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("");
 
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
             {
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
-                WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
-                    () => executor.ExecuteAsync(CancellationToken.None));
-
-                Assert.AreEqual(exception.Message, "The StressAppTest workload did not produce valid results. The results file is blank");
+                WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual("Invalid results. The StressAppTest workload did not produce valid results.", exception.Message);
             }
         }
 

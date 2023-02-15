@@ -55,17 +55,17 @@
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneMLPerfRepo",
+                "Scenario": "CloneRepo",
                 "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
                 "PackageName": "mlperf"
             }
         },
         {
-            "Type": "CudaAndNvidiaGPUDriverInstallation",
+            "Type": "NvidiaCudaInstallation",
             "Parameters": {
-                "Scenario": "InstallCudaAndNvidiaGPUDriver",
+                "Scenario": "InstallNvidiaCuda",
                 "CudaVersion": "$.Parameters.CudaVersion",
                 "DriverVersion": "$.Parameters.DriverVersion",
                 "Username": "$.Parameters.Username",

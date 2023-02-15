@@ -354,7 +354,8 @@ namespace VirtualClient.Actions
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
                                     await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                                    process.ThrowIfWorkloadFailed();
                                     await this.SystemManager.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());
                                 }
                             }

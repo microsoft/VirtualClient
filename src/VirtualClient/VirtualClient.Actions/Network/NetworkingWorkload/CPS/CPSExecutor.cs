@@ -270,16 +270,13 @@ namespace VirtualClient.Actions.NetworkPerformance
                             try
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
-
-                                await process.StartAndWaitAsync(cancellationToken, timeout)
-                                    .ConfigureAwait(false);
+                                await process.StartAndWaitAsync(cancellationToken, timeout);
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true)
-                                       .ConfigureAwait();
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true);
 
-                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    process.ThrowIfWorkloadFailed();
                                     this.results = process.StandardOutput.ToString();
                                 }
                             }

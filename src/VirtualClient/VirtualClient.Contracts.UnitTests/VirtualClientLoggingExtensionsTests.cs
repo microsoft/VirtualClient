@@ -13,6 +13,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging;
     using Moq;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -36,6 +37,250 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public void AddProcessContextExtensionAddsTheExpectedProcessInformationToTheEventContext(
+           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process);
+
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            string expectedProcessInfo = new
+            {
+                id = process.Id,
+                command = $"{expectedCommand} {expectedArguments}".Trim(),
+                workingDir = expectedWorkingDir ?? string.Empty,
+                exitCode = expectedExitCode,
+                standardOutput = expectedStandardOutput ?? string.Empty,
+                standardError = expectedStandardError ?? string.Empty
+            }.ToJson();
+
+            string actualProcessInfo = processContext.ToJson();
+            SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+        }
+
+        [Test]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 1")]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 2")]
+        public void AddProcessContextExtensionAddsTheExpectedProcessInformationToTheEventContextWhenResultsAreProvided(
+           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedResults)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                }
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, results: expectedResults);
+
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            string expectedProcessInfo = new
+            {
+                id = process.Id,
+                command = $"{expectedCommand} {expectedArguments}".Trim(),
+                workingDir = expectedWorkingDir ?? string.Empty,
+                exitCode = expectedExitCode,
+                results = expectedResults,
+            }.ToJson();
+            
+            string actualProcessInfo = processContext.ToJson();
+            SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+        }
+
+        [Test]
+        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputOnlyScenario()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder("Standard output from the process."))
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars:15);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            JObject processDetails = JObject.FromObject(processContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            Assert.IsTrue(standardOutput.Length == 15);
+            Assert.IsTrue(standardOutput == "Standard output");
+            Assert.IsTrue(standardOutput.Length + standardError.Length == 15);
+        }
+
+        [Test]
+        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardErrorOnlyScenario()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                },
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 14);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            JObject processDetails = JObject.FromObject(processContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            Assert.IsTrue(standardError.Length == 14);
+            Assert.IsTrue(standardError == "Standard error");
+            Assert.IsTrue(standardOutput.Length + standardError.Length == 14);
+        }
+
+        [Test]
+        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputPlusErrorScenario()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                },
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder("Standard output from the process.")),
+
+                // 32 total chars (max 47 - 32 means that there can only be 15 in standard output)
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 47);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            JObject processDetails = JObject.FromObject(processContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 15);
+            Assert.IsTrue(standardOutput == "Standard output");
+            Assert.IsTrue(standardError.Length == 32);
+            Assert.IsTrue(standardError == "Standard error from the process.");
+        }
+
+        [Test]
+        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThresholdWhichIsLargerThanTheEntiretyOfStandardOutput()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                },
+
+                // 32 total chars (max 14 - 32 means that there can only be none left in standard output)
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder("Standard output from the process.")),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 14);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            JObject processDetails = JObject.FromObject(processContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 0);
+            Assert.IsTrue(standardError.Length == 14);
+            Assert.IsTrue(standardError == "Standard error");
+        }
+
+        [Test]
+        public void AddProcessContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_WorseCaseScenario()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                },
+
+                // 32 total chars (max 14 - 32 means that there can only be none left in standard output)
+                StandardOutput = new Common.ConcurrentBuffer(new StringBuilder("Standard output from the process.")),
+                StandardError = new Common.ConcurrentBuffer(new StringBuilder("Standard error from the process."))
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: 0);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+
+            JObject processDetails = JObject.FromObject(processContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 0);
+            Assert.IsTrue(standardError.Length == 0);
+        }
+
+        [Test]
+        public void AddProcessContextExtensionValidatesTheMaxCharacterCount()
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = 0,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "AnyCommand.exe",
+                    Arguments = "--any=arguments",
+                    WorkingDirectory = "C:\\Users\\Any"
+                }
+            };
+
+            Assert.Throws<ArgumentException>(() => new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: -1));
+        }
+
+
+        [Test]
         [TestCase("PropertyName", "propertyName")]
         [TestCase("propertyName", "propertyName")]
         public void CamelCasedExtensionCreatesTheExpectedPropertyName(string propertyName, string expectedValue)
@@ -46,7 +291,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [TestCase(LogLevel.Critical)]
-        [TestCase(LogLevel.Debug)]
+        [TestCase(LogLevel.Trace)]
         [TestCase(LogLevel.Error)]
         [TestCase(LogLevel.Information)]
         [TestCase(LogLevel.None)]
@@ -218,7 +463,7 @@ namespace VirtualClient.Contracts
 
         [Test]
         [TestCase(LogLevel.Critical)]
-        [TestCase(LogLevel.Debug)]
+        [TestCase(LogLevel.Trace)]
         [TestCase(LogLevel.Error)]
         [TestCase(LogLevel.Information)]
         [TestCase(LogLevel.None)]
@@ -325,626 +570,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LogPerformanceCountersExtensionLogsTheExpectedEvents_Scenario1()
-        {
-            string expectedToolName = "AnyTool";
-            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
-            DateTime expectedEndTime = DateTime.UtcNow;
-            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
-            var expectedMetadata = new Dictionary<string, IConvertible>(){
-               { "Key1","Value1" },
-               { "Key2","Value2" }
-            };
-
-            List<Metric> expectedCounters = new List<Metric>
-            {
-                new Metric("Metric1", 12345, MetricRelativity.HigherIsBetter, tags: expectedTags, description: "Metric 1 description", metadata: expectedMetadata)
-            };
-
-            this.mockLogger.Object.LogPerformanceCounters(
-                expectedToolName,
-                expectedCounters,
-                expectedStartTime,
-                expectedEndTime,
-                this.mockEventContext);
-
-            this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 12
-                    && context.ActivityId == this.mockEventContext.ActivityId
-                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolName")
-                    && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("metricName")
-                    && context.Properties.ContainsKey("metricValue")
-                    && context.Properties.ContainsKey("metricUnit")
-                    && context.Properties.ContainsKey("metricDescription")
-                    && context.Properties.ContainsKey("metricRelativity")
-                    && context.Properties.ContainsKey("scenarioName")
-                    && context.Properties.ContainsKey("scenarioStartTime")
-                    && context.Properties.ContainsKey("scenarioEndTime")
-                    && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
-                    && context.Properties["toolName"].ToString() == expectedToolName
-                    && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
-                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
-                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
-                    && context.Properties["metricName"].ToString() == expectedCounters[0].Name
-                    && context.Properties["metricValue"].ToString() == expectedCounters[0].Value.ToString()
-                    && context.Properties["metricUnit"].ToString() == string.Empty
-                    && context.Properties["metricDescription"].ToString() == "Metric 1 description"
-                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
-                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                   && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
-                null,
-                null));
-        }
-
-        [Test]
-        public void LogPerformanceCountersExtensionLogsTheExpectedEvents_Scenario2()
-        {
-            string expectedToolName = "AnyTool";
-            string expectedToolVersion = "1.2.3.4";
-            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
-            DateTime expectedEndTime = DateTime.UtcNow;
-            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
-            var expectedMetadata = new Dictionary<string, IConvertible>(){
-               { "Key1","Value1" },
-               { "Key2","Value2" }
-            };
-
-            List<Metric> expectedCounters = new List<Metric>
-            {
-                new Metric("Metric1", 12345, "KB/sec", MetricRelativity.HigherIsBetter, tags: expectedTags, description: "Metric 1 description", metadata: expectedMetadata)
-            };
-
-            this.mockLogger.Object.LogPerformanceCounters(
-                expectedToolName,
-                expectedCounters,
-                expectedStartTime,
-                expectedEndTime,
-                this.mockEventContext,
-                expectedToolVersion);
-
-            this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
-                It.Is<EventContext>(context => context.Properties.Count == 12
-                    && context.ActivityId == this.mockEventContext.ActivityId
-                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("toolName")
-                    && context.Properties.ContainsKey("toolVersion")
-                    && context.Properties.ContainsKey("metricName")
-                    && context.Properties.ContainsKey("metricValue")
-                    && context.Properties.ContainsKey("metricUnit")
-                    && context.Properties.ContainsKey("scenarioName")
-                    && context.Properties.ContainsKey("scenarioStartTime")
-                    && context.Properties.ContainsKey("scenarioEndTime")
-                    && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
-                    && context.Properties["toolName"].ToString() == expectedToolName
-                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
-                    && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
-                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
-                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
-                    && context.Properties["metricName"].ToString() == expectedCounters[0].Name
-                    && context.Properties["metricValue"].ToString() == expectedCounters[0].Value.ToString()
-                    && context.Properties["metricUnit"].ToString() == "KB/sec"
-                    && context.Properties["metricDescription"].ToString() == "Metric 1 description"
-                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
-                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
-                null,
-                null));
-        }
-
-        [Test]
-        [TestCase(0, null, null, null, null, null)]
-        [TestCase(0, "", "", "", "", "")]
-        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
-        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsAsyncExtensionEmitsTheExpectedProcessInformationAsTelemetry(
-            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = expectedExitCode,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = expectedCommand,
-                    Arguments = expectedArguments,
-                    WorkingDirectory = expectedWorkingDir
-                },
-                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
-                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
-            };
-
-            bool expectedInfoCaptured = false;
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
-            {
-                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
-                {
-                    Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
-                    Assert.IsInstanceOf<EventContext>(state);
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
-
-                    string expectedProcessInfo = new
-                    {
-                        id = process.Id,
-                        command = $"{expectedCommand} {expectedArguments}".Trim(),
-                        workingDir = expectedWorkingDir ?? string.Empty,
-                        exitCode = expectedExitCode,
-                        standardOutput = expectedStandardOutput ?? string.Empty,
-                        standardError = expectedStandardError ?? string.Empty
-                    }.ToJson();
-
-                    string actualProcessInfo = processContext.ToJson();
-
-                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
-                    expectedInfoCaptured = true;
-                }
-            };
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
-                .ConfigureAwait(false);
-
-            Assert.IsTrue(expectedInfoCaptured);
-        }
-
-        [Test]
-        [TestCase(0, null, null, null, null, null)]
-        [TestCase(0, "", "", "", "", "")]
-        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
-        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsExtensionEmitsTheExpectedProcessInformationAsTelemetryWhenTheToolsetNameIsProvided(
-           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = expectedExitCode,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = expectedCommand,
-                    Arguments = expectedArguments,
-                    WorkingDirectory = expectedWorkingDir
-                },
-                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
-                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
-            };
-
-            string expectedToolset = "AnyWorkloadToolset";
-            bool expectedInfoCaptured = false;
-
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
-            {
-                if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessDetails")
-                {
-                    Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
-                    Assert.IsInstanceOf<EventContext>(state);
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
-
-                    string expectedProcessInfo = new
-                    {
-                        id = process.Id,
-                        command = $"{expectedCommand} {expectedArguments}".Trim(),
-                        workingDir = expectedWorkingDir ?? string.Empty,
-                        exitCode = expectedExitCode,
-                        standardOutput = expectedStandardOutput ?? string.Empty,
-                        standardError = expectedStandardError ?? string.Empty
-                    }.ToJson();
-
-                    string actualProcessInfo = processContext.ToJson();
-
-                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
-                    expectedInfoCaptured = true;
-                }
-            };
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(expectedInfoCaptured);
-        }
-
-        [Test]
-        [TestCase("<AnyToolset<")]
-        [TestCase(">AnyToolset>")]
-        [TestCase(":AnyToolset:")]
-        [TestCase("\"AnyToolset\"")]
-        [TestCase("/AnyToolset/")]
-        [TestCase("\\AnyToolset\\")]
-        [TestCase("|AnyToolset|")]
-        [TestCase("?AnyToolset?")]
-        [TestCase("*AnyToolset*")]
-        public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenEmittingTelemetry(string toolsetName)
-        {
-            InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            bool confirmed = false;
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
-            {
-                if (eventInfo.Name == $"{nameof(TestExecutor)}.AnyToolset.ProcessDetails")
-                {
-                    confirmed = true;
-                }
-            };
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        [TestCase("AccessKey", "AnyKey123")]
-        [TestCase("AccessToken", "AnyToken123")]
-        [TestCase("Password", "AnyPass123")]
-        [TestCase("Pwd", "AnyPass123")]
-        public async Task LogProcessDetailsExtensionRemovesSensitiveDataFromTheProcessCommandDetailsInTelemetry(string sensitiveDataReference, string sensitiveData)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "C:\\any\\anyworkload.exe",
-                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
-                }
-            };
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            bool confirmed = false;
-            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
-            {
-                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
-                {
-                    Assert.IsInstanceOf<EventContext>(state);
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
-
-                    string actualProcessInfo = processContext.ToJson();
-                    Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
-                    confirmed = true;
-                }
-            };
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        [TestCase(0, null, null, null, null, null)]
-        [TestCase(0, "", "", "", "", "")]
-        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
-        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsToFileSystemAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
-            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = expectedExitCode,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = expectedCommand,
-                    Arguments = expectedArguments,
-                    WorkingDirectory = expectedWorkingDir
-                },
-                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
-                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
-            };
-
-            bool expectedLogFileWritten = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, CancellationToken>((path, content, token) =>
-                {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
-
-                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
-                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
-                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
-                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Delimiter missing");
-
-                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
-                    {
-                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
-                    {
-                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
-                    }
-
-                    expectedLogFileWritten = true;
-                });
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(expectedLogFileWritten);
-        }
-
-        [Test]
-        [TestCase(0, null, null, null, null, null)]
-        [TestCase(0, "", "", "", "", "")]
-        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
-        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
-        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsToFileAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenTheToolsetNameIsProvided(
-            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                ExitCode = expectedExitCode,
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = expectedCommand,
-                    Arguments = expectedArguments,
-                    WorkingDirectory = expectedWorkingDir
-                },
-                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
-                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
-            };
-
-            string expectedToolset = "AnyWorkloadToolset";
-            bool expectedLogFileWritten = false;
-
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, CancellationToken>((path, content, token) =>
-                {
-                    string expectedLogDirectory = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
-
-                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
-                    Assert.IsTrue(path.EndsWith($"{expectedToolset}.log".ToLowerInvariant()), "Log file name not matched");
-                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
-                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
-                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Delimiter missing");
-
-                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
-                    {
-                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
-                    {
-                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
-                    }
-
-                    expectedLogFileWritten = true;
-                });
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(expectedLogFileWritten);
-        }
-
-        [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExist()
-        {
-            InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
- 
-            string expectedLogPath = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
-        }
-
-        [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
-        {
-            InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            string expectedToolset = "AnyWorkloadToolset";
-            string expectedLogPath = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
-        }
-
-        [Test]
-        [TestCase("AccessKey", "AnyKey123")]
-        [TestCase("AccessToken", "AnyToken123")]
-        [TestCase("Password", "AnyPass123")]
-        [TestCase("Pwd", "AnyPass123")]
-        public async Task LogProcessDetailsToFileAsyncExtensionRemovesSensitiveDataFromTheProcessCommandDetailsWhenLoggingToFile(string sensitiveDataReference, string sensitiveData)
-        {
-            InMemoryProcess process = new InMemoryProcess
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "C:\\any\\anyworkload.exe",
-                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
-                }
-            };
-
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, CancellationToken>((path, content, token) =>
-                {
-                    Assert.IsFalse(content.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
-                    confirmed = true;
-                });
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
-        {
-            InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, CancellationToken>((path, content, token) =>
-                {
-                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
-
-                    Assert.IsTrue(path.StartsWith(expectedLogPath));
-                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
-                    confirmed = true;
-                });
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), "AnyToolset", logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        [TestCase("<anytoolset<")]
-        [TestCase(">anytoolset>")]
-        [TestCase(":anytoolset:")]
-        [TestCase("\"anytoolset\"")]
-        [TestCase("/anytoolset/")]
-        [TestCase("\\anytoolset\\")]
-        [TestCase("|anytoolset|")]
-        [TestCase("?anytoolset?")]
-        [TestCase("*anytoolset*")]
-        public async Task LogProcessDetailsToFileAsyncExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
-        {
-            InMemoryProcess process = new InMemoryProcess();
-            TestExecutor component = new TestExecutor(this.mockFixture);
-
-            bool confirmed = false;
-            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<string, string, CancellationToken>((path, content, token) =>
-                {
-                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
-
-                    Assert.IsTrue(path.StartsWith(expectedLogPath));
-                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
-                    confirmed = true;
-                });
-
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: false, logToFile: true)
-               .ConfigureAwait(false);
-
-            Assert.IsTrue(confirmed);
-        }
-
-        [Test]
-        public void LogSystemEventsExtensionLogsTheExpectedEvents()
-        {
-            string expectedMessage = "RealtimeDataMonitorCounters";
-            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
-            {
-                ["SystemEventLog"] = "Process shutdown unexpectedly.",
-                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced."
-            };
-
-            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
-
-            this.mockLogger.Verify(logger => logger.Log(
-                LogLevel.Information,
-                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedMessage),
-                It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
-                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
-                    && context.Properties.ContainsKey("eventType")
-                    && context.Properties.ContainsKey("eventInfo")),
-                null,
-                null),
-                Times.Exactly(2)); // Each performance counter is logged as an individual message
-        }
-
-        [Test]
-        public void LogSystemEventsExtensionIncludesTheSystemEventInformationInTheEventContext()
-        {
-            string expectedMessage = "RealtimeDataMonitorCounters";
-            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
-            {
-                ["SystemEventLog"] = "Process shutdown unexpectedly.",
-                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced.",
-                ["MicrocodeVersion"] = 1234
-            };
-
-            int counterIndex = 0;
-
-            this.mockLogger
-                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
-                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
-                {
-                    Assert.IsNotNull(state);
-                    Assert.IsTrue(state.Properties.ContainsKey("eventType"));
-                    Assert.IsTrue(state.Properties.ContainsKey("eventInfo"));
-                    Assert.AreEqual(state.Properties["eventType"].ToString(), expectedSystemEvents.ElementAt(counterIndex).Key);
-                    Assert.AreEqual(state.Properties["eventInfo"], expectedSystemEvents.ElementAt(counterIndex).Value);
-                    counterIndex++;
-                });
-
-            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
-        }
-
-
-        [Test]
-        public void LogSystemEventsExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
-        {
-            EventContext originalContext = new EventContext(Guid.NewGuid(), new Dictionary<string, object>
-            {
-                ["property1"] = "Any Value",
-                ["property2"] = 1234
-            });
-
-            EventContext cloneOfOriginal = originalContext.Clone();
-
-            IDictionary<string, object> systemEvents = new Dictionary<string, object>
-            {
-                ["SystemEventLog"] = "Process shutdown unexpectedly."
-            };
-
-            this.mockLogger
-                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
-                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
-                {
-                    // A clone is used to avoid side effecting the original
-                    EventContext actualContext = state;
-                    Assert.IsFalse(object.ReferenceEquals(originalContext, actualContext));
-                });
-
-            this.mockLogger.Object.LogSystemEvents("AnyMessage", systemEvents, this.mockEventContext);
-
-            // The original should not have been changed.
-            Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);
-            Assert.AreEqual(originalContext.ParentActivityId, cloneOfOriginal.ParentActivityId);
-            Assert.AreEqual(originalContext.TransactionId, cloneOfOriginal.TransactionId);
-            Assert.AreEqual(originalContext.Properties.Count, cloneOfOriginal.Properties.Count);
-            CollectionAssert.AreEquivalent(originalContext.Properties.Keys, cloneOfOriginal.Properties.Keys);
-            CollectionAssert.AreEquivalent(originalContext.Properties.Values, cloneOfOriginal.Properties.Values);
-        }
-
-        [Test]
         public void LogMetricsExtensionLogsTheExpectedEvents_Scenario1()
         {
             string expectedScenarioName = "AnyTestName";
@@ -1001,6 +626,8 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricDescription"].ToString() == string.Empty
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.Undefined.ToString()
                     && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["toolResults"].ToString() == string.Empty
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
                     && context.Properties["metricMetadata"].ToString() == string.Empty),
                 null,
@@ -1026,7 +653,7 @@ namespace VirtualClient.Contracts
             List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
             var expectedMetadata = new Dictionary<string, IConvertible>(){
                { "Key1","Value1" },
-               { "Key2","Value2" } 
+               { "Key2","Value2" }
             };
 
             this.mockLogger.Object.LogMetrics(
@@ -1206,6 +833,1243 @@ namespace VirtualClient.Contracts
                 "AnyCommandLine",
                 new List<string>(),
                 this.mockEventContext);
+
+            // The original should not have been changed.
+            Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);
+            Assert.AreEqual(originalContext.ParentActivityId, cloneOfOriginal.ParentActivityId);
+            Assert.AreEqual(originalContext.TransactionId, cloneOfOriginal.TransactionId);
+            Assert.AreEqual(originalContext.Properties.Count, cloneOfOriginal.Properties.Count);
+            CollectionAssert.AreEquivalent(originalContext.Properties.Keys, cloneOfOriginal.Properties.Keys);
+            CollectionAssert.AreEquivalent(originalContext.Properties.Values, cloneOfOriginal.Properties.Values);
+        }
+
+        [Test]
+        public void LogPerformanceCountersExtensionLogsTheExpectedEvents_Scenario1()
+        {
+            string expectedToolName = "AnyTool";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+            var expectedMetadata = new Dictionary<string, IConvertible>(){
+               { "Key1","Value1" },
+               { "Key2","Value2" }
+            };
+
+            List<Metric> expectedCounters = new List<Metric>
+            {
+                new Metric("Metric1", 12345, MetricRelativity.HigherIsBetter, tags: expectedTags, description: "Metric 1 description", metadata: expectedMetadata)
+            };
+
+            this.mockLogger.Object.LogPerformanceCounters(
+                expectedToolName,
+                expectedCounters,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
+                It.Is<EventContext>(context => context.Properties.Count == 12
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricUnit")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["metricName"].ToString() == expectedCounters[0].Name
+                    && context.Properties["metricValue"].ToString() == expectedCounters[0].Value.ToString()
+                    && context.Properties["metricUnit"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Metric 1 description"
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                   && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogPerformanceCountersExtensionLogsTheExpectedEvents_Scenario2()
+        {
+            string expectedToolName = "AnyTool";
+            string expectedToolVersion = "1.2.3.4";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+            var expectedMetadata = new Dictionary<string, IConvertible>(){
+               { "Key1","Value1" },
+               { "Key2","Value2" }
+            };
+
+            List<Metric> expectedCounters = new List<Metric>
+            {
+                new Metric("Metric1", 12345, "KB/sec", MetricRelativity.HigherIsBetter, tags: expectedTags, description: "Metric 1 description", metadata: expectedMetadata)
+            };
+
+            this.mockLogger.Object.LogPerformanceCounters(
+                expectedToolName,
+                expectedCounters,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext,
+                expectedToolVersion);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name == ("PerformanceCounter")),
+                It.Is<EventContext>(context => context.Properties.Count == 12
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricUnit")
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["metricName"].ToString() == expectedCounters[0].Name
+                    && context.Properties["metricValue"].ToString() == expectedCounters[0].Value.ToString()
+                    && context.Properties["metricUnit"].ToString() == "KB/sec"
+                    && context.Properties["metricDescription"].ToString() == "Metric 1 description"
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                    && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
+                null,
+                null));
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsAsyncExtensionEmitsTheExpectedProcessInformationAsTelemetry(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            string expectedResults = "Any results output by the process.";
+            bool expectedProcessDetailsCaptured = false;
+            bool expectedProcessResultsCaptured = false;
+
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
+                Assert.IsInstanceOf<EventContext>(state);
+                Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
+                {
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        standardOutput = expectedStandardOutput ?? string.Empty,
+                        standardError = expectedStandardError ?? string.Empty
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedProcessDetailsCaptured = true;
+                }
+                else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
+                {
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        results = expectedResults
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedProcessResultsCaptured = true;
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: expectedResults.AsArray(), logToTelemetry: true)
+                .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedProcessDetailsCaptured);
+            Assert.IsTrue(expectedProcessResultsCaptured);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsExtensionEmitsTheExpectedProcessInformationAsTelemetryWhenTheToolsetNameIsProvided(
+           int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            string expectedToolset = "AnyWorkloadToolset";
+            string expectedResults = "Any results output by the process.";
+            bool expectedProcessDetailsCaptured = false;
+            bool expectedProcessResultsCaptured = false;
+
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
+                Assert.IsInstanceOf<EventContext>(state);
+                Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessDetails")
+                {
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        standardOutput = expectedStandardOutput ?? string.Empty,
+                        standardError = expectedStandardError ?? string.Empty
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedProcessDetailsCaptured = true;
+                }
+                else if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessResults")
+                {
+                    string expectedProcessInfo = new
+                    {
+                        id = process.Id,
+                        command = $"{expectedCommand} {expectedArguments}".Trim(),
+                        workingDir = expectedWorkingDir ?? string.Empty,
+                        exitCode = expectedExitCode,
+                        results = expectedResults
+                    }.ToJson();
+
+                    string actualProcessInfo = processContext.ToJson();
+
+                    SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
+                    expectedProcessResultsCaptured = true;
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: expectedResults.AsArray(), logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedProcessDetailsCaptured);
+            Assert.IsTrue(expectedProcessResultsCaptured);
+        }
+
+        [Test]
+        [TestCase("<AnyToolset<")]
+        [TestCase(">AnyToolset>")]
+        [TestCase(":AnyToolset:")]
+        [TestCase("\"AnyToolset\"")]
+        [TestCase("/AnyToolset/")]
+        [TestCase("\\AnyToolset\\")]
+        [TestCase("|AnyToolset|")]
+        [TestCase("?AnyToolset?")]
+        [TestCase("*AnyToolset*")]
+        public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenEmittingTelemetry(string toolsetName)
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool processDetailsHandled = false;
+            bool processResultsHandled = false;
+
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.AnyToolset.ProcessDetails")
+                {
+                    processDetailsHandled = true;
+                }
+                else if (eventInfo.Name == $"{nameof(TestExecutor)}.AnyToolset.ProcessResults")
+                {
+                    processResultsHandled = true;
+                }
+            };
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: "Any results".AsArray(), logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(processDetailsHandled);
+            Assert.IsTrue(processResultsHandled);
+        }
+
+        [Test]
+        [TestCase("AccessKey", "AnyKey123")]
+        [TestCase("AccessToken", "AnyToken123")]
+        [TestCase("Password", "AnyPass123")]
+        [TestCase("Pwd", "AnyPass123")]
+        public async Task LogProcessDetailsExtensionRemovesSensitiveDataFromTheProcessCommandDetailsInTelemetry(string sensitiveDataReference, string sensitiveData)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "C:\\any\\anyworkload.exe",
+                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.Logger.OnLog = (level, eventInfo, state, error) =>
+            {
+                if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
+                {
+                    Assert.IsInstanceOf<EventContext>(state);
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                    string actualProcessInfo = processContext.ToJson();
+                    Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
+                    confirmed = true;
+                }
+                else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
+                {
+                    Assert.IsInstanceOf<EventContext>(state);
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+
+                    string actualProcessInfo = processContext.ToJson();
+                    Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
+                    confirmed = true;
+                }
+            };
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: "Any results".AsArray(), logToTelemetry: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsToFileSystemAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
+                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
+                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsFalse(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter unexpected");
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
+                    }
+
+                    expectedLogFileWritten = true;
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsToFileAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenTheToolsetNameIsProvided(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            string expectedToolset = "AnyWorkloadToolset";
+            bool expectedLogFileWritten = false;
+
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{expectedToolset}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
+                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
+                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsFalse(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter unexpected");
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
+                    }
+
+                    expectedLogFileWritten = true;
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        [TestCase(0, null, null, null, null, null)]
+        [TestCase(0, "", "", "", "", "")]
+        [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", null, null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
+        [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
+        [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
+        public async Task LogProcessDetailsToFileSystemAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenResultsAreProvided(
+            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                ExitCode = expectedExitCode,
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = expectedCommand,
+                    Arguments = expectedArguments,
+                    WorkingDirectory = expectedWorkingDir
+                },
+                StandardOutput = expectedStandardOutput != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardOutput)) : null,
+                StandardError = expectedStandardError != null ? new Common.ConcurrentBuffer(new StringBuilder(expectedStandardError)) : null
+            };
+
+            bool expectedLogFileWritten = false;
+            string expectedResults = "Any results from the execution of the process.";
+
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
+                    Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
+                    Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
+                    Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
+                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsTrue(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter missing");
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardOutput, StringComparison.Ordinal), "Standard output missing");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(expectedStandardError))
+                    {
+                        Assert.IsTrue(content.Contains(expectedStandardError, StringComparison.Ordinal), "Standard error missing");
+                    }
+
+                    Assert.IsTrue(content.Contains(expectedResults, StringComparison.Ordinal));
+
+                    expectedLogFileWritten = true;
+                });
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: expectedResults.AsArray(), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExist()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+ 
+            string expectedLogPath = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            string expectedToolset = "AnyWorkloadToolset";
+            string expectedLogPath = this.mockFixture.GetLogsPath(expectedToolset.ToLowerInvariant());
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            this.mockFixture.Directory.Verify(dir => dir.CreateDirectory(expectedLogPath), Times.Once);
+        }
+
+        [Test]
+        [TestCase("AccessKey", "AnyKey123")]
+        [TestCase("AccessToken", "AnyToken123")]
+        [TestCase("Password", "AnyPass123")]
+        [TestCase("Pwd", "AnyPass123")]
+        public async Task LogProcessDetailsToFileAsyncExtensionRemovesSensitiveDataFromTheProcessCommandDetailsWhenLoggingToFile(string sensitiveDataReference, string sensitiveData)
+        {
+            InMemoryProcess process = new InMemoryProcess
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "C:\\any\\anyworkload.exe",
+                    Arguments = $"--sensitive-data=\"{sensitiveDataReference}={sensitiveData}\""
+                }
+            };
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    Assert.IsFalse(content.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsToFileAsyncExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+
+                    Assert.IsTrue(path.StartsWith(expectedLogPath));
+                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), "AnyToolset", logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        [TestCase("<anytoolset<")]
+        [TestCase(">anytoolset>")]
+        [TestCase(":anytoolset:")]
+        [TestCase("\"anytoolset\"")]
+        [TestCase("/anytoolset/")]
+        [TestCase("\\anytoolset\\")]
+        [TestCase("|anytoolset|")]
+        [TestCase("?anytoolset?")]
+        [TestCase("*anytoolset*")]
+        public async Task LogProcessDetailsToFileAsyncExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
+        {
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogPath = this.mockFixture.GetLogsPath("anytoolset");
+
+                    Assert.IsTrue(path.StartsWith(expectedLogPath));
+                    Assert.IsTrue(path.EndsWith("anytoolset.log"));
+                    confirmed = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionLogsTheExpectedInformation()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogFailedMetric(
+                expectedToolName,
+                expectedScenarioName,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext,
+                expectedScenarioArguments,
+                expectedMetricCategorization,
+                expectedToolVersion,
+                expectedTags);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionLogsTheExpectedInformation_WhenMinimumInfoIsProvided()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogFailedMetric(expectedToolName, expectedScenarioName, expectedStartTime, expectedEndTime, this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionLogsTheExpectedInformation()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogSuccessMetric(
+                expectedToolName,
+                expectedScenarioName,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext,
+                expectedScenarioArguments,
+                expectedMetricCategorization,
+                expectedToolVersion,
+                expectedTags);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionLogsTheExpectedInformation_WhenMinimumInfoIsProvided()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogSuccessMetric(expectedToolName, expectedScenarioName, expectedStartTime, expectedEndTime, this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario1()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+            component.LogFailedMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario2()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
+            component.LogFailedMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Any_Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario3()
+        {
+            // Scenario:
+            // Complete information provided including scenario name, tool name, and timestamps.
+
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.LogFailedMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario1()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+            component.LogSuccessMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario2()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
+            component.LogSuccessMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Any_Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario3()
+        {
+            // Scenario:
+            // Complete information provided including scenario name, tool name, and timestamps.
+
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.LogSuccessMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSystemEventsExtensionLogsTheExpectedEvents()
+        {
+            string expectedMessage = "RealtimeDataMonitorCounters";
+            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
+            {
+                ["SystemEventLog"] = "Process shutdown unexpectedly.",
+                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced."
+            };
+
+            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.SystemEvent && eventId.Name == expectedMessage),
+                It.Is<EventContext>(context => context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("eventType")
+                    && context.Properties.ContainsKey("eventInfo")),
+                null,
+                null),
+                Times.Exactly(2)); // Each performance counter is logged as an individual message
+        }
+
+        [Test]
+        public void LogSystemEventsExtensionIncludesTheSystemEventInformationInTheEventContext()
+        {
+            string expectedMessage = "RealtimeDataMonitorCounters";
+            IDictionary<string, object> expectedSystemEvents = new Dictionary<string, object>
+            {
+                ["SystemEventLog"] = "Process shutdown unexpectedly.",
+                ["SystemFileChange"] = "ntdll.dll version 1.2.3 replaced.",
+                ["MicrocodeVersion"] = 1234
+            };
+
+            int counterIndex = 0;
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    Assert.IsNotNull(state);
+                    Assert.IsTrue(state.Properties.ContainsKey("eventType"));
+                    Assert.IsTrue(state.Properties.ContainsKey("eventInfo"));
+                    Assert.AreEqual(state.Properties["eventType"].ToString(), expectedSystemEvents.ElementAt(counterIndex).Key);
+                    Assert.AreEqual(state.Properties["eventInfo"], expectedSystemEvents.ElementAt(counterIndex).Value);
+                    counterIndex++;
+                });
+
+            this.mockLogger.Object.LogSystemEvents(expectedMessage, expectedSystemEvents, this.mockEventContext);
+        }
+
+
+        [Test]
+        public void LogSystemEventsExtensionDoesNotSideEffectOrChangeAnEventContextProvided()
+        {
+            EventContext originalContext = new EventContext(Guid.NewGuid(), new Dictionary<string, object>
+            {
+                ["property1"] = "Any Value",
+                ["property2"] = 1234
+            });
+
+            EventContext cloneOfOriginal = originalContext.Clone();
+
+            IDictionary<string, object> systemEvents = new Dictionary<string, object>
+            {
+                ["SystemEventLog"] = "Process shutdown unexpectedly."
+            };
+
+            this.mockLogger
+                .Setup(logger => logger.Log(It.IsAny<LogLevel>(), It.IsAny<EventId>(), It.IsAny<EventContext>(), null, null))
+                .Callback<LogLevel, EventId, EventContext, Exception, Func<EventContext, Exception, string>>((level, eventId, state, exc, formatter) =>
+                {
+                    // A clone is used to avoid side effecting the original
+                    EventContext actualContext = state;
+                    Assert.IsFalse(object.ReferenceEquals(originalContext, actualContext));
+                });
+
+            this.mockLogger.Object.LogSystemEvents("AnyMessage", systemEvents, this.mockEventContext);
 
             // The original should not have been changed.
             Assert.AreEqual(originalContext.ActivityId, cloneOfOriginal.ActivityId);

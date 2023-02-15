@@ -12,118 +12,118 @@
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "bt.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "bt.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "bt.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "cg.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "cg.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "cg.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "ep.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "ep.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "ep.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "ft.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "ft.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "ft.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "is.C.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "is.C.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "is.C.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "lu.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "lu.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "lu.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "mg.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "mg.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "mg.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "sp.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "sp.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "sp.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "dt.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "dt.D.x WH",
-                "Username": "$.Parameters.Username",
-                "Scenario": "dt.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "dt.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "dt.D.x BH",
-                "Username": "$.Parameters.Username",
-                "Scenario": "dt.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "dt.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "dt.D.x SH",
-                "Username": "$.Parameters.Username",
-                "Scenario": "dt.D.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "dc.B.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "dc.B.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "dc.B.x"
+                "Username": "$.Parameters.Username"
             }
         },
         {
             "Type": "NASParallelBenchExecutor",
             "Parameters": {
+                "Scenario": "ua.D.x",
                 "PackageName": "nasparallelbench",
                 "Benchmark": "ua.D.x",
-                "Username": "$.Parameters.Username",
-                "Scenario": "ua.D.x"
+                "Username": "$.Parameters.Username"
             }
         }
     ],
@@ -131,14 +131,14 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "libopenmpi-dev,make,openmpi-bin,gfortran"
             }
         },
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallNASParallelBenchWorkloadPackage",
+                "Scenario": "InstallNASParallel",
                 "BlobContainer": "packages",
                 "BlobName": "nasparallelbench3.4.2.zip",
                 "PackageName": "nasparallelbench",

@@ -34,7 +34,7 @@ namespace VirtualClient.Actions
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string expectedCommand = @$"stress-ng --cpu 71 --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedCommand = @$"sudo stress-ng --cpu 71 --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

@@ -20,7 +20,7 @@
         {
             "Type": "NetworkingWorkloadProxy",
             "Parameters": {
-                "Scenario": "Networking_Workload_Proxy",
+                "Scenario": "ProxyServer",
                 "Role": "Server"
             }
         },
@@ -343,7 +343,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallNetworkingWorkloadPackage",
+                "Scenario": "InstallNetworkToolsets",
                 "BlobContainer": "packages",
                 "BlobName": "networking.2.0.0.zip",
                 "PackageName": "networking",
@@ -353,7 +353,7 @@
         {
             "Type": "NetworkConfigurationSetup",
             "Parameters": {
-                "Scenario": "ConfigureNetworkEphemeralPorts",
+                "Scenario": "ConfigureNetwork",
                 "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
                 "EnableBusyPoll": "$.Parameters.EnableBusyPoll",
                 "DisableFirewall": "$.Parameters.DisableFirewall",

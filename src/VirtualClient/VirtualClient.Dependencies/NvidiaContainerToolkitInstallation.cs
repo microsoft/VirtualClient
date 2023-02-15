@@ -74,9 +74,7 @@ namespace VirtualClient.Dependencies
                         default:
                             // different distro installation to be addded.
                             throw new WorkloadException(
-                                $"Nvidia Container Toolkit Installtion is not supported on the current Linux distro - {distroInfo.LinuxDistribution.ToString()}.  through VC " +
-                                $" Supported distros include:" +
-                                $" Ubuntu, Debian, CentOS7, CentOS8, RHEL7, SUSE. ",
+                                $"Nvidia Container Toolkit Installation is not supported by Virtual Client on the current Linux distro '{distroInfo.LinuxDistribution}'",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
 
@@ -90,9 +88,7 @@ namespace VirtualClient.Dependencies
                 {
                     // CUDA and Nvidia driver installation for other platforms to be added.
                     throw new WorkloadException(
-                        $"Nvidia Container Toolkit is not supported on the current platform {this.Platform} through VC." +
-                        $"Supported Platforms include:" +
-                        $" Unix ",
+                        $"Nvidia Container Toolkit is not supported by Virtual Client on the current platform '{this.Platform}'.",
                         ErrorReason.PlatformNotSupported);
                 }
             }

@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
@@ -171,9 +170,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Copies = await this.GetServerCopiesCount(this.ServerApiClient, cancellationToken)
-                                                        .ConfigureAwait(false);
-                        await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        this.Copies = await this.GetServerCopiesCount(this.ServerApiClient, cancellationToken);
+                        await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
                     }
                 }));
             }
@@ -208,7 +206,7 @@ namespace VirtualClient.Actions
                         startTime,
                         endTime,
                         workloadMetrics,
-                        string.Empty,
+                        null,
                         null,
                         this.Tags,
                         telemetryContext);
@@ -241,12 +239,10 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results, logToFile: true)
-                                    .ConfigureAwait();
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results: process.StandardOutput.ToString().AsArray(), logToFile: true);
+                                process.ThrowIfWorkloadFailed();
 
                                 results += $"{process.StandardOutput.ToString()}{Environment.NewLine}";
-
-                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                             }
                         }
                     }

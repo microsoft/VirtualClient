@@ -275,6 +275,18 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--logToFile")]
+        [TestCase("--logtofile")]
+        [TestCase("--log-to-file")]
+        [TestCase("--ltf")]
+        public void LogToFileFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateLogToFileFlag();
+            ParseResult result = option.Parse(alias);
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--metadata")]
         [TestCase("--mt")]
         public void MetadataOptionSupportsExpectedAliases(string alias)

@@ -53,16 +53,23 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, OpenFOAMSectionDelimiter);
-            this.ThrowIfInvalidOutputFormat();
-            this.CreateExecutionTimesDataTable();
+            try
+            {
+                this.Preprocess();
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, OpenFOAMSectionDelimiter);
+                this.ThrowIfInvalidOutputFormat();
+                this.CreateExecutionTimesDataTable();
 
-            List<Metric> metrics = new List<Metric>();
-            double numberOfIterationsPerMinute = this.CalculateIterationsPerMinute();
+                List<Metric> metrics = new List<Metric>();
+                double numberOfIterationsPerMinute = this.CalculateIterationsPerMinute();
 
-            metrics.Add(new Metric("Iterations/min", numberOfIterationsPerMinute, "itrs/min", MetricRelativity.HigherIsBetter));
-            return metrics;
+                metrics.Add(new Metric("Iterations/min", numberOfIterationsPerMinute, "itrs/min", MetricRelativity.HigherIsBetter));
+                return metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse OpenFOAM metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

@@ -58,7 +58,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
                                     await this.LogProcessDetailsAsync(process, telemetryContext, "Latte", logToFile: true);
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                                    process.ThrowIfWorkloadFailed();
                                     await this.SystemManagement.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());
                                 }
                             }

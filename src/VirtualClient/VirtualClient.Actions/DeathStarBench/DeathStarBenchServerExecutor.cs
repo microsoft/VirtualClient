@@ -10,7 +10,6 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
-    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -22,6 +21,7 @@ namespace VirtualClient.Actions
     public class DeathStarBenchServerExecutor : DeathStarBenchExecutor
     {
         private bool disposed;
+        private string tokenFilePath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DeathStarBenchServerExecutor"/> class.
@@ -49,8 +49,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
-        private string TokenFilePath { get; set; }
-
         /// <summary>
         /// Executes server side of workload.
         /// </summary>
@@ -66,29 +64,22 @@ namespace VirtualClient.Actions
                 {
                     if (!this.IsMultiRoleLayout())
                     {
-                        try
-                        {
-                            this.Logger.LogTraceMessage("Server Polling until state deleted or not present.");
-                            await DeathStarBenchClientExecutor.PollUntilStateDeletedAsync(
-                                this.ServerApiClient,
-                                nameof(DeathStarBenchState),
-                                DeathStarBenchExecutor.StateConfirmationPollingTimeout,
-                                cancellationToken).ConfigureAwait();
+                        this.Logger.LogTraceMessage("Server Polling until state deleted or not present.");
 
-                            await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait();
-                            await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait();
+                        await DeathStarBenchClientExecutor.PollUntilStateDeletedAsync(
+                            this.ServerApiClient,
+                            nameof(DeathStarBenchState),
+                            DeathStarBenchExecutor.StateConfirmationPollingTimeout,
+                            cancellationToken).ConfigureAwait();
 
-                            DeathStarBenchState serverState = new DeathStarBenchState(this.ServiceName, true);
-                            HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), serverState, cancellationToken)
-                                .ConfigureAwait();
+                        await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait();
+                        await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait();
 
-                            response.ThrowOnError<WorkloadException>();
+                        DeathStarBenchState serverState = new DeathStarBenchState(this.ServiceName, true);
+                        HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), serverState, cancellationToken)
+                            .ConfigureAwait();
 
-                        }
-                        catch (Exception)
-                        {
-                            throw new Exception($"Some error at server side in {this.ServiceName} scenario");
-                        }
+                        response.ThrowOnError<WorkloadException>();
                     }
                     else
                     {
@@ -111,8 +102,8 @@ namespace VirtualClient.Actions
                 if (this.IsMultiRoleLayout())
                 {
                     Console.WriteLine($"{this.ServiceDirectory}");
-                    this.TokenFilePath = this.PlatformSpecifics.Combine(this.ServiceDirectory, "token.txt");
-                    this.ResetFile(this.TokenFilePath, telemetryContext);
+                    this.tokenFilePath = this.PlatformSpecifics.Combine(this.ServiceDirectory, "token.txt");
+                    this.ResetFile(this.tokenFilePath, telemetryContext);
 
                     ClientInstance clientInstance = this.GetLayoutClientInstance();
                     this.ServerIpAddress = clientInstance.IPAddress;
@@ -184,7 +175,7 @@ namespace VirtualClient.Actions
         {
             ISystemManagement systemManager = this.Dependencies.GetService<ISystemManagement>();
 
-            string clientCommand = await systemManager.FileSystem.File.ReadAllTextAsync(this.TokenFilePath, cancellationToken)
+            string clientCommand = await systemManager.FileSystem.File.ReadAllTextAsync(this.tokenFilePath, cancellationToken)
                 .ConfigureAwait();
 
             this.SwarmCommand = new State(new Dictionary<string, IConvertible>
@@ -204,8 +195,6 @@ namespace VirtualClient.Actions
             }
             else
             {
-                this.Logger.LogTraceMessage($"Updating Deathstarcommand state ");
-
                 string responseContent = await response.Content.ReadAsStringAsync()
                     .ConfigureAwait();
 

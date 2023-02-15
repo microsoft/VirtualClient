@@ -13,7 +13,7 @@
         {
             "Type": "MemcachedServerExecutor",
             "Parameters": {
-                "Scenario": "MemcachedServer",
+                "Scenario": "Server",
                 "PackageName": "Memcached",
                 "Role": "Server",
                 "Port": "6379",
@@ -181,7 +181,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForMemtier",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "autoconf,automake,libpcre3-dev,libevent-dev,zlib1g-dev,libssl-dev,pkg-config,build-essential",
                 "Packages-Yum": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git",
                 "Packages-Dnf": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git"
@@ -190,16 +190,16 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForMemcached",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "wget,tcl-dev,numactl",
                 "Packages-Yum": "wget,tcl-devel,numactl",
                 "Packages-Dnf": "wget,tcl-devel,numactl"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneMemtierBenchmarkRepo",
+                "Scenario": "CloneRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }

@@ -14,7 +14,7 @@
         {
             "Type": "AspNetBenchExecutor",
             "Parameters": {
-                "Scenario": "AspNetJson",
+                "Scenario": "JsonSerialization",
                 "PackageName": "aspnetbenchmarks",
                 "BombardierPackageName": "bombardier",
                 "DotNetSdkPackageName": "dotnetsdk",
@@ -33,13 +33,13 @@
         {
             "Type": "ChocolateyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGitOnWindows",
+                "Scenario": "InstallGit",
                 "PackageName": "chocolatey",
                 "Packages": "git"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
                 "Scenario": "CloneAspNetBenchmarksRepo",
                 "RepoUri": "https://github.com/aspnet/Benchmarks.git",
@@ -57,7 +57,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "DownloadBombardierBinary",
+                "Scenario": "InstallBombardier",
                 "BlobContainer": "packages",
                 "BlobName": "bombardier.1.2.5.zip",
                 "PackageName": "bombardier",

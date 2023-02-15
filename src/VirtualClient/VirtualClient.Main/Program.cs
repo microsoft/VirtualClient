@@ -60,7 +60,7 @@ namespace VirtualClient
 
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
-                Program.InitializeStartupLogging();
+                Program.InitializeStartupLogging(args);
 
                 using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
                 {
@@ -204,6 +204,9 @@ namespace VirtualClient
                 // --layoutPath
                 OptionFactory.CreateLayoutPathOption(required: false),
 
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false),
+
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
 
@@ -240,6 +243,9 @@ namespace VirtualClient
 
                 // --ipaddress
                 OptionFactory.CreateIPAddressOption(required: false),
+
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false),
 
                 // --monitor
                 OptionFactory.CreateMonitorFlag(required: false, false)
@@ -278,6 +284,9 @@ namespace VirtualClient
                 // --metadata
                 OptionFactory.CreateMetadataOption(required: false),
 
+                // --log-to-file
+                OptionFactory.CreateLogToFileFlag(required: false),
+
                 // --packageStore
                 OptionFactory.CreatePackageStoreOption(required: false),
 
@@ -307,8 +316,21 @@ namespace VirtualClient
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
 
-        private static void InitializeStartupLogging()
+        private static void InitializeStartupLogging(string[] args)
         {
+            // Log to file. Instructs the application to log the output of processes
+            // to files in the logs directory.
+            Option logToFile = OptionFactory.CreateLogToFileFlag();
+
+            foreach (string arg in args)
+            {
+                if (logToFile.HasAlias(arg))
+                {
+                    VirtualClientComponent.LogToFile = true;
+                    break;
+                }
+            }
+
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace));
 

@@ -128,7 +128,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateDebugFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--debug" })
+            Option<bool> option = new Option<bool>(new string[] { "--debug", "--verbose" })
             {
                 Name = "Debug",
                 Description = "Flag indicates that verbose output should be emitted to the console/terminal.",
@@ -295,6 +295,27 @@ namespace VirtualClient
                     "systems to synchronize with each other.",
                 ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option indicates that the output of processes should be logged to 
+        /// files in the logs directory.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateLogToFileFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--log-to-file", "--logToFile", "--logtofile", "--ltf" })
+            {
+                Name = "LogToFile",
+                Description = "Flag indicates that the output of processes should be logged to files in the logs directory.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);

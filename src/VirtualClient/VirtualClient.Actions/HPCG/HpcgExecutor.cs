@@ -135,11 +135,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (string file in outputFiles)
                     {
-                        string contents = await this.fileSystem.File.ReadAllTextAsync(file)
-                            .ConfigureAwait();
+                        string contents = await this.LoadResultsAsync(file, cancellationToken);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", contents, logToFile: true)
-                            .ConfigureAwait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: contents.AsArray(), logToFile: true);
 
                         HpcgMetricsParser parser = new HpcgMetricsParser(contents);
                         IList<Metric> metrics = parser.Parse();
@@ -155,8 +153,7 @@ namespace VirtualClient.Actions
                             this.Tags,
                             telemetryContext);
 
-                        await this.fileSystem.File.DeleteAsync(file)
-                            .ConfigureAwait();
+                        await this.fileSystem.File.DeleteAsync(file);
                     }
                 }
             }
@@ -172,17 +169,16 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(HpcgExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, "bash", this.hpcgRunShellPath, this.hpcgDirectory))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", this.hpcgRunShellPath, this.hpcgDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg")
-                                .ConfigureAwait();
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                             await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken).ConfigureAwait();
                         }
                     }

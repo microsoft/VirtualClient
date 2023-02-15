@@ -103,18 +103,17 @@ namespace VirtualClient.Actions
                 // We are attempting to add in a common method for execution of commands as we have seen throughout many executors.
                 // In the near term, we are going to add this in slowly and incrementally in order to avoid raising the likelihood
                 // of regressions.
-                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true)
-                    .ConfigureAwait())
+                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"lzbenchexecutor.sh \"{commandLineArguments}\"", this.LzbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench")
-                            .ConfigureAwait();
+                        if (process.IsErrored())
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench");
+                            process.ThrowIfWorkloadFailed();
+                        }
 
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-
-                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken)
-                            .ConfigureAwait();
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                     }
                 }
             }
@@ -176,11 +175,8 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string contents = await this.fileSystem.File.ReadAllTextAsync(file)
-                        .ConfigureAwait(false);
-
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents, logToFile: true)
-                       .ConfigureAwait(false);
+                    string contents = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents.AsArray(), logToFile: true);
 
                     LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
                     IList<Metric> metrics = parser.Parse();
@@ -196,8 +192,7 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    await this.fileSystem.File.DeleteAsync(file)
-                        .ConfigureAwait(false);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
         }

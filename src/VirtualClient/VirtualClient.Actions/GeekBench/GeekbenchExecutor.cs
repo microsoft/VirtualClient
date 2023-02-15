@@ -201,11 +201,12 @@ namespace VirtualClient.Actions
                     try
                     {
                         await process.StartAndWaitAsync(cancellationToken);
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Geekbench5");
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Geekbench5", logToFile: true);
+
+                            process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, this.ResultsFilePath, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }

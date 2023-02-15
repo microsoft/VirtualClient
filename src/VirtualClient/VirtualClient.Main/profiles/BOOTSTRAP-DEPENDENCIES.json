@@ -8,7 +8,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallDependenciesPackage",
+                "Scenario": "InstallDependencies",
                 "BlobContainer": "packages",
                 "BlobName": "$.Parameters.Package",
                 "PackageName": "$.Parameters.RegisterAsName",

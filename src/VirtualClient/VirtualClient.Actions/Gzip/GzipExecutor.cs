@@ -83,10 +83,9 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "GZip", logToFile: true)
-                            .ConfigureAwait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "GZip", logToFile: true);
 
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, commandLineArguments, telemetryContext);
                     }
                 }
@@ -157,8 +156,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
                         }
 
                         output = process.StandardOutput.ToString();

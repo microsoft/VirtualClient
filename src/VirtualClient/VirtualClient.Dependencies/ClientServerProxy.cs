@@ -47,6 +47,7 @@ namespace VirtualClient.Dependencies
         {
             this.backgroundTasks = new Dictionary<Guid, Tuple<Task, CancellationTokenSource>>();
             this.stateManager = dependencies.GetService<IStateManager>();
+            this.LogSuccessFailMetrics = false;
         }
 
         /// <summary>

@@ -13,7 +13,7 @@
         {
             "Type": "SysbenchOLTPServerExecutor",
             "Parameters": {
-                "Scenario": "SysbenchOLTPServer",
+                "Scenario": "Server",
                 "Role": "Server"
             }
         },
@@ -358,7 +358,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages": "make, automake, libtool, pkg-config",
                 "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
                 "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
@@ -370,15 +370,15 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages": "mysql-server",
                 "Role": "Server"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneSysbenchRepo",
+                "Scenario": "CloneRepo",
                 "RepoUri": "https://github.com/akopytov/sysbench.git",
                 "PackageName": "sysbench",
                 "Role": "Client"
@@ -387,7 +387,7 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "StartDatabaseServer",
+                "Scenario": "ConfigureServer",
                 "Action": "StartServer",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"
@@ -405,14 +405,17 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "RaisedStatementCount",
+                "Scenario": "ConfigureDatabase",
                 "Action": "RaisedStatementCount",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"
             }
         },
         {
-            "Type": "ApiServer"
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
         }
     ]
 }

@@ -15,6 +15,7 @@ on the system.
 | --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\>  | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Azure Event Hub Integration](./0610-integration-event-hub.md). |
 | --e, --experimentId=\<guid\>                                   | No       | guid                         | A unique identifier that defines the ID of the experiment for which the Virtual Client workload is associated. |
 | --lp, --layoutPath=\<path\>                                    | No       | string/path                  | A path to a environment layout file that provides additional metadata about the system/hardware on which the Virtual Client will run and information required to support client/server advanced topologies. See [Client/Server Support](./0020-client-server.md). |
+| --ltf, --log-to-file, --logtofile                              | No       |                              | Flag indicates that the output of processes executed by the Virtual Client should be written to log files in the logs directory. |
 | --mt, --metadata=\<key=value,,,key=value...\>                  | No       | string/text                  | Metadata to include with all logs/telemetry output from the Virtual Client. <br/><br/>Each metadata entry should be akey value pair separated by ",,," delimiters (e.g. property1=value1,,,property2=value2). |
 | --pm, --parameters=\<key=value,,,key=value...\>                | No       | string/text                  | Parameters or overrides to pass to the execution profiles that can modify aspects of their operation. <br/><br/>Each instruction should be a key value pair separated by ",,," delimiters (e.g. instruction1=value1,,,instruction2=value2). |
 | --sc, --scenarios=\<scenario,scenario...\>                     | No       | string/text                  | A comma-delimited list/subset of scenarios defined in the execution profile to run (e.g. scenario1,scenario2,scenario3). |
@@ -53,6 +54,9 @@ on the system.
 
  # Install just the dependencies defined in the profile (but do not run the actions or monitors).
  VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
+
+ # Log the output of workload, monitor and dependency processes to the logs directory on the file system.
+ VirtualClient.exe --profile=PERF-CPU-OPENSSL.json --system=Demo --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
 ```
 
 ## Subcommands
@@ -73,6 +77,7 @@ The following tables describe the various subcommands that are supported by the 
 | --a, --agentId, --clientId=\<id\>                             | No       | string/text                  | An identifier that can be used to uniquely identify the instance of the Virtual Client in telemetry separate from other instances. The default value is the name of the system if this option is not explicitly defined (i.e. the name as defined by the operating system). |
 | --eh, --eventHub, --eventHubConnectionString=\<accesspolicy\> | No       | string/connection string     | A full connection string/access policy for the Azure Event Hub namespace where telemetry should be written. Contact the VC Team to get an access policy for your team. See [Azure Event Hub Integration](./0610-integration-event-hub.md). |
 | --e, --experimentId=\<guid\>                                  | No       | guid                         | A unique identifier that defines the ID of the experiment for which the Virtual Client workload is associated. |
+| --ltf, --log-to-file, --logtofile                             | No       |                              | Flag indicates that the output of processes executed by the Virtual Client should be written to log files in the logs directory. |
 | --mt, --metadata=\<key=value,,,key=value...\>                 | No       | string/text                  | Metadata to include with all logs/telemetry output from the Virtual Client. <br/><br/>Each metadata entry should be akey value pair separated by ",,," delimiters (e.g. property1=value1,,,property2=value2). |
 | --s, --system=\<executionSystem\>                             | No       | string/text                  | The execution system/platform in which Virtual Client is running (e.g. Azure). |
 | --debug                                                       | No       |                              | If this flag is set, verbose logging will be output to the console.  |
@@ -110,7 +115,6 @@ VirtualClient.exe runapi
 # Run the API service locally and monitor another remote instance of the Virtual Client.
 VirtualClient.exe runapi --monitor --ipAddress=1.2.3.4
 ```
-
 
 ## Exit Codes
 The Virtual Client application is instrumented to provide fine-grained return/exit codes that describe the outcome or result of the application operations. An exit code of

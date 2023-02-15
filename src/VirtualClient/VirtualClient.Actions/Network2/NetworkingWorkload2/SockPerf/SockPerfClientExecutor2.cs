@@ -341,12 +341,16 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    if (process.IsErrored())
+                                    {
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
+                                        process.ThrowIfWorkloadFailed();
+                                    }
+
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results, logToFile: true);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray(), logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)

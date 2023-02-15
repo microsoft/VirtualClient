@@ -357,7 +357,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallDiskSpdWorkloadPackage",
+                "Scenario": "InstallDiskSpd",
                 "BlobContainer": "packages",
                 "BlobName": "diskspd.2.0.21.zip",
                 "PackageName": "diskspd",

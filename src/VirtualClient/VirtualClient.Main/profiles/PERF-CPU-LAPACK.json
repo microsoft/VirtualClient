@@ -13,7 +13,7 @@
         {
             "Type": "LAPACKExecutor",
             "Parameters": {
-                "Scenario": "ProcessorSpeed",
+                "Scenario": "LinearEquations",
                 "PackageName": "lapack"
             }
         }
@@ -29,7 +29,7 @@
         {
             "Type": "ChocolateyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallCygwinOnWindows",
+                "Scenario": "InstallCygwin",
                 "PackageName": "chocolatey",
                 "Packages": "cygwin"
             }
@@ -37,6 +37,7 @@
         {
             "Type": "CompilerInstallation",
             "Parameters": {
+                "Scenario": "InstallCompiler",
                 "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
                 "CygwinPackages": "python3"
@@ -45,7 +46,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallLAPACKWorkloadPackage",
+                "Scenario": "InstallLAPACK",
                 "BlobContainer": "packages",
                 "BlobName": "lapack.3.10.0.zip",
                 "PackageName": "lapack",

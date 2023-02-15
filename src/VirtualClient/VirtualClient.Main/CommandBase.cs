@@ -78,6 +78,12 @@ namespace VirtualClient
         public string ExecutionSystem { get; set; }
 
         /// <summary>
+        /// True if the output of processes executed should be logged to files in
+        /// the logs directory.
+        /// </summary>
+        public bool LogToFile { get; set; }
+
+        /// <summary>
         /// Metadata properties (key/value pairs) supplied to the application.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; set; }

@@ -145,12 +145,13 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.PerformanceSummary)
-                                .ConfigureAwait();
+                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfExecutor.PerformanceSummary);
                         }
                     }
 
@@ -361,8 +362,8 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(file)
-                        .ConfigureAwait(false);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
@@ -378,11 +379,7 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results, logToFile: true)
-                        .ConfigureAwait(false);
-
-                    await this.fileSystem.File.DeleteAsync(file)
-                        .ConfigureAwait(false);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
             else if (context == MLPerfExecutor.PerformanceSummary)
@@ -391,8 +388,8 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(file)
-                        .ConfigureAwait(false);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();
@@ -408,11 +405,7 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results, logToFile: true)
-                        .ConfigureAwait(false);
-
-                    await this.fileSystem.File.DeleteAsync(file)
-                        .ConfigureAwait(false);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
         }

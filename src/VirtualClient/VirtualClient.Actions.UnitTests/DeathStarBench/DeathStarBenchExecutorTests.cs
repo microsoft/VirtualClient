@@ -26,7 +26,6 @@ namespace VirtualClient.Actions
         public void SetupTests()
         {
             this.fixture = new MockFixture();
-
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
@@ -81,7 +80,7 @@ namespace VirtualClient.Actions
 
             IEnumerable<string> expectedCommands = new List<string>
             {
-                @"bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/Scripts/dockerComposeScript.sh",
+                @"bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/scripts/dockerComposeScript.sh",
                 @"chmod +x ""/usr/local/bin/docker-compose""",
                 @"python3 -m pip install aiohttp asyncio",
                 @"luarocks install luasocket",
@@ -153,7 +152,8 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["PackageName"] = this.mockPath.Name
+                [nameof(DeathStarBenchExecutor.PackageName)] = this.mockPath.Name,
+                [nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork"
             };
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);

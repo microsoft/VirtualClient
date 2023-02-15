@@ -13,6 +13,7 @@
         {
             "Type": "LzbenchExecutor",
             "Parameters": {
+                "Scenario": "CompressionDecompression",
                 "Version": "1.8.1",
                 "Options": "-t16,16 -eall -o4 -r",
                 "PackageName": "lzbench"
@@ -23,6 +24,7 @@
         {
             "Type": "CompilerInstallation",
             "Parameters": {
+                "Scenario": "InstallCompiler",
                 "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion"
             }
@@ -30,7 +32,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "unzip"
             }
         }

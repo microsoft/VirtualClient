@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.Collections.Generic;
     using VirtualClient.Contracts;
     using YamlDotNet.Serialization;
@@ -29,26 +30,33 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Metrics = new List<Metric>();
-
-            IDeserializer deserializer = new DeserializerBuilder()
-                .WithNamingConvention(PascalCaseNamingConvention.Instance)
-                .IgnoreUnmatchedProperties()
-                .Build();
-            StressNgResult parsedResult = deserializer.Deserialize<StressNgResult>(this.PreprocessedText);
-
-            foreach (StressNgStressorResult stressor in parsedResult.Metrics)
+            try
             {
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps"));
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond));
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond));
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second"));
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second"));
-                this.Metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second"));
-            }
+                this.Preprocess();
+                this.Metrics = new List<Metric>();
 
-            return this.Metrics;
+                IDeserializer deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(PascalCaseNamingConvention.Instance)
+                    .IgnoreUnmatchedProperties()
+                    .Build();
+                StressNgResult parsedResult = deserializer.Deserialize<StressNgResult>(this.PreprocessedText);
+
+                foreach (StressNgStressorResult stressor in parsedResult.Metrics)
+                {
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops", stressor.BogoOps, "BogoOps"));
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-usr-sys-time", stressor.BogoOpsPerSecondUsrSysTime, BogusOperationsPerSecond));
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-bogo-ops-per-second-real-time", stressor.BogoOpsPerSecondRealTime, BogusOperationsPerSecond));
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-wall-clock-time", stressor.WallClockTime, "second"));
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-user-time", stressor.UserTime, "second"));
+                    this.Metrics.Add(new Metric($"{stressor.Stressor}-system-time", stressor.SystemTime, "second"));
+                }
+
+                return this.Metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse Stress-ng metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <summary>

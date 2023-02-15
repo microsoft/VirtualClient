@@ -129,9 +129,7 @@ namespace VirtualClient.Dependencies
                         default:
                             // different distro installation to be addded.
                             throw new WorkloadException(
-                                $"CUDA and Nvidia GPU Driver Installtion is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
-                                $" Supported distros include:" +
-                                $" Ubuntu, Debian, CentOS7, RHEL7, RHEL8, SUSE ",
+                                $"CUDA and Nvidia GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
 
@@ -147,7 +145,7 @@ namespace VirtualClient.Dependencies
                 {
                     // CUDA and Nvidia driver installation for other platforms to be added.
                     throw new WorkloadException(
-                        $"CUDA and Nvidia GPU Driver Installtion is not supported on the current platform {this.Platform} through VC." +
+                        $"CUDA and Nvidia GPU driver Installation is not supported by Virtual Client on the current platform '{this.Platform}'." +
                         $"Supported Platforms include:" +
                         $" Unix ",
                         ErrorReason.PlatformNotSupported);

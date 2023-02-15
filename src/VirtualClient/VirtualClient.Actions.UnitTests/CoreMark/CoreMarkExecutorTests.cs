@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
+    using VirtualClient.Actions.Properties;
 
     [TestFixture]
     [Category("Unit")]
@@ -30,6 +31,26 @@ namespace VirtualClient.Actions
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.Parameters["PackageName"] = "CoreMark";
+
+            string results = null;
+
+            // Setup the mock logic to return valid CoreMark results.
+            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith(".log"))))
+                .Returns(true);
+
+            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, CancellationToken>((file, token) =>
+                {
+                    if (file.EndsWith("run1.log") || file.EndsWith("run2.log"))
+                    {
+                        results = File.ReadAllText(this.mockFixture.Combine(
+                            MockFixture.TestAssemblyDirectory,
+                            "Examples",
+                            "CoreMark",
+                            "CoreMarkExampleSingleThread.txt"));
+                    }
+                })
+                .ReturnsAsync(() => results);
         }
 
         [Test]
@@ -46,14 +67,14 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CoreMarkExecutorExcutesAsExpected()
+        public async Task CoreMarkExecutorExecutesTheExpectedCommand()
         {
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=71 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
+                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD=71 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
                 return this.mockFixture.Process;
             };
 
@@ -74,7 +95,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
+                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
                 return this.mockFixture.Process;
             };
 

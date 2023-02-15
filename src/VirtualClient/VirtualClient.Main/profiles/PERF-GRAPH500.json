@@ -13,7 +13,7 @@
         {
             "Type": "Graph500Executor",
             "Parameters": {
-                "Scenario": "ProcessorSpeed",
+                "Scenario": "GraphAlgorithms",
                 "PackageName": "graph500",
                 "Scale": "$.Parameters.Scale",
                 "EdgeFactor": "$.Parameters.EdgeFactor"
@@ -24,14 +24,14 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackages",
+                "Scenario": "InstallLinuxPackages",
                 "Packages": "make,mpich"
             }
         },
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGraph500WorkloadPackage",
+                "Scenario": "InstallGraph500",
                 "BlobContainer": "packages",
                 "BlobName": "graph500.3.0.0.zip",
                 "PackageName": "graph500",

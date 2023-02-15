@@ -150,8 +150,8 @@ namespace VirtualClient.Actions
         public void Prime95ExecutorThrowsWhenTheWorkloadDoesNotProduceValidResults(PlatformID platform)
         {
             this.SetupDefaultBehavior(platform);
-            this.fixture.File.Setup(fe => fe.ReadAllText(It.IsAny<string>()))
-                .Returns("");
+            this.fixture.File.Setup(fe => fe.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("");
 
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
@@ -160,7 +160,7 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
                 
-                Assert.AreEqual(exception.Message , "The Prime95 workload did not produce valid results.");
+                Assert.AreEqual("Invalid results. The Prime95 workload did not produce valid results.", exception.Message);
             }
         }
 
@@ -180,7 +180,7 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
 
-                Assert.AreEqual(exception.Message, "The Prime95 results file was not found at path '" + this.mockPackage.Path + resultsPath + "'.");
+                Assert.AreEqual($"Expected results file '{this.mockPackage.Path + resultsPath}' not found.", exception.Message);
             }
         }
 

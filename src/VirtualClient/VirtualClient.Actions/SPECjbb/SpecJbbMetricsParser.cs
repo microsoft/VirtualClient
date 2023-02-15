@@ -30,21 +30,28 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Metrics = new List<Metric>();
-
-            // If the line doesn't have column, it's individual result.
-            // If the line has column, it's the summary line.
-            List<string> metrics = this.PreprocessedText.Split(",").ToList();
-            foreach (string metric in metrics)
+            try
             {
-                string[] tokens = metric.Split("=");
-                string name = tokens[0];
-                string value = tokens[1];
-                this.Metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
-            }
+                this.Preprocess();
+                this.Metrics = new List<Metric>();
 
-            return this.Metrics;
+                // If the line doesn't have column, it's individual result.
+                // If the line has column, it's the summary line.
+                List<string> metrics = this.PreprocessedText.Split(",").ToList();
+                foreach (string metric in metrics)
+                {
+                    string[] tokens = metric.Split("=");
+                    string name = tokens[0];
+                    string value = tokens[1];
+                    this.Metrics.Add(new Metric(name.Trim(), Convert.ToDouble(value), SpecJbbMetricsParser.OperationPerSecond, MetricRelativity.HigherIsBetter));
+                }
+
+                return this.Metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse SPECjbb metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

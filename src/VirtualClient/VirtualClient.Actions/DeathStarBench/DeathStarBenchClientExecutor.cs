@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -23,17 +22,16 @@ namespace VirtualClient.Actions
     /// </summary>
     public class DeathStarBenchClientExecutor : DeathStarBenchExecutor
     {
-        private string workPath;
         private IAsyncPolicy clientExecutionRetryPolicy;
         private TimeSpan serverOnlinePollingTimeout;
 
-        private Dictionary<string, Dictionary<string, string>> actionScript = new Dictionary<string, Dictionary<string, string>>()
+        private Dictionary<string, Dictionary<string, string>> actionScript = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase)
         {
             {
                 DeathStarBenchExecutor.SocialNetwork, new Dictionary<string, string>()
                 {
                     { "ComposePost", "./scripts/social-network/compose-post.lua http://localhost:8080/wrk2-api/post/compose" },
-                    { "ReadHomeTimeline", "./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read " },
+                    { "ReadHomeTimeline", "./scripts/social-network/read-home-timeline.lua http://localhost:8080/wrk2-api/home-timeline/read" },
                     { "ReadUserTimeline", "./scripts/social-network/read-user-timeline.lua http://localhost:8080/wrk2-api/user-timeline/read" },
                     { "MixedWorkload", "./scripts/social-network/mixed-workload.lua http://localhost:8080" }
                 }
@@ -123,9 +121,9 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.ExecuteClientWorkloadAsync(telemetryContext, cancellationToken).ConfigureAwait();
+                            await this.ExecuteClientWorkloadAsync(telemetryContext, cancellationToken);
                         }
-                    }).ConfigureAwait();
+                    });
                 }
                 else
                 {
@@ -136,63 +134,45 @@ namespace VirtualClient.Actions
                         JObject.FromObject(expectedServerState),
                         DeathStarBenchExecutor.StateConfirmationPollingTimeout,
                         DefaultStateComparer.Instance,
-                        cancellationToken).ConfigureAwait();
+                        cancellationToken);
 
                     try
                     {
-                        this.Logger.LogTraceMessage("Client Execution start");
-                        await this.ExecuteClientAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait();
+                        await this.ExecuteClientAsync(telemetryContext, cancellationToken);
                     }
                     finally
                     {
-                        this.Logger.LogTraceMessage("Client Stopping docker services");
-                        await this.StopDockerAsync(CancellationToken.None)
-                            .ConfigureAwait();
+                        this.Logger.LogTraceMessage("Client Stopping docker services...");
+                        await this.StopDockerAsync(CancellationToken.None);
 
-                        this.Logger.LogTraceMessage("Deleting states");
-                        await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait();
+                        this.Logger.LogTraceMessage("Deleting states...");
+                        await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken);
                     }
                 }
 
             });
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, string scenarioName, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, string scenarioName, string resultsPath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();
-                if (!fileSystem.File.Exists(resultsFilePath))
-                {
-                    throw new WorkloadException(
-                        $"The DeathStarBench results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
-                }
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: results.AsArray(), logToFile: true);
 
-                string content = await fileSystem.File.ReadAllTextAsync(resultsFilePath)
-                    .ConfigureAwait();
+                DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
+                IList<Metric> metrics = deathStarBenchMetricsParser.Parse();
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: content ?? string.Empty, logToFile: true)
-                    .ConfigureAwait();
-
-                if (content != null)
-                {
-                    DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(content);
-                    IList<Metric> metrics = deathStarBenchMetricsParser.Parse();
-
-                    this.Logger.LogMetrics(
-                        "DeathStarBench",
-                        scenarioName,
-                        process.StartTime,
-                        process.ExitTime,
-                        metrics,
-                        null,
-                        this.Parameters.ToString(),
-                        this.Tags,
-                        telemetryContext);
-                }
+                this.Logger.LogMetrics(
+                    "DeathStarBench",
+                    scenarioName,
+                    process.StartTime,
+                    process.ExitTime,
+                    metrics,
+                    null,
+                    commandArguments,
+                    this.Tags,
+                    telemetryContext);
             }
         }
 
@@ -204,13 +184,11 @@ namespace VirtualClient.Actions
 
                 // 1) Confirm server is online.
                 // ===========================================================================
-                await this.ServerApiClient.PollForHeartbeatAsync(this.serverOnlinePollingTimeout, cancellationToken)
-                    .ConfigureAwait();
+                await this.ServerApiClient.PollForHeartbeatAsync(this.serverOnlinePollingTimeout, cancellationToken);
 
                 // 2) Wait for the server to signal the eventing API is online.
                 // ===========================================================================
-                await this.ServerApiClient.PollForServerOnlineAsync(this.serverOnlinePollingTimeout, cancellationToken)
-                    .ConfigureAwait();
+                await this.ServerApiClient.PollForServerOnlineAsync(this.serverOnlinePollingTimeout, cancellationToken);
 
                 this.Logger.LogTraceMessage($"{nameof(DeathStarBenchClientExecutor)}.ServerOnline");
 
@@ -218,26 +196,23 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 this.Logger.LogTraceMessage("Synchronization: Request server to stop all workloads...");
 
-                await this.ResetServerAsync(telemetryContext, cancellationToken)
-                    .ConfigureAwait();
+                await this.ResetServerAsync(telemetryContext, cancellationToken);
 
                 // stop docker services at client side.
-                await this.StopDockerAsync(cancellationToken)
-                    .ConfigureAwait();
+                await this.StopDockerAsync(cancellationToken);
 
                 // 4) Request the server to start the next workload.
                 // ===========================================================================
                 Item<Instructions> instructions = new Item<Instructions>(
-                nameof(Instructions),
-                new Instructions(InstructionsType.ClientServerStartExecution, new Dictionary<string, IConvertible>
-                {
-                    ["ServiceName"] = this.ServiceName
-                }));
+                    nameof(Instructions),
+                    new Instructions(InstructionsType.ClientServerStartExecution, new Dictionary<string, IConvertible>
+                    {
+                        ["ServiceName"] = this.ServiceName
+                    }));
 
                 this.Logger.LogTraceMessage($"Synchronization: Request server to start workload...");
 
-                await this.ServerApiClient.SendInstructionsAsync(JObject.FromObject(instructions), cancellationToken)
-                    .ConfigureAwait();
+                await this.ServerApiClient.SendInstructionsAsync(JObject.FromObject(instructions), cancellationToken);
 
                 // 5) Confirm the server has started the requested workload.
                 // ===========================================================================
@@ -248,7 +223,7 @@ namespace VirtualClient.Actions
                     (state) => state.ServiceName == this.ServiceName && state.ServiceState == true,
                     DeathStarBenchExecutor.StateConfirmationPollingTimeout,
                     cancellationToken,
-                    this.Logger).ConfigureAwait();
+                    this.Logger);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                 this.Logger.LogTraceMessage("Synchronization: Start client workload...");
@@ -257,19 +232,17 @@ namespace VirtualClient.Actions
                 // ===========================================================================
                 try
                 {
-                    await this.ExecuteClientAsync(telemetryContext, cancellationToken).ConfigureAwait();
+                    await this.ExecuteClientAsync(telemetryContext, cancellationToken);
                 }
                 finally
                 {
                     // Stop docker services at client side(If multiVM get out of swarm network and single VM stop the services).
-                    await this.StopDockerAsync(CancellationToken.None)
-                        .ConfigureAwait();
+                    await this.StopDockerAsync(CancellationToken.None);
 
                     this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
 
                     // send Instructions to server for ClientserverReset. 
-                    await this.ResetServerAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait();
+                    await this.ResetServerAsync(telemetryContext, cancellationToken);
                 }
 
             });
@@ -302,53 +275,39 @@ namespace VirtualClient.Actions
 
         private async Task ExecuteClientAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.workPath = this.PlatformSpecifics.Combine(this.ServiceDirectory, "wrk2");
-
             if (this.IsMultiRoleLayout())
             {
-                string joinSwarmCommand = await this.GetJoinSwarmCommand(cancellationToken)
-                    .ConfigureAwait();
+                string joinSwarmCommand = await this.GetJoinSwarmCommand(cancellationToken);
 
-                await this.ExecuteCommandAsync(joinSwarmCommand, this.ServiceDirectory, cancellationToken)
-                    .ConfigureAwait();
-
-                await this.WaitAsync(DeathStarBenchExecutor.ServerWarmUpTime, cancellationToken)
-                    .ConfigureAwait();
+                await this.ExecuteCommandAsync(joinSwarmCommand, this.ServiceDirectory, cancellationToken);
+                await this.WaitAsync(DeathStarBenchExecutor.ServerWarmUpTime, cancellationToken);
             }
 
-            if (string.Equals(this.ServiceName, DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
-            {
-                string wrkPath = this.PlatformSpecifics.Combine(this.workPath, "wrk");
-                await this.SystemManager.MakeFileExecutableAsync(wrkPath, this.Platform, cancellationToken)
-                        .ConfigureAwait();
-            }
+            await this.ExecuteCommandAsync("make", this.MakefileDirectory, cancellationToken);
 
-            await this.ExecuteCommandAsync("make", this.workPath, cancellationToken)
-                .ConfigureAwait();
-
-            foreach (var action in this.actionScript[this.ServiceName.ToLower()].Keys)
+            foreach (var action in this.actionScript[this.ServiceName].Keys)
             {
-                string resultsPath = this.PlatformSpecifics.Combine(this.workPath, $"results.txt");
+                string resultsPath = this.PlatformSpecifics.Combine(this.MakefileDirectory, "results.txt");
+                string scenarioName = $"{this.ServiceName}_{action}";
+
                 this.ResetFile(resultsPath, telemetryContext);
 
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        @$"bash -c ""./wrk -D exp -t {this.ThreadCount} -c {this.ConnectionCount} -d {this.Duration} -L -s {this.actionScript[this.ServiceName.ToLower()][action]} -R {this.RequestPerSec} >> results.txt""",
-                        this.workPath,
-                        telemetryContext,
-                        cancellationToken,
-                        runElevated: true).ConfigureAwait())
+                    string commandArguments = 
+                        @$"-c ""./wrk -D exp -t {this.ThreadCount} -c {this.ConnectionCount} -d {this.Duration} -L -s {this.actionScript[this.ServiceName][action]} -R {this.RequestPerSec} >> results.txt""";
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(@$"bash", commandArguments, this.MakefileDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench")
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-
-                            await this.CaptureMetricsAsync(process, resultsPath, $"{this.ServiceName}_{action}", telemetryContext, cancellationToken)
-                                .ConfigureAwait();
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+  
+                            await this.CaptureMetricsAsync(process, commandArguments, scenarioName, resultsPath, telemetryContext, cancellationToken);
                         }
                     }
                 }

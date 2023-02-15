@@ -52,10 +52,12 @@ namespace VirtualClient.Actions
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectOpenFOAMoutputPath = Path.Combine(workingDirectory, @"Examples\OpenFOAM\OpenFOAMResultsInvalidExample.txt");
+
             this.rawText = File.ReadAllText(IncorrectOpenFOAMoutputPath);
             this.testParser = new OpenFOAMMetricsParser(this.rawText);
-            SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains("The OpenFOAM results file has incorrect format for parsing", exception.Message);
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+            StringAssert.Contains("Failed to parse OpenFOAM metrics from results", exception.Message);
         }
     }
 }

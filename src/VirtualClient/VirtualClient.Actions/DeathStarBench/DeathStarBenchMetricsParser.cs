@@ -45,17 +45,24 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, DeathStarBenchMetricsParser.DeathStarBenchSectionDelimiter);
-            this.ThrowIfInvalidOutputFormat();
+            try
+            {
+                this.Preprocess();
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, DeathStarBenchMetricsParser.DeathStarBenchSectionDelimiter);
+                this.ThrowIfInvalidOutputFormat();
 
-            List<Metric> metrics = new List<Metric>();
+                List<Metric> metrics = new List<Metric>();
 
-            metrics.AddRange(this.ParseThreadStatsResult());
-            metrics.AddRange(this.ParseLatencyDistributionResult());
-            metrics.AddRange(this.ParseTransferPerSecResult());
+                metrics.AddRange(this.ParseThreadStatsResult());
+                metrics.AddRange(this.ParseLatencyDistributionResult());
+                metrics.AddRange(this.ParseTransferPerSecResult());
 
-            return metrics;
+                return metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse DeathStarBench metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

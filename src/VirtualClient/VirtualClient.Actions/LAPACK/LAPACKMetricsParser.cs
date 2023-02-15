@@ -84,22 +84,29 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LAPACKSectionDelimiter);
-            this.ThrowIfInvalidOutputFormat();
-            this.CalculateLAPACKResult();
+            try
+            {
+                this.Preprocess();
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LAPACKSectionDelimiter);
+                this.ThrowIfInvalidOutputFormat();
+                this.CalculateLAPACKResult();
 
-            List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(this.LINSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.LINComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.EIGComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                List<Metric> metrics = new List<Metric>();
+                metrics.AddRange(this.LINSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.LINDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.LINComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.LINComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.EIGSingleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.EIGDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.EIGComplexResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
+                metrics.AddRange(this.EIGComplexDoubleResult.GetMetrics(nameIndex: 0, valueIndex: 2, unitIndex: 3, metricRelativity: MetricRelativity.LowerIsBetter));
 
-            return metrics;
+                return metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse LAPACK metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

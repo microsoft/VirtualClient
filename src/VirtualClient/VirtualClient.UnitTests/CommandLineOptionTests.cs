@@ -77,6 +77,10 @@ namespace VirtualClient
         [TestCase("--layoutpath", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--layout", "C:\\any\\path\\to\\layout.json")]
         [TestCase("--lp", "C:\\any\\path\\to\\layout.json")]
+        [TestCase("--log-to-file", null)]
+        [TestCase("--logToFile", null)]
+        [TestCase("--logtofile", null)]
+        [TestCase("--ltf", null)]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
@@ -139,6 +143,10 @@ namespace VirtualClient
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--metadata", "Key1=Value1,,,Key2=Value2")]
         [TestCase("--mt", "Key1=Value1,,,Key2=Value2")]
+        [TestCase("--log-to-file", null)]
+        [TestCase("--logToFile", null)]
+        [TestCase("--logtofile", null)]
+        [TestCase("--ltf", null)]
         [TestCase("--packageStore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
@@ -180,6 +188,10 @@ namespace VirtualClient
         [TestCase("--ipAddress", "10.0.0.128")]
         [TestCase("--ip", "10.0.0.128")]
         [TestCase("--debug", null)]
+        [TestCase("--log-to-file", null)]
+        [TestCase("--logToFile", null)]
+        [TestCase("--logtofile", null)]
+        [TestCase("--ltf", null)]
         public void VirtualClientRunApiCommandSupportsAllExpectedOptions(string option, string value)
         {
             using (CancellationTokenSource cancellationSource = new CancellationTokenSource())

@@ -57,10 +57,12 @@ namespace VirtualClient.Actions
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectDeathBenchoutputPath = Path.Combine(workingDirectory, @"Examples\DeathStarbench\DeathStarbenchIncorrectOutputExample.txt");
+
             this.rawText = File.ReadAllText(IncorrectDeathBenchoutputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);
-            SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains("The DeathStarBench output file has incorrect format for parsing", exception.Message);
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+            StringAssert.Contains("Failed to parse DeathStarBench metrics from results.", exception.Message);
         }
     }
 }

@@ -230,8 +230,11 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    if (process.IsErrored())
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
                 }
             }
         }
@@ -246,15 +249,15 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(file);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results, logToFile: true);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results.AsArray(), logToFile: true);
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(
                         toolName: "SPECcpu",
-                        scenarioName: "SPECcpu",
+                        scenarioName: this.Scenario,
                         process.StartTime,
                         process.ExitTime,
                         metrics,

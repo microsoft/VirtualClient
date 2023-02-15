@@ -5,15 +5,12 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -143,9 +140,7 @@ namespace VirtualClient.Actions
                             // 3) Execute the client workload.
                             // ===========================================================================
                             ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-
+                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
                         }
                     }));
                 }
@@ -171,17 +166,16 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string clientCommand = @$"bash -c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.ClientCount} -n {this.RequestCount} -P {this.PipelineDepth} -q --csv""";
+                    string commandArguments = @$"-c ""{this.ClientExecutablePath} -h {ipAddress} -p {this.Port} -c {this.ClientCount} -n {this.RequestCount} -P {this.PipelineDepth} -q --csv""";
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(clientCommand, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), telemetryContext, cancellationToken, runElevated: true)
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", commandArguments, this.PlatformSpecifics.Combine(this.RedisPackagePath, "src"), telemetryContext, cancellationToken, runElevated: true)
                         .ConfigureAwait())
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true)
-                                .ConfigureAwait();
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
 
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            process.ThrowIfWorkloadFailed();
                             this.CaptureMetrics(process, telemetryContext, cancellationToken);
                         }
                     }

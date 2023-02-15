@@ -41,11 +41,14 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
             this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
+                executor.ExecuteActions = false;
+
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
@@ -69,17 +72,19 @@ namespace VirtualClient.Actions
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - Expected processes are executed.
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+            this.mockFixture
+                .Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId)
+                .SetupLayout(new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
 
             this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
 
             string[] expectedFiles = new string[]
             {
-                @"Scripts",
-                @"socialNetwork/wrk2",
-                @"mediaMicroservices/wrk2",
-                @"hotelReservation/wrk2",
+                @"linux-x64/scripts",
+                @"linux-x64/socialnetwork/wrk2",
+                @"linux-x64/mediamicroservices/wrk2",
+                @"linux-x64/mediamicroservices/wrk2/wrk",
+                @"linux-x64/hotelreservation/wrk2",
             };
 
             this.mockFixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);

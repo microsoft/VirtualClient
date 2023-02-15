@@ -367,13 +367,16 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp");
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    if (process.IsErrored())
+                                    {
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", logToFile: true);
+                                        process.ThrowIfWorkloadFailed();
+                                    }
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                    string results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", logToFile: true);
+                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
+                                    await this.LogProcessDetailsAsync(process, relatedContext, "NTttcp", results: results.AsArray(), logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)
@@ -407,8 +410,7 @@ namespace VirtualClient.Actions
 
             if (fileAccess.Exists(this.ResultsPath))
             {
-                string resultsContent = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
-                    .ConfigureAwait(false);
+                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None);
 
                 if (!string.IsNullOrWhiteSpace(resultsContent))
                 {

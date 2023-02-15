@@ -323,13 +323,16 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                    if (process.IsErrored())
+                                    {
+                                        await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
+                                        process.ThrowIfWorkloadFailed();
+                                    }
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
-                                    string results = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", logToFile: true);
+                                    string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", results: results.AsArray(), logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)
@@ -363,7 +366,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             if (fileAccess.Exists(this.ResultsPath))
             {
-                string resultsContent = await this.SystemManagement.FileSystem.File.ReadAllTextAsync(this.ResultsPath)
+                string resultsContent = await this.LoadResultsAsync(this.ResultsPath, CancellationToken.None)
                     .ConfigureAwait(false);
 
                 if (!string.IsNullOrWhiteSpace(resultsContent))

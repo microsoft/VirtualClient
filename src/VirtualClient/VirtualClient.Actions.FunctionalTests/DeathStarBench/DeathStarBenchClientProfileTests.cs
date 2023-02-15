@@ -34,7 +34,9 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
             DeathStarBenchExecutor.StateConfirmationPollingTimeout = TimeSpan.FromSeconds(1);
+
             this.mockFixture.SetupWorkloadPackage("deathstarbench");
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
         }
@@ -47,6 +49,8 @@ namespace VirtualClient.Actions
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
+                executor.ExecuteActions = false;
+
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
@@ -79,23 +83,23 @@ namespace VirtualClient.Actions
             string[] expectedFiles = new string[]
             {
                 @"Scripts",
-                @"linux-x64/socialNetwork/wrk2",
-                @"linux-x64/mediaMicroservices/wrk2/wrk",
-                @"linux-x64/hotelReservation/wrk2",
-                @"linux-x64/socialNetwork/wrk2/results.txt",
-                @"linux-x64/mediaMicroservices/wrk2/results.txt",
-                @"linux-x64/hotelReservation/wrk2/results.txt",
+                @"linux-x64/socialnetwork/wrk2",
+                @"linux-x64/mediamicroservices/wrk2/wrk",
+                @"linux-x64/hotelreservation/wrk2",
+                @"linux-x64/socialnetwork/wrk2/results.txt",
+                @"linux-x64/mediamicroservices/wrk2/results.txt",
+                @"linux-x64/hotelreservation/wrk2/results.txt",
             };
 
             this.mockFixture.SetupWorkloadPackage("deathstarbench", expectedFiles: expectedFiles);
-            this.mockFixture.SetupFile("deathstarbench/linux-x64/socialNetwork/wrk2", "results.txt", TestDependencies.GetResourceFileContents("Results_DeathStarBench.txt"));
+            this.mockFixture.SetupFile("deathstarbench/linux-x64/socialnetwork/wrk2", "results.txt", TestDependencies.GetResourceFileContents("Results_DeathStarBench.txt"));
             this.mockFixture.SetupFile(@"/usr/local/bin/docker-compose");
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
 
-                if (arguments == "bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/Scripts/isSwarmNode.sh")
+                if (arguments == "bash /home/user/tools/VirtualClient/packages/deathstarbench/linux-x64/scripts/isSwarmNode.sh")
                 {
                     this.SetupApiClient(serverIPAddress: "1.2.3.5");
                 }
@@ -117,6 +121,7 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
+
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }

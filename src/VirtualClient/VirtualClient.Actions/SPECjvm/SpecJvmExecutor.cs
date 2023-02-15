@@ -136,8 +136,12 @@ namespace VirtualClient.Actions
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm");
-                                process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                                if (process.IsErrored())
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", logToFile: true);
+                                    process.ThrowIfWorkloadFailed();
+                                }
+
                                 await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                             }
                         }
@@ -156,8 +160,8 @@ namespace VirtualClient.Actions
 
                 foreach (string file in outputFiles)
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(file);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results, logToFile: true);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results: results.AsArray(), logToFile: true);
 
                     SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results);
 

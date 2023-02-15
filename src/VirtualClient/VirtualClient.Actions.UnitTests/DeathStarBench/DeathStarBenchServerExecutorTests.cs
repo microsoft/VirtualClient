@@ -38,21 +38,22 @@ namespace VirtualClient.Actions
 
             this.SetupDefaultMockFileSystemBehavior();
             this.SetupDefaultMockApiBehavior();
-            this.fixture.Parameters["PackageName"] = "DeathStarBench";
+            this.fixture.Parameters[nameof(DeathStarBenchExecutor.PackageName)] = "deathstarbench";
+            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = "socialnetwork";
         }
 
         [Test]
-        [TestCase("socialNetwork", @"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml socialNetwork""")]
-        [TestCase("mediaMicroservices", @"bash -c ""docker stack deploy --compose-file=docker-compose.yml mediaMicroservices""")]
-        [TestCase("hotelReservation", @"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml hotelReservation""")]
-        public async Task DeathStarBenchServerExecutorExecutesExpectedProcessInMultiVMScenario(string ServiceName, string ExpectedArgument)
+        [TestCase("socialnetwork", @"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml socialnetwork""")]
+        [TestCase("mediamicroservices", @"bash -c ""docker stack deploy --compose-file=docker-compose.yml mediamicroservices""")]
+        [TestCase("hotelreservation", @"bash -c ""docker stack deploy --compose-file=docker-compose-swarm.yml hotelreservation""")]
+        public async Task DeathStarBenchServerExecutorExecutesExpectedProcessInMultiVMScenario(string serviceName, string expectedArguments)
         {
             int processExecuted = 0;
-            this.fixture.Parameters[nameof(DeathStarBenchExecutor.Scenario)] = ServiceName;
+            this.fixture.Parameters[nameof(DeathStarBenchExecutor.ServiceName)] = serviceName;
             this.fixture.Parameters[nameof(DeathStarBenchServerExecutor.GraphType)] = GraphType;
             using TestDeathStarBenchServerExecutor executor = new TestDeathStarBenchServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
 
-            DeathStarBenchState serverState = new DeathStarBenchState(ServiceName, true);
+            DeathStarBenchState serverState = new DeathStarBenchState(serviceName, true);
             Item<JObject> expectedStateItem = new Item<JObject>(nameof(DeathStarBenchState), JObject.FromObject(serverState));
 
             Item<JObject> expectedCommandStateItem = new Item<JObject>(nameof(DeathStarBenchExecutor.SwarmCommand), JObject.FromObject(expectedStateItem));
@@ -61,7 +62,7 @@ namespace VirtualClient.Actions
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
             {
-                if (arguments == ExpectedArgument)
+                if (arguments == expectedArguments)
                 {
                     processExecuted++;
                 }
@@ -75,9 +76,9 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("socialNetwork")]
-        [TestCase("mediaMicroservices")]
-        [TestCase("hotelReservation")]
+        [TestCase("socialnetwork")]
+        [TestCase("mediamicroservices")]
+        [TestCase("hotelreservation")]
         public async Task DeathStarBenchServerExecutorExecutesExpectedProcessInSingleVMScenario(string ServiceName)
         {
             int processExecuted = 0;
@@ -110,7 +111,7 @@ namespace VirtualClient.Actions
             };
 
             this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(DeathStarBenchState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                        .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound, expectedStateItem));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound, expectedStateItem));
 
             await executor.ExecuteAsync(CancellationToken.None)
                 .ConfigureAwait(false);
@@ -120,7 +121,7 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockFileSystemBehavior()
         {
-            string mockCommand = "mockCommad";
+            string mockCommand = "--join-swarm";
             this.fixture.File.Setup(f => f.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
@@ -135,7 +136,7 @@ namespace VirtualClient.Actions
         {
             State command = new State(new Dictionary<string, IConvertible>
             {
-                [nameof(DeathStarBenchExecutor.SwarmCommand)] = "mock Command"
+                [nameof(DeathStarBenchExecutor.SwarmCommand)] = "--join-swarm"
             });
         }
         private class TestDeathStarBenchServerExecutor : DeathStarBenchServerExecutor

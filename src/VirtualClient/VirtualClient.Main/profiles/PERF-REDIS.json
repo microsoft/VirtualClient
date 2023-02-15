@@ -10,10 +10,10 @@
         {
             "Type": "RedisServerExecutor",
             "Parameters": {
-                "Scenario": "RedisServer",
+                "Scenario": "Server",
                 "Role": "Server",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "Bind": 1
             }
         },
@@ -23,7 +23,7 @@
                 "Scenario": "Memtier_4t_1c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "4",
                 "ClientCount": "1",
                 "RunCount": "1",
@@ -38,7 +38,7 @@
                 "Scenario": "Memtier_4t_2c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "4",
                 "ClientCount": "2",
                 "RunCount": "1",
@@ -53,7 +53,7 @@
                 "Scenario": "Memtier_4t_8c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "4",
                 "ClientCount": "4",
                 "RunCount": "1",
@@ -68,7 +68,7 @@
                 "Scenario": "Memtier_4t_16c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "4",
                 "ClientCount": "8",
                 "RunCount": "1",
@@ -83,7 +83,7 @@
                 "Scenario": "Memtier_16t_1c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "16",
                 "ClientCount": "1",
                 "RunCount": "1",
@@ -98,7 +98,7 @@
                 "Scenario": "Memtier_16t_2c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "16",
                 "ClientCount": "2",
                 "RunCount": "1",
@@ -113,7 +113,7 @@
                 "Scenario": "Memtier_16t_4c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "16",
                 "ClientCount": "4",
                 "RunCount": "1",
@@ -128,7 +128,7 @@
                 "Scenario": "Memtier_16t_8c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ThreadCount": "16",
                 "ClientCount": "8",
                 "RunCount": "1",
@@ -143,7 +143,7 @@
                 "Scenario": "RedisBenchmark_10kreq_1c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "1",
                 "RequestCount": "10000",
                 "PipelineDepth": "32"
@@ -155,7 +155,7 @@
                 "Scenario": "RedisBenchmark_10kreq_2c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "2",
                 "RequestCount": "10000",
                 "PipelineDepth": "32"
@@ -167,7 +167,7 @@
                 "Scenario": "RedisBenchmark_10kreq_4c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "4",
                 "RequestCount": "10000",
                 "PipelineDepth": "32"
@@ -179,7 +179,7 @@
                 "Scenario": "RedisBenchmark_10kreq_8c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "8",
                 "RequestCount": "10000",
                 "PipelineDepth": "32"
@@ -191,7 +191,7 @@
                 "Scenario": "RedisBenchmark_50kreq_1c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "1",
                 "RequestCount": "50000",
                 "PipelineDepth": "32"
@@ -203,7 +203,7 @@
                 "Scenario": "RedisBenchmark_50kreq_2c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "2",
                 "RequestCount": "50000",
                 "PipelineDepth": "32"
@@ -215,7 +215,7 @@
                 "Scenario": "RedisBenchmark_50kreq_4c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "4",
                 "RequestCount": "50000",
                 "PipelineDepth": "32"
@@ -227,7 +227,7 @@
                 "Scenario": "RedisBenchmark_50kreq_8c",
                 "Role": "Client",
                 "Port": "6379",
-                "PackageName": "Redis",
+                "PackageName": "redis",
                 "ClientCount": "8",
                 "RequestCount": "50000",
                 "PipelineDepth": "32"
@@ -238,7 +238,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForMemtier",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
                 "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
                 "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
@@ -247,16 +247,16 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForRedis",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
                 "Packages-Yum": "wget,numactl,tcl-devel",
                 "Packages-Dnf": "wget,numactl,tcl-devel"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneMemtierBenchmarkRepo",
+                "Scenario": "CloneRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }
@@ -278,7 +278,10 @@
             }
         },
         {
-            "Type": "ApiServer"
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
         }
     ]
 }

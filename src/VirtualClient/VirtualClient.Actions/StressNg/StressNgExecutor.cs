@@ -66,12 +66,16 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, telemetryContext, cancellationToken))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(StressNgExecutor.StressNg, commandLineArguments, this.stressNgDirectory, telemetryContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng");
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        if (process.IsErrored())
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+                        }
+
                         await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                     }
                 }
@@ -100,8 +104,8 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    string results = await this.fileSystem.File.ReadAllTextAsync(this.stressNgOutputFilePath);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", results, logToFile: true);
+                    string results = await this.LoadResultsAsync(this.stressNgOutputFilePath, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Stress-ng", results: results.AsArray(), logToFile: true);
 
                     StressNgMetricsParser parser = new StressNgMetricsParser(results);
 

@@ -13,8 +13,6 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using Polly;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -77,12 +75,18 @@ namespace VirtualClient.Contracts
             this.systemInfo = this.Dependencies.GetService<ISystemInfo>();
             this.AgentId = this.systemInfo.AgentId;
             this.ExperimentId = this.systemInfo.ExperimentId;
+            this.LogSuccessFailMetrics = true;
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
             this.CpuArchitecture = this.systemInfo.CpuArchitecture;
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
         }
+
+        /// <summary>
+        /// True if the output of processes should be logged to files in the logs directory.
+        /// </summary>
+        public static bool LogToFile { get; set; } = false;
 
         /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
@@ -105,7 +109,7 @@ namespace VirtualClient.Contracts
         public IServiceCollection Dependencies { get; set; }
 
         /// <summary>
-        /// Action end time
+        /// Component end time
         /// </summary>
         public DateTime EndTime { get; set; }
 
@@ -384,6 +388,11 @@ namespace VirtualClient.Contracts
         public string TypeName { get; protected set; }
 
         /// <summary>
+        /// The toolname or component name to use when logging completion metrics.
+        /// </summary>
+        protected bool LogSuccessFailMetrics { get; set; }
+
+        /// <summary>
         /// Disposes of resources used by the instance.
         /// </summary>
         public void Dispose()
@@ -415,12 +424,16 @@ namespace VirtualClient.Contracts
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
                 {
+                    bool succeeded = false;
+                    DateTime executionStartTime = DateTime.UtcNow;
+
                     try
                     {
                         this.ValidateParameters();
 
                         await this.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                         await this.ExecuteAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        succeeded = true;
                     }
                     catch (OperationCanceledException)
                     {
@@ -429,6 +442,18 @@ namespace VirtualClient.Contracts
                     finally
                     {
                         await this.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+                        if (this.LogSuccessFailMetrics)
+                        {
+                            if (succeeded)
+                            {
+                                this.LogSuccessMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                            }
+                            else
+                            {
+                                this.LogFailedMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                            }
+                        }
                     }
                 }, displayErrors: true);
             }

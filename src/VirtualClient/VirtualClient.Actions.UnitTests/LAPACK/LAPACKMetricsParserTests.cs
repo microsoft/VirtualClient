@@ -67,14 +67,14 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(@"Examples\LAPACK\LAPACKIncorrectFormatExample.txt", @"The LAPACK output file has incorrect format for parsing")]
-        [TestCase(@"Examples\LAPACK\LAPACKIncorrectResultsExample.txt", @"A test in LAPACK has no output time metrics")]
-        public void LAPACKParserThrowIfInvalidOutput(string IncorrectLAPACKoutputPath, string exceptionMessage)
+        [TestCase(@"Examples\LAPACK\LAPACKIncorrectFormatExample.txt")]
+        [TestCase(@"Examples\LAPACK\LAPACKIncorrectResultsExample.txt")]
+        public void LAPACKParserThrowIfInvalidOutput(string IncorrectLAPACKoutputPath)
         {
             this.rawText = File.ReadAllText(IncorrectLAPACKoutputPath);
             this.testParser = new LAPACKMetricsParser(this.rawText);
-            SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains(exceptionMessage, exception.Message);
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
         }
     }
 }

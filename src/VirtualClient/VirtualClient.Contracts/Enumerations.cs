@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+
 namespace VirtualClient
 {
     /// <summary>
@@ -472,20 +474,60 @@ namespace VirtualClient
     }
 
     /// <summary>
-    /// Defines the type of IP address.
+    /// Defines different Linux distribution
     /// </summary>
-    public enum IPAddressType
+    public enum LinuxDistribution
     {
         /// <summary>
-        /// Private IP address. Part of a virtual network (VNET). Discoverable only
-        /// by clients on the same VNET.
+        /// Unkwown distribution.
         /// </summary>
-        Private,
+        Unknown,
 
         /// <summary>
-        /// Public IP address. Discoverable by any client via the public internet.
+        /// Ubuntu
         /// </summary>
-        Public
+        Ubuntu,
+
+        /// <summary>
+        /// RHEL7
+        /// </summary>
+        RHEL7,
+
+        /// <summary>
+        /// RHEL8
+        /// </summary>
+        RHEL8,
+
+        /// <summary>
+        /// Debian
+        /// </summary>
+        Debian,
+
+        /// <summary>
+        /// CentOS7
+        /// </summary>
+        CentOS7,
+
+        /// <summary>
+        /// CentOS8
+        /// </summary>
+        CentOS8,
+
+        /// <summary>
+        /// SUSE
+        /// </summary>
+        SUSE,
+
+        /// <summary>
+        /// Flatcar
+        /// https://www.flatcar.org/
+        /// </summary>
+        Flatcar,
+
+        /// <summary>
+        /// MSFT internal CentOS based distro Mariner
+        /// </summary>
+        Mariner
     }
 
     /// <summary>
@@ -580,62 +622,5 @@ namespace VirtualClient
         /// OnDemand - Profile the system only when requested.
         /// </summary>
         OnDemand
-    }
-
-    /// <summary>
-    /// Defines different Linux distribution
-    /// </summary>
-    public enum LinuxDistribution
-    {
-        /// <summary>
-        /// Unkwown distribution.
-        /// </summary>
-        Unknown,
-
-        /// <summary>
-        /// Ubuntu
-        /// </summary>
-        Ubuntu,
-
-        /// <summary>
-        /// RHEL7
-        /// </summary>
-        RHEL7,
-
-        /// <summary>
-        /// RHEL8
-        /// </summary>
-        RHEL8,
-
-        /// <summary>
-        /// Debian
-        /// </summary>
-        Debian,
-
-        /// <summary>
-        /// CentOS7
-        /// </summary>
-        CentOS7,
-
-        /// <summary>
-        /// CentOS8
-        /// </summary>
-        CentOS8,
-
-        /// <summary>
-        /// SUSE
-        /// </summary>
-        SUSE,
-
-        /// <summary>
-        /// Flatcar
-        /// https://www.flatcar.org/
-        /// </summary>
-        Flatcar,
-
-        /// <summary>
-        /// MSFT internal CentOS based distro Mariner
-        /// </summary>
-        Mariner
     }
 }

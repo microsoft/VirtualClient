@@ -63,6 +63,20 @@ will be included in ALL metrics, counters, logs etc... telemetry that is emitted
 VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
 ```
 
+## Scenario: Log Process Output to the File System
+Virtual Client runs a wide range of workloads, monitors and dependency handlers when executing a given profile. The following examples show
+how to instruct the application to log the output of processes to files in the logs directory on the file system.
+
+```
+# Log the workload process output to the file system.
+#
+# On Windows
+VirtualClient.exe --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+
+# On Linux
+./VirtualClient --profile=PERF-IO-FIO.json --timeout=180 --packages="{BlobStoreConnectionString|SAS URI}" --log-to-file
+```
+
 ## Scenario: Upload Metrics and Logs to an Event Hub
 The Virtual Client supports the ability to upload metrics, counters, logs etc... to an [Azure Event Hub](https://azure.microsoft.com/en-us/services/event-hubs/?OCID=AID2200277_SEM_092bba0f3fec11eb8ce6dbef46f6464a:G:s&ef_id=092bba0f3fec11eb8ce6dbef46f6464a:G:s&msclkid=092bba0f3fec11eb8ce6dbef46f6464a).
 Event Hubs are a highly-scalable messaging platform in the Azure Cloud that can be integrated out-of-the-box with other big-data platforms such as Azure Data Explorer (ADX/Kusto).

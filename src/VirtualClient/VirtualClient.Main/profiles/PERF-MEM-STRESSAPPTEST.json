@@ -25,7 +25,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallStressAppTestPackage",
+                "Scenario": "InstallStressAppTest",
                 "BlobContainer": "packages",
                 "BlobName": "stressapptest_20221115.zip",
                 "PackageName": "stressapptest",

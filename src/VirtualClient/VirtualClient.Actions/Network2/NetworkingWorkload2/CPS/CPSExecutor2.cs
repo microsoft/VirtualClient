@@ -355,7 +355,8 @@ namespace VirtualClient.Actions
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
                                     await this.LogProcessDetailsAsync(process, relatedContext, "CPS", logToFile: true);
-                                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+
+                                    process.ThrowIfWorkloadFailed();
                                     this.Results = process.StandardOutput.ToString();
                                 }
                             }

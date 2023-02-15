@@ -6,10 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Linq;
+    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -98,17 +99,20 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark")
-                        .ConfigureAwait(false);
+                    if (process.IsErrored())
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
 
-                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                    IEnumerable<string> results = await this.LoadResultsAsync(
+                        new string[] { this.OutputFile1Path, this.OutputFile2Path },
+                        cancellationToken);
 
-                    await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results, logToFile: true);
+                    await this.CaptureMetricsAsync(process, results, commandLineArguments, telemetryContext, cancellationToken);
                 }
             }
-
-            this.Logger.LogTraceMessage($"CoreMark process {pathToExe} {commandLineArguments}", telemetryContext);
         }
 
         private string GetCommandLineArguments()
@@ -116,20 +120,15 @@ namespace VirtualClient.Actions
             return @$"XCFLAGS=""-DMULTITHREAD={this.ThreadCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, IEnumerable<string> workloadResults, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();
-                    foreach (string resultsFile in new string[] { this.OutputFile1Path, this.OutputFile2Path })
+                    foreach (string results in workloadResults)
                     {
-                        string results = await fileSystem.File.ReadAllTextAsync(resultsFile)
-                            .ConfigureAwait(false);
-
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results, logToFile: true)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results.AsArray(), logToFile: true);
 
                         if (!string.IsNullOrWhiteSpace(results))
                         {

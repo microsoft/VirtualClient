@@ -55,17 +55,24 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.ParseSpecCpuResult();
-            this.ParseSpecCpuSummaryResult();
+            try
+            {
+                this.Preprocess();
+                this.ParseSpecCpuResult();
+                this.ParseSpecCpuSummaryResult();
 
-            List<Metric> metrics = new List<Metric>();
+                List<Metric> metrics = new List<Metric>();
 
-            metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "Score", namePrefix: "SPECcpu-base-", metricRelativity: MetricRelativity.HigherIsBetter));
+                metrics.AddRange(this.SpecCpu.GetMetrics(nameIndex: 0, valueIndex: 7, unit: "Score", namePrefix: "SPECcpu-peak-", ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
+                metrics.AddRange(this.SpecCpuSummary.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "Score", namePrefix: string.Empty, ignoreFormatError: true, metricRelativity: MetricRelativity.HigherIsBetter));
 
-            return metrics;
+                return metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse SPECcpu metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>

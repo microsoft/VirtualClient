@@ -70,19 +70,13 @@ namespace VirtualClient.Actions
         public IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// Service Name. ex: socialNetwork, mediaMicroservices, hotelReservation.
+        /// Service Name. ex: socialnetwork, mediamicroservices, hotelreservation.
         /// </summary>
         public string ServiceName
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DeathStarBenchExecutor.Scenario), out IConvertible serviceName);
-                return serviceName?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.ServiceName)] = value;
+                return this.Parameters.GetValue<string>(nameof(DeathStarBenchExecutor.ServiceName)).ToLowerInvariant();
             }
         }
 
@@ -102,9 +96,10 @@ namespace VirtualClient.Actions
         public static TimeSpan ServerWarmUpTime { get; set; } = TimeSpan.FromMinutes(3);
 
         /// <summary>
-        /// Cancellation Token Source for Server.
+        /// The path to the directory where the 'Makefile' exists and where the build/compilation
+        /// will happen.
         /// </summary>
-        protected CancellationTokenSource ServerCancellationSource { get; set; }
+        protected string MakefileDirectory { get; set; }
 
         /// <summary>
         /// Path to DeathStarBench Benchmark Package.
@@ -115,6 +110,11 @@ namespace VirtualClient.Actions
         /// Path to Service in DeathStarBench Benchmark Package.
         /// </summary>
         protected string ServiceDirectory { get; set; }
+
+        /// <summary>
+        /// Cancellation Token Source for Server.
+        /// </summary>
+        protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
         /// Path to scripts.
@@ -152,12 +152,20 @@ namespace VirtualClient.Actions
                 .ConfigureAwait();
 
             this.PackageDirectory = workloadPackage.Path;
-            this.ScriptsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "Scripts");
+            this.ScriptsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "scripts");
+            this.ServiceDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, this.ServiceName.ToLowerInvariant());
+            this.MakefileDirectory = this.PlatformSpecifics.Combine(this.ServiceDirectory, "wrk2");
+
+            if (this.ServiceName.Equals(DeathStarBenchExecutor.MediaMicroservices, StringComparison.OrdinalIgnoreCase))
+            {
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(this.MakefileDirectory, "wrk"),
+                    this.Platform,
+                    cancellationToken);
+            }
 
             await this.InstallDependenciesAsync(cancellationToken)
                 .ConfigureAwait();
-
-            this.ServiceDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, this.ServiceName);
         }
 
         /// <summary>
@@ -227,10 +235,6 @@ namespace VirtualClient.Actions
                     // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
                     this.Logger.LogMessage($"{nameof(DeathStarBenchExecutor)}.Canceled", telemetryContext);
                 }
-                catch (Exception)
-                {
-                    this.Logger.LogMessage($"{nameof(DeathStarBenchExecutor)} error occured when executing {this.Scenario} scenario", telemetryContext);
-                }
             }
         }
 
@@ -262,32 +266,24 @@ namespace VirtualClient.Actions
                             {
                                 this.Logger.LogTraceMessage($"Synchronization: Stopping all workloads...");
 
-                                await this.StopDockerAsync(CancellationToken.None)
-                                    .ConfigureAwait();
-
-                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken)
-                                    .ConfigureAwait();
+                                await this.StopDockerAsync(CancellationToken.None);
+                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken);
                             }
                             else if (workloadInstructions.Type == InstructionsType.ClientServerStartExecution)
                             {
-                                await this.StopDockerAsync(CancellationToken.None)
-                                    .ConfigureAwait();
+                                await this.StopDockerAsync(CancellationToken.None);
+                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken);
 
-                                await this.DeleteWorkloadStateAsync(relatedContext, cancellationToken)
-                                    .ConfigureAwait();
+                                this.Parameters[nameof(this.ServiceName)] = workloadInstructions.Properties[nameof(this.ServiceName)];
 
-                                this.Parameters["Scenario"] = workloadInstructions.Properties["ServiceName"];
-
-                                var serverExecutor = this.CreateWorkloadServer();
+                                VirtualClientComponent serverExecutor = this.CreateWorkloadServer();
                                 this.Logger.LogTraceMessage($"Synchronization: Starting {this.ServiceName} workload...");
 
-                                await serverExecutor.ExecuteAsync(cancellationToken)
-                                    .ConfigureAwait();
+                                await serverExecutor.ExecuteAsync(cancellationToken);
 
                                 // create the state here.
                                 DeathStarBenchState expectedServerState = new DeathStarBenchState(this.ServiceName, true);
-                                await this.LocalApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), expectedServerState, cancellationToken)
-                                    .ConfigureAwait();
+                                await this.LocalApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), expectedServerState, cancellationToken);
                             }
                         });
                     }
@@ -592,9 +588,8 @@ namespace VirtualClient.Actions
                         break;
                     default:
                         throw new WorkloadException(
-                            $"The DeathStarBench benchmark workload is not supported on the current Linux distro - " +
-                            $"{distroInfo.LinuxDistribution.ToString()} through Virtual Client.  Supported distros include:" +
-                            $" Ubuntu ",
+                            $"The DeathStarBench benchmark workload is not supported by Virtual Client on the current Linux distro " +
+                            $"'{distroInfo.LinuxDistribution}'.",
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }

@@ -6,11 +6,8 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
@@ -332,11 +329,156 @@ namespace VirtualClient.Contracts
             Assert.IsTrue(executed == false);
         }
 
+        [Test]
+        public async Task VirtualClientComponentLogsExpectedMetricsOnSuccessfulExecutions_Scenario1()
+        {
+            // Scenario:
+            // The component parameters does NOT have a 'Scenario' defined.
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.Parameters.Clear();
+            await component.ExecuteAsync(CancellationToken.None);
+
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            Assert.IsTrue(messageLogged.Count() == 1);
+
+            EventContext context = messageLogged.First().Item3 as EventContext;
+
+            Assert.IsNotNull(context);
+            Assert.IsTrue(
+                context.Properties.ContainsKey("scenarioName")
+                && context.Properties.ContainsKey("metricName")
+                && context.Properties.ContainsKey("metricValue")
+                && context.Properties.ContainsKey("metricDescription")
+                && context.Properties.ContainsKey("metricRelativity")
+                && context.Properties.ContainsKey("toolName")
+                && context.Properties["scenarioName"].ToString() == "Outcome"
+                && context.Properties["metricName"].ToString() == "Succeeded"
+                && context.Properties["metricValue"].ToString() == "1"
+                && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                && context.Properties["toolName"].ToString() == component.TypeName);
+        }
+
+        [Test]
+        public async Task VirtualClientComponentLogsExpectedMetricsOnSuccessfulExecutions_Scenario2()
+        {
+            // Scenario:
+            // The component parameters have a 'Scenario' defined.
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
+            await component.ExecuteAsync(CancellationToken.None);
+
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            Assert.IsTrue(messageLogged.Count() == 1);
+
+            EventContext context = messageLogged.First().Item3 as EventContext;
+
+            Assert.IsNotNull(context);
+            Assert.IsTrue(
+                context.Properties.ContainsKey("scenarioName")
+                && context.Properties.ContainsKey("metricName")
+                && context.Properties.ContainsKey("metricValue")
+                && context.Properties.ContainsKey("metricDescription")
+                && context.Properties.ContainsKey("metricRelativity")
+                && context.Properties.ContainsKey("toolName")
+                && context.Properties["scenarioName"].ToString() == "AnyScenarioDefined"
+                && context.Properties["metricName"].ToString() == "Succeeded"
+                && context.Properties["metricValue"].ToString() == "1"
+                && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                && context.Properties["toolName"].ToString() == component.TypeName);
+        }
+
+        [Test]
+        public async Task VirtualClientComponentLogsExpectedMetricsOnFailedExecutions_Scenario1()
+        {
+            // Scenario:
+            // The component parameters does NOT have a 'Scenario' defined.
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.Parameters.Clear();
+
+            try
+            {
+                // Cause the execution to fail.
+                component.OnExecute = (telemetryContext, token) => throw new WorkloadException($"Any failure reason");
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+            catch
+            {
+                // Exception is expected to surface.
+            }
+
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            Assert.IsTrue(messageLogged.Count() == 1);
+
+            EventContext context = messageLogged.First().Item3 as EventContext;
+
+            Assert.IsNotNull(context);
+            Assert.IsTrue(
+                context.Properties.ContainsKey("scenarioName")
+                && context.Properties.ContainsKey("metricName")
+                && context.Properties.ContainsKey("metricValue")
+                && context.Properties.ContainsKey("metricDescription")
+                && context.Properties.ContainsKey("metricRelativity")
+                && context.Properties.ContainsKey("toolName")
+                && context.Properties["scenarioName"].ToString() == "Outcome"
+                && context.Properties["metricName"].ToString() == "Failed"
+                && context.Properties["metricValue"].ToString() == "1"
+                && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                && context.Properties["toolName"].ToString() == component.TypeName);
+        }
+
+        [Test]
+        public async Task VirtualClientComponentLogsExpectedMetricsOnFailedExecutions_Scenario2()
+        {
+            // Scenario:
+            // The component parameters have a 'Scenario' defined.
+
+            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            component.Parameters[nameof(component.Scenario)] = "AnyScenarioDefined";
+
+            try
+            {
+                // Cause the execution to fail.
+                component.OnExecute = (telemetryContext, token) => throw new WorkloadException($"Any failure reason");
+                await component.ExecuteAsync(CancellationToken.None);
+            }
+            catch
+            {
+                // Exception is expected to surface.
+            }
+
+            var messageLogged = this.mockFixture.Logger.MessagesLogged($"{component.TypeName}.ScenarioResult");
+            Assert.IsTrue(messageLogged.Count() == 1);
+
+            EventContext context = messageLogged.First().Item3 as EventContext;
+
+            Assert.IsNotNull(context);
+            Assert.IsTrue(
+                context.Properties.ContainsKey("scenarioName")
+                && context.Properties.ContainsKey("metricName")
+                && context.Properties.ContainsKey("metricValue")
+                && context.Properties.ContainsKey("metricDescription")
+                && context.Properties.ContainsKey("metricRelativity")
+                && context.Properties.ContainsKey("toolName")
+                && context.Properties["scenarioName"].ToString() == "AnyScenarioDefined"
+                && context.Properties["metricName"].ToString() == "Failed"
+                && context.Properties["metricValue"].ToString() == "1"
+                && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                && context.Properties["toolName"].ToString() == component.TypeName);
+        }
+
         private class TestVirtualClientComponent : VirtualClientComponent
         {
             public TestVirtualClientComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
+                this.LogSuccessFailMetrics = true;
             }
 
             public Action<EventContext, CancellationToken> OnExecute { get; set; }

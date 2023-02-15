@@ -411,22 +411,19 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{nameof(DiskSpdExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    DateTime start = DateTime.Now;
-                    await workload.Process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                    DateTime end = DateTime.Now;
+                    await workload.Process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true)
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true);
 
                         if (this.DiskFill)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
+                            workload.Process.ThrowIfWorkloadFailed(errorReason: ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                         else if (!cancellationToken.IsCancellationRequested)
                         {
-                            workload.Process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            workload.Process.ThrowIfWorkloadFailed();
                             this.CaptureMetrics(workload, telemetryContext);
                         }
                     }

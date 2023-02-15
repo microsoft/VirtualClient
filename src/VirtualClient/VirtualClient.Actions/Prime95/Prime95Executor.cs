@@ -321,10 +321,14 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.LogProcessDetailsAsync(process, telemetryContext);
+                            if (process.IsErrored(this.successExitCodes))
+                            {
+                                this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", logToFile: true);
 
-                            // The exit code on SafeKill is -1 which is not a part of the default success codes.
-                            process.ThrowIfErrored<WorkloadException>(successCodes: this.successExitCodes, errorReason: ErrorReason.WorkloadFailed);
+                                // The exit code on SafeKill is -1 which is not a part of the default success codes.
+                                process.ThrowIfWorkloadFailed(this.successExitCodes);
+                            }
+
                             await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         }
                     }
@@ -396,24 +400,13 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
-                if (!this.fileSystem.File.Exists(resultsPath))
-                {
-                    throw new WorkloadResultsException(
-                        $"The Prime95 results file was not found at path '{resultsPath}'.",
-                        ErrorReason.WorkloadResultsNotFound);
-                }
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                string results = await this.fileSystem.File.ReadAllTextAsync(resultsPath)
-                    .ConfigureAwait();
-
-                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results, logToFile: true)
-                    .ConfigureAwait();
+                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results.AsArray(), logToFile: true);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {
-                    throw new WorkloadResultsException(
-                        "The Prime95 workload did not produce valid results.",
-                        ErrorReason.WorkloadResultsNotFound);
+                    throw new WorkloadResultsException($"Invalid results. The Prime95 workload did not produce valid results.", ErrorReason.InvalidResults);
                 }
 
                 double runTimeInSeconds = process.ExitTime.Subtract(process.StartTime).TotalSeconds;
@@ -440,7 +433,7 @@ namespace VirtualClient.Actions
                         metric.Relativity);
                 }
 
-                await this.fileSystem.File.DeleteAsync(resultsPath).ConfigureAwait();
+                await this.fileSystem.File.DeleteAsync(resultsPath);
             }
         }
     }
