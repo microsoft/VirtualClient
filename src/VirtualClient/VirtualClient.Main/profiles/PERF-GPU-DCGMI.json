@@ -2,7 +2,7 @@
   "Description": "DCGMI Monitor",
   "Parameters": {
     "Level": "4",
-    "Username": "testuser",
+    "Username": "null",
     "CudaVersion": "11.6",
     "DriverVersion": "510",
     "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
@@ -29,8 +29,38 @@
     {
       "Type": "DCGMIDiagExecutor",
       "Parameters": {
-        "Scenario": "Capture metrics",
+        "Scenario": "Diag-r",
         "Level": "$.Parameters.Level"
+      }
+    },
+    {
+      "Type": "DCGMIDiscoveryExecutor",
+      "Parameters": {
+        "Scenario": "DiscoveryList"
+      }
+    },
+    {
+      "Type": "DCGMIFieldGroupExecutor",
+      "Parameters": {
+        "Scenario": "FieldGroupList"
+      }
+    },
+    {
+      "Type": "DCGMIGroupExecutor",
+      "Parameters": {
+        "Scenario": "GroupsList"
+      }
+    },
+    {
+      "Type": "DCGMIHealthCheckExecutor",
+      "Parameters": {
+        "Scenario": "Health check"
+      }
+    },
+    {
+      "Type": "DCGMIModulesExecutor",
+      "Parameters": {
+        "Scenario": "ModulesList"
       }
     }
   ]

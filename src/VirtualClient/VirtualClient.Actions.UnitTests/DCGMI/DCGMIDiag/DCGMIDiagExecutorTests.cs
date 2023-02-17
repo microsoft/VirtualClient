@@ -79,15 +79,15 @@ namespace VirtualClient.Actions
                     }
                     else if (arguments == $"nvidia-smi -e 1")
                     {
-                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIDiagExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
+                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIDiscoveryExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
                     }
                 }
                 return process;
             };
 
-            using (TestDCGMIDiagExecutor testDCGMIInstallation = new TestDCGMIDiagExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIDiagExecutor testDCGMIDiagExecutor = new TestDCGMIDiagExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await testDCGMIInstallation.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
+                await testDCGMIDiagExecutor.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
             }
 
             Assert.AreEqual(3, commandExecuted);
@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
         }
 
-        private class TestDCGMIDiagExecutor : DCGMIDiagExecutor
+        private class TestDCGMIDiagExecutor : DCGMIDiscoveryExecutor
         {
             public TestDCGMIDiagExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
