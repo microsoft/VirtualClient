@@ -17,7 +17,7 @@
             "Parameters": {
                 "Scenario": "ScoreSystem",
                 "PackageName": "coremark",
-                "ThreadCount":"$.Parameters.ThreadCount"
+                "ThreadCount": "$.Parameters.ThreadCount"
             }
         }
     ],

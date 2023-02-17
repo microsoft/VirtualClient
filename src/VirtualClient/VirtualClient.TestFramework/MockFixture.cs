@@ -42,6 +42,12 @@ namespace VirtualClient
         /// </summary>
         public static readonly string TestAssemblyDirectory = Path.GetDirectoryName(MockFixture.TestAssembly.Location);
 
+        /// <summary>
+        /// The path to the directory where test example files can be found. Note that this requires the
+        /// test project to copy the files to a directory called 'Examples'.
+        /// </summary>
+        public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
+
         static MockFixture()
         {
             VirtualClientComponent.LogToFile = true;

@@ -76,7 +76,7 @@ namespace VirtualClient.Dependencies
 
                 Environment.SetEnvironmentVariable(JavaDevelopmentKitInstallation.JavaHomeEnvironmentVariable, javaDirectory, EnvironmentVariableTarget.Process);
                 Environment.SetEnvironmentVariable(JavaDevelopmentKitInstallation.JavaExeEnvironmentVariable, javaExecutable, EnvironmentVariableTarget.Process);
-                this.systemManager.AddDirectoryToPath(javaDirectory);
+                this.systemManager.AddToPathEnvironmentVariable(javaDirectory);
 
                 // Ensure the binary can execute (e.g. chmod +x)
                 await this.systemManager.MakeFileExecutableAsync(javaExecutable, this.Platform, cancellationToken)

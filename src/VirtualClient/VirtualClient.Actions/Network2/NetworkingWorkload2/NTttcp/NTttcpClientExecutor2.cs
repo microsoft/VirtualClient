@@ -254,10 +254,7 @@ namespace VirtualClient.Actions
             this.Logger.LogTraceMessage($"Synchronization: Wait for server online...");
 
             // Confirm the server has stopped all workloads
-            await this.ServerApiClient.PollUntilStateIsDeletedAsync(
-                nameof(NTttcpWorkloadState),
-                cancellationToken,
-                this.StateConfirmationPollingTimeout).ConfigureAwait(false);
+            await this.ServerApiClient.PollForStateDeletedAsync(nameof(NTttcpWorkloadState), this.StateConfirmationPollingTimeout, cancellationToken);
         }
 
         private string GetWindowsSpecificCommandLine()
@@ -379,13 +376,8 @@ namespace VirtualClient.Actions
                     await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
                     this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
-
-                    await this.ServerApiClient.PollUntilStateIsDeletedAsync(
-                       nameof(NTttcpWorkloadState),
-                       cancellationToken,
-                       this.StateConfirmationPollingTimeout).ConfigureAwait(false);
+                    await this.ServerApiClient.PollForStateDeletedAsync(nameof(NTttcpWorkloadState), this.StateConfirmationPollingTimeout, cancellationToken);
                 }
-
             });
         }
 

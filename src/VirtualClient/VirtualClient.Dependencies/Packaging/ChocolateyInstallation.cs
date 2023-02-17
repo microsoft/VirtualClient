@@ -77,7 +77,7 @@ namespace VirtualClient.Dependencies
                 await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
                     .ConfigureAwait(false);
 
-                systemManagement.AddDirectoryToPath(this.Combine(programDataPath, "chocolatey", "bin"));
+                systemManagement.AddToPathEnvironmentVariable(this.Combine(programDataPath, "chocolatey", "bin"));
 
                 await systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
                     .ConfigureAwait(false);

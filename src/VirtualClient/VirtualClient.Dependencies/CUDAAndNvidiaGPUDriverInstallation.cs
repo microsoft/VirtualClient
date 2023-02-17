@@ -5,7 +5,8 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
+    using System.Diagnostics.CodeAnalysis;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class CudaAndNvidiaGPUDriverInstallation : VirtualClientComponent
     {
+        private IFileSystem fileSystem;
         private ISystemManagement systemManager;
         private IStateManager stateManager;
 
@@ -35,6 +37,7 @@ namespace VirtualClient.Dependencies
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = dependencies.GetService<ISystemManagement>();
             this.stateManager = this.systemManager.StateManager;
+            this.fileSystem = this.systemManager.FileSystem;
         }
 
         /// <summary>
@@ -133,7 +136,7 @@ namespace VirtualClient.Dependencies
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
 
-                    await this.CudaAndNvidiaGPUDriverInstallationAsync(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
+                    await this.InstallCudaAndDriversAsync(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
@@ -155,8 +158,29 @@ namespace VirtualClient.Dependencies
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
         }
 
-        private async Task CudaAndNvidiaGPUDriverInstallationAsync(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Readability")]
+        private async Task InstallCudaAndDriversAsync(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // The .bashrc file is used to define commands that should be run whenever the system
+            // is booted. For the purpose of the CUDA driver installation, we want to include extra
+            // paths in the $PATH environment variable post installation.
+            string bashRcPath = $"/home/{this.Username}/.bashrc";
+
+            // We hit a bug where the .bashrc file does not exist on the system. To prevent issues later
+            // we are creating the file if it is missing.
+            if (!this.fileSystem.File.Exists(bashRcPath))
+            {
+                await this.fileSystem.File.WriteAllLinesAsync(
+                    bashRcPath,
+                    new string[]
+                    {
+                        "# ~/.bashrc: executed by bash(1) for non-login shells.",
+                        "# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)",
+                        "# for examples"
+                    },
+                    cancellationToken);
+            }
+
             // List<string> cleanupCommands = this.CleanupCommands(linuxDistribution);
             List<string> prerequisiteCommands = this.PrerequisiteCommands(linuxDistribution);
             List<string> installationCommands = this.VersionSpecificInstallationCommands(linuxDistribution);

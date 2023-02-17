@@ -19,7 +19,6 @@
         <ProjectReference Include="..\VirtualClient.Api\VirtualClient.Api.csproj" />
         <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
         <ProjectReference Include="..\VirtualClient.Core\VirtualClient.Core.csproj" />
-        <ProjectReference Include="..\VirtualClient.Dependencies\VirtualClient.Dependencies.csproj" />
     </ItemGroup>
 
     <ItemGroup>

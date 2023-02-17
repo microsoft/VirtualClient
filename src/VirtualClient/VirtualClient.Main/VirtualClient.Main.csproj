@@ -66,6 +66,7 @@
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
+        <WindowsProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
@@ -76,6 +77,7 @@
         <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECJBB.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC30.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC70.json" />
@@ -113,6 +115,7 @@
         <LinuxProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
         <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
@@ -120,6 +123,7 @@
         <LinuxProfiles Include="profiles\PERF-NETWORK.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-DEATHSTARBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
+        <LinuxProfiles Include="profiles\PERF-SPECJBB.json" />
         <LinuxProfiles Include="profiles\PERF-SPECJVM.json" />
         <LinuxProfiles Include="profiles\PERF-OPENFOAM.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC30.json" />
@@ -130,6 +134,7 @@
 
     <ItemGroup>
         <MonitorProfiles Include="profiles\MONITORS-DEFAULT.json" />
+        <MonitorProfiles Include="profiles\MONITORS-GPU-NVIDIA.json" />
         <MonitorProfiles Include="profiles\MONITORS-NONE.json" />
     </ItemGroup>
 

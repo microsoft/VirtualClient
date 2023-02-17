@@ -13,12 +13,13 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies;
+    using static VirtualClient.Actions.PostgreSQLExecutor;
 
     /// <summary>
     /// MemcachedMemtier workload executor
@@ -27,14 +28,10 @@ namespace VirtualClient.Actions
     public class MemcachedExecutor : VirtualClientComponent
     {
         /// <summary>
-        /// Name of memtier benchmark tool.
+        /// The property name used by the server-side executor to define the number
+        /// of Memcached server copies to run.
         /// </summary>
-        protected const string Memtier = "Memtier";
-
-        /// <summary>
-        /// Name of MemcachedBenchmark tool.
-        /// </summary>
-        protected const string MemcachedBenchmark = "MemcachedBenchmark";
+        internal const string ServerCopiesCount = nameof(ServerCopiesCount);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExampleClientServerExecutor"/> class.
@@ -61,29 +58,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// State representing server Instances.
-        /// </summary>
-        public State ServerCopiesCount { get; set; }
-
-        /// <summary>
-        /// Number of copies of Redis server instances to be created.
-        /// </summary>
-        public string Copies { get; set; }
-
-        /// <summary>
-        /// Client used to communicate with the hosted instance of the
-        /// Virtual Client API at server side.
-        /// </summary>
-        public IApiClient ServerApiClient { get; set; }
-
-        /// <summary>
         /// The user who has the ssh identity registered for.
         /// </summary>
         public string Username
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedExecutor.Username), out IConvertible username);
+                this.Parameters.TryGetValue(nameof(this.Username), out IConvertible username);
                 return username?.ToString();
             }
         }
@@ -91,56 +72,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Port on which server runs.
         /// </summary>
-        public string Port
+        public int Port
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedExecutor.Port), out IConvertible port);
-                return port?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Protocol to use at client side.
-        /// </summary>
-        public string Protocol
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(MemcachedExecutor.Protocol), out IConvertible protocol);
-                return protocol?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Path to MemcachedMemtier Benchmark Package.
-        /// </summary>
-        public string PackagePath { get; set; }
-
-        /// <summary>
-        /// Server IpAddress on which Redis Server runs.
-        /// </summary>
-        protected string ServerIpAddress { get; set; }
-
-        /// <summary>
-        /// Path to Memcached Package.
-        /// </summary>
-        protected string MemcachedPackagePath { get; set; }
-
-        /// <summary>
-        /// Path to Memcached Package.
-        /// </summary>
-        protected string MemtierPackagePath { get; set; }
-
-        /// <summary>
-        /// Decides whether to Bind redis process to cores.
-        /// </summary>
-        protected string Bind
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(MemcachedExecutor.Bind), out IConvertible bind);
-                return bind?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.Port));
             }
         }
 
@@ -167,6 +103,17 @@ namespace VirtualClient.Actions
         protected ProcessManager ProcessManager { get; }
 
         /// <summary>
+        /// Server IpAddress on which Redis Server runs.
+        /// </summary>
+        protected string ServerIpAddress { get; set; }
+
+        /// <summary>
+        /// Client used to communicate with the hosted instance of the
+        /// Virtual Client API at server side.
+        /// </summary>
+        protected IApiClient ServerApiClient { get; set; }
+
+        /// <summary>
         /// Provides access to dependencies required for interacting with the system, environment
         /// and runtime platform.
         /// </summary>
@@ -188,9 +135,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+            await this.ValidatePlatformSupportAsync(cancellationToken);
 
             if (this.IsMultiRoleLayout())
             {
@@ -199,33 +144,6 @@ namespace VirtualClient.Actions
 
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
-            }
-
-            DependencyPath memtierPackage = await this.PackageManager.GetPackageAsync(MemtierInstallation.MemtierPackage, CancellationToken.None)
-                    .ConfigureAwait(false);
-            if (memtierPackage != null)
-            {
-                this.MemtierPackagePath = memtierPackage.Path;
-            }
-            else
-            {
-                throw new DependencyException(
-                    $"Memtier package was not found on the system.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-
-            DependencyPath memcachedPackage = await this.PackageManager.GetPackageAsync(MemcachedInstallation.MemcachedPackage, CancellationToken.None)
-                .ConfigureAwait(false);
-            if (memcachedPackage != null)
-            {
-                this.MemcachedPackagePath = memcachedPackage.Path;
-
-            }
-            else
-            {
-                throw new DependencyException(
-                    $"Memcached package was not found on the system.",
-                    ErrorReason.WorkloadDependencyMissing);
             }
         }
 
@@ -328,8 +246,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="processName">The name of the process required to be killed.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        protected Task KillProcessesWithNameAsync(string processName, CancellationToken cancellationToken)
+        protected Task KillProcessesAsync(string processName, CancellationToken cancellationToken)
         {
             IEnumerable<IProcessProxy> processProxyList = GetRunningProcessByName(processName);
             if (processProxyList != null)
@@ -344,48 +261,72 @@ namespace VirtualClient.Actions
             return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
-        private void CheckPlatformSupport()
+        private async Task ValidatePlatformSupportAsync(CancellationToken cancellationToken)
         {
-            switch (this.Platform)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The Memcached Memtier benchmark workload is currently not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
+                switch (this.Platform)
+                {
+                    case PlatformID.Unix:
+                        LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                        switch (distroInfo.LinuxDistribution)
+                        {
+                            case LinuxDistribution.Ubuntu:
+                            case LinuxDistribution.Debian:
+                            case LinuxDistribution.CentOS8:
+                            case LinuxDistribution.RHEL8:
+                            case LinuxDistribution.Mariner:
+                                break;
+                            default:
+                                throw new WorkloadException(
+                                    $"The Memcached Memtier benchmark workload is not supported on the current Linux distro " +
+                                    $"'{distroInfo.LinuxDistribution}'.  Supported distros include: " +
+                                    $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
+                                    $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
+                                    ErrorReason.LinuxDistributionNotSupported);
+                        }
+
+                        break;
+
+                    default:
+                        throw new WorkloadException(
+                            $"The Memcached Memtier benchmark workload is currently not supported on the current platform/architecture " +
+                            $"'{this.PlatformArchitectureName}'. Supported platform/architectures include: " +
+                            $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
+                            $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
+                            ErrorReason.PlatformNotSupported);
+                }
             }
         }
 
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        internal class ServerState : State
         {
-            if (this.Platform == PlatformID.Unix)
+            public ServerState()
+                : base()
             {
-                var linuxDistributionInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
+                this.ServerCopies = 1;
+            }
 
-                if (!cancellationToken.IsCancellationRequested)
+            [JsonConstructor]
+            public ServerState(IDictionary<string, IConvertible> properties = null)
+                : base(properties)
+            {
+            }
+
+            /// <summary>
+            /// The number of copies/instances of the Memcached server to run simultaneously.
+            /// </summary>
+            public int ServerCopies
+            {
+                get
                 {
-                    switch (linuxDistributionInfo.LinuxDistribution)
-                    {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS8:
-                        case LinuxDistribution.RHEL8:
-                        case LinuxDistribution.Mariner:
-                            break;
-                        default:
-                            throw new WorkloadException(
-                                $"The Memcached Memtier benchmark workload is not supported on the current Linux distro - " +
-                                $"{linuxDistributionInfo.LinuxDistribution}.  Supported distros include:" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" + 
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
-                                ErrorReason.LinuxDistributionNotSupported);
-                    }
+                    return this.Properties.GetValue<int>(nameof(this.ServerCopies));
+                }
+
+                set
+                {
+                    this[nameof(this.ServerCopies)] = value;
                 }
             }
         }

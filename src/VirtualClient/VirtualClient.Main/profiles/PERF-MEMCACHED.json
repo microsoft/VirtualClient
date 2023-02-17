@@ -6,36 +6,36 @@
         "SupportedOperatingSystems": "Ubuntu"
     },
     "Parameters": {
-        "ServerItemMemoryMB": 1024,
+        "ServerPort": 6379,
+        "ServerMemoryCacheSizeInMB": 1024,
         "Username": "username"
     },
     "Actions": [
         {
-            "Type": "MemcachedServerExecutor",
+            "Type": "MemcachedMemtierServerExecutor",
             "Parameters": {
                 "Scenario": "Server",
-                "PackageName": "Memcached",
+                "PackageName": "memcached",
+                "BenchmarkPackageName": "memtier",
                 "Role": "Server",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "Bind": 1,
-                "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username",
-                "ServerItemMemoryMB": "$.Parameters.ServerItemMemoryMB"
+                "ServerMemoryCacheSizeInMB": "$.Parameters.ServerMemoryCacheSizeInMB"
             }
         },
         {
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_4t_1c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 4,
-                "ClientCountPerThread": 1,
+                "ClientsPerThread": 1,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -44,15 +44,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_4t_2c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 4,
-                "ClientCountPerThread": 2,
+                "ClientsPerThread": 2,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -61,15 +60,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_4t_4c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 4,
-                "ClientCountPerThread": 4,
+                "ClientsPerThread": 4,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -78,15 +76,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_8t_2c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 8,
-                "ClientCountPerThread": 2,
+                "ClientsPerThread": 2,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -95,15 +92,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_8t_4c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 8,
-                "ClientCountPerThread": 4,
+                "ClientsPerThread": 4,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -112,15 +108,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_8t_8c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 8,
-                "ClientCountPerThread": 8,
+                "ClientsPerThread": 8,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -129,15 +124,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_16t_4c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 16,
-                "ClientCountPerThread": 4,
+                "ClientsPerThread": 4,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -146,15 +140,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_16t_8c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 16,
-                "ClientCountPerThread": 8,
+                "ClientsPerThread": 8,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -163,15 +156,14 @@
             "Type": "MemcachedMemtierClientExecutor",
             "Parameters": {
                 "Scenario": "Memtier_16t_16c",
-                "PackageName": "Memcached",
+                "PackageName": "memtier",
                 "Role": "Client",
                 "ThreadCount": 16,
-                "ClientCountPerThread": 16,
+                "ClientsPerThread": 16,
                 "RunCount": 1,
-                "DurationInSecs": 180,
+                "Duration": "00:03:00",
                 "PipelineDepth": 32,
-                "Port": "6379",
-                "Bind": 1,
+                "Port": "$.Parameters.ServerPort",
                 "Protocol": "memcache_text",
                 "Username": "$.Parameters.Username"
             }
@@ -191,32 +183,44 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "wget,tcl-dev,numactl",
-                "Packages-Yum": "wget,tcl-devel,numactl",
-                "Packages-Dnf": "wget,tcl-devel,numactl"
+                "Packages-Apt": "tcl-dev,numactl",
+                "Packages-Yum": "tcl-devel,numactl",
+                "Packages-Dnf": "tcl-devel,numactl"
+            }
+        },
+        {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallMemcached",
+                "PackageName": "memcached",
+                "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ExecutePackageCommand",
+            "Parameters": {
+                "Scenario": "CompileMemcached",
+                "PlatformArchitecture": "linux-x64,linux-arm64",
+                "Command": "./configure&&make",
+                "PackageName": "memcached",
+                "Role": "Server"
             }
         },
         {
             "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneRepo",
+                "Scenario": "InstallMemtier",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }
         },
         {
-            "Type": "MemcachedInstallation",
+            "Type": "ExecutePackageCommand",
             "Parameters": {
-                "Scenario": "InstallMemcached",
-                "Version": "1.6.17",
-                "PackageName": "memcached"
-            }
-        },
-        {
-            "Type": "MemtierInstallation",
-            "Parameters": {
-                "Scenario": "InstallMemtier",
-                "Version": "1.4.0",
+                "Scenario": "Memtier",
+                "PlatformArchitecture": "linux-x64,linux-arm64",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf&&./configure&&make",
                 "PackageName": "memtier"
             }
         },

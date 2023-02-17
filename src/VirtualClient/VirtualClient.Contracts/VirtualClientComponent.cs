@@ -78,6 +78,7 @@ namespace VirtualClient.Contracts
             this.LogSuccessFailMetrics = true;
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
+            this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(this.systemInfo.Platform, this.systemInfo.CpuArchitecture, false);
             this.CpuArchitecture = this.systemInfo.CpuArchitecture;
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
@@ -388,6 +389,12 @@ namespace VirtualClient.Contracts
         public string TypeName { get; protected set; }
 
         /// <summary>
+        /// The name of the platform/architecture for the system on which the application is
+        /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64).
+        /// </summary>
+        protected string PlatformArchitectureName { get; }
+
+        /// <summary>
         /// The toolname or component name to use when logging completion metrics.
         /// </summary>
         protected bool LogSuccessFailMetrics { get; set; }
@@ -564,6 +571,14 @@ namespace VirtualClient.Contracts
             }
 
             return shouldExecute;
+        }
+
+        /// <summary>
+        /// Allows components to validate it can be executed.
+        /// </summary>
+        protected virtual void Validate()
+        {
+            this.ValidateParameters();
         }
 
         /// <summary>

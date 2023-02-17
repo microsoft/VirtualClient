@@ -6,7 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Net;
-    using System.Net.Http;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -30,67 +30,73 @@ namespace VirtualClient.Actions
         public MemcachedMemtierClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ClientFlowRetryPolicy = Policy.Handle<Exception>().RetryAsync(3);
+            this.ClientFlowRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries * 2));
             this.PollingTimeout = TimeSpan.FromMinutes(40);
         }
 
         /// <summary>
         /// Number of clients.
         /// </summary>
-        public string ClientCountPerThread
+        public int ClientsPerThread
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.ClientCountPerThread), out IConvertible clientCountPerThread);
-                return clientCountPerThread?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.ClientsPerThread));
             }
         }
 
         /// <summary>
         /// Number of threads to be created at client side.
         /// </summary>
-        public string ThreadCount
+        public int ThreadCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.ThreadCount), out IConvertible threadCount);
-                return threadCount?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.ThreadCount));
             }
         }
 
         /// <summary>
         /// Pipeline depth at client side.
         /// </summary>
-        public string PipelineDepth 
+        public int PipelineDepth 
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.PipelineDepth), out IConvertible pipelineDepth);
-                return pipelineDepth?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.PipelineDepth));
             }
         }
 
         /// <summary>
         /// Time for which client executes load on server.
         /// </summary>
-        public string DurationInSecs
+        public TimeSpan Duration
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.DurationInSecs), out IConvertible durationInSecs);
-                return durationInSecs?.ToString();
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration));
+            }
+        }
+
+        /// <summary>
+        /// Protocol to use at client side.
+        /// </summary>
+        public string Protocol
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.Protocol));
             }
         }
 
         /// <summary>
         /// Number of runs the client executes load on server.
         /// </summary>
-        public string RunCount
+        public int RunCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(MemcachedMemtierClientExecutor.RunCount), out IConvertible runCount);
-                return runCount?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.RunCount), 1);
             }
         }
 
@@ -100,9 +106,14 @@ namespace VirtualClient.Actions
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
 
         /// <summary>
-        /// Path to RedisMemtier Script.
+        /// Path to memtier benchmark executable (e.g. memtier_benchmark).
         /// </summary>
-        protected string ClientExecutorPath { get; set; }
+        protected string MemtierExecutablePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis Package.
+        /// </summary>
+        protected string MemtierPackagePath { get; set; }
 
         /// <summary>
         /// The timespan at which the client will poll the server for responses before
@@ -135,30 +146,24 @@ namespace VirtualClient.Actions
                             // 1) Confirm server is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
-
-                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
-                                .ConfigureAwait(false);
+                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
 
                             // 2) Confirm the server-side application (e.g. web server) is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
-
-                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
-                                .ConfigureAwait(false);
+                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken);
 
                             this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
                             this.Logger.LogTraceMessage("Synchronization: Start client workload...");
 
                             // 3) Get Parameters required.
                             // ===========================================================================
-                            this.Copies = await this.GetServerCopiesCount(serverApiClient, cancellationToken)
-                                                        .ConfigureAwait(false);
+                            int serverInstances = await this.GetServerCount(serverApiClient, cancellationToken);
 
                             // 4) Execute the client workload.
                             // ===========================================================================
                             ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
+                            await this.ExecuteWorkloadAsync(ipAddress, serverInstances, telemetryContext, cancellationToken);
                         }
                     }));
                 }
@@ -170,8 +175,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Copies = await this.GetServerCopiesCount(this.ServerApiClient, cancellationToken);
-                        await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
+                        int serverInstances = await this.GetServerCount(this.ServerApiClient, cancellationToken);
+                        await this.ExecuteWorkloadAsync(ipAddress, serverInstances, telemetryContext, cancellationToken);
                     }
                 }));
             }
@@ -184,8 +189,13 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.ClientExecutorPath = this.PlatformSpecifics.Combine(this.MemtierPackagePath, "memtier_benchmark");
+            await base.InitializeAsync(telemetryContext, cancellationToken);
+            DependencyPath memtierPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, CancellationToken.None);
+
+            this.MemtierPackagePath = memtierPackage.Path;
+            this.MemtierExecutablePath = this.PlatformSpecifics.Combine(this.MemtierPackagePath, "memtier_benchmark");
+
+            await this.SystemManagement.MakeFileExecutableAsync(this.MemtierExecutablePath, this.Platform, cancellationToken);
             this.InitializeApiClients();
         }
 
@@ -218,22 +228,24 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task ExecuteWorkloadAsync(IPAddress serverIpAddress, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteWorkloadAsync(IPAddress serverIpAddress, int serverInstances, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
                 DateTime startTime = DateTime.UtcNow;
-                string results = string.Empty;
+                StringBuilder results = new StringBuilder();
 
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    for (int i = 0; i < int.Parse(this.Copies); i++)
+                    for (int i = 0; i < serverInstances; i++)
                     {
-                        int port = int.Parse(this.Port) + i;
-                        string command = $"-u {this.Username} {this.ClientExecutorPath}";
+                        int port = this.Port + i;
+
+                        string command = $"-u {this.Username} {this.MemtierExecutablePath}";
                         string commandArguments = 
-                            $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientCountPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 " +
-                            $"--pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.DurationInSecs} --print-percentiles 50,90,95,99,99.9 --random-data";
+                            $"--server {serverIpAddress} --port {port} --protocol {this.Protocol} --clients {this.ClientsPerThread} --threads {this.ThreadCount} --ratio 1:9 --data-size 32 " +
+                            $"--pipeline {this.PipelineDepth} --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count {this.RunCount} --test-time {this.Duration.TotalSeconds} " +
+                            $"--print-percentiles 50,90,95,99,99.9 --random-data";
 
                         using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.MemtierPackagePath, telemetryContext, cancellationToken, runElevated: true))
                         {
@@ -241,33 +253,30 @@ namespace VirtualClient.Actions
                             {
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results: process.StandardOutput.ToString().AsArray(), logToFile: true);
                                 process.ThrowIfWorkloadFailed();
-
-                                results += $"{process.StandardOutput.ToString()}{Environment.NewLine}";
+                                results.AppendLine(process.StandardOutput.ToString());
                             }
                         }
                     }
 
-                    this.CaptureMetrics(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(results.ToString(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                 }
             });
         }
 
-        /// <summary>
-        /// Gets the parameters that define the scale configuration for the Memcahed memtier.
-        /// </summary>
-        private async Task<string> GetServerCopiesCount(IApiClient serverApiClient, CancellationToken cancellationToken)
+        private async Task<int> GetServerCount(IApiClient serverApiClient, CancellationToken cancellationToken)
         {
-            HttpResponseMessage response = await serverApiClient.GetStateAsync(nameof(this.ServerCopiesCount), cancellationToken)
-               .ConfigureAwait(false);
+            Item<ServerState> state = await serverApiClient.GetStateAsync<ServerState>(
+                nameof(ServerState),
+                cancellationToken);
 
-            response.ThrowOnError<WorkloadException>();
+            if (state == null)
+            {
+                throw new WorkloadException(
+                    $"Expected server state information missing. The server did not return state indicating the count/instances of the Memcached server are running.",
+                    ErrorReason.WorkloadUnexpectedAnomaly);
+            }
 
-            string responseContent = await response.Content.ReadAsStringAsync()
-                .ConfigureAwait(false);
-
-            State state = responseContent.FromJson<Item<State>>().Definition;
-
-            return state.Properties[nameof(this.ServerCopiesCount)].ToString();
+            return state.Definition.ServerCopies;
         }
     }
 }

@@ -1,0 +1,67 @@
+{
+    "Description": "PostgreSQL Benchmark",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "01:00:00",
+        "SupportedPlatforms": "linux-x64,win-x64",
+        "SupportedOperatingSystems": "Ubuntu,Windows"
+    },
+    "Parameters": {
+        "ReuseDatabase": true
+    },
+    "Actions": [
+        {
+            "Type": "PostgreSQLExecutor",
+            "Parameters": {
+                "Scenario": "TPC-C",
+                "PackageName": "postgresql",
+                "HammerDBPackageName": "hammerdb",
+                "DatabaseName": "tpcc",
+                "ReuseDatabase": "$.Parameters.ReuseDatabase"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallPostgreSQL",
+                "BlobContainer": "packages",
+                "BlobName": "postgresql.14.0.0.zip",
+                "PackageName": "postgresql",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallHammerDB",
+                "BlobContainer": "packages",
+                "BlobName": "hammerdb.4.6.0.zip",
+                "PackageName": "hammerdb",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "libxft-dev",
+                "Packages-Yum": "libxft-devel,libXft"
+            }
+        },
+        {
+            "Type": "PostgreSQLInstallation",
+            "Parameters": {
+                "Scenario": "InstallPostgreSQLServer",
+                "PackageName": "postgresql",
+                "Version": 14
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}

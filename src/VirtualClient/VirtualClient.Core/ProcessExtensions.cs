@@ -154,6 +154,34 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Throws an exception when a dependency installation process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfDependencyInstallationFailed(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.DependencyInstallationFailed)
+        {
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorMessage ?? "Dependency installation process failed.", errorReason);
+        }
+
+        /// <summary>
+        /// Throws an exception when a dependency installation process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="successCodes">The set of exit codes that indicate success.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfDependencyInstallationFailed(this IProcessProxy process, IEnumerable<int> successCodes, string errorMessage = null, ErrorReason errorReason = ErrorReason.DependencyInstallationFailed)
+        {
+            successCodes.ThrowIfNullOrEmpty(nameof(successCodes));
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<DependencyException>(successCodes, errorMessage ?? "Dependency installation process failed.", errorReason);
+        }
+
+        /// <summary>
         /// Throws an exception if the process has exited and the exit code does not match
         /// one of the default success exit codes.
         /// </summary>
@@ -222,6 +250,34 @@ namespace VirtualClient
                         $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in the parameters supplied.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Throws an exception when a monitor process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfMonitorFailed(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.MonitorFailed)
+        {
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<MonitorException>(ProcessProxy.DefaultSuccessCodes, errorMessage ?? "Monitor process execution failed.", errorReason);
+        }
+
+        /// <summary>
+        /// Throws an exception when a monitor process has exited and the exit code does not match
+        /// one of the default success exit codes.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="successCodes">The set of exit codes that indicate success.</param>
+        /// <param name="errorMessage">An optional error message to use instead of the default.</param>
+        /// <param name="errorReason">The reason/category of the error.</param>
+        public static void ThrowIfMonitorFailed(this IProcessProxy process, IEnumerable<int> successCodes, string errorMessage = null, ErrorReason errorReason = ErrorReason.MonitorFailed)
+        {
+            successCodes.ThrowIfNullOrEmpty(nameof(successCodes));
+            process.ThrowIfNull(nameof(process));
+            process.ThrowIfErrored<MonitorException>(successCodes, errorMessage ?? "Monitor process execution failed.", errorReason);
         }
 
         /// <summary>

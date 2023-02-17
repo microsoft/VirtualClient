@@ -5,15 +5,18 @@
         "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "Ubuntu"
     },
-    "Parameters": {},
+    "Parameters": {
+        "ServerPort": 6379
+    },
     "Actions": [
         {
             "Type": "RedisServerExecutor",
             "Parameters": {
                 "Scenario": "Server",
                 "Role": "Server",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
+                "BenchmarkPackageName": "memtier",
                 "Bind": 1
             }
         },
@@ -22,14 +25,14 @@
             "Parameters": {
                 "Scenario": "Memtier_4t_1c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "4",
-                "ClientCount": "1",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 4,
+                "ClientsPerThread": 1,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -37,14 +40,14 @@
             "Parameters": {
                 "Scenario": "Memtier_4t_2c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "4",
-                "ClientCount": "2",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 4,
+                "ClientsPerThread": 2,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -52,14 +55,14 @@
             "Parameters": {
                 "Scenario": "Memtier_4t_8c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "4",
-                "ClientCount": "4",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 4,
+                "ClientsPerThread": 4,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -67,14 +70,14 @@
             "Parameters": {
                 "Scenario": "Memtier_4t_16c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "4",
-                "ClientCount": "8",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 4,
+                "ClientsPerThread": 8,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -82,14 +85,14 @@
             "Parameters": {
                 "Scenario": "Memtier_16t_1c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "16",
-                "ClientCount": "1",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 16,
+                "ClientsPerThread": 1,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -97,14 +100,14 @@
             "Parameters": {
                 "Scenario": "Memtier_16t_2c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "16",
-                "ClientCount": "2",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 16,
+                "ClientsPerThread": 2,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -112,14 +115,14 @@
             "Parameters": {
                 "Scenario": "Memtier_16t_4c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "16",
-                "ClientCount": "4",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 16,
+                "ClientsPerThread": 4,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -127,14 +130,14 @@
             "Parameters": {
                 "Scenario": "Memtier_16t_8c",
                 "Role": "Client",
-                "Port": "6379",
-                "PackageName": "redis",
-                "ThreadCount": "16",
-                "ClientCount": "8",
-                "RunCount": "1",
-                "DurationInSecs": "180",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Port": "$.Parameters.ServerPort",
+                "PackageName": "memtier",
+                "ThreadCount": 16,
+                "ClientsPerThread": 8,
+                "RunCount": 1,
+                "Duration": "00:03:00",
+                "Protocol": "redis",
+                "PipelineDepth": 32
             }
         },
         {
@@ -142,11 +145,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_10kreq_1c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "1",
-                "RequestCount": "10000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 1,
+                "RequestCount": 10000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -154,11 +157,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_10kreq_2c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "2",
-                "RequestCount": "10000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 2,
+                "RequestCount": 10000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -166,11 +169,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_10kreq_4c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "4",
-                "RequestCount": "10000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 4,
+                "RequestCount": 10000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -178,11 +181,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_10kreq_8c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "8",
-                "RequestCount": "10000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 8,
+                "RequestCount": 10000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -190,11 +193,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_50kreq_1c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "1",
-                "RequestCount": "50000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 1,
+                "RequestCount": 50000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -202,11 +205,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_50kreq_2c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "2",
-                "RequestCount": "50000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 2,
+                "RequestCount": 50000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -214,11 +217,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_50kreq_4c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "4",
-                "RequestCount": "50000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 4,
+                "RequestCount": 50000,
+                "PipelineDepth": 32
             }
         },
         {
@@ -226,11 +229,11 @@
             "Parameters": {
                 "Scenario": "RedisBenchmark_50kreq_8c",
                 "Role": "Client",
-                "Port": "6379",
+                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "ClientCount": "8",
-                "RequestCount": "50000",
-                "PipelineDepth": "32"
+                "ClientsPerThread": 8,
+                "RequestCount": 50000,
+                "PipelineDepth": 32
             }
         }
     ],
@@ -254,26 +257,36 @@
             }
         },
         {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRedis",
+                "PackageName": "redis",
+                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz"
+            }
+        },
+        {
+            "Type": "ExecutePackageCommand",
+            "Parameters": {
+                "Scenario": "CompileRedis",
+                "PlatformArchitecture": "linux-x64,linux-arm64",
+                "Command": "./configure&&make",
+                "PackageName": "redis"
+            }
+        },
+        {
             "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneRepo",
+                "Scenario": "InstallMemtier",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }
         },
         {
-            "Type": "RedisInstallation",
+            "Type": "ExecutePackageCommand",
             "Parameters": {
-                "Scenario": "InstallRedis",
-                "Version": "6.2.1",
-                "PackageName": "redis"
-            }
-        },
-        {
-            "Type": "MemtierInstallation",
-            "Parameters": {
-                "Scenario": "InstallMemtier",
-                "Version": "1.4.0",
+                "Scenario": "CompileMemtier",
+                "PlatformArchitecture": "linux-x64,linux-arm64",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf&&./configure&&make",
                 "PackageName": "memtier"
             }
         },

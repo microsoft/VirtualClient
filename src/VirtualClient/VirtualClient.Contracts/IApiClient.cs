@@ -61,6 +61,16 @@ namespace VirtualClient
         Task<HttpResponseMessage> DeleteStateAsync(string stateId, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
 
         /// <summary>
+        /// Makes an API request to get a heartbeat response.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="retryPolicy">A retry policy to apply when the client receives transient error responses from the API.</param>
+        /// <returns>
+        /// An <see cref="HttpResponseMessage"/> containing the HTTP status code of the response.
+        /// </returns>
+        Task<HttpResponseMessage> GetHeartbeatAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
+
+        /// <summary>
         /// Makes an API request to confirm if the eventing API is online and ready to service requests. The eventing
         /// API is offline by default awaiting signal from workloads or monitors within the Virtual Client to indicate they
         /// are ready.
@@ -70,17 +80,7 @@ namespace VirtualClient
         /// <returns>
         /// An <see cref="HttpResponseMessage"/> containing the online status of the API.
         /// </returns>
-        Task<HttpResponseMessage> GetEventingOnlineStatusAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
-
-        /// <summary>
-        /// Makes an API request to get a heartbeat response.
-        /// </summary>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <param name="retryPolicy">A retry policy to apply when the client receives transient error responses from the API.</param>
-        /// <returns>
-        /// An <see cref="HttpResponseMessage"/> containing the HTTP status code of the response.
-        /// </returns>
-        Task<HttpResponseMessage> GetHeartbeatAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
+        Task<HttpResponseMessage> GetServerOnlineStatusAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
 
         /// <summary>
         /// Makes an API request to get a state object/definition.

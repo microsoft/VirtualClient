@@ -17,6 +17,7 @@ namespace VirtualClient.Contracts
     using Polly;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
 
     /// <summary>
@@ -61,13 +62,22 @@ namespace VirtualClient.Contracts
 
             return (logger ?? defaultLogger).LogMessageAsync("ClientServer.GetState", telemetryContext, async () =>
             {
+                Item<TState> state = null;
                 HttpResponseMessage response = await client.GetStateAsync(stateId, cancellationToken, retryPolicy)
                     .ConfigureAwait(false);
 
                 telemetryContext.AddResponseContext(response);
-                response.ThrowOnError<ApiException>(ErrorReason.HttpNonSuccessResponse);
 
-                return await response.FromContentAsync<Item<TState>>();
+                if (response.IsSuccessStatusCode)
+                {
+                    state = await response.FromContentAsync<Item<TState>>();
+                }
+                else if (response.StatusCode != HttpStatusCode.NotFound)
+                {
+                    response.ThrowOnError<ApiException>(ErrorReason.HttpNonSuccessResponse);
+                }
+
+                return state;
             });
         }
 
@@ -113,24 +123,73 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Makes a request to get/create a state object/definition.
+        /// Makes a request to get/create a state object/definition or creates a default instance for the object type 'TState'. 
+        /// Note that it is a requirement that the state object have a default/empty constructor in order to be used with this
+        /// method.
         /// </summary>
         /// <param name="client">The API client instance.</param>
         /// <param name="stateId">The unique ID of the state object.</param>
-        /// <param name="state">The state object/definition.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="retryPolicy">A retry policy to apply when the client receives transient error responses from the API.</param>
         /// <param name="logger">A logger to use for capturing API telemetry.</param>
         /// <returns>
         /// An <see cref="HttpResponseMessage"/> containing the state object/definition.
         /// </returns>
-        public static Task<HttpResponseMessage> GetOrCreateStateAsync<TState>(this IApiClient client, string stateId, TState state, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null, ILogger logger = null)
+        public static Task<Item<TState>> GetOrCreateStateAsync<TState>(this IApiClient client, string stateId, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null, ILogger logger = null)
+            where TState : State, new()
         {
             client.ThrowIfNull(nameof(client));
             stateId.ThrowIfNullOrWhiteSpace(nameof(stateId));
-            state.ThrowIfNull(nameof(state));
 
-            return client.GetOrCreateStateAsync(stateId, JObject.FromObject(state), cancellationToken, retryPolicy, logger);
+            EventContext telemetryContext = EventContext.Persisted()
+                .AddContext("uri", client.BaseUri.ToString())
+                .AddContext(nameof(stateId), stateId);
+
+            return (logger ?? defaultLogger).LogMessageAsync("ClientServer.GetOrCreateState", telemetryContext, async () =>
+            {
+                Item<TState> state = null;
+                using (HttpResponseMessage getResponse = await client.GetStateAsync(stateId, cancellationToken, retryPolicy))
+                {
+                    telemetryContext.AddResponseContext(getResponse, "response-get");
+
+                    if (getResponse.IsSuccessStatusCode)
+                    {
+                        state = await getResponse.Content.ReadAsJsonAsync<Item<TState>>();
+                    }
+                    else if (getResponse.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        try
+                        {
+                            TState defaultInstance = Activator.CreateInstance<TState>();
+                            using (HttpResponseMessage postResponse = await client.CreateStateAsync(stateId, defaultInstance, cancellationToken, retryPolicy))
+                            {
+                                telemetryContext.AddResponseContext(postResponse, "response-post");
+
+                                if (postResponse.IsSuccessStatusCode)
+                                {
+                                    state = await postResponse.Content.ReadAsJsonAsync<Item<TState>>();
+                                }
+                            }
+                        }
+                        catch (MissingMemberException exc)
+                        {
+                            // This should never happen given the new() constraint on the TData type in the above
+                            // method signature.
+                            throw new SchemaException(
+                                $"The state object of type '{typeof(TState).FullName}' is missing the default/parameterless constructor. " +
+                                $"This constructor is required in order to initialize default instances of the state.",
+                                exc);
+                        }
+                    }
+
+                    if (state == null)
+                    {
+                        throw new ApiException($"API state get/create request failed.", ErrorReason.HttpNonSuccessResponse);
+                    }
+                }
+
+                return state;
+            });
         }
 
         /// <summary>
@@ -186,9 +245,9 @@ namespace VirtualClient.Contracts
                             }
                         }
                     }
-                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    catch (HttpRequestException)
                     {
-                        // API itself is offline.
+                        // API itself may not be online yet.
                         responses.Add(new
                         {
                             apiOnline = false,
@@ -196,24 +255,28 @@ namespace VirtualClient.Contracts
                             httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
                         });
                     }
-                    catch
+                    catch (Exception exc)
                     {
-                        // State not available on server yet.
+                        // Any errors which are not specifically HTTP exceptions indicate issues with the
+                        // payload (e.g. the response content was not in the expected Item<T> state).
+                        throw new WorkloadException(
+                            $"Unexpected/invalid response when polling for expected state '{stateId}'. " +
+                            $"Latest response state: {currentState?.ToString()}",
+                            exc,
+                            ErrorReason.ApiRequestFailed);
                     }
-                    finally
-                    {
-                        if (!stateFound)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException(
-                                    $"Polling for expected state '{stateId}' timed out (timeout={timeout}).",
-                                    ErrorReason.ApiStatePollingTimeout);
-                            }
 
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
+                    if (!stateFound)
+                    {
+                        if (DateTime.UtcNow >= pollingTimeout)
+                        {
+                            throw new WorkloadException(
+                                $"Polling for expected state '{stateId}' timed out (timeout={timeout}).",
+                                ErrorReason.ApiStatePollingTimeout);
                         }
+
+                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 while (!stateFound && !cancellationToken.IsCancellationRequested);
@@ -272,9 +335,9 @@ namespace VirtualClient.Contracts
                             }
                         }
                     }
-                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    catch (HttpRequestException)
                     {
-                        // API itself is offline.
+                        // API itself may not be online yet.
                         responses.Add(new
                         {
                             apiOnline = false,
@@ -282,25 +345,29 @@ namespace VirtualClient.Contracts
                             httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
                         });
                     }
-                    catch
+                    catch (Exception exc)
                     {
-                        // State not available on server yet.
+                        // Any errors which are not specifically HTTP exceptions indicate issues with the
+                        // payload (e.g. the response content was not in the expected Item<T> state).
+                        throw new WorkloadException(
+                            $"Unexpected/invalid response when polling for expected state '{stateId}'. " +
+                            $"Latest response state: {currentState?.ToString()}",
+                            exc,
+                            ErrorReason.ApiRequestFailed);
                     }
-                    finally
-                    {
-                        if (!stateFound)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException(
-                                    $"Polling for expected state '{stateId}' timed out (timeout={timeout}). " +
-                                    $"Latest response state: {currentState?.ToString()}",
-                                    ErrorReason.ApiStatePollingTimeout);
-                            }
 
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
+                    if (!stateFound)
+                    {
+                        if (DateTime.UtcNow >= pollingTimeout)
+                        {
+                            throw new WorkloadException(
+                                $"Polling for expected state '{stateId}' timed out (timeout={timeout}). " +
+                                $"Latest response state: {currentState?.ToString()}",
+                                ErrorReason.ApiStatePollingTimeout);
                         }
+
+                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 while (!stateFound && !cancellationToken.IsCancellationRequested);
@@ -346,31 +413,34 @@ namespace VirtualClient.Contracts
                             heartbeatConfirmed = response.IsSuccessStatusCode;
                         }
                     }
-                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    catch (HttpRequestException)
                     {
-                        // API itself is offline.
+                        // API itself may not be online yet.
                         responses.Add(new
                         {
                             httpStatusCode = (int)HttpStatusCode.ServiceUnavailable,
                             httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
                         });
                     }
-                    catch
+                    catch (Exception exc)
                     {
-                        // State not available on server yet.
+                        // Any errors which are not specifically HTTP exceptions indicate issues with the
+                        // payload (e.g. the response content was not in the expected Item<T> state).
+                        throw new WorkloadException(
+                            $"Unexpected/invalid response when polling for heartbeat. ",
+                            exc,
+                            ErrorReason.ApiRequestFailed);
                     }
-                    finally
-                    {
-                        if (!heartbeatConfirmed)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException($"Polling for an API heartbeat timed out (timeout={timeout}).", ErrorReason.ApiStatePollingTimeout);
-                            }
 
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
+                    if (!heartbeatConfirmed)
+                    {
+                        if (DateTime.UtcNow >= pollingTimeout)
+                        {
+                            throw new WorkloadException($"Polling for an API heartbeat timed out (timeout={timeout}).", ErrorReason.ApiStatePollingTimeout);
                         }
+
+                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 while (!heartbeatConfirmed && !cancellationToken.IsCancellationRequested);
@@ -405,7 +475,7 @@ namespace VirtualClient.Contracts
                     try
                     {
                         ConsoleLogger.Default.LogTraceMessage("...............................Polling for server online.");
-                        using (HttpResponseMessage response = await client.GetEventingOnlineStatusAsync(cancellationToken).ConfigureAwait(false))
+                        using (HttpResponseMessage response = await client.GetServerOnlineStatusAsync(cancellationToken).ConfigureAwait(false))
                         {
                             responses.Add(new
                             {
@@ -416,9 +486,9 @@ namespace VirtualClient.Contracts
                             apiOnline = response.IsSuccessStatusCode;
                         }
                     }
-                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    catch (HttpRequestException)
                     {
-                        // API itself is offline.
+                        // API itself may not be online yet.
                         responses.Add(new
                         {
                             apiOnline = false,
@@ -426,24 +496,27 @@ namespace VirtualClient.Contracts
                             httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
                         });
                     }
-                    catch
+                    catch (Exception exc)
                     {
-                        // API service may not be online yet.
+                        // Any errors which are not specifically HTTP exceptions indicate issues with the
+                        // payload (e.g. the response content was not in the expected Item<T> state).
+                        throw new WorkloadException(
+                            $"Unexpected/invalid response when polling for server to be online. ",
+                            exc,
+                            ErrorReason.ApiRequestFailed);
                     }
-                    finally
-                    {
-                        if (!apiOnline)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException(
-                                    $"Polling for server online signal timed out (timeout={timeout}).",
-                                    ErrorReason.ApiStatePollingTimeout);
-                            }
 
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
-                                .ConfigureAwait(false);
+                    if (!apiOnline)
+                    {
+                        if (DateTime.UtcNow >= pollingTimeout)
+                        {
+                            throw new WorkloadException(
+                                $"Polling for server online signal timed out (timeout={timeout}).",
+                                ErrorReason.ApiStatePollingTimeout);
                         }
+
+                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
                 while (!apiOnline && !cancellationToken.IsCancellationRequested);
@@ -461,7 +534,7 @@ namespace VirtualClient.Contracts
         /// <returns>
         /// An <see cref="HttpResponseMessage"/> containing the state object/definition at last poll call.
         /// </returns>
-        public static Task PollUntilStateIsDeletedAsync(this IApiClient client, string stateId, CancellationToken cancellationToken, TimeSpan timeout, ILogger logger = null)
+        public static Task PollForStateDeletedAsync(this IApiClient client, string stateId, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
         {
             client.ThrowIfNull(nameof(client));
             stateId.ThrowIfNullOrWhiteSpace(nameof(stateId));
@@ -475,7 +548,7 @@ namespace VirtualClient.Contracts
                 .AddContext(nameof(stateId), stateId)
                 .AddContext(nameof(timeout), pollingTimeout);
 
-            return (logger ?? ConsoleLogger.Default).LogMessageAsync("ClientServer.PollUntilStateIsDeleted", telemetryContext, async () =>
+            return (logger ?? ConsoleLogger.Default).LogMessageAsync("ClientServer.PollForStateDeleted", telemetryContext, async () =>
             {
                 telemetryContext.AddContext(nameof(responses), responses);
 
@@ -494,9 +567,9 @@ namespace VirtualClient.Contracts
                             stateExists = response.StatusCode == HttpStatusCode.OK;
                         }
                     }
-                    catch (HttpRequestException exc) when (exc.Message.Contains("No connection", StringComparison.OrdinalIgnoreCase))
+                    catch (HttpRequestException)
                     {
-                        // API itself is offline.
+                        // API itself may not be online yet.
                         responses.Add(new
                         {
                             apiOnline = false,
@@ -504,23 +577,26 @@ namespace VirtualClient.Contracts
                             httpStatus = HttpStatusCode.ServiceUnavailable.ToString()
                         });
                     }
-                    catch
+                    catch (Exception exc)
                     {
-                        // State not available on server yet.
+                        // Any errors which are not specifically HTTP exceptions indicate issues with the
+                        // payload (e.g. the response content was not in the expected Item<T> state).
+                        throw new WorkloadException(
+                           $"Unexpected/invalid response when polling for state '{stateId}' to be deleted.",
+                           exc,
+                           ErrorReason.ApiRequestFailed);
                     }
-                    finally
-                    {
-                        if (stateExists)
-                        {
-                            if (DateTime.UtcNow >= pollingTimeout)
-                            {
-                                throw new WorkloadException(
-                                    $"Polling for deletion of state '{stateId}' timed out (timeout={timeout}).",
-                                    ErrorReason.ApiStatePollingTimeout);
-                            }
 
-                            await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken).ConfigureAwait(false);
+                    if (stateExists)
+                    {
+                        if (DateTime.UtcNow >= pollingTimeout)
+                        {
+                            throw new WorkloadException(
+                                $"Polling for state '{stateId}' deletion timed out (timeout={timeout}).",
+                                ErrorReason.ApiStatePollingTimeout);
                         }
+
+                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 while (stateExists && !cancellationToken.IsCancellationRequested);

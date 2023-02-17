@@ -97,14 +97,18 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="platform">The OS/system platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU/processor architecture (e.g. amd64, arm).</param>
+        /// <param name="throwIfNotSupported">True to throw an exception if the platform/architecture is not supported.</param>
         /// <returns></returns>
-        public static string GetPlatformArchitectureName(PlatformID platform, Architecture? architecture = null)
+        public static string GetPlatformArchitectureName(PlatformID platform, Architecture? architecture = null, bool throwIfNotSupported = true)
         {
             string platformArchitectureName = null;
 
-            PlatformSpecifics.ThrowIfNotSupported(platform);
+            if (throwIfNotSupported)
+            {
+                PlatformSpecifics.ThrowIfNotSupported(platform);
+            }
 
-            if (architecture != null)
+            if (throwIfNotSupported && architecture != null)
             {
                 PlatformSpecifics.ThrowIfNotSupported(architecture.Value);
             }
@@ -120,7 +124,7 @@ namespace VirtualClient.Contracts
                     break;
             }
 
-            if (architecture != null)
+            if (architecture != null && platformArchitectureName != null)
             {
                 switch (architecture.Value)
                 {

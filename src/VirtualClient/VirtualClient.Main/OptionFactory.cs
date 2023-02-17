@@ -611,7 +611,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateSystemOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--platform", "--system", "--s" })
+            Option<string> option = new Option<string>(new string[] { "--system", "--s" })
             {
                 Name = "ExecutionSystem",
                 Description = "The execution system/environment platform (e.g. Azure).",

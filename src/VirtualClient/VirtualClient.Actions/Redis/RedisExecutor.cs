@@ -5,22 +5,18 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Net.Http;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies;
 
     /// <summary>
     /// Redis workload executor
@@ -29,14 +25,10 @@ namespace VirtualClient.Actions
     public class RedisExecutor : VirtualClientComponent
     {
         /// <summary>
-        /// Name of memtier benchmark tool.
+        /// The property name used by the server-side executor to define the number
+        /// of Redis server copies to run.
         /// </summary>
-        protected const string Memtier = "Memtier";
-
-        /// <summary>
-        /// Name of RedisBenchmark tool.
-        /// </summary>
-        protected const string RedisBenchmark = "RedisBenchmark";
+        internal const string ServerCopiesCount = nameof(ServerCopiesCount);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisExecutor"/> class.
@@ -47,65 +39,17 @@ namespace VirtualClient.Actions
             : base(dependencies, parameters)
         {
             this.ApiClientManager = dependencies.GetService<IApiClientManager>();
+            this.SystemManagement = this.Dependencies.GetService<ISystemManagement>();
         }
-
-        /// <summary>
-        /// State representing server Instances.
-        /// </summary>
-        public State ServerCopiesCount { get; set; }
-
-        /// <summary>
-        /// Number of copies of Redis server instances to be created.
-        /// </summary>
-        public string Copies { get; set;  }
-
-        /// <summary>
-        /// Client used to communicate with the hosted instance of the
-        /// Virtual Client API at server side.
-        /// </summary>
-        public IApiClient ServerApiClient { get; set; }
 
         /// <summary>
         /// Port on which server runs.
         /// </summary>
-        public string Port
+        public int Port
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(RedisMemtierClientExecutor.Port), out IConvertible port);
-                return port?.ToString();
-            }
-        }
-
-        /// <summary>
-        /// An interface that can be used to communicate with the underlying system.
-        /// </summary>
-        protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
-
-        /// <summary>
-        /// Server IpAddress on which Redis Server runs.
-        /// </summary>
-        protected string ServerIpAddress { get; set; }
-
-        /// <summary>
-        /// Path to Redis Package.
-        /// </summary>
-        protected string RedisPackagePath { get; set; }
-
-        /// <summary>
-        /// Path to Redis Package.
-        /// </summary>
-        protected string MemtierPackagePath { get; set; }
-
-        /// <summary>
-        /// Decides whether to Bind redis process to cores.
-        /// </summary>
-        protected string Bind
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(RedisExecutor.Bind), out IConvertible bind);
-                return bind?.ToString();
+                return this.Parameters.GetValue<int>(nameof(this.Port));
             }
         }
 
@@ -116,59 +60,25 @@ namespace VirtualClient.Actions
         protected IApiClientManager ApiClientManager { get; }
 
         /// <summary>
+        /// Client used to communicate with the hosted instance of the
+        /// Virtual Client API at server side.
+        /// </summary>
+        protected IApiClient ServerApiClient { get; set; }
+
+        /// <summary>
+        /// Server IpAddress on which Redis Server runs.
+        /// </summary>
+        protected string ServerIpAddress { get; set; }
+
+        /// <summary>
         /// Cancellation Token Source for Server.
         /// </summary>
         protected CancellationTokenSource ServerCancellationSource { get; set; }
 
         /// <summary>
-        /// Initializes the environment and dependencies for running the Redis Memtier workload.
+        /// An interface that can be used to communicate with the underlying system.
         /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.CheckPlatformSupport();
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance clientInstance = this.GetLayoutClientInstance();
-                string layoutIPAddress = clientInstance.IPAddress;
-
-                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
-                this.ThrowIfRoleNotSupported(clientInstance.Role);
-            }
-
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-
-            DependencyPath memtierPackage = await packageManager.GetPackageAsync(MemtierInstallation.MemtierPackage, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (memtierPackage != null)
-            {
-                this.MemtierPackagePath = memtierPackage.Path;
-            }
-            else
-            {
-                throw new DependencyException(
-                    $"Memtier package was not found on the system.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-
-            DependencyPath redisPackage = await packageManager.GetPackageAsync(RedisInstallation.RedisPackage, CancellationToken.None)
-                .ConfigureAwait(false);
-
-            if (redisPackage != null)
-            {
-                this.RedisPackagePath = redisPackage.Path;
-
-            }
-            else
-            {
-                throw new DependencyException(
-                    $"Redis package was not found on the system.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-        }
+        protected ISystemManagement SystemManagement { get; set; }
 
         /// <summary>
         /// Executes the workload.
@@ -178,6 +88,23 @@ namespace VirtualClient.Actions
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Initializes the environment and dependencies for running the Redis Memtier workload.
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            await this.ValidatePlatformSupportAsync(cancellationToken);
+
+            if (this.IsMultiRoleLayout())
+            {
+                ClientInstance clientInstance = this.GetLayoutClientInstance();
+                string layoutIPAddress = clientInstance.IPAddress;
+
+                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
+                this.ThrowIfRoleNotSupported(clientInstance.Role);
+            }
         }
 
         /// <summary>
@@ -219,7 +146,7 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
+                    using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
@@ -234,16 +161,41 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CheckPlatformSupport()
+        private async Task ValidatePlatformSupportAsync(CancellationToken cancellationToken)
         {
             switch (this.Platform)
             {
                 case PlatformID.Unix:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            switch (distroInfo.LinuxDistribution)
+                            {
+                                case LinuxDistribution.Ubuntu:
+                                case LinuxDistribution.Debian:
+                                case LinuxDistribution.CentOS8:
+                                case LinuxDistribution.RHEL8:
+                                    break;
+                                default:
+                                    throw new WorkloadException(
+                                        $"The Redis Memtier benchmark workload is not supported on the current Linux distro " +
+                                        $"'{distroInfo.LinuxDistribution}'.  Supported distros include: " +
+                                        $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
+                                        $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)}",
+                                        ErrorReason.LinuxDistributionNotSupported);
+                            }
+                        }
+                    }
+
                     break;
+
                 default:
                     throw new WorkloadException(
                         $"The Redis Memtier benchmark workload is currently not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
+                        $"'{this.PlatformArchitectureName}'." +
                         $" Supported platform/architectures include: " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
@@ -251,31 +203,34 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        internal class ServerState : State
         {
-            if (this.Platform == PlatformID.Unix)
+            public ServerState()
+                : base()
             {
-                var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                this.ServerCopies = 1;
+            }
 
-                if (!cancellationToken.IsCancellationRequested)
+            [JsonConstructor]
+            public ServerState(IDictionary<string, IConvertible> properties = null)
+                : base(properties)
+            {
+            }
+
+            /// <summary>
+            /// The number of copies/instances of the Redis server to run simultaneously.
+            /// </summary>
+            public int ServerCopies
+            {
+                get
                 {
-                    switch (linuxDistributionInfo.LinuxDistribution)
-                    {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS8:
-                        case LinuxDistribution.RHEL8:
-                            break;
-                        default:
-                            throw new WorkloadException(
-                                $"The Redis Memtier benchmark workload is not supported on the current Linux distro - " +
-                                $"{linuxDistributionInfo.LinuxDistribution.ToString()}.  Supported distros include:" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)}",
-                                ErrorReason.LinuxDistributionNotSupported);
-                    }
-                } 
+                    return this.Properties.GetValue<int>(nameof(this.ServerCopies));
+                }
+
+                set
+                {
+                    this[nameof(this.ServerCopies)] = value;
+                }
             }
         }
     }

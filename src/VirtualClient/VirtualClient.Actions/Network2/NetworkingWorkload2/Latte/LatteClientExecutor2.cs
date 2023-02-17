@@ -169,10 +169,7 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             // Confirm the server has stopped all workloads
-            await this.ServerApiClient.PollUntilStateIsDeletedAsync(
-                nameof(LatteWorkloadState),
-                cancellationToken,
-                this.StateConfirmationPollingTimeout).ConfigureAwait(false);
+            await this.ServerApiClient.PollForStateDeletedAsync(nameof(LatteWorkloadState), this.StateConfirmationPollingTimeout, cancellationToken);
         }
 
         private Task ExecuteClientWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -244,13 +241,8 @@ namespace VirtualClient.Actions
                     await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
                     this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
-
-                    await this.ServerApiClient.PollUntilStateIsDeletedAsync(
-                        nameof(LatteWorkloadState),
-                        cancellationToken,
-                        this.StateConfirmationPollingTimeout).ConfigureAwait(false);
+                    await this.ServerApiClient.PollForStateDeletedAsync(nameof(LatteWorkloadState), this.StateConfirmationPollingTimeout, cancellationToken);
                 }
-
             });
         }
 

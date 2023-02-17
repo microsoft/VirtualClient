@@ -143,7 +143,7 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public Task<HttpResponseMessage> GetEventingOnlineStatusAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        public Task<HttpResponseMessage> GetServerOnlineStatusAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
         {
             // Format: /api/events
             string route = VirtualClientApiClient.EventsApiRoute;

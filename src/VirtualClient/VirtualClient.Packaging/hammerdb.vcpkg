@@ -1,0 +1,6 @@
+﻿{
+    "name": "hammerdb",
+    "description": "Toolsets for installing HammerDB on the system.",
+    "version": "4.6.0",
+    "metadata": { }
+}

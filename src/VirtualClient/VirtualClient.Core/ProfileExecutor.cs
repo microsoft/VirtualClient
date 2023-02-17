@@ -12,6 +12,8 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Polly.Caching;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -307,6 +309,8 @@ namespace VirtualClient
                             }
 
                             rounds++;
+                            await this.UpdateGlobalStateAsync(rounds == 1, rounds, parentContext, cancellationToken);
+
                             DateTime startTime = DateTime.UtcNow;
                             this.IterationBegin?.Invoke(this, new EventArgs());
 
@@ -687,6 +691,30 @@ namespace VirtualClient
             }
 
             return components;
+        }
+
+        private async Task UpdateGlobalStateAsync(bool isFirstRun, int profileIterations, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    IStateManager stateManager = this.Dependencies.GetService<IStateManager>();
+                    
+                    await stateManager.SaveStateAsync(
+                        nameof(GlobalState),
+                        new Item<GlobalState>(nameof(GlobalState), new GlobalState
+                        {
+                            IsFirstRun = isFirstRun,
+                            ProfileIteration = profileIterations
+                        }),
+                        cancellationToken);
+                }
+                catch (Exception exc)
+                {
+                    this.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            }
         }
     }
 }

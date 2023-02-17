@@ -281,7 +281,7 @@ namespace VirtualClient
             // in the built-in packages for VC.
             if (systemManagement.DiskManager is UnixDiskManager)
             {
-                DependencyPath lshwPackage = systemManagement.PackageManager.GetPackageAsync("lshw", CancellationToken.None)
+                DependencyPath lshwPackage = systemManagement.PackageManager.GetPackageAsync(PackageManager.BuiltInLshwPackageName, CancellationToken.None)
                     .GetAwaiter().GetResult();
 
                 if (lshwPackage != null)
@@ -293,7 +293,7 @@ namespace VirtualClient
 
                     if (systemManagement.FileSystem.Directory.Exists(lshwPackage.Path))
                     {
-                        string lshwPath = Path.Combine(lshwPackage.Path, "lshw");
+                        string lshwPath = Path.Combine(lshwPackage.Path, PackageManager.BuiltInLshwPackageName);
                         systemManagement.MakeFileExecutableAsync(lshwPath, platformSpecifics.Platform, CancellationToken.None)
                             .GetAwaiter().GetResult();
 

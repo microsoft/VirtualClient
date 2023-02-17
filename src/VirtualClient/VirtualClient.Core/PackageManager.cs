@@ -28,6 +28,16 @@ namespace VirtualClient
     public class PackageManager : IPackageManager, IDisposable
     {
         /// <summary>
+        /// The name of the built-in package containing the lshw toolset.
+        /// </summary>
+        public const string BuiltInLshwPackageName = "lshw";
+
+        /// <summary>
+        /// The name of the built-in package containing the wget/wget2 toolset.
+        /// </summary>
+        public const string BuiltInWgetPackageName = "wget";
+
+        /// <summary>
         /// The environment variable that can be used by the user to define the location of
         /// VC packages.
         /// </summary>
@@ -44,6 +54,15 @@ namespace VirtualClient
         public const string VCPkgRegExtension = ".vcpkgreg";
 
         private static char[] pathTrimChars = new char[] { '\\', '/' };
+        private static IDictionary<string, ArchiveType> archiveFileTypeMappings = new Dictionary<string, ArchiveType>(StringComparer.OrdinalIgnoreCase)
+        {
+            { ".zip", ArchiveType.Zip },
+            { ".tar.gz", ArchiveType.Zip },
+            { ".tgz", ArchiveType.Tgz },
+            { ".tar.gzip", ArchiveType.Tgz },
+            { ".tar", ArchiveType.Tar }
+        };
+
         private Semaphore semaphore;
         private bool disposed;
 
@@ -108,11 +127,11 @@ namespace VirtualClient
         /// Returns the name of the archive file without its file extension
         /// (e.g. anyarchive.zip, anyarchive.tgz, anyarchive.tar.gz -> anyarchive).
         /// </summary>
-        /// <param name="archiveFile">The archive file path or name.</param>
-        public static string GetArchiveFileNameWithoutExtension(string archiveFile)
+        /// <param name="filePath">The archive file path or name.</param>
+        public static string GetArchiveFileNameWithoutExtension(string filePath)
         {
             StringComparison ignoreCase = StringComparison.OrdinalIgnoreCase;
-            string archiveFileName = Path.GetFileName(archiveFile);
+            string archiveFileName = Path.GetFileName(filePath);
             if (archiveFileName.EndsWith(".tar.gz", ignoreCase))
             {
                 archiveFileName = archiveFileName.Substring(0, archiveFileName.Length - 7);
@@ -140,13 +159,39 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns true if the archive file type is recognized from the file path and outputs
+        /// the type (e.g. Zip, Tgz)
+        /// </summary>
+        /// <param name="filePath">The archive file path or name.</param>
+        /// <param name="archiveType">The type of archive file (e.g. Zip, Tgz).</param>
+        public static bool TryGetArchiveFileType(string filePath, out ArchiveType archiveType)
+        {
+            archiveType = ArchiveType.Undefined;
+            StringComparison ignoreCase = StringComparison.OrdinalIgnoreCase;
+            string archiveFilePath = filePath.Trim();
+
+            foreach (var entry in PackageManager.archiveFileTypeMappings)
+            {
+                if (archiveFilePath.EndsWith(entry.Key, ignoreCase))
+                {
+                    archiveType = entry.Value;
+                    break;
+                }
+            }
+
+            return archiveType != ArchiveType.Undefined;
+        }
+
+        /// <summary>
         /// Performs extensions package discovery on the system.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         public Task<IEnumerable<DependencyPath>> DiscoverExtensionsAsync(CancellationToken cancellationToken)
         {
-            List<string> packageDirectories = new List<string>();
-            packageDirectories.Add(this.PlatformSpecifics.PackagesDirectory);
+            List<string> packageDirectories = new List<string>
+            {
+                this.PlatformSpecifics.PackagesDirectory
+            };
 
             string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariableValue(PackageManager.UserDefinedPackageLocationVariable);
             if (!string.IsNullOrWhiteSpace(userDefinedPath))
@@ -771,13 +816,14 @@ namespace VirtualClient
                     break;
 
                 case ArchiveType.Tgz:
+                case ArchiveType.Tar:
                     await this.ExtractTarballAsync(archiveFilePath, destinationPath, cancellationToken)
                         .ConfigureAwait(false);
 
                     break;
 
                 default:
-                    throw new WorkloadException($"Unsupported archival format. Can not extract the contents of: '{archiveFilePath}'");
+                    throw new WorkloadException($"Unsupported archive file format. Can not extract the contents of: '{archiveFilePath}'");
             }
         }
 
@@ -806,8 +852,13 @@ namespace VirtualClient
             }
 
             ProcessManager manager = ProcessManager.Create(Environment.OSVersion.Platform);
+
+            // To extract a .tar file, we use -xzf
+            // To extract a .tar.gz, .tgz or .tar.gzip file, we use -xzvf
+            string arguments = archiveFilepath.EndsWith(".tar") ? "-xzf" : "-xzvf";
+
             // -x: extract -z: pass through gzip before un-tarring -f archive file -C destination
-            using (IProcessProxy process = manager.CreateProcess("tar", $"-xzf {archiveFilepath} -C {destinationPath}"))
+            using (IProcessProxy process = manager.CreateProcess("tar", $"{arguments} {archiveFilepath} -C {destinationPath}"))
             {
                 await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                 if (!cancellationToken.IsCancellationRequested)

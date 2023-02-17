@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -75,13 +76,13 @@ namespace VirtualClient.Actions
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
-            State serverCopiesCount = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(MemcachedExecutor.ServerCopiesCount)] = "2"
-            });
-
-            apiClient.GetOrCreateStateAsync(nameof(MemcachedExecutor.ServerCopiesCount), serverCopiesCount, CancellationToken.None)
-                .GetAwaiter().GetResult();
+            await apiClient.UpdateStateAsync(
+                nameof(MemcachedExecutor.ServerCopiesCount),
+                new Item<State>(nameof(MemcachedExecutor.ServerCopiesCount), new State(new Dictionary<string, IConvertible>
+                {
+                    [nameof(MemcachedExecutor.ServerCopiesCount)] = "2"
+                })),
+                CancellationToken.None);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

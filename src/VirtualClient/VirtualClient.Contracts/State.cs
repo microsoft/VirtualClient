@@ -20,13 +20,20 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new instance of the 
         /// </summary>
-        /// <param name="properties">Metadata properties associated with the state.</param>
-        [JsonConstructor]
-        public State(IDictionary<string, IConvertible> properties = null)
+        public State()
         {
             this.Properties = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Extensions = new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase);
+        }
 
+        /// <summary>
+        /// Initializes a new instance of the 
+        /// </summary>
+        /// <param name="properties">Metadata properties associated with the state.</param>
+        [JsonConstructor]
+        public State(IDictionary<string, IConvertible> properties)
+            : this()
+        {
             if (properties?.Any() == true)
             {
                 this.Properties.AddRange(properties);
@@ -47,6 +54,22 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonExtensionData(ReadData = true, WriteData = true)]
         public IDictionary<string, JToken> Extensions { get; }
+
+        /// <summary>
+        /// Indexer can be used to access properties by name.
+        /// </summary>
+        public IConvertible this[string propertyName]
+        {
+            get
+            {
+                return this.Properties[propertyName];
+            }
+
+            set
+            {
+                this.Properties[propertyName] = value;
+            }
+        }
 
         /// <summary>
         /// Determines if two objects are equal.

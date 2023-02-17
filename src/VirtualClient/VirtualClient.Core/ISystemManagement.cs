@@ -67,7 +67,7 @@ namespace VirtualClient
         /// <summary>
         /// Add directory to $PATH in Linux and environment variable PATH for Windows.
         /// </summary>
-        public void AddDirectoryToPath(string directory, EnvironmentVariableTarget environmentVariableTarget = EnvironmentVariableTarget.Process);
+        public void AddToPathEnvironmentVariable(string directory, EnvironmentVariableTarget environmentVariableTarget = EnvironmentVariableTarget.Process);
 
         /// <summary>
         /// Refresh Environment variables.

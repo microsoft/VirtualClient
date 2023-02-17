@@ -75,11 +75,13 @@ namespace VirtualClient.Actions
                         await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait();
                         await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait();
 
-                        DeathStarBenchState serverState = new DeathStarBenchState(this.ServiceName, true);
-                        HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), serverState, cancellationToken)
-                            .ConfigureAwait();
-
-                        response.ThrowOnError<WorkloadException>();
+                        using (HttpResponseMessage response = await this.ServerApiClient.UpdateStateAsync(
+                            nameof(DeathStarBenchState),
+                            new Item<DeathStarBenchState>(nameof(DeathStarBenchState), new DeathStarBenchState(this.ServiceName, true)),
+                            cancellationToken))
+                        {
+                            response.ThrowOnError<WorkloadException>();
+                        }
                     }
                     else
                     {

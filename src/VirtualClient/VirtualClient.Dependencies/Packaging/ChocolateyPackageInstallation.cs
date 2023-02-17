@@ -125,8 +125,8 @@ namespace VirtualClient.Dependencies
             // Directly adding the packages to path in here.
             foreach (string package in packages)
             {
-                this.systemManagement.AddDirectoryToPath(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package));
-                this.systemManagement.AddDirectoryToPath(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package, "bin"));
+                this.systemManagement.AddToPathEnvironmentVariable(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package));
+                this.systemManagement.AddToPathEnvironmentVariable(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package, "bin"));
             }
 
             // choco list doesn't work well enough and is going thorugh a rename/deprecating

@@ -8,7 +8,6 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
@@ -19,81 +18,92 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MemcachedServerExecutorTests
     {
-        private const string ExampleUsername = "my-username"; 
         private MockFixture fixture;
-        private DependencyPath mockPath;
-        private DependencyPath memcachedPath;
-        private DependencyPath memtierPath;
+        private DependencyPath mockMemcachedPackage;
+        private DependencyPath mockBenchmarkPackage;
 
         [SetUp]
-        public void SetupTests()
+        public void SetupDefaults()
         {
             this.fixture = new MockFixture();
             this.fixture.Setup(PlatformID.Unix);
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            this.memcachedPath = new DependencyPath("memcached", this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "memcached"));
-            this.memtierPath = new DependencyPath("memtier", this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "memtier"));
+
+            this.mockMemcachedPackage = new DependencyPath("memcached", this.fixture.GetPackagePath("memcached"));
+            this.mockBenchmarkPackage = new DependencyPath("memtier", this.fixture.GetPackagePath("memtier"));
+
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["PackageName"] = this.mockPath.Name,
-                ["Copies"] = "4",
-                ["Bind"] = "1",
-                ["Port"] = "6379",
-                ["ServerItemMemoryMB"] = "64",
+                ["Scenario"] = "Memtier_Scenario",
+                ["PackageName"] = this.mockMemcachedPackage.Name,
+                ["BenchmarkPackageName"] = this.mockBenchmarkPackage.Name,
+                ["Bind"] = 1,
+                ["Port"] = 6379,
+                ["ServerMemoryCacheSizeInMB"] = 64,
                 ["Protocol"] = "memcache_text",
-                ["Username"] = MemcachedServerExecutorTests.ExampleUsername
+                ["Username"] = "testuser"
             };
 
-            string agentId = $"{Environment.MachineName}-Server";
-            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId)
+                .Returns($"{Environment.MachineName}-Server");
 
-            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.mockPath);
-            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync("MemcachedPackage", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(memcachedPath);
-            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync("MemtierPackage", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(memtierPath);
-            this.SetupDefaultMockFileSystemBehavior();
+            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(this.mockMemcachedPackage.Name, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.mockMemcachedPackage);
+
+            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(this.mockBenchmarkPackage.Name, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.mockBenchmarkPackage);
+
+            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+        }
+
+
+        [Test]
+        public async Task MemcachedMemtierServerExecutorOnInitializationGetsExpectedPackagesLocationOnServerRole()
+        {
+            using (var component = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                await component.InitializeAsync(EventContext.None, CancellationToken.None);
+
+                this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockMemcachedPackage.Name, It.IsAny<CancellationToken>()));
+                this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockBenchmarkPackage.Name, It.IsAny<CancellationToken>()));
+            }
         }
 
         [Test]
-        [Ignore("Need fix: properly mock the system core count.")]
         public async Task MemcachedMemtierServerExecutorExecutesExpectedProcess()
         {
-            int commandExecuted = 0;
-
-            using TestMemcachedMemtierServerExecutor executor = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-
-            List<string> expectedCommands = new List<string>()
+            using (var executor = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} bash -c \"numactl -C 0 {this.memcachedPath.Path}/memcached -d -p 6379 -t 4 -m 64\"",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} bash -c \"numactl -C 1 {this.memcachedPath.Path}/memcached -d -p 6380 -t 4 -m 64\"",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} bash -c \"numactl -C 2 {this.memcachedPath.Path}/memcached -d -p 6381 -t 4 -m 64\"",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} bash -c \"numactl -C 3 {this.memcachedPath.Path}/memcached -d -p 6382 -t 4 -m 64\"",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} {this.memtierPath.Path}/memtier_benchmark --protocol=memcache_text --server localhost --port=6379 -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} {this.memtierPath.Path}/memtier_benchmark --protocol=memcache_text --server localhost --port=6380 -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} {this.memtierPath.Path}/memtier_benchmark --protocol=memcache_text --server localhost --port=6381 -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys",
-                $"sudo -u {MemcachedServerExecutorTests.ExampleUsername} {this.memtierPath.Path}/memtier_benchmark --protocol=memcache_text --server localhost --port=6382 -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys"
-           };
-
-            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
-            {
-                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                List<string> expectedCommands = new List<string>()
                 {
-                    commandExecuted++;
+                    // Make the memcached server toolset executable
+                    $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/linux-x64/memcached\"",
+
+                    // Make the benchmark toolset executable
+                    $"sudo chmod +x \"{this.mockBenchmarkPackage.Path}/linux-x64/memtier_benchmark\"",
+               };
+
+                // The default behavior is to run a server copy per logical core on the system.
+                for (int coreNum = 0; coreNum < Environment.ProcessorCount; coreNum++)
+                {
+                    // Start the server binded to the logical core. Values based on the parameters set at the top.
+                    expectedCommands.Add(
+                        $"sudo -u testuser bash -c \"numactl -C {coreNum} {this.mockMemcachedPackage.Path}/linux-x64/memcached -d -p {executor.Port + coreNum} -t 4 -m 64\"");
+
+                    // Warmup the server. Values based on the parameters set at the top.
+                    expectedCommands.Add(
+                        $"sudo -u testuser {this.mockBenchmarkPackage.Path}/linux-x64/memtier_benchmark --protocol=memcache_text --server localhost --port={executor.Port + coreNum} -c 1 -t 1 " +
+                        $"--pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys");
                 }
-                
-                return this.fixture.Process;
-            };
 
-            await executor.ExecuteAsync(CancellationToken.None);
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{exe} {arguments}");
+                    return this.fixture.Process;
+                };
 
-            Assert.AreEqual(8, commandExecuted);
-        }
-
-        private void SetupDefaultMockFileSystemBehavior()
-        {
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
         }
 
         private class TestMemcachedMemtierServerExecutor : MemcachedServerExecutor
@@ -103,7 +113,10 @@ namespace VirtualClient.Actions
             {
             }
 
-            public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
+            public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+            {
+                return base.InitializeAsync(telemetryContext, cancellationToken);
+            }
         }
     }
 }

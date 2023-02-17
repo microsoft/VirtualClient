@@ -324,7 +324,12 @@ namespace VirtualClient
         Undefined,
 
         /// <summary>
-        /// File extension .tar.gz
+        /// File extension .tar
+        /// </summary>
+        Tar,
+
+        /// <summary>
+        /// File extension .tar.gz, .tgz or .tar.gzip
         /// </summary>
         Tgz,
 

@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
@@ -14,6 +15,7 @@ namespace VirtualClient.Contracts
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
 
     [TestFixture]
     [Category("Unit")]
@@ -34,6 +36,131 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public async Task GetStateExtensionReturnsTheExpectedStateWhenItExists()
+        {
+            Item<TestState> existingState = new Item<TestState>(Guid.NewGuid().ToString(), new TestState());
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, existingState))
+            {
+                this.fixture.ApiClient.OnGetState(existingState.Id).ReturnsAsync(response);
+
+                Item<TestState> actualState = await this.fixture.ApiClient.Object.GetStateAsync<TestState>(existingState.Id, CancellationToken.None);
+                Assert.AreEqual(existingState.Id, actualState.Id);
+                Assert.IsNotNull(existingState.Definition);
+                Assert.IsNotNull(existingState.Definition.Properties);
+                Assert.AreEqual(existingState.Definition.Value, actualState.Definition.Value);
+            }
+        }
+
+        [Test]
+        public async Task GetStateExtensionReturnsTheExpectedStateWhenItExists_With_API_JObject_Responses()
+        {
+            Item<JObject> existingState = new Item<JObject>(Guid.NewGuid().ToString(), JObject.FromObject(new TestState()));
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, existingState))
+            {
+                this.fixture.ApiClient.OnGetState(existingState.Id).ReturnsAsync(response);
+
+                Item<TestState> actualState = await this.fixture.ApiClient.Object.GetStateAsync<TestState>(existingState.Id, CancellationToken.None);
+                Assert.AreEqual(existingState.Id, actualState.Id);
+                Assert.IsNotNull(existingState.Definition);
+            }
+        }
+
+        [Test]
+        public async Task GetStateExtensionReturnsTheExpectedStateWhenItDoesNotExist()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient.OnGetState().ReturnsAsync(response);
+
+                Item<TestState> actualState = await this.fixture.ApiClient.Object.GetStateAsync<TestState>("AnyId", CancellationToken.None);
+                Assert.IsNull(actualState);
+            }
+        }
+
+        [Test]
+        public void GetStateExtensionThrowsWhenReceivingAnUnexpectedAPIResponse()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.Ambiguous))
+            {
+                this.fixture.ApiClient.OnGetState().ReturnsAsync(response);
+
+                ApiException error = Assert.ThrowsAsync<ApiException>(
+                    () => this.fixture.ApiClient.Object.GetStateAsync<State>("AnyId", CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.HttpNonSuccessResponse, error.Reason);
+            }
+        }
+
+        [Test]
+        public async Task GetOrCreateStateExtensionReturnsTheExpectedStateWhenItExists()
+        {
+            Item<TestState> existingState = new Item<TestState>(Guid.NewGuid().ToString(), new TestState());
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, existingState))
+            {
+                this.fixture.ApiClient.OnGetState(existingState.Id).ReturnsAsync(response);
+
+                Item<TestState> actualState = await this.fixture.ApiClient.Object.GetOrCreateStateAsync<TestState>(existingState.Id, CancellationToken.None);
+                Assert.AreEqual(existingState.Id, actualState.Id);
+                Assert.IsNotNull(existingState.Definition);
+                Assert.IsNotNull(existingState.Definition.Properties);
+                Assert.AreEqual(existingState.Definition.Value, actualState.Definition.Value);
+            }
+        }
+
+        [Test]
+        public async Task GetOrCreateStateExtensionReturnsTheExpectedStateWhenItExists_With_API_JObject_Responses()
+        {
+            Item<JObject> existingState = new Item<JObject>(Guid.NewGuid().ToString(), JObject.FromObject(new TestState()));
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, existingState))
+            {
+                this.fixture.ApiClient.OnGetState(existingState.Id).ReturnsAsync(response);
+
+                Item<TestState> actualState = await this.fixture.ApiClient.Object.GetOrCreateStateAsync<TestState>(existingState.Id, CancellationToken.None);
+                Assert.AreEqual(existingState.Id, actualState.Id);
+                Assert.IsNotNull(existingState.Definition);
+            }
+        }
+
+        [Test]
+        public async Task GetOrCreateStateExtensionCreatesADefaultStateWhenOneDoesNotExist()
+        {
+            Item<TestState> defaultState = new Item<TestState>(Guid.NewGuid().ToString(), new TestState());
+
+            using (HttpResponseMessage getResponse = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                using (HttpResponseMessage postResponse = this.fixture.CreateHttpResponse(HttpStatusCode.Created, defaultState))
+                {
+                    this.fixture.ApiClient.OnGetState(defaultState.Id).ReturnsAsync(getResponse);
+                    this.fixture.ApiClient.OnCreateState<TestState>(defaultState.Id).ReturnsAsync(postResponse);
+
+                    Item<TestState> actualState = await this.fixture.ApiClient.Object.GetOrCreateStateAsync<TestState>(defaultState.Id, CancellationToken.None);
+                    Assert.AreEqual(defaultState.Id, actualState.Id);
+                    Assert.IsNotNull(defaultState.Definition);
+                    Assert.IsNotNull(defaultState.Definition.Properties);
+                    Assert.AreEqual(defaultState.Definition.Value, actualState.Definition.Value);
+                }
+            }
+        }
+
+        [Test]
+        public void GetOrCreateStateExtensionThrowsWhenReceivingAnUnexpectedAPIResponse()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.Ambiguous))
+            {
+                this.fixture.ApiClient.OnGetState().ReturnsAsync(response);
+
+                ApiException error = Assert.ThrowsAsync<ApiException>(
+                    () => this.fixture.ApiClient.Object.GetOrCreateStateAsync<State>("AnyId", CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.HttpNonSuccessResponse, error.Reason);
+            }
+        }
+
+        [Test]
         public async Task PollForExpectedStateExtensionRequestsTheCorrectStateObject()
         {
             bool expectedCallMade = false;
@@ -51,7 +178,7 @@ namespace VirtualClient.Contracts
                 string actualStateId = null;
 
                 this.fixture.ApiClient
-                    .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                     .Callback<string, CancellationToken, IAsyncPolicy<HttpResponseMessage>> ((stateId, token, retryPolicy) =>
                     {
                         actualStateId = stateId;
@@ -64,6 +191,41 @@ namespace VirtualClient.Contracts
                     JObject.FromObject(expectedState),
                     TimeSpan.Zero,
                     DefaultStateComparer.Instance,
+                    CancellationToken.None).ConfigureAwait(false);
+
+                Assert.AreEqual(expectedStateId, actualStateId);
+                Assert.IsTrue(expectedCallMade);
+            }
+        }
+
+        [Test]
+        public async Task PollForExpectedStateExtensionRequestsTheCorrectStateObject_Overload2()
+        {
+            bool expectedCallMade = false;
+            string expectedStateId = "State1234";
+
+            State expectedState = new State();
+            expectedState["Identifier"] = "123456";
+
+            Item<State> expectedStateItem = new Item<State>(expectedStateId, expectedState);
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateItem))
+            {
+                string actualStateId = null;
+
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Callback<string, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((stateId, token, retryPolicy) =>
+                    {
+                        actualStateId = stateId;
+                        expectedCallMade = true;
+                    })
+                    .ReturnsAsync(response);
+
+                await this.fixture.ApiClient.Object.PollForExpectedStateAsync<State>(
+                    expectedStateId,
+                    (state) => state["Identifier"].ToString() == "123456",
+                    TimeSpan.Zero,
                     CancellationToken.None).ConfigureAwait(false);
 
                 Assert.AreEqual(expectedStateId, actualStateId);
@@ -86,7 +248,7 @@ namespace VirtualClient.Contracts
             using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedStateInstance))
             {
                 this.fixture.ApiClient
-                    .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                     .ReturnsAsync(response);
 
                 Assert.DoesNotThrowAsync(() => this.fixture.ApiClient.Object.PollForExpectedStateAsync(
@@ -121,13 +283,221 @@ namespace VirtualClient.Contracts
             using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK, responseStateItem))
             {
                 this.fixture.ApiClient
-                   .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                   .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                    .ReturnsAsync(response);
 
                 WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
                     () => this.fixture.ApiClient.Object.PollForExpectedStateAsync(expectedStateId, JObject.FromObject(expectedState), TimeSpan.Zero, DefaultStateComparer.Instance, CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+            }
+        }
+
+        [Test]
+        public void PollForExpectedStateExtensionThrowsWhenAnAttemptToPollForAMatchingStateTimesOut_Overload2()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync("AnyStateId", It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .ReturnsAsync(response);
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => this.fixture.ApiClient.Object.PollForExpectedStateAsync<State>(
+                    "AnyStateId",
+                    (state) => false,
+                    TimeSpan.Zero,
+                    CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+            }
+        }
+
+        [Test]
+        public void PollForExpectedStateExtensionThrowsWhenAnUnexpectedNonHttpRequestErrorHappens_Overload2()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync("AnyStateId", It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Throws(new ArgumentException("Serialization error."));
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => this.fixture.ApiClient.Object.PollForExpectedStateAsync<State>(
+                    "AnyStateId",
+                    (state) => false,
+                    TimeSpan.Zero,
+                    CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiRequestFailed, error.Reason);
+                Assert.IsNotNull(error.InnerException);
+                Assert.IsInstanceOf<ArgumentException>(error.InnerException);
+                Assert.AreEqual($"Serialization error.", error.InnerException.Message);
+            }
+        }
+
+        [Test]
+        public async Task PollForHeartbeatExtensionMakesTheExpectedRequest()
+        {
+            bool expectedCallMade = false;
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Callback<CancellationToken, IAsyncPolicy<HttpResponseMessage>>((token, retryPolicy) => expectedCallMade = true)
+                    .ReturnsAsync(response);
+
+                await this.fixture.ApiClient.Object.PollForHeartbeatAsync(TimeSpan.Zero, CancellationToken.None);
+
+                Assert.IsTrue(expectedCallMade);
+            }
+        }
+
+        [Test]
+        public void PollForHeartbeatExtensionThrowsWhenAnAttemptToPollForHeartbeatTimesOut()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .ReturnsAsync(response);
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForHeartbeatAsync(TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+            }
+        }
+
+        [Test]
+        public void PollForHeartbeatExtensionThrowsWhenAnUnexpectedNonHttpRequestErrorHappens()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Throws(new ArgumentException("Unexpected issue."));
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForHeartbeatAsync(TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiRequestFailed, error.Reason);
+                Assert.IsNotNull(error.InnerException);
+                Assert.IsInstanceOf<ArgumentException>(error.InnerException);
+                Assert.AreEqual("Unexpected issue.", error.InnerException.Message);
+            }
+        }
+
+        [Test]
+        public async Task PollForServerOnlineExtensionMakesTheExpectedRequest()
+        {
+            bool expectedCallMade = false;
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Callback<CancellationToken, IAsyncPolicy<HttpResponseMessage>>((token, retryPolicy) => expectedCallMade = true)
+                    .ReturnsAsync(response);
+
+                await this.fixture.ApiClient.Object.PollForServerOnlineAsync(TimeSpan.Zero, CancellationToken.None);
+
+                Assert.IsTrue(expectedCallMade);
+            }
+        }
+
+        [Test]
+        public void PollForServerOnlineExtensionThrowsWhenAnAttemptToPollForHeartbeatTimesOut()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .ReturnsAsync(response);
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForServerOnlineAsync(TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+            }
+        }
+
+        [Test]
+        public void PollForServerOnlineExtensionThrowsWhenAnUnexpectedNonHttpRequestErrorHappens()
+        {
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Throws(new ArgumentException("Unexpected issue."));
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForServerOnlineAsync(TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiRequestFailed, error.Reason);
+                Assert.IsNotNull(error.InnerException);
+                Assert.IsInstanceOf<ArgumentException>(error.InnerException);
+                Assert.AreEqual("Unexpected issue.", error.InnerException.Message);
+            }
+        }
+
+        [Test]
+        public async Task PollForStateDeletedExtensionMakesTheExpectedRequest()
+        {
+            bool expectedCallMade = false;
+            string expectedStateId = "State1234";
+
+            using (HttpResponseMessage response1 = this.fixture.CreateHttpResponse(HttpStatusCode.OK))
+            {
+                using (HttpResponseMessage response2 = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound))
+                {
+                    this.fixture.ApiClient
+                        .SetupSequence(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                        .ReturnsAsync(response1)
+                        .ReturnsAsync(() => { expectedCallMade = true; return response2; });
+
+                    await this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.FromSeconds(20), CancellationToken.None);
+
+                    Assert.IsTrue(expectedCallMade);
+                }
+            }
+        }
+
+        [Test]
+        public void PollForStateDeletedExtensionThrowsWhenAnAttemptToPollForHeartbeatTimesOut()
+        {
+            string expectedStateId = "State1234";
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .ReturnsAsync(response);
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
+            }
+        }
+
+        [Test]
+        public void PollForStateDeletedExtensionThrowsWhenAnUnexpectedNonHttpRequestErrorHappens()
+        {
+            string expectedStateId = "State1234";
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.OK))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync(expectedStateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .Throws(new ArgumentException("Unexpected issue."));
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(
+                    () => this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.Zero, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.ApiRequestFailed, error.Reason);
+                Assert.IsNotNull(error.InnerException);
+                Assert.IsInstanceOf<ArgumentException>(error.InnerException);
+                Assert.AreEqual("Unexpected issue.", error.InnerException.Message);
             }
         }
 
@@ -407,6 +777,28 @@ namespace VirtualClient.Contracts
                     TimeSpan.Zero,
                     DefaultStateComparer.Instance,
                     CancellationToken.None));
+            }
+        }
+
+        private class TestState : State
+        {
+            public TestState()
+                : base()
+            {
+                this[nameof(this.Value)] = -1;
+            }
+
+            public TestState(IDictionary<string, IConvertible> properties)
+                : base(properties)
+            {
+            }
+
+            public int Value
+            {
+                get
+                {
+                    return this.Properties.GetValue<int>(nameof(this.Value), -1);
+                }
             }
         }
     }

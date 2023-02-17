@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection.Metadata;
@@ -28,6 +29,8 @@ namespace VirtualClient.Actions
         private const string CoreMarkOutputFile1 = "run1.log";
         private const string CoreMarkOutputFile2 = "run2.log";
 
+        private ISystemManagement systemManagement;
+
         /// <summary>
         /// Constructor for <see cref="CoreMarkExecutor"/>
         /// </summary>
@@ -36,6 +39,7 @@ namespace VirtualClient.Actions
         public CoreMarkExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
+            this.systemManagement = dependencies.GetService<ISystemManagement>();
         }
 
         /// <summary>
@@ -46,9 +50,14 @@ namespace VirtualClient.Actions
             get
             {
                 // Default to system core count, but overwritable with parameters.
-                return this.Parameters.GetValue<int>(
-                    nameof(CoreMarkExecutor.ThreadCount),
-                    this.Dependencies.GetService<ISystemManagement>().GetSystemCoreCount());
+                int threadCount = this.systemManagement.GetSystemCoreCount();
+
+                if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
+                {
+                    threadCount = value.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return threadCount;
             }
         }
 

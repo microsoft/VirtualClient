@@ -37,7 +37,7 @@ The following section describes the parameters used by the individual component 
       "Parameters": {
           "Scenario": "InstallJavaSDKPackage",
           "BlobContainer": "packages",
-          "BlobName": "microsoft-jdk-17.0.3.zip",
+          "BlobName": "microsoft-jdk-17.0.5.zip",
           "PackageName": "javadevelopmentkit",
           "Extract": true
       }

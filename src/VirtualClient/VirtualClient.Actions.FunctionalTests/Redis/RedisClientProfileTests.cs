@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
                 [nameof(RedisExecutor.ServerCopiesCount)] = "2"
             });
 
-            apiClient.CreateStateAsync(nameof(RedisExecutor.ServerCopiesCount), serverCopiesCount, CancellationToken.None)
+            apiClient.CreateStateAsync("ServerState", serverCopiesCount, CancellationToken.None)
                 .GetAwaiter().GetResult();
         }
     }

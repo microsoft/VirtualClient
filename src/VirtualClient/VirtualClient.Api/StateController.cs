@@ -84,7 +84,7 @@ namespace VirtualClient.Api
         }
 
         /// <summary>
-        /// Provides methods for managing local state.
+        /// TODO: Use state manager. Provides methods for managing local state.
         /// </summary>
         public IStateManager StateManager { get; }
 

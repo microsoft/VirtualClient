@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -31,26 +32,62 @@ namespace VirtualClient.Actions
         public RedisServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
+            this.ServerCopies = Environment.ProcessorCount;
             this.StateManager = this.Dependencies.GetService<IStateManager>();
         }
+
+        /// <summary>
+        /// Parameter defines the name of the package that contains the memtier benchmark workload
+        /// toolsets (e.g. memtier).
+        /// </summary>
+        public string BenchmarkPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.BenchmarkPackageName));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines whether to bind the Redis server process to cores on the system.
+        /// </summary>
+        public int Bind
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Bind));
+            }
+        }
+
+        /// <summary>
+        /// Path to the benchmark executable (e.g. memtier_benchmark).
+        /// </summary>
+        protected string BenchmarkExecutablePath { get; set; }
+
+        /// <summary>
+        /// Path to benchmark workload package used to warmup the server (e.g. memtier).
+        /// </summary>
+        protected string BenchmarkPackagePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis server executable.
+        /// </summary>
+        protected string RedisExecutablePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis server package.
+        /// </summary>
+        protected string RedisPackagePath { get; set; }
+
+        /// <summary>
+        /// Number of copies of Redis server instances to be created.
+        /// </summary>
+        protected int ServerCopies { get; set; }
 
         /// <summary>
         /// Provides access to the local state management facilities.
         /// </summary>
         protected IStateManager StateManager { get; }
-
-        /// <summary>
-        /// Initializes the environment and dependencies for server of redis workload.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.Copies = Environment.ProcessorCount.ToString();
-            this.InitializeApiClients(); 
-        }
 
         /// <summary>
         /// Executes server side of workload.
@@ -64,7 +101,7 @@ namespace VirtualClient.Actions
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                    await this.SetOrUpdateServerCopiesParameter(cancellationToken).ConfigureAwait(false);
+                    await this.SaveServerCopyStateAsync(cancellationToken).ConfigureAwait(false);
 
                     if (!this.IsMultiRoleLayout())
                     {
@@ -107,6 +144,30 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Initializes the environment and dependencies for server of redis workload.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns></returns>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            DependencyPath redisPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            DependencyPath memtierPackage = await this.GetPlatformSpecificPackageAsync(this.BenchmarkPackageName, CancellationToken.None);
+
+            this.RedisPackagePath = redisPackage.Path;
+            this.RedisExecutablePath = this.Combine(this.RedisPackagePath, "src", "redis-server");
+
+            this.BenchmarkPackagePath = memtierPackage.Path;
+            this.BenchmarkExecutablePath = this.Combine(this.BenchmarkPackagePath, "memtier_benchmark");
+
+            await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.BenchmarkExecutablePath, this.Platform, cancellationToken);
+
+            this.InitializeApiClients();
+        }
+
+        /// <summary>
         /// Returns list of processes running.
         /// </summary>
         /// <param name="processName">Name of the process.</param>
@@ -142,28 +203,33 @@ namespace VirtualClient.Actions
 
         private async Task ExecuteServerWorkload(CancellationToken cancellationToken)
         {
-            await this.KillServerWorkload(cancellationToken).ConfigureAwait(false);
+            await this.KillServerWorkload(cancellationToken);
 
-            for (int i = 1; i <= int.Parse(this.Copies); i++)
+            for (int i = 1; i <= this.ServerCopies; i++)
             {
-                int port = int.Parse(this.Port) + i - 1;
+                int port = this.Port + i - 1;
                 string precommand = string.Empty;
-                if (long.Parse(this.Bind) == 1)
+                if (this.Bind == 1)
                 {
                     int core = i - 1;
                     precommand = $"numactl -C {core}";
                 }
                 
-                string startservercommand = $"bash -c \"{precommand} {this.RedisPackagePath}/src/redis-server --port {port} --protected-mode no --ignore-warnings ARM64-COW-BUG --save  --io-threads 4 --maxmemory-policy noeviction\"";
+                // e.g.
+                // bash -c "numactl -c 1 /home/user/VirtualClient/linux-x64/packages/redis/src/redis-server --port 6389 --protected-mode no
+                //       --ignore-warnings ARM64-COW-BUG --save --io-threads 4 --maxmemory-policy noeviction
+                string startservercommand = 
+                    $"bash -c \"{precommand} {this.RedisExecutablePath} --port {port} --protected-mode no --ignore-warnings ARM64-COW-BUG --save " +
+                    $"--io-threads 4 --maxmemory-policy noeviction\"";
 
-                using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, startservercommand, null, this.RedisPackagePath))
+                using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, startservercommand, null, this.RedisPackagePath))
                 {
                     if (!process.Start())
                     {
-                        throw new WorkloadException($"The API server workload did not start as expected.", ErrorReason.WorkloadFailed);
+                        throw new WorkloadException($"The Redis server did not start as expected.", ErrorReason.WorkloadFailed);
                     }
 
-                    await this.WarmUpServer(port, cancellationToken).ConfigureAwait(false);
+                    await this.WarmUpServer(port, cancellationToken);
                 }
             }
         }
@@ -178,27 +244,25 @@ namespace VirtualClient.Actions
 
         private async Task WarmUpServer(int port, CancellationToken cancellationToken)
         {
-            await this.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
+            await this.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
 
-            string warmupservercommand =
-                $"{this.MemtierPackagePath}/memtier_benchmark --protocol=redis --server localhost --port={port} -c 1 -t 1 --pipeline 100 " +
-                $"--data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys";
+            string warmupCommand =
+                $"{this.BenchmarkExecutablePath} --protocol=redis --server localhost --port={port} -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 " +
+                $"--ratio=1:0 --requests=allkeys";
 
-            await this.ExecuteCommandAsync(warmupservercommand, this.RedisPackagePath, cancellationToken)
+            await this.ExecuteCommandAsync(warmupCommand, this.BenchmarkPackagePath, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        private async Task SetOrUpdateServerCopiesParameter(CancellationToken cancellationToken)
+        private Task SaveServerCopyStateAsync(CancellationToken cancellationToken)
         {
-            this.ServerCopiesCount = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(this.ServerCopiesCount)] = this.Copies
-            });
-
-            HttpResponseMessage response = await this.ServerApiClient.GetOrCreateStateAsync(nameof(this.ServerCopiesCount), JObject.FromObject(this.ServerCopiesCount), cancellationToken)
-                .ConfigureAwait(false);
-
-            response.ThrowOnError<WorkloadException>();
+            return this.ServerApiClient.UpdateStateAsync(
+                nameof(ServerState),
+                new Item<ServerState>(nameof(ServerState), new ServerState
+                {
+                    ServerCopies = this.ServerCopies
+                }),
+                cancellationToken);
         }
 
         /// <summary>
@@ -211,7 +275,7 @@ namespace VirtualClient.Actions
         {
             return this.Logger.LogMessageAsync($"{nameof(RedisServerExecutor)}.ResetState", telemetryContext, async () =>
             {
-                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(nameof(this.ServerCopiesCount), cancellationToken)
+                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(nameof(ServerState), cancellationToken)
                     .ConfigureAwait(false);
 
                 if (response.StatusCode != HttpStatusCode.NoContent)

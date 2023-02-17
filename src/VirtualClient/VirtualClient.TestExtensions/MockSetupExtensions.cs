@@ -86,6 +86,24 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Setup default behavior for getting API heartbeats using the <see cref="IApiClient"/>.
+        /// </summary>
+        public static ISetup<IApiClient, Task<HttpResponseMessage>> OnGetHeartbeat(this Mock<IApiClient> apiClient)
+        {
+            apiClient.ThrowIfNull(nameof(apiClient));
+            return apiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+        }
+
+        /// <summary>
+        /// Setup default behavior for checking if a server-side component is online using the <see cref="IApiClient"/>.
+        /// </summary>
+        public static ISetup<IApiClient, Task<HttpResponseMessage>> OnGetServerOnline(this Mock<IApiClient> apiClient)
+        {
+            apiClient.ThrowIfNull(nameof(apiClient));
+            return apiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+        }
+
+        /// <summary>
         /// Setup default behavior for retrieving state objects using the <see cref="IApiClient"/>.
         /// </summary>
         public static ISetup<IApiClient, Task<HttpResponseMessage>> OnGetState(this Mock<IApiClient> apiClient, string stateId = null)

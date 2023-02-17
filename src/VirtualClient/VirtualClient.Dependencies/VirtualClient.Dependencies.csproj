@@ -13,6 +13,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
         <!--
         Scripts/content that needs to be copied into the build output 'scripts' directory.
         -->

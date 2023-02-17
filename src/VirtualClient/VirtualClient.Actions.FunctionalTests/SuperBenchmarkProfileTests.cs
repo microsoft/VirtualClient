@@ -46,10 +46,10 @@ namespace VirtualClient.Actions
             {
                 $"sudo apt update",
                 $"sudo apt install build-essential -yq",
-                $"sudo wget https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run",
-                $"sudo sh cuda_11.6.0_510.39.01_linux.run --silent",
-                $"sudo bash -c \"echo 'export PATH=/usr/local/cuda-11.6/bin${{PATH:+:${{PATH}}}}' | sudo tee -a /home/[a-z]+/.bashrc\"",
-                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-11.6/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+                $"sudo wget https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+                $"sudo sh cuda_12.0.0_525.60.13_linux.run --silent",
+                $"sudo bash -c \"echo 'export PATH=/usr/local/cuda-12.0/bin${{PATH:+:${{PATH}}}}' | sudo tee -a /home/[a-z]+/.bashrc\"",
+                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-12.0/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/[a-z]+/.bashrc\""
             };
 
@@ -126,9 +126,9 @@ namespace VirtualClient.Actions
                 $"sudo apt-get install -y nvidia-docker2",
                 $"sudo systemctl restart docker",
                 $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient\"",
-                $"sudo git clone -b v0.5.0 https://github.com/microsoft/superbenchmark",
+                $"sudo git clone -b v0.7.0 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh",
-                $"sudo sb deploy --host-list localhost -i superbench/superbench:v0.5.0-cuda11.1.1",
+                $"sudo sb deploy --host-list localhost -i superbench/superbench:v0.7.0-cuda11.1.1",
                 $"sudo sb run --host-list localhost -c default.yaml"
             };
         }

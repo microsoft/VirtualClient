@@ -282,8 +282,10 @@ namespace VirtualClient.Actions
                                 await serverExecutor.ExecuteAsync(cancellationToken);
 
                                 // create the state here.
-                                DeathStarBenchState expectedServerState = new DeathStarBenchState(this.ServiceName, true);
-                                await this.LocalApiClient.GetOrCreateStateAsync(nameof(DeathStarBenchState), expectedServerState, cancellationToken);
+                                await this.LocalApiClient.UpdateStateAsync(
+                                    nameof(DeathStarBenchState),
+                                    new Item<DeathStarBenchState>(nameof(DeathStarBenchState), new DeathStarBenchState(this.ServiceName, true)),
+                                    cancellationToken);
                             }
                         });
                     }

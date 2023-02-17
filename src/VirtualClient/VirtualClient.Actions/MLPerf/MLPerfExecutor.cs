@@ -400,7 +400,7 @@ namespace VirtualClient.Actions
                         process.StartTime,
                         process.ExitTime,
                         metrics,
-                        "AccuracyMode",
+                        "PerformanceMode",
                         null,
                         this.Tags,
                         telemetryContext);

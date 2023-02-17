@@ -35,7 +35,7 @@ Runs the MLPerf benchmark workload to test GPU performance.
   | DiskFilter     | Optional. Filter to decide the disk that will be used to download benchmarks. Since benchmarks data is around 800gb, default disk filter is greater than 1000gb. | SizeGreaterThan:1000gb  |
   | CudaVersion     | Optional. Version of CUDA that needs to be installed. | 11.6  |
   | DriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
-  | LocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run  |
+  | LocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run  |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

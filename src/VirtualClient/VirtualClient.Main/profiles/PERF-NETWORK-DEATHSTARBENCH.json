@@ -60,7 +60,7 @@
             "Parameters": {
                 "Scenario": "InstallDeathStarBench",
                 "BlobContainer": "packages",
-                "BlobName": "deathstarbench.1.0.4.zip",
+                "BlobName": "deathstarbench.2.0.0.zip",
                 "PackageName": "deathstarbench",
                 "Extract": true
             }

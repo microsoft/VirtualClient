@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -47,6 +48,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
             this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
@@ -84,13 +86,13 @@ namespace VirtualClient.Actions
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
-            State serverCopiesCount = new State(new Dictionary<string, IConvertible>
-            {
-                [nameof(RedisExecutor.ServerCopiesCount)] = "2"
-            });
-
-            apiClient.GetOrCreateStateAsync(nameof(RedisExecutor.ServerCopiesCount), serverCopiesCount, CancellationToken.None)
-                .GetAwaiter().GetResult();
+            await apiClient.UpdateStateAsync(
+                "ServerState",
+                new Item<State>("ServerState", new State(new Dictionary<string, IConvertible>
+                {
+                    [nameof(RedisExecutor.ServerCopiesCount)] = 2
+                })),
+                CancellationToken.None);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {

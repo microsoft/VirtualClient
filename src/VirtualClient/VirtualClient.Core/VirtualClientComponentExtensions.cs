@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
@@ -98,6 +99,18 @@ namespace VirtualClient
             }
 
             return process;
+        }
+
+        /// <summary>
+        /// Returns the package/dependency path information if it is registered.
+        /// </summary>
+        public static Task<DependencyPath> GetPlatformSpecificPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
+
+            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
+            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken);
         }
 
         /// <summary>
