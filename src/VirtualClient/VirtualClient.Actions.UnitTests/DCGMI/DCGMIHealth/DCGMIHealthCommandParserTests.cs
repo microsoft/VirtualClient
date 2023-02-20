@@ -15,16 +15,16 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class DCGMIHealthCheckCommandParserTests
+    public class DCGMIHealthCommandParserTests
     {   
         [Test]
-        public void DCGMIHealthCheckCommandParseParsesMetricsCorrectly()
+        public void DCGMIHealthCommandParseParsesMetricsCorrectly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string outputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIHealthCheckResults.json");
             string rawText = File.ReadAllText(outputPath);
 
-            DCGMIHealthCheckCommandParser testParser = new DCGMIHealthCheckCommandParser(rawText);
+            DCGMIHealthCommandParser testParser = new DCGMIHealthCommandParser(rawText);
             IList<Metric> metrics = testParser.Parse();
 
             Assert.AreEqual(1, metrics.Count);
@@ -32,12 +32,12 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void DCGMIHealthCheckCommandParseThrowsExceptionForIncorrectMetrics()
+        public void DCGMIHealthCommandParseThrowsExceptionForIncorrectMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");
             string rawText = File.ReadAllText(IncorrectoutputPath);
-            DCGMIHealthCheckCommandParser testParser = new DCGMIHealthCheckCommandParser(rawText);
+            DCGMIHealthCommandParser testParser = new DCGMIHealthCommandParser(rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
             StringAssert.Contains("The DCGMI HealthCheck output file has incorrect format for parsing", exception.Message);
         }

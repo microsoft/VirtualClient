@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Contracts;
     using System.Runtime.InteropServices;
-    public class DCGMIModuleExecutorTests
+    public class DCGMIProftesterExecutorTests
     {
         private MockFixture mockFixture;
 
@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task TestDCGMIModulesListCommandExecutesExpectedCommandsOnUbuntu()
+        public async Task TestDCGMIProftesterExecutesExpectedCommandsOnUbuntu()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
@@ -48,7 +48,8 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommands = new List<string>()
             {
-                "sudo dcgmi modules -l"
+                $"sudo /usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.mockFixture.Parameters["FieldIDProftester"]} -d 10",
+                $"sudo dcgmi dmon -e {this.mockFixture.Parameters["ListOfFieldIDsDmon"]} -c 30"
             };
 
             int commandExecuted = 0;
@@ -70,7 +71,7 @@ namespace VirtualClient.Actions
                 {
                     commandExecuted++;
                 }
-                if (arguments == $"dcgmi modules -l")
+                if (arguments == $"dcgmi dmon -e {this.mockFixture.Parameters["ListOfFieldIDsDmon"]} -c 30")
                 {
                     cancellationTokenSource.Cancel();
                     return process;
@@ -78,12 +79,12 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            using (TestDCGMIModuleExecutor testDCGMIModuleExecutor = new TestDCGMIModuleExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIProftesterExecutor testDCGMIProftesterExecutor = new TestDCGMIProftesterExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await testDCGMIModuleExecutor.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
+                await testDCGMIProftesterExecutor.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(1, commandExecuted);
+            Assert.AreEqual(2, commandExecuted);
         }
 
         private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)
@@ -93,15 +94,14 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "Username", "anyuser" },
-                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
-                {"MonitorFrequency", "00:00:02"},
-                {"MonitorWarmupPeriod", "00:00:02"}
+                { "FieldIDProftester", "1004" },
+                {"ListOfFieldIDsDmon", "1004,1005,1001"}
             };           
         }
 
-        private class TestDCGMIModuleExecutor : DCGMIModulesExecutor
+        private class TestDCGMIProftesterExecutor : DCGMIProftesterExecutor
         {
-            public TestDCGMIModuleExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            public TestDCGMIProftesterExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }

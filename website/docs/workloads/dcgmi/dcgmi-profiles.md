@@ -3,7 +3,7 @@ The following profiles run DCGMI for qualifying GPUs.
 
 * [Workload Details](./dcgmi.md)  
 
-## QUAL-GPU-DCGMI-DIAG.json
+## QUAL-GPU-DCGMI.json
 DCGM is part of the Nvidia GPU Deployment Kit and is designed to work with Nvidia's Tesla GPU accelerators, which are commonly used in data centers for high-performance computing and other GPU-accelerated workloads.
 This profile is designed to identify general/broad regressions when compared against a baseline by validating few tests as part of Active health checks.
 
@@ -27,10 +27,7 @@ This profile is designed to identify general/broad regressions when compared aga
 
   | Parameter  |Purpose                | Default value |
   |------------|--------------------------|---------------|
-  |  Username  | Optional. User which needs to be created in container to run MLPerf benchmarks. | testuser  |
-  | CudaVersion     | Optional. Version of CUDA that needs to be installed. | 11.6  |
-  | DriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
-  | LocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run  |
+  |  Username  | Mandatory. User which needs to be created in container to run MLPerf benchmarks. | null  |
   | Level | Optional. Which level of tests to run | 4 |
 
 
@@ -52,8 +49,8 @@ This profile is designed to identify general/broad regressions when compared aga
 
   ```bash
   # Execute the monitor profile
-  VirtualClient.exe --profile=QUAL-GPU-DCGMI-DIAG.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
 
-  VirtualClient.exe --profile=QUAL-GPU-DCGMI-DIAG.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1
+  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1,,,User
   ```

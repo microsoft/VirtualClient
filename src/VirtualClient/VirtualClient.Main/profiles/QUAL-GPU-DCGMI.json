@@ -1,0 +1,77 @@
+﻿{
+  "Description": "DCGMI Monitor",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:60:00",
+    "SupportedPlatforms": "linux-x64",
+    "SupportedOperatingSystems": "Ubuntu, Debian, CentOS8, RHEL8, SUSE"
+  },
+  "Parameters": {
+    "Level": "4",
+    "Username": "null"
+  },
+  "Actions": [
+    {
+      "Type": "DCGMIDiagExecutor",
+      "Parameters": {
+        "Scenario": "Diagnostics",
+        "Level": "$.Parameters.Level"
+      }
+    },
+    {
+      "Type": "DCGMIDiscoveryExecutor",
+      "Parameters": {
+        "Scenario": "DiscoveryList"
+      }
+    },
+    {
+      "Type": "DCGMIFieldGroupExecutor",
+      "Parameters": {
+        "Scenario": "FieldGroupList"
+      }
+    },
+    {
+      "Type": "DCGMIGroupExecutor",
+      "Parameters": {
+        "Scenario": "GroupList"
+      }
+    },
+    {
+      "Type": "DCGMIHealthExecutor",
+      "Parameters": {
+        "Scenario": "HealthCheck"
+      }
+    },
+    {
+      "Type": "DCGMIModulesExecutor",
+      "Parameters": {
+        "Scenario": "ModulesList"
+      }
+    },
+    {
+      "Type": "DCGMIProftesterExecutor",
+      "Parameters": {
+        "Scenario": "CUDATestGenerator",
+        "FieldIDProftester": "1004",
+        "ListOfFieldIDsDmon": "1004,1005,1001"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "CudaAndNvidiaGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallCudaAndNvidiaGPUDriver",
+        "CudaVersion": "11.6",
+        "DriverVersion": "510",
+        "Username": "$.Parameters.Username",
+        "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
+      }
+    },
+    {
+      "Type": "DCGMIInstallation",
+      "Parameters": {
+        "Scenario": "InstallDCGMI"
+      }
+    }
+  ]
+}

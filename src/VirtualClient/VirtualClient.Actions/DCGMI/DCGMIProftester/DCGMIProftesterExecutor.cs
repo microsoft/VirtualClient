@@ -20,20 +20,20 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The DCGMI Discovery Executor for GPU
+    /// The DCGMI proftester(CUDA Test Generator) Executor for GPU
     /// </summary>
     [UnixCompatible]
-    public class DCGMIModulesExecutor : VirtualClientComponent
+    public class DCGMIProftesterExecutor : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
         private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DCGMIModulesExecutor"/> class.
+        /// Initializes a new instance of the <see cref="DCGMIProftesterExecutor"/> class.
         /// </summary>
         /// /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public DCGMIModulesExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public DCGMIProftesterExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -41,7 +41,31 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes enviroment to run DCGMI Field Group.
+        /// FieldID to determine load generator .
+        /// </summary>
+        public string FieldIDProftester
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(DCGMIProftesterExecutor.FieldIDProftester), out IConvertible fieldid);
+                return fieldid?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// List of FieldIDs to get metrics while running dmon command .
+        /// </summary>
+        public string ListOfFieldIDsDmon
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(DCGMIProftesterExecutor.ListOfFieldIDsDmon), out IConvertible fieldid);
+                return fieldid?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Initializes enviroment to run dcgmiproftester(CUDA Test Generator).
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
@@ -67,7 +91,7 @@ namespace VirtualClient.Actions
 
                     default:
                         throw new WorkloadException(
-                            $"{nameof(DCGMIModulesExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                            $"{nameof(DCGMIProftesterExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
                             $" Supported distros include:" +
                             $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
                             ErrorReason.LinuxDistributionNotSupported);
@@ -76,11 +100,11 @@ namespace VirtualClient.Actions
             else
             {
                 throw new WorkloadException(
-                            $"{nameof(DCGMIModulesExecutor)} is not supported on the current platform {this.Platform} through VC." +
+                            $"{nameof(DCGMIProftesterExecutor)} is not supported on the current platform {this.Platform} through VC." +
                             $"Supported Platforms include:" +
                             $" Unix ",
                             ErrorReason.PlatformNotSupported);
-            }           
+            }   
         }
 
         /// <inheritdoc/>
@@ -93,7 +117,7 @@ namespace VirtualClient.Actions
                     break;
 
                 case PlatformID.Unix:
-                    await this.ExecuteDCGMIModulesListCommandAsync(telemetryContext, cancellationToken)
+                    await this.ExecuteDCGMIProfTesterAsync(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                     break;
             }           
@@ -141,28 +165,61 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        private async Task ExecuteDCGMIModulesListCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteDCGMIProfTesterAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi modules -l";
+            List<Task<string>> tasksList = new List<Task<string>>();
+            string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
+            string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
             this.StartTime = DateTime.Now;
-            string results = await this.ExecuteCommandAsync<DCGMIModulesExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+            tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIProftesterExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
+            .ConfigureAwait(false)));
+            tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIProftesterExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
+            .ConfigureAwait(false)));
+            string[] outputresults = await Task.WhenAll<string>(tasksList);
 
-            Console.WriteLine("results are " + results);
+            string dcgmiproftesterresults = outputresults[0];
+            string dcgmidmonresults = outputresults[1];
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);           
+            this.CaptureDmonResultsAsync(dcgmidmonresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureProftesterResultsAsync(dcgmiproftesterresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureDmonResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    DCGMIModulesCommandParser dcgmiModulesCommandParser = new DCGMIModulesCommandParser(results);
-                    IList<Metric> metrics = dcgmiModulesCommandParser.Parse();
+                    DCGMIDmonCommandParser dcgmiDmonCommandParser = new DCGMIDmonCommandParser(results);
+                    IList<Metric> metrics = dcgmiDmonCommandParser.Parse();
                     this.Logger.LogMetrics(
-                                "DCGMIModules",
+                                "DCGMIDmon",
+                                scenarioName: this.Scenario,
+                                startTime,
+                                endTime,
+                                metrics,
+                                string.Empty,
+                                this.Parameters.ToString(),
+                                this.Tags,
+                                telemetryContext);
+                }
+                catch (SchemaException exc)
+                {
+                    throw new WorkloadResultsException($"Failed to parse workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
+                }
+            }
+        }
+
+        private void CaptureProftesterResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    DCGMIProftesterCommandParser dcgmiProftesterCommandParser = new DCGMIProftesterCommandParser(results);
+                    IList<Metric> metrics = dcgmiProftesterCommandParser.Parse();
+                    this.Logger.LogMetrics(
+                                "DCGMIProftester",
                                 scenarioName: this.Scenario,
                                 startTime,
                                 endTime,

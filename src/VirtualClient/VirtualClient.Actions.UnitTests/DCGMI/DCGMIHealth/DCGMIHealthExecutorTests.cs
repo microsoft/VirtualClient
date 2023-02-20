@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Contracts;
     using System.Runtime.InteropServices;
-    public class DCGMIHealthCheckExecutorTests
+    public class DCGMIHealthExecutorTests
     {
         private MockFixture mockFixture;
 
@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task TestDCGMIHealthCheckListCommandExecutesExpectedCommandsOnUbuntu()
+        public async Task TestDCGMIHealthCommandExecutesExpectedCommandsOnUbuntu()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
@@ -93,14 +93,11 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "Username", "anyuser" },
-                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
-                {"MonitorFrequency", "00:00:02"},
-                {"MonitorWarmupPeriod", "00:00:02"}
+                { "Username", "anyuser" }
             };            
         }
 
-        private class TestDCGMIHealthCheckExecutor : DCGMIHealthCheckExecutor
+        private class TestDCGMIHealthCheckExecutor : DCGMIHealthExecutor
         {
             public TestDCGMIHealthCheckExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)

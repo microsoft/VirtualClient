@@ -15,7 +15,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class DCGMIModuleCommandParserTests
+    public class DCGMIModulesCommandParserTests
     {   
         [Test]
         public void DCGMIModuleCommandParserParsesMetricsCorrectly()
@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void DCGMIGroupCommandParseThrowsExceptionForIncorrectMetrics()
+        public void DCGMIModuleCommandParseThrowsExceptionForIncorrectMetrics()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectoutputPath = Path.Combine(workingDirectory, "Examples", "DCGMI", "DCGMIIncorrectresults.json");

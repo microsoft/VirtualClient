@@ -20,10 +20,9 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Contracts;
     using System.Runtime.InteropServices;
-    public class DCGMIDiagExecutorTests
+    public class DCGMIModulesExecutorTests
     {
         private MockFixture mockFixture;
-        private State mockState;
 
         [SetUp]
         public void SetupTest()
@@ -34,7 +33,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task TestDCGMIDiagExecutesExpectedCommandsOnUbuntu()
+        public async Task TestDCGMIModulesExecutesExpectedCommandsOnUbuntu()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
@@ -49,9 +48,7 @@ namespace VirtualClient.Actions
 
             List<string> expectedCommands = new List<string>()
             {
-                "sudo nvidia-smi -pm 1",
-                "sudo nvidia-smi -e 1",
-                $"sudo dcgmi diag -r {this.mockFixture.Parameters["Level"]} -j"
+                "sudo dcgmi modules -l"
             };
 
             int commandExecuted = 0;
@@ -72,25 +69,21 @@ namespace VirtualClient.Actions
                 if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
                     commandExecuted++;
-                    if (arguments == $"dcgmi diag -r {this.mockFixture.Parameters["Level"]} -j")
-                    {
-                        cancellationTokenSource.Cancel();
-                        return process;
-                    }
-                    else if (arguments == $"nvidia-smi -e 1")
-                    {
-                        this.mockFixture.StateManager.OnGetState(nameof(DCGMIDiagExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
-                    }
+                }
+                if (arguments == $"dcgmi modules -l")
+                {
+                    cancellationTokenSource.Cancel();
+                    return process;
                 }
                 return process;
             };
 
-            using (TestDCGMIDiagExecutor testDCGMIDiagExecutor = new TestDCGMIDiagExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestDCGMIModuleExecutor testDCGMIModuleExecutor = new TestDCGMIModuleExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await testDCGMIDiagExecutor.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
+                await testDCGMIModuleExecutor.ExecuteAsync(cancellationtoken).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(3, commandExecuted);
+            Assert.AreEqual(1, commandExecuted);
         }
 
         private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)
@@ -99,21 +92,13 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "Level", "1" },
                 { "Username", "anyuser" }
-            };
-
-            this.mockState = new State();
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
-
-            this.mockFixture.ApiClient.Setup(client => client.CreateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            };           
         }
 
-        private class TestDCGMIDiagExecutor : DCGMIDiagExecutor
+        private class TestDCGMIModuleExecutor : DCGMIModulesExecutor
         {
-            public TestDCGMIDiagExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            public TestDCGMIModuleExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }

@@ -20,20 +20,20 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The DCGMI Health Check Executor for GPU
+    /// The DCGMI Health Executor for GPU
     /// </summary>
     [UnixCompatible]
-    public class DCGMIHealthCheckExecutor : VirtualClientComponent
+    public class DCGMIHealthExecutor : VirtualClientComponent
     {
         private ISystemManagement systemManagement;
         private IStateManager stateManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DCGMIHealthCheckExecutor"/> class.
+        /// Initializes a new instance of the <see cref="DCGMIHealthExecutor"/> class.
         /// </summary>
         /// /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public DCGMIHealthCheckExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public DCGMIHealthExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes enviroment to run DCGMI Health check.
+        /// Initializes enviroment to run DCGMI Health.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
@@ -67,7 +67,7 @@ namespace VirtualClient.Actions
 
                     default:
                         throw new WorkloadException(
-                            $"{nameof(DCGMIHealthCheckExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                            $"{nameof(DCGMIHealthExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
                             $" Supported distros include:" +
                             $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
                             ErrorReason.LinuxDistributionNotSupported);
@@ -76,7 +76,7 @@ namespace VirtualClient.Actions
             else
             {
                 throw new WorkloadException(
-                            $"{nameof(DCGMIHealthCheckExecutor)} is not supported on the current platform {this.Platform} through VC." +
+                            $"{nameof(DCGMIHealthExecutor)} is not supported on the current platform {this.Platform} through VC." +
                             $"Supported Platforms include:" +
                             $" Unix ",
                             ErrorReason.PlatformNotSupported);
@@ -146,9 +146,9 @@ namespace VirtualClient.Actions
 
         private async Task ExecuteDCGMIHealthCheckCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi health -c -j ";
+            string command = "dcgmi health -c -j";
             this.StartTime = DateTime.Now;
-            string results = await this.ExecuteCommandAsync<DCGMIHealthCheckExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+            string results = await this.ExecuteCommandAsync<DCGMIHealthExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
@@ -162,7 +162,7 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    DCGMIHealthCheckCommandParser dcgmiHealthCheckCommandParser = new DCGMIHealthCheckCommandParser(results);
+                    DCGMIHealthCommandParser dcgmiHealthCheckCommandParser = new DCGMIHealthCommandParser(results);
                     IList<Metric> metrics = dcgmiHealthCheckCommandParser.Parse();
                     this.Logger.LogMetrics(
                                 "DCGMIHealthCheck",

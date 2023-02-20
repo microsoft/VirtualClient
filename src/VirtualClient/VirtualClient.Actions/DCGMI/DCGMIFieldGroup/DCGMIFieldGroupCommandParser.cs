@@ -79,6 +79,7 @@ namespace VirtualClient.Actions
                     metadata.Add($"id_name_fieldIDs_{i}", id + "_" + name + "_" + fieldIDs);
                 }
 
+                metadata.Add("Fieldgroup output", this.RawText);
                 this.Metrics.Add(new Metric("fieldCount", metricValue, metadata: metadata));
             }
             catch

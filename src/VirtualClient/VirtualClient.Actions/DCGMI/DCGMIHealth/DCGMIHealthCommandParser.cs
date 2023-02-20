@@ -14,15 +14,15 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Parser for DCGMIHealthCheck command output document.
+    /// Parser for DCGMIHealth command output document.
     /// </summary>
-    public class DCGMIHealthCheckCommandParser : MetricsParser
+    public class DCGMIHealthCommandParser : MetricsParser
     {
         /// <summary>
-        /// Constructor for <see cref="DCGMIHealthCheckCommandParser"/>
+        /// Constructor for <see cref="DCGMIHealthCommandParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public DCGMIHealthCheckCommandParser(string rawText)
+        public DCGMIHealthCommandParser(string rawText)
             : base(rawText)
         {
         }
@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
             }
             catch
             {
-                throw new SchemaException("The DCGMI HealthCheck output file has incorrect format for parsing");
+                throw new SchemaException("The DCGMI Health output file has incorrect format for parsing");
             }
 
             return this.Metrics;

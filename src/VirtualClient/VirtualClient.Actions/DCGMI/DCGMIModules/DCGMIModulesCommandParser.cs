@@ -35,11 +35,6 @@ namespace VirtualClient.Actions
         /// </summary>
         private static readonly Regex SectionDelimiter = new Regex(@"==*", RegexOptions.ExplicitCapture);
 
-        /*/// <summary>
-        /// Sectionize by one or more equal symbol lines.
-        /// </summary>
-        private static readonly Regex EqualsRegex = new Regex(@"^-={1,}-$", RegexOptions.ExplicitCapture);*/
-
         /// <summary>
         /// Separate the column values by 2 or more spaces.
         /// </summary>
@@ -68,7 +63,6 @@ namespace VirtualClient.Actions
             this.Metrics = new List<Metric>();
 
             double status;
-            // double metricValue = 0;
             try
             {
                 var statusMatches = Regex.Matches(this.PreprocessedText, GetStatus);
@@ -82,10 +76,7 @@ namespace VirtualClient.Actions
                     status = 0;
                 }
 
-                // this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, new Regex(@"^\| Status: Success\s*\|.*\r?\n", RegexOptions.ExplicitCapture));
-                // this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, SectionDelimiter);
                 this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"Status:\s*(.*?)\s*(\r\n|\n)", string.Empty);
-                // this.PreprocessedText = this.PreprocessedText.Replace(GetStatus, string.Empty);
                 this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, SectionDelimiter);
                 this.CalculateModulesList();
                 int rows = this.ModulesListResult.Rows.Count;
@@ -105,24 +96,18 @@ namespace VirtualClient.Actions
         protected override void Preprocess()
         {
             this.PreprocessedText = Regex.Replace(this.RawText, @"[=+]", "-");
-            // this.PreprocessedText = this.PreprocessedText.Replace("+", "-");
             this.PreprocessedText = this.PreprocessedText.Replace("Loaded", "1");
             this.PreprocessedText = this.PreprocessedText.Replace("Not loaded", "0");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"--*\n", string.Empty);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"\|", string.Empty);
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"(\r\n|\n)", $"{Environment.NewLine}");            // this.PreprocessedText = TextParsingExtensions.RemoveRows(this.PreprocessedText, new Regex(@"--*", RegexOptions.ExplicitCapture));
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"(\r\n|\n)", $"{Environment.NewLine}");            
         }
 
         private void CalculateModulesList()
         {
             string sectionName = "List Modules";
-            // IList<string> columnNames = new List<string> { "moduleID", "Name", "State" };
             this.ModulesListResult = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DCGMIModulesCommandParser.DataTableDelimiter, sectionName);
-
-            // this.ModulesListResult.Columns.Add("StateValue");
-            // IList<string> splitColumnNames = new List<string> { "StateString", "StateValue" };
-            // this.ModulesListResult.SplitDataColumn(columnIndex: 2, DCGMIModulesCommandParser.ValueUnitSplitRegex, splitColumnNames);
         }
     }
 }

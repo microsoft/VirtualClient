@@ -125,7 +125,7 @@ namespace VirtualClient.Actions
                         break;
 
                     case PlatformID.Unix:
-                        await this.ExecuteDCGMDiagCommandAsync(telemetryContext, cancellationToken)
+                        await this.ExecuteDCGMIDiagCommandAsync(telemetryContext, cancellationToken)
                             .ConfigureAwait(false);
                         break;
                 }
@@ -174,60 +174,41 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        private async Task ExecuteDCGMDiagCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteDCGMIDiagCommandAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi diag";
-            string commandArguments = $"-r {this.Level} -j";
+            string command = $"dcgmi diag -r {this.Level} -j";
+            this.StartTime = DateTime.Now;
 
+            string results = await this.ExecuteCommandAsync<DCGMIDiagExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+            .ConfigureAwait(false);
+
+            Console.WriteLine("results are " + results);
+
+            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+        }
+
+        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    this.Logger.LogTraceMessage($"Executing process '{command}' '{commandArguments}' at directory '{Environment.CurrentDirectory}'.");
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", Environment.CurrentDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        DateTime startTime = DateTime.UtcNow;
-                        await process.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        DateTime endTime = DateTime.UtcNow;
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            try
-                            {
-                                this.Logger.LogProcessDetails<DCGMIDiagExecutor>(process, EventContext.Persisted());
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
-                                if (process.StandardOutput.Length > 0)
-                                {
-                                    Console.WriteLine("results are " + process.StandardOutput.ToString());
-                                    DCGMIDiagCommandParser parser = new DCGMIDiagCommandParser(process.StandardOutput.ToString());
-                                    IList<Metric> metrics = parser.Parse();
-
-                                    if (metrics?.Any() == true)
-                                    {
-                                        this.Logger.LogPerformanceCounters("dcgmi diag", metrics, startTime, endTime, telemetryContext);
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                this.Logger.LogProcessDetails<DCGMIDiagExecutor>(process, EventContext.Persisted());
-                                throw;
-                            }
-                        }
-                    }
+                    DCGMIDiagCommandParser dcgmiDiagCommandParser = new DCGMIDiagCommandParser(results);
+                    IList<Metric> metrics = dcgmiDiagCommandParser.Parse();
+                    this.Logger.LogMetrics(
+                                "DCGMIDiag",
+                                scenarioName: this.Scenario,
+                                startTime,
+                                endTime,
+                                metrics,
+                                string.Empty,
+                                this.Parameters.ToString(),
+                                this.Tags,
+                                telemetryContext);
                 }
-                catch (OperationCanceledException)
+                catch (SchemaException exc)
                 {
-                    // Expected whenever ctrl-C is used.
-                }
-                catch (Exception exc)
-                {
-                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    throw new WorkloadResultsException($"Failed to parse workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
                 }
             }
         }
