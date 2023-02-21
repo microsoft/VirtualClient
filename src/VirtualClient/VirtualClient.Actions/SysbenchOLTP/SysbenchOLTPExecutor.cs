@@ -123,7 +123,7 @@ namespace VirtualClient.Actions
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.ServerIpAddress = serverIPAddress.ToString();
 
-                ClientInstance clientInstance = this.GetLayoutClientInstance();
+                ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
 
                 this.ClientIpAddress = clientIPAddress.ToString();
@@ -215,6 +215,40 @@ namespace VirtualClient.Actions
                                 $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
+                }
+            }
+        }
+
+        internal class SysbenchOLTPState : State
+        {
+            public SysbenchOLTPState(IDictionary<string, IConvertible> properties = null)
+                : base(properties)
+            {
+            }
+
+            public bool SysbenchInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.SysbenchInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
+                }
+            }
+
+            public bool MySQLDBInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.MySQLDBInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.MySQLDBInitialized)] = value;
                 }
             }
         }
