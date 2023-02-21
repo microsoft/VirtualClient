@@ -1,0 +1,52 @@
+{
+  "Description": "LAPACK Performance workload",
+  "Parameters": {
+    "AccountKey": "[secret:commandline]=StorageAccountKey",
+    "N": "gcc",
+    "NB": "10"
+  },
+  "Actions": [
+    {
+      "Type": "LinpackExecutor",
+      "Parameters": {
+        "Scenario": "ProcessorSpeed",
+        "PackageName": "linpack"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "choco"
+      }
+    },
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallCygwinOnWindows",
+        "PackageName": "choco",
+        "Packages": "cygwin"
+      }
+    },
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "CygwinPackages": "python3"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallARMPerformanceLibrariesPackage",
+        "BlobContainer": "packages",
+        "BlobName": "arm-perf-Bin",
+        "PackageName": "lapack",
+        "Extract": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Actions
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Contracts;
+    using static System.Collections.Specialized.BitVector32;
+    using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
+
+    /// <summary>
+    /// Parser for Linpack test results file.
+    /// </summary>
+    public class HPLMetricsParser : MetricsParser
+    {
+        /// <summary>
+        /// Sectionize by === lines.
+        /// </summary>
+        private static readonly Regex LinpackSectionDelimiter = new Regex(@"===*", RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// Separate the column values by 2 or more spaces.
+        /// </summary>
+        private static readonly Regex LinpackDataTableDelimiter = new Regex(@"(\s){2,}", RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// constructor for <see cref="HPLMetricsParser"/>.
+        /// </summary>
+        /// <param name="rawText">Raw text to parse.</param>
+        public HPLMetricsParser(string rawText)
+            : base(rawText)
+        {
+        }
+
+        /// <summary>
+        /// Results for Linpack results .
+        /// </summary>
+        public DataTable LinpackResult { get; set; }
+
+        private List<Metric> Metrics { get; set; }
+
+        /// <inheritdoc/>
+        public override IList<Metric> Parse()
+        {
+            this.Metrics = new List<Metric>();
+            this.Preprocess();
+            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, LinpackSectionDelimiter);
+            this.ThrowIfInvalidOutputFormat();
+            this.CalculateLinpackResult();
+            return this.Metrics;
+        }
+
+        /// <inheritdoc/>
+        protected override void Preprocess()
+        {
+            this.PreprocessedText = Regex.Replace(this.RawText, @"(\r\n|\n)+", $"{Environment.NewLine}");
+            this.PreprocessedText = this.PreprocessedText.Replace("T/V", $"LinpackResults{Environment.NewLine}T/V");
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @$"--*{Environment.NewLine}", string.Empty);
+        }
+
+        private void CalculateLinpackResult()
+        {
+            this.LinpackResult = DataTableExtensions.ConvertToDataTable(
+                            this.Sections["LinpackResults"], HPLMetricsParser.LinpackDataTableDelimiter, "LinpackResults");
+
+            DataRow row = this.LinpackResult.Rows[0];
+            int columnIndex = 0;
+
+            foreach (DataColumn column in this.LinpackResult.Columns)
+            {
+                double metricValue;
+                string value = row[columnIndex].ToString().Trim();
+                if (double.TryParse(value, out metricValue))
+                {
+                    this.Metrics.Add(new Metric(column.ColumnName, metricValue));
+                }
+
+                columnIndex++;
+            }
+        }
+
+        /// <inheritdoc/>
+        private void ThrowIfInvalidOutputFormat()
+        {
+            if (this.Sections.Count != 4 || !this.Sections.ContainsKey("LinpackResults"))
+            {
+                throw new SchemaException("The Linpack output file has incorrect format for parsing");
+            }
+        }
+    }
+}
