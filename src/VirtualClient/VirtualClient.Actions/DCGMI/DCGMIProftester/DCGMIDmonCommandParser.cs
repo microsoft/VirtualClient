@@ -116,6 +116,12 @@ namespace VirtualClient.Actions
             {
                 throw new SchemaException("The DCGMI dmon output file has incorrect format for parsing");
             }
+
+            if (this.Sections.ContainsKey("CUDA Generator metrics") && !this.Sections["CUDA Generator metrics"].ToString().Contains("Entity_ID"))
+            {
+                throw new SchemaException("The DCGMI dmon output file has incorrect format for parsing");
+
+            }
         }
     }
 }

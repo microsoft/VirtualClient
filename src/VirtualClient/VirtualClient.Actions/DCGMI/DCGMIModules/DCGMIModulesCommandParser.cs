@@ -98,7 +98,7 @@ namespace VirtualClient.Actions
             this.PreprocessedText = Regex.Replace(this.RawText, @"[=+]", "-");
             this.PreprocessedText = this.PreprocessedText.Replace("Loaded", "1");
             this.PreprocessedText = this.PreprocessedText.Replace("Not loaded", "0");
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"--*\n", string.Empty);
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, $@"--*{Environment.NewLine}", string.Empty);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"\|", string.Empty);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"(\r\n|\n)", $"{Environment.NewLine}");            
         }

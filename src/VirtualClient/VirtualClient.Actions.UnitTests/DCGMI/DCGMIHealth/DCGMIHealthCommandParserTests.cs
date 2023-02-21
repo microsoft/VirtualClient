@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
             string rawText = File.ReadAllText(IncorrectoutputPath);
             DCGMIHealthCommandParser testParser = new DCGMIHealthCommandParser(rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => testParser.Parse());
-            StringAssert.Contains("The DCGMI HealthCheck output file has incorrect format for parsing", exception.Message);
+            StringAssert.Contains("The DCGMI Health output file has incorrect format for parsing", exception.Message);
         }
     }
 }
