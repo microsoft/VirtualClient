@@ -43,7 +43,7 @@ namespace VirtualClient.Dependencies
         public IAsyncPolicy RetryPolicy { get; set; }
 
         /// <summary>
-        /// Executes docker installation steps.
+        /// Executes DCGMI installation steps.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>

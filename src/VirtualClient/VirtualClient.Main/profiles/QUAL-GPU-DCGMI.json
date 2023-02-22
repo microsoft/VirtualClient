@@ -11,46 +11,46 @@
   },
   "Actions": [
     {
-      "Type": "DCGMIDiagExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "Diagnostics",
+        "Subsystem": "Diagnostics",
         "Level": "$.Parameters.Level"
       }
     },
     {
-      "Type": "DCGMIDiscoveryExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "DiscoveryList"
+        "Subsystem": "Discovery"
       }
     },
     {
-      "Type": "DCGMIFieldGroupExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "FieldGroupList"
+        "Subsystem": "FieldGroup"
       }
     },
     {
-      "Type": "DCGMIGroupExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "GroupList"
+        "Subsystem": "Group"
       }
     },
     {
-      "Type": "DCGMIHealthExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "HealthCheck"
+        "Subsystem": "Health"
       }
     },
     {
-      "Type": "DCGMIModulesExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "ModulesList"
+        "Subsystem": "Modules"
       }
     },
     {
-      "Type": "DCGMIProftesterExecutor",
+      "Type": "DCGMIExecutor",
       "Parameters": {
-        "Scenario": "CUDATestGenerator",
+        "Subsystem": "CUDATestGenerator",
         "FieldIDProftester": "1004",
         "ListOfFieldIDsDmon": "1004,1005,1001"
       }
