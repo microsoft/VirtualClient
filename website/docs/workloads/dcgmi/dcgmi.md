@@ -15,7 +15,7 @@ At its heart, DCGM is an intelligent, lightweight user space library/agent that 
 [DCGMI user guide](https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/index.html)
 
 
-## Supported Command
+## Supported Commands
 DCGM Diagnostics are designed to: 
 
 Provide multiple test timeframes to facilitate different preparedness or failure conditions:
@@ -26,15 +26,23 @@ Provide multiple test timeframes to facilitate different preparedness or failure
 
 It is a single tool to discover deployment, system software and hardware configuration issues, basic diagnostics, integration issues, and relative system performance.
 
-Right now the only command supported is "dcgmi diag"
+Commands supported are "dcgmi diag", "dcgmi discovery","dcgmi fieldgroup", " dcgmi group", "dcgmi modules", "dcgmi health" and CUDA Generator scenario.
 ```
 dcgmi diag -r {level} -j
+dcgmi discovery -l
+dcgmi fieldgroup -l
+dcgmi group -l
+dcgmi modules -l
+dcgmi health -c -j
+CUDA generator scenario:
+/usr/bin/dcgmproftester11 --no-dcgm-validation -t {FieldID} -d 10
+dcgmi dmon -e {ListOfFieldIDs} -c 15
 ```
 
-Please create a feature request if you need support for other commands.
+Please create a feature request if you need support for any other commands.
 
 
-## DCGMI diag Output Description
+## DCGMI Output Description
 The following section describes the various counters/metrics that are available with the dcgmi toolset.
 
 | Metric Name | Description | Value |

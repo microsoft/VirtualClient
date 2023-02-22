@@ -52,5 +52,5 @@ This profile is designed to identify general/broad regressions when compared aga
   VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
 
-  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1,,,User
+  VirtualClient.exe --profile=QUAL-GPU-DCGMI.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Level=1,,,Username=testusername
   ```
