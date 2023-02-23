@@ -405,8 +405,35 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
+                "Scenario": "CreateUser",
+                "Action": "CreateUser",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
                 "Scenario": "RaisedStatementCount",
                 "Action": "RaisedStatementCount",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureNetwork",
+                "Action": "ConfigureNetwork",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "GrantPrivileges",
+                "Action": "GrantPrivileges",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"
             }

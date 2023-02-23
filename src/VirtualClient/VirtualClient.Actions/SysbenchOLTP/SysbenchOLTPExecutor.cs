@@ -238,19 +238,6 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
                 }
             }
-
-            public bool MySQLDBInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.MySQLDBInitialized), false);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.MySQLDBInitialized)] = value;
-                }
-            }
         }
     }
 }

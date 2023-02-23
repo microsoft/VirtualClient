@@ -13,6 +13,7 @@ namespace VirtualClient.Dependencies
     using System.Threading.Tasks;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -30,9 +31,15 @@ namespace VirtualClient.Dependencies
             {
                 { nameof(MySQLServerConfiguration.Scenario), "StartMySQLServer" },
                 { nameof(MySQLServerConfiguration.Action), "StartServer" },
-                { nameof(MySQLServerConfiguration.DatabaseName), "sbtest" },
+                { nameof(MySQLServerConfiguration.DatabaseName), "sbtest" }
             };
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
+
+            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            {
+                new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
+                new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
+            });
         }
 
         [Test]
@@ -40,7 +47,7 @@ namespace VirtualClient.Dependencies
         {
             string[] expectedCommands =
             {
-                "C:\\tools\\mysql\\current\\bin\\mysqld.exe",
+                "net start mysql",
             };
 
             int commandNumber = 0;
@@ -160,10 +167,156 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        public async Task MySQLConfigurationExecutesTheExpectedProcessForCreateUserCommand()
+        {
+            this.mockFixture.Parameters["Action"] = "CreateUser";
+            string[] expectedCommands =
+            {
+                $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"DROP USER 'sbtest'@'1.2.3.5'\"",
+                $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"CREATE USER 'sbtest'@'1.2.3.5'\""
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe}")
+                {
+                    commandExecuted = true;
+                }
+
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber++;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
+            {
+                Assert.IsNotNull(state);
+            });
+
+            using (TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.mockFixture))
+            {
+                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
         public async Task MySQLConfigurationExecutesTheExpectedProcessForRaiseMaxStatementCountCommand()
         {
             this.mockFixture.Parameters["Action"] = "RaisedStatementCount";
             string expectedCommand = $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"SET GLOBAL MAX_PREPARED_STMT_COUNT=100000;\" --user=root";
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommand == $"{exe}")
+                {
+                    commandExecuted = true;
+                }
+
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber++;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
+            {
+                Assert.IsNotNull(state);
+            });
+
+            using (TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.mockFixture))
+            {
+                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task MySQLConfigurationExecutesTheExpectedProcessForConfigureNetworkCommand()
+        {
+            this.mockFixture.Parameters["Action"] = "ConfigureNetwork";
+            string[] expectedCommands =
+            {
+                $"sed -i \"s/.*bind-address.*/bind-address = 1.2.3.4/\" /etc/mysql/mysql.conf.d/mysqld.cnf",
+                $"net stop mysql",
+                $"net start mysql"
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe}")
+                {
+                    commandExecuted = true;
+                }
+
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber++;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
+            };
+
+            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
+            {
+                Assert.IsNotNull(state);
+            });
+
+            using (TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.mockFixture))
+            {
+                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task MySQLConfigurationExecutesTheExpectedProcessForGrantPrivilegesCommand()
+        {
+            this.mockFixture.Parameters["Action"] = "GrantPrivileges";
+            string expectedCommand = $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"GRANT ALL ON sbtest.* TO 'sbtest'@'1.2.3.5'\"";
 
             int commandNumber = 0;
             bool commandExecuted = false;
