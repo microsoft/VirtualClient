@@ -3,10 +3,7 @@
 
 namespace VirtualClient.Monitors
 {
-    using System;
     using System.Collections.Generic;
-    using System.Data;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Data contract for PciDevice parsed from lsPci.
@@ -26,7 +23,7 @@ namespace VirtualClient.Monitors
         /// <summary>
         /// 
         /// </summary>
-        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// 
@@ -51,7 +48,7 @@ namespace VirtualClient.Monitors
             /// <summary>
             /// 
             /// </summary>
-            public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string> { };
+            public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object> { };
         }
     }
 }
