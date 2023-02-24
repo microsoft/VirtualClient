@@ -5,7 +5,6 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
     using VirtualClient.Contracts;
@@ -105,9 +104,9 @@ namespace VirtualClient.Monitors
             return devices;
         }
 
-        private Dictionary<string, string> ParseDictionary(string[] lines) 
+        private Dictionary<string, object> ParseDictionary(string[] lines) 
         {
-            Dictionary<string, string> result = new Dictionary<string, string>();
+            Dictionary<string, object> result = new Dictionary<string, object>();
 
             for (int index = 0; index < lines.Length; index++)
             {
