@@ -1,0 +1,95 @@
+{
+	"DCGM GPU Diagnostic" : 
+	{
+		"test_categories" : 
+		[
+			{
+				"category" : "Deployment",
+				"tests" : 
+				[
+					{
+						"name" : "Denylist",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "NVML Library",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "CUDA Main Library",
+						"results" : 
+						[
+							{
+								"status": "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Permissions and OS Blocks",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Persistence Mode",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Environment Variables",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Page Retirement/Row Remap",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Graphics Processes",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Inforom",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}
