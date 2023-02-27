@@ -46,17 +46,7 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
-
-            SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", cancellationToken)
-                ?? new SysbenchOLTPState();
-
-            if (!state.MySQLDBInitialized)
-            {
-                await this.ConfigureMySQLPrivilegesAsync(cancellationToken);
-                state.MySQLDBInitialized = true;
-            }
-
-            await this.StateManager.SaveStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", state, cancellationToken);
+            await this.ConfigureMySQLPrivilegesAsync(cancellationToken);
         }
 
         /// <summary>
