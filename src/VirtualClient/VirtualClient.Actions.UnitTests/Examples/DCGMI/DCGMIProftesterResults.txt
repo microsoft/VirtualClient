@@ -1,0 +1,50 @@
+﻿Skipping CreateDcgmGroups() since DCGM validation is disabled
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (0.0 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (0.0 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (0.0 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (0.0 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25963.4 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25963.4 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25963.4 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25963.4 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25913.3 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25913.3 gflops).
+Worker 0:0[1004]: TensorEngineActive: generated ???, dcgm 0.000 (25913.3 gflops).
+Worker 0:0[1004]: Message: DCGM CudaContext Init completed successfully.
+
+CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR: 1024
+CUDA_VISIBLE_DEVICES: GPU-35341418-8f03-bb7c-5930-523192ef2f95
+CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT: 40
+CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR: 65536
+CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR: 7
+CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR: 5
+CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH: 256
+CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE: 5001
+Max Memory bandwidth: 320064000000 bytes (320.1 GiB)
+CU_DEVICE_ATTRIBUTE_ECC_SUPPORT: false
+GPU 0, TestField 1004 test PASSED.
+All Tests Passed.
+Skipping CreateDcgmGroups() since DCGM validation is disabled
+Worker 0:0[1005]: DramUtil generated 0.000/0.883, dcgm 0.000 (0.0 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.6 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.6 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: DramUtil generated 0.883/0.883, dcgm 0.000 (282.5 GiB/sec), bandwidthDivisor 1.000.
+Worker 0:0[1005]: Message: CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR: 1024
+CUDA_VISIBLE_DEVICES: GPU-35341418-8f03-bb7c-5930-523192ef2f95
+CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT: 40
+CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR: 65536
+CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR: 7
+CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR: 5
+CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH: 256
+CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE: 5001
+Max Memory bandwidth: 320064000000 bytes (320.1 GiB)
+CU_DEVICE_ATTRIBUTE_ECC_SUPPORT: false
+GPU 0, TestField 1005 test PASSED.
+All Tests Passed.

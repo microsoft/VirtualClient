@@ -130,6 +130,7 @@
         <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
+        <LinuxProfiles Include="profiles\QUAL-GPU-DCGMI.json" />
     </ItemGroup>
 
     <ItemGroup>
