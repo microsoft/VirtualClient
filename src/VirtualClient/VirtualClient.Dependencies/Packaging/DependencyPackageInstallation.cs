@@ -11,6 +11,7 @@ namespace VirtualClient.Dependencies.Packaging
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -149,7 +150,7 @@ namespace VirtualClient.Dependencies.Packaging
                 {
                     IDiskManager diskManager = this.Dependencies.GetService<IDiskManager>();
                     IEnumerable<Disk> disks = await diskManager.GetDisksAsync(cancellationToken).ConfigureAwait(false);
-                    if (!DependencyPackageInstallation.TryResolveRelativeDiskLocation(disks, this.InstallationPath, out installationPath))
+                    if (!DependencyPackageInstallation.TryResolveRelativeDiskLocation(disks, this.InstallationPath, this.Platform, out installationPath))
                     {
                         throw new WorkloadException(
                             $"The installation path provided '{this.InstallationPath}' cannot be resolved",
@@ -196,21 +197,21 @@ namespace VirtualClient.Dependencies.Packaging
             return stream;
         }
 
-        private static bool TryResolveRelativeDiskLocation(IEnumerable<Disk> disks, string relativeLocationReference, out string diskLocation)
+        private static bool TryResolveRelativeDiskLocation(IEnumerable<Disk> disks, string relativeLocationReference, PlatformID platform, out string diskLocation)
         {
             diskLocation = relativeLocationReference;
             if (DependencyPackageInstallation.IsRelativeDiskLocation(relativeLocationReference))
             {
                 if (relativeLocationReference.StartsWith(DependencyPackageInstallation.FirstDisk))
                 {
-                    string accessPath = disks.OrderBy(d => d.Index).First().DevicePath;
+                    string accessPath = disks.OrderBy(d => d.Index).First().GetPreferredAccessPath(platform);
                     diskLocation = Path.Combine(relativeLocationReference.Replace(DependencyPackageInstallation.FirstDisk, accessPath));
                     return true;
                 }
 
                 if (relativeLocationReference.StartsWith(DependencyPackageInstallation.LastDisk))
                 {
-                    string accessPath = disks.OrderBy(d => d.Index).Last().DevicePath;
+                    string accessPath = disks.OrderBy(d => d.Index).Last().GetPreferredAccessPath(platform);
                     diskLocation = Path.Combine(relativeLocationReference.Replace(DependencyPackageInstallation.LastDisk, accessPath));
                     return true;
                 }
