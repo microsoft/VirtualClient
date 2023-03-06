@@ -144,13 +144,6 @@
         <Folder Include="Properties\" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="profiles\PERF-CPU-COREMARKPRO.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-      </None>
-    </ItemGroup>
-
     <Target Name="PublishProfiles" AfterTargets="Publish">
         <Message Importance="high" Text="RuntimeIdentifier = $(RuntimeIdentifier)" />
 
