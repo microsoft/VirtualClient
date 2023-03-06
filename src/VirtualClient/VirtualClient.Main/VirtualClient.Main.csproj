@@ -97,6 +97,7 @@
         <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />
         <LinuxProfiles Include="profiles\PERF-COMPRESSION-LZBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-HPCG.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
@@ -141,6 +142,13 @@
 
     <ItemGroup>
         <Folder Include="Properties\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="profiles\PERF-CPU-COREMARKPRO.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </None>
     </ItemGroup>
 
     <Target Name="PublishProfiles" AfterTargets="Publish">

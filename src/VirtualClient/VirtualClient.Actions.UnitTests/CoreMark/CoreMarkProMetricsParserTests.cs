@@ -18,106 +18,65 @@ namespace VirtualClient.Actions
         private string rawText;
         private CoreMarkProMetricsParser testParser;
 
-        [SetUp]
-        public void Setup()
+        private string ExamplePath
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "CoreMark", "CoreMarkProExample.txt");
-            this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new CoreMarkProMetricsParser(this.rawText);
-            this.testParser.Parse();
-        }
-
-        [Test]
-        public void CoreMarkProParserViewDataTable()
-        {
-            this.testParser.WorkloadResult.PrintDataTableFormatted();
-            this.testParser.MarkResult.PrintDataTableFormatted();
+            get
+            {
+                string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return Path.Combine(workingDirectory, "Examples", "CoreMark");
+            }
         }
 
         [Test]
         public void CoreMarkProParserVerifyWorkloadMetrics()
         {
+            string outputPath = Path.Combine(this.ExamplePath, "CoreMarkProExample2.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new CoreMarkProMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
 
-            Assert.AreEqual(555.56, metrics.Where(m => m.Name == "MultiCore-cjpeg-rose7-preset").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-cjpeg-rose7-preset").FirstOrDefault().Unit);
-            Assert.AreEqual(156.25, metrics.Where(m => m.Name == "SingleCore-cjpeg-rose7-preset").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-cjpeg-rose7-preset").FirstOrDefault().Unit);
-            Assert.AreEqual(3.56, metrics.Where(m => m.Name == "Scaling-cjpeg-rose7-preset").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-cjpeg-rose7-preset").FirstOrDefault().Unit);
-
-            Assert.AreEqual(4.87, metrics.Where(m => m.Name == "MultiCore-core").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-core").FirstOrDefault().Unit);
-            Assert.AreEqual(1.30, metrics.Where(m => m.Name == "SingleCore-core").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-core").FirstOrDefault().Unit);
-            Assert.AreEqual(3.75, metrics.Where(m => m.Name == "Scaling-core").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-core").FirstOrDefault().Unit);
-
-            Assert.AreEqual(1428.57, metrics.Where(m => m.Name == "MultiCore-linear_alg-mid-100x100-sp").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-linear_alg-mid-100x100-sp").FirstOrDefault().Unit);
-            Assert.AreEqual(409.84, metrics.Where(m => m.Name == "SingleCore-linear_alg-mid-100x100-sp").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-linear_alg-mid-100x100-sp").FirstOrDefault().Unit);
-            Assert.AreEqual(3.49, metrics.Where(m => m.Name == "Scaling-linear_alg-mid-100x100-sp").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-linear_alg-mid-100x100-sp").FirstOrDefault().Unit);
-
-            Assert.AreEqual(22.56, metrics.Where(m => m.Name == "MultiCore-loops-all-mid-10k-sp").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-loops-all-mid-10k-sp").FirstOrDefault().Unit);
-            Assert.AreEqual(6.25, metrics.Where(m => m.Name == "SingleCore-loops-all-mid-10k-sp").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-loops-all-mid-10k-sp").FirstOrDefault().Unit);
-            Assert.AreEqual(3.61, metrics.Where(m => m.Name == "Scaling-loops-all-mid-10k-sp").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-loops-all-mid-10k-sp").FirstOrDefault().Unit);
-
-            Assert.AreEqual(33.22, metrics.Where(m => m.Name == "MultiCore-nnet_test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-nnet_test").FirstOrDefault().Unit);
-            Assert.AreEqual(10.56, metrics.Where(m => m.Name == "SingleCore-nnet_test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-nnet_test").FirstOrDefault().Unit);
-            Assert.AreEqual(3.15, metrics.Where(m => m.Name == "Scaling-nnet_test").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-nnet_test").FirstOrDefault().Unit);
-
-            Assert.AreEqual(70.18, metrics.Where(m => m.Name == "MultiCore-parser-125k").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-parser-125k").FirstOrDefault().Unit);
-            Assert.AreEqual(19.23, metrics.Where(m => m.Name == "SingleCore-parser-125k").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-parser-125k").FirstOrDefault().Unit);
-            Assert.AreEqual(3.65, metrics.Where(m => m.Name == "Scaling-parser-125k").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-parser-125k").FirstOrDefault().Unit);
-
-            Assert.AreEqual(1666.67, metrics.Where(m => m.Name == "MultiCore-radix2-big-64k").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-radix2-big-64k").FirstOrDefault().Unit);
-            Assert.AreEqual(453.72, metrics.Where(m => m.Name == "SingleCore-radix2-big-64k").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-radix2-big-64k").FirstOrDefault().Unit);
-            Assert.AreEqual(3.67, metrics.Where(m => m.Name == "Scaling-radix2-big-64k").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-radix2-big-64k").FirstOrDefault().Unit);
-
-            Assert.AreEqual(588.24, metrics.Where(m => m.Name == "MultiCore-sha-test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-sha-test").FirstOrDefault().Unit);
-            Assert.AreEqual(172.41, metrics.Where(m => m.Name == "SingleCore-sha-test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-sha-test").FirstOrDefault().Unit);
-            Assert.AreEqual(3.41, metrics.Where(m => m.Name == "Scaling-sha-test").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-sha-test").FirstOrDefault().Unit);
-
-            Assert.AreEqual(500, metrics.Where(m => m.Name == "MultiCore-zip-test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "MultiCore-zip-test").FirstOrDefault().Unit);
-            Assert.AreEqual(142.86, metrics.Where(m => m.Name == "SingleCore-zip-test").FirstOrDefault().Value);
-            Assert.AreEqual("iterations/sec", metrics.Where(m => m.Name == "SingleCore-zip-test").FirstOrDefault().Unit);
-            Assert.AreEqual(3.50, metrics.Where(m => m.Name == "Scaling-zip-test").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-zip-test").FirstOrDefault().Unit);
-        }
-
-        [Test]
-        public void CoreMarkProParserVerifyMarkResultMetrics()
-        {
-            IList<Metric> metrics = this.testParser.Parse();
-
-            // 9 Workloads with 3 metrics each plus the result of 3 metrics. 9*3+3=30
+            // 9 Workloads with 3 metrics each plus the result of 3 summary metrics. 9*3+3=30
             Assert.AreEqual(30, metrics.Count);
 
-            Assert.AreEqual(19183.84, metrics.Where(m => m.Name == "MultiCore-CoreMark-PRO").FirstOrDefault().Value);
-            Assert.AreEqual("Score", metrics.Where(m => m.Name == "MultiCore-CoreMark-PRO").FirstOrDefault().Unit);
-            Assert.AreEqual(5439.59, metrics.Where(m => m.Name == "SingleCore-CoreMark-PRO").FirstOrDefault().Value);
-            Assert.AreEqual("Score", metrics.Where(m => m.Name == "SingleCore-CoreMark-PRO").FirstOrDefault().Unit);
-            Assert.AreEqual(3.53, metrics.Where(m => m.Name == "Scaling-CoreMark-PRO").FirstOrDefault().Value);
-            Assert.AreEqual("scale", metrics.Where(m => m.Name == "Scaling-CoreMark-PRO").FirstOrDefault().Unit);
+            MetricAssert.Exists(metrics, "MultiCore-cjpeg-rose7-preset", 555.56, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-cjpeg-rose7-preset", 156.25, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-cjpeg-rose7-preset", 3.56, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-core", 4.87, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-core", 1.30, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-core", 3.75, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-linear_alg-mid-100x100-sp", 1428.57, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-linear_alg-mid-100x100-sp", 409.84, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-linear_alg-mid-100x100-sp", 3.49, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-loops-all-mid-10k-sp", 22.56, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-loops-all-mid-10k-sp", 6.25, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-loops-all-mid-10k-sp", 3.61, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-nnet_test", 33.22, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-nnet_test", 10.56, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-nnet_test", 3.15, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-parser-125k", 70.18, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-parser-125k", 19.23, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-parser-125k", 3.65, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-radix2-big-64k", 1666.67, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-radix2-big-64k", 453.72, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-radix2-big-64k", 3.67, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-sha-test", 588.24, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-sha-test", 172.41, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-sha-test", 3.41, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-zip-test", 500, "iterations/sec");
+            MetricAssert.Exists(metrics, "SingleCore-zip-test", 142.86, "iterations/sec");
+            MetricAssert.Exists(metrics, "Scaling-zip-test", 3.50, "scale");
+
+            MetricAssert.Exists(metrics, "MultiCore-CoreMark-PRO", 19183.84, "Score");
+            MetricAssert.Exists(metrics, "SingleCore-CoreMark-PRO", 5439.59, "Score");
+            MetricAssert.Exists(metrics, "Scaling-CoreMark-PRO", 3.53, "scale");
         }
     }
 }
