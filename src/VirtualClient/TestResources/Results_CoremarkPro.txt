@@ -1,0 +1,1333 @@
+make -I/home/azureuser/coremark-pro/util/make -f Makefile.mak TARGET=linux64 workloads/sets/workload-joins.fpmark
+make[1]: Entering directory '/home/azureuser/coremark-pro'
+make[1]: Nothing to be done for 'workloads/sets/workload-joins.fpmark'.
+make[1]: Leaving directory '/home/azureuser/coremark-pro'
+make -I/home/azureuser/coremark-pro/util/make -f Makefile.mak TARGET=linux64 Makefile
+make[1]: Entering directory '/home/azureuser/coremark-pro'
+make[1]: Nothing to be done for 'Makefile'.
+make[1]: Leaving directory '/home/azureuser/coremark-pro'
+make -I/home/azureuser/coremark-pro/util/make -f Makefile.mak TARGET=linux64 certify-all
+make[1]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+Starting build process for cjpeg-rose7-preset/ sha-test/ core/ nnet_test/ linear_alg-mid-100x100-sp/ parser-125k/ loops-all-mid-10k-sp/ radix2-big-64k/ zip-test/
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+make[2]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+make[2]: Nothing to be done for 'build'.
+make[2]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+Starting certifcation process for cjpeg-rose7-preset/ sha-test/ core/ nnet_test/ linear_alg-mid-100x100-sp/ parser-125k/ loops-all-mid-10k-sp/ radix2-big-64k/ zip-test/
+make DIR_CERT=/home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15 -f Makefile.mak certify-process
+make[2]: Entering directory '/home/azureuser/coremark-pro'
+for CONTYPE in single best ; do \
+        echo "  Gathering results for ${CONTYPE}";\
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/verify ;\
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/perf ;\
+        echo "23061:22:34:15 Starting Run ${CONTYPE}" >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/progress.log ;\
+        [ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ;\
+        for WLD in cjpeg-rose7-preset/ sha-test/ core/ nnet_test/ linear_alg-mid-100x100-sp/ parser-125k/ loops-all-mid-10k-sp/ radix2-big-64k/ zip-test/ ; do \
+                make DIR_CERT=/home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE} CONCURRNCY=${CONTYPE} -f Makefile.mak wcertify-${WLD} ;\
+                echo "  Saving results for ${WLD}";\
+                cat /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/perf/logs/progress.log >> /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/progress.log &&\
+                rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/perf/logs/progress.log ;\
+                cat /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/perf/logs/linux64.gcc64.log >> /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/linux64.gcc64.log &&\
+                rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/perf/logs/linux64.gcc64.log;\
+        done ;\
+        cat /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/progress.log >> /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/progress.log ;\
+        cat /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/${CONTYPE}/linux64.gcc64.log >> /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/linux64.gcc64.log ;\
+done
+        Gathering results for single
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for cjpeg-rose7-preset/
+for WLD in workloads/cjpeg-rose7-preset/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for cjpeg-rose7-preset/
+for ii in 1 2 3 ; do \
+for WLD in workloads/cjpeg-rose7-preset/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for cjpeg-rose7-preset/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for sha-test/
+for WLD in workloads/sha-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for sha-test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/sha-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for sha-test/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for core/
+for WLD in workloads/core/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for core/
+for ii in 1 2 3 ; do \
+for WLD in workloads/core/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for core/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for nnet_test/
+for WLD in workloads/nnet_test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for nnet_test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/nnet_test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for nnet_test/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for linear_alg-mid-100x100-sp/
+for WLD in workloads/linear_alg-mid-100x100-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for linear_alg-mid-100x100-sp/
+for ii in 1 2 3 ; do \
+for WLD in workloads/linear_alg-mid-100x100-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for linear_alg-mid-100x100-sp/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for parser-125k/
+for WLD in workloads/parser-125k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for parser-125k/
+for ii in 1 2 3 ; do \
+for WLD in workloads/parser-125k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for parser-125k/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for loops-all-mid-10k-sp/
+for WLD in workloads/loops-all-mid-10k-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for loops-all-mid-10k-sp/
+for ii in 1 2 3 ; do \
+for WLD in workloads/loops-all-mid-10k-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for loops-all-mid-10k-sp/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for radix2-big-64k/
+for WLD in workloads/radix2-big-64k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for radix2-big-64k/
+for ii in 1 2 3 ; do \
+for WLD in workloads/radix2-big-64k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for radix2-big-64k/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for zip-test/
+for WLD in workloads/zip-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe  -c1 -w1 -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for zip-test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/zip-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe  -c1 -w1 -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log single >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/single/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for zip-test/
+        Gathering results for best
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/cjpeg-rose7-preset'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for cjpeg-rose7-preset/
+for WLD in workloads/cjpeg-rose7-preset/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for cjpeg-rose7-preset/
+for ii in 1 2 3 ; do \
+for WLD in workloads/cjpeg-rose7-preset/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/cjpeg-rose7-preset.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/cjpeg-rose7-preset.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for cjpeg-rose7-preset/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/sha-test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for sha-test/
+for WLD in workloads/sha-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for sha-test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/sha-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/sha-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/sha-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for sha-test/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/core'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for core/
+for WLD in workloads/core/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for core/
+for ii in 1 2 3 ; do \
+for WLD in workloads/core/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/core.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/core.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for core/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/nnet_test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for nnet_test/
+for WLD in workloads/nnet_test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for nnet_test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/nnet_test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/nnet_test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/nnet_test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for nnet_test/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/linear_alg-mid-100x100-sp'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for linear_alg-mid-100x100-sp/
+for WLD in workloads/linear_alg-mid-100x100-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for linear_alg-mid-100x100-sp/
+for ii in 1 2 3 ; do \
+for WLD in workloads/linear_alg-mid-100x100-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/linear_alg-mid-100x100-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linear_alg-mid-100x100-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for linear_alg-mid-100x100-sp/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/parser-125k'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for parser-125k/
+for WLD in workloads/parser-125k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for parser-125k/
+for ii in 1 2 3 ; do \
+for WLD in workloads/parser-125k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/parser-125k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/parser-125k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for parser-125k/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/loops-all-mid-10k-sp'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for loops-all-mid-10k-sp/
+for WLD in workloads/loops-all-mid-10k-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for loops-all-mid-10k-sp/
+for ii in 1 2 3 ; do \
+for WLD in workloads/loops-all-mid-10k-sp/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/loops-all-mid-10k-sp.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/loops-all-mid-10k-sp.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for loops-all-mid-10k-sp/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/radix2-big-64k'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for radix2-big-64k/
+for WLD in workloads/radix2-big-64k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for radix2-big-64k/
+for ii in 1 2 3 ; do \
+for WLD in workloads/radix2-big-64k/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/radix2-big-64k.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/radix2-big-64k.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for radix2-big-64k/
+make[3]: Entering directory '/home/azureuser/coremark-pro'
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith
+make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith -f /home/azureuser/coremark-pro/mith/Makefile all
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/mith'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+make[4]: Nothing to be done for 'build'.
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/obj/workloads/zip-test'
+rm -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/*
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify
+mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+[ -f /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log ] || cat util/perl/headings.txt > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+        Verification run for zip-test/
+for WLD in workloads/zip-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load && \
+        make XCMD="-c4 -v1" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run && \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results && \
+        mkdir -p /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} && \
+        cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/verify/${WLD} \
+        ;\
+done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe   -c4 -v1  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+        Performance runs for zip-test/
+for ii in 1 2 3 ; do \
+for WLD in workloads/zip-test/ ; do \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile load &&   \
+        make XCMD="-c4 -v0" -C /home/azureuser/coremark-pro/builds/linux64/gcc64/bin -f /home/azureuser/coremark-pro/${WLD}/Makefile run &&     \
+        make -C /home/azureuser/coremark-pro/builds/linux64/gcc64/logs -f /home/azureuser/coremark-pro/${WLD}/Makefile results  \
+        ;\
+done; done
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+/home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe   -c4 -v0  > /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log 2>&1
+/usr/bin/size  /home/azureuser/coremark-pro/builds/linux64/gcc64/bin/zip-test.exe >  /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.size.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/bin'
+make[4]: Entering directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro/util/perl/results_parser.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/zip-test.run.log
+make[4]: Leaving directory '/home/azureuser/coremark-pro/builds/linux64/gcc64/logs'
+perl /home/azureuser/coremark-pro//util/perl/cert_median.pl /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log best >> /home/azureuser/coremark-pro/builds/linux64/gcc64/logs/linux64.gcc64.log
+cp -rfu /home/azureuser/coremark-pro/builds/linux64/gcc64/logs /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/best/perf
+make[3]: Leaving directory '/home/azureuser/coremark-pro'
+        Saving results for zip-test/
+perl /home/azureuser/coremark-pro//util/perl/cert_mark.pl -i /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/linux64.gcc64.log -s coremarkpro > /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/linux64.gcc64.mark
+cp -f /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/linux64.gcc64.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs
+cp -f /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/linux64.gcc64.mark /home/azureuser/coremark-pro/builds/linux64/gcc64/logs
+cp -f /home/azureuser/coremark-pro/builds/linux64/gcc64/cert/23_03_02_22_34_15/progress.log /home/azureuser/coremark-pro/builds/linux64/gcc64/logs
+
+WORKLOAD RESULTS TABLE
+
+                                                 MultiCore SingleCore           
+Workload Name                                     (iter/s)   (iter/s)    Scaling
+----------------------------------------------- ---------- ---------- ----------
+cjpeg-rose7-preset                                  555.56     156.25       3.56
+core                                                  4.87       1.30       3.75
+linear_alg-mid-100x100-sp                          1428.57     409.84       3.49
+loops-all-mid-10k-sp                                 22.56       6.25       3.61
+nnet_test                                            33.22      10.56       3.15
+parser-125k                                          70.18      19.23       3.65
+radix2-big-64k                                     1666.67     453.72       3.67
+sha-test                                            588.24     172.41       3.41
+zip-test                                            500.00     142.86       3.50
+
+MARK RESULTS TABLE
+
+Mark Name                                        MultiCore SingleCore    Scaling
+----------------------------------------------- ---------- ---------- ----------
+CoreMark-PRO                                      19183.84    5439.59       3.53
+make[2]: Leaving directory '/home/azureuser/coremark-pro'
+make[1]: Leaving directory '/home/azureuser/coremark-pro'
