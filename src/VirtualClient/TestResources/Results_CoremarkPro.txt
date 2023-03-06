@@ -1,4 +1,4 @@
-﻿make -I/home/azureuser/coremark-pro/util/make -f Makefile.mak TARGET=linux64 workloads/sets/workload-joins.fpmark
+make -I/home/azureuser/coremark-pro/util/make -f Makefile.mak TARGET=linux64 workloads/sets/workload-joins.fpmark
 make[1]: Entering directory '/home/azureuser/coremark-pro'
 make[1]: Nothing to be done for 'workloads/sets/workload-joins.fpmark'.
 make[1]: Leaving directory '/home/azureuser/coremark-pro'

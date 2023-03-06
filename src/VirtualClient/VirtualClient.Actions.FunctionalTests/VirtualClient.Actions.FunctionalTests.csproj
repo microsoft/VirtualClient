@@ -41,6 +41,12 @@
         <Content Include="..\TestResources\sockperf-results.txt" Link="Resources\sockperf-results.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\TestResources\Results_Coremark.txt" Link="Resources\Results_Coremark.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_CoremarkPro.txt" Link="Resources\Results_CoremarkPro.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\TestResources\Results-OpenSSL-Speed.txt" Link="Resources\Results-OpenSSL-Speed.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -128,6 +134,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-COREMARK.json" Link="Profiles\PERF-CPU-COREMARK.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-COREMARKPRO.json" Link="Profiles\PERF-CPU-COREMARKPRO.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-HPCG.json" Link="Profiles\PERF-CPU-HPCG.json">

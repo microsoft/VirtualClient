@@ -23,6 +23,7 @@ namespace VirtualClient.Actions
     public class CoreMarkProExecutorTests
     {
         private MockFixture mockFixture;
+        private ConcurrentBuffer coremarkProOutput = new ConcurrentBuffer();
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -30,6 +31,12 @@ namespace VirtualClient.Actions
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.Parameters["PackageName"] = "CoreMarkPro";
+
+            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string resultsPath = Path.Combine(currentDirectory, "Examples", "CoreMark", "CoreMarkProExample1.txt");
+            string results = File.ReadAllText(resultsPath);
+            this.coremarkProOutput.Clear();
+            this.coremarkProOutput.Append(results);
         }
 
         [Test]
@@ -52,24 +59,9 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
-                Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=71 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
-                return this.mockFixture.Process;
-            };
-
-            using (CoreMarkProExecutor executor = new CoreMarkProExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        public async Task CoreMarkProExecutorExcutesAllowsThreadOverWrite()
-        {
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
-            {
-                Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual(args, $"make XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread");
+                Assert.AreEqual("make", cmd);
+                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c71' certify-all");
+                this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
                 return this.mockFixture.Process;
             };
 
