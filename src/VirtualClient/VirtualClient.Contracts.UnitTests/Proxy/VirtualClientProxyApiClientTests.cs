@@ -131,6 +131,35 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobs_2()
+        {
+            ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+                {
+                    this.mockRestClient.Setup(client => client.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
+
+                    this.mockRestClient.Setup(client => client.GetAsync(
+                            It.IsAny<Uri>(),
+                            It.IsAny<CancellationToken>(),
+                            It.IsAny<HttpCompletionOption>()))
+                        .Callback<Uri, CancellationToken, HttpCompletionOption>((uri, token, option) =>
+                        {
+                            Assert.AreEqual(uri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
+                        })
+                        .Returns(Task.FromResult(response));
+
+                    await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    this.mockRestClient.Verify(client => client.GetAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>(), It.IsAny<HttpCompletionOption>()), Times.Once());
+                }
+            }
+        }
+
+        [Test]
         [TestCase(1024, 16, 64)]
         [TestCase(1032, 16, 65)]
         [TestCase(16, 32, 1)]
