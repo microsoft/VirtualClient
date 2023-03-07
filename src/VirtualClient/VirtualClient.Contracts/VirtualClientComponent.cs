@@ -75,6 +75,7 @@ namespace VirtualClient.Contracts
             this.systemInfo = this.Dependencies.GetService<ISystemInfo>();
             this.AgentId = this.systemInfo.AgentId;
             this.ExperimentId = this.systemInfo.ExperimentId;
+            this.LogSuccessFailMetrics = true;
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
             this.CpuArchitecture = this.systemInfo.CpuArchitecture;
@@ -382,6 +383,11 @@ namespace VirtualClient.Contracts
         protected IList<Action> CleanupTasks { get; }
 
         /// <summary>
+        /// The toolname or component name to use when logging completion metrics.
+        /// </summary>
+        protected bool LogSuccessFailMetrics { get; set; }
+
+        /// <summary>
         /// Disposes of resources used by the instance.
         /// </summary>
         public void Dispose()
@@ -413,6 +419,9 @@ namespace VirtualClient.Contracts
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
                 {
+                    bool succeeded = false;
+                    DateTime executionStartTime = DateTime.UtcNow;
+
                     try
                     {
                         this.ValidateParameters();
@@ -426,6 +435,18 @@ namespace VirtualClient.Contracts
                     }
                     finally
                     {
+                        if (this.LogSuccessFailMetrics)
+                        {
+                            if (succeeded)
+                            {
+                                this.LogSuccessMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                            }
+                            else
+                            {
+                                this.LogFailedMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                            }
+                        }
+
                         await this.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
                 }, displayErrors: true);

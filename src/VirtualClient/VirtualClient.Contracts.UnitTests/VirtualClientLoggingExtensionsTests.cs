@@ -18,12 +18,14 @@ namespace VirtualClient.Contracts
     [Category("Unit")]
     public class VirtualClientLoggingExtensionsTests
     {
+        private MockFixture mockFixture;
         private Mock<ILogger> mockLogger;
         private EventContext mockEventContext;
 
         [SetUp]
         public void SetupTest()
         {
+            this.mockFixture = new MockFixture();
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
         }
@@ -430,6 +432,504 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
                 null,
                 null));
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionLogsTheExpectedInformation()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogFailedMetric(
+                expectedToolName,
+                expectedScenarioName,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext,
+                expectedScenarioArguments,
+                expectedMetricCategorization,
+                expectedToolVersion,
+                expectedTags);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionLogsTheExpectedInformation_WhenMinimumInfoIsProvided()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogFailedMetric(expectedToolName, expectedScenarioName, expectedStartTime, expectedEndTime, this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionLogsTheExpectedInformation()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogSuccessMetric(
+                expectedToolName,
+                expectedScenarioName,
+                expectedStartTime,
+                expectedEndTime,
+                this.mockEventContext,
+                expectedScenarioArguments,
+                expectedMetricCategorization,
+                expectedToolVersion,
+                expectedTags);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionLogsTheExpectedInformation_WhenMinimumInfoIsProvided()
+        {
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+            List<string> expectedTags = new List<string> { "Tag1", "Tag2" };
+
+            this.mockLogger.Object.LogSuccessMetric(expectedToolName, expectedScenarioName, expectedStartTime, expectedEndTime, this.mockEventContext);
+
+            this.mockLogger.Verify(logger => logger.Log(
+                LogLevel.Information,
+                It.Is<EventId>(eventId => eventId.Id == (int)LogType.Metrics && eventId.Name.EndsWith("ScenarioResult")),
+                It.Is<EventContext>(context => context.Properties.Count == 15
+                    && context.ActivityId == this.mockEventContext.ActivityId
+                    && context.ParentActivityId == this.mockEventContext.ParentActivityId
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
+                    && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty),
+                null,
+                null));
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario1()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+            component.LogFailedMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario2()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
+            component.LogFailedMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Any_Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogFailedMetricExtensionOnComponentLogsTheExpectedInformation_scenario3()
+        {
+            // Scenario:
+            // Complete information provided including scenario name, tool name, and timestamps.
+
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.LogFailedMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Failed"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution failed for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.LowerIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario1()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component do not contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+            component.LogSuccessMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario2()
+        {
+            // Scenario:
+            // Minimum info provided. Additionally, the parameters for the component contain a 'Scenario'
+            // definition.
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters[nameof(component.Scenario)] = "Any_Outcome";
+            component.LogSuccessMetric();
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == "Any_Outcome"
+                    && context.Properties["scenarioArguments"].ToString() == string.Empty
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == string.Empty
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == component.TypeName
+                    && context.Properties["toolVersion"].ToString() == string.Empty
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
+        }
+
+        [Test]
+        public void LogSuccessMetricExtensionOnComponentLogsTheExpectedInformation_scenario3()
+        {
+            // Scenario:
+            // Complete information provided including scenario name, tool name, and timestamps.
+
+            string expectedScenarioName = "AnyTestName";
+            string expectedToolName = "ToolA";
+            string expectedToolVersion = "1.2.3";
+            string expectedMetricCategorization = "instanceA";
+            string expectedScenarioArguments = "--name=AnyTestName --runtime=100";
+            DateTime expectedStartTime = DateTime.UtcNow.AddSeconds(-100);
+            DateTime expectedEndTime = DateTime.UtcNow;
+
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.LogSuccessMetric(expectedToolName, expectedToolVersion, expectedScenarioName, expectedScenarioArguments, expectedMetricCategorization, expectedStartTime, expectedEndTime);
+
+            var loggedMetric = this.mockFixture.Logger.FirstOrDefault();
+
+            Assert.IsNotNull(loggedMetric);
+            Assert.IsInstanceOf<EventContext>(loggedMetric.Item3);
+            EventContext context = loggedMetric.Item3 as EventContext;
+
+            Assert.IsTrue(context.Properties.Count == 15
+                    && context.Properties.ContainsKey("scenarioName")
+                    && context.Properties.ContainsKey("scenarioStartTime")
+                    && context.Properties.ContainsKey("scenarioEndTime")
+                    && context.Properties.ContainsKey("scenarioArguments")
+                    && context.Properties.ContainsKey("metricName")
+                    && context.Properties.ContainsKey("metricValue")
+                    && context.Properties.ContainsKey("metricCategorization")
+                    && context.Properties.ContainsKey("metricDescription")
+                    && context.Properties.ContainsKey("metricRelativity")
+                    && context.Properties.ContainsKey("toolName")
+                    && context.Properties.ContainsKey("toolVersion")
+                    && context.Properties.ContainsKey("toolResults")
+                    && context.Properties.ContainsKey("tags")
+                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties["scenarioName"].ToString() == expectedScenarioName
+                    && context.Properties["scenarioArguments"].ToString() == expectedScenarioArguments
+                    && context.Properties["metricName"].ToString() == "Succeeded"
+                    && context.Properties["metricValue"].ToString() == "1"
+                    && context.Properties["metricCategorization"].ToString() == expectedMetricCategorization
+                    && context.Properties["metricDescription"].ToString() == "Indicates the component or toolset execution succeeded for the scenario defined."
+                    && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
+                    && context.Properties["toolName"].ToString() == expectedToolName
+                    && context.Properties["toolVersion"].ToString() == expectedToolVersion
+                    && context.Properties["tags"].ToString() == string.Empty
+                    && context.Properties["metricMetadata"].ToString() == string.Empty);
         }
 
         [Test]
