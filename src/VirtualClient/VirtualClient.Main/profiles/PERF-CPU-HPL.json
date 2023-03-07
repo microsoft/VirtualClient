@@ -1,41 +1,34 @@
 {
-  "Description": "LAPACK Performance workload",
+  "Description": "High Performance Linkpack Performance workload",
   "Parameters": {
-    "AccountKey": "[secret:commandline]=StorageAccountKey",
-    "N": "gcc",
-    "NB": "10"
+    "AccountKey": "[secret:commandline]=StorageAccountKey"
   },
   "Actions": [
     {
-      "Type": "LinpackExecutor",
+      "Type": "HPLExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
-        "PackageName": "linpack"
+        "PackageName": "HPL",
+        "N": null,
+        "NB": "384",
+        "HPLVersion": "2.3"
       }
     }
   ],
   "Dependencies": [
     {
-      "Type": "ChocolateyInstallation",
+      "Type": "LinuxPackageInstallation",
       "Parameters": {
-        "Scenario": "InstallChocolatey",
-        "PackageName": "choco"
-      }
-    },
-    {
-      "Type": "ChocolateyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallCygwinOnWindows",
-        "PackageName": "choco",
-        "Packages": "cygwin"
+        "Scenario": "InstallRequiredLinuxPackagesForHPL",
+        "Repositories-Apt": "ppa:ubuntu-toolchain-r/test",
+        "Packages": "build-essential,linux-generic,libmpich-dev,libopenmpi-dev,libatlas-base-dev"
       }
     },
     {
       "Type": "CompilerInstallation",
       "Parameters": {
-        "CompilerName": "$.Parameters.CompilerName",
-        "CompilerVersion": "$.Parameters.CompilerVersion",
-        "CygwinPackages": "python3"
+        "CompilerName": "gcc",
+        "CompilerVersion": "11"
       }
     },
     {
@@ -43,8 +36,8 @@
       "Parameters": {
         "Scenario": "InstallARMPerformanceLibrariesPackage",
         "BlobContainer": "packages",
-        "BlobName": "arm-perf-Bin",
-        "PackageName": "lapack",
+        "BlobName": "armperformancelibraries.zip",
+        "PackageName": "arm_performance_libraries",
         "Extract": true
       }
     }

@@ -42,16 +42,6 @@ ALIGN  : 8 double precision words
 - Computational tests pass if scaled residuals are less than                16.0
 
 ================================================================================
-Gflops
---------------------------------------------------------------------------------
-WR01R2R4        8029   400     1     2              11.55             2.9874e+01
-HPL_pdgesv() start time Tue Feb 21 12:06:09 2023
-
-HPL_pdgesv() end time   Tue Feb 21 12:06:20 2023
-
---------------------------------------------------------------------------------
-||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   5.36736931e-03 ...... PASSED
-================================================================================
 
 Finished      1 tests with the following results:
               1 tests completed and passed residual checks,
