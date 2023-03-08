@@ -148,7 +148,7 @@ namespace VirtualClient.Contracts
                         }
                     }
 
-                    telemetryContext.AddContext(name ?? "process", new
+                    telemetryContext.Properties[name ?? "process"] = new
                     {
                         id = process.Id,
                         command = fullCommand ?? string.Empty,
@@ -156,18 +156,18 @@ namespace VirtualClient.Contracts
                         exitCode = finalExitCode,
                         standardOutput = finalStandardOutput ?? string.Empty,
                         standardError = finalStandardError ?? string.Empty
-                    });
+                    };
                 }
                 else
                 {
-                    telemetryContext.AddContext(name ?? "process", new
+                    telemetryContext.Properties[name ?? "process"] = new
                     {
                         id = process.Id,
                         command = fullCommand ?? string.Empty,
                         workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
                         exitCode = finalExitCode,
                         results = results ?? string.Empty,
-                    });
+                    };
                 }
             }
             catch
@@ -1016,7 +1016,6 @@ namespace VirtualClient.Contracts
                         string.Empty);
 
                     string effectiveCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
-
                     string logPath = specifics.GetLogsPath(effectiveToolName.ToLowerInvariant().RemoveWhitespace());
 
                     if (!fileSystem.Directory.Exists(logPath))

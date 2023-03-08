@@ -74,8 +74,30 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Username                  | Required for multi-system scenarios. Defines the user to use for SSH connections on the Server role system.  |  |
-  | ServerItemMemoryMB        | Optional. The amount of memory (in megabytes) to be created/staged for use on the server-side by the Memcached server. Allows for scaling.  | 1024 (megabytes) |
+  | ServerInstances           | Optional. Defines the number of distinct instances of the Memcached server to run. There will be 1 client for each 1 server instance running in parallel. | # of logical cores on system |
+  | ServerMemoryCacheSizeInMB | Optional. The amount of memory (in megabytes) to be created/staged for use on the server-side by each instance of a Memcached server (allowance for scaling).  | 1024 (megabytes) |
+  | ServerPort                | Optional. The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | 6379 |
+  | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
+
+* **Component Parameters**  
+  The following parameters describe the parameters within the profile components.
+
+  | Server Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | BenchmarkPackageName      | The name of the  | |
+  | BindToCores               | True to instruct the Memcached servers to bind to explicit cores on the system (e.g. 0, 1, 2,3 ) | |
+  | PackageName               | The name of the package that contains the Memcached server binaries/scripts.    |               |
+  | Port                      | The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
+  | ServerInstances           | Defines the number of distinct instances of the Memcached server to run. There will be 1 client for each 1 server instance running in parallel. | # of logical cores on system |
+  | ServerMemoryCacheSizeInMB | The amount of memory (in megabytes) to be created/staged for use on the server-side by each instance of a Memcached server (allowance for scaling).  | |
+  | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
+
+  | Client Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | CommandLine               | The memtier_benchmark toolset command line to use against each instance of the Memcached server running. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
+  | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

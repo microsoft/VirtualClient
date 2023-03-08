@@ -56,10 +56,10 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);
 
-            var state = new Item<ServerState>(nameof(ServerState), new ServerState
+            var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
             {
-                ServerCopies = 1
-            });
+                [nameof(ServerState.Ports)] = 6379
+            }));
 
             this.fixture.ApiClient.OnGetState(nameof(ServerState))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, state));

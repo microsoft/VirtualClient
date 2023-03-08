@@ -7,9 +7,10 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Runtime.InteropServices;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
@@ -27,6 +28,22 @@ namespace VirtualClient
             .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
+        /// Evaluates each of the parameters provided to the component to replace
+        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
+        /// </summary>
+        /// <param name="component">The component whose parameters to evaluate.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            if (component.Parameters?.Any() == true)
+            {
+                await ProfileExpressionEvaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
+            }
+        }
+
+        /// <summary>
         /// Executes a command within an isolated process.
         /// </summary>
         /// <param name="component">The component that is executing the process/command.</param>
@@ -35,6 +52,7 @@ namespace VirtualClient
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
         /// <returns>The process that executed the command.</returns>
         public static Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -42,9 +60,10 @@ namespace VirtualClient
             string workingDirectory,
             EventContext telemetryContext,
             CancellationToken cancellationToken,
-            bool runElevated = false)
+            bool runElevated = false,
+            string username = null)
         {
-            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated);
+            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username);
         }
 
         /// <summary>
@@ -57,6 +76,7 @@ namespace VirtualClient
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
         /// <returns>The process that executed the command.</returns>
         public static async Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -65,11 +85,25 @@ namespace VirtualClient
             string workingDirectory,
             EventContext telemetryContext,
             CancellationToken cancellationToken,
-            bool runElevated = false)
+            bool runElevated = false,
+            string username = null)
         {
             component.ThrowIfNull(nameof(component));
             command.ThrowIfNullOrWhiteSpace(nameof(command));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                if (component.Platform != PlatformID.Unix)
+                {
+                    throw new NotSupportedException($"The application of a username is not supported on '{component.Platform}' platform/architecture systems.");
+                }
+
+                if (!runElevated)
+                {
+                    throw new NotSupportedException($"The application of a username is not supported unless running elevated. Use the '{nameof(runElevated)}' parameter.");
+                }
+            }
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
@@ -88,7 +122,7 @@ namespace VirtualClient
                 }
                 else
                 {
-                    process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory);
+                    process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
                 }
 
                 component.CleanupTasks.Add(() => process.SafeKill());
@@ -102,15 +136,66 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns the current name/username for the logged in user.
+        /// </summary>
+        /// <param name="component">The component verifying the username.</param>
+        /// <param name="nonSudo">
+        /// True to return the sudo user (vs. root) on Unix/Linux systems. This can be used to run commands that do 
+        /// not allow the "root" user to be used.
+        /// </param>
+        public static string GetCurrentUserName(this VirtualClientComponent component, bool nonSudo = false)
+        {
+            string currentUser = component.GetEnvironmentVariable(EnvironmentVariable.USER);
+            if (nonSudo && string.Equals(currentUser, "root", StringComparison.OrdinalIgnoreCase))
+            {
+                currentUser = component.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+
+                if (string.IsNullOrWhiteSpace(currentUser))
+                {
+                    throw new DependencyException(
+                        $"The non-sudo username could not be determined. The expected environment variable was not set.",
+                        ErrorReason.DependencyNotFound);
+                }
+            }
+
+            return currentUser;
+        }
+
+        /// <summary>
+        /// Returns the value of the environment variable as defined for the current process.
+        /// </summary>
+        /// <param name="component">The component requesting the environment variable value.</param>
+        /// <param name="variableName">The name of the environment variable.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
+        /// <returns>The value of the environment variable</returns>
+        public static string GetEnvironmentVariable(this VirtualClientComponent component, string variableName, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
+        {
+            component.ThrowIfNull(nameof(component));
+            return component.PlatformSpecifics.GetEnvironmentVariable(variableName, target);
+        }
+
+        /// <summary>
         /// Returns the package/dependency path information if it is registered.
         /// </summary>
-        public static Task<DependencyPath> GetPlatformSpecificPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken)
+        public static Task<DependencyPath> GetPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
         {
             component.ThrowIfNull(nameof(component));
             packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
 
             IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
-            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken);
+            return packageManager.GetPackageAsync(packageName, cancellationToken, throwIfNotfound);
+        }
+
+        /// <summary>
+        /// Returns the package/dependency path information if it is registered.
+        /// </summary>
+        public static Task<DependencyPath> GetPlatformSpecificPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
+        {
+            component.ThrowIfNull(nameof(component));
+            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
+
+            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
+            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken, throwIfNotfound);
         }
 
         /// <summary>
@@ -184,6 +269,45 @@ namespace VirtualClient
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Refresh Environment variables on command line.
+        /// </summary>
+        /// <param name="component">The component requesting the refresh.</param>
+        /// <param name="cancellationToken">Token to cancel operation.</param>
+        /// <returns></returns>
+        public static async Task RefreshEnvironmentVariablesAsync(this VirtualClientComponent component, CancellationToken cancellationToken)
+        {
+            string scriptPath = component.PlatformSpecifics.GetScriptPath("refreshenv");
+            if (component.Platform == PlatformID.Win32NT)
+            {
+                ProcessManager processManager = component.Dependencies.GetService<ProcessManager>();
+                using (IProcessProxy process = processManager.CreateElevatedProcess(component.Platform, "refreshenv.cmd", scriptPath))
+                {
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.SystemOperationFailed);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets the value of the environment variable or appends a value to the end of it.
+        /// </summary>
+        /// <param name="component">The component setting the environment variable.</param>
+        /// <param name="name">The name of the environment variable to set.</param>
+        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
+        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
+        public static void SetEnvironmentVariable(this VirtualClientComponent component, string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
+        {
+            component.ThrowIfNull(nameof(component));
+            component.PlatformSpecifics.SetEnvironmentVariable(name, value, target, append);
         }
 
         /// <summary>

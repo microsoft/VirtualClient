@@ -6,10 +6,6 @@
         <NoWarn>NU5100,NU5110,NU5111,NU5118,NU5128,NU5131</NoWarn>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
-    </PropertyGroup>
-
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\NuGetPackaging.targets" />
 
@@ -23,9 +19,11 @@
     NuGet package.
     -->
     <PropertyGroup>
-        <OutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</OutDir>
-        <NuspecBasePath>$(OutputPath)$(TargetFramework)</NuspecBasePath>
-        <NuspecProperties>BinDir=$(OutDir)\bin;BinConfigDir=$(OutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(OutDir)\tools;Version=$(Version)</NuspecProperties>
+        <!--
+        https://learn.microsoft.com/en-us/nuget/reference/msbuild-targets 
+        -->
+        <PackageOutDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Repo.props))\out</PackageOutDir>
+        <NuspecProperties>BinDir=$(PackageOutDir)\bin;BinConfigDir=$(PackageOutDir)\bin\$(Configuration);PackagingSourceDir=.;ToolsOutDir=$(PackageOutDir)\tools;Version=$(Version)</NuspecProperties>
 
         <!-- Framework Package = AutoFixture -->
         <NuspecProperties>$(NuspecProperties);AutoFixture_Version=$(AutoFixture_PackageVersion)</NuspecProperties>

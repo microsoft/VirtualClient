@@ -17,8 +17,6 @@ namespace VirtualClient
     /// </summary>
     public static class ProcessExtensions
     {
-        private static readonly Type WorkloadExceptionType = typeof(WorkloadException);
-
         /// <summary>
         /// Creates process that can be run with elevated privileges.
         /// </summary>
@@ -27,7 +25,8 @@ namespace VirtualClient
         /// <param name="command">The command to run.</param>
         /// <param name="arguments">The command line arguments to supply to the command.</param>
         /// <param name="workingDir">The working directory for the command.</param>
-        public static IProcessProxy CreateElevatedProcess(this ProcessManager processManager, PlatformID platform, string command, string arguments = null, string workingDir = null)
+        /// <param name="username">The username to use for running the command.</param>
+        public static IProcessProxy CreateElevatedProcess(this ProcessManager processManager, PlatformID platform, string command, string arguments = null, string workingDir = null, string username = null)
         {
             IProcessProxy process = null;
             switch (platform)
@@ -37,7 +36,15 @@ namespace VirtualClient
                     string effectiveCommand = command;
                     if (!string.Equals(command, "sudo") && !PlatformSpecifics.IsRunningInContainer())
                     {
-                        effectiveCommandArguments = $"{command} {arguments}";
+                        if (string.IsNullOrWhiteSpace(username))
+                        {
+                            effectiveCommandArguments = $"{command} {arguments}";
+                        }
+                        else
+                        {
+                            effectiveCommandArguments = $"-u {username} {command} {arguments}";
+                        }
+
                         effectiveCommand = "sudo";
                     }
 
@@ -45,6 +52,11 @@ namespace VirtualClient
                     break;
 
                 default:
+                    if (!string.IsNullOrWhiteSpace(username))
+                    {
+                        throw new NotSupportedException($"The application of a username is not supported on '{platform}' platform/architecture systems.");
+                    }
+
                     process = processManager.CreateProcess(command, arguments?.Trim(), workingDir);
                     break;
             }

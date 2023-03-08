@@ -9,6 +9,7 @@ namespace VirtualClient
     using VirtualClient.Common;
     using Moq;
     using NUnit.Framework;
+    using Microsoft.Azure.Amqp.Framing;
 
     [TestFixture]
     [Category("Unit")]

@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -132,61 +133,11 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Add directory to $PATH in Linux and environment variable PATH for Windows.
+        /// Returns the core counts on the system.
         /// </summary>
-        public void AddToPathEnvironmentVariable(string directory, EnvironmentVariableTarget environmentVariableTarget = EnvironmentVariableTarget.Process)
+        public int GetSystemCoreCount()
         {
-            string originalPath = Environment.GetEnvironmentVariable("PATH", environmentVariableTarget);
-            string newPath = string.Empty;
-            switch (this.Platform)
-            {
-                case PlatformID.Win32NT:
-                    originalPath = originalPath?.TrimEnd(';');
-                    newPath = $"{originalPath};{directory}";
-                    break;
-
-                case PlatformID.Unix:
-                    originalPath = originalPath?.TrimEnd(':');
-                    newPath = $"{originalPath}:{directory}";
-                    break;
-            }
-
-            Environment.SetEnvironmentVariable("PATH", newPath, environmentVariableTarget);
-        }
-        
-        /// <summary>
-        /// Refresh Environment variables on command line.
-        /// </summary>
-        /// <param name="cancellationToken">Token to cancel operation.</param>
-        /// <returns></returns>
-        public async Task RefreshEnvironmentVariableAsync(CancellationToken cancellationToken)
-        {
-            string scriptPath = this.PlatformSpecifics.GetScriptPath("refreshenv");
-            if (this.Platform == PlatformID.Win32NT)
-            {
-                using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(
-                        this.Platform, "refreshenv.cmd", scriptPath))
-                {
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.SystemOperationFailed);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns the enviroment variable associated with given target.
-        /// </summary>
-        /// <param name="environmentVariableName">Name of the environment variable</param>
-        /// <param name="environmentVariableTarget">EnvironmentVariable target (User/Machine/Process)</param>
-        /// <returns>Environment variable string.</returns>
-        public string GetEnvironmentVariable(string environmentVariableName, EnvironmentVariableTarget environmentVariableTarget)
-        {
-            return Environment.GetEnvironmentVariable(environmentVariableName, environmentVariableTarget);
+            return Environment.ProcessorCount;
         }
 
         /// <summary>
@@ -245,14 +196,6 @@ namespace VirtualClient
             }
 
             return systemMemoryInKb;
-        }
-
-        /// <summary>
-        /// Returns the core counts on the system.
-        /// </summary>
-        public int GetSystemCoreCount()
-        {
-            return Environment.ProcessorCount;
         }
 
         /// <inheritdoc />

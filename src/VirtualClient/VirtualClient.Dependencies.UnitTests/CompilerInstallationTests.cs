@@ -119,7 +119,8 @@ namespace VirtualClient.Dependencies
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User)).Returns(this.mockFixture.PlatformSpecifics.Combine("C:", "tools"));
+            this.mockFixture.SetEnvironmentVariable("ChocolateyToolsLocation", this.mockFixture.Combine("C:", "tools"));
+
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(CompilerInstallation.CompilerName), "gcc" },

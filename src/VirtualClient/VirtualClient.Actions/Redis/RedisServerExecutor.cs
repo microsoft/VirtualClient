@@ -5,14 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json.Linq;
+    using Microsoft.Extensions.Logging;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -24,6 +24,9 @@ namespace VirtualClient.Actions
     /// </summary>
     public class RedisServerExecutor : RedisExecutor
     {
+        private List<Task> serverProcesses;
+        private bool disposed;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisServerExecutor"/> class.
         /// </summary>
@@ -32,42 +35,67 @@ namespace VirtualClient.Actions
         public RedisServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ServerCopies = Environment.ProcessorCount;
-            this.StateManager = this.Dependencies.GetService<IStateManager>();
+            this.serverProcesses = new List<Task>();
+
+            this.ServerRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
+                .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries));
         }
 
         /// <summary>
-        /// Parameter defines the name of the package that contains the memtier benchmark workload
-        /// toolsets (e.g. memtier).
+        /// Parameter defines whether to bind the Memcached server process to cores on the system.
         /// </summary>
-        public string BenchmarkPackageName
+        public bool BindToCores
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.BenchmarkPackageName));
+                return this.Parameters.GetValue<bool>(nameof(this.BindToCores), true);
             }
         }
 
         /// <summary>
-        /// Parameter defines whether to bind the Redis server process to cores on the system.
+        /// Parameter defines the Redis server command line to execute.
         /// </summary>
-        public int Bind
+        public string CommandLine
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Bind));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
             }
         }
 
         /// <summary>
-        /// Path to the benchmark executable (e.g. memtier_benchmark).
+        /// Port on which server runs.
         /// </summary>
-        protected string BenchmarkExecutablePath { get; set; }
+        public int Port
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Port));
+            }
+        }
 
         /// <summary>
-        /// Path to benchmark workload package used to warmup the server (e.g. memtier).
+        /// Parameter defines the number of server instances/copies to run.
         /// </summary>
-        protected string BenchmarkPackagePath { get; set; }
+        public int ServerInstances
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
+            }
+        }
+
+        /// <summary>
+        /// Client used to communicate with the locally hosted instance of the
+        /// Virtual Client API.
+        /// </summary>
+        protected IApiClient ApiClient
+        {
+            get
+            {
+                return this.ServerApiClient;
+            }
+        }
 
         /// <summary>
         /// Path to Redis server executable.
@@ -80,14 +108,39 @@ namespace VirtualClient.Actions
         protected string RedisPackagePath { get; set; }
 
         /// <summary>
-        /// Number of copies of Redis server instances to be created.
+        /// A retry policy to apply to the server when starting to handle transient issues that
+        /// would otherwise prevent it from starting successfully.
         /// </summary>
-        protected int ServerCopies { get; set; }
+        protected IAsyncPolicy ServerRetryPolicy { get; set; }
 
         /// <summary>
-        /// Provides access to the local state management facilities.
+        /// Disposes of resources used by the executor including shutting down any
+        /// instances of Redis server running.
         /// </summary>
-        protected IStateManager StateManager { get; }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!this.disposed && this.serverProcesses.Any())
+                {
+                    try
+                    {
+                        // We MUST stop the server instances from running before VC exits or they will
+                        // continue running until explicitly stopped. This is a problem for running Redis
+                        // workloads back to back because the requisite ports will be in use already on next
+                        // VC startup.
+                        this.KillServerInstancesAsync(CancellationToken.None)
+                            .GetAwaiter().GetResult();
+                    }
+                    catch
+                    {
+                        // Best effort
+                    }
+
+                    this.disposed = true;
+                }
+            }
+        }
 
         /// <summary>
         /// Executes server side of workload.
@@ -96,49 +149,39 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return this.Logger.LogMessageAsync($"{nameof(RedisExecutor)}.ExecuteServer", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteServer", telemetryContext, async () =>
             {
-                using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                try
                 {
-                    await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                    await this.SaveServerCopyStateAsync(cancellationToken).ConfigureAwait(false);
+                    this.SetServerOnline(false);
 
-                    if (!this.IsMultiRoleLayout())
+                    if (this.ResetServer(telemetryContext))
                     {
-                        await this.ExecuteServerWorkload(cancellationToken).ConfigureAwait(false);
+                        await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                        await this.KillServerInstancesAsync(cancellationToken);
+                        this.StartServerInstances(telemetryContext, cancellationToken);
                     }
-                    else
+
+                    await this.SaveStateAsync(telemetryContext, cancellationToken);
+                    this.SetServerOnline(true);
+
+                    if (this.IsMultiRoleLayout())
                     {
-                        try
-                        {
-                            await this.ExecuteServerWorkload(cancellationToken).ConfigureAwait(false);
-                            IEnumerable<IProcessProxy> processProxyList = this.ProcessesRunning("redis-server");
+                        await Task.WhenAny(this.serverProcesses);
 
-                            this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
-
-                            this.SetServerOnline(true);
-
-                            if (processProxyList != null)
-                            {
-                                foreach (IProcessProxy process in processProxyList)
-                                {
-                                    this.CleanupTasks.Add(() => process.SafeKill());
-                                    await process.WaitForExitAsync(cancellationToken)
-                                        .ConfigureAwait(false);
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException)
+                        // A cancellation is request, then we allow each of the server instances
+                        // to gracefully exit. If a cancellation was not requested, it means that one 
+                        // or more of the server instances exited and we will want to allow the component
+                        // to start over restarting the servers.
+                        if (cancellationToken.IsCancellationRequested)
                         {
-                            // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                        }
-                        finally
-                        {
-                            // Always signal to clients that the server is offline before exiting. This helps to ensure that the client
-                            // and server have consistency in handshakes even if one side goes down and returns at some other point.
-                            this.SetServerOnline(false);
+                            await Task.WhenAll(this.serverProcesses);
                         }
                     }
+                }
+                catch
+                {
+                    this.SetServerOnline(false);
                 }
             });
         }
@@ -151,136 +194,189 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            DependencyPath redisPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            DependencyPath memtierPackage = await this.GetPlatformSpecificPackageAsync(this.BenchmarkPackageName, CancellationToken.None);
+            await base.InitializeAsync(telemetryContext, cancellationToken);
+            DependencyPath redisPackage = await this.GetPackageAsync(this.PackageName, cancellationToken);
 
             this.RedisPackagePath = redisPackage.Path;
             this.RedisExecutablePath = this.Combine(this.RedisPackagePath, "src", "redis-server");
 
-            this.BenchmarkPackagePath = memtierPackage.Path;
-            this.BenchmarkExecutablePath = this.Combine(this.BenchmarkPackagePath, "memtier_benchmark");
-
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.BenchmarkExecutablePath, this.Platform, cancellationToken);
 
             this.InitializeApiClients();
         }
 
         /// <summary>
-        /// Returns list of processes running.
+        /// Validates the component definition for requirements.
         /// </summary>
-        /// <param name="processName">Name of the process.</param>
-        /// <returns>List of processes running.</returns>
-        private IEnumerable<IProcessProxy> ProcessesRunning(string processName)
+        protected override void Validate()
         {
-            IEnumerable<IProcessProxy> processProxyList = null;
-            List<Process> processlist = new List<Process>(Process.GetProcesses());
-            foreach (Process process in processlist)
+            base.Validate();
+
+            if (this.BindToCores && this.ServerInstances > Environment.ProcessorCount)
             {
-                if (process.ProcessName.Contains(processName))
+                throw new WorkloadException(
+                    $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+        }
+
+        private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.DeleteState", relatedContext, async () =>
+            {
+                using (HttpResponseMessage response = await this.ApiClient.DeleteStateAsync(nameof(ServerState), cancellationToken))
                 {
-                    Process[] processesByName = Process.GetProcessesByName(process.ProcessName);
-                    if (processesByName?.Any() ?? false)
+                    relatedContext.AddResponseContext(response);
+                    if (response.StatusCode != HttpStatusCode.NoContent)
                     {
-                        if (processProxyList == null)
+                        response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                    }
+                }
+            });
+        }
+
+        private async Task KillServerInstancesAsync(CancellationToken cancellationToken)
+        {
+            this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
+            await this.ExecuteCommandAsync("pkill -f redis-server", this.RedisPackagePath, cancellationToken);
+            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+        }
+
+        private bool ResetServer(EventContext telemetryContext)
+        {
+            bool shouldReset = true;
+            if (this.serverProcesses?.Any() == true)
+            {
+                // Depending upon how the server Task instances are created, the Task may be in a status
+                // of Running or WaitingForActivation. The server is running in either of these 2 states.
+                shouldReset = !this.serverProcesses.All(p => p.Status == TaskStatus.Running || p.Status == TaskStatus.WaitingForActivation);
+            }
+
+            if (shouldReset)
+            {
+                this.Logger.LogTraceMessage($"Restart Redis Server(s)...");
+            }
+            else
+            {
+                this.Logger.LogTraceMessage($"Redis Server(s) Running...");
+            }
+
+            return shouldReset;
+        }
+
+        private Task SaveStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
+            {
+                List<int> ports = new List<int>();
+                for (int i = 0; i < this.ServerInstances; i++)
+                {
+                    ports.Add(this.Port + i);
+                }
+
+                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(
+                    nameof(ServerState),
+                    new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
+                    {
+                        [nameof(ServerState.Ports)] = string.Join(",", ports)
+                    })),
+                    cancellationToken))
+                {
+                    relatedContext.AddResponseContext(response);
+                    if (response.StatusCode != HttpStatusCode.NoContent)
+                    {
+                        response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                    }
+                }
+            });
+        }
+
+        private void StartServerInstances(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.serverProcesses.Clear();
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("serverInstances", this.ServerInstances)
+                .AddContext("portRange", $"{this.Port}-{this.Port + this.ServerInstances}")
+                .AddContext("bindToCores", this.BindToCores);
+
+            this.Logger.LogMessage($"{this.TypeName}.StartServerInstances", relatedContext, () =>
+            {
+                try
+                {
+                    string command = "bash";
+                    string workingDirectory = this.RedisPackagePath;
+                    List<string> commands = new List<string>();
+
+                    relatedContext.AddContext("command", command);
+                    relatedContext.AddContext("commandArguments", commands);
+                    relatedContext.AddContext("workingDir", workingDirectory);
+
+                    for (int i = 0; i < this.ServerInstances; i++)
+                    {
+                        // We are starting the server instances in the background. Once they are running we
+                        // will warm them up and then exit. We keep a reference to the server processes/tasks
+                        // so that they remain running until the class is disposed.
+                        int port = this.Port + i;
+                        int? bindToCore = this.BindToCores ? i : null;
+                        string commandArguments = null;
+
+                        if (this.BindToCores)
                         {
-                            processProxyList = processesByName.Select((Process process) => new ProcessProxy(process));
+                            // e.g.
+                            // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/redis/src/redis-server --port 6389 --protected-mode no
+                            //       --ignore-warnings ARM64-COW-BUG --save --io-threads 4 --maxmemory-policy noeviction
+
+                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
                         }
                         else
                         {
-                            foreach (Process proxy in processesByName)
-                            {
-                                processProxyList.Append(new ProcessProxy(proxy));
-                            }
+                            commandArguments = $"-c \"{this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
+                        }
+
+                        // We cannot use a Task.Run here. The Task is queued on the threadpool but does not get running
+                        // until our counter 'i' is at the end. This will cause all server instances to use the same port
+                        // and to try to bind to the same core.
+                        commands.Add(commandArguments);
+                        this.serverProcesses.Add(this.StartServerInstanceAsync(port, command, commandArguments, workingDirectory, relatedContext, cancellationToken, bindToCore));
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+                }
+            });
+        }
+
+        private Task StartServerInstanceAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int? bindToCore = null)
+        {
+            return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+            {
+                try
+                {
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            ConsoleLogger.Default.LogMessage($"Redis server process exited (port = {port})...", telemetryContext);
+                            process.ThrowIfWorkloadFailed();
                         }
                     }
                 }
-            }
-
-            return processProxyList;
-        }
-
-        private async Task ExecuteServerWorkload(CancellationToken cancellationToken)
-        {
-            await this.KillServerWorkload(cancellationToken);
-
-            for (int i = 1; i <= this.ServerCopies; i++)
-            {
-                int port = this.Port + i - 1;
-                string precommand = string.Empty;
-                if (this.Bind == 1)
+                catch (OperationCanceledException)
                 {
-                    int core = i - 1;
-                    precommand = $"numactl -C {core}";
+                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
                 }
-                
-                // e.g.
-                // bash -c "numactl -c 1 /home/user/VirtualClient/linux-x64/packages/redis/src/redis-server --port 6389 --protected-mode no
-                //       --ignore-warnings ARM64-COW-BUG --save --io-threads 4 --maxmemory-policy noeviction
-                string startservercommand = 
-                    $"bash -c \"{precommand} {this.RedisExecutablePath} --port {port} --protected-mode no --ignore-warnings ARM64-COW-BUG --save " +
-                    $"--io-threads 4 --maxmemory-policy noeviction\"";
-
-                using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, startservercommand, null, this.RedisPackagePath))
+                catch (Exception exc)
                 {
-                    if (!process.Start())
-                    {
-                        throw new WorkloadException($"The Redis server did not start as expected.", ErrorReason.WorkloadFailed);
-                    }
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.StartServerInstanceError",
+                        LogLevel.Error,
+                        telemetryContext.Clone().AddError(exc));
 
-                    await this.WarmUpServer(port, cancellationToken);
-                }
-            }
-        }
-
-        private async Task KillServerWorkload(CancellationToken cancellationToken)
-        {
-            await this.ExecuteCommandAsync("pkill -f redis-server", this.RedisPackagePath, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken).ConfigureAwait(false);
-        }
-
-        private async Task WarmUpServer(int port, CancellationToken cancellationToken)
-        {
-            await this.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
-
-            string warmupCommand =
-                $"{this.BenchmarkExecutablePath} --protocol=redis --server localhost --port={port} -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 " +
-                $"--ratio=1:0 --requests=allkeys";
-
-            await this.ExecuteCommandAsync(warmupCommand, this.BenchmarkPackagePath, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private Task SaveServerCopyStateAsync(CancellationToken cancellationToken)
-        {
-            return this.ServerApiClient.UpdateStateAsync(
-                nameof(ServerState),
-                new Item<ServerState>(nameof(ServerState), new ServerState
-                {
-                    ServerCopies = this.ServerCopies
-                }),
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Deletes the existing states.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events emitted.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        private Task DeleteWorkloadStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return this.Logger.LogMessageAsync($"{nameof(RedisServerExecutor)}.ResetState", telemetryContext, async () =>
-            {
-                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(nameof(ServerState), cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (response.StatusCode != HttpStatusCode.NoContent)
-                {
-                    response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                    throw;
                 }
             });
         }

@@ -109,7 +109,7 @@ namespace VirtualClient.Dependencies
                     }
                     else if (this.Platform == PlatformID.Win32NT)
                     {
-                        string chocolateyToolsLocation = this.systemManager.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
+                        string chocolateyToolsLocation = this.GetEnvironmentVariable("ChocolateyToolsLocation", EnvironmentVariableTarget.User);
                         string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);

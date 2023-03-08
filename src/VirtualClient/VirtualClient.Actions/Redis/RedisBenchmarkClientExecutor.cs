@@ -9,9 +9,11 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -21,6 +23,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class RedisBenchmarkClientExecutor : RedisExecutor
     {
+        private readonly object lockObject = new object();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisBenchmarkClientExecutor"/> class.
         /// </summary>
@@ -29,40 +33,58 @@ namespace VirtualClient.Actions
         public RedisBenchmarkClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ClientFlowRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries * 2));
+            this.ClientFlowRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
+                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries * 2));
+
+            this.ClientRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
+                .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries));
+
             this.PollingTimeout = TimeSpan.FromMinutes(40);
         }
 
         /// <summary>
-        /// Number of requests from client.
+        /// Parameter defines the number of Memtier benchmark instances to execute against
+        /// each server instance. Default = # of logical cores/vCPUs on system.
         /// </summary>
-        public int RequestCount
+        public int ClientInstances
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.RequestCount));
+                return this.Parameters.GetValue<int>(nameof(this.ClientInstances), 1);
             }
         }
 
         /// <summary>
-        /// Number of clients per thread.
+        /// Parameter defines the Memtier benchmark toolset command line to execute.
         /// </summary>
-        public int ClientsPerThread
+        public string CommandLine
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.ClientsPerThread));
+                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
             }
         }
 
         /// <summary>
-        /// Number of concurrent requests from client.
+        /// Parameter defines the length of time the Memtier benchmark should be executed.
         /// </summary>
-        public int PipelineDepth
+        public TimeSpan Duration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.PipelineDepth));
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration), TimeSpan.FromSeconds(60));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines true/false whether the action is meant to warm up the server.
+        /// We do not capture metrics on warm up operations.
+        /// </summary>
+        public bool WarmUp
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.WarmUp), false);
             }
         }
 
@@ -70,6 +92,17 @@ namespace VirtualClient.Actions
         /// The retry policy to apply to the client-side execution workflow.
         /// </summary>
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
+
+        /// <summary>
+        /// The retry policy to apply to each Memtier workload instance when trying to startup
+        /// against a target server.
+        /// </summary>
+        protected IAsyncPolicy ClientRetryPolicy { get; set; }
+
+        /// <summary>
+        /// True/false whether the Redis server instance has been warmed up.
+        /// </summary>
+        protected bool IsServerWarmedUp { get; set; }
 
         /// <summary>
         /// The timespan at which the client will poll the server for responses before
@@ -90,59 +123,71 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes  client side.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPAddress ipAddress;
-            List<Task> clientWorkloadTasks = new List<Task>();
-
-            if (this.IsMultiRoleLayout())
+            if (!this.WarmUp || !this.IsServerWarmedUp)
             {
-                IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(ClientRole.Server);
-                foreach (ClientInstance server in targetServers)
+                IPAddress ipAddress;
+                List<Task> clientWorkloadTasks = new List<Task>();
+
+                if (this.IsMultiRoleLayout())
                 {
-                    // Reliability/Recovery:
-                    // The pattern here is to allow for any steps within the workflow to fail and to simply start the entire workflow
-                    // over again.
+                    IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(ClientRole.Server);
+                    foreach (ClientInstance server in targetServers)
+                    {
+                        // Reliability/Recovery:
+                        // The pattern here is to allow for any steps within the workflow to fail and to simply start the entire workflow
+                        // over again.
+                        clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
+
+                                // 1) Confirm server is online.
+                                // ===========================================================================
+                                this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
+                                await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
+
+                                // 2) Confirm the server-side application (e.g. web server) is online.
+                                // ===========================================================================
+                                this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
+                                await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
+
+                                this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
+                                this.Logger.LogTraceMessage("Synchronization: Start client workload...");
+
+                                // 3) Get Parameters required.
+                                ServerState serverState = await this.GetServerStateAsync(serverApiClient, cancellationToken);
+
+                                // 4) Execute the client workload.
+                                // ===========================================================================
+                                ipAddress = IPAddress.Parse(server.IPAddress);
+                                await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
+                            }
+                        }));
+                    }
+                }
+                else
+                {
+                    ipAddress = IPAddress.Loopback;
                     clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
-
-                            // 1) Confirm server is online.
-                            // ===========================================================================
-                            this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
-                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken);
-
-                            // 2) Confirm the server-side application (e.g. web server) is online.
-                            // ===========================================================================
-                            this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
-                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromSeconds(30), cancellationToken);
-
-                            this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
-                            this.Logger.LogTraceMessage("Synchronization: Start client workload...");
-
-                            // 3) Execute the client workload.
-                            // ===========================================================================
-                            ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
+                            ServerState serverState = await this.GetServerStateAsync(this.ServerApiClient, cancellationToken);
+                            await this.ExecuteWorkloadsAsync(ipAddress, serverState, telemetryContext, cancellationToken);
                         }
                     }));
                 }
-            }
-            else
-            {
-                ipAddress = IPAddress.Loopback;
-                clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken);
-                    }
-                }));
-            }
 
-            return Task.WhenAll(clientWorkloadTasks);
+                await Task.WhenAll(clientWorkloadTasks);
+
+                if (this.WarmUp)
+                {
+                    this.IsServerWarmedUp = true;
+                }
+            }
         }
 
         /// <summary>
@@ -154,7 +199,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            DependencyPath redisPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, CancellationToken.None);
+            DependencyPath redisPackage = await this.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             this.RedisPackagePath = redisPackage.Path;
             this.RedisExecutablePath = this.PlatformSpecifics.Combine(this.RedisPackagePath, "src", "redis-benchmark");
@@ -163,25 +208,30 @@ namespace VirtualClient.Actions
             this.InitializeApiClients();
         }
 
-        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string output, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(process.StandardOutput.ToString());
-                    IList<Metric> metrics = redisBenchmarkMetricsParser.Parse();
+                    // The Redis workloads run multi-threaded. The lock is meant to ensure we do not have
+                    // race conditions that affect the parsing of the results.
+                    lock (this.lockObject)
+                    {
+                        RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(output);
+                        IList<Metric> metrics = redisBenchmarkMetricsParser.Parse();
 
-                    this.Logger.LogMetrics(
-                        "Redis-Benchmark",
-                        scenarioName: this.Scenario,
-                        process.StartTime,
-                        process.ExitTime,
-                        metrics,
-                        string.Empty,
-                        null,
-                        this.Tags,
-                        telemetryContext);
+                        this.Logger.LogMetrics(
+                            "Redis-Benchmark",
+                            scenarioName: this.Scenario,
+                            startTime,
+                            endTime,
+                            metrics,
+                            string.Empty,
+                            null,
+                            this.Tags,
+                            telemetryContext);
+                    }
                 }
                 catch (SchemaException exc)
                 {
@@ -190,29 +240,102 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task ExecuteWorkloadAsync(IPAddress ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteWorkloadsAsync(IPAddress serverIPAddress, ServerState serverState, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("serverIPAddress", serverIPAddress.ToString())
+                .AddContext("serverPorts", serverState.Ports);
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkloads", relatedContext.Clone(), async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    // e.g.
-                    // sudo bash -c "/home/user/virtualclient/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 2 -n 10000 -P 32 -q --csv"
+                    string command = "bash";
                     string workingDirectory = this.PlatformSpecifics.Combine(this.RedisPackagePath, "src");
-                    string commandArguments = @$"-c ""{this.RedisExecutablePath} -h {ipAddress} -p {this.Port} -c {this.ClientsPerThread} -n {this.RequestCount} -P {this.PipelineDepth} -q --csv""";
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    List<string> commands = new List<string>();
+                    relatedContext.AddContext("command", "bash");
+                    relatedContext.AddContext("commandArguments", commands);
+                    relatedContext.AddContext("workingDirectory", workingDirectory);
+
+                    List<Task> workloadProcesses = new List<Task>();
+                    foreach (int serverPort in serverState.Ports)
+                    {
+                        for (int i = 0; i < this.ClientInstances; i++)
+                        {
+                            // e.g.
+                            // sudo bash -c "/home/user/virtualclient/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 2 -n 10000 -P 32 -q --csv"
+                            string commandArguments = $"-c \"{this.RedisExecutablePath} -h {serverIPAddress} -p {serverPort} {this.CommandLine}\"";
+                            commands.Add($"{command} {commandArguments}");
+
+                            workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
+
+                            if (this.WarmUp)
+                            {
+                                // We run ONLY 1 client workload per server endpoint/port when warming up.
+                                break;
+                            }
+                        }
+                    }
+
+                    await Task.WhenAll(workloadProcesses);
+                }
+            });
+        }
+
+        private async Task ExecuteWorkloadAsync(int serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await (this.ClientRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                {
+                    DateTime startTime = DateTime.UtcNow;
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
+                            ConsoleLogger.Default.LogMessage($"Redis benchmark process exited (server port = {serverPort})...", telemetryContext);
 
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
                             process.ThrowIfWorkloadFailed();
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+
+                            if (!this.WarmUp)
+                            {
+                                this.CaptureMetrics(process.StandardOutput.ToString(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+            }
+            catch (Exception exc)
+            {
+                this.Logger.LogMessage(
+                    $"{this.TypeName}.ExecuteWorkloadError",
+                    LogLevel.Error,
+                    telemetryContext.Clone().AddError(exc));
+
+                throw;
+            }
+        }
+
+        private async Task<ServerState> GetServerStateAsync(IApiClient serverApiClient, CancellationToken cancellationToken)
+        {
+            Item<ServerState> state = await serverApiClient.GetStateAsync<ServerState>(
+                nameof(ServerState),
+                cancellationToken);
+
+            if (state == null)
+            {
+                throw new WorkloadException(
+                    $"Expected server state information missing. The server did not return state indicating the details for the Memcached server(s) running.",
+                    ErrorReason.WorkloadUnexpectedAnomaly);
+            }
+
+            return state.Definition;
         }
     }
 }

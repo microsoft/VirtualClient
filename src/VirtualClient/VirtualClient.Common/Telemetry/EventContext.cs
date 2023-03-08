@@ -295,7 +295,14 @@ namespace VirtualClient.Common.Telemetry
 
             if (withProperties && this.Properties.Any())
             {
-                clonedContext.Properties.AddRange(this.Properties.Except(clonedContext.Properties));
+                foreach (var entry in this.Properties)
+                {
+                    // ALWAYS use the indexer here. It is possible that there are persistent properties that
+                    // conflict with properties that were added to the EventContext explicitly. With Add or AddRange,
+                    // methods, this will cause an error "The key already existed in the dictionary." Entries that are
+                    // in the object being cloned take precedence over entries added as globally persistent.
+                    clonedContext.Properties[entry.Key] = entry.Value;
+                }
             }
 
             return clonedContext;

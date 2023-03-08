@@ -446,10 +446,17 @@ namespace VirtualClient.Contracts
                     {
                         // Expected for cases where a cancellation token is cancelled.
                     }
+                    catch (Exception)
+                    {
+                        // Occasionally some of the workloads throw exceptions right as VC receives a
+                        // cancellation/exit request.
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                    }
                     finally
                     {
-                        await this.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
                         if (this.LogSuccessFailMetrics)
                         {
                             if (succeeded)
@@ -461,6 +468,8 @@ namespace VirtualClient.Contracts
                                 this.LogFailedMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
                             }
                         }
+
+                        await this.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
                 }, displayErrors: true);
             }

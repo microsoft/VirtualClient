@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace VirtualClient.Contracts
 {
     /// <summary>
@@ -48,6 +50,43 @@ namespace VirtualClient.Contracts
         /// The default disk type.
         /// </summary>
         public const string DefaultDisk = "disk";
+    }
+
+    /// <summary>
+    /// Common environment variable names.
+    /// </summary>
+    [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Represents common environment variable naming conventsions.")]
+    public static class EnvironmentVariable
+    {
+        /// <summary>
+        /// Name = JAVA_HOME
+        /// </summary>
+        public const string JAVA_HOME = nameof(JAVA_HOME);
+
+        /// <summary>
+        /// Name = JAVA_EXE
+        /// </summary>
+        public const string JAVA_EXE = nameof(JAVA_EXE);
+
+        /// <summary>
+        /// Name = LD_LIBRARY_PATH
+        /// </summary>
+        public const string LD_LIBRARY_PATH = nameof(LD_LIBRARY_PATH);
+
+        /// <summary>
+        /// Name = SUDO_USER
+        /// </summary>
+        public const string SUDO_USER = nameof(SUDO_USER);
+
+        /// <summary>
+        /// Name = PATH
+        /// </summary>
+        public const string PATH = nameof(PATH);
+
+        /// <summary>
+        /// Name = USER
+        /// </summary>
+        public const string USER = nameof(USER);
     }
 
     /// <summary>

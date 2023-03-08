@@ -3,11 +3,12 @@ Memcached is an open source (BSD licensed), high-performance, distributed memory
 arbitrary data (strings, objects) from results of database calls, API calls, or page rendering. Memcached works with an in-memory dataset. It is a client-server
 model workload in which Memcached acts as server. There are different tools that acts are clients.
 
-One of the widely used tool is onboarded into Virtual Client. It is
-1. [Memtier Benchmarking Tool](https://redis.com/blog/memtier_benchmark-a-high-throughput-benchmarking-tool-for-redis-memcached/)
-
+One of the widely used is the memtier_benchmark produced by Redis Labs.
+* [Memcached Performance](https://github.com/memcached/memcached/wiki/Performance)  
+* [Memtier Benchmarking Tool](https://redis.com/blog/memtier_benchmark-a-high-throughput-benchmarking-tool-for-redis-memcached/)
 * [Official Memcached Documentation](https://memcached.org/about)
 * [Memcached Github Repo](https://github.com/memcached/memcached)
+* [Memtier Benchmark Toolset](https://github.com/RedisLabs/memtier_benchmark)
 
 ## What is Being Measured?
 The Memtier toolset is used to generate various traffic patterns against Memcached instances. It provides a robust set of customization and reporting 

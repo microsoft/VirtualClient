@@ -18,8 +18,6 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class JavaDevelopmentKitInstallation : VirtualClientComponent
     {
-        private const string JavaHomeEnvironmentVariable = "JAVA_HOME";
-        private const string JavaExeEnvironmentVariable = "JAVA_EXE";
         private ISystemManagement systemManager;
 
         /// <summary>
@@ -74,9 +72,9 @@ namespace VirtualClient.Dependencies
                     javaExecutable = this.PlatformSpecifics.Combine(javaDirectory, "java.exe");
                 }
 
-                Environment.SetEnvironmentVariable(JavaDevelopmentKitInstallation.JavaHomeEnvironmentVariable, javaDirectory, EnvironmentVariableTarget.Process);
-                Environment.SetEnvironmentVariable(JavaDevelopmentKitInstallation.JavaExeEnvironmentVariable, javaExecutable, EnvironmentVariableTarget.Process);
-                this.systemManager.AddToPathEnvironmentVariable(javaDirectory);
+                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, javaDirectory, EnvironmentVariableTarget.Process);
+                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_EXE, javaExecutable, EnvironmentVariableTarget.Process);
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, javaDirectory, append: true);
 
                 // Ensure the binary can execute (e.g. chmod +x)
                 await this.systemManager.MakeFileExecutableAsync(javaExecutable, this.Platform, cancellationToken)

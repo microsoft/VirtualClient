@@ -56,6 +56,8 @@ namespace VirtualClient.Dependencies
             telemetryContext.AddContext("packagesDirectory", this.PlatformSpecifics.PackagesDirectory);
 
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
+            ProcessManager processManager = systemManagement.ProcessManager;
+
             string cloneDirectory = this.PlatformSpecifics.GetPackagePath(this.PackageName.ToLowerInvariant());
 
             if (systemManagement.FileSystem.Directory.Exists(cloneDirectory))
@@ -64,15 +66,14 @@ namespace VirtualClient.Dependencies
             }
             else
             {
-                this.Logger.LogTraceMessage($"Beginning Git clone repo: '{this.RepoUri}' to directory '{cloneDirectory}'.", telemetryContext);
+                this.Logger.LogTraceMessage($"Clone repo '{this.RepoUri}' to directory '{cloneDirectory}'.", telemetryContext);
 
                 if (!systemManagement.FileSystem.Directory.Exists(this.PlatformSpecifics.PackagesDirectory))
                 {
                     systemManagement.FileSystem.Directory.CreateDirectory(this.PlatformSpecifics.PackagesDirectory);
                 }
 
-                using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(
-                    this.Platform, "git", $"clone {this.RepoUri} {cloneDirectory}", this.PlatformSpecifics.PackagesDirectory))
+                using (IProcessProxy process = processManager.CreateProcess("git", $"clone {this.RepoUri} {cloneDirectory}", this.PlatformSpecifics.PackagesDirectory))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -93,8 +94,6 @@ namespace VirtualClient.Dependencies
                             cloneDirectory,
                             $"'{this.PackageName}' Git repo."),
                         cancellationToken).ConfigureAwait(false);
-
-                    this.Logger.LogTraceMessage($"Git clone output: {process.StandardOutput}.", EventContext.Persisted());
                 }
 
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(this.PlatformSpecifics.PackagesDirectory, this.PackageName));

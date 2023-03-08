@@ -97,6 +97,7 @@ namespace VirtualClient.Dependencies
             //  --dir {this.PlatformSpecifics.PackagesDirectory} This option seems to require a choco license on win11, still researching.
             string formattedArguments = $"install {string.Join(' ', packages)} --yes";
             string chocoExePath = this.Combine(this.chocoDirectory, "choco.exe");
+
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
                 // Runs the installation command with retries and throws if the command fails after all
@@ -119,14 +120,15 @@ namespace VirtualClient.Dependencies
             }).ConfigureAwait(false);
 
             // The environment variable needs to be reloaded after installation. There is a script that comes with chocolatey(RefreshEnv.cmd)
-            await this.systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await this.RefreshEnvironmentVariablesAsync(cancellationToken);
 
             // Directly adding the packages to path in here.
             foreach (string package in packages)
             {
-                this.systemManagement.AddToPathEnvironmentVariable(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package));
-                this.systemManagement.AddToPathEnvironmentVariable(this.Combine(this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramFiles"), package, "bin"));
+                string programFilesPath = this.PlatformSpecifics.GetEnvironmentVariable("ProgramFiles");
+
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(programFilesPath, package), append: true);
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(programFilesPath, package, "bin"), append: true);
             }
 
             // choco list doesn't work well enough and is going thorugh a rename/deprecating

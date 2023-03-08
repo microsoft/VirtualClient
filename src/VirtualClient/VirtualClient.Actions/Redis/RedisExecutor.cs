@@ -25,17 +25,11 @@ namespace VirtualClient.Actions
     public class RedisExecutor : VirtualClientComponent
     {
         /// <summary>
-        /// The property name used by the server-side executor to define the number
-        /// of Redis server copies to run.
-        /// </summary>
-        internal const string ServerCopiesCount = nameof(ServerCopiesCount);
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="RedisExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">An enumeration of key-value pairs that can control the execution of the component.</param>/param>
-        public RedisExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        protected RedisExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.ApiClientManager = dependencies.GetService<IApiClientManager>();
@@ -43,15 +37,11 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Port on which server runs.
+        /// The Memtier benchmark will return an exit code of 130 when it is interupted while
+        /// trying to write to standard output. This happens when Ctrl-C is used for example.
+        /// We handle this error for this reason.
         /// </summary>
-        public int Port
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.Port));
-            }
-        }
+        protected static IEnumerable<int> SuccessExitCodes { get; } = new List<int>(ProcessProxy.DefaultSuccessCodes) { 130 };
 
         /// <summary>
         /// Provides the ability to create API clients for interacting with local as well as remote instances
@@ -91,6 +81,46 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Executes the commands.
+        /// </summary>
+        /// <param name="command">Command that needs to be executed</param>
+        /// <param name="workingDir">The directory where we want to execute the command</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="successCodes">Alternative exit codes to use to represent successful process exit.</param>
+        /// <returns>String output of the command.</returns>
+        protected async Task ExecuteCommandAsync(string command, string workingDir, CancellationToken cancellationToken, IEnumerable<int> successCodes = null)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDir}'.");
+
+                EventContext telemetryContext = EventContext.Persisted()
+                    .AddContext("packageName", this.PackageName)
+                    .AddContext("packagePath", workingDir)
+                    .AddContext("command", "sudo")
+                    .AddContext("commandArguments", command);
+
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
+                {
+                    using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDir))
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            this.LogProcessDetailsAsync(process, telemetryContext);
+
+                            process.ThrowIfErrored<WorkloadException>(
+                                successCodes ?? ProcessProxy.DefaultSuccessCodes,
+                                errorReason: ErrorReason.WorkloadFailed);
+                        }
+                    }
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
         /// Initializes the environment and dependencies for running the Redis Memtier workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -125,39 +155,6 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
-            }
-        }
-
-        /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="workingDirectory">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>String output of the command.</returns>
-        protected async Task ExecuteCommandAsync(string command, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}'  at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", command);
-
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, null, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
             }
         }
 
@@ -205,12 +202,6 @@ namespace VirtualClient.Actions
 
         internal class ServerState : State
         {
-            public ServerState()
-                : base()
-            {
-                this.ServerCopies = 1;
-            }
-
             [JsonConstructor]
             public ServerState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
@@ -218,18 +209,14 @@ namespace VirtualClient.Actions
             }
 
             /// <summary>
-            /// The number of copies/instances of the Redis server to run simultaneously.
+            /// The set of ports on which the Memcached servers are running.
             /// </summary>
-            public int ServerCopies
+            public IEnumerable<int> Ports
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(this.ServerCopies));
-                }
-
-                set
-                {
-                    this[nameof(this.ServerCopies)] = value;
+                    this.Properties.TryGetValue(nameof(this.Ports), out IConvertible ports);
+                    return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
                 }
             }
         }

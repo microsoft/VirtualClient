@@ -20,17 +20,33 @@ namespace VirtualClient
         /// <summary>
         /// Returns the package/dependency path information if it is registered.
         /// </summary>
-        public static async Task<DependencyPath> GetPlatformSpecificPackageAsync(this IPackageManager packageManager, string packageName, PlatformID platform, Architecture architecture, CancellationToken cancellationToken)
+        public static async Task<DependencyPath> GetPackageAsync(this IPackageManager packageManager, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
         {
-            DependencyPath package = await packageManager.GetPackageAsync(packageName, cancellationToken)
-                .ConfigureAwait(false);
+            packageManager.ThrowIfNull(nameof(packageManager));
+            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
 
-            if (package == null)
+            DependencyPath package = await packageManager.GetPackageAsync(packageName, cancellationToken);
+
+            if (throwIfNotfound && package == null)
             {
                 throw new DependencyException(
                     $"A package with the name '{packageName}' was not found on the system.",
                     ErrorReason.WorkloadDependencyMissing);
             }
+
+            return package;
+        }
+
+        /// <summary>
+        /// Returns the package/dependency path information if it is registered.
+        /// </summary>
+        public static async Task<DependencyPath> GetPlatformSpecificPackageAsync(this IPackageManager packageManager, string packageName, PlatformID platform, Architecture architecture, CancellationToken cancellationToken, bool throwIfNotfound = true)
+        {
+            packageManager.ThrowIfNull(nameof(packageManager));
+            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
+
+            DependencyPath package = await packageManager.GetPackageAsync(packageName, cancellationToken, throwIfNotfound)
+                .ConfigureAwait(false);
 
             return packageManager.PlatformSpecifics.ToPlatformSpecificPath(package, platform, architecture);
         }

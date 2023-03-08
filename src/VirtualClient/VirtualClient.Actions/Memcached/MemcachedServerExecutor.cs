@@ -5,11 +5,14 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -21,7 +24,7 @@ namespace VirtualClient.Actions
     /// </summary>
     public class MemcachedServerExecutor : MemcachedExecutor
     {
-        private IProcessProxy process;
+        private List<Task> serverProcesses;
         private bool disposed;
 
         /// <summary>
@@ -32,35 +35,47 @@ namespace VirtualClient.Actions
         public MemcachedServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.ServerCopies = Environment.ProcessorCount;
-            this.StateManager = this.Dependencies.GetService<IStateManager>();
-        }
+            this.serverProcesses = new List<Task>();
 
-        /// <summary>
-        /// Parameter defines the name of the package that contains the benchmark workload
-        /// toolsets (e.g. memtier).
-        /// </summary>
-        public string BenchmarkPackageName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.BenchmarkPackageName));
-            }
+            this.ServerRetryPolicy = Policy.Handle<Exception>(exc => !(exc is OperationCanceledException))
+                .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries));
         }
 
         /// <summary>
         /// Parameter defines whether to bind the Memcached server process to cores on the system.
         /// </summary>
-        public int Bind
+        public bool BindToCores
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Bind));
+                return this.Parameters.GetValue<bool>(nameof(this.BindToCores), true);
             }
         }
 
         /// <summary>
-        /// The size (in megabytes) to use for caching items in memory for the Memcached
+        /// Parameter defines the Memcached server command line to execute.
+        /// </summary>
+        public string CommandLine
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the initial port on which server instances will run.
+        /// </summary>
+        public int Port
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Port));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the size (in megabytes) to use for caching items in memory for the Memcached
         /// server.
         /// </summary>
         public int ServerMemoryCacheSizeInMB
@@ -72,24 +87,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of copies of Memcached server instances to be created.
+        /// Parameter defines the number of threads to allocate to each server instance
+        /// running. Default = # of logical cores/vCPUs on the system.
         /// </summary>
-        protected int ServerCopies { get; set; }
+        public int ServerThreadCount
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.ServerThreadCount), Environment.ProcessorCount);
+            }
+        }
 
         /// <summary>
-        /// Provides access to the local state management facilities.
+        /// Client used to communicate with the locally hosted instance of the
+        /// Virtual Client API.
         /// </summary>
-        protected IStateManager StateManager { get; }
-
-        /// <summary>
-        /// Path to the benchmark executable (e.g. memtier_benchmark).
-        /// </summary>
-        protected string BenchmarkExecutablePath { get; set; }
-
-        /// <summary>
-        /// Path to benchmark workload package used to warmup the server (e.g. memtier).
-        /// </summary>
-        protected string BenchmarkPackagePath { get; set; }
+        protected IApiClient ApiClient
+        {
+            get
+            {
+                return this.ServerApiClient;
+            }
+        }
 
         /// <summary>
         /// Path to Memcached server executable.
@@ -102,9 +121,39 @@ namespace VirtualClient.Actions
         protected string MemcachedPackagePath { get; set; }
 
         /// <summary>
-        /// Cancellation Token Source for Server.
+        /// A retry policy to apply to the server when starting to handle transient issues that
+        /// would otherwise prevent it from starting successfully.
         /// </summary>
-        protected CancellationTokenSource ServerCancellationSource { get; set; }
+        protected IAsyncPolicy ServerRetryPolicy { get; set; }
+
+        /// <summary>
+        /// Disposes of resources used by the executor including shutting down any
+        /// instances of Memcached server running.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!this.disposed && this.serverProcesses.Any())
+                {
+                    try
+                    {
+                        // We MUST stop the server instances from running before VC exits or they will
+                        // continue running until explicitly stopped. This is a problem for running Memcached
+                        // workloads back to back because the requisite ports will be in use already on next
+                        // VC startup.
+                        this.KillServerInstancesAsync(CancellationToken.None)
+                            .GetAwaiter().GetResult();
+                    }
+                    catch
+                    {
+                        // Best effort
+                    }
+
+                    this.disposed = true;
+                }
+            }
+        }
 
         /// <summary>
         /// Executes the workload.
@@ -113,49 +162,40 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return this.Logger.LogMessageAsync($"{nameof(MemcachedExecutor)}.ExecuteServer", telemetryContext, async () =>
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteServer", telemetryContext, async () =>
             {
-                using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                try
                 {
-                    await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                    await this.SaveServerCopyStateAsync(cancellationToken).ConfigureAwait(false);
+                    this.SetServerOnline(false);
 
-                    if (!this.IsMultiRoleLayout())
+                    if (this.ResetServer(telemetryContext))
                     {
-                        await this.ExecuteServerWorkload(cancellationToken).ConfigureAwait(false);
+                        await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                        await this.KillServerInstancesAsync(cancellationToken);
+                        this.StartServerInstances(telemetryContext, cancellationToken);
                     }
-                    else
+
+                    await this.SaveStateAsync(telemetryContext, cancellationToken);
+                    this.SetServerOnline(true);
+
+                    if (this.IsMultiRoleLayout())
                     {
-                        try
-                        {
-                            await this.ExecuteServerWorkload(cancellationToken).ConfigureAwait(false);
-                            IEnumerable<IProcessProxy> memcachedProcessProxyList = GetRunningProcessByName("memcached");
+                        await Task.WhenAny(this.serverProcesses);
 
-                            this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
-
-                            this.SetServerOnline(true);
-
-                            if (memcachedProcessProxyList != null)
-                            {
-                                foreach (IProcessProxy process in memcachedProcessProxyList)
-                                {
-                                    this.CleanupTasks.Add(() => process.SafeKill());
-                                    await process.WaitForExitAsync(cancellationToken)
-                                        .ConfigureAwait(false);
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException)
+                        // A cancellation is request, then we allow each of the server instances
+                        // to gracefully exit. If a cancellation was not requested, it means that one 
+                        // or more of the server instances exited and we will want to allow the component
+                        // to start over restarting the servers.
+                        if (cancellationToken.IsCancellationRequested)
                         {
-                            // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                        }
-                        finally
-                        {
-                            // Always signal to clients that the server is offline before exiting. This helps to ensure that the client
-                            // and server have consistency in handshakes even if one side goes down and returns at some other point.
-                            this.SetServerOnline(false);
+                            await Task.WhenAll(this.serverProcesses);
                         }
                     }
+                }
+                catch
+                {
+                    this.SetServerOnline(false);
+                    throw;
                 }
             });
         }
@@ -166,108 +206,166 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken);
-            DependencyPath memcachedPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
-            DependencyPath benchmarkPackage = await this.GetPlatformSpecificPackageAsync(this.BenchmarkPackageName, cancellationToken);
+            DependencyPath memcachedPackage = await this.GetPackageAsync(this.PackageName, cancellationToken);
 
             this.MemcachedPackagePath = memcachedPackage.Path;
-            this.BenchmarkPackagePath = benchmarkPackage.Path;
-
             this.MemcachedExecutablePath = this.Combine(this.MemcachedPackagePath, "memcached");
-            this.BenchmarkExecutablePath = this.Combine(this.BenchmarkPackagePath, "memtier_benchmark");
 
             await this.SystemManagement.MakeFileExecutableAsync(this.MemcachedExecutablePath, this.Platform, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.BenchmarkExecutablePath, this.Platform, cancellationToken);
 
             this.InitializeApiClients();
         }
 
-        /// <summary>
-        /// Disposes of resources used by the instance.
-        /// </summary>
-        protected override void Dispose(bool disposing)
+        private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            base.Dispose(disposing);
-            if (disposing)
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.DeleteState", relatedContext, async () =>
             {
-                if (!this.disposed)
+                using (HttpResponseMessage response = await this.ApiClient.DeleteStateAsync(nameof(ServerState), cancellationToken))
                 {
-                    this.process?.Dispose();
-                    this.disposed = true;
+                    relatedContext.AddResponseContext(response);
+                    if (response.StatusCode != HttpStatusCode.NoContent)
+                    {
+                        response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                    }
+                }
+            });
+        }
+
+        private Task KillServerInstancesAsync(CancellationToken cancellationToken)
+        {
+            this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
+            IEnumerable<IProcessProxy> processes = this.ProcessManager.GetProcesses("memcached");
+
+            if (processes?.Any() == true)
+            {
+                foreach (IProcessProxy process in processes)
+                {
+                    process.SafeKill();
                 }
             }
+
+            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
-        private async Task ExecuteServerWorkload(CancellationToken cancellationToken)
+        private bool ResetServer(EventContext telemetryContext)
         {
-            await this.KillProcessesAsync("memcached", cancellationToken);
-
-            for (int i = 0; i < this.ServerCopies; i++)
+            bool shouldReset = true;
+            if (this.serverProcesses?.Any() == true)
             {
-                int port = this.Port + i;
-                string precommand = string.Empty;
-
-                if (this.Bind == 1)
-                {
-                    int core = i;
-                    precommand = $"numactl -C {core}";
-                }
-
-                // https://docs.oracle.com/cd/E17952_01/mysql-5.6-en/ha-memcached-cmdline-options.html#:~:text=Set%20the%20amount%20of%20memory%20allocated%20to%20memcached,amount%20of%20RAM%20to%20be%20allocated%20%28in%20megabytes%29.
-
-                string startservercommand = $"-u {this.Username} bash -c \"{precommand} {this.MemcachedExecutablePath} -d -p {port} -t 4 -m {this.ServerMemoryCacheSizeInMB}\"";
-
-                this.Logger.LogTraceMessage($"Executing process '{startservercommand}'  at directory '{this.MemcachedPackagePath}'.");
-                this.process = this.ProcessManager.CreateElevatedProcess(this.Platform, startservercommand, null, this.MemcachedPackagePath);
-
-                if (!this.process.Start())
-                {
-                    throw new WorkloadException($"The Memcached server did not start as expected.", ErrorReason.WorkloadFailed);
-                }
-
-                await this.WarmUpServer(port, cancellationToken);
-
+                // Depending upon how the server Task instances are created, the Task may be in a status
+                // of Running or WaitingForActivation. The server is running in either of these 2 states.
+                shouldReset = !this.serverProcesses.All(p => p.Status == TaskStatus.Running || p.Status == TaskStatus.WaitingForActivation);
             }
-        }
 
-        private async Task WarmUpServer(int port, CancellationToken cancellationToken)
-        {
-            await this.WaitAsync(TimeSpan.FromSeconds(1), cancellationToken);
-
-            string warmupCommand = 
-                $"-u {this.Username} {this.BenchmarkExecutablePath} --protocol=memcache_text --server localhost --port={port} -c 1 -t 1 " +
-                $"--pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys";
-
-            await this.ExecuteCommandAsync(warmupCommand, null, this.BenchmarkPackagePath, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        private Task SaveServerCopyStateAsync(CancellationToken cancellationToken)
-        {
-            return this.ServerApiClient.UpdateStateAsync(
-                nameof(ServerState),
-                new Item<ServerState>(nameof(ServerState), new ServerState
-                {
-                    ServerCopies = this.ServerCopies
-                }),
-                cancellationToken);
-        }
-
-        /// <summary>
-        /// Deletes the existing states.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events emitted.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        private Task DeleteWorkloadStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return this.Logger.LogMessageAsync($"{nameof(MemcachedServerExecutor)}.ResetState", telemetryContext, async () =>
+            if (shouldReset)
             {
-                HttpResponseMessage response = await this.ServerApiClient.DeleteStateAsync(nameof(ServerState), cancellationToken)
-                    .ConfigureAwait(false);
+                this.Logger.LogTraceMessage($"Restart Memcached Server(s)...", telemetryContext);
+            }
+            else
+            {
+                this.Logger.LogTraceMessage($"Memcached Server(s) Running...", telemetryContext);
+            }
 
-                if (response.StatusCode != HttpStatusCode.NoContent)
+            return shouldReset;
+        }
+
+        private Task SaveStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
+            {
+                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(
+                    nameof(ServerState),
+                    new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
+                    {
+                        [nameof(ServerState.Ports)] = this.Port
+                    })),
+                    cancellationToken))
+                    {
+                        relatedContext.AddResponseContext(response);
+                        if (response.StatusCode != HttpStatusCode.NoContent)
+                        {
+                            response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                        }
+                    }
+            });
+        }
+
+        private void StartServerInstances(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            this.serverProcesses.Clear();
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("port", this.Port)
+                .AddContext("bindToCores", this.BindToCores)
+                .AddContext("serverMemoryCacheSizeInMB", this.ServerMemoryCacheSizeInMB)
+                .AddContext("serverThreadCount", this.ServerThreadCount);
+
+            this.Logger.LogMessage($"{this.TypeName}.StartServerInstances", relatedContext, () =>
+            {
+                try
                 {
-                    response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                    string command = "bash";
+                    string commandArguments = null;
+                    string workingDirectory = this.MemcachedPackagePath;
+
+                    if (this.BindToCores)
+                    {
+                        IEnumerable<int> coreBindings = Enumerable.Range(0, Environment.ProcessorCount);
+
+                        // e.g.
+                        // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/memcached/memcached --port 6389 -t 4 -m 1024
+                        // https://github.com/memcached/memcached/wiki/Commands#flushall
+                        // https://docs.oracle.com/cd/E17952_01/mysql-5.6-en/ha-memcached-cmdline-options.html#:~:text=Set%20the%20amount%20of%20memory%20allocated%20to%20memcached,amount%20of%20RAM%20to%20be%20allocated%20%28in%20megabytes%29.
+
+                        commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine}\"";
+                    }
+                    else
+                    {
+                        commandArguments = $"-c \"{this.MemcachedExecutablePath} {this.CommandLine}\"";
+                    }
+
+                    relatedContext.AddContext("command", command);
+                    relatedContext.AddContext("commandArguments", commandArguments);
+                    relatedContext.AddContext("workingDir", workingDirectory);
+
+                    this.serverProcesses.Add(this.StartServerInstanceAsync(this.Port, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+                }
+            });
+        }
+
+        private Task StartServerInstanceAsync(int serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+            {
+                try
+                {
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, username: this.Username))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            ConsoleLogger.Default.LogMessage($"Memcached server process exited (port = {serverPort})...", telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.StartServerInstanceError",
+                        LogLevel.Error,
+                        telemetryContext.Clone().AddError(exc));
+
+                    throw;
                 }
             });
         }

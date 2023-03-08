@@ -11,13 +11,19 @@ sudo apt install make
 sudo apt install gcc
 sudo apt install libssl-dev
 
-# Compile. In the directory to which the .tar.gz package was extracted.
-./configure
+# Compile. In the directory to which the .tar.gz package was extracted. Note that we need to
+# configure the installation directory so that all of the binaries are consolidated in a single
+# directory when we install. Update the paths appropriately.
+./configure --prefix=/home/user/wget2-2.0.1/install --libdir=/home/user/wget2-2.0.1/install --bindir=/home/user/wget2-2.0.1/install
 make
 sudo make install
 
 # Binary location
-The compiled binary is installed in /usr/local/bin -> wget2
+The compiled binaries will be installed in the path configured as noted above (e.g. /home/user/wget2-2.0.1/install).
+We will need all of the files and folders within this directory. You can zip up the entire directory for copying off
+of the system if needed.
+
+zip -r /home/user/wget2-2.0.1/install/wget2-2.0.1.zip /home/user/wget2-2.0.1/install
 
 
 For Linux-arm64:
@@ -31,10 +37,19 @@ sudo apt install make
 sudo apt install gcc
 sudo apt install libssl-dev
 
-# Compile. In the directory to which the .tar.gz package was extracted.
-./configure
+# Compile. In the directory to which the .tar.gz package was extracted. Note that we need to
+# configure the installation directory so that all of the binaries are consolidated in a single
+# directory when we install. Update the paths appropriately.
+./configure --prefix=/home/user/wget2-2.0.1/install --libdir=/home/user/wget2-2.0.1/install --bindir=/home/user/wget2-2.0.1/install
 make
 sudo make install
 
 # Binary location
 The compiled binary is installed in /usr/local/bin -> wget2
+
+# Binary location
+The compiled binaries will be installed in the path configured as noted above (e.g. /home/user/wget2-2.0.1/install).
+We will need all of the files and folders within this directory. You can zip up the entire directory for copying off
+of the system if needed.
+
+zip -r /home/user/wget2-2.0.1/install/wget2-2.0.1.zip /home/user/wget2-2.0.1/install

@@ -4,6 +4,7 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.CommandLine;
     using System.CommandLine.Builder;
@@ -20,6 +21,8 @@ namespace VirtualClient
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
 
@@ -64,34 +67,48 @@ namespace VirtualClient
 
                 using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
                 {
-                    CancellationToken cancellationToken = cancellationTokenSource.Token;
-                    Console.CancelKeyPress += (sender, e) =>
+                    try
                     {
-                        cancellationTokenSource.Cancel();
-                        e.Cancel = true;
-                    };
-
-                    CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationTokenSource);
-                    ParseResult parseResult = commandBuilder.Build().Parse(args);
-                    parseResult.ThrowOnUsageError();
-
-                    Task<int> executionTask = parseResult.InvokeAsync();
-
-                    // On Windows systems, this is required when running Virtual Client as a service.
-                    // Certain notifications have to be sent to the Windows service control manager (SCM)
-                    // in order to ensure the service is recognized as running.
-                    Task serviceHostTask = Task.Run(() =>
-                    {
-                        if (Program.IsRunningAsService())
+                        CancellationToken cancellationToken = cancellationTokenSource.Token;
+                        Console.CancelKeyPress += (sender, e) =>
                         {
-                            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                            {
-                                Program.RunAsWindowsService(cancellationTokenSource);
-                            }
-                        }
-                    });
+                            cancellationTokenSource.Cancel();
+                            e.Cancel = true;
+                        };
 
-                    exitCode = executionTask.GetAwaiter().GetResult();
+                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationTokenSource);
+                        ParseResult parseResult = commandBuilder.Build().Parse(args);
+                        parseResult.ThrowOnUsageError();
+
+                        Program.InitializeFileLogging(args);
+
+                        Task<int> executionTask = parseResult.InvokeAsync();
+
+                        // On Windows systems, this is required when running Virtual Client as a service.
+                        // Certain notifications have to be sent to the Windows service control manager (SCM)
+                        // in order to ensure the service is recognized as running.
+                        Task serviceHostTask = Task.Run(() =>
+                        {
+                            if (Program.IsRunningAsService())
+                            {
+                                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                                {
+                                    Program.RunAsWindowsService(cancellationTokenSource);
+                                }
+                            }
+                        });
+
+                        exitCode = executionTask.GetAwaiter().GetResult();
+                    }
+                    catch (Exception)
+                    {
+                        // Occasionally some of the workloads throw exceptions right as VC receives a
+                        // cancellation/exit request.
+                        if (!cancellationTokenSource.IsCancellationRequested)
+                        {
+                            throw;
+                        }
+                    }
                 }
             }
             catch (ObjectDisposedException)
@@ -316,7 +333,7 @@ namespace VirtualClient
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
 
-        private static void InitializeStartupLogging(string[] args)
+        private static void InitializeFileLogging(string[] args)
         {
             // Log to file. Instructs the application to log the output of processes
             // to files in the logs directory.
@@ -330,7 +347,10 @@ namespace VirtualClient
                     break;
                 }
             }
+        }
 
+        private static void InitializeStartupLogging(string[] args)
+        {
             List<ILoggerProvider> loggerProviders = new List<ILoggerProvider>();
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace));
 

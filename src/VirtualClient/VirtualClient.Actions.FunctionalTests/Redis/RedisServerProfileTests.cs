@@ -13,12 +13,14 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Fare;
     using Moq;
     using NUnit.Framework;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Functional")]
@@ -87,10 +89,10 @@ namespace VirtualClient.Actions
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
             await apiClient.UpdateStateAsync(
-                "ServerState",
-                new Item<State>("ServerState", new State(new Dictionary<string, IConvertible>
+                nameof(ServerState),
+                new Item<ServerState>("ServerState", new ServerState(new Dictionary<string, IConvertible>
                 {
-                    [nameof(RedisExecutor.ServerCopiesCount)] = 2
+                    [nameof(ServerState.Ports)] = 6379
                 })),
                 CancellationToken.None);
 

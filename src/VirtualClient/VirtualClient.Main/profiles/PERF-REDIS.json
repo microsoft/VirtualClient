@@ -6,234 +6,261 @@
         "SupportedOperatingSystems": "Ubuntu"
     },
     "Parameters": {
-        "ServerPort": 6379
+        "ServerPort": 6379,
+        "ServerThreadCount": 4,
+        "ServerInstances": "{LogicalCoreCount}",
+        "ClientInstances": 1,
+        "Duration": "00:01:00"
     },
     "Actions": [
         {
             "Type": "RedisServerExecutor",
             "Parameters": {
                 "Scenario": "Server",
-                "Role": "Server",
-                "Port": "$.Parameters.ServerPort",
                 "PackageName": "redis",
-                "BenchmarkPackageName": "memtier",
-                "Bind": 1
+                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+                "BindToCores": true,
+                "Port": "$.Parameters.ServerPort",
+                "ServerInstances": "$.Parameters.ServerInstances",
+                "ServerThreadCount": "$.Parameters.ServerThreadCount",
+                "Role": "Server"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_4t_1c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "warmup_32b_pool",
                 "PackageName": "memtier",
-                "ThreadCount": 4,
-                "ClientsPerThread": 1,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern S:S --run-count 1",
+                "ClientInstances": 1,
+                "WarmUp": true,
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_4t_2c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "warmup_1kb_pool",
                 "PackageName": "memtier",
-                "ThreadCount": 4,
-                "ClientsPerThread": 2,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern S:S --run-count 1",
+                "ClientInstances": 1,
+                "WarmUp": true,
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_4t_8c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "warmup_10kb_pool",
                 "PackageName": "memtier",
-                "ThreadCount": 4,
-                "ClientsPerThread": 4,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern S:S --run-count 1",
+                "ClientInstances": 1,
+                "WarmUp": true,
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_4t_16c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "memtier_8t_32c_32b_r1:1",
                 "PackageName": "memtier",
-                "ThreadCount": 4,
-                "ClientsPerThread": 8,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 8 --clients 32  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_16t_1c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "memtier_8t_32c_1kb_r1:1",
                 "PackageName": "memtier",
-                "ThreadCount": 16,
-                "ClientsPerThread": 1,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_16t_2c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "memtier_8t_32c_10kb_r1:1",
                 "PackageName": "memtier",
-                "ThreadCount": 16,
-                "ClientsPerThread": 2,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_16t_4c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "memtier_16t_32c_32b_r1:1",
                 "PackageName": "memtier",
-                "ThreadCount": 16,
-                "ClientsPerThread": 4,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_16t_8c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "memtier_16t_32c_1kb_r1:1",
                 "PackageName": "memtier",
-                "ThreadCount": 16,
-                "ClientsPerThread": 8,
-                "RunCount": 1,
-                "Duration": "00:03:00",
-                "Protocol": "redis",
-                "PipelineDepth": 32
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_16t_32c_10kb_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_32t_32c_32b_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_32t_32c_1kb_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_32t_32c_1kb_r1:10",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_32t_32c_10kb_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_64t_32c_32b_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_64t_32c_1kb_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_64t_32c_1kb_r1:10",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "memtier_64t_32c_10kb_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "RedisBenchmark_10kreq_1c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "redis_100kreq_4c",
                 "PackageName": "redis",
-                "ClientsPerThread": 1,
-                "RequestCount": 10000,
-                "PipelineDepth": 32
+                "CommandLine": "-c 4 -n 100000 -P 4 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "RedisBenchmark_10kreq_2c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "redis_100kreq_8c",
                 "PackageName": "redis",
-                "ClientsPerThread": 2,
-                "RequestCount": 10000,
-                "PipelineDepth": 32
+                "CommandLine": "-c 8 -n 100000 -P 8 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "RedisBenchmark_10kreq_4c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "redis_100kreq_16c",
                 "PackageName": "redis",
-                "ClientsPerThread": 4,
-                "RequestCount": 10000,
-                "PipelineDepth": 32
+                "CommandLine": "-c 16 -n 100000 -P 16 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "RedisBenchmark_10kreq_8c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "redis_100kreq_32c",
                 "PackageName": "redis",
-                "ClientsPerThread": 8,
-                "RequestCount": 10000,
-                "PipelineDepth": 32
+                "CommandLine": "-c 32 -n 100000 -P 32 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "RedisBenchmark_50kreq_1c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
+                "Scenario": "redis_100kreq_64c",
                 "PackageName": "redis",
-                "ClientsPerThread": 1,
-                "RequestCount": 50000,
-                "PipelineDepth": 32
-            }
-        },
-        {
-            "Type": "RedisBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "RedisBenchmark_50kreq_2c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
-                "PackageName": "redis",
-                "ClientsPerThread": 2,
-                "RequestCount": 50000,
-                "PipelineDepth": 32
-            }
-        },
-        {
-            "Type": "RedisBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "RedisBenchmark_50kreq_4c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
-                "PackageName": "redis",
-                "ClientsPerThread": 4,
-                "RequestCount": 50000,
-                "PipelineDepth": 32
-            }
-        },
-        {
-            "Type": "RedisBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "RedisBenchmark_50kreq_8c",
-                "Role": "Client",
-                "Port": "$.Parameters.ServerPort",
-                "PackageName": "redis",
-                "ClientsPerThread": 8,
-                "RequestCount": 50000,
-                "PipelineDepth": 32
+                "CommandLine": "-c 64 -n 100000 -P 64 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         }
     ],
@@ -261,16 +288,18 @@
             "Parameters": {
                 "Scenario": "InstallRedis",
                 "PackageName": "redis",
-                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz"
+                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
+                "SubPath": "redis-6.2.1",
+                "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
             }
         },
         {
-            "Type": "ExecutePackageCommand",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileRedis",
-                "PlatformArchitecture": "linux-x64,linux-arm64",
-                "Command": "./configure&&make",
-                "PackageName": "redis"
+                "Platforms": "linux-x64,linux-arm64",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:redis}"
             }
         },
         {
@@ -282,12 +311,12 @@
             }
         },
         {
-            "Type": "ExecutePackageCommand",
+            "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
-                "PlatformArchitecture": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0&&autoreconf -ivf&&./configure&&make",
-                "PackageName": "memtier"
+                "Platforms": "linux-x64,linux-arm64",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+                "WorkingDirectory": "{PackagePath:memtier}"
             }
         },
         {

@@ -5,9 +5,10 @@ cache, message broker and streaming engine.
 * [Official Redis Documentation](https://redis.io/docs/about/)
 * [Redis Github Repo](https://github.com/redis/redis)
 
-Two of the widely used tools for benchmarking performance of a Redis server include:
-1. [Memtier Benchmarking Tool](https://redis.com/blog/memtier_benchmark-a-high-throughput-benchmarking-tool-for-redis-memcached/)
-2. [Redis Benchmarking Tool](https://redis.io/docs/reference/optimization/benchmarks/)
+Two of the widely used tools for benchmarking performance of a Redis server include the Memtier and Redis benchmarks.
+* [Memtier Benchmarking Tool](https://redis.com/blog/memtier_benchmark-a-high-throughput-benchmarking-tool-for-redis-memcached/)
+* [Memtier Benchmark Repo](https://github.com/RedisLabs/memtier_benchmark)
+* [Redis Benchmarking Tool](https://redis.io/docs/reference/optimization/benchmarks/)
 
 ## What is Being Measured?
 Either the Memtier toolset or Redis benchmark is used to generate various traffic patterns against Redis instances. These toolsets performs GET and SET operations against 

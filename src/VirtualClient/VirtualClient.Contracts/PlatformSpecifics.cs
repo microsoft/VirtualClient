@@ -221,11 +221,11 @@ namespace VirtualClient.Contracts
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    fullPath = this.StandardizePath(string.Join('\\', pathSegments));
+                    fullPath = this.StandardizePath(string.Join('\\', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))));
                     break;
 
                 case PlatformID.Unix:
-                    fullPath = this.StandardizePath(string.Join('/', pathSegments));
+                    fullPath = this.StandardizePath(string.Join('/', pathSegments.Where(p => !string.IsNullOrWhiteSpace(p))));
                     break;
             }
 
@@ -236,10 +236,11 @@ namespace VirtualClient.Contracts
         /// Returns the value of the environment variable as defined for the current process.
         /// </summary>
         /// <param name="variableName">The name of the environment variable.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
         /// <returns>The value of the environment variable</returns>
-        public virtual string GetEnvironmentVariableValue(string variableName)
+        public virtual string GetEnvironmentVariable(string variableName, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
         {
-            return Environment.GetEnvironmentVariable(variableName);
+            return Environment.GetEnvironmentVariable(variableName, target);
         }
 
         /// <summary>
@@ -321,6 +322,42 @@ namespace VirtualClient.Contracts
             return additionalPathSegments?.Any() != true
                 ? this.StateDirectory
                 : this.Combine(this.StateDirectory, this.Combine(additionalPathSegments));
+        }
+
+        /// <summary>
+        /// Sets the value of the environment variable or appends a value to the end of it.
+        /// </summary>
+        /// <param name="name">The name of the environment variable to set.</param>
+        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
+        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
+        public virtual void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
+        {
+            string originalValue = Environment.GetEnvironmentVariable(name, target);
+            string newValue = value ?? string.Empty;
+            bool commitChange = true;
+
+            if (!string.IsNullOrWhiteSpace(originalValue) && append)
+            {
+                commitChange = false;
+                char delimiter = this.Platform == PlatformID.Unix ? ':' : ';';
+
+                originalValue = originalValue?.TrimEnd(delimiter);
+                if (string.IsNullOrWhiteSpace(originalValue))
+                {
+                    commitChange = true;
+                }
+                else if (!originalValue.EndsWith(value))
+                {
+                    commitChange = true;
+                    newValue = $"{originalValue}{delimiter}{newValue}";
+                }
+            }
+
+            if (commitChange)
+            {
+                Environment.SetEnvironmentVariable(name, newValue, target);
+            }
         }
 
         /// <summary>

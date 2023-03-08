@@ -194,6 +194,14 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns the value of the environment variable from the underlying <see cref="PlatformSpecifics"/> instance.
+        /// </summary>
+        public string GetEnvironmentVariable(string name, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
+        {
+            return this.PlatformSpecifics.GetEnvironmentVariable(name, target);
+        }
+
+        /// <summary>
         /// Combines the path segments into a valid log file path.
         /// </summary>
         public string GetLogsPath(params string[] pathSegments)
@@ -215,6 +223,14 @@ namespace VirtualClient
         public string GetProfilesPath(params string[] pathSegments)
         {
             return this.PlatformSpecifics.GetProfilePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Sets the environment variable value in the underlying <see cref="PlatformSpecifics"/> instance.
+        /// </summary>
+        public void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
+        {
+            this.PlatformSpecifics.SetEnvironmentVariable(name, value, target, append);
         }
 
         /// <summary>

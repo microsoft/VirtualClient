@@ -11,8 +11,9 @@ against a baseline. GeekBench is an industry standard benchmarking toolset.
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) 
 
 * **Supported Platform/Architectures**
-  * linux-x64
-  * linux-arm64
+  Note that Geekbench5 runs on linux-arm64 systems; however, it is a preview build that carries a requirement of uploading data to Primate Labs' (Geekbench producer)
+  data systems. We are currently electing to NOT support this in Virtual Client.
+  * linux-x64 
   * win-x64
   * win-arm64
 

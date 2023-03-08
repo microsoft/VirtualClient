@@ -41,6 +41,28 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(@"package.1.0.0.other", ArchiveType.Undefined)]
+        [TestCase(@"package.1.0.0.zip", ArchiveType.Zip)]
+        [TestCase(@"6.2.1.tar", ArchiveType.Tar)]
+        [TestCase(@"6.2.1.tar.gz", ArchiveType.Tgz)]
+        [TestCase(@"6.2.1.tgz", ArchiveType.Tgz)]
+        [TestCase(@"6.2.1.tar.gzip", ArchiveType.Tgz)]
+        [TestCase(@"C:\any\path\to\package.1.0.0.other", ArchiveType.Undefined)]
+        [TestCase(@"C:\any\path\to\package.1.0.0.zip", ArchiveType.Zip)]
+        [TestCase(@"/home/user/vc/content/linux-x64/packages/6.2.1.tar", ArchiveType.Tar)]
+        [TestCase(@"/home/user/vc/content/linux-x64/packages/6.2.1.tar.gz", ArchiveType.Tgz)]
+        [TestCase(@"/home/user/vccontent/linux-x64/packages/6.2.1.tgz", ArchiveType.Tgz)]
+        [TestCase(@"/home/user/vccontent/linux-x64/packages/6.2.1.tar.gzip", ArchiveType.Tgz)]
+        public void TryGetArchiveFileTypeExtensionCorrectlyIdentifiesTheArchiveType(string archivePath, ArchiveType expectedArchiveType)
+        {
+            Assert.AreEqual(
+                expectedArchiveType == ArchiveType.Undefined ? false : true,
+                PackageManager.TryGetArchiveFileType(archivePath, out ArchiveType actualArchiveType));
+
+            Assert.AreEqual(expectedArchiveType, actualArchiveType);
+        }
+
+        [Test]
         public async Task PackageManagerDiscoversExtensionsThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";

@@ -182,7 +182,7 @@ namespace VirtualClient.Dependencies
                     .ConfigureAwait(false);
 
                 string visualStudioCRuntimeDllPath = this.PlatformSpecifics.ToPlatformSpecificPath(visualStudioCRuntimePackage, this.Platform, this.CpuArchitecture).Path;
-                this.systemManagement.AddToPathEnvironmentVariable(visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine);
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, powerShellExe, command))
                 {

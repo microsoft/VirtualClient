@@ -7,7 +7,6 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.CommandLine.Builder;
     using System.CommandLine.Parsing;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -24,9 +23,6 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class ExecuteCommand : VirtualClientComponent
     {
-        private ProcessManager processManager;
-        private ISystemManagement systemManagement;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="WgetPackageInstallation"/> class.
         /// </summary>
@@ -35,8 +31,6 @@ namespace VirtualClient.Dependencies
         public ExecuteCommand(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.systemManagement = dependencies.GetService<ISystemManagement>();
-            this.processManager = this.systemManagement.ProcessManager;
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
         }
 
@@ -56,17 +50,14 @@ namespace VirtualClient.Dependencies
         /// Parameter describes the platform/architectures on which the command will be 
         /// executed. If not defined, the command will be executed on any platform architecture.
         /// </summary>
-        public IEnumerable<string> PlatformArchitectures
+        public IEnumerable<string> Platforms
         {
             get
             {
                 List<string> platformArchitectures = new List<string>();
                 IConvertible value = null;
 
-                if (!this.Parameters.TryGetValue("PlatformArchitecture", out value))
-                {
-                    this.Parameters.TryGetValue(nameof(this.PlatformArchitectures), out value);
-                }
+                this.Parameters.TryGetValue(nameof(this.Platforms), out value);
 
                 if (value != null)
                 {
@@ -156,7 +147,7 @@ namespace VirtualClient.Dependencies
         {
             telemetryContext.AddContext("command", this.Command);
             telemetryContext.AddContext("workingDirectory", this.WorkingDirectory);
-            telemetryContext.AddContext("platformArchitecture", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.PlatformArchitectures));
+            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.Platforms));
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -187,6 +178,14 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Initializes the component for execution.
+        /// </summary>
+        protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            return this.EvaluateParametersAsync(cancellationToken);
+        }
+
+        /// <summary>
         /// Returns true/false whether the component is supported on the system.
         /// </summary>
         protected override bool IsSupported()
@@ -196,7 +195,7 @@ namespace VirtualClient.Dependencies
             {
                 // We execute only if the current platform/architecture matches those
                 // defined in the parameters.
-                if (!this.PlatformArchitectures.Any() || this.PlatformArchitectures.Contains(this.PlatformArchitectureName))
+                if (!this.Platforms.Any() || this.Platforms.Contains(this.PlatformArchitectureName))
                 {
                     isSupported = true;
                 }

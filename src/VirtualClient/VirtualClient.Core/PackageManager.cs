@@ -57,7 +57,7 @@ namespace VirtualClient
         private static IDictionary<string, ArchiveType> archiveFileTypeMappings = new Dictionary<string, ArchiveType>(StringComparer.OrdinalIgnoreCase)
         {
             { ".zip", ArchiveType.Zip },
-            { ".tar.gz", ArchiveType.Zip },
+            { ".tar.gz", ArchiveType.Tgz },
             { ".tgz", ArchiveType.Tgz },
             { ".tar.gzip", ArchiveType.Tgz },
             { ".tar", ArchiveType.Tar }
@@ -193,7 +193,7 @@ namespace VirtualClient
                 this.PlatformSpecifics.PackagesDirectory
             };
 
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariableValue(PackageManager.UserDefinedPackageLocationVariable);
+            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
             if (!string.IsNullOrWhiteSpace(userDefinedPath))
             {
                 packageDirectories.Add(userDefinedPath);
@@ -263,7 +263,7 @@ namespace VirtualClient
             List<string> packageDirectories = new List<string>();
             packageDirectories.Add(this.PlatformSpecifics.PackagesDirectory);
 
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariableValue(PackageManager.UserDefinedPackageLocationVariable);
+            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
             if (!string.IsNullOrWhiteSpace(userDefinedPath))
             {
                 packageDirectories.Add(userDefinedPath);
@@ -404,7 +404,7 @@ namespace VirtualClient
             List<string> packageDirectories = new List<string>();
             packageDirectories.Add(this.PlatformSpecifics.PackagesDirectory);
 
-            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariableValue(PackageManager.UserDefinedPackageLocationVariable);
+            string userDefinedPath = this.PlatformSpecifics.GetEnvironmentVariable(PackageManager.UserDefinedPackageLocationVariable);
             if (!string.IsNullOrWhiteSpace(userDefinedPath))
             {
                 packageDirectories.Add(userDefinedPath);
@@ -856,6 +856,8 @@ namespace VirtualClient
             // To extract a .tar file, we use -xzf
             // To extract a .tar.gz, .tgz or .tar.gzip file, we use -xzvf
             string arguments = archiveFilepath.EndsWith(".tar") ? "-xzf" : "-xzvf";
+
+            Console.WriteLine($"Extract Command: tar {arguments} {archiveFilepath} -C {destinationPath}");
 
             // -x: extract -z: pass through gzip before un-tarring -f archive file -C destination
             using (IProcessProxy process = manager.CreateProcess("tar", $"{arguments} {archiveFilepath} -C {destinationPath}"))

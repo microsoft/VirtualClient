@@ -237,9 +237,6 @@ namespace VirtualClient.Monitors
                             }
                             catch
                             {
-                                // We cannot log the process details here. The output is too large. We will log on errors
-                                // though.
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Atop");
                                 throw;
                             }
                         }

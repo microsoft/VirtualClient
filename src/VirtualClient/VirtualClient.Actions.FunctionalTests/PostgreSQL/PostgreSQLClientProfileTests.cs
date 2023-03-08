@@ -145,7 +145,12 @@ namespace VirtualClient.Actions
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
             PostgreSQLServerState expectedState = new PostgreSQLServerState
             {
-                DatabaseCreated = true
+                DatabaseCreated = true,
+                InitialSetupComplete = true,
+                UserName = "anyUser",
+                Password = "anyValue",
+                NumOfVirtualUsers = 100,
+                WarehouseCount = 100
             };
 
             apiClient.CreateStateAsync(nameof(PostgreSQLServerState), expectedState, CancellationToken.None)
@@ -161,10 +166,6 @@ namespace VirtualClient.Actions
                 switch (stateId)
                 {
                     case nameof(PostgreSQLServerState):
-                        stateItem = new Item<JObject>(stateId, JObject.FromObject(expectedState));
-                        break;
-
-                    case nameof(PostgreSQLParameters):
                         stateItem = new Item<JObject>(stateId, JObject.FromObject(expectedState));
                         break;
                 }

@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -19,7 +18,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.PostgreSQLExecutor;
 
     /// <summary>
     /// MemcachedMemtier workload executor
@@ -27,11 +25,7 @@ namespace VirtualClient.Actions
     [UnixCompatible]
     public class MemcachedExecutor : VirtualClientComponent
     {
-        /// <summary>
-        /// The property name used by the server-side executor to define the number
-        /// of Memcached server copies to run.
-        /// </summary>
-        internal const string ServerCopiesCount = nameof(ServerCopiesCount);
+        private bool parametersEvaluated;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExampleClientServerExecutor"/> class.
@@ -58,7 +52,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The user who has the ssh identity registered for.
+        /// Parameter defines the username to use for running both the Memcached server
+        /// as well as the Memtier workload.
         /// </summary>
         public string Username
         {
@@ -67,18 +62,19 @@ namespace VirtualClient.Actions
                 this.Parameters.TryGetValue(nameof(this.Username), out IConvertible username);
                 return username?.ToString();
             }
+
+            private set
+            {
+                this.Parameters[nameof(this.Username)] = value;
+            }
         }
 
         /// <summary>
-        /// Port on which server runs.
+        /// The Memtier benchmark will return an exit code of 130 when it is interupted while
+        /// trying to write to standard output. This happens when Ctrl-C is used for example.
+        /// We handle this error for this reason.
         /// </summary>
-        public int Port
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.Port));
-            }
-        }
+        protected static IEnumerable<int> SuccessExitCodes { get; } = new List<int>(ProcessProxy.DefaultSuccessCodes) { 130 };
 
         /// <summary>
         /// Provides the ability to create API clients for interacting with local as well as remote instances
@@ -131,11 +127,56 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Executes the commands.
+        /// </summary>
+        /// <param name="command">The command to run.</param>
+        /// <param name="arguments">The command line arguments to supply to the command.</param>
+        /// <param name="workingDir">The working directory for the command.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="successCodes">Alternative exit codes to use to represent successful process exit.</param>
+        protected async Task ExecuteCommandAsync(string command, string arguments, string workingDir, CancellationToken cancellationToken, IEnumerable<int> successCodes = null)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                this.Logger.LogTraceMessage($"Executing process '{command}' '{arguments}' at directory '{workingDir}'.");
+
+                EventContext telemetryContext = EventContext.Persisted()
+                    .AddContext("packagePath", workingDir)
+                    .AddContext("command", command)
+                    .AddContext("commandArguments", arguments);
+
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
+                {
+                    using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDir))
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+
+                            process.ThrowIfErrored<WorkloadException>(
+                                successCodes ?? ProcessProxy.DefaultSuccessCodes,
+                                errorReason: ErrorReason.WorkloadFailed);
+                        }
+                    }
+                }).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
         /// Initializes the environment and dependencies for running the Memcached Memtier workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.ValidatePlatformSupportAsync(cancellationToken);
+
+            if (!this.parametersEvaluated)
+            {
+                await this.EvaluateParametersAsync(cancellationToken);
+                this.parametersEvaluated = true;
+            }
 
             if (this.IsMultiRoleLayout())
             {
@@ -144,6 +185,19 @@ namespace VirtualClient.Actions
 
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
+            }
+
+            if (string.IsNullOrWhiteSpace(this.Username))
+            {
+                // Memcached will NOT allow the server to run as "root". If we are running
+                // with "sudo" here, we will get the sudo user instead. Otherwise, we get the
+                // logged in user by default.
+                this.Username = this.GetCurrentUserName();
+                if (string.Equals(this.Username, "root", StringComparison.Ordinal))
+                {
+                    this.Username = this.GetCurrentUserName(nonSudo: true);
+                    this.Logger.LogTraceMessage($"Memcached cannot be ran with root privileges. Running Memcached as non-sudo user '{this.Username}'");
+                }
             }
         }
 
@@ -166,99 +220,6 @@ namespace VirtualClient.Actions
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
             }
-        }
-
-        /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="command">The command to run.</param>
-        /// <param name="arguments">The command line arguments to supply to the command.</param>
-        /// <param name="workingDir">The working directory for the command.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns></returns>
-        protected async Task ExecuteCommandAsync(string command, string arguments, string workingDir, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{command}' '{arguments}' at directory '{workingDir}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("packageName", this.PackageName)
-                    .AddContext("packagePath", workingDir)
-                    .AddContext("command", command)
-                    .AddContext("commandArguments", arguments);
-
-                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDir))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait(false);
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
-        /// Gets all the processes running with the given name.
-        /// </summary>
-        /// <param name="processName">Name of the process.</param>
-        /// <returns>List of processes with the given name.</returns>
-        protected static IEnumerable<IProcessProxy> GetRunningProcessByName(string processName)
-        {
-            IEnumerable<IProcessProxy> processProxyList = null;
-            var processlist = Process.GetProcesses();
-            foreach (Process process in processlist)
-            {
-                if (process.ProcessName.Contains(processName))
-                {
-                    Process[] processesByName = Process.GetProcessesByName(process.ProcessName);
-                    if (processesByName?.Any() ?? false)
-                    {
-                        if (processProxyList == null)
-                        {
-                            processProxyList = processesByName.Select((Process process) => new ProcessProxy(process));
-                        }
-                        else
-                        {
-                            foreach (Process proxy in processesByName)
-                            {
-                                _ = processProxyList.Append(new ProcessProxy(proxy));
-                            }
-                        }
-                    }
-                }
-            }
-
-            return processProxyList;
-        }
-
-        /// <summary>
-        /// Kills the processes running with the given name.
-        /// </summary>
-        /// <param name="processName">The name of the process required to be killed.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected Task KillProcessesAsync(string processName, CancellationToken cancellationToken)
-        {
-            IEnumerable<IProcessProxy> processProxyList = GetRunningProcessByName(processName);
-            if (processProxyList != null)
-            {
-                foreach (IProcessProxy process in processProxyList)
-                {
-                    Console.WriteLine("Killing process {0} with id {1}", process.Name, process.Id);
-                    process.SafeKill();
-                }
-            }
-
-            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
         private async Task ValidatePlatformSupportAsync(CancellationToken cancellationToken)
@@ -302,12 +263,6 @@ namespace VirtualClient.Actions
 
         internal class ServerState : State
         {
-            public ServerState()
-                : base()
-            {
-                this.ServerCopies = 1;
-            }
-
             [JsonConstructor]
             public ServerState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
@@ -315,18 +270,14 @@ namespace VirtualClient.Actions
             }
 
             /// <summary>
-            /// The number of copies/instances of the Memcached server to run simultaneously.
+            /// The set of ports on which the Memcached servers are running.
             /// </summary>
-            public int ServerCopies
+            public IEnumerable<int> Ports
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(this.ServerCopies));
-                }
-
-                set
-                {
-                    this[nameof(this.ServerCopies)] = value;
+                    this.Properties.TryGetValue(nameof(this.Ports), out IConvertible ports);
+                    return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
                 }
             }
         }

@@ -90,12 +90,34 @@ namespace VirtualClient
         /// <summary>
         /// Returns the value of the environment variable in the test 'EnvironmentVariables' set.
         /// </summary>
-        /// <param name="variableName">The name of the environment variable.</param>
+        /// <param name="name">The name of the environment variable.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
         /// <returns>The value of the environment variable</returns>
-        public override string GetEnvironmentVariableValue(string variableName)
+        public override string GetEnvironmentVariable(string name, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
         {
-            this.EnvironmentVariables.TryGetValue(variableName, out string value);
+            this.EnvironmentVariables.TryGetValue(name, out string value);
             return value;
+        }
+
+        /// <summary>
+        /// Sets the value of the environment variable in the test 'EnvironmentVariables' set.
+        /// </summary>
+        /// <param name="name">The name of the environment variable to set.</param>
+        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
+        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
+        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
+        public override void SetEnvironmentVariable(string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
+        {
+            if (!append)
+            {
+                this.EnvironmentVariables[name] = value;
+            }
+            else
+            {
+                char delimiter = this.Platform == PlatformID.Unix ? ':' : ';';
+                this.EnvironmentVariables.TryGetValue(name, out string existingValue);
+                this.EnvironmentVariables[name] = string.IsNullOrWhiteSpace(existingValue) ? value : $"{existingValue}{delimiter}{value}";
+            }
         }
     }
 }

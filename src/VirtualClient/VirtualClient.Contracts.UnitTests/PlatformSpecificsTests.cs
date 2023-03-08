@@ -300,6 +300,22 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        [TestCase("\r\n")]
+        public void PlatformSpecificsHandlesPathSegmentsThatAreNothingButWhitespaceOnWindowsSystems(string emptyPathSegment)
+        {
+            string[] pathSegments = new string[] { @"C:\", "any", "path", "on", "the", "system", emptyPathSegment };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+
+            string expectedPath = @"C:\any\path\on\the\system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
         public void PlatformSpecificsHandlesExtraneousPathDelimitersOnUnixSystems()
         {
             string[] pathSegments = new string[] { "/home/", "any//", "///path", "on", "/the/", "//system" };
@@ -317,7 +333,7 @@ namespace VirtualClient.Contracts
             string[] pathSegments = new string[] { "/home/", "any//", "//path", "on", @"\the/", @"\\\\system" };
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
 
-            string expectedPath = @"/home/any/path/on/the/system";
+            string expectedPath = "/home/any/path/on/the/system";
             string actualPath = platformSpecifics.Combine(pathSegments);
 
             Assert.AreEqual(expectedPath, actualPath);
@@ -330,6 +346,311 @@ namespace VirtualClient.Contracts
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
 
             string actualPath = platformSpecifics.Combine(pathSegments);
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        [TestCase("\n")]
+        public void PlatformSpecificsHandlesPathSegmentsThatAreNothingButWhitespaceOnUnixSystems(string emptyPathSegment)
+        {
+            string[] pathSegments = new string[] { "/home", "any", "path", "on", "the", "system", emptyPathSegment };
+            PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+
+            string expectedPath = "/home/any/path/on/the/system";
+            string actualPath = platformSpecifics.Combine(pathSegments);
+
+            Assert.AreEqual(expectedPath, actualPath);
+        }
+
+        [Test]
+        public void PlatformSpecificsSetsEnvironmentVariablesToExpectedValues_WindowsSystems()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_1";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // Set initial value
+                Environment.SetEnvironmentVariable(environmentVariableName, "InitialValue", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_WindowsSystems_1()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_2";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // Set initial value
+                Environment.SetEnvironmentVariable(environmentVariableName, "InitialValue1;InitialValue2", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1;InitialValue2;{expectedValue}", actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_WindowsSystems_2()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_3";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // No value set in the environment variable. The append should work like a direct
+                // set in this case.
+                Environment.SetEnvironmentVariable(environmentVariableName, "", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_WindowsSystems_3()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_4";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // The value set is just a delimiter.  The append should work like a direct
+                // set in this case. 
+                Environment.SetEnvironmentVariable(environmentVariableName, ";", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsDoesNotAppendDuplicateValuesToEnvironmentVariables_WindowsSystems()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_5";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // 1) Initial value already contains the expected value.
+                Environment.SetEnvironmentVariable(environmentVariableName, $"InitialValue1;InitialValue2;{expectedValue}", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1;InitialValue2;{expectedValue}", actualValue);
+
+                // 2) Initial value already contains the expected value but with a trailing delimiter
+                Environment.SetEnvironmentVariable(environmentVariableName, $"InitialValue1;InitialValue2;{expectedValue};", target);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1;InitialValue2;{expectedValue};", actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+
+        [Test]
+        public void PlatformSpecificsSetsEnvironmentVariablesToExpectedValues_UnixSystems()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_UNIX_1";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // Set initial value
+                Environment.SetEnvironmentVariable(environmentVariableName, "InitialValue", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_UnixSystems_1()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_UNIX_2";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // Set initial value
+                Environment.SetEnvironmentVariable(environmentVariableName, "InitialValue1:InitialValue2", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1:InitialValue2:{expectedValue}", actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_UnixSystems_2()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_UNIX_3";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // No value set in the environment variable. The append should work like a direct
+                // set in this case.
+                Environment.SetEnvironmentVariable(environmentVariableName, "", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsAppendsValuesToEnvironmentVariablesAsExpected_UnixSystems_3()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_UNIX_4";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // The value set is just a delimiter.  The append should work like a direct
+                // set in this case. 
+                Environment.SetEnvironmentVariable(environmentVariableName, ":", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual(expectedValue, actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
+        }
+
+        [Test]
+        public void PlatformSpecificsDoesNotAppendDuplicateValuesToEnvironmentVariables_UnixSystems()
+        {
+            string environmentVariableName = "VC_SYSTEM_MANAGEMENT_TEST_UNIX_5";
+            EnvironmentVariableTarget target = EnvironmentVariableTarget.Process;
+
+            try
+            {
+                string expectedValue = Guid.NewGuid().ToString();
+
+                // 1) Initial value already contains the expected value.
+                Environment.SetEnvironmentVariable(environmentVariableName, $"InitialValue1:InitialValue2:{expectedValue}", target);
+
+                // Change initial value
+                PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Unix, Architecture.X64);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                string actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1:InitialValue2:{expectedValue}", actualValue);
+
+                // 2) Initial value already contains the expected value but with a trailing delimiter
+                Environment.SetEnvironmentVariable(environmentVariableName, $"InitialValue1:InitialValue2:{expectedValue}:", target);
+                platformSpecifics.SetEnvironmentVariable(environmentVariableName, expectedValue, target, append: true);
+
+                actualValue = Environment.GetEnvironmentVariable(environmentVariableName, target);
+                Assert.AreEqual($"InitialValue1:InitialValue2:{expectedValue}:", actualValue);
+            }
+            finally
+            {
+                // Remove the environment variable.
+                Environment.SetEnvironmentVariable(environmentVariableName, null, target);
+            }
         }
 
         // Used to expose the ability to define the 'current directory' for the purposes of

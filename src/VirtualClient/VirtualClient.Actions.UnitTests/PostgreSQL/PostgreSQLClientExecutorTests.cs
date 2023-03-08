@@ -220,7 +220,7 @@ namespace VirtualClient.Actions
             this.SetupDefaults();
 
             this.mockFixture.ApiClient
-                .OnGetState(nameof(PostgreSQLParameters))
+                .OnGetState(nameof(PostgreSQLServerState))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
 
             using (var executor = new TestPostgreSQLClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))

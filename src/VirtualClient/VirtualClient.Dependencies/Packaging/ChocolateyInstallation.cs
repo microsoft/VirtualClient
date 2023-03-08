@@ -71,16 +71,14 @@ namespace VirtualClient.Dependencies
                 }
 
                 // It will install to "%programdata%\chocolatey\bin\choco.exe"
-                string programDataPath = this.PlatformSpecifics.GetEnvironmentVariableValue("ProgramData");
+                string programDataPath = this.PlatformSpecifics.GetEnvironmentVariable("ProgramData");
                 DependencyPath package = new DependencyPath(this.PackageName, this.Combine(programDataPath, "chocolatey", "bin"));
 
                 await systemManagement.PackageManager.RegisterPackageAsync(package, cancellationToken)
                     .ConfigureAwait(false);
 
-                systemManagement.AddToPathEnvironmentVariable(this.Combine(programDataPath, "chocolatey", "bin"));
-
-                await systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(programDataPath, "chocolatey", "bin"), append: true);
+                await this.RefreshEnvironmentVariablesAsync(cancellationToken);
             }
         }
     }
