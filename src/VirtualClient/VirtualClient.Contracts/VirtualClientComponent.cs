@@ -428,7 +428,7 @@ namespace VirtualClient.Contracts
 
                         await this.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                         await this.ExecuteAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                        succeeded = true
+                        succeeded = true;
                     }
                     catch (OperationCanceledException)
                     {
