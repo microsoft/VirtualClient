@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     /// The HPL(High Performance Linpack) workload executor.
     /// </summary>
     [UnixCompatible]
-    public class HPLExecutor : VirtualClientComponent
+    public class HPLinpackExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
@@ -35,11 +35,11 @@ namespace VirtualClient.Actions
         private IPackageManager packageManager;
 
         /// <summary>
-        /// Constructor for <see cref="HPLExecutor"/>
+        /// Constructor for <see cref="HPLinpackExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public HPLExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public HPLinpackExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLExecutor.N), out IConvertible n);
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.N), out IConvertible n);
                 return n?.ToString();
             }
 
@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLExecutor.NB), out IConvertible nb);
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.NB), out IConvertible nb);
                 return nb?.ToString();
             }
 
@@ -89,7 +89,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLExecutor.ARMPerformanceLibrariesPackageName), "arm_performance_libraries");
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.ARMPerformanceLibrariesPackageName), out IConvertible armperformancelibraries);
+                return armperformancelibraries?.ToString();
             }
         }
 
@@ -100,7 +101,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLExecutor.HPLVersion), out IConvertible hplversion);
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.HPLVersion), out IConvertible hplversion);
                 return hplversion?.ToString();
             }
         }
@@ -136,9 +137,9 @@ namespace VirtualClient.Actions
 
                 await this.ExecuteElevatedCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken);
             }
-            
-            HPLState state = await this.stateManager.GetStateAsync<HPLState>($"{nameof(HPLState)}", cancellationToken)
-                ?? new HPLState();
+
+            HPLinpackState state = await this.stateManager.GetStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", cancellationToken)
+                ?? new HPLinpackState();
 
             if (!state.HPLInitialized)
             {
@@ -149,7 +150,7 @@ namespace VirtualClient.Actions
             }
 
             this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.HPLVersion}");
-            await this.stateManager.SaveStateAsync<HPLState>($"{nameof(HPLState)}", state, cancellationToken);
+            await this.stateManager.SaveStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", state, cancellationToken);
 
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "Make.Linux_GCC"))
                 .ConfigureAwait(false);
@@ -344,7 +345,7 @@ namespace VirtualClient.Actions
                 .AddContext("executable", pathToExe)
                 .AddContext("commandArguments", commandLineArguments);
 
-                await this.Logger.LogMessageAsync($"{nameof(HPLExecutor)}.ExecuteWorkload", relatedContext, async () =>
+                await this.Logger.LogMessageAsync($"{nameof(HPLinpackExecutor)}.ExecuteWorkload", relatedContext, async () =>
                 {
                     DateTime start = DateTime.Now;
 
@@ -355,7 +356,7 @@ namespace VirtualClient.Actions
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<HPLExecutor>(process, telemetryContext);
+                            this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
                             process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         }
 
@@ -380,7 +381,7 @@ namespace VirtualClient.Actions
                     .AddContext("command", pathToExe)
                     .AddContext("commandArguments", commandLineArguments);
 
-                await this.Logger.LogMessageAsync($"{nameof(HPLExecutor)}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{nameof(HPLinpackExecutor)}.ExecuteProcess", telemetryContext, async () =>
                 {
                     DateTime start = DateTime.Now;
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
@@ -390,7 +391,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<HPLExecutor>(process, telemetryContext);
+                            this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
                             process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         }
 
@@ -406,13 +407,13 @@ namespace VirtualClient.Actions
 
         private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            HPLMetricsParser parser = new HPLMetricsParser(results);
+            HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
             IList<Metric> metrics = parser.Parse();
 
             foreach (Metric result in metrics)
             {
                 this.Logger.LogMetrics(
-                    "HPL",
+                    "HPLinpack",
                     this.Scenario,
                     startTime,
                     endTime,
@@ -427,9 +428,9 @@ namespace VirtualClient.Actions
             }
         }
 
-        internal class HPLState : State
+        internal class HPLinpackState : State
         {
-            public HPLState(IDictionary<string, IConvertible> properties = null)
+            public HPLinpackState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
             {
             }
@@ -438,12 +439,12 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(HPLState.HPLInitialized), false);
+                    return this.Properties.GetValue<bool>(nameof(HPLinpackState.HPLInitialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(HPLState.HPLInitialized)] = value;
+                    this.Properties[nameof(HPLinpackState.HPLInitialized)] = value;
                 }
             }
         }

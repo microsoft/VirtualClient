@@ -145,7 +145,7 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-HPCG.json" Link="Profiles\PERF-CPU-HPCG.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-HPL.json" Link="Profiles\PERF-CPU-HPL.json">
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-HPLINPACK.json" Link="Profiles\PERF-CPU-HPLINPACK.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-LAPACK.json" Link="Profiles\PERF-CPU-LAPACK.json">

@@ -1,17 +1,20 @@
 {
   "Description": "High Performance Linkpack Performance workload",
-  "Parameters": {
-    "AccountKey": "[secret:commandline]=StorageAccountKey"
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:01:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64",
+    "SupportedOperatingSystems": "Ubuntu"
   },
   "Actions": [
     {
-      "Type": "HPLExecutor",
+      "Type": "HPLinpackExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "PackageName": "HPL",
         "N": null,
         "NB": "384",
-        "HPLVersion": "2.3"
+        "HPLVersion": "2.3",
+        "ARMPerformanceLibrariesPackageName": "arm_performance_libraries"
       }
     }
   ],

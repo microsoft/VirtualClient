@@ -15,7 +15,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Functional")]
-    public class HPLProfileTests
+    public class HPLinpackProfileTests
     {
         private DependencyFixture mockFixture;
 
@@ -27,8 +27,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-CPU-HPL.json")]
-        public void HPLWorkloadProfileParametersAreInlinedCorrectly(string profile)
+        [TestCase("PERF-CPU-HPLINPACK.json")]
+        public void HPLinpackWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
@@ -38,8 +38,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-CPU-HPL.json")]
-        public async Task HPLWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
+        [TestCase("PERF-CPU-HPLINPACK.json")]
+        public async Task HPLinpackWorkloadProfileInstallsTheExpectedDependenciesOnUnixPlatform(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
 
@@ -62,8 +62,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-CPU-HPL.json")]
-        public async Task HPLWorkloadProfileExecutesTheExpectedWorkloadsOnUnixX64Platform(string profile)
+        [TestCase("PERF-CPU-HPLINPACK.json")]
+        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixX64Platform(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
@@ -119,8 +119,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-CPU-HPL.json")]
-        public async Task HPLWorkloadProfileExecutesTheExpectedWorkloadsOnUnixArm64Platform(string profile)
+        [TestCase("PERF-CPU-HPLINPACK.json")]
+        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixArm64Platform(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.

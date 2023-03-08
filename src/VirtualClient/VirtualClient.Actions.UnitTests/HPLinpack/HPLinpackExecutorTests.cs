@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class HPLExecutorTests
+    public class HPLinpackExecutorTests
     {
         private MockFixture fixture;
         private DependencyPath mockPath;
@@ -165,7 +165,7 @@ namespace VirtualClient.Actions
             this.currentDirectoryPath = new DependencyPath("HPL", currentDirectory);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\HPL\HPLResults.txt");
+            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\HPLinpack\HPLResults.txt");
             this.rawString = File.ReadAllText(resultsPath);
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>()))
                 .Returns(this.rawString);
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
             };
         }
 
-        private class TestHPLExecutor : HPLExecutor
+        private class TestHPLExecutor : HPLinpackExecutor
         {
             public TestHPLExecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
