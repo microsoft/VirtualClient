@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common.Telemetry;
+    using System.CodeDom.Compiler;
 
     [TestFixture]
     [Category("Unit")]
@@ -54,9 +55,9 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 string workloadExpectedPath = this.fixture.PlatformSpecifics.Combine(
-                    this.fixture.PlatformSpecifics.GetPackagePath(), $"hpl-{this.fixture.Parameters["HPLVersion"]}");
+                    this.fixture.PlatformSpecifics.GetPackagePath(), $"hpl-{this.fixture.Parameters["Version"]}");
 
-                Assert.AreEqual(workloadExpectedPath, executor.HPLDirectory);
+                Assert.AreEqual(workloadExpectedPath, executor.GetHPLDirectory);
             }
         }
 
@@ -65,27 +66,26 @@ namespace VirtualClient.Actions
         public async Task HPLExecutorExecutesWorkloadAsExpectedOnUbuntuArmPlatform(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            List<string> expectedCommandsOnLinuxarm64 = new List<string>()
-            {
-                $"sudo ./arm-performance-libraries_22.1_Ubuntu-20.04.sh -a",
-                $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["HPLVersion"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
-                $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
-                $"sudo bash -c \"source make_generic\"",
-                $"make arch=Linux_GCC",
-                $"sudo runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl"
-            };
+            
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
             {
-                int executedArmCommands = 0;
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path,"arm-performance-libraries_22.1_Ubuntu-20.04.sh")}",
+                    $"sudo ./arm-performance-libraries_22.1_Ubuntu-20.04.sh -a",
+                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["Version"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
+                    $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
+                    $"sudo bash -c \"source make_generic\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"make arch=Linux_GCC",
+                    $"sudo runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl"
+                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
-                    if (expectedCommandsOnLinuxarm64.Any(c => c == $"{command} {arguments}"))
-                    {
-                        executedArmCommands++;
-                    }
-
+                    expectedCommands.Remove(expectedCommands[0]);
                     if (arguments == $"runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
@@ -97,7 +97,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(6, executedArmCommands);
+                Assert.AreEqual(expectedCommands.Count, 0);
             }
         }
 
@@ -107,25 +107,22 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
-            List<string> expectedCommandsOnLinuxx64 = new List<string>()
-            {
-                $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["HPLVersion"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
-                $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
-                $"sudo bash -c \"source make_generic\"",
-                $"make arch=Linux_GCC",
-                $"sudo runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
-            };
-
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
             {
-                int executedX64Commands = 0;
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["Version"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
+                    $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
+                    $"sudo bash -c \"source make_generic\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"make arch=Linux_GCC",
+                    $"sudo runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
-                    if (expectedCommandsOnLinuxx64.Any(c => c == $"{command} {arguments}"))
-                    {
-                        executedX64Commands++;
-                    }
+                    expectedCommands.Remove(expectedCommands[0]);
                     if (arguments == $"runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
@@ -136,7 +133,7 @@ namespace VirtualClient.Actions
                 await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                Assert.AreEqual(5, executedX64Commands);
+                Assert.AreEqual(expectedCommands.Count, 0);
             }
         }
 
@@ -178,7 +175,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["PackageName"] = "HPL",
-                ["HPLVersion"] = "2.3",
+                ["Version"] = "2.3",
                 ["N"] = "20000",
                 ["NB"] = "256",
                 ["Scenario"] = "ProcessorSpeed"
@@ -192,11 +189,6 @@ namespace VirtualClient.Actions
             {
             }
 
-            public TestHPLExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
-                : base(dependencies, parameters)
-            {
-            }
-
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
                 return base.InitializeAsync(telemetryContext, cancellationToken);
@@ -207,6 +199,8 @@ namespace VirtualClient.Actions
                 this.InitializeAsync(context, cancellationToken).GetAwaiter().GetResult();
                 return base.ExecuteAsync(context, cancellationToken);
             }
+
+            public string GetHPLDirectory => base.HPLDirectory;
         }
     }
 }

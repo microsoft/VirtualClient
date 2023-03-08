@@ -4,6 +4,7 @@
 namespace VirtualClient.Actions
 {
     using System;
+    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Linq;
     using System.Runtime.InteropServices;
@@ -71,7 +72,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
             this.mockFixture.Parameters.Add("PackageName", "HPL");
-            this.mockFixture.Parameters.Add("HPLVersion", "2.3");
+            this.mockFixture.Parameters.Add("Version", "2.3");
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
@@ -128,7 +129,7 @@ namespace VirtualClient.Actions
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.Arm64);
             this.mockFixture.Parameters.Add("PackageName", "HPL");
-            this.mockFixture.Parameters.Add("HPLVersion", "2.3");
+            this.mockFixture.Parameters.Add("Version", "2.3");
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
@@ -182,7 +183,7 @@ namespace VirtualClient.Actions
             {
                 return new List<string>
                 {
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["HPLVersion"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
+                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["Version"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
@@ -194,7 +195,7 @@ namespace VirtualClient.Actions
                 return new List<string>
                 {
                     $"sudo ./arm-performance-libraries_22.1_Ubuntu-20.04.sh -a",
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["HPLVersion"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
+                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["Version"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",

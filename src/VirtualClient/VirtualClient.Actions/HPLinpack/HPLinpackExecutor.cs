@@ -51,34 +51,23 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The order of the coefficient matrix also known as problem size (N)
         /// </summary>
-        public string N
+        public string ProblemSizeN
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.N), out IConvertible n);
-                return n?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.N)] = value;
+                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), Environment.ProcessorCount * 10000);
             }
         }
 
         /// <summary>
         /// The partitioning blocking factor also known as block size (NB)
         /// </summary>
-        public string NB
+        public string BlockSizeNB
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.NB), out IConvertible nb);
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.BlockSizeNB), out IConvertible nb);
                 return nb?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.NB)] = value;
             }
         }
 
@@ -95,21 +84,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Version of HPL being used
+        /// Version of HPL being used.
         /// </summary>
-        public string HPLVersion
+        public string Version
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.HPLVersion), out IConvertible hplversion);
-                return hplversion?.ToString();
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Version), out IConvertible version);
+                return version?.ToString();
             }
         }
 
         /// <summary>
-        /// The path where the HPL directory.
+        /// The path to the HPL directory.
         /// </summary>
-        public string HPLDirectory { get; set; }
+        protected string HPLDirectory { get; set; }
 
         /// <summary>
         /// The number of Process rows(P).
@@ -135,7 +124,7 @@ namespace VirtualClient.Actions
                 string armPackageLibrariesPath = armPerformanceLibrariesPackage.Path;
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
 
-                await this.ExecuteElevatedCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, true, telemetryContext, cancellationToken);
             }
 
             HPLinpackState state = await this.stateManager.GetStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", cancellationToken)
@@ -143,13 +132,13 @@ namespace VirtualClient.Actions
 
             if (!state.HPLInitialized)
             {
-                await this.ExecuteCommandAsync("wget", $"http://www.netlib.org/benchmark/hpl/hpl-{this.HPLVersion}.tar.gz -O {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("tar", $"-zxvf {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("wget", $"http://www.netlib.org/benchmark/hpl/hpl-{this.Version}.tar.gz -O {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("tar", $"-zxvf {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
                 state.HPLInitialized = true;
 
             }
 
-            this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.HPLVersion}");
+            this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.Version}");
             await this.stateManager.SaveStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", state, cancellationToken);
 
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "Make.Linux_GCC"))
@@ -158,11 +147,11 @@ namespace VirtualClient.Actions
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", "Make.Linux_GCC"))
                 .ConfigureAwait(false);
 
-            await this.ExecuteElevatedCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), true, telemetryContext, cancellationToken);
 
             await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", $"Make.Linux_GCC ")} Make.Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", $"Make.Linux_GCC ")} Make.Linux_GCC", this.HPLDirectory, false, telemetryContext, cancellationToken);
 
         }
 
@@ -172,21 +161,21 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
+            await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, false, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
             this.SetParameters();
-            await this.ConfigureHPLdatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
             string results;
             if (this.CpuArchitecture == Architecture.X64)
             {
-                results = await this.ExecuteElevatedCommandAsync("runuser", $"-u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken)
+                results = await this.ExecuteCommandAsync("runuser", $"-u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             }
             else
             {
-                results = await this.ExecuteElevatedCommandAsync("runuser", $"-u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken)
+                results = await this.ExecuteCommandAsync("runuser", $"-u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             }
 
@@ -196,11 +185,6 @@ namespace VirtualClient.Actions
 
         private void SetParameters()
         {
-            if (this.N == null)
-            {
-                this.N = (Environment.ProcessorCount * 10000).ToString();
-            }
-
             // gives you P*Q = Environment.ProcessorCount and P <= Q and  Q-P to be the minimum possible value.
             this.ProcessRows = 1;
             this.ProcessColumns = Environment.ProcessorCount;
@@ -216,7 +200,6 @@ namespace VirtualClient.Actions
                     }
                 }
             }
-
         }
 
         private void ThrowIfPlatformIsNotSupported()
@@ -225,7 +208,7 @@ namespace VirtualClient.Actions
             {
                 throw new WorkloadException(
                     $"The HPL workload is currently only supported on the following platform/architectures: " +
-                    $"'{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}', '{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}'. ",
+                    $"'{PlatformSpecifics.LinuxX64}', '{PlatformSpecifics.LinuxArm64}'.",
                     ErrorReason.PlatformNotSupported);
             }
         }
@@ -233,7 +216,7 @@ namespace VirtualClient.Actions
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string makeFilePath = this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", "Make.Linux_GCC");
-            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN Make.Linux_GCC", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN Make.Linux_GCC", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), false, telemetryContext, cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"ARCH *= *[^\n]*", "ARCH = Linux_GCC", cancellationToken);
@@ -274,20 +257,20 @@ namespace VirtualClient.Actions
                     makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken); 
         }
 
-        private async Task ConfigureHPLdatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ConfigureDatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string hplDatFile = this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC", "HPL.dat");
             await this.fileSystem.File.ReplaceInFileAsync(
                     hplDatFile, @"([0-9]+\s+)+# of problems sizes", $"1   # of problems sizes", cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+Ns", $"{this.N} Ns", cancellationToken);
+                    hplDatFile, @"([0-9]+\s+)+Ns", $"{this.ProblemSizeN} Ns", cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     hplDatFile, @"([0-9]+\s+)+# of NBs", $"1   # of NBs", cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
-                    hplDatFile, @"([0-9]+\s+)+NBs", $"{this.NB} NBs", cancellationToken);
+                    hplDatFile, @"([0-9]+\s+)+NBs", $"{this.BlockSizeNB} NBs", cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     hplDatFile, @"([0-9]+\s+)+# of process grids", $"1   # of process grids", cancellationToken);
@@ -334,7 +317,7 @@ namespace VirtualClient.Actions
 
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, bool runElevated, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string output = string.Empty;
 
@@ -348,8 +331,17 @@ namespace VirtualClient.Actions
                 await this.Logger.LogMessageAsync($"{nameof(HPLinpackExecutor)}.ExecuteWorkload", relatedContext, async () =>
                 {
                     DateTime start = DateTime.Now;
+                    IProcessProxy process;
+                    if (runElevated)
+                    {
+                        process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory);
+                    }
+                    else
+                    {
+                        process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, workingDirectory);
+                    }
 
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, workingDirectory))
+                    using (process)
                     {
                         SystemManagement.CleanupTasks.Add(() => process.SafeKill());
 
@@ -369,42 +361,6 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        private async Task<string> ExecuteElevatedCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string output = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext relatedContext = telemetryContext.Clone()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(HPLinpackExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    DateTime start = DateTime.Now;
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
-
-                        output = process.StandardOutput.ToString();
-
-                    }
-                }).ConfigureAwait(false);
-            }
-
-            return output;
-
-        }
-
         private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
@@ -421,7 +377,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"{this.N}_{this.NB}_{this.ProcessRows}_{this.ProcessColumns}",
+                    $"{this.ProblemSizeN}_{this.BlockSizeNB}_{this.ProcessRows}_{this.ProcessColumns}",
                     this.Tags,
                     telemetryContext,
                     result.Relativity);

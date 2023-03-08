@@ -11,9 +11,9 @@
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "PackageName": "HPL",
-        "N": null,
-        "NB": "384",
-        "HPLVersion": "2.3",
+        "ProblemSizeN": null,
+        "BlockSizeNB": "384",
+        "Version": "2.3",
         "ARMPerformanceLibrariesPackageName": "arm_performance_libraries"
       }
     }
