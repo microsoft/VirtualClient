@@ -1,18 +1,25 @@
 {
-  "Description": "High Performance Linkpack Performance workload",
+  "Description": "High Performance Linpack Performance workload",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "00:01:00",
     "SupportedPlatforms": "linux-x64,linux-arm64",
     "SupportedOperatingSystems": "Ubuntu"
+  },
+  "Parameters": {
+    "Username": "null",
+    "CompilerName": "gcc",
+    "CompilerVersion": "11"
   },
   "Actions": [
     {
       "Type": "HPLinpackExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
+        "Username": "$.Parameters.Username",
         "PackageName": "HPL",
         "ProblemSizeN": null,
-        "BlockSizeNB": "384",
+        "BlockSizeNB": "256",
+        "CCFLAGS": "$(HPL_DEFS) -Ofast -march=armv8-a",
         "Version": "2.3",
         "ARMPerformanceLibrariesPackageName": "arm_performance_libraries"
       }
@@ -30,8 +37,8 @@
     {
       "Type": "CompilerInstallation",
       "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "11"
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
       }
     },
     {

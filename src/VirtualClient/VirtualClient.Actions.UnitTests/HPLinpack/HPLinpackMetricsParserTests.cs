@@ -36,6 +36,14 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = this.testParser.Parse();
             Assert.AreEqual(4, metrics.Count);
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("N_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["N_WR01R2R4"].Equals("8029"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("NB_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["NB_WR01R2R4"].Equals("400"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("P_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["P_WR01R2R4"].Equals("1"));
+            Assert.IsTrue(metrics[0].Metadata.ContainsKey("Q_WR01R2R4"));
+            Assert.IsTrue(metrics[0].Metadata["Q_WR01R2R4"].Equals("2"));
             MetricAssert.Exists(metrics, "Time", 11.55);
             MetricAssert.Exists(metrics, "GFlops", 29.874);
             MetricAssert.Exists(metrics, "Time", 11.55);

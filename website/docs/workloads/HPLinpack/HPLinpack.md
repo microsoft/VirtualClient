@@ -11,7 +11,7 @@ HPLinpack is designed to be a very simple benchmarking tool. It produces the amo
 * Rate of execution for solving linear system
 
 ## Workload Metrics
-The following metrics are examples of those captured by the Virtual Client when running the LAPACK workload.
+The following metrics are examples of those captured by the Virtual Client when running the HPLinpack workload.
 
 | Metric Name | Value  | Unit   | Description                                   |
 |-------------|--------|--------|-----------------------------------------------|

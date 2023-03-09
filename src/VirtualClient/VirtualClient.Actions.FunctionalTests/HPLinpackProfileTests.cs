@@ -82,6 +82,7 @@ namespace VirtualClient.Actions
                 @"bin/Linux_GCC/HPL.dat"
             };
 
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
             this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -139,6 +140,7 @@ namespace VirtualClient.Actions
                 @"bin/Linux_GCC/HPL.dat"
             };
 
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
             this.mockFixture.SetupWorkloadPackage("armperformancelibraries", expectedFiles: @"arm-performance-libraries_22.1_Ubuntu-20.04.sh");
             this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -187,7 +189,7 @@ namespace VirtualClient.Actions
                     $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u null -- mpirun --use-hwthread-cpus -np 16 ./xhpl"
                 };
             }
             else
@@ -199,7 +201,7 @@ namespace VirtualClient.Actions
                     $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u null -- mpirun -np 16 ./xhpl"
                 };
             }
         }

@@ -41,7 +41,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        public async Task HPLExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture)
+        public async Task HPLinpackExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
@@ -63,10 +63,9 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        public async Task HPLExecutorExecutesWorkloadAsExpectedOnUbuntuArmPlatform(PlatformID platform, Architecture architecture)
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuArmPlatform(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            
 
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
             {
@@ -80,13 +79,13 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun -np 16 ./xhpl"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun -np 16 ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
                     }
@@ -103,7 +102,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        public async Task HPLExecutorExecutesWorkloadAsExpectedOnUbuntuX64Platform(PlatformID platform, Architecture architecture)
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuX64Platform(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
@@ -117,13 +116,13 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np 16 ./xhpl"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np 16 ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
                     }
@@ -140,7 +139,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public void HPLExecutorThrowsWhenPlatformIsNotSupported(PlatformID platformID, Architecture architecture)
+        public void HPLinpackExecutorThrowsWhenPlatformIsNotSupported(PlatformID platformID, Architecture architecture)
         {
             this.fixture.Setup(platformID, architecture);
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
@@ -171,13 +170,17 @@ namespace VirtualClient.Actions
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
+                ["Username"] = "username",
+                ["CompilerName"] = "gcc",
+                ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
                 ["Version"] = "2.3",
-                ["N"] = "20000",
-                ["NB"] = "256",
+                ["ProblemSizeN"] = "20000",
+                ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed"
             };
         }

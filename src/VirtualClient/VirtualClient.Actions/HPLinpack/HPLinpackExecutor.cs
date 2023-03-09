@@ -33,6 +33,8 @@ namespace VirtualClient.Actions
         private ISystemManagement systemManagement;
         private IStateManager stateManager;
         private IPackageManager packageManager;
+        private int coreCount;
+        private string makeFileName = "Make.Linux_GCC";
 
         /// <summary>
         /// Constructor for <see cref="HPLinpackExecutor"/>
@@ -46,6 +48,18 @@ namespace VirtualClient.Actions
             this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
             this.stateManager = this.systemManagement.StateManager;
+        }
+
+        /// <summary>
+        /// The user who has the ssh identity registered for.
+        /// </summary>
+        public string Username
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Username), out IConvertible username);
+                return username?.ToString();
+            }
         }
 
         /// <summary>
@@ -96,6 +110,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Compiler flags.
+        /// </summary>
+        public string CCFlags
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.CCFlags), out IConvertible ccflags);
+                return ccflags?.ToString();
+            }
+        }
+
+        /// <summary>
         /// The path to the HPL directory.
         /// </summary>
         protected string HPLDirectory { get; set; }
@@ -116,7 +142,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.ThrowIfPlatformIsNotSupported();
-
+            this.coreCount = this.systemManagement.GetSystemCoreCount();
             if (this.CpuArchitecture == Architecture.Arm64)
             {
                 DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
@@ -141,17 +167,17 @@ namespace VirtualClient.Actions
             this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.Version}");
             await this.stateManager.SaveStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", state, cancellationToken);
 
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "Make.Linux_GCC"))
+            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName))
                 .ConfigureAwait(false);
 
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", "Make.Linux_GCC"))
+            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName))
                 .ConfigureAwait(false);
 
             await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), true, telemetryContext, cancellationToken);
 
             await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", $"Make.Linux_GCC ")} Make.Linux_GCC", this.HPLDirectory, false, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, false, telemetryContext, cancellationToken);
 
         }
 
@@ -170,12 +196,12 @@ namespace VirtualClient.Actions
             string results;
             if (this.CpuArchitecture == Architecture.X64)
             {
-                results = await this.ExecuteCommandAsync("runuser", $"-u azureuser -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
+                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             }
             else
             {
-                results = await this.ExecuteCommandAsync("runuser", $"-u azureuser -- mpirun -np {Environment.ProcessorCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
+                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             }
 
@@ -187,12 +213,12 @@ namespace VirtualClient.Actions
         {
             // gives you P*Q = Environment.ProcessorCount and P <= Q and  Q-P to be the minimum possible value.
             this.ProcessRows = 1;
-            this.ProcessColumns = Environment.ProcessorCount;
-            for (int i = 2; i <= Math.Sqrt(Environment.ProcessorCount); i++)
+            this.ProcessColumns = this.coreCount;
+            for (int i = 2; i <= Math.Sqrt(this.coreCount); i++)
             {
-                if (Environment.ProcessorCount % i == 0)
+                if (this.coreCount % i == 0)
                 {
-                    int j = Environment.ProcessorCount / i;
+                    int j = this.coreCount / i;
                     if (j - i < this.ProcessColumns - this.ProcessRows)
                     {
                         this.ProcessRows = i;
@@ -215,8 +241,8 @@ namespace VirtualClient.Actions
 
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string makeFilePath = this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", "Make.Linux_GCC");
-            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN Make.Linux_GCC", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), false, telemetryContext, cancellationToken);
+            string makeFilePath = this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName);
+            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN {this.makeFileName}", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), false, telemetryContext, cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"ARCH *= *[^\n]*", "ARCH = Linux_GCC", cancellationToken);
@@ -239,7 +265,7 @@ namespace VirtualClient.Actions
                         makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"CCFLAGS *= *[^\n]*", "CCFLAGS = $(HPL_DEFS) -Ofast -march=armv8-a", cancellationToken);
+                        makeFilePath, @"CCFLAGS *= *[^\n]*", $"CCFLAGS = {this.CCFlags}", cancellationToken);
             }
             else if (this.CpuArchitecture == Architecture.X64)
             {
@@ -370,14 +396,14 @@ namespace VirtualClient.Actions
             {
                 this.Logger.LogMetrics(
                     "HPLinpack",
-                    this.Scenario,
+                    $"{this.Scenario}_{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     startTime,
                     endTime,
                     result.Name,
                     result.Value,
                     result.Unit,
                     null,
-                    $"{this.ProblemSizeN}_{this.BlockSizeNB}_{this.ProcessRows}_{this.ProcessColumns}",
+                    $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     this.Tags,
                     telemetryContext,
                     result.Relativity);

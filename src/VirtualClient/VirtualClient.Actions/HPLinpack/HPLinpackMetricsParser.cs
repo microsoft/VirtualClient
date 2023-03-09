@@ -61,10 +61,10 @@ namespace VirtualClient.Actions
 
                     Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()
                          {
-                             { "N_WR{st[0]}", st[1] },
-                             { "NB_WR{st[0]}", st[2] },
-                             { "P_WR{st[0]}", st[3] },
-                             { "Q_WR{st[0]}", st[4] },
+                             { $"N_WR{st[0]}", st[1] },
+                             { $"NB_WR{st[0]}", st[2] },
+                             { $"P_WR{st[0]}", st[3] },
+                             { $"Q_WR{st[0]}", st[4] },
                          };
 
                     this.Metrics.Add(new Metric($"Time", Convert.ToDouble(st[5]), "secs", metadata: metadata));
