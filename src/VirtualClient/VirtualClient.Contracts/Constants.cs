@@ -70,4 +70,15 @@ namespace VirtualClient.Contracts
         /// </summary>
         public const string TelemetrySource = "TelemetrySource";
     }
+
+    /// <summary>
+    /// Common profile metadata property names.
+    /// </summary>
+    public class ProfileMetadata
+    {
+        /// <summary>
+        /// Metadata = SupportsIterations
+        /// </summary>
+        public const string SupportsIterations = nameof(SupportsIterations);
+    }
 }
