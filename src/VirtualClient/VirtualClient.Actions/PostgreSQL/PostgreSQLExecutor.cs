@@ -11,11 +11,11 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using VirtualClient;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -28,11 +28,6 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class PostgreSQLExecutor : VirtualClientComponent
     {
-        /// <summary>
-        /// Port number on which PostgreSQL server is hosted.
-        /// </summary>
-        protected const int PortNumber = 5432;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLExecutor"/> class.
         /// </summary>
@@ -59,6 +54,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.HammerDBPackageName));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the port number on which the PostgreSQL server will run on.
+        /// </summary>
+        public int Port
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.Port), 5432);
             }
         }
 
@@ -113,7 +119,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.ValidatePlatformSupportedAsync(cancellationToken);
-            await PostgreSQLExecutor.OpenFirewallPortsAsync(this.SystemManagement.FirewallManager, cancellationToken);
+            await PostgreSQLExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
 
             this.InitializeApiClients();
 
@@ -289,7 +295,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private static Task OpenFirewallPortsAsync(IFirewallManager firewallManager, CancellationToken cancellationToken)
+        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
         {
             return firewallManager.EnableInboundConnectionsAsync(
                 new List<FirewallEntry>
@@ -298,7 +304,7 @@ namespace VirtualClient.Actions
                         "PostgreSQL: Allow Multiple Machines communications",
                         "Allows individual machine instances to communicate with other machine in client-server scenario",
                         "tcp",
-                        new List<int> { PortNumber })
+                        new List<int> { port })
                 },
                 cancellationToken);
         }
@@ -342,43 +348,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        internal class PostgreSQLClientState : State
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PostgreSQLClientState"/> object.
-            /// </summary>
-            public PostgreSQLClientState()
-                : base()
-            {
-                this.InitialSetupComplete = false;
-            }
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PostgreSQLClientState"/> object.
-            /// </summary>
-            [JsonConstructor]
-            public PostgreSQLClientState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
-
-            /// <summary>
-            /// True if the system and server-side setup is completed.
-            /// </summary>
-            public bool InitialSetupComplete
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.InitialSetupComplete));
-                }
-
-                set
-                {
-                    this[nameof(this.InitialSetupComplete)] = value;
-                }
-            }
-        }
-
         /// <summary>
         /// State information provided by the server role executor.
         /// </summary>
@@ -390,10 +359,9 @@ namespace VirtualClient.Actions
             public PostgreSQLServerState()
                 : base()
             {
-                this.DatabaseCreated = false;
-                this.InitialSetupComplete = false;
-                this.NumOfVirtualUsers = -1;
+                this.DatabaseInitialized = false;
                 this.WarehouseCount = -1;
+                this.UserCount = -1;
             }
 
             /// <summary>
@@ -408,16 +376,16 @@ namespace VirtualClient.Actions
             /// <summary>
             /// True if the PostgreSQL database was created.
             /// </summary>
-            public bool DatabaseCreated
+            public bool DatabaseInitialized
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(this.DatabaseCreated));
+                    return this.Properties.GetValue<bool>(nameof(this.DatabaseInitialized));
                 }
 
                 set
                 {
-                    this[nameof(this.DatabaseCreated)] = value;
+                    this[nameof(this.DatabaseInitialized)] = value;
                 }
             }
 
@@ -425,16 +393,16 @@ namespace VirtualClient.Actions
             /// The number of virtual users to use for running parallel OLTP operations against the database
             /// as part of the TPC-C operations.
             /// </summary>
-            public int NumOfVirtualUsers
+            public int UserCount
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(this.NumOfVirtualUsers));
+                    return this.Properties.GetValue<int>(nameof(this.UserCount));
                 }
 
                 set
                 {
-                    this[nameof(this.NumOfVirtualUsers)] = value;
+                    this[nameof(this.UserCount)] = value;
                 }
             }
 
@@ -451,22 +419,6 @@ namespace VirtualClient.Actions
                 set
                 {
                     this[nameof(this.Password)] = value;
-                }
-            }
-
-            /// <summary>
-            /// True if the system and server-side setup is completed.
-            /// </summary>
-            public bool InitialSetupComplete
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.InitialSetupComplete));
-                }
-
-                set
-                {
-                    this[nameof(this.InitialSetupComplete)] = value;
                 }
             }
 

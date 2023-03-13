@@ -31,7 +31,7 @@
             "Parameters": {
                 "Scenario": "warmup_32b_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -42,7 +42,7 @@
             "Parameters": {
                 "Scenario": "warmup_1kb_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -53,7 +53,7 @@
             "Parameters": {
                 "Scenario": "warmup_10kb_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol redis --threads 64 --clients 4 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern S:S --run-count 1",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -62,9 +62,20 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
+                "Scenario": "memtier_4t_4c_32b_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 4 --clients 4  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Duration": "$.Parameters.Duration",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "MemtierBenchmarkClientExecutor",
+            "Parameters": {
                 "Scenario": "memtier_8t_32c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 8 --clients 32  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 8 --clients 32  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -75,7 +86,7 @@
             "Parameters": {
                 "Scenario": "memtier_8t_32c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -86,7 +97,7 @@
             "Parameters": {
                 "Scenario": "memtier_8t_32c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 8 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -97,7 +108,7 @@
             "Parameters": {
                 "Scenario": "memtier_16t_32c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -108,7 +119,7 @@
             "Parameters": {
                 "Scenario": "memtier_16t_32c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -119,7 +130,7 @@
             "Parameters": {
                 "Scenario": "memtier_16t_32c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 16 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -130,7 +141,7 @@
             "Parameters": {
                 "Scenario": "memtier_32t_32c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -141,7 +152,7 @@
             "Parameters": {
                 "Scenario": "memtier_32t_32c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -152,7 +163,7 @@
             "Parameters": {
                 "Scenario": "memtier_32t_32c_1kb_r1:10",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -163,51 +174,7 @@
             "Parameters": {
                 "Scenario": "memtier_32t_32c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_64t_32c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix=sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_64t_32c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_64t_32c_1kb_r1:10",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix=med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_64t_32c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol redis --threads 64 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix=lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol redis --threads 32 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -216,50 +183,99 @@
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "redis_100kreq_4c",
+                "Scenario": "redis_8c_32b_10kreq",
                 "PackageName": "redis",
-                "CommandLine": "-c 4 -n 100000 -P 4 -q --csv",
+                "CommandLine": "-c 8 -d 32 -n 10000 -P 4 -q --csv",
                 "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
                 "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "redis_100kreq_8c",
+                "Scenario": "redis_8c_1kb_10kreq",
                 "PackageName": "redis",
-                "CommandLine": "-c 8 -n 100000 -P 8 -q --csv",
+                "CommandLine": "-c 8 -d 1024 -n 10000 -P 4 -q --csv",
                 "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
                 "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "redis_100kreq_16c",
+                "Scenario": "redis_8c_10kb_10kreq",
                 "PackageName": "redis",
-                "CommandLine": "-c 16 -n 100000 -P 16 -q --csv",
+                "CommandLine": "-c 8 -d 10240 -n 10000 -P 4 -q --csv",
                 "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
                 "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "redis_100kreq_32c",
+                "Scenario": "redis_16c_32b_10kreq",
                 "PackageName": "redis",
-                "CommandLine": "-c 32 -n 100000 -P 32 -q --csv",
+                "CommandLine": "-c 16 -d 32 -n 10000 -P 4 -q --csv",
                 "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
                 "Role": "Client"
             }
         },
         {
             "Type": "RedisBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "redis_100kreq_64c",
+                "Scenario": "redis_16c_1kb_10kreq",
                 "PackageName": "redis",
-                "CommandLine": "-c 64 -n 100000 -P 64 -q --csv",
+                "CommandLine": "-c 16 -d 1024 -n 10000 -P 4 -q --csv",
                 "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "RedisBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "redis_16c_10kb_10kreq",
+                "PackageName": "redis",
+                "CommandLine": "-c 16 -d 10240 -n 10000 -P 4 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "RedisBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "redis_32c_32b_10kreq",
+                "PackageName": "redis",
+                "CommandLine": "-c 32 -d 32 -n 10000 -P 4 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "RedisBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "redis_32c_1kb_10kreq",
+                "PackageName": "redis",
+                "CommandLine": "-c 32 -d 1024 -n 10000 -P 4 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "RedisBenchmarkClientExecutor",
+            "Parameters": {
+                "Scenario": "redis_32c_10kb_10kreq",
+                "PackageName": "redis",
+                "CommandLine": "-c 32 -d 10240 -n 1000 -P 4 -q --csv",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "MetricFilters": "GET,^SET",
                 "Role": "Client"
             }
         }

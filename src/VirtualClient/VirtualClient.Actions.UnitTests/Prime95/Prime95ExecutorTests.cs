@@ -39,7 +39,8 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void Prime95ExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.fixture.Setup(platform);
+            this.SetupDefaultBehavior(platform);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
             using (TestPrime95Executor prime95Executor = new TestPrime95Executor(this.fixture))
             {
@@ -95,7 +96,7 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultBehavior(platform);
             
-            this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = string.Empty;            
+            this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = string.Empty;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.ValidateParameters());

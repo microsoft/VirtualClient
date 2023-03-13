@@ -7,6 +7,7 @@ namespace VirtualClient.Dependencies.Packaging
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
@@ -87,13 +88,34 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
-        [TestCase("{FirstDisk}")]
-        [TestCase("{LastDisk}")]
-        public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsGiven(string diskReference)
+        public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsFirstDisk()
         {
             Disk mockDisk = this.mockFixture.Create<Disk>();
-            string relativePath = $"{diskReference}\\packages";
-            string expectedPath = this.mockFixture.PlatformSpecifics.Combine(mockDisk.DevicePath, "packages");
+            string relativePath = $"{{FirstDisk}}\\packages";
+            string expectedPath = this.mockFixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
+
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
+            this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = relativePath;
+
+            bool installed = false;
+            this.mockFixture.PackageManager.OnInstallPackage(evaluate: (description, installationPath) =>
+            {
+                installed = true;
+                Assert.IsNotNull(installationPath);
+                Assert.AreEqual(expectedPath, installationPath);
+            })
+            .ReturnsAsync(this.installedDependency.Path);
+
+            await this.installer.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            Assert.IsTrue(installed);
+        }
+
+        [Test]
+        public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsLastDisk()
+        {
+            Disk mockDisk = this.mockFixture.Create<Disk>();
+            string relativePath = $"{{LastDisk}}\\packages";
+            string expectedPath = this.mockFixture.PlatformSpecifics.Combine(mockDisk.Volumes.First().AccessPaths.First(), "packages");
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<Disk>() { mockDisk });
             this.installer.Parameters[nameof(DependencyPackageInstallation.InstallationPath)] = relativePath;

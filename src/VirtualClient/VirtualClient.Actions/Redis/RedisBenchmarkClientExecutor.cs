@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
@@ -226,7 +227,7 @@ namespace VirtualClient.Actions
                             scenarioName: this.Scenario,
                             startTime,
                             endTime,
-                            metrics,
+                            this.MetricFilters?.Any() == true ? metrics.FilterBy(this.MetricFilters) : metrics,
                             string.Empty,
                             null,
                             this.Tags,

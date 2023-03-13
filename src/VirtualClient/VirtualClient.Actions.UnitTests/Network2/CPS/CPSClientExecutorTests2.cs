@@ -140,6 +140,7 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
+            this.mockFixture.Parameters["PackageName"] = "cps";
             this.mockFixture.Parameters["Port"] = 3001;
             this.mockFixture.Parameters["Connections"] = 256;
             this.mockFixture.Parameters["TestDuration"] = 300;

@@ -41,10 +41,9 @@ namespace VirtualClient.Actions
             {
                 ["Scenario"] = "Redis_Scenario",
                 ["PackageName"] = this.mockPackage.Name,
-                ["ClientsPerThread"] = 2,
-                ["PipelineDepth"] = 32,
-                ["RequestCount"] = 10000,
-                ["Port"] = 6379
+                ["CommandLine"] = "-c 8 -d 32 -n 10000 -P 4 -q --csv",
+                ["ClientInstances"] = 1,
+                ["PipelineDepth"] = 32
             };
 
             this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -56,13 +55,10 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);
 
-            var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
-            {
-                [nameof(ServerState.Ports)] = 6379
-            }));
-
+            // Setup:
+            // Single server instance running on port 6379
             this.fixture.ApiClient.OnGetState(nameof(ServerState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, state));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), new ServerState(new int[] { 6379 }))));
 
             this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
                 .Returns<string, ClientInstance>((id, instance) =>
@@ -97,10 +93,10 @@ namespace VirtualClient.Actions
                 List<string> expectedCommands = new List<string>()
                 {
                     // Make the benchmark toolset executable
-                    $"sudo chmod +x \"{this.mockPackage.Path}/linux-x64/src/redis-benchmark\"",
+                    $"sudo chmod +x \"{this.mockPackage.Path}/src/redis-benchmark\"",
 
                     // Run the Redis benchmark. Values based on the default parameter values set at the top
-                    $"sudo bash -c \"{this.mockPackage.Path}/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 2 -n 10000 -P 32 -q --csv\"" 
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 6379 {executor.CommandLine}\"" 
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -117,16 +113,158 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task RedisBenchmarkClientExecutorUsesThePortDefinedToCommunicateWithTheServer()
+        public async Task RedisBenchmarkClientExecutorEstablishesTheExpectedClientServerPairings_1_Server_Instance()
         {
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters["Port"] = 1234;
+                // 1 set of client instances run on each port reported by the server
+                ServerState serverState = new ServerState(new int[] { 1234 });
+
+                this.fixture.ApiClient.OnGetState(nameof(ServerState))
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
 
                 List<string> expectedCommands = new List<string>()
                 {
-                    // Run the Redis benchmark. Values based on the default parameter values set at the top
-                    $"sudo bash -c \"{this.mockPackage.Path}/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 1234 -c 2 -n 10000 -P 32 -q --csv\""
+                    // 1 client instances for the server on port 1234
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1234 {executor.CommandLine}\"",
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(this.results);
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task RedisBenchmarkClientExecutorEstablishesTheExpectedClientServerPairings_2_Server_Instances()
+        {
+            using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                // 1 set of client instances run on each port reported by the server
+                ServerState serverState = new ServerState(new int[] { 1234, 5678 });
+
+                this.fixture.ApiClient.OnGetState(nameof(ServerState))
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // 1 client instances for the server on port 1234
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1234 {executor.CommandLine}\"",
+
+                    // 1 client instances for the server on port 5678
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 5678 {executor.CommandLine}\""
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(this.results);
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task RedisBenchmarkClientExecutorEstablishesTheExpectedClientServerPairings_4_Server_Instances()
+        {
+            using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                // 1 set of client instances run on each port reported by the server
+                ServerState serverState = new ServerState(new int[] { 1234, 5678, 1111, 2222 });
+
+                this.fixture.ApiClient.OnGetState(nameof(ServerState))
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // 1 client instances for the server on port 1234
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1234 {executor.CommandLine}\"",
+
+                    // 1 client instances for the server on port 5678
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 5678 {executor.CommandLine}\"",
+
+                    // 1 client instances for the server on port 1234
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1111 {executor.CommandLine}\"",
+
+                    // 1 client instances for the server on port 5678
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 2222 {executor.CommandLine}\""
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(this.results);
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task RedisBenchmarkClientExecutorEstablishesTheExpectedClientServerPairings_1_Server_Instance_2_Client_Instances()
+        {
+            using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                // 2 client instances per server instance
+                executor.Parameters["ClientInstances"] = 2;
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // 2 client instances for the server on port 6379 (defined in default setup).
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 6379 {executor.CommandLine}\"",
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 6379 {executor.CommandLine}\"",
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(this.results);
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task RedisBenchmarkClientExecutorEstablishesTheExpectedClientServerPairings_2_Server_Instances_2_Client_Instances()
+        {
+            using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                // 2 client instances per server instance
+                executor.Parameters["ClientInstances"] = 2;
+
+                // 1 set of client instances run on each port reported by the server
+                ServerState serverState = new ServerState(new int[] { 1234, 5678 });
+
+                this.fixture.ApiClient.OnGetState(nameof(ServerState))
+                    .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // 2 client instances for the server on port 1234.
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1234 {executor.CommandLine}\"",
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 1234 {executor.CommandLine}\"",
+
+                    // 2 client instances for the server on port 5678.
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 5678 {executor.CommandLine}\"",
+                    $"sudo bash -c \"{this.mockPackage.Path}/src/redis-benchmark -h 1.2.3.5 -p 5678 {executor.CommandLine}\"",
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

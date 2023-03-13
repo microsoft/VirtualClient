@@ -108,7 +108,6 @@ namespace VirtualClient.Dependencies
                     // operations.
                     string wgetExe = this.Combine(wgetPackage.Path, this.Platform == PlatformID.Unix ? "wget2" : "wget.exe");
 
-                    this.RetryPolicy = Policy.NoOpAsync();
                     await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                     {
                         // e.g.

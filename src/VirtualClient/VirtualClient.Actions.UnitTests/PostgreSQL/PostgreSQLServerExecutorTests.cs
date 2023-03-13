@@ -5,212 +5,236 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Net;
     using System.Net.Http;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
+    using Polly;
     using VirtualClient;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-    using NUnit.Framework;
-    using Polly;
-    using System.Linq;
     using static VirtualClient.Actions.PostgreSQLExecutor;
 
     [TestFixture]
     [Category("Unit")]
     public class PostgreSQLServerExecutorTests
     {
-        private const string MockPassword = "MockPassword";
-        private const string PasswordKey = "Password";
-        private const long WarehouseCount = 1000;
-        private const int NumOfUsersForDBCreation = 100;
-        private MockFixture fixture;
-        private DependencyPath mockPath;
+        private MockFixture mockFixture;
+        private DependencyPath mockPostgreSqlPackage;
+        private DependencyPath mockHammerDBPackage;
 
-        [SetUp]
-        public void SetupTests()
+        public void SetupDefaults(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
-            this.fixture = new MockFixture();
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform, architecture);
+
+            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync("mock Makefile");
+
+            this.mockPostgreSqlPackage = new DependencyPath("postgresql", this.mockFixture.GetPackagePath("postgresql"), metadata: new Dictionary<string, IConvertible>
+            {
+                // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                // the package store (i.e. in the *.vcpkg file).
+                [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
+                [$"{PackageMetadata.InstallationPath}-linux-arm64"] = "/etc/postgresql/14/main",
+                [$"{PackageMetadata.InstallationPath}-win-x64"] = "C:\\Program Files\\PostgreSQL\\14",
+                [$"{PackageMetadata.InstallationPath}-win-arm64"] = "C:\\Program Files\\PostgreSQL\\14"
+            });
+
+            this.mockHammerDBPackage = new DependencyPath("hammerdb", this.mockFixture.GetPackagePath("hammerdb"));
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                ["PackageName"] = this.mockPostgreSqlPackage.Name,
+                ["HammerDBPackageName"] = this.mockHammerDBPackage.Name,
+                ["DatabaseName"] = "tpcc",
+                ["ReuseDatabase"] = true,
+                ["Username"] = "anyuser",
+                ["Password"] = "anyvalue",
+                ["UserCount"] = 100,
+                ["WarehouseCount"] = 100
+            };
+
+            this.mockFixture.PackageManager.OnGetPackage("postgresql").ReturnsAsync(this.mockPostgreSqlPackage);
+            this.mockFixture.PackageManager.OnGetPackage("hammerdb").ReturnsAsync(this.mockHammerDBPackage);
+
+            // Setup:
+            // The server will be checking for state objects. State is how the server communicates required information
+            // to the client.
+            this.mockFixture.ApiClient.OnGetState(nameof(PostgreSQLServerState))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState())));
+
+            this.mockFixture.ApiClient.OnUpdateState<PostgreSQLServerState>(nameof(PostgreSQLServerState))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+
         }
 
         [Test]
-        public async Task PostgreSQLServerExecutorInitializeDependenciesAsExpectedOnUbuntuAsync()
+        public async Task PostgreSQLServerExecutorInitializeDependenciesAsExpectedOnLinuxSystems()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
-            using (TestPostgreSQLServerExecutor executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+            using (TestPostgreSQLServerExecutor executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await executor.OnInitialize(EventContext.None, CancellationToken.None);
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
 
-                string expectedPath = this.fixture.Combine(this.mockPath.Path, "linux-x64", "createDBScript.sh");
-                this.fixture.File.Verify(f => f.Copy(expectedPath, It.IsAny<string>()));
+                // The createDBscript.sh must be copied from a location within the HammerDB package to the root directory
+                // of that package for the platform/architecture
+                string createDBScriptCopyFromPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "postgresql", "createDBScript.sh");
+                string createDBScriptCopyToPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "createDBScript.sh");
+
+                // createDB.tcl
+                string createDBTclCopyFromPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "postgresql", "createDBScript.sh");
+                string createDBTclCopyToPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "createDBScript.sh");
+
+                this.mockFixture.File.Verify(f => f.Copy(createDBScriptCopyFromPath, createDBScriptCopyToPath, true));
+                this.mockFixture.File.Verify(f => f.Copy(createDBTclCopyFromPath, createDBTclCopyToPath, true));
             }
         }
 
         [Test]
-        public void PostgreSQLServerExecutorThrowsOnFailingToCreateWorkloadState()
+        public void PostgreSQLServerExecutorThrowsOnFailingToSaveTheServerState()
         {
-            this.SetupDefaultMockBehavior();
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(PostgreSQLServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
+            this.SetupDefaults();
 
-            using (var executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.fixture.ApiClient.Setup(client => client.CreateStateAsync(nameof(PostgreSQLServerState), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                    .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
+                this.mockFixture.ApiClient.OnUpdateState<PostgreSQLServerState>(nameof(PostgreSQLServerState))
+                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.BadRequest));
 
-                var dependencyException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(dependencyException.Message == "API Request Error (status code = NotFound): ");
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.Http400BadRequestResponse, error.Reason);
             }
         }
 
         [Test]
-        public void PostgreSQLServerExecutorThrowsOnFailingToCreateParametersStateIfNotCreatedEarlier()
+        public async Task PostgreSQLServerExecutorWritesTheExpectedInformationToTheServerState()
         {
-            this.SetupDefaultMockBehavior();
+            this.SetupDefaults();
 
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(PostgreSQLServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
-
-            this.fixture.ApiClient.Setup(client => client.CreateStateAsync(nameof(PostgreSQLServerState), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
-
-            using (var executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var dependencyException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(dependencyException.Message == "API Request Error (status code = NotFound): ");
+                bool confirmed = false;
+                this.mockFixture.ApiClient.OnUpdateState<PostgreSQLServerState>(nameof(PostgreSQLServerState))
+                    .Callback<string, object, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((stateId, state, token, retryPolicy) =>
+                    {
+                        Item<PostgreSQLServerState> actualState = state as Item<PostgreSQLServerState>;
+
+                        // Based on setup at the top. On first call, the database has not been created yet.
+                        Assert.IsNotNull(actualState);
+                        Assert.IsTrue(actualState.Definition.DatabaseInitialized);
+                        Assert.AreEqual(100, actualState.Definition.WarehouseCount);
+                        Assert.AreEqual(100, actualState.Definition.UserCount);
+                        Assert.AreEqual("anyuser", actualState.Definition.UserName);
+                        Assert.AreEqual("anyvalue", actualState.Definition.Password);
+                        confirmed = true;
+                    })
+                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(confirmed);
             }
         }
 
         [Test]
-        public void PostgreSQLServerExecutorThrowsOnFailingToGetExistingWorkloadState()
+        public async Task PostgreSQLServerExecutorExecutesExpectedCommandsOnWindowsSystemsToCreateTheDatabase()
         {
-            this.SetupDefaultMockBehavior();
-            
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(PostgreSQLServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
-
-            using (var executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            this.SetupDefaults(PlatformID.Win32NT,Architecture.X64);
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                var dependencyException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(dependencyException.Message == "API Request Error (status code = NotFound): ");
-            }
-        }
+                // e.g.
+                // C:\Program Files\PostgreSQL\14
+                string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-win-x64"].ToString();
+                
+                // e.g. 
+                // C:\Users\Any\VirtualClient\packages\hammerdb\win-x64
+                string hammerDBPath = this.mockHammerDBPackage.Path;
 
-        [Test]
-        public void PostgreSQLServerExecutorThrowsOnFailingToUpdateWorkloadState()
-        {
-            this.SetupDefaultMockBehavior();
-            
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(PostgreSQLServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
-
-            this.fixture.ApiClient.Setup(client => client.UpdateStateAsync(nameof(PostgreSQLServerState), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.NotFound));
-
-            using TestPostgreSQLServerExecutor executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters);
-
-            var dependencyException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-            Assert.IsTrue(dependencyException.Message == "API Request Error (status code = NotFound): ");
-        }
-
-        [Test]
-        public async Task PostgreSQLServerExecutorExecutesExpectedProcessOnWindows()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT,Architecture.X64);
-            int processExecuted = 0;
-            using (var executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"powershell -Command \"& {{Add-Content -Path '{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
-                    $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "bin", "psql.exe")} -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
-                    $"{this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "hammerdbcli.bat")} auto createDB.tcl"
+                    // Set the database server configuration.
+                    $"powershell -Command \"& {{Add-Content -Path '{this.mockFixture.Combine(postgreSqlInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
+
+                    // Restart the database services.
+                    $"{postgreSqlInstallationPath}\\bin\\pg_ctl.exe restart -D \"{postgreSqlInstallationPath}\\data\"",
+
+                    // Drop the TPCC database if it already exists.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
+
+                    // Drop the user if it exists.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP ROLE IF EXISTS anyuser;\"",
+
+                    // Create the user for access to the database.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"CREATE USER anyuser PASSWORD 'anyvalue';\"",
+
+                    // Create the database and populate it with data.
+                    $"{hammerDBPath}\\win-x64\\hammerdbcli.bat auto createDB.tcl",
                 };
 
-                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
-                    if (expectedCommands.Any(c => c == $"{file} {arguments}"))
-                    {
-                        processExecuted++;
-                    }
-
-                    return this.fixture.Process;
+                    expectedCommands.Remove($"{file} {arguments}");
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                Assert.AreEqual(3, processExecuted);
+                Assert.IsEmpty(expectedCommands);
             }
         }
 
         [Test]
         public async Task PostgreSQLServerExecutorExecutesExpectedProcessOnUnix()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, Architecture.X64);
-            int processExecuted = 0;
-            string expectedCommand = "sudo bash createDBScript.sh";
-
-            using (var executor = new TestPostgreSQLServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-                {
-                    if (expectedCommand == $"{file} {arguments}")
-                    {
-                        processExecuted++;
-                    }
+                // e.g.
+                // /etc/postgresql/14/main
+                string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-linux-x64"].ToString();
 
-                    Assert.IsNotNull(workingDirectory);
-                    return this.fixture.Process;
+                // e.g. 
+                // /home/user/VirtualClient/packages/hammerdb/linux-x64
+                string hammerDBPath = this.mockHammerDBPackage.Path;
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // Set the database server configuration.
+                    $"powershell -Command \"& {{Add-Content -Path '{this.mockFixture.Combine(postgreSqlInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
+
+                    // Restart the database services.
+                    $"{postgreSqlInstallationPath}\\bin\\pg_ctl.exe restart -D \"{postgreSqlInstallationPath}\\data\"",
+
+                    // Drop the TPCC database if it already exists.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
+
+                    // Drop the user if it exists.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP ROLE IF EXISTS anyuser;\"",
+
+                    // Create the user for access to the database.
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"CREATE USER anyuser PASSWORD 'anyvalue';\"",
+
+                    // Create the database and populate it with data.
+                    $"{hammerDBPath}\\win-x64\\hammerdbcli.bat auto createDB.tcl",
+                };
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove($"{file} {arguments}");
+                    return this.mockFixture.Process;
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
 
-                Assert.AreEqual(1, processExecuted);
+                Assert.IsEmpty(expectedCommands);
             }
-        }
-
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
-        {
-            this.fixture.Setup(platform, architecture);
-
-            string makeFileString = "mock Makefile";
-
-            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(makeFileString);
-
-            this.mockPath = this.fixture.Create<DependencyPath>();
-            this.fixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                ["PackageName"] = this.mockPath.Name
-            };
-
-            this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.mockPath);
-
-            var expectedState = new Item<State>(nameof(PostgreSQLServerState), new PostgreSQLServerState
-            {
-                DatabaseCreated = true,
-                InitialSetupComplete = false,
-                UserName = "anyUser",
-                Password = "anyValue",
-                NumOfVirtualUsers = 100,
-                WarehouseCount = 100
-            });
-
-            this.fixture.ApiClient.Setup(client => client.GetStateAsync(nameof(PostgreSQLServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-           
         }
 
         private class TestPostgreSQLServerExecutor : PostgreSQLServerExecutor
@@ -220,16 +244,22 @@ namespace VirtualClient.Actions
             {
             }
 
-            public Func<EventContext, CancellationToken, Task> OnInitialize => base.InitializeAsync;
+            public new string HammerDBPackagePath => base.HammerDBPackagePath;
 
-            public long NumberWarehouses => this.WarehouseCount;
+            public new int UserCount => base.UserCount;
 
-            public int NumberOfVirtualUsers => this.NumOfVirtualUsers;
+            public new string Password => base.ClientPassword;
 
-            public string PsqlUserName => this.UserName;
+            public new string PostgreSqlInstallationPath => base.PostgreSqlInstallationPath;
 
-            public string PsqlPassword => this.Password;
+            public new string Username => base.ClientUsername;
 
+            public new int WarehouseCount => base.WarehouseCount;
+
+            public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+            {
+                return base.InitializeAsync(telemetryContext, cancellationToken);
+            }
         }
     }
 }

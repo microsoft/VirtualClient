@@ -145,11 +145,10 @@ namespace VirtualClient.Actions
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
             PostgreSQLServerState expectedState = new PostgreSQLServerState
             {
-                DatabaseCreated = true,
-                InitialSetupComplete = true,
+                DatabaseInitialized = true,
                 UserName = "anyUser",
                 Password = "anyValue",
-                NumOfVirtualUsers = 100,
+                UserCount = 100,
                 WarehouseCount = 100
             };
 

@@ -28,7 +28,6 @@ namespace VirtualClient.Actions
         // Maintained in the HammerDB package that we use.
         private const string RunTransactionsScriptName = "runTransactionsScript.sh";
         private const string RunTransactionsTclName = "runTransactions.tcl";
-        private Item<PostgreSQLClientState> clientState;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLClientExecutor"/> class.
@@ -56,19 +55,25 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // The VC server-side instance/API must be confirmed online.
             await this.ServerApiClient.PollForHeartbeatAsync(
                 this.PollingTimeout,
                 cancellationToken);
 
+            // The VC server-side instance/role must be confirmed ready for the client to operate (e.g. the database is initialized).
             await this.ServerApiClient.PollForServerOnlineAsync(
                 this.PollingTimeout,
                 cancellationToken);
 
+            // The PostgreSQL database must be confirmed to be initialized and ready.
             await this.ServerApiClient.PollForExpectedStateAsync<PostgreSQLServerState>(
                 nameof(PostgreSQLServerState),
-                (state => state.DatabaseCreated == true),
+                (state => state.DatabaseInitialized == true),
                 this.PollingTimeout,
                 cancellationToken);
+
+            // Configure the HammerDB transactions execution workload.
+            await this.ConfigureWorkloadAsync(cancellationToken);
 
             DateTime startTime = DateTime.UtcNow;
 
@@ -90,71 +95,70 @@ namespace VirtualClient.Actions
                     cancellationToken);
             }
 
-            this.CaptureWorkloadResultsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            this.CaptureMetricsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
-        /// <summary>
-        /// Initializes the workload executor paths and dependencies.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetricsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken);
-
-            this.clientState = await this.LocalApiClient.GetOrCreateStateAsync<PostgreSQLClientState>(
-                nameof(PostgreSQLClientState),
-                cancellationToken,
-                logger: this.Logger);
-
-            if (!this.clientState.Definition.InitialSetupComplete)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                // Each time that we run we copy the script file and the TCL file into the root HammerDB directory
-                // alongside the benchmarking toolsets (e.g. hammerdbcli).
-                string scriptPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsScriptName);
-                string tclPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsTclName);
-                string scriptCopyPath = null;
-                string tclCopyPath = null;
+                try
+                {
+                    PostgreSQLMetricsParser postgreSQLParser = new PostgreSQLMetricsParser(results);
+                    IList<Metric> metrics = postgreSQLParser.Parse();
 
-                if (!this.FileSystem.File.Exists(tclPath))
+                    this.CaptureMetrics(metrics, startTime, DateTime.UtcNow, telemetryContext);
+                }
+                catch (SchemaException exc)
+                {
+                    throw new WorkloadResultsException($"Failed to parse workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
+                }
+            }
+        }
+
+        private Task ConfigureWorkloadAsync(CancellationToken cancellationToken)
+        {
+            // Each time that we run we copy the script file and the TCL file into the root HammerDB directory
+            // alongside the benchmarking toolsets (e.g. hammerdbcli).
+            string scriptPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsScriptName);
+            string tclPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsTclName);
+            string scriptCopyPath = null;
+            string tclCopyPath = null;
+
+            if (!this.FileSystem.File.Exists(tclPath))
+            {
+                throw new DependencyException(
+                    $"Required script file missing. The script file required in order to run transactions against the database '{PostgreSQLClientExecutor.RunTransactionsTclName}' " +
+                    $"does not exist in the HammerDB package.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            if (this.Platform == PlatformID.Unix)
+            {
+                if (!this.FileSystem.File.Exists(scriptPath))
                 {
                     throw new DependencyException(
-                        $"Required script file missing. The script file required in order to run transactions against the database '{PostgreSQLClientExecutor.RunTransactionsTclName}' " +
+                        $"Required script file missing. The script file required in order to run transactions against the database '{PostgreSQLClientExecutor.RunTransactionsScriptName}' " +
                         $"does not exist in the HammerDB package.",
                         ErrorReason.DependencyNotFound);
                 }
 
-                if (this.Platform == PlatformID.Unix)
-                {
-                    if (!this.FileSystem.File.Exists(scriptPath))
-                    {
-                        throw new DependencyException(
-                            $"Required script file missing. The script file required in order to run transactions against the database '{PostgreSQLClientExecutor.RunTransactionsScriptName}' " +
-                            $"does not exist in the HammerDB package.",
-                            ErrorReason.DependencyNotFound);
-                    }
+                scriptCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsScriptName);
+                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
 
-                    scriptCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsScriptName);
-                    tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
-
-                    this.FileSystem.File.Copy(scriptPath, scriptCopyPath, true);
-                    this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
-                }
-                else if (this.Platform == PlatformID.Win32NT)
-                {
-                    tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
-                    this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
-                }
-
-                await this.SetTclScriptParameters(cancellationToken);
+                this.FileSystem.File.Copy(scriptPath, scriptCopyPath, true);
+                this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
             }
+            else if (this.Platform == PlatformID.Win32NT)
+            {
+                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
+                this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
+            }
+
+            return this.SetTclScriptParametersAsync(cancellationToken);
         }
 
-        /// <summary>
-        /// Sets the parameters in the TCL file for running transactions against the database.
-        /// </summary>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected async Task SetTclScriptParameters(CancellationToken cancellationToken)
+        private async Task SetTclScriptParametersAsync(CancellationToken cancellationToken)
         {
             Item<PostgreSQLServerState> state = await this.ServerApiClient.GetStateAsync<PostgreSQLServerState>(
                 nameof(PostgreSQLServerState),
@@ -179,7 +183,7 @@ namespace VirtualClient.Actions
             await this.FileSystem.File.ReplaceInFileAsync(
                     this.PlatformSpecifics.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName),
                     @"<VIRTUALUSERS>",
-                    $"{parameters.NumOfVirtualUsers}",
+                    $"{parameters.UserCount}",
                     cancellationToken);
 
             await this.FileSystem.File.ReplaceInFileAsync(
@@ -199,24 +203,6 @@ namespace VirtualClient.Actions
                     @"<PASSWORD>",
                     $"{parameters.Password}",
                     cancellationToken);
-        }
-
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    PostgreSQLMetricsParser postgreSQLParser = new PostgreSQLMetricsParser(results);
-                    IList<Metric> metrics = postgreSQLParser.Parse();
-
-                    this.CaptureMetrics(metrics, startTime, DateTime.UtcNow, telemetryContext);
-                }
-                catch (SchemaException exc)
-                {
-                    throw new WorkloadResultsException($"Failed to parse workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
-                }
-            }
         }
     }
 }

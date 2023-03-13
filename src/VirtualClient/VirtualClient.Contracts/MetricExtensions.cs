@@ -15,6 +15,23 @@ namespace VirtualClient.Contracts
     public static class MetricExtensions
     {
         /// <summary>
+        /// Extension allows metadata properties to be added to each of the metrics in a set.
+        /// </summary>
+        public static void AddMetadata(this IEnumerable<Metric> metrics, IDictionary<string, IConvertible> metadata)
+        {
+            metrics.ThrowIfNull(nameof(metrics));
+            metadata.ThrowIfNullOrEmpty(nameof(metadata));
+
+            if (metrics?.Any() == true)
+            {
+                foreach (Metric metric in metrics)
+                {
+                    metric.Metadata.AddRange(metadata, true);
+                }
+            }
+        }
+
+        /// <summary>
         /// Filters the set of metrics down to those whose names match or contain the filter terms
         /// provided (case-insensitive).
         /// </summary>

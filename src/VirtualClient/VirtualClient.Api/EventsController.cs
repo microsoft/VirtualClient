@@ -16,6 +16,7 @@ namespace VirtualClient.Api
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensions;
 
     /// <summary>
     /// Virtual Client REST API controller for managing client/server eventing.

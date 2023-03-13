@@ -62,31 +62,14 @@ namespace VirtualClient.Actions
                 // Events API. Event handlers have a signature that is may be too strict to 
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
-                    if (!this.IsMultiRoleLayout())
+                    await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                    await this.StopDockerAsync(this.ServerCancellationSource.Token);
+                    await this.ExecuteServerAsync(telemetryContext, cancellationToken);
+                    await this.SaveStateAsync(this.ServiceName, telemetryContext, cancellationToken);
+
+                    if (this.IsMultiRoleLayout())
                     {
-                        this.Logger.LogTraceMessage("Server Polling until state deleted or not present.");
-
-                        await DeathStarBenchClientExecutor.PollUntilStateDeletedAsync(
-                            this.ServerApiClient,
-                            nameof(DeathStarBenchState),
-                            DeathStarBenchExecutor.StateConfirmationPollingTimeout,
-                            cancellationToken).ConfigureAwait();
-
-                        await this.StopDockerAsync(this.ServerCancellationSource.Token).ConfigureAwait();
-                        await this.ExecuteServerAsync(telemetryContext, cancellationToken).ConfigureAwait();
-
-                        using (HttpResponseMessage response = await this.ServerApiClient.UpdateStateAsync(
-                            nameof(DeathStarBenchState),
-                            new Item<DeathStarBenchState>(nameof(DeathStarBenchState), new DeathStarBenchState(this.ServiceName, true)),
-                            cancellationToken))
-                        {
-                            response.ThrowOnError<WorkloadException>();
-                        }
-                    }
-                    else
-                    {
-                        await this.ExecuteServerAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait();
+                        await this.WaitAsync(cancellationToken);
                     }
                 }
             });
@@ -103,7 +86,7 @@ namespace VirtualClient.Actions
             {
                 if (this.IsMultiRoleLayout())
                 {
-                    Console.WriteLine($"{this.ServiceDirectory}");
+                    Console.WriteLine($"Service Directory: {this.ServiceDirectory}");
                     this.tokenFilePath = this.PlatformSpecifics.Combine(this.ServiceDirectory, "token.txt");
                     this.ResetFile(this.tokenFilePath, telemetryContext);
 
@@ -171,6 +154,41 @@ namespace VirtualClient.Actions
 
                 this.disposed = true;
             }
+        }
+
+        private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.DeleteState", relatedContext, async () =>
+            {
+                using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(DeathStarBenchState), cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        relatedContext.AddResponseContext(response);
+                        response.ThrowOnError<WorkloadException>();
+                    }
+                }
+            });
+        }
+
+        private Task SaveStateAsync(string serviceName, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone();
+            return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
+            {
+                using (HttpResponseMessage response = await this.LocalApiClient.UpdateStateAsync(
+                    nameof(DeathStarBenchState),
+                    new Item<DeathStarBenchState>(nameof(DeathStarBenchState), new DeathStarBenchState(serviceName, true)),
+                    cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        relatedContext.AddResponseContext(response);
+                        response.ThrowOnError<WorkloadException>();
+                    }
+                }
+            });
         }
 
         private async Task SetOrUpdateClientCommandLine(CancellationToken cancellationToken)

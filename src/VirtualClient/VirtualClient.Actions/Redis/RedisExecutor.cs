@@ -24,6 +24,8 @@ namespace VirtualClient.Actions
     [UnixCompatible]
     public class RedisExecutor : VirtualClientComponent
     {
+        private bool parametersEvaluated;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisExecutor"/> class.
         /// </summary>
@@ -127,6 +129,12 @@ namespace VirtualClient.Actions
         {
             await this.ValidatePlatformSupportAsync(cancellationToken);
 
+            if (!this.parametersEvaluated)
+            {
+                await this.EvaluateParametersAsync(cancellationToken);
+                this.parametersEvaluated = true;
+            }
+
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance clientInstance = this.GetLayoutClientInstance();
@@ -206,6 +214,15 @@ namespace VirtualClient.Actions
             public ServerState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
             {
+            }
+
+            internal ServerState(IEnumerable<int> ports)
+               : base()
+            {
+                if (ports?.Any() == true)
+                {
+                    this[nameof(this.Ports)] = string.Join(",", ports);
+                }
             }
 
             /// <summary>

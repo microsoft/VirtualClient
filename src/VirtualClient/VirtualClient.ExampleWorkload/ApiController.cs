@@ -16,7 +16,7 @@ namespace VirtualClient
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
-    using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensions;
     using VirtualClient.Properties;
 
     /// <summary>

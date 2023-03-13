@@ -192,8 +192,7 @@ namespace VirtualClient.Actions
                                 VirtualClientEventing.ReceiveInstructions += this.OnInstructionsReceived;
                                 VirtualClientEventing.SetEventingApiOnline(true);
 
-                                await this.WaitAsync(this.ServerCancellationSource.Token)
-                                    .ConfigureAwait();
+                                await this.WaitAsync(this.ServerCancellationSource.Token);
                             }
                             catch (OperationCanceledException)
                             {
@@ -211,9 +210,7 @@ namespace VirtualClient.Actions
                         {
                             using (var serverExecutor = this.CreateWorkloadServer())
                             {
-                                await serverExecutor.ExecuteAsync(this.ServerCancellationSource.Token)
-                                    .ConfigureAwait();
-
+                                await serverExecutor.ExecuteAsync(this.ServerCancellationSource.Token);
                                 this.Logger.LogMessage($"{nameof(DeathStarBenchExecutor)}.ServerExecutionCompleted", telemetryContext);
                             }
                         }

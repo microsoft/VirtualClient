@@ -3,26 +3,24 @@
 
 namespace VirtualClient.Actions
 {
-    using Microsoft.Extensions.DependencyInjection;
-    using Moq;
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using VirtualClient.Actions.NetworkPerformance;
-    using VirtualClient.Contracts;
-    using Polly;
-    using System.Net.Http;
-    using System.Net;
     using System.IO;
+    using System.Net.Http;
+    using System.Net.Sockets;
     using System.Reflection;
     using System.Runtime.InteropServices;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
     using Newtonsoft.Json.Linq;
-    using static VirtualClient.Actions.LatteExecutor2;
-    using System.Net.Sockets;
+    using NUnit.Framework;
+    using Polly;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+    using static VirtualClient.Actions.LatteExecutor2;
 
     [TestFixture]
     [Category("Unit")]
@@ -35,7 +33,6 @@ namespace VirtualClient.Actions
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-
         }
 
         [Test]
@@ -45,9 +42,7 @@ namespace VirtualClient.Actions
         {
             int sendInstructionsExecuted = 0;
             this.SetupDefaultMockApiBehavior(platformID, architecture);
-            this.mockFixture.Parameters["Protocol"] = ProtocolType.Tcp.ToString();
-            this.mockFixture.Parameters["TestDuration"] = 34;
-            this.mockFixture.Parameters["WarmupTime"] = 47;
+
             this.mockFixture.ApiClient.Setup(client => client.SendInstructionsAsync(It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .Callback<JObject, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((obj, can, pol) =>
                 {
@@ -61,15 +56,14 @@ namespace VirtualClient.Actions
                     if (stateItem.Definition.Type == InstructionsType.ClientServerStartExecution)
                     {
                         Assert.AreEqual(sendInstructionsExecuted, 1);
-
                         sendInstructionsExecuted++;
                     }
 
                     Assert.AreEqual(stateItem.Definition.Properties["Scenario"], "AnyScenario");
                     Assert.AreEqual(stateItem.Definition.Properties["Type"], typeof(LatteServerExecutor2).Name);
                     Assert.AreEqual(stateItem.Definition.Properties["Protocol"], ProtocolType.Tcp.ToString());
-                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 34);
-                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 47);
+                    Assert.AreEqual(stateItem.Definition.Properties["TestDuration"], 300);
+                    Assert.AreEqual(stateItem.Definition.Properties["WarmupTime"], 300);
                 })
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -118,6 +112,7 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
+            this.mockFixture.Parameters["PackageName"] = "latte";
             this.mockFixture.Parameters["TestDuration"] = 300;
             this.mockFixture.Parameters["WarmupTime"] = 300;
             this.mockFixture.Parameters["Protocol"] = "Tcp";

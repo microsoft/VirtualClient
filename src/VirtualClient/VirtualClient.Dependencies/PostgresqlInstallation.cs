@@ -39,22 +39,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The version of PostgreSQL to install.
-        /// </summary>
-        public int Version
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(PostgreSQLInstallation.Version));
-            }
-
-            set
-            {
-                this.Parameters[nameof(PostgreSQLInstallation.Version)] = value;
-            }
-        }
-
-        /// <summary>
         /// A policy that defines how the component will retry when
         /// it experiences transient issues.
         /// </summary>
@@ -131,26 +115,9 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        /// <summary>
-        /// Validates the parameters supplied in the profile.
-        /// </summary>
-        protected override void ValidateParameters()
-        {
-            base.ValidateParameters();
-
-            // It is risky to allow the user to change the version given that the version of the installer in the
-            // 'postgresql' package for win-x64 and win-arm64 allows only 1 version (e.g. postgresql-14.exe).
-            if (this.Version != 14)
-            {
-                throw new DependencyException(
-                    $"Unsupported version. PostgreSQL version '{this.Version}' is not supported by the Virtual Client. The following versions are currently supported: 14.",
-                    ErrorReason.DependencyDescriptionInvalid);
-            }
-        }
-
         private Task InstallOnCentOSOrRHELAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installationScript = this.Combine(this.PackagePath, "install_postgresql_rhel_centos.sh");
+            string installationScript = this.Combine(this.PackagePath, "rhel", "install.sh");
             telemetryContext.AddContext(nameof(installationScript), installationScript);
 
             return this.RetryPolicy.ExecuteAsync(async () =>
@@ -168,7 +135,7 @@ namespace VirtualClient.Dependencies
 
         private Task InstallOnUbuntuOrDebianAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installationScript = this.Combine(this.PackagePath, "install_postgresql_ubuntu.sh");
+            string installationScript = this.Combine(this.PackagePath, "ubuntu", "install.sh");
             telemetryContext.AddContext(nameof(installationScript), installationScript);
 
             return this.RetryPolicy.ExecuteAsync(async () =>
@@ -186,7 +153,7 @@ namespace VirtualClient.Dependencies
 
         private Task InstallOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installerPath = this.Combine(this.PackagePath, $"postgresql-{this.Version}.exe");
+            string installerPath = this.Combine(this.PackagePath, $"postgresql.exe");
             telemetryContext.AddContext(nameof(installerPath), installerPath);
 
             return this.RetryPolicy.ExecuteAsync(async () =>

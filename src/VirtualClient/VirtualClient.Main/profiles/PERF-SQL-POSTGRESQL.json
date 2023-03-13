@@ -6,7 +6,8 @@
         "SupportedOperatingSystems": "Ubuntu,Windows"
     },
     "Parameters": {
-        "ReuseDatabase": true
+        "ReuseDatabase": true,
+        "Port": 5432
     },
     "Actions": [
         {
@@ -16,7 +17,8 @@
                 "PackageName": "postgresql",
                 "HammerDBPackageName": "hammerdb",
                 "DatabaseName": "tpcc",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase"
+                "ReuseDatabase": "$.Parameters.ReuseDatabase",
+                "Port": "$.Parameters.Port"
             }
         }
     ],
@@ -53,8 +55,7 @@
             "Type": "PostgreSQLInstallation",
             "Parameters": {
                 "Scenario": "InstallPostgreSQLServer",
-                "PackageName": "postgresql",
-                "Version": 14
+                "PackageName": "postgresql"
             }
         },
         {

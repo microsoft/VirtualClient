@@ -13,9 +13,11 @@ namespace VirtualClient
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
+    using Moq.Language;
     using Moq.Language.Flow;
     using Newtonsoft.Json.Linq;
     using Polly;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
@@ -117,6 +119,58 @@ namespace VirtualClient
             else
             {
                 return apiClient.Setup(client => client.GetStateAsync(stateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+        }
+
+        /// <summary>
+        /// Setup default behavior for retrieving state objects using the <see cref="IApiClient"/>.
+        /// </summary>
+        public static ISetupSequentialResult<Task<HttpResponseMessage>> OnGetStateSequence(this Mock<IApiClient> apiClient, string stateId = null)
+        {
+            apiClient.ThrowIfNull(nameof(apiClient));
+
+            if (stateId == null)
+            {
+                return apiClient.SetupSequence(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+            else
+            {
+                return apiClient.SetupSequence(client => client.GetStateAsync(stateId, It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+        }
+
+        /// <summary>
+        /// Setup default behavior for updating state objects using the <see cref="IApiClient"/>.
+        /// </summary>
+        public static ISetup<IApiClient, Task<HttpResponseMessage>> OnUpdateState(this Mock<IApiClient> apiClient, string stateId = null)
+        {
+            apiClient.ThrowIfNull(nameof(apiClient));
+
+            if (stateId == null)
+            {
+                return apiClient.Setup(client => client.UpdateStateAsync(It.IsAny<string>(), It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+            else
+            {
+                return apiClient.Setup(client => client.UpdateStateAsync(stateId, It.IsAny<JObject>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+        }
+
+        /// <summary>
+        /// Setup default behavior for updating state objects using the <see cref="IApiClient"/>.
+        /// </summary>
+        public static ISetup<IApiClient, Task<HttpResponseMessage>> OnUpdateState<TState>(this Mock<IApiClient> apiClient, string stateId = null)
+            where TState : State
+        {
+            apiClient.ThrowIfNull(nameof(apiClient));
+
+            if (stateId == null)
+            {
+                return apiClient.Setup(client => client.UpdateStateAsync(It.IsAny<string>(), It.IsAny<Item<TState>>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
+            }
+            else
+            {
+                return apiClient.Setup(client => client.UpdateStateAsync(stateId, It.IsAny<Item<TState>>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()));
             }
         }
 

@@ -14,6 +14,7 @@ namespace VirtualClient.Api
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensions;
 
     /// <summary>
     /// Virtual Client REST API controller for providing heartbeats to clients.

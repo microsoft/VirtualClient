@@ -269,6 +269,15 @@ namespace VirtualClient.Actions
             {
             }
 
+            internal ServerState(IEnumerable<int> ports)
+              : base()
+            {
+                if (ports?.Any() == true)
+                {
+                    this[nameof(this.Ports)] = string.Join(",", ports);
+                }
+            }
+
             /// <summary>
             /// The set of ports on which the Memcached servers are running.
             /// </summary>

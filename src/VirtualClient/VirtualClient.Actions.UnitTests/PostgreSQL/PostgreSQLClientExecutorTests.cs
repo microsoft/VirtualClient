@@ -70,12 +70,11 @@ namespace VirtualClient.Actions
             // Setup: Server state
             var expectedState = new Item<State>(nameof(PostgreSQLServerState), new PostgreSQLServerState
             {
-                InitialSetupComplete = true,
-                DatabaseCreated = true,
+                DatabaseInitialized = true,
                 UserName = "anyUser",
                 Password = "anyValue",
                 WarehouseCount = 1000,
-                NumOfVirtualUsers = 1000
+                UserCount = 1000
             });
 
             this.mockFixture.ApiClient.OnGetState(nameof(PostgreSQLServerState))

@@ -433,7 +433,6 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--platform")]
         [TestCase("--system")]
         [TestCase("--s")]
         public void SystemOptionSupportsExpectedAliases(string alias)

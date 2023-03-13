@@ -18,6 +18,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Extensions;
 
     /// <summary>
     /// Some logging hellper methods specific to virtual client
@@ -256,6 +257,68 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
+        /// to write custom telemetry and metrics associated with individual operations within the component.
+        /// </summary>
+        public static void LogFailedMetric(
+            this VirtualClientComponent component,
+            string toolName = null,
+            string toolVersion = null,
+            string scenarioName = null,
+            string scenarioArguments = null,
+            string metricCategorization = null,
+            DateTime? scenarioStartTime = null,
+            DateTime? scenarioEndTime = null,
+            EventContext telemetryContext = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            component.LogSuccessOrFailMetric(false, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
+        }
+
+        /// <summary>
+        /// Logs a "Failed" metric to the target telemetry data store(s).
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
+        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
+        /// <param name="scenarioStartTime">The time at which the test began.</param>
+        /// <param name="scenarioEndTime">The time at which the test ended.</param>
+        /// <param name="tags">Tags associated with the test.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
+        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
+        /// <param name="toolVersion">The version of the tool/toolset.</param>
+        public static void LogFailedMetric(
+            this ILogger logger,
+            string toolName,
+            string scenarioName,
+            DateTime scenarioStartTime,
+            DateTime scenarioEndTime,
+            EventContext eventContext,
+            string scenarioArguments = null,
+            string metricCategorization = null,
+            string toolVersion = null,
+            IEnumerable<string> tags = null)
+        {
+            VirtualClientLoggingExtensions.LogMetrics(
+                logger,
+                toolName,
+                scenarioName,
+                scenarioStartTime,
+                scenarioEndTime,
+                "Failed",
+                1,
+                null,
+                metricCategorization,
+                scenarioArguments,
+                tags,
+                eventContext,
+                MetricRelativity.LowerIsBetter,
+                "Indicates the component or toolset execution failed for the scenario defined.",
+                toolVersion: toolVersion);
+        }
+
+        /// <summary>
         /// Extension logs the information and context.
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -472,19 +535,21 @@ namespace VirtualClient.Contracts
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
+        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
         public static void LogMetrics(
             this ILogger logger,
             string toolName,
             string scenarioName,
             DateTime scenarioStartTime,
             DateTime scenarioEndTime,
-            IList<Metric> metrics,
+            IEnumerable<Metric> metrics,
             string metricCategorization,
             string scenarioArguments,
             IEnumerable<string> tags,
             EventContext eventContext,
             string toolResults = null,
-            string toolVersion = null)
+            string toolVersion = null,
+            bool supportOriginalSchema = false)
         {
             logger.ThrowIfNull(nameof(logger));
 
@@ -507,7 +572,8 @@ namespace VirtualClient.Contracts
                     metric.Description,
                     toolResults,
                     toolVersion,
-                    metric.Metadata);
+                    metric.Metadata,
+                    supportOriginalSchema);
             }
         }
 
@@ -531,6 +597,7 @@ namespace VirtualClient.Contracts
         /// <param name="toolResults">The raw results produced by the workload/monitor etc. from which the metrics were parsed.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
         /// <param name="metricMetadata">Telemetry context related to metric.</param>
+        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
         public static void LogMetrics(
             this ILogger logger,
             string toolName,
@@ -548,7 +615,8 @@ namespace VirtualClient.Contracts
             string description = null,
             string toolResults = null,
             string toolVersion = null,
-            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null)
+            IEnumerable<KeyValuePair<string, IConvertible>> metricMetadata = null,
+            bool supportOriginalSchema = false)
         {
             logger.ThrowIfNull(nameof(logger));
             scenarioName.ThrowIfNullOrWhiteSpace(nameof(scenarioName));
@@ -558,9 +626,6 @@ namespace VirtualClient.Contracts
             scenarioStartTime.ThrowIfInvalid(nameof(scenarioStartTime), (time) => time != DateTime.MinValue);
             scenarioEndTime.ThrowIfInvalid(nameof(scenarioEndTime), (time) => time != DateTime.MinValue);
 
-            // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-            // output. To enable a seamless transition, we are supporting the old and the new schema
-            // until we have all systems using the latest version of the Virtual Client.
             var properties = new Dictionary<string, object>
             {
                 { "scenarioName", scenarioName },
@@ -580,6 +645,20 @@ namespace VirtualClient.Contracts
                 { "metricMetadata", metricMetadata as object ?? string.Empty }
             };
 
+            // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
+            // output. To enable a seamless transition, we are supporting the old and the new schema
+            // until we have all systems using the latest version of the Virtual Client.
+            if (supportOriginalSchema)
+            {
+                properties["testName"] = scenarioName;
+                properties["testResult"] = metricValue;
+                properties["units"] = metricUnits ?? string.Empty;
+                properties["testedInstance"] = metricCategorization ?? string.Empty;
+                properties["testArguments"] = scenarioArguments ?? string.Empty;
+                properties["testStartTime"] = scenarioStartTime;
+                properties["testEndTime"] = scenarioEndTime;
+            }
+
             EventContext metricsContext = eventContext.Clone();
             metricsContext.Properties.AddRange(properties, withReplace: true);
 
@@ -596,7 +675,8 @@ namespace VirtualClient.Contracts
         /// <param name="endTime">The time at which the performance counter capture process ended.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogPerformanceCounters(this ILogger logger, string toolName, IEnumerable<Metric> counters, DateTime startTime, DateTime endTime, EventContext eventContext, string toolVersion = null)
+        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
+        public static void LogPerformanceCounters(this ILogger logger, string toolName, IEnumerable<Metric> counters, DateTime startTime, DateTime endTime, EventContext eventContext, string toolVersion = null, bool supportOriginalSchema = false)
         {
             logger.ThrowIfNull(nameof(logger));
             eventContext.ThrowIfNull(nameof(eventContext));
@@ -608,9 +688,6 @@ namespace VirtualClient.Contracts
                 {
                     if (counter != Metric.None)
                     {
-                        // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                        // output. To enable a seamless transition, we are supporting the old and the new schema
-                        // until we have all systems using the latest version of the Virtual Client.
                         EventContext counterContext = eventContext.Clone();
                         counterContext.Properties["scenarioName"] = scenarioName;
                         counterContext.Properties["scenarioStartTime"] = startTime;
@@ -624,6 +701,19 @@ namespace VirtualClient.Contracts
                         counterContext.Properties["toolVersion"] = toolVersion;
                         counterContext.Properties["tags"] = counter.Tags != null ? $"{string.Join(",", counter.Tags)}" : string.Empty;
                         counterContext.Properties["metricMetadata"] = counter.Metadata as object;
+
+                        // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
+                        // output. To enable a seamless transition, we are supporting the old and the new schema
+                        // until we have all systems using the latest version of the Virtual Client.
+                        if (supportOriginalSchema)
+                        {
+                            counterContext.Properties["counterName"] = counter.Name;
+                            counterContext.Properties["counterValue"] = counter.Value;
+                            counterContext.Properties["testName"] = scenarioName;
+                            counterContext.Properties["testStartTime"] = startTime;
+                            counterContext.Properties["testEndTime"] = endTime;
+                            counterContext.Properties["units"] = counter.Unit ?? string.Empty;
+                        }
 
                         VirtualClientLoggingExtensions.LogMessage(logger, scenarioName, LogLevel.Information, LogType.Metrics, counterContext);
                     }
@@ -733,49 +823,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Logs a "Failed" metric to the target telemetry data store(s).
-        /// </summary>
-        /// <param name="logger">The logger instance.</param>
-        /// <param name="toolName">The name of the tool that produced the test metrics/results (e.g. GeekBench, FIO).</param>
-        /// <param name="scenarioName">The name of the test (e.g. fio_randwrite_4GB_4k_d1_th1_direct).</param>
-        /// <param name="scenarioStartTime">The time at which the test began.</param>
-        /// <param name="scenarioEndTime">The time at which the test ended.</param>
-        /// <param name="tags">Tags associated with the test.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        /// <param name="scenarioArguments">The command line parameters provided to the tool.</param>
-        /// <param name="metricCategorization">The resource that was tested (e.g. a specific disk drive).</param>
-        /// <param name="toolVersion">The version of the tool/toolset.</param>
-        public static void LogFailedMetric(
-            this ILogger logger,
-            string toolName,
-            string scenarioName,
-            DateTime scenarioStartTime,
-            DateTime scenarioEndTime,
-            EventContext eventContext,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            string toolVersion = null,
-            IEnumerable<string> tags = null)
-        {
-            VirtualClientLoggingExtensions.LogMetrics(
-                logger,
-                toolName,
-                scenarioName,
-                scenarioStartTime,
-                scenarioEndTime,
-                "Failed",
-                1,
-                null,
-                metricCategorization,
-                scenarioArguments,
-                tags,
-                eventContext,
-                MetricRelativity.LowerIsBetter,
-                "Indicates the component or toolset execution failed for the scenario defined.",
-                toolVersion: toolVersion);
-        }
-
-        /// <summary>
         /// Logs a "Succeeded" metric to the target telemetry data store(s).
         /// </summary>
         /// <param name="logger">The logger instance.</param>
@@ -821,25 +868,6 @@ namespace VirtualClient.Contracts
         /// Executes whenever an operation within the context of the component succeeds. This is used for example 
         /// to write custom telemetry and metrics associated with individual operations within the component.
         /// </summary>
-        public static void LogFailedMetric(
-            this VirtualClientComponent component,
-            string toolName = null,
-            string toolVersion = null,
-            string scenarioName = null,
-            string scenarioArguments = null,
-            string metricCategorization = null,
-            DateTime? scenarioStartTime = null,
-            DateTime? scenarioEndTime = null,
-            EventContext telemetryContext = null)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.LogSuccessOrFailMetric(false, toolName, toolVersion, scenarioName, scenarioArguments, metricCategorization, scenarioStartTime, scenarioEndTime, telemetryContext);
-        }
-
-        /// <summary>
-        /// Executes whenever an operation within the context of the component succeeds. This is used for example 
-        /// to write custom telemetry and metrics associated with individual operations within the component.
-        /// </summary>
         public static void LogSuccessMetric(
             this VirtualClientComponent component,
             string toolName = null,
@@ -862,7 +890,8 @@ namespace VirtualClient.Contracts
         /// <param name="message">The performance counter message/event name.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
         /// <param name="events">The system events to log.</param>
-        public static void LogSystemEvents(this ILogger logger, string message, IEnumerable<KeyValuePair<string, object>> events, EventContext eventContext)
+        /// <param name="supportOriginalSchema">True to include properties in the metrics output that support the original Virtual Client metrics schema. Default = false.</param>
+        public static void LogSystemEvents(this ILogger logger, string message, IEnumerable<KeyValuePair<string, object>> events, EventContext eventContext, bool supportOriginalSchema = false)
         {
             logger.ThrowIfNull(nameof(logger));
             message.ThrowIfNullOrWhiteSpace(nameof(message));
@@ -871,12 +900,18 @@ namespace VirtualClient.Contracts
             {
                 foreach (var systemEvent in events)
                 {
-                    // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                    // output. To enable a seamless transition, we are supporting the old and the new schema
-                    // until we have all systems using the latest version of the Virtual Client.
                     EventContext systemEventContext = eventContext?.Clone();
                     systemEventContext.Properties["eventType"] = systemEvent.Key;
                     systemEventContext.Properties["eventInfo"] = systemEvent.Value;
+
+                    // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
+                    // output. To enable a seamless transition, we are supporting the old and the new schema
+                    // until we have all systems using the latest version of the Virtual Client.
+                    if (supportOriginalSchema)
+                    {
+                        systemEventContext.Properties["name"] = systemEvent.Key;
+                        systemEventContext.Properties["value"] = systemEvent.Value;
+                    }
 
                     VirtualClientLoggingExtensions.LogMessage(logger, message, LogLevel.Information, LogType.SystemEvent, systemEventContext);
                 }

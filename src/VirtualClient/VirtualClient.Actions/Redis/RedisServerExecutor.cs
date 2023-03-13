@@ -182,6 +182,7 @@ namespace VirtualClient.Actions
                 catch
                 {
                     this.SetServerOnline(false);
+                    throw;
                 }
             });
         }
@@ -255,11 +256,11 @@ namespace VirtualClient.Actions
 
             if (shouldReset)
             {
-                this.Logger.LogTraceMessage($"Restart Redis Server(s)...");
+                this.Logger.LogTraceMessage($"Restart Redis Server(s)...", telemetryContext);
             }
             else
             {
-                this.Logger.LogTraceMessage($"Redis Server(s) Running...");
+                this.Logger.LogTraceMessage($"Redis Server(s) Running...", telemetryContext);
             }
 
             return shouldReset;
@@ -276,19 +277,15 @@ namespace VirtualClient.Actions
                     ports.Add(this.Port + i);
                 }
 
-                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(
-                    nameof(ServerState),
-                    new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
-                    {
-                        [nameof(ServerState.Ports)] = string.Join(",", ports)
-                    })),
-                    cancellationToken))
+                var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
+                {
+                    [nameof(ServerState.Ports)] = string.Join(",", ports)
+                }));
+
+                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(ServerState), state, cancellationToken))
                 {
                     relatedContext.AddResponseContext(response);
-                    if (response.StatusCode != HttpStatusCode.NoContent)
-                    {
-                        response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
-                    }
+                    response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
                 }
             });
         }
@@ -320,7 +317,6 @@ namespace VirtualClient.Actions
                         // will warm them up and then exit. We keep a reference to the server processes/tasks
                         // so that they remain running until the class is disposed.
                         int port = this.Port + i;
-                        int? bindToCore = this.BindToCores ? i : null;
                         string commandArguments = null;
 
                         if (this.BindToCores)
@@ -340,7 +336,7 @@ namespace VirtualClient.Actions
                         // until our counter 'i' is at the end. This will cause all server instances to use the same port
                         // and to try to bind to the same core.
                         commands.Add(commandArguments);
-                        this.serverProcesses.Add(this.StartServerInstanceAsync(port, command, commandArguments, workingDirectory, relatedContext, cancellationToken, bindToCore));
+                        this.serverProcesses.Add(this.StartServerInstanceAsync(port, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
                     }
                 }
                 catch (OperationCanceledException)
@@ -350,7 +346,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private Task StartServerInstanceAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, int? bindToCore = null)
+        private Task StartServerInstanceAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {

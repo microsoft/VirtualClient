@@ -275,20 +275,16 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone();
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
-                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(
-                    nameof(ServerState),
-                    new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
-                    {
-                        [nameof(ServerState.Ports)] = this.Port
-                    })),
-                    cancellationToken))
-                    {
-                        relatedContext.AddResponseContext(response);
-                        if (response.StatusCode != HttpStatusCode.NoContent)
-                        {
-                            response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
-                        }
-                    }
+                var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
+                {
+                    [nameof(ServerState.Ports)] = this.Port
+                }));
+
+                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(ServerState), state, cancellationToken))
+                {
+                    relatedContext.AddResponseContext(response);
+                    response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
+                }
             });
         }
 

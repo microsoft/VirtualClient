@@ -38,7 +38,8 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Unix)]
         public void StressAppTestExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platform)
         {
-            this.fixture.Setup(platform);
+            this.SetupDefaultBehavior(platform);
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
 
             using (TestStressAppTestExecutor StressAppTestExecutor = new TestStressAppTestExecutor(this.fixture))
             {

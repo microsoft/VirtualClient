@@ -46,7 +46,12 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 ["PackageName"] = this.mockPostgreSqlPackage.Name,
-                ["HammerDBPackageName"] = this.mockHammerDbPackage.Name
+                ["HammerDBPackageName"] = this.mockHammerDbPackage.Name,
+                ["ReuseDatabase"] = true,
+                ["Username"] = "anyuser",
+                ["Password"] = "anyvalue",
+                ["UserCount"] = 100,
+                ["WarehouseCount"] = 100
             };
 
             this.mockFixture.PackageManager.OnGetPackage("postgresql").ReturnsAsync(this.mockPostgreSqlPackage);

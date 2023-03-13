@@ -4,8 +4,11 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections;
+    using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -18,6 +21,9 @@ namespace VirtualClient
     /// </summary>
     public static class FileSystemExtensions
     {
+        private const string SettingsBeginComment = "# VC Settings Begin";
+        private const string SettingsEndComment = "# VC Settings End";
+
         /// <summary>
         /// Evaluates if the given fully qualified file can be found in the file system, throws if can not be found.
         /// </summary>

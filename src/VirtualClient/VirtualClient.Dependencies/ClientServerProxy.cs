@@ -15,6 +15,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensions;
 
     /// <summary>
     /// Acts as a proxy for a client to pass instructions to the server to execute actions

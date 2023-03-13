@@ -1,0 +1,129 @@
+{
+	"DCGM GPU Diagnostic" : 
+	{
+		"test_categories" : 
+		[
+			{
+				"category" : "Deployment",
+				"tests" : 
+				[
+					{
+						"name" : "Denylist",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "NVML Library",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "CUDA Main Library",
+						"results" : 
+						[
+							{
+								"status": "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Permissions and OS Blocks",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Persistence Mode",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Environment Variables",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Page Retirement/Row Remap",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Graphics Processes",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					},
+					{
+						"name" : "Inforom",
+						"results" : 
+						[
+							{
+								"status" : "Pass"
+							}
+						]
+					}
+				]
+			},
+			{
+				"category" : "Integration",
+				"tests" : 
+				[
+					{
+						"name" : "PCIe",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"info" : "GPU 0 GPU 0 GPU to Host bandwidth:\t\t13.15 GB/s, GPU 0 GPU 0 Host to GPU bandwidth:\t\t13.11 GB/s, GPU 0 GPU 0 bidirectional bandwidth:\t22.49 GB/s, GPU 0 GPU 0 GPU to Host latency:\t\t2.287 us, GPU 0 GPU 0 Host to GPU latency:\t\t2.370 us, GPU 0 GPU 0 bidirectional latency:\t\t4.532 us",
+								"status" : "Pass"
+							}
+						]
+					}
+				]
+			},
+			{
+				"category" : "Hardware",
+				"tests" : 
+				[
+					{
+						"name" : "GPU Memory",
+						"results" : 
+						[
+							{
+								"gpu_ids" : "0",
+								"info" : "GPU 0 Allocated 15206918958 bytes (97.3%)",
+								"status" : "Pass"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

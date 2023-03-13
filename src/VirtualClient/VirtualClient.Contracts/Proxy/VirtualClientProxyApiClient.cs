@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts.Proxy
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
@@ -244,7 +245,7 @@ namespace VirtualClient.Contracts.Proxy
 
         private static bool IsRangeEnabled(HttpResponseMessage response)
         {
-            return response != null && response.IsSuccessStatusCode && response.Headers.AcceptRanges != null;
+            return response != null && response.IsSuccessStatusCode && response.Headers.AcceptRanges?.Count > 0;
         }
     }
 }

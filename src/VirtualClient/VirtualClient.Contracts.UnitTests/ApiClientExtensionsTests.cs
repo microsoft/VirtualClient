@@ -570,7 +570,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void GetStateExtensionThrowsIfStateNotFound()
+        public async Task GetStateExtensionReturnsTheExpectedResponseWhenTheStateIsNotFound()
         {
             string expectedStateId = "State1234";
 
@@ -583,6 +583,30 @@ namespace VirtualClient.Contracts
             Item<ClientServerState> expectedStateInstance = new Item<ClientServerState>(expectedStateId, parameters);
 
             using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.NotFound, expectedStateInstance))
+            {
+                this.fixture.ApiClient
+                    .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                    .ReturnsAsync(response);
+
+                Item<ClientServerState> state = await this.fixture.ApiClient.Object.GetStateAsync<ClientServerState>(expectedStateId, CancellationToken.None);
+                Assert.IsNull(state);
+            }
+        }
+
+        [Test]
+        public void GetStateExtensionThrowsIfTheApiReturnsAnUnexpectedNonSuccessResponse()
+        {
+            string expectedStateId = "State1234";
+
+            IDictionary<string, IConvertible> properties = new Dictionary<string, IConvertible>();
+            properties.Add("Property1", "value1");
+            properties.Add("Property2", "value2");
+
+            var parameters = new ClientServerState(ClientServerStatus.Ready, properties);
+
+            Item<ClientServerState> expectedStateInstance = new Item<ClientServerState>(expectedStateId, parameters);
+
+            using (HttpResponseMessage response = this.fixture.CreateHttpResponse(HttpStatusCode.BadRequest, expectedStateInstance))
             {
                 this.fixture.ApiClient
                     .Setup(client => client.GetStateAsync(It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))

@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -136,8 +137,8 @@ namespace VirtualClient.Dependencies
 
             IConvertible expectedVersion = this.mockFixture.Parameters["Version"];
 
-            Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(
-                $@"{this.mockPackage.Path}\{platformArchitecture}\postgresql-{expectedVersion}.exe --mode ""unattended"" --serverport ""5432"" --superpassword ""postgres"""));
+            Assert.IsTrue(this.mockFixture.ProcessManager.Commands.Contains(
+                $"{this.mockPackage.Path}\\{platformArchitecture}\\postgresql-{expectedVersion}.exe --mode \"unattended\" --serverport \"5432\" --superpassword \"postgres\""));
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)

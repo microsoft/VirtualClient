@@ -10,7 +10,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Extensions;
 
     /// <summary>
     /// Provides an <see cref="ILogger"/> implementation that writes messages to the console. The

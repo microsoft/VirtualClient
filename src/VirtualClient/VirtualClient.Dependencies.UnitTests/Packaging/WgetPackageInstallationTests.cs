@@ -19,18 +19,33 @@ namespace VirtualClient.Dependencies.Packaging
     {
         private MockFixture mockFixture;
 
-        public void SetupDefaults(PlatformID platformID, Architecture architecture)
+        public void SetupDefaults(PlatformID platform, Architecture architecture)
         {
             this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(platformID, architecture);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            this.mockFixture.Setup(platform, architecture);
+
+            if (platform == PlatformID.Unix)
             {
-                { nameof(WgetPackageInstallation.PackageName), "any-package" },
-                { nameof(WgetPackageInstallation.PackageUri), "https://any.company.com/packages/any-package.1.0.0.tar.gz" }
-            };
+                this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+                {
+                    { nameof(WgetPackageInstallation.PackageName), "any-package" },
+                    { nameof(WgetPackageInstallation.PackageUri), "https://any.company.com/packages/any-package.1.0.0.tar.gz" }
+                };
+            }
+            else
+            {
+                this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+                {
+                    { nameof(WgetPackageInstallation.PackageName), "any-package" },
+                    { nameof(WgetPackageInstallation.PackageUri), "https://any.company.com/packages/any-package.1.0.0.zip" }
+                };
+            }
 
             // The wget/wget2 toolset is used to download the packages from the internet.
             this.mockFixture.PackageManager.OnGetPackage("wget").ReturnsAsync(new DependencyPath("wget", this.mockFixture.GetPackagePath("wget")));
+
+            // Setup the wget/wget2 files to exist
+            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.Contains("wget")))).Returns(true);
         }
 
         [Test]
@@ -65,7 +80,7 @@ namespace VirtualClient.Dependencies.Packaging
                 installation.RetryPolicy = Policy.NoOpAsync();
 
                 string expectedDownloadPath = this.mockFixture.GetPackagePath("any-package.1.0.0.tar.gz");
-                string expectedInstallationPath = this.mockFixture.GetPackagePath("any-package.1.0.0");
+                string expectedInstallationPath = this.mockFixture.GetPackagePath("any-package");
 
                 bool downloadPathConfirmed = false;
                 bool installationPathConfirmed = false;
@@ -109,8 +124,8 @@ namespace VirtualClient.Dependencies.Packaging
             {
                 installation.RetryPolicy = Policy.NoOpAsync();
 
-                string expectedDownloadPath = this.mockFixture.GetPackagePath("any-package.1.0.0.tar.gz");
-                string expectedInstallationPath = this.mockFixture.GetPackagePath("any-package.1.0.0");
+                string expectedDownloadPath = this.mockFixture.GetPackagePath("any-package.1.0.0.zip");
+                string expectedInstallationPath = this.mockFixture.GetPackagePath("any-package");
 
                 bool downloadPathConfirmed = false;
                 bool installationPathConfirmed = false;
@@ -136,7 +151,7 @@ namespace VirtualClient.Dependencies.Packaging
                 await installation.ExecuteAsync(CancellationToken.None);
 
                 // On Windows, we use the 'wget' toolset.
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget {installation.PackageUri}"), "Wget download command incorrect.");
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget.exe {installation.PackageUri}"), "Wget download command incorrect.");
                 Assert.IsTrue(downloadPathConfirmed, "Archive file path incorrect.");
                 Assert.IsTrue(installationPathConfirmed, "Package installation path incorrect.");
                 Assert.IsTrue(packageRegistrationConfirmed, "Package registration incorrect.");
@@ -164,7 +179,13 @@ namespace VirtualClient.Dependencies.Packaging
                 })
                 .WaitAndRetryAsync(expectedRetries, (retries => TimeSpan.Zero));
 
-                this.mockFixture.ProcessManager.OnProcessCreated = (process) => throw new ProcessException($"Wget package download failed");
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    if (!process.FullCommand().Contains("chmod"))
+                    {
+                        throw new ProcessException($"Wget package download failed");
+                    }
+                };
 
                 try
                 {

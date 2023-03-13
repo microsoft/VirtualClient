@@ -251,7 +251,7 @@ namespace VirtualClient.Actions
                     // race conditions that affect the parsing of the results.
                     lock (this.lockObject)
                     {
-                        MemtierBenchmarkMetricsParser resultsParser = new MemtierBenchmarkMetricsParser(results);
+                        MemtierMetricsParser resultsParser = new MemtierMetricsParser(results);
                         IList<Metric> workloadMetrics = resultsParser.Parse();
 
                         this.Logger.LogMetrics(

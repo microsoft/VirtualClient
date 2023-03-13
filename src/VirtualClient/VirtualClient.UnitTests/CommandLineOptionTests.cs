@@ -91,7 +91,6 @@ namespace VirtualClient
         [TestCase("--pm", "Param1=Value1,,,Param2=Value2")]
         [TestCase("--seed", "1234")]
         [TestCase("--sd", "1234")]
-        [TestCase("--platform", "Azure")]
         [TestCase("--scenarios", "Scenario1")]
         [TestCase("--sc", "Scenario1")]
         [TestCase("--system", "Azure")]
@@ -151,7 +150,6 @@ namespace VirtualClient
         [TestCase("--packagestore", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--packages", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
         [TestCase("--ps", "https://anystorageaccount.blob.core.windows.net/?sv=2020-08-04&ss=b")]
-        [TestCase("--platform", "Azure")]
         [TestCase("--system", "Azure")]
         [TestCase("--s", "Azure")]
         public void VirtualClientBootstrapCommandSupportsAllExpectedOptions(string option, string value)

@@ -90,6 +90,11 @@ namespace VirtualClient.Contracts
         public const string OperationsPerSec = "operations/sec";
 
         /// <summary>
+        /// Requests per second
+        /// </summary>
+        public const string RequestsPerSec = "requests/sec";
+
+        /// <summary>
         /// Transactions/sec
         /// </summary>
         public const string TransactionsPerSec = "transactions/sec";
