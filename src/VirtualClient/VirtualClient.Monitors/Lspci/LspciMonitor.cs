@@ -5,15 +5,11 @@ namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
-    using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
     using global::VirtualClient.Contracts;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -97,7 +93,7 @@ namespace VirtualClient.Monitors
                         command = this.PlatformSpecifics.Combine(workingDir, command);
                     }
 
-                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, workingDir + "\\" + command, $"{commandArguments}", workingDir))
+                    using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", workingDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
