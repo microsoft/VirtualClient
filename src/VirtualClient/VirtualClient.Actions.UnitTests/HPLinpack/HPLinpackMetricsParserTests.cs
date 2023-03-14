@@ -3,7 +3,6 @@
 
 namespace VirtualClient.Actions
 {
-    using VirtualClient.Common.Contracts;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
@@ -13,7 +12,6 @@ namespace VirtualClient.Actions
     using System.Text;
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
-    using Microsoft.Identity.Client;
 
     [TestFixture]
     [Category("Unit")]

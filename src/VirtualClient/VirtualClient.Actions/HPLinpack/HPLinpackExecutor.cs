@@ -69,7 +69,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), Environment.ProcessorCount * 10000);
+                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), this.systemManagement.GetSystemCoreCount() * 10000);
             }
         }
 

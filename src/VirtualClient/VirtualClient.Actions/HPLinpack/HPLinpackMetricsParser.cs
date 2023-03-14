@@ -8,10 +8,7 @@ namespace VirtualClient.Actions
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
-    using static System.Collections.Specialized.BitVector32;
-    using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
     /// Parser for Linpack test results file.
