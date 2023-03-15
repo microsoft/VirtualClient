@@ -23,6 +23,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Common.Contracts;
+    using System.Globalization;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -697,6 +698,8 @@ namespace VirtualClient
                 dependencies.AddSingleton<EnvironmentLayout>(environmentLayout);
             }
 
+            this.Validate(dependencies, profile);
+
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
@@ -745,6 +748,21 @@ namespace VirtualClient
             {
                 await packageManager.InstallExtensionsAsync(extensions, cancellationToken)
                     .ConfigureAwait(false);
+            }
+        }
+
+        private void Validate(IServiceCollection dependencies, ExecutionProfile profile)
+        {
+            ProfileTiming timing = dependencies.GetService<ProfileTiming>();
+
+            if (profile.Metadata?.Any() == true
+                && profile.Metadata.TryGetValue(ProfileMetadata.SupportsIterations, out IConvertible supportsIterations)
+                && timing.ProfileIterations != null
+                && supportsIterations.ToBoolean(CultureInfo.InvariantCulture) == false)
+            {
+                throw new NotSupportedException(
+                    $"Iterations not supported. One or more of the profiles supplied on the command line have metadata indicating that " +
+                    "iterations (e.g. --iterations) is not supported.");
             }
         }
     }

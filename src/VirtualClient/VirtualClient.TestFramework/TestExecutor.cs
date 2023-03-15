@@ -19,6 +19,14 @@ namespace VirtualClient
         /// <summary>
         /// Initializes a new instance of the <see cref="TestExecutor"/> class.
         /// </summary>
+        public TestExecutor(MockFixture fixture)
+            : base(fixture?.Dependencies, fixture?.Parameters)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestExecutor"/> class.
+        /// </summary>
         public TestExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
