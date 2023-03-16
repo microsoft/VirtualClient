@@ -94,6 +94,8 @@ rem XXXXXXXX END EDIT HERE XXXXXXXXXXX
 call %~dp0\bin\windows\setspecvars.bat
 if errorlevel 1 goto :DONE
 
+runcpu %*
+
 if defined SHRC_QUIET goto :DONE
 rem    Finally, let's print all this in a way that makes sense.
 rem    While we're at it, this is a good little test of whether
@@ -117,5 +119,3 @@ goto :EOF
 
 rem Editor settings: (please leave this at the end of the file)
 rem vim: set filetype=dosbatch syntax=dosbatch shiftwidth=4 tabstop=8 expandtab nosmarttab:
-
-runcpu %1

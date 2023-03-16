@@ -132,7 +132,7 @@ namespace VirtualClient.Actions
                 }
                 else
                 {
-                    await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}", this.PackageDirectory, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
 
@@ -236,7 +236,7 @@ namespace VirtualClient.Actions
                     await this.ExecuteCommandAsync("powershell", mountIsoCmd, this.PackageDirectory, telemetryContext, cancellationToken);
 
                     // powershell -Command "(Get-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso" | Get-Volume).DriveLetter "
-                    string getDriveLetterCmd = $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter \"";
+                    string getDriveLetterCmd = $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter\"";
                     string driveLetter = await this.ExecuteCommandAsync("powershell", getDriveLetterCmd, this.PackageDirectory, telemetryContext, cancellationToken);
 
                     // The reason for the echo is that there is a "pause" in the install.bat. The echo skips it.
@@ -327,10 +327,11 @@ namespace VirtualClient.Actions
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
             int coreCount = this.systemManager.GetSystemCoreCount();
-            string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning} {this.SpecProfile}";
+            string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
             cmd = (this.Platform == PlatformID.Unix) ? $"{cmd} --reportable" : $"{cmd} --noreportable";
+            cmd = $"{cmd} {this.SpecProfile}";
             return cmd;
         }
 
