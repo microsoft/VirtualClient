@@ -29,24 +29,39 @@
             }
         }
     ],
-    "Dependencies": [
-        {
-            "Type": "CompilerInstallation",
-            "Parameters": {
-                "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
-                "CompilerVersion": "$.Parameters.CompilerVersion"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallSPECcpuWorkloadPackage",
-                "BlobContainer": "packages",
-                "BlobName": "speccpu.2017.1.1.8.zip",
-                "PackageName": "speccpu2017",
-                "Extract": true
-            }
-        }
-    ]
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "chocolatey"
+      }
+    },
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallCygwinOnWindows",
+        "PackageName": "chocolatey",
+        "Packages": "cygwin"
+      }
+    },
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECcpuWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "speccpu.2017.1.1.8.zip",
+        "PackageName": "speccpu2017",
+        "Extract": true
+      }
+    }
+  ]
 }

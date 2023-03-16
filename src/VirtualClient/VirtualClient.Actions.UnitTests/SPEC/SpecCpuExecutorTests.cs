@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
             bool commandCalled = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune base --noreportable fprate")
+                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune base --noreportable fprate")
                 {
                     commandCalled = true;
                 }
@@ -257,7 +257,7 @@ namespace VirtualClient.Actions
             commandCalled = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --noreportable intspeed")
+                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --noreportable intspeed")
                 {
                     commandCalled = true;
                 }

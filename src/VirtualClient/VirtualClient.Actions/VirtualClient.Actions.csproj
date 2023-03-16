@@ -33,6 +33,10 @@
         <ScriptFiles Include="MLPerf\**\*.py" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ScriptFiles Remove="SPECcpu\vc-win-arm64.cfg" />
+    </ItemGroup>
+
     <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">
         <Message Importance="high" Text="Publish workload scripts/content..." />
 
