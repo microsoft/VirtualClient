@@ -211,6 +211,27 @@ namespace VirtualClient
             Assert.IsFalse(result.Errors.Any());
         }
 
+
+        [Test]
+        [TestCase("--flush-wait")]
+        [TestCase("--fw")]
+        public void FlushWaitOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateFlushWaitOption();
+            ParseResult result = option.Parse($"{alias}=1234");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
+        public void FlushWaitOptionValueMustBeAValidTimeSpanOrIntegerFormat()
+        {
+            Option option = OptionFactory.CreateFlushWaitOption();
+            Assert.Throws<ArgumentException>(() => option.Parse("--flush-wait=NotValid"));
+            Assert.DoesNotThrow(() => option.Parse("--flush-wait=01.00:30:00"));
+            Assert.DoesNotThrow(() => option.Parse("--flush-wait=00:30:00"));
+            Assert.DoesNotThrow(() => option.Parse("--flush-wait=1440"));
+        }
+
         [Test]
         [TestCase("--ipAddress")]
         [TestCase("--ipaddress")]

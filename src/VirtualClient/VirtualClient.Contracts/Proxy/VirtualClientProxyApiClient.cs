@@ -29,11 +29,13 @@ namespace VirtualClient.Contracts.Proxy
         private const string TelemetryApiRoute = "/api/telemetry";
         private const int DefaultBlobChunkSize = 1024 * 1024;
 
-        private static IAsyncPolicy<HttpResponseMessage> defaultHttpGetRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(
-           (retries) => TimeSpan.FromMilliseconds(retries * 500));
-
-        private static IAsyncPolicy<HttpResponseMessage> defaultHttpPostRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(
+        private static IAsyncPolicy<HttpResponseMessage> defaultGetRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(
+            HttpMethod.Get,
             (retries) => TimeSpan.FromMilliseconds(retries * 500));
+
+        private static IAsyncPolicy<HttpResponseMessage> defaultPostRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(
+           HttpMethod.Post,
+           (retries) => TimeSpan.FromMilliseconds(retries * 500));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientProxyApiClient"/> class.
@@ -66,9 +68,10 @@ namespace VirtualClient.Contracts.Proxy
         protected IRestClient RestClient { get; }
 
         /// <summary>
-        /// The size of an individual chunk of a blob to be downloaded.
+        /// The size (in bytes) of an individual chunk of a blob to be downloaded when using
+        /// download ranges.
         /// </summary>
-        protected virtual int BlobChunkSize { get; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
+        protected virtual int ChunkSize { get; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
 
         /// <summary>
         /// Creates an URI route for the proxy API blob endpoints based on the information defined
@@ -105,39 +108,62 @@ namespace VirtualClient.Contracts.Proxy
             downloadStream.ThrowIfNull(nameof(downloadStream));
 
             Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
-            HttpResponseMessage response = null; 
-            HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken).ConfigureAwait(false);
-            
+
+            HttpResponseMessage response = null;
+            HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken);
+
             // If range is not enabled download the file as usual.
             if (!VirtualClientProxyApiClient.IsRangeEnabled(headResponse))
             {
-                response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
+                response = await (retryPolicy ?? defaultGetRetryPolicy).ExecuteAsync(() => this.RestClient.GetAsync(requestUri, cancellationToken));
 
-                Stream httpStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                await httpStream.CopyToAsync(downloadStream, cancellationToken).ConfigureAwait(false);
-                return response;
+                Stream httpStream = await response.Content.ReadAsStreamAsync();
+                await httpStream.CopyToAsync(downloadStream, cancellationToken);
             }
-
-            long? fileLength = headResponse.Content.Headers.ContentLength;
-            if (!fileLength.HasValue)
+            else
             {
-                throw new ApiException($"The 'Content-Length' header was not present in the HTTP Response from: '{requestUri}'", ErrorReason.ApiRequestFailed);
-            }
+                long? fileLength = headResponse.Content.Headers.ContentLength;
+                if (!fileLength.HasValue)
+                {
+                    throw new ApiException($"The 'Content-Length' header was not present in the HTTP Response from: '{requestUri}'", ErrorReason.ApiRequestFailed);
+                }
 
-            using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri))
-            {
+                if (fileLength <= 0)
+                {
+                    throw new ApiException(
+                        $"The file length returned by the Proxy API '{fileLength}' is not a valid length. File lengths must be greater than 0.",
+                        ErrorReason.ApiRequestFailed);
+                }
+
                 for (int latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
                 {
-                    request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.BlobChunkSize);
-                    response = await (retryPolicy ?? defaultHttpGetRetryPolicy).ExecuteAsync(() => this.RestClient.SendAsync(request, cancellationToken));
-                    if (!response.IsSuccessStatusCode)
+                    response = await (retryPolicy ?? defaultGetRetryPolicy).ExecuteAsync(async () =>
                     {
-                        return response;
-                    }
-                    
-                    byte[] currentContent = await response.Content.ReadAsByteArrayAsync();
-                    await downloadStream.WriteAsync(currentContent, cancellationToken);
-                    latestRequestLength = currentContent.Length;
+                        // Note that you CANNOT reuse an HttpRequestMessage for multiple calls. Doing so causes the exception
+                        // "Cannot send the same request message multiple times" to be thrown.
+                        //
+                        // The retry policy is outside of the 'using' to ensure that it is a new HttpRequestMessage for every call including
+                        // on initial call failures where retries are employed.
+                        using (HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUri))
+                        {
+                            request.Headers.Range = new RangeHeaderValue(totalDownloadedLength, totalDownloadedLength + this.ChunkSize);
+                            using (HttpResponseMessage sequentialResponse = await this.RestClient.SendAsync(request, cancellationToken))
+                            {
+                                // Return immediately on a non-success status code. The status will be compared against the
+                                // set of status codes considered transient and the logic will retry if so.
+                                if (!sequentialResponse.IsSuccessStatusCode)
+                                {
+                                    return sequentialResponse;
+                                }
+
+                                byte[] currentContent = await sequentialResponse.Content.ReadAsByteArrayAsync();
+                                await downloadStream.WriteAsync(currentContent, cancellationToken);
+                                latestRequestLength = currentContent.Length;
+
+                                return new HttpResponseMessage(sequentialResponse.StatusCode);
+                            }
+                        }
+                    });
                 }
             }
 
@@ -155,7 +181,7 @@ namespace VirtualClient.Contracts.Proxy
             {
                 Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
 
-                return await (retryPolicy ?? defaultHttpPostRetryPolicy).ExecuteAsync(async () =>
+                return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
                     HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken)
                         .ConfigureAwait(false);
@@ -174,7 +200,7 @@ namespace VirtualClient.Contracts.Proxy
             {
                 Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.TelemetryApiRoute);
 
-                return await (retryPolicy ?? defaultHttpPostRetryPolicy).ExecuteAsync(async () =>
+                return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
                     HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken)
                         .ConfigureAwait(false);
@@ -184,17 +210,11 @@ namespace VirtualClient.Contracts.Proxy
             }
         }
 
-        /// <summary>
-        /// Creates the default retry policy for REST GET calls made to the API service.
-        /// </summary>
-        /// <param name="retryWaitInterval">
-        /// Defines the individual retry wait interval given the number of retries. The integer parameter defines the retries that have occurred at that moment in time.
-        /// </param>
-        internal static IAsyncPolicy<HttpResponseMessage> GetDefaultHttpGetRetryPolicy(Func<int, TimeSpan> retryWaitInterval)
+        internal static IAsyncPolicy<HttpResponseMessage> GetDefaultRetryPolicy(HttpMethod method, Func<int, TimeSpan> retryWaitInterval)
         {
             // This is not a full list of REST status codes that could be considered non-transient but is a
             // list of codes that would be expected from the Virtual Client API during normal operations.
-            List<HttpStatusCode> nonTransientErrorCodes = new List<HttpStatusCode>
+            List<HttpStatusCode> nonTransientErrorCodesOnGet = new List<HttpStatusCode>
             {
                 HttpStatusCode.BadRequest,
                 HttpStatusCode.NotFound,
@@ -205,26 +225,7 @@ namespace VirtualClient.Contracts.Proxy
                 HttpStatusCode.Unauthorized
             };
 
-            return Policy.HandleResult<HttpResponseMessage>(response =>
-            {
-                // Retry if the response status is not a success status code (i.e. 200s) but only if the status
-                // code is also not in the list of non-transient status codes.
-                bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientErrorCodes.Contains(response.StatusCode);
-                return shouldRetry;
-            }).WaitAndRetryAsync(10, retryWaitInterval);
-        }
-
-        /// <summary>
-        /// Creates the default retry policy for REST POST calls made to the API service.
-        /// </summary>
-        /// <param name="retryWaitInterval">
-        /// Defines the individual retry wait interval given the number of retries. The integer parameter defines the retries that have occurred at that moment in time.
-        /// </param>
-        internal static IAsyncPolicy<HttpResponseMessage> GetDefaultHttpPostRetryPolicy(Func<int, TimeSpan> retryWaitInterval)
-        {
-            // This is not a full list of REST status codes that could be considered non-transient but is a
-            // list of codes that would be expected from the Virtual Client API during normal operations.
-            List<HttpStatusCode> nonTransientErrorCodes = new List<HttpStatusCode>
+            List<HttpStatusCode> nonTransientErrorCodesOnPost = new List<HttpStatusCode>
             {
                 HttpStatusCode.BadRequest,
                 HttpStatusCode.Conflict,
@@ -236,9 +237,13 @@ namespace VirtualClient.Contracts.Proxy
 
             return Policy.HandleResult<HttpResponseMessage>(response =>
             {
+                IEnumerable<HttpStatusCode> nonTransientCodes = method == HttpMethod.Get
+                    ? nonTransientErrorCodesOnGet
+                    : nonTransientErrorCodesOnPost;
+
                 // Retry if the response status is not a success status code (i.e. 200s) but only if the status
                 // code is also not in the list of non-transient status codes.
-                bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientErrorCodes.Contains(response.StatusCode);
+                bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientCodes.Contains(response.StatusCode);
                 return shouldRetry;
             }).WaitAndRetryAsync(10, retryWaitInterval);
         }
