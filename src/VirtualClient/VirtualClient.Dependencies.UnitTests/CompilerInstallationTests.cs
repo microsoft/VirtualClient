@@ -132,8 +132,8 @@ namespace VirtualClient.Dependencies
 
             List<string> expectedCommands = new List<string>()
             {
-                $@"{cygwinInstallerPath} --quiet-mode --root {cygwinPath} --site http://cygwin.mirror.constant.com --packages make,cmake,gcc-fortran,python3",
-                $@"{cygwinInstallerPath} --quiet-mode --root {cygwinPath} --site http://cygwin.mirror.constant.com --packages make,cmake,gcc-fortran"
+                $@"{cygwinInstallerPath} --quiet-mode --root {cygwinPath} --site http://cygwin.mirror.constant.com --packages make,cmake,python3",
+                $@"{cygwinInstallerPath} --quiet-mode --root {cygwinPath} --site http://cygwin.mirror.constant.com --packages make,cmake"
             };
 
             int commandExecuted = 0;
