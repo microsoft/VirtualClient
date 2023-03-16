@@ -45,7 +45,7 @@
         {
           "Type": "LspciMonitor",
           "Parameters": {
-            "Scenario": "CaptureCounters",
+            "Scenario": "LspciDevices",
             "MonitorFrequency": "12:00:00",
             "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
           }
