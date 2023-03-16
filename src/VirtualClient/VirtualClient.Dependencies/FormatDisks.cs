@@ -38,11 +38,24 @@ namespace VirtualClient.Dependencies
         public string DiskFilter
         {
             // Disk filter is removed from FormatDisk dependency parameters, because NVME disk doesn't return size information
-            // for disks pre-formatting. TODO: Investigate if DiskPart can return size before formating.
+            // for disks pre-formatting. TODO: Investigate if DiskPart can return size before formatting.
             get
             {
                 // Enforce filter to remove OS disk.
                 return "OSDisk:false";
+            }
+        }
+
+        /// <summary>
+        /// True to initialize + format the target disks in-parallel. Default = false.
+        /// </summary>
+        public bool InitializeDisksInParallel
+        {
+            get
+            {
+                // DO NOT CHANGE THE DEFAULT. It should ALWAYS be false. Parallel disk initialization on
+                // Windows does not work well because of the limitations of DiskPart.
+                return this.Parameters.GetValue<bool>(nameof(this.InitializeDisksInParallel), false);
             }
         }
 
@@ -95,12 +108,31 @@ namespace VirtualClient.Dependencies
                     isOperatingSystemDisk = disk.IsOperatingSystem()
                 }));
 
+                if (this.InitializeDisksInParallel)
+                {
+                    ConsoleLogger.Default.LogTraceMessage("Initialize disks in-parallel...");
+                }
+
+                List<Task> initializationTasks = new List<Task>();
                 foreach (Disk disk in disksToFormat)
                 {
-                    await this.SystemManagement.DiskManager.FormatDiskAsync(disk, partitionType, fileSystemType, cancellationToken)
-                        .ConfigureAwait(false);
+                    Task diskInitialization = this.SystemManagement.DiskManager.FormatDiskAsync(disk, partitionType, fileSystemType, cancellationToken);
 
-                    await Task.Delay(this.WaitTime, cancellationToken).ConfigureAwait(false);
+                    // Due to limitations in DiskPart on Windows, we do not support initializing disks in parallel
+                    if (this.InitializeDisksInParallel && this.Platform != PlatformID.Win32NT)
+                    {
+                        initializationTasks.Add(diskInitialization);
+                    }
+                    else
+                    {
+                        await diskInitialization;
+                        await Task.Delay(this.WaitTime, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+
+                if (initializationTasks.Any())
+                {
+                    await Task.WhenAll(initializationTasks);
                 }
             }
         }

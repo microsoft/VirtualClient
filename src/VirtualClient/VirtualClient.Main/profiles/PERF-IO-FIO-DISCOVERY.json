@@ -12,7 +12,8 @@
         "ProcessModel": "SingleProcess",
         "MaxThreads": "8",
         "QueueDepths": "1,4,16,64,256,1024",
-        "DirectIO": true
+        "DirectIO": true,
+        "InitializeDisksInParallel": true
     },
     "Actions": [
         {
@@ -490,7 +491,8 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "InitializeDisks"
+                "Scenario": "InitializeDisks",
+                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

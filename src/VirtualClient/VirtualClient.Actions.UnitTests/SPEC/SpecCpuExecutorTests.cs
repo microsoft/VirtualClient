@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -41,6 +42,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
                 .Returns(new string[] { this.mockFixture.Combine(this.mockPackage.Path, "speccpu.iso") });
+
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
@@ -49,6 +51,9 @@ namespace VirtualClient.Actions
             string mockProfileText = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SPEC", "mockspeccpu.cfg"));
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.FileInfo.Setup(file => file.FromFileName(It.IsAny<string>()))
+                .Returns(new Mock<IFileInfo>().Object);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {

@@ -103,7 +103,7 @@ namespace VirtualClient.Actions
         public async Task FioDiscoveryExecutorInitializeAsExpected()
         {
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DiskFill), "True");
-            this.mockFixture.Parameters[nameof(DiskPerformanceWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=write";
+            this.mockFixture.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=write";
             using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>

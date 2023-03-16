@@ -4,7 +4,6 @@
 namespace VirtualClient.Common.Rest
 {
     using System;
-    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Interface for generic rest client builder.
@@ -21,8 +20,15 @@ namespace VirtualClient.Common.Rest
         /// Use bearer token for authentication.
         /// </summary>
         /// <param name="authToken">The authentication token.</param>
+        /// <param name="headerName">The prefix for the authentication token (e.g. Bearer {token}, ApiKey {token}). Default = 'Bearer'.</param>
         /// <returns>Builder itself.</returns>
-        IRestClientBuilder WithTokenAuthentication(string authToken);
+        IRestClientBuilder AddAuthorizationHeader(string authToken, string headerName = "Bearer");
+
+        /// <summary>
+        /// Add accepted media type.
+        /// </summary>
+        /// <returns>The builder itself</returns>
+        IRestClientBuilder AddAcceptedMediaType(MediaType mediaType);
 
         /// <summary>
         /// Always trust the server certificate.
@@ -30,11 +36,5 @@ namespace VirtualClient.Common.Rest
         /// </summary>
         /// <returns>Builder itself.</returns>
         IRestClientBuilder AlwaysTrustServerCertificate();
-
-        /// <summary>
-        /// Add accepted media type.
-        /// </summary>
-        /// <returns>The builder itself</returns>
-        IRestClientBuilder AddAcceptedMediaType(MediaType mediaType);
     }
 }

@@ -6,6 +6,7 @@ namespace VirtualClient.Actions.DiskPerformance
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -14,6 +15,7 @@ namespace VirtualClient.Actions.DiskPerformance
     using Polly;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using YamlDotNet.Core.Tokens;
 
     [TestFixture]
     [Category("Unit")]
@@ -251,6 +253,32 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        public async Task DiskSpdExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
+        {
+            IEnumerable<Disk> remoteDisks = this.SetupWorkloadScenario(testRemoteDisks: true);
+
+            // Clear any access points out.
+            remoteDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
+
+            using (TestDiskSpdExecutor workloadExecutor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
+            {
+                await workloadExecutor.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsNotEmpty(remoteDisks);
+                Assert.AreEqual(3, remoteDisks.SelectMany(d => d.Volumes.Where(v => v.AccessPaths?.Any() == true)).Count());
+
+                string expectedMountPoint1 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_d");
+                Assert.AreEqual(expectedMountPoint1, remoteDisks.ElementAt(0).Volumes.ElementAt(0).AccessPaths.First());
+
+                string expectedMountPoint2 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_e");
+                Assert.AreEqual(expectedMountPoint2, remoteDisks.ElementAt(1).Volumes.ElementAt(0).AccessPaths.First());
+
+                string expectedMountPoint3 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_f");
+                Assert.AreEqual(expectedMountPoint3, remoteDisks.ElementAt(2).Volumes.ElementAt(0).AccessPaths.First());
+            }
+        }
+
+        [Test]
         public async Task DiskSpdExecutorExecutesExpectedProcesses()
         {
             InMemoryProcess process1 = new InMemoryProcess
@@ -265,10 +293,10 @@ namespace VirtualClient.Actions.DiskPerformance
                 OnHasExited = () => true
             };
 
-            List<DiskPerformanceWorkloadProcess> expectedWorkloads = new List<DiskPerformanceWorkloadProcess>
+            List<DiskWorkloadProcess> expectedWorkloads = new List<DiskWorkloadProcess>
             {
-                new DiskPerformanceWorkloadProcess(process1, "anyTestedInstance", "D:\\any\file.dat"),
-                new DiskPerformanceWorkloadProcess(process2, "anyTestedInstance", "E:\\any\file.dat")
+                new DiskWorkloadProcess(process1, "anyTestedInstance", "D:\\any\file.dat"),
+                new DiskWorkloadProcess(process2, "anyTestedInstance", "E:\\any\file.dat")
             };
 
             using (TestDiskSpdExecutor diskSpdExecutor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
@@ -344,7 +372,7 @@ namespace VirtualClient.Actions.DiskPerformance
             {
             }
 
-            public Func<IEnumerable<Disk>, CancellationToken, bool> OnCreateMountPointsAsync { get; set; }
+            public Func<IEnumerable<Disk>, CancellationToken, bool> OnCreateMountPoints { get; set; }
 
             public Action<IEnumerable<string>> OnDeleteTestFiles { get; set; }
 
@@ -358,12 +386,12 @@ namespace VirtualClient.Actions.DiskPerformance
                 base.ApplyParameters(telemetryContext);
             }
 
-            public new IEnumerable<DiskPerformanceWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
+            public new IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
             {
                 return base.CreateWorkloadProcesses(executable, commandArguments, disks, processModel);
             }
 
-            public new Task ExecuteWorkloadsAsync(IEnumerable<DiskPerformanceWorkloadProcess> workloads, CancellationToken cancellationToken)
+            public new Task ExecuteWorkloadsAsync(IEnumerable<DiskWorkloadProcess> workloads, CancellationToken cancellationToken)
             {
                 return base.ExecuteWorkloadsAsync(workloads, cancellationToken);
             }
@@ -371,11 +399,6 @@ namespace VirtualClient.Actions.DiskPerformance
             public new void ValidateParameters()
             {
                 base.ValidateParameters();
-            }
-
-            protected override Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-            {
-                return Task.FromResult(this.OnCreateMountPointsAsync?.Invoke(disks, cancellationToken) ?? false);
             }
 
             protected override Task DeleteTestFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)

@@ -6,11 +6,18 @@ namespace VirtualClient.Actions.DiskPerformance
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
+    using System.Threading;
     using Microsoft.Extensions.DependencyInjection;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using System.Runtime.CompilerServices;
+    using VirtualClient.Common;
+    using System.Text;
 
     [TestFixture]
     [Category("Unit")]
@@ -20,6 +27,13 @@ namespace VirtualClient.Actions.DiskPerformance
         private IDictionary<string, IConvertible> profileParameters;
         private IEnumerable<Disk> disks;
         private string mockCommandLine;
+        private string mockResults;
+
+        [OneTimeSetUp]
+        public void SetupFixture()
+        {
+            this.mockResults = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Examples", "FIO", "Results_FIO.json"));
+        }
 
         [SetUp]
         public void SetupTest()
@@ -32,23 +46,30 @@ namespace VirtualClient.Actions.DiskPerformance
             this.mockCommandLine = "--name=fio_test_1 --ioengine=libaio";
             this.profileParameters = new Dictionary<string, IConvertible>
             {
-                { nameof(DiskPerformanceWorkloadExecutor.CommandLine), this.mockCommandLine },
-                { nameof(DiskPerformanceWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
-                { nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), "true" },
+                { nameof(FioExecutor.CommandLine), this.mockCommandLine },
+                { nameof(FioExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
+                { nameof(FioExecutor.DeleteTestFilesOnFinish), "true" },
+                { nameof(FioExecutor.TestName), "fio_test_1" }
             };
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("fio", this.mockFixture.GetPackagePath("fio")));
+            this.mockFixture.File.OnFileExists().Returns(true);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 return new InMemoryProcess
                 {
+                    OnHasExited = () => true,
+                    ExitCode = 0,
                     StartInfo = new ProcessStartInfo
                     {
                         FileName = command,
                         Arguments = arguments,
                         WorkingDirectory = workingDir
-                    }
+                    },
+                    StandardOutput = new ConcurrentBuffer(new StringBuilder(this.mockResults))
                 };
             };
         }
@@ -124,6 +145,39 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        public async Task FioExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
+        {
+            // Clear any access points out.
+            this.disks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
+
+            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
+
+            this.mockFixture.DiskManager
+                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
+                {
+                    (volume.AccessPaths as List<string>).Add(mountPoint);
+                })
+                .Returns(Task.CompletedTask);
+
+            using (TestFioExecutor workloadExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                await workloadExecutor.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsTrue(this.disks.Skip(1).All(d => d.Volumes.First().AccessPaths?.Any() == true));
+
+                string expectedMountPoint1 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1");
+                Assert.AreEqual(expectedMountPoint1, this.disks.ElementAt(1).Volumes.First().AccessPaths.First());
+
+                string expectedMountPoint2 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1");
+                Assert.AreEqual(expectedMountPoint2, this.disks.ElementAt(2).Volumes.First().AccessPaths.First());
+
+                string expectedMountPoint3 = Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1");
+                Assert.AreEqual(expectedMountPoint3, this.disks.ElementAt(3).Volumes.First().AccessPaths.First());
+            }
+        }
+
+        [Test]
         public void FioExecutorCreatesTheExpectedWorkloadProcess_Scenario1()
         {
             using (TestFioExecutor fioExecutor = new TestFioExecutor(this.mockFixture.Dependencies, this.profileParameters))
@@ -137,7 +191,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 (diskToTest.Volumes.First().AccessPaths as List<string>).Clear();
                 (diskToTest.Volumes.First().AccessPaths as List<string>).Add(expectedMountPath);
 
-                DiskPerformanceWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, diskToTest);
+                DiskWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, diskToTest);
 
                 Assert.IsNotNull(workloadProcess);
                 Assert.IsNotNull(workloadProcess.Process);
@@ -165,7 +219,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 (disksToTest.ElementAt(0).Volumes.First().AccessPaths as List<string>).Add(expectedMountPath1);
                 (disksToTest.ElementAt(1).Volumes.First().AccessPaths as List<string>).Add(expectedMountPath2);
 
-                DiskPerformanceWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, disksToTest.ToArray());
+                DiskWorkloadProcess workloadProcess = fioExecutor.CreateWorkloadProcess(expectedCommand, expectedArguments, expectedTestedInstance, disksToTest.ToArray());
 
                 Assert.IsNotNull(workloadProcess);
                 Assert.IsNotNull(workloadProcess.Process);
@@ -186,7 +240,9 @@ namespace VirtualClient.Actions.DiskPerformance
             {
             }
 
-            public Func<string, string, string, string[], DiskPerformanceWorkloadProcess> OnCreateProcess { get; set; }
+            public Func<IEnumerable<Disk>, CancellationToken, bool> OnCreateMountPoints { get; set; }
+
+            public Func<string, string, string, string[], DiskWorkloadProcess> OnCreateProcess { get; set; }
 
             public new void ApplyConfiguration(string configuration, EventContext telemetryContext)
             {
@@ -198,7 +254,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 base.ApplyParameters(telemetryContext);
             }
 
-            public new DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+            public new DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
             {
                 return base.CreateWorkloadProcess(executable, commandArguments, testedInstance, disksToTest);
             }

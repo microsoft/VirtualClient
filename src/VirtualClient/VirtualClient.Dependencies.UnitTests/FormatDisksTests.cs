@@ -75,6 +75,33 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [TestCase(PlatformID.Unix, FileSystemType.Ext4)]
+        public async Task FormatDisksWillParallelizeTheDiskFormattingOperationsWhenInstructedOnAGivenPlatform(PlatformID platform, FileSystemType expectedFileSystemType)
+        {
+            this.mockFixture.Setup(platform);
+            this.disks = this.mockFixture.CreateDisks(platform, true);
+            this.SetupDefaultMockBehaviors();
+
+            // Instruct the executor to format in-parallel
+            this.mockFixture.Parameters[nameof(FormatDisks.InitializeDisksInParallel)] = true;
+
+            using (FormatDisks diskFormatter = new FormatDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                diskFormatter.WaitTime = TimeSpan.Zero;
+                await diskFormatter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                // It is difficult to evaluate whether the operations ran in pure parallel. We are simply evaluating
+                // that the each of the format calls/per disk was made for now.
+                this.mockFixture.DiskManager.Verify(mgr => mgr.FormatDiskAsync(
+                   It.IsAny<Disk>(),
+                   It.IsAny<PartitionType>(),
+                   expectedFileSystemType,
+                   It.IsAny<CancellationToken>()),
+                   Times.Exactly(this.disks.Count(disk => !disk.Volumes.Any())));
+            }
+        }
+
+        [Test]
         public async Task FormatDisksWillNotFormatTheOperatingSystemDisk_Scenario1()
         {
             this.SetupDefaultMockBehaviors();
@@ -118,12 +145,12 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task FormatDisksWillNotFormatCDRomDisk()
+        public async Task FormatDisksExcludesNonFormattableDevices()
         {
             this.mockFixture.Setup(PlatformID.Unix);
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             Disk cdRom1 = new Disk(4, "/dev/dvd");
-            Disk cdRom2 = new Disk(5, "/dev/random", accessPaths: new List<string> { "/dev/cdrom" });
+            Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
 
             this.SetupDefaultMockBehaviors();

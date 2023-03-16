@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public class FioExecutor : DiskPerformanceWorkloadExecutor
+    public class FioExecutor : DiskWorkloadExecutor
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FioExecutor"/> class.
@@ -42,7 +42,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Workload Processes.
         /// </summary>
-        protected List<DiskPerformanceWorkloadProcess> WorkloadProcesses { get; } = new List<DiskPerformanceWorkloadProcess>();
+        protected List<DiskWorkloadProcess> WorkloadProcesses { get; } = new List<DiskWorkloadProcess>();
 
         /// <summary>
         /// Returns the IO engine to use with FIO on the platform specified (e.g. windowsaio, libaio).
@@ -268,7 +268,7 @@ namespace VirtualClient.Actions
 
                     using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
-                        foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                        foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                         {
                             fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.TestName, telemetryContext, cancellationToken));
                         }
@@ -287,7 +287,7 @@ namespace VirtualClient.Actions
                             .ConfigureAwait(false);
                     }
 
-                    foreach (DiskPerformanceWorkloadProcess workload in this.WorkloadProcesses)
+                    foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
                     {
                         await this.DeleteTestVerificationFilesAsync(workload.TestFiles)
                             .ConfigureAwait(false);
@@ -329,6 +329,48 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Creates mount points for any disks that do not have them already.
+        /// </summary>
+        /// <param name="disks">This disks on which to create the mount points.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        protected override async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+        {
+            bool mountPointsCreated = false;
+
+            // Don't mount any partition in OS drive.
+            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
+            {
+                // mount every volume that doesn't have an accessPath.
+                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
+                {
+                    string newMountPoint = volume.GetDefaultMountPoint();
+                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
+
+                    EventContext relatedContext = EventContext.Persisted().Clone()
+                        .AddContext(nameof(volume), volume)
+                        .AddContext("mountPoint", newMountPoint);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
+                    {
+                        string newMountPoint = volume.GetDefaultMountPoint();
+                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
+                        {
+                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                        }
+
+                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        mountPointsCreated = true;
+
+                    }).ConfigureAwait(false);
+                }
+            }
+
+            return mountPointsCreated;
+        }
+
+        /// <summary>
         /// Creates a process to run FIO targeting the disks specified.
         /// </summary>
         /// <param name="executable">The full path to the FIO executable.</param>
@@ -337,7 +379,7 @@ namespace VirtualClient.Actions
         /// </param>
         /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
         /// <param name="disksToTest">The disks under test.</param>
-        protected override DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+        protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
             string ioEngine = FioExecutor.GetIOEngine(this.Platform);
             string[] testFiles = disksToTest.Select(disk => this.GetTestFile(disk.GetPreferredAccessPath(this.Platform))).ToArray();
@@ -345,7 +387,7 @@ namespace VirtualClient.Actions
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 
-            return new DiskPerformanceWorkloadProcess(process, testedInstance, testFiles);
+            return new DiskWorkloadProcess(process, testedInstance, testFiles);
         }
 
         /// <summary>
@@ -423,7 +465,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the provided workload.
         /// </summary>
-        protected async Task ExecuteWorkloadAsync(DiskPerformanceWorkloadProcess workload, string testName, EventContext telemetryContext, CancellationToken cancellationToken, Dictionary<string, IConvertible> metricMetadata = null)
+        protected async Task ExecuteWorkloadAsync(DiskWorkloadProcess workload, string testName, EventContext telemetryContext, CancellationToken cancellationToken, Dictionary<string, IConvertible> metricMetadata = null)
         {
             if (!cancellationToken.IsCancellationRequested)
             {

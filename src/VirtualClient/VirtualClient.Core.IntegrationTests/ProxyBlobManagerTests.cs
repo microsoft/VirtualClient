@@ -37,34 +37,54 @@ namespace VirtualClient
         [TestCase("CSIToolkit.4.8.1.zip")]
         public async Task ProxyBlobManagerCanHandleLargeFileDownloads(string largePackageName)
         {
-            // WARNING:
-            // The packages we are downloading are very big (1+ GB in size). Be careful to ensure you have
-            // enough drive space. It is recommended that you delete the downloaded content afterwards as well.
-            VirtualClientProxyApiClient apiClient = DependencyFactory.CreateVirtualClientProxyApiClient(ProxyBlobManagerTests.proxyApiUri, TimeSpan.FromHours(2));
-            ProxyBlobManager blobManager = new Proxy.ProxyBlobManager(ProxyBlobManagerTests.packageStore, apiClient);
-
-            BlobDescriptor descriptor = new BlobDescriptor
-            {
-                Name = largePackageName,
-                ContainerName = "packages",
-                ContentEncoding = Encoding.UTF8,
-                ContentType = "application/octet-stream"
-            };
-
-            string downloadDirectory = Path.Combine(MockFixture.TestAssemblyDirectory, "downloads");
+            // string downloadDirectory = Path.Combine(MockFixture.TestAssemblyDirectory, "downloads");
+            string downloadDirectory = @"S:\\Downloads";
             string downloadPath = Path.Combine(downloadDirectory, largePackageName);
 
-            if (!Directory.Exists(downloadDirectory))
+            try
             {
-                Directory.CreateDirectory(downloadDirectory);
+                // WARNING:
+                // The packages we are downloading are very big (1+ GB in size). Be careful to ensure you have
+                // enough drive space. It is recommended that you delete the downloaded content afterwards as well.
+                IRestClient restClient = new RestClientBuilder(TimeSpan.FromMinutes(10))
+                   .AlwaysTrustServerCertificate()
+                   .AddAuthorizationHeader("Hql8Q~nCUoSXQGV2.ZWB3V3QDnW-3SfdcmUDbaS1", "ApiKey")
+                   .Build();
+
+                VirtualClientProxyApiClient apiClient = new VirtualClientProxyApiClient(restClient, proxyApiUri);
+                apiClient.ChunkSize = 1024 * 1024 * 100;
+
+                // VirtualClientProxyApiClient apiClient = DependencyFactory.CreateVirtualClientProxyApiClient(ProxyBlobManagerTests.proxyApiUri, TimeSpan.FromHours(2));
+                ProxyBlobManager blobManager = new Proxy.ProxyBlobManager(ProxyBlobManagerTests.packageStore, apiClient);
+
+                BlobDescriptor descriptor = new BlobDescriptor
+                {
+                    Name = largePackageName,
+                    ContainerName = "packages",
+                    ContentEncoding = Encoding.UTF8,
+                    ContentType = "application/octet-stream"
+                };
+
+                if (!Directory.Exists(downloadDirectory))
+                {
+                    Directory.CreateDirectory(downloadDirectory);
+                }
+
+                File.Delete(downloadPath);
+
+                using (FileStream stream = new FileStream(downloadPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+                {
+                    await blobManager.DownloadBlobAsync(descriptor, stream, CancellationToken.None)
+                        .ConfigureAwait(false);
+                }
             }
-
-            File.Delete(downloadPath);
-
-            using (FileStream stream = new FileStream(downloadPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))
+            catch
             {
-                await blobManager.DownloadBlobAsync(descriptor, stream, CancellationToken.None)
-                    .ConfigureAwait(false);
+                throw;
+            }
+            finally
+            {
+                File.Delete(downloadPath);
             }
         }
     }
