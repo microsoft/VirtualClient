@@ -9,12 +9,10 @@ namespace VirtualClient.Contracts.Proxy
     using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
-    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;

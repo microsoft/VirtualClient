@@ -296,18 +296,6 @@ namespace VirtualClient.Contracts.Proxy
             }).WaitAndRetryAsync(10, retryWaitInterval);
         }
 
-        private Uri CreateApiUri(string route, string additionalQueryString)
-        {
-            if (!string.IsNullOrWhiteSpace(this.BaseUri.Query))
-            {
-                return new Uri($"{this.BaseUri.AbsolutePath}/{route}?{this.BaseUri.Query}&{additionalQueryString}");
-            }
-            else
-            {
-                return new Uri($"{this.BaseUri.AbsolutePath}/{route}?{additionalQueryString}");
-            }
-        }
-
         private static bool IsRangeEnabled(HttpResponseMessage response)
         {
             return response != null && response.IsSuccessStatusCode && response.Headers.AcceptRanges?.Count > 0;

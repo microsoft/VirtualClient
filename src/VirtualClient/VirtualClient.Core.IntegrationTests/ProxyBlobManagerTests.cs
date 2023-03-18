@@ -48,7 +48,7 @@ namespace VirtualClient
                 // enough drive space. It is recommended that you delete the downloaded content afterwards as well.
                 IRestClient restClient = new RestClientBuilder(TimeSpan.FromMinutes(10))
                    .AlwaysTrustServerCertificate()
-                   .AddAuthorizationHeader("Hql8Q~nCUoSXQGV2.ZWB3V3QDnW-3SfdcmUDbaS1", "ApiKey")
+                   .AddAuthorizationHeader("{Add_The_API_Key_Here}", "ApiKey")
                    .Build();
 
                 VirtualClientProxyApiClient apiClient = new VirtualClientProxyApiClient(restClient, proxyApiUri);

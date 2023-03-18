@@ -228,8 +228,8 @@ namespace VirtualClient
                 new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
             {
                 Name = "FlushWait",
-                Description = "An explicit timeout to apply when waiting to allow all telemetry to be flushed (i.e. to prevent loss). " +
-                    "This may be a valid timespan (e.g. 01.00:00:00) or simple numeric value representing total minutes (e.g. 1440). ",
+                Description = "An explicit timeout to apply before exiting to allow all telemetry to be flushed (i.e. to prevent loss). " +
+                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). ",
                 ArgumentHelpName = "timespan",
                 AllowMultipleArgumentsPerToken = false
             };
@@ -639,7 +639,7 @@ namespace VirtualClient
             {
                 Name = "Timeout",
                 Description = "An explicit timeout to apply to profile operations (e.g. action/workload execution timeout). " +
-                    "This may be a valid timespan (e.g. 01.00:00:00) or simple numeric value representing total minutes (e.g. 1440). " +
+                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). " +
                     "To set the application to timeout only after a current running action completes, include a 'deterministic' instruction (e.g. 1440,deterministic). " +
                     "To set the application to timeout only after all profile actions complete, include a 'deterministic*' instruction (e.g. 1440,deterministic*). " +
                     "This option cannot be used with a profile iterations option.",

@@ -40,7 +40,7 @@ namespace VirtualClient
 
             this.blobManager = new TestBlobManager(new DependencyBlobStore(
                 DependencyStore.Packages,
-                "DefaultEndpointsProtocol=https;AccountName=anyaccount;AccountKey=x7R+VxLadqD;EndpointSuffix=core.windows.net"));
+                "DefaultEndpointsProtocol=https;AccountName=anyaccount;EndpointSuffix=core.windows.net"));
 
             this.blobManager.OnDownloadToStreamAsync = (descriptor, stream) =>
             {
