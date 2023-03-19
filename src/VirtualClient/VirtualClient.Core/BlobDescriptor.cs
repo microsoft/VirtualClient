@@ -4,6 +4,7 @@
 namespace VirtualClient
 {
     using System;
+    using System.Diagnostics;
     using System.Text;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -20,6 +21,7 @@ namespace VirtualClient
     /// Naming Conventions:
     /// https://docs.microsoft.com/en-us/rest/api/storageservices/Naming-and-Referencing-Containers--Blobs--and-Metadata
     /// </remarks>
+    [DebuggerDisplay("{ContainerName}/{Name}")]
     public class BlobDescriptor : DependencyDescriptor
     {
         /// <summary>

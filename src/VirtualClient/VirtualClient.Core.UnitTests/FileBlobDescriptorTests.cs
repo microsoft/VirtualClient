@@ -4,7 +4,9 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Linq;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Contracts;
@@ -231,7 +233,7 @@ namespace VirtualClient
                 componentName: expectedComponentName,
                 componentScenario: expectedComponentScenario,
                 role: expectedRole,
-                preserveSubDirectory: expectedSubDirectory);
+                subPath: expectedSubDirectory);
 
             Assert.AreEqual(expectedExperimentId, blob.ContainerName);
             Assert.AreEqual(expectedBlobPath, blob.Name);
@@ -265,139 +267,110 @@ namespace VirtualClient
                 componentName: expectedComponentName,
                 componentScenario: expectedComponentScenario,
                 role: expectedRole,
-                preserveSubDirectory: expectedSubDirectory);
+                subPath: expectedSubDirectory);
 
             Assert.AreEqual(expectedExperimentId, blob.ContainerName);
             Assert.AreEqual(expectedBlobPath, blob.Name);
             Assert.AreEqual(expectedContentType, blob.ContentType);
         }
 
-        ////[Test]
-        ////public void BlobDescriptorCreatesTheExpectedPathForAGivenExperiment_Scenario2()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    string fileName = "anyfile.log";
-        ////    DateTime timestamp = DateTime.UtcNow;
+        [Test]
+        public void FileBlobDescriptorCreatesTheExpectedPathForAGivenFileAndSetOfDescriptors_Scenario8()
+        {
+            DateTime expectedFileCreationTime = DateTime.UtcNow;
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedExperimentId = Guid.NewGuid().ToString();
+            string expectedComponentName = "anymonitor";
+            string expectedComponentScenario = "Scenario01";
+            string expectedRole = "Server";
+            string expectedFileName = "anyfile.log";
+            string expectedRoundTripDate = expectedFileCreationTime.ToString("O");
 
-        ////    string expectedPath = $"{this.agentId}/{componentName}/{timestamp.ToString("O")}-{fileName}".ToLowerInvariant().Replace(":", "_");
-        ////    BlobDescriptor blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, this.agentId, componentName, fileName, timestamp);
+            string filePath = $"/home/user/virtualclient/packages/speccpu/a/b/logs/{expectedFileName}";
+            string expectedBlobPath = $"{expectedRole}/{expectedComponentName}/{expectedComponentScenario}/b/logs/{expectedRoundTripDate}-{expectedFileName}"
+                .ToLowerInvariant().Replace(":", "_");
 
-        ////    Assert.AreEqual(expectedPath, blob.Name);
-        ////}
+            this.mockFileInfo.Setup(file => file.FullName).Returns(filePath);
+            this.mockFileInfo.Setup(file => file.CreationTimeUtc).Returns(expectedFileCreationTime);
 
-        ////[Test]
-        ////public void BlobDescriptorCreatesTheExpectedPathForAGivenExperimentAccountingForDifferentTimestampKinds()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    string fileName = "anyfile.log";
-        ////    DateTime timestamp = DateTime.UtcNow;
+            FileBlobDescriptor blob = FileBlobDescriptor.ToBlobDescriptor(
+                this.mockFileInfo.Object,
+                expectedContentType,
+                expectedExperimentId,
+                componentName: expectedComponentName,
+                componentScenario: expectedComponentScenario,
+                role: expectedRole,
+                subPathAfter: $"/home/user/virtualclient/packages/speccpu/a");
 
-        ////    // Timestamp is in local time. It will be converted to UTC.
-        ////    string expectedPath = $"{this.agentId}/{componentName}/{timestamp.ToString("O")}-{fileName}".ToLowerInvariant().Replace(":", "_");
-        ////    BlobDescriptor blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, this.agentId, componentName, fileName, timestamp.ToLocalTime());
+            Assert.AreEqual(expectedExperimentId, blob.ContainerName);
+            Assert.AreEqual(expectedBlobPath, blob.Name);
+            Assert.AreEqual(expectedContentType, blob.ContentType);
+        }
 
-        ////    Assert.AreEqual(expectedPath, blob.Name);
+        [Test]
+        public void FileBlobDescriptorCreatesTheExpectedPathForAGivenFileAndSetOfDescriptors_Scenario8_2()
+        {
+            DateTime expectedFileCreationTime = DateTime.UtcNow;
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedExperimentId = Guid.NewGuid().ToString();
+            string expectedAgentId = "agent01";
+            string expectedComponentName = "anymonitor";
+            string expectedComponentScenario = "Scenario01";
+            string expectedRoundTripDate = expectedFileCreationTime.ToString("O");
 
-        ////    // Timestamp is an undefined kind. It will be converted to UTC.
-        ////    blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, agentId, componentName, fileName, new DateTime(timestamp.ToLocalTime().Ticks, DateTimeKind.Unspecified));
+            List<string> filePaths = new List<string>
+            {
+                "/home/user/virtualclient/packages/speccpu/a/b/logs/log1.txt",
+                "/home/user/virtualclient/packages/speccpu/a/b/c/logs/log1.txt",
+                "/home/user/virtualclient/packages/speccpu/a/b/d/logs/log1.txt",
+                "/home/user/virtualclient/packages/speccpu/a/b/c/d/e/logs/log1.txt"
+            };
 
-        ////    Assert.AreEqual(expectedPath, blob.Name);
-        ////}
+            this.mockFileInfo.SetupSequence(file => file.FullName)
+                .Returns(filePaths[0])
+                .Returns(filePaths[1])
+                .Returns(filePaths[2])
+                .Returns(filePaths[3]);
 
-        ////[Test]
-        ////public void BlobDescriptorCreatesTheExpectedCasingForPathsCreatedForAGivenExperimentWhenAScenarioIsIncluded()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    string scenario = "anyscenario";
-        ////    string fileName = "anyfile.log";
-        ////    DateTime timestamp = DateTime.UtcNow;
+            this.mockFileInfo.Setup(file => file.CreationTimeUtc).Returns(expectedFileCreationTime);
 
-        ////    // Blob store paths should always be lower-cased.
-        ////    string expectedPath = $"{this.agentId}/{componentName}/{scenario}/{timestamp.ToString("O")}-{fileName}".ToLowerInvariant().Replace(":", "_");
-        ////    BlobDescriptor blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, this.agentId, componentName, fileName, timestamp, directoryPrefix: scenario);
+            IEnumerable<FileBlobDescriptor> descriptors = FileBlobDescriptor.ToBlobDescriptors(
+                new List<IFileInfo>
+                {
+                    // One file object per file path above. The setups will account for the different
+                    // paths and creation times.
+                    this.mockFileInfo.Object,
+                    this.mockFileInfo.Object,
+                    this.mockFileInfo.Object,
+                    this.mockFileInfo.Object
+                },
+                expectedContentType,
+                expectedExperimentId,
+                expectedAgentId,
+                componentName: expectedComponentName,
+                componentScenario: expectedComponentScenario,
+                subPathAfter: $"/home/user/virtualclient/packages/speccpu/a");
 
-        ////    Assert.AreEqual(expectedPath, blob.Name);
-        ////}
+            Assert.IsNotEmpty(descriptors);
+            Assert.IsTrue(descriptors.Count() == filePaths.Count);
+            Assert.IsTrue(descriptors.All(desc => desc.ContainerName == expectedExperimentId));
+            Assert.IsTrue(descriptors.All(desc => desc.ContentType == expectedContentType));
 
-        ////[Test]
-        ////public void BlobDescriptorUsesTheExpectedCasingForPathsCreatedForAGivenExperiment_1()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    string fileName = "anyfile.log";
-        ////    DateTime timestamp = DateTime.UtcNow;
+            Assert.AreEqual(
+                $"{expectedAgentId}/{expectedComponentName}/{expectedComponentScenario}/b/logs/{expectedRoundTripDate}-log1.txt".ToLowerInvariant().Replace(":", "_"),
+                descriptors.ElementAt(0).Name);
 
-        ////    // Blob store paths should always be lower-cased.
-        ////    string expectedPath = $"{this.agentId}/{componentName}/{timestamp.ToString("O")}-{fileName}".ToLowerInvariant().Replace(":", "_");
-        ////    BlobDescriptor blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, this.agentId.ToUpperInvariant(), componentName.ToUpperInvariant(), fileName.ToUpperInvariant(), timestamp);
+            Assert.AreEqual(
+                $"{expectedAgentId}/{expectedComponentName}/{expectedComponentScenario}/b/c/logs/{expectedRoundTripDate}-log1.txt".ToLowerInvariant().Replace(":", "_"),
+                descriptors.ElementAt(1).Name);
 
-        ////    Assert.AreEqual(expectedPath, blob.Name);
-        ////}
+            Assert.AreEqual(
+               $"{expectedAgentId}/{expectedComponentName}/{expectedComponentScenario}/b/d/logs/{expectedRoundTripDate}-log1.txt".ToLowerInvariant().Replace(":", "_"),
+               descriptors.ElementAt(2).Name);
 
-        ////[Test]
-        ////public void BlobDescriptorUsesTheExpectedCasingForPathsCreatedForAGivenExperiment_2()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    string scenario = "anyscenario";
-        ////    string fileName = "anyfile.log";
-        ////    DateTime timestamp = DateTime.UtcNow;
-
-        ////    // Blob store paths should always be lower-cased.
-        ////    string expectedPath = $"{this.agentId}/{componentName}/{scenario}/{timestamp.ToString("O")}-{fileName}".ToLowerInvariant().Replace(":", "_");
-        ////    BlobDescriptor blob = BlobDescriptor.ToBlobDescriptor(this.experimentId, this.agentId.ToUpperInvariant(), componentName.ToUpperInvariant(), fileName.ToUpperInvariant(), timestamp, directoryPrefix: scenario.ToUpperInvariant());
-
-        ////    Assert.AreEqual(expectedPath, blob.Name);
-        ////}
-
-        ////[Test]
-        ////public void BlobDescriptorCreatesTheExpectedPathsForListOfFilesWithStartDirectoryNotDefined()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    List<string> filePaths = new List<string>()
-        ////    {
-        ////        "/dev/a/b/c.txt",
-        ////        "/dev/a/b/d.txt",
-        ////        "/dev/a/e.txt",
-        ////    };
-
-        ////    DateTime startDateTime = DateTime.UtcNow;
-        ////    string dateTimeString = startDateTime.ToString("O").Replace(":", "_").ToLowerInvariant();
-        ////    string expectedPrefix = $"{this.agentId}/{componentName}".ToLowerInvariant();
-        ////    var blobLists = BlobDescriptor.ToBlobDescriptors(
-        ////        this.experimentId, this.agentId, componentName, filePaths, timestamp: startDateTime);
-
-        ////    Assert.AreEqual("/dev/a/b/c.txt", blobLists.ElementAt(0).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/{dateTimeString}-c.txt", blobLists.ElementAt(0).Value.Name);
-        ////    Assert.AreEqual("/dev/a/b/d.txt", blobLists.ElementAt(1).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/{dateTimeString}-d.txt", blobLists.ElementAt(1).Value.Name);
-        ////    Assert.AreEqual("/dev/a/e.txt", blobLists.ElementAt(2).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/{dateTimeString}-e.txt", blobLists.ElementAt(2).Value.Name);
-        ////}
-
-
-        ////[Test]
-        ////public void BlobDescriptorCreatesTheExpectedPathsForListOfFilesWithStartDirectoryDefined()
-        ////{
-        ////    string componentName = "anymonitor";
-        ////    List<string> filePaths = new List<string>()
-        ////    {
-        ////        "/dev/a/b/c.txt",
-        ////        "/dev/a/b/d.txt",
-        ////        "/dev/a/e.txt",
-        ////    };
-
-        ////    string startDirectory = "/dev/a/";
-        ////    DateTime startDateTime = DateTime.UtcNow;
-        ////    string dateTimeString = startDateTime.ToString("O").Replace(":", "_").ToLowerInvariant();
-        ////    string expectedPrefix = $"{this.agentId}/{componentName}".ToLowerInvariant();
-        ////    var blobLists = BlobDescriptor.ToBlobDescriptors(
-        ////        this.experimentId, this.agentId, componentName, filePaths, timestamp: startDateTime, startDirectory: startDirectory);
-
-        ////    Assert.AreEqual("/dev/a/b/c.txt", blobLists.ElementAt(0).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/b/{dateTimeString}-c.txt", blobLists.ElementAt(0).Value.Name);
-        ////    Assert.AreEqual("/dev/a/b/d.txt", blobLists.ElementAt(1).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/b/{dateTimeString}-d.txt", blobLists.ElementAt(1).Value.Name);
-        ////    Assert.AreEqual("/dev/a/e.txt", blobLists.ElementAt(2).Key);
-        ////    Assert.AreEqual($"{expectedPrefix}/{dateTimeString}-e.txt", blobLists.ElementAt(2).Value.Name);
-        ////}
+            Assert.AreEqual(
+              $"{expectedAgentId}/{expectedComponentName}/{expectedComponentScenario}/b/c/d/e/logs/{expectedRoundTripDate}-log1.txt".ToLowerInvariant().Replace(":", "_"),
+              descriptors.ElementAt(3).Name);
+        }
     }
 }

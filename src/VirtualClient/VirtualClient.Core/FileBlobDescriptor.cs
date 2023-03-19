@@ -3,6 +3,7 @@
 
 namespace VirtualClient
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
@@ -54,7 +55,12 @@ namespace VirtualClient
         /// vs. /b9d30758-20a7-4779-826e-137c31a867e1/agent01/component/2022-03-18T10:00:05.1276589Z-toolset.log)
         /// </param>
         /// <param name="role">A specific role for which the instance of Virtual Client is playing (e.g. Client, Server).</param>
-        /// <param name="preserveSubDirectory">
+        /// <param name="subPath">
+        /// Optional parameter defines a subpath of a file directory to include within the final blob name/path
+        /// (e.g. given a file /dev/a/b/c.txt and a subpath of /any/path, the final blob path will be 
+        /// {experimentId}/{agentId}/.../any/path/c.txt).
+        /// </param>
+        /// <param name="subPathAfter">
         /// Optional parameter defines a path within the file directory after which to preserve the subpath within the final blob name/path
         /// (e.g. given 2 files /dev/a/b/c.txt and /dev/a/b.txt and instruction to preserve subpath after '/dev/a', the final blob paths will be 
         /// {experimentId}/{agentId}/.../b/c.txt and {experimentId}/{agentId}/.../b.txt respectively).
@@ -67,11 +73,17 @@ namespace VirtualClient
             string componentName = null,
             string componentScenario = null,
             string role = null,
-            string preserveSubDirectory = null)
+            string subPath = null,
+            string subPathAfter = null)
         {
             file.ThrowIfNull(nameof(file));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
             experimentId.ThrowIfNullOrWhiteSpace(nameof(experimentId));
+
+            if (!string.IsNullOrWhiteSpace(subPath) && !string.IsNullOrWhiteSpace(subPathAfter))
+            {
+                throw new ArgumentException($"Invalid usage. The '{nameof(subPath)}' and '{nameof(subPathAfter)}' parameters cannot be used at the same time.");
+            }
 
             List<string> pathSegments = new List<string>();
 
@@ -79,7 +91,8 @@ namespace VirtualClient
             // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/2022-03-18T10:00:05.1276589Z-toolset.log
             // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/ntttcp_tcp_4k_buffer_t1/2022-03-18T10:00:05.1276589Z-toolset.log
 
-            string normalizedFileName = Path.GetFileName(file.FullName);
+            string filePath = file.FullName;
+            string normalizedFileName = Path.GetFileName(filePath);
             string blobName = $"{file.CreationTimeUtc.ToString("O")}-{normalizedFileName}";
 
             string effectiveAgentId = agentId;
@@ -107,9 +120,19 @@ namespace VirtualClient
                 pathSegments.Add(componentScenario);
             }
 
-            if (!string.IsNullOrWhiteSpace(preserveSubDirectory))
+            if (!string.IsNullOrWhiteSpace(subPath))
             {
-                pathSegments.Add(preserveSubDirectory.Trim('/').Trim('\\'));
+                pathSegments.Add(subPath.Trim('/').Trim('\\'));
+            }
+
+            if (!string.IsNullOrWhiteSpace(subPathAfter))
+            {
+                int indexOfSubPath = filePath.IndexOf(subPathAfter);
+                if (indexOfSubPath >= 0)
+                {
+                    pathSegments.Add(
+                        Path.GetDirectoryName(filePath.Replace(subPathAfter, string.Empty, StringComparison.OrdinalIgnoreCase)).Trim('/').Trim('\\'));
+                }
             }
 
             pathSegments.Add(blobName);
@@ -140,7 +163,12 @@ namespace VirtualClient
         /// vs. /b9d30758-20a7-4779-826e-137c31a867e1/agent01/component/2022-03-18T10:00:05.1276589Z-toolset.log)
         /// </param>
         /// <param name="role">A specific role for which the instance of Virtual Client is playing (e.g. Client, Server).</param>
-        /// <param name="preserveSubDirectory">
+        /// <param name="subPath">
+        /// Optional parameter defines a subpath of a file directory to include within the final blob name/path
+        /// (e.g. given a file /dev/a/b/c.txt and a subpath of /any/path, the final blob path will be 
+        /// {experimentId}/{agentId}/.../any/path/c.txt).
+        /// </param>
+        /// <param name="subPathAfter">
         /// Optional parameter defines a path within the file directory after which to preserve the subpath within the final blob name/path
         /// (e.g. given 2 files /dev/a/b/c.txt and /dev/a/b.txt and instruction to preserve subpath after '/dev/a', the final blob paths will be 
         /// {experimentId}/{agentId}/.../b/c.txt and {experimentId}/{agentId}/.../b.txt respectively).
@@ -153,7 +181,8 @@ namespace VirtualClient
             string componentName = null,
             string componentScenario = null,
             string role = null,
-            string preserveSubDirectory = null)
+            string subPath = null,
+            string subPathAfter = null)
         {
             files.ThrowIfNullOrEmpty(nameof(files));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
@@ -163,7 +192,7 @@ namespace VirtualClient
 
             foreach (IFileInfo file in files)
             {
-                result.Add(FileBlobDescriptor.ToBlobDescriptor(file, contentType, experimentId, agentId, componentName, componentScenario, preserveSubDirectory, role));
+                result.Add(FileBlobDescriptor.ToBlobDescriptor(file, contentType, experimentId, agentId, componentName, componentScenario, role, subPath, subPathAfter));
             }
 
             return result;
