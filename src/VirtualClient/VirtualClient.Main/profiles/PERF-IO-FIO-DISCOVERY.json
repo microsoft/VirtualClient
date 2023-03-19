@@ -22,7 +22,7 @@
                 "Scenario": "DiskFill",
                 "CommandLine": "--direct=1 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name={Scenario} --size={DiskFillSize}",
                 "PackageName": "fio",
-                "ProcessModel": "SingleProcess",
+                "ProcessModel": "SingleProcessPerDisk",
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "DiskFill": true,
                 "DeleteTestFilesOnFinish": false,

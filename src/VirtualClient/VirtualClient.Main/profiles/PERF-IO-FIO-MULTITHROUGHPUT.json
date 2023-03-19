@@ -24,6 +24,7 @@
                 "DiskFill": true,
                 "GroupReporting": "0",
                 "PackageName": "fio",
+                "ProcessModel": "SingleProcessPerDisk",
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
