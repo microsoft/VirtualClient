@@ -1,0 +1,258 @@
+##################################################################################################################################
+#   INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN                                                      #
+#                                                                                                                                #
+# 'reportable' flag not set during run                                                                                           #
+# 502.gcc_r (base) did not have enough runs!                                                                                     #
+# 520.omnetpp_r (base) did not have enough runs!                                                                                 #
+# 500.perlbench_r (base) did not have enough runs!                                                                               #
+# 541.leela_r (base) did not have enough runs!                                                                                   #
+# 548.exchange2_r (base) did not have enough runs!                                                                               #
+# 557.xz_r (base) did not have enough runs!                                                                                      #
+# 531.deepsjeng_r (base) did not have enough runs!                                                                               #
+# 505.mcf_r (base) did not have enough runs!                                                                                     #
+# 523.xalancbmk_r (base) did not have enough runs!                                                                               #
+# 525.x264_r (base) did not have enough runs!                                                                                    #
+# 502.gcc_r (base) had invalid runs!                                                                                             #
+# 520.omnetpp_r (base) had invalid runs!                                                                                         #
+# 500.perlbench_r (base) had invalid runs!                                                                                       #
+# 548.exchange2_r (base) had invalid runs!                                                                                       #
+# 523.xalancbmk_r (base) had invalid runs!                                                                                       #
+# 525.x264_r (base) had invalid runs!                                                                                            #
+# Run of 500.perlbench_r (base) was not valid; status is CE                                                                      #
+# Run of 502.gcc_r (base) was not valid; status is CE                                                                            #
+# Run of 520.omnetpp_r (base) was not valid; status is CE                                                                        #
+# Run of 523.xalancbmk_r (base) was not valid; status is CE                                                                      #
+# Run of 525.x264_r (base) was not valid; status is CE                                                                           #
+# Run of 548.exchange2_r (base) was not valid; status is CE                                                                      #
+# Unknown flags were used! See                                                                                                   #
+#      https://www.spec.org/cpu2017/Docs/runcpu.html#flagsurl                                                                    #
+# for information about how to get rid of this error.                                                                            #
+# Error 500.perlbench_r: Error with make!                                                                                        #
+# Error 502.gcc_r: Error with make!                                                                                              #
+# Error 520.omnetpp_r: Error with make!                                                                                          #
+# Error 523.xalancbmk_r: Error with make!                                                                                        #
+# Error 525.x264_r: Error with make!                                                                                             #
+# Error 548.exchange2_r: failed by request                                                                                       #
+#                                                                                                                                #
+#   INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN                                                      #
+##################################################################################################################################
+                                                     SPEC CPU(R)2017 Integer Rate Result
+                                                       My Corporation Virtual Machine
+
+                                CPU2017 License: nnn (Your SPEC license number)          Test date: Mar-2023
+                                Test sponsor: My Corporation                 Hardware availability:         
+                                Tested by:    My Corporation                 Software availability:         
+
+                       Estimated                       Estimated
+                 Base     Base        Base        Peak     Peak        Peak
+Benchmarks       Copies  Run Time     Rate        Copies  Run Time     Rate 
+--------------- -------  ---------  ---------    -------  ---------  ---------
+500.perlbench_r       1         --            CE
+502.gcc_r             1         --            CE
+505.mcf_r             1        663       2.44  *
+520.omnetpp_r         1         --            CE
+523.xalancbmk_r       1         --            CE
+525.x264_r            1         --            CE
+531.deepsjeng_r       1        521       2.20  *
+541.leela_r           1        645       2.57  *
+548.exchange2_r       1         --            CE
+557.xz_r              1        686       1.57  *
+=================================================================================
+500.perlbench_r                               NR
+502.gcc_r                                     NR
+505.mcf_r             1        663       2.44  *
+520.omnetpp_r                                 NR
+523.xalancbmk_r                               NR
+525.x264_r                                    NR
+531.deepsjeng_r       1        521       2.20  *
+541.leela_r           1        645       2.57  *
+548.exchange2_r                               NR
+557.xz_r              1        686       1.57  *
+ Est. SPECrate(R)2017_int_base             --
+ Est. SPECrate(R)2017_int_peak                                         Not Run
+
+
+                                                                  HARDWARE
+                                                                  --------
+            CPU Name: Ampere Altra
+             Max MHz:  
+             Nominal:  
+             Enabled: 4 cores, 1 chip
+           Orderable:  
+            Cache L1:  
+                  L2:  
+                  L3:  
+               Other:  
+              Memory: 16 GB (2 x 15 GB nRxn PCn-0T) ** fixme **
+                       
+                       
+             Storage:  
+               Other:  
+
+
+                                                                  SOFTWARE
+                                                                  --------
+                  OS: Microsoft Windows 11 Enterprise (ARM 64-bit
+                      Processor)
+                      Build 10.0.22621
+            Compiler: C/C++: Version 19.00.23506 of Microsoft
+                      Visual Studio 2015
+            Parallel: No
+            Firmware: Microsoft Corporation Hyper-V UEFI Release v4.1,
+                      05/16/2022
+         File System:  
+        System State:  
+       Base Pointers: 64-bit
+       Peak Pointers: Not Applicable
+               Other:  
+    Power Management: --
+
+
+                                                               Platform Notes
+                                                               --------------
+    
+     Sysinfo program C:/speccpu/bin/sysinfo
+     Rev: r6622 of 2021-04-07 982a61ec0915b55891ef0e16acafc64d
+     running on win11-arm64-d4p Fri Mar 10 17:23:46 2023
+    
+     SUT (System Under Test) info as seen by some common utilities.
+     For more information on this section, see
+        https://www.spec.org/cpu2017/Docs/config.html#sysinfo
+    
+     System
+     ...wmic computersystem, wmic bios
+     Manufacturer  : Microsoft Corporation
+     Model         : Virtual Machine
+     BIOS          : Microsoft Corporation Hyper-V UEFI Release v4.1, 05/16/2022
+    
+     OS
+     ...wmic os
+     Caption       : Microsoft Windows 11 Enterprise
+     OSArchitecture: ARM 64-bit Processor
+     Version       : 10.0.22621
+    
+     CPU
+     ...wmic cpu
+     Name          : Ampere(R) Altra(R) Processor
+                   : (1 chip)
+     L2CacheSize   :
+     L3CacheSize   : 0
+     MaxClockSpeed : 2999
+     NumberOfCores : 4
+     NumberOfLogicalProcessors: 4
+    
+     Memory
+     ...wmic memorychip
+        2 x Microsoft Corporation None 1 GB (1073741824) at
+     Total Memory  : 16 GB
+    
+     Disks
+     ...wmic diskdrive
+     Microsoft Virtual Disk 127 GB
+    
+     (End of data from sysinfo program)
+
+                                                           Compiler Version Notes
+                                                           ----------------------
+    ==============================================================================
+    C   | 505.mcf_r(base) 557.xz_r(base)
+    ------------------------------------------------------------------------------
+    /usr/lib/gcc/x86_64-pc-cygwin/11/../../../../x86_64-pc-cygwin/bin/ld: cannot
+      find : No such file or directory
+    collect2: error: ld returned 1 exit status
+    ------------------------------------------------------------------------------
+    
+    ==============================================================================
+    C++ | 531.deepsjeng_r(base) 541.leela_r(base)
+    ------------------------------------------------------------------------------
+    /usr/lib/gcc/x86_64-pc-cygwin/11/../../../../x86_64-pc-cygwin/bin/ld: cannot
+      find : No such file or directory
+    collect2: error: ld returned 1 exit status
+    ------------------------------------------------------------------------------
+
+                                                             Base Unknown Flags
+                                                             ------------------
+       505.mcf_r: "gcc" (in CC) "gcc" (in LD)
+                  "-O3 -flto -g -ffunction-sections -ffast-math -Wl,--gc-sections -USPEC_CPU -USPEC_CPU_WINDOWS -USPEC_WINDOWS" (in OPTIMIZE)
+
+ 531.deepsjeng_r: "g++" (in CXX) "g++" (in LD)
+                  "-O3 -flto -g -ffunction-sections -ffast-math -Wl,--gc-sections -USPEC_CPU -USPEC_CPU_WINDOWS -USPEC_WINDOWS" (in OPTIMIZE)
+                  "-fexceptions" (in CXXOPTIMIZE)
+
+     541.leela_r: "g++" (in CXX) "g++" (in LD)
+                  "-O3 -flto -g -ffunction-sections -ffast-math -Wl,--gc-sections -USPEC_CPU -USPEC_CPU_WINDOWS -USPEC_WINDOWS" (in OPTIMIZE)
+                  "-fexceptions" (in CXXOPTIMIZE)
+
+        557.xz_r: "gcc" (in CC) "gcc" (in LD)
+                  "-O3 -flto -g -ffunction-sections -ffast-math -Wl,--gc-sections -USPEC_CPU -USPEC_CPU_WINDOWS -USPEC_WINDOWS" (in OPTIMIZE)
+
+
+                                                           Base Portability Flags
+                                                           ----------------------
+       505.mcf_r: -DSPEC_P64
+ 531.deepsjeng_r: -DSPEC_P64
+     541.leela_r: -DSPEC_P64
+        557.xz_r: -DSPEC_P64
+
+
+                                                           Base Optimization Flags
+                                                           -----------------------
+C benchmarks:
+
+       505.mcf_r: No flags used
+
+        557.xz_r: Same as 505.mcf_r
+
+C++ benchmarks:
+
+ 531.deepsjeng_r: No flags used
+
+     541.leela_r: Same as 531.deepsjeng_r
+
+
+  SPEC CPU and SPECrate are registered trademarks of the Standard Performance Evaluation Corporation.  All other brand and
+    product names appearing in this result are trademarks or registered trademarks of their respective holders.
+##################################################################################################################################
+#   INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN                                                      #
+#                                                                                                                                #
+# 'reportable' flag not set during run                                                                                           #
+# 502.gcc_r (base) did not have enough runs!                                                                                     #
+# 520.omnetpp_r (base) did not have enough runs!                                                                                 #
+# 500.perlbench_r (base) did not have enough runs!                                                                               #
+# 541.leela_r (base) did not have enough runs!                                                                                   #
+# 548.exchange2_r (base) did not have enough runs!                                                                               #
+# 557.xz_r (base) did not have enough runs!                                                                                      #
+# 531.deepsjeng_r (base) did not have enough runs!                                                                               #
+# 505.mcf_r (base) did not have enough runs!                                                                                     #
+# 523.xalancbmk_r (base) did not have enough runs!                                                                               #
+# 525.x264_r (base) did not have enough runs!                                                                                    #
+# 502.gcc_r (base) had invalid runs!                                                                                             #
+# 520.omnetpp_r (base) had invalid runs!                                                                                         #
+# 500.perlbench_r (base) had invalid runs!                                                                                       #
+# 548.exchange2_r (base) had invalid runs!                                                                                       #
+# 523.xalancbmk_r (base) had invalid runs!                                                                                       #
+# 525.x264_r (base) had invalid runs!                                                                                            #
+# Run of 500.perlbench_r (base) was not valid; status is CE                                                                      #
+# Run of 502.gcc_r (base) was not valid; status is CE                                                                            #
+# Run of 520.omnetpp_r (base) was not valid; status is CE                                                                        #
+# Run of 523.xalancbmk_r (base) was not valid; status is CE                                                                      #
+# Run of 525.x264_r (base) was not valid; status is CE                                                                           #
+# Run of 548.exchange2_r (base) was not valid; status is CE                                                                      #
+# Unknown flags were used! See                                                                                                   #
+#      https://www.spec.org/cpu2017/Docs/runcpu.html#flagsurl                                                                    #
+# for information about how to get rid of this error.                                                                            #
+# Error 500.perlbench_r: Error with make!                                                                                        #
+# Error 502.gcc_r: Error with make!                                                                                              #
+# Error 520.omnetpp_r: Error with make!                                                                                          #
+# Error 523.xalancbmk_r: Error with make!                                                                                        #
+# Error 525.x264_r: Error with make!                                                                                             #
+# Error 548.exchange2_r: failed by request                                                                                       #
+#                                                                                                                                #
+#   INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN -- INVALID RUN                                                      #
+##################################################################################################################################
+---------------------------------------------------------------------------------------------------------------------------------------------
+For questions about this result, please contact the tester.
+For other inquiries, please contact info@spec.org.
+Copyright 2017-2023 Standard Performance Evaluation Corporation
+Tested with SPEC CPU(R)2017 v1.1.8 on 2023-03-10 17:23:36Coordinated Universal Time.
+Report generated on 2023-03-10 18:07:55 by CPU2017 text formatter v6255.

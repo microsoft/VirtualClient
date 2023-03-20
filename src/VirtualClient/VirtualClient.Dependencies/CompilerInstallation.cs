@@ -167,11 +167,11 @@ namespace VirtualClient.Dependencies
             string cygwinInstallerPath = this.PlatformSpecifics.Combine(cygwinInstallationPath.Path, "cygwinsetup.exe");
             if (!string.IsNullOrEmpty(this.CygwinPackages))
             {
-                cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake,gcc-fortran,{this.CygwinPackages}";
+                cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake,{this.CygwinPackages}";
             }
             else
             {
-                cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake,gcc-fortran";
+                cygwinCommandArguments = @$"--quiet-mode --root {cygwinInstallationPath.Path} --site http://cygwin.mirror.constant.com --packages make,cmake";
             }
 
             return this.ExecuteCommandAsync(cygwinInstallerPath, cygwinCommandArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken);

@@ -24,10 +24,10 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The SpecCpu workload executor.
     /// </summary>
-    [UnixCompatible]
     public class SpecCpuExecutor : VirtualClientComponent
     {
         private const string SpecCpuRunShell = "runspeccpu.sh";
+        private const string SpecCpuRunBat = "runspeccpu.bat";
 
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -126,8 +126,16 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                if (this.Platform == PlatformID.Unix)
+                {
+                    await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else
+                {
+                    await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}", this.PackageDirectory, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
                 endTime = DateTime.UtcNow;
             }
@@ -165,14 +173,20 @@ namespace VirtualClient.Actions
 
         private string GetConfigurationFileName()
         {
-            switch (this.CpuArchitecture)
+            switch ((this.Platform, this.CpuArchitecture))
             {
                 // Windows is not supported. Modify this section if Windows is added.
-                case Architecture.X64:
+                case (PlatformID.Unix, Architecture.X64):
                     return "vc-linux-x64.cfg";
 
-                case Architecture.Arm64:
+                case (PlatformID.Unix, Architecture.Arm64):
                     return "vc-linux-arm64.cfg";
+
+                case (PlatformID.Win32NT, Architecture.X64):
+                    return "vc-win-x64.cfg";
+
+                case (PlatformID.Win32NT, Architecture.Arm64):
+                    return "vc-win-arm64.cfg";
 
                 default:
                     throw new NotSupportedException($"Current CPU architechture '{this.CpuArchitecture.ToString()}' is not supported for SPECcpu.");
@@ -208,11 +222,35 @@ namespace VirtualClient.Actions
                 string mountPath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.GetPackagePath(), "speccpu_mount");
                 this.fileSystem.Directory.CreateDirectory(mountPath);
 
-                await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
-                await this.WriteSpecCpuConfigAsync(cancellationToken);
-                await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
+                if (this.Platform == PlatformID.Unix)
+                {
+                    await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
+                    await this.WriteSpecCpuConfigAsync(cancellationToken);
+                    await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
+                }
+                else
+                {
+                    // powershell -Command "Mount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
+                    string mountIsoCmd = $"-Command \"Mount-DiskImage -ImagePath {isoFilePath}\"";
+                    await this.ExecuteCommandAsync("powershell", mountIsoCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+
+                    // powershell -Command "(Get-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso" | Get-Volume).DriveLetter "
+                    string getDriveLetterCmd = $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter\"";
+                    string driveLetter = await this.ExecuteCommandAsync("powershell", getDriveLetterCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+
+                    // The reason for the echo is that there is a "pause" in the install.bat. The echo skips it.
+                    // echo 1 | install.bat  C:\cpu2017
+                    string installCmd = $"/c echo 1 | {this.PlatformSpecifics.Combine($"{driveLetter.Trim()}:", "install.bat")} {this.PackageDirectory}";
+                    await this.ExecuteCommandAsync("cmd", installCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+
+                    await this.WriteSpecCpuConfigAsync(cancellationToken);
+
+                    // powershell -Command "Dismount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
+                    string dismountCmd = $"-Command \"Dismount-DiskImage -ImagePath {isoFilePath}\"";
+                    await this.ExecuteCommandAsync("powershell", dismountCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                }
 
                 state.SpecCpuInitialized = true;
             }
@@ -220,7 +258,7 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", state, cancellationToken);
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             EventContext relatedContext = telemetryContext.Clone();
 
@@ -237,6 +275,8 @@ namespace VirtualClient.Actions
                     this.Logger.LogProcessDetails<SpecCpuExecutor>(process, relatedContext);
                     process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                 }
+
+                return process.StandardOutput.ToString();
             }
         }
 
@@ -294,7 +334,12 @@ namespace VirtualClient.Actions
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
             int coreCount = this.systemManager.GetSystemCoreCount();
-            return @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning} --reportable {this.SpecProfile}";
+            string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
+
+            // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.
+            cmd = (this.Platform == PlatformID.Unix) ? $"{cmd} --reportable" : $"{cmd} --noreportable";
+            cmd = $"{cmd} {this.SpecProfile}";
+            return cmd;
         }
 
         private async Task WriteSpecCpuConfigAsync(CancellationToken cancellationToken)
@@ -304,10 +349,20 @@ namespace VirtualClient.Actions
             string templateText = await this.fileSystem.File.ReadAllTextAsync(this.PlatformSpecifics.GetScriptPath("speccpu", configurationFile));
 
             // Copy SPECcpu run shell to the config folder.
-            this.fileSystem.File.Copy(
-                this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunShell),
-                this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunShell),
+            if (this.Platform == PlatformID.Unix) 
+            {
+                this.fileSystem.File.Copy(
+                    this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunShell),
+                    this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunShell),
+                    true);
+            }
+            else
+            {
+                this.fileSystem.File.Copy(
+                this.PlatformSpecifics.GetScriptPath("speccpu", SpecCpuExecutor.SpecCpuRunBat),
+                this.Combine(this.PackageDirectory, SpecCpuExecutor.SpecCpuRunBat),
                 true);
+            }
 
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.BaseOptimizingFlags, this.BaseOptimizingFlags, StringComparison.OrdinalIgnoreCase);
             templateText = templateText.Replace(SpecCpuConfigPlaceHolder.PeakOptimizingFlags, this.PeakOptimizingFlags, StringComparison.OrdinalIgnoreCase);

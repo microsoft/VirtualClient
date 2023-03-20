@@ -217,5 +217,22 @@ namespace VirtualClient.Actions
             MetricAssert.Exists(metrics, "SPECspeed(R)2017_int_base", 13.4, "Score");
             MetricAssert.Exists(metrics, "SPECspeed(R)2017_int_peak", 13.4, "Score");
         }
+
+        [Test]
+        public void SpecCpuParserVerifyMetricsIntRateBaseWinArm64Incomplete()
+        {
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "SpecCpu", "intrate-base-win-arm64-1.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new SpecCpuMetricsParser(this.rawText);
+            IList<Metric> metrics = this.testParser.Parse();
+
+            Assert.AreEqual(4, metrics.Count);
+
+            MetricAssert.Exists(metrics, "SPECcpu-base-505.mcf_r", 2.44, "Score");
+            MetricAssert.Exists(metrics, "SPECcpu-base-531.deepsjeng_r", 2.20, "Score");
+            MetricAssert.Exists(metrics, "SPECcpu-base-541.leela_r", 2.57, "Score");
+            MetricAssert.Exists(metrics, "SPECcpu-base-557.xz_r", 1.57, "Score");
+        }
     }
 }
