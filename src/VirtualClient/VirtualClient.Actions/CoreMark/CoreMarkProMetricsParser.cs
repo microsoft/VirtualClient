@@ -78,6 +78,10 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void Preprocess()
         {
+            // remove all outputs before "WORKLOAD RESULTS TABLE"
+            int index = this.RawText.IndexOf("WORKLOAD RESULTS TABLE");
+            this.PreprocessedText = this.RawText.Substring(index);
+
             /* Change this:
              * 
              * WORKLOAD RESULTS TABLE
@@ -92,7 +96,7 @@ namespace VirtualClient.Actions
              * 
              */
             Regex replaceHeader = new Regex(@"(WORKLOAD RESULTS TABLE)(\s)+(MultiCore)(\s)+(SingleCore)");
-            this.PreprocessedText = Regex.Replace(this.RawText, replaceHeader.ToString(), $"WORKLOAD RESULTS TABLE");
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, replaceHeader.ToString(), $"WORKLOAD RESULTS TABLE");
             // DataTable class doesn't allow duplicate column name, so the two iter/s need to be replaced.
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"(\(iter\/s\))(\s)+(\(iter\/s\))", $"MultiCore   SingleCore");
 

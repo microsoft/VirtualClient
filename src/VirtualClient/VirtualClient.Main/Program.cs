@@ -20,6 +20,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Microsoft.Extensions.Options;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
 
@@ -194,6 +195,9 @@ namespace VirtualClient
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
+
+                // --flush-wait
+                OptionFactory.CreateFlushWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --installDependencies
                 OptionFactory.CreateDependenciesFlag(required: false),

@@ -70,4 +70,31 @@ namespace VirtualClient.Contracts
         /// </summary>
         public const string TelemetrySource = "TelemetrySource";
     }
+
+    /// <summary>
+    /// Common HTTP content types.
+    /// </summary>
+    public static class HttpContentType
+    {
+        /// <summary>
+        /// text/plain
+        /// </summary>
+        public const string PlainText = "text/plain";
+
+        /// <summary>
+        /// application/octet-stream
+        /// </summary>
+        public const string Binary = "application/octet-stream";
+    }
+
+    /// <summary>
+    /// Common profile metadata property names.
+    /// </summary>
+    public class ProfileMetadata
+    {
+        /// <summary>
+        /// Metadata = SupportsIterations
+        /// </summary>
+        public const string SupportsIterations = nameof(SupportsIterations);
+    }
 }

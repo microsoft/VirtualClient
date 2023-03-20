@@ -48,11 +48,11 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersFiltersCDRomWithNoneFilter()
+        public void DiskFiltersAlwaysFiltersOutCDROMDevices()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             Disk cdRom1 = new Disk(4, "/dev/dvd");
-            Disk cdRom2 = new Disk(5, "/dev/random", accessPaths: new List<string> { "/dev/cdrom" });
+            Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
 
             string filterString = "none";

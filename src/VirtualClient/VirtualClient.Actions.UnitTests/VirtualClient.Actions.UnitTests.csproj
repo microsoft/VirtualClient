@@ -85,6 +85,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DiskPerformance\" />
     <Folder Include="Examples\FIO\" />
   </ItemGroup>
 

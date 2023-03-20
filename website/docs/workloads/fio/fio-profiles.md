@@ -95,6 +95,7 @@ aspects of the workload execution.
   | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See the link 'Testing Specific Disks' at the top for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 500GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 500GB |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 496GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 496GB |
+  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | false (initialized sequentially) |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -215,10 +216,11 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   | DiskFilter                | Optional. Filter allowing the user to select the disks on which to test.<br/><br/>See '[disk testing scenarios](https://github.com/microsoft/VirtualClient/blob/main/website/docs/guides/usage-scenarios/test-disks.md)' for more details. | BiggestSize |
   | DiskFillSize              | Optional. Allows the user to override the default disk fill size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
   | FileSize                  | Optional. Allows the user to override the default file size used in the FIO profile (e.g. 134GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 134GB |
-  | ProcessModel                 | Optional. Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). | SingleProcess |
-  | MaxThreads                 | Optional. Allows the user to override the maximum number of threads used by FIO.By default if 'null' is given as value. It will use the number cores of the machine | Number of CPU cores |
-  | QueueDepths                 | Optional. Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
-  | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | ProcessModel              | Optional. Allows the user to override the default value you can selection Single Process for all disk(SingleProcess) or 1 process for each disk under test (SingleProcessPerDisk). | SingleProcess |
+  | MaxThreads                | Optional. Allows the user to override the maximum number of threads used by FIO.By default if 'null' is given as value. It will use the number cores of the machine | Number of CPU cores |
+  | QueueDepths               | Optional. Allows the user to override the a comma seperated list of queuedepths to iterate. A single queueDepth can be named as ScenarioQueueDepth | "1,4,16,64,256,1024" |
+  | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
   
 * **Profile Component Parameters**  
   The following section describes the parameters used by the individual components in the profile.
@@ -342,12 +344,13 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | DefaultNumJobs            | Optional. Allows the user to override Number of jobs for each component (Random read component,Random write component,Sequential read component,Sequential write component)             | 1 |
-  | DiskFilter           | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
-  | RandomIOFileSize              | Optional. Allows the user to override the default random io file size used in the profile (e.g. 124GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 124GB |
-  | SequentialIOFileSize                  | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
-  | TargetIOPS                 | Optional. Allows the user to override the default value for Target IOPS for all the components combined. | 5000 |
-  | TargetPercents                 | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
-  | DirectIO                    | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | DiskFilter                | Disk filter to choose disks. Default is to test on biggest non-OS disks.             | BiggestSize |
+  | RandomIOFileSize          | Optional. Allows the user to override the default random io file size used in the profile (e.g. 124GB -> 26GB). This enables the profile to be used in scenarios where the disk size is very small (e.g. local/temp disk -> 32GB in size). | 124GB |
+  | SequentialIOFileSize      | Optional. Allows the user to override the default random io file size used in the profile. | 20GB |
+  | TargetIOPS                | Optional. Allows the user to override the default value for Target IOPS for all the components combined. | 5000 |
+  | TargetPercents            | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
+  | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
+  | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
   
   
 * **Profile Component Parameters** 

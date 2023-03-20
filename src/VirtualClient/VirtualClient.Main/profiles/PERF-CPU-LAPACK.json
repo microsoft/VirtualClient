@@ -39,7 +39,7 @@
             "Parameters": {
                 "CompilerName": "$.Parameters.CompilerName",
                 "CompilerVersion": "$.Parameters.CompilerVersion",
-                "CygwinPackages": "python3"
+                "CygwinPackages": "gcc-fortran,python3"
             }
         },
         {

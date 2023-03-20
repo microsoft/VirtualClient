@@ -156,7 +156,11 @@ namespace VirtualClient
                 // Blobs:     555553ed-3f63-43fe-ae7c-327bae09ee60/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/example_monitor/2021-11-19T13:45:31.1247568Z-monitor.log
                 //            555553ed-3f63-43fe-ae7c-327bae09ee60/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/example_monitor/2021-11-19T13:46:30.6489302Z-monitor.log
                 //            555553ed-3f63-43fe-ae7c-327bae09ee60/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/example_monitor/2021-11-19T13:47:32.7295123Z-monitor.log
-                BlobDescriptor resultsBlob = BlobDescriptor.ToBlobDescriptor(this.ExperimentId, this.AgentId, "examplemonitor", "monitor.log");
+                FileBlobDescriptor resultsBlob = FileBlobDescriptor.ToBlobDescriptor(
+                    this.fileSystem.FileInfo.FromFileName(resultsFilePath),
+                    this.ExperimentId,
+                    this.AgentId,
+                    "examplemonitor");
 
                 await blobManager.UploadBlobAsync(resultsBlob, uploadStream, cancellationToken)
                     .ConfigureAwait(false);

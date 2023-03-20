@@ -22,6 +22,8 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Reflection;
 
+    [TestFixture]
+    [Category("Unit")]
     public class DCGMIExecutorTests
     {
         private MockFixture mockFixture;

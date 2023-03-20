@@ -136,7 +136,7 @@ namespace VirtualClient.Common.Extensions
             }
 
             T convertedValue = default(T);
-            IConvertible value = dictionary.ContainsKey(key)
+            IConvertible value = dictionary.ContainsKey(key) && dictionary[key] != null
                 ? dictionary[key]
                 : defaultValue;
 
