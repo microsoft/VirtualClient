@@ -35,6 +35,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.mockFixture.SetupWorkloadPackage("memtier", expectedFiles: "memtier_benchmark");
         }
 
         [Test]
@@ -59,7 +61,19 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-             $"sudo -u username /home/user/tools/VirtualClient/packages/memtier/memtier_benchmark --server 1.2.3.5 --port 6379 --protocol memcache_text --clients 1 --threads 4 --ratio 1:9 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count 1 --test-time 180 --print-percentiles 50,90,95,99,99.9 --random-data"
+                "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1",
+                "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1",
+                "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern S:S --run-count 1",
+                "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 32 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data"
             };
 
             // Setup the expectations for the workload
@@ -72,7 +86,7 @@ namespace VirtualClient.Actions
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
 
-                if (arguments.Contains("memtier_benchmark --server", StringComparison.OrdinalIgnoreCase))
+                if (arguments?.Contains("memtier_benchmark", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_MemcachedMemtier.txt"));
                 }

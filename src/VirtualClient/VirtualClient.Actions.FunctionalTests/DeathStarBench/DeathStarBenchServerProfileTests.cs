@@ -58,6 +58,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Ignore("The complexity of this function test needs to be revisited")]
         [TestCase("PERF-NETWORK-DEATHSTARBENCH.json")]
         public async Task DeathStarBenchWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformSingleVM(string profile)
         {

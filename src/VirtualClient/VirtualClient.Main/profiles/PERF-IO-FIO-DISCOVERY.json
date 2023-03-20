@@ -12,7 +12,8 @@
         "ProcessModel": "SingleProcess",
         "MaxThreads": "8",
         "QueueDepths": "1,4,16,64,256,1024",
-        "DirectIO": true
+        "DirectIO": true,
+        "InitializeDisksInParallel": true
     },
     "Actions": [
         {
@@ -21,7 +22,7 @@
                 "Scenario": "DiskFill",
                 "CommandLine": "--direct=1 --overwrite=1 --output-format=json --rw=write --bs=256K --numjobs=1 --iodepth=64 --fallocate=none --refill_buffers=1 --name={Scenario} --size={DiskFillSize}",
                 "PackageName": "fio",
-                "ProcessModel": "SingleProcess",
+                "ProcessModel": "SingleProcessPerDisk",
                 "DiskFillSize": "$.Parameters.DiskFillSize",
                 "DiskFill": true,
                 "DeleteTestFilesOnFinish": false,
@@ -490,7 +491,8 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "InitializeDisks"
+                "Scenario": "InitializeDisks",
+                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

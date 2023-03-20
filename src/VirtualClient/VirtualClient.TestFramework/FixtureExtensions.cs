@@ -6,12 +6,9 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Diagnostics.CodeAnalysis;
     using System.Net;
     using System.Net.Http;
-    using System.Text;
     using AutoFixture;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -118,39 +115,40 @@ namespace VirtualClient
 
         public static Disk CreateDisk(int index, PlatformID platform = PlatformID.Unix, bool withVolume = false, string deviceName = null, bool os = false)
         {
-            string mockPath = platform == PlatformID.Win32NT ? @$"\\.\PHYSICALDISK{index}" : $"/dev/sd{(char)('c' + (char)index)}";
-            List<string> accessPath = new List<string> { $"{mockPath}{index}" };
+            string diskPath = platform == PlatformID.Win32NT
+                ? @$"\\.\PHYSICALDISK{index}"
+                : $"/dev/sd{(char)('c' + (char)index)}";
+
+            string devicePath = platform == PlatformID.Win32NT
+                ? $"{(char)('C' + (char)index)}:\\"
+                : $"{diskPath}1";
+
+            List<string> accessPaths = new List<string>();
+            if (platform == PlatformID.Win32NT)
+            {
+                accessPaths.Add(diskPath);
+            }
+
             List<DiskVolume> volumes = new List<DiskVolume>();
 
             if (withVolume)
             {
-                volumes = new List<DiskVolume>() { FixtureExtensions.CreateDiskVolume(index, platform, os) };
+                volumes = new List<DiskVolume>() { FixtureExtensions.CreateDiskVolume(devicePath, platform, os) };
             }
 
-            return new Disk(index, deviceName ?? mockPath, volumes, accessPath, properties: FixtureExtensions.CreateDiskProperties(index, platform, os));
+            return new Disk(index, deviceName ?? diskPath, volumes, properties: FixtureExtensions.CreateDiskProperties(index, platform, os));
         }
 
-        public static DiskVolume CreateDiskVolume(int index, PlatformID platform = PlatformID.Unix, bool os = false)
+        public static DiskVolume CreateDiskVolume(string devicePath, PlatformID platform = PlatformID.Unix, bool os = false)
         {
-            List<string> accessPath = new List<string>();
-            string devicePath = string.Empty;
-            if (platform == PlatformID.Unix)
+            List<string> accessPaths = new List<string>();
+            accessPaths.Add(devicePath);
+            if (os)
             {
-                accessPath.Add($"/dev/sdd{index}");
-                devicePath = $"/dev/sdd{index}";
-                if (os)
-                {
-                    accessPath.Add("/");
-                }
-            }
-            else
-            {
-                devicePath = $@"\\.\PHYSICALDISK{index}";
-                // C:, D:, E:, etc
-                accessPath.Add($@"{(char)('C' + (char)index)}:\");
+                accessPaths.Add("/");
             }
 
-            return new DiskVolume(0, devicePath, accessPath, properties: FixtureExtensions.CreateDiskProperties(1, platform, os));
+            return new DiskVolume(0, devicePath, accessPaths, properties: FixtureExtensions.CreateDiskProperties(1, platform, os));
         }
 
         private static Dictionary<string, IConvertible> CreateDiskProperties(int lun = 0, PlatformID platform = PlatformID.Unix, bool os = false)

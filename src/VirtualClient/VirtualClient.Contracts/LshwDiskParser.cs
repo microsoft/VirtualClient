@@ -96,7 +96,7 @@ namespace VirtualClient.Contracts
             diskProperties.AddRange(diskConfigurations);
             diskProperties.AddRange(diskCapabilities);
 
-            IList<string> accessPath = LshwDiskParser.ReadLogicalNames(xmlDiskNode, out string devicePath);
+            LshwDiskParser.ReadLogicalNames(xmlDiskNode, out string devicePath);
             int lun = LshwDiskParser.ReadLogicalUnit(xmlDiskNode);
 
             List<DiskVolume> volumes = new List<DiskVolume>();
@@ -114,7 +114,6 @@ namespace VirtualClient.Contracts
                 lun,
                 devicePath,
                 volumes,
-                accessPath,
                 diskProperties);
         }
 

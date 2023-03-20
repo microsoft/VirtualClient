@@ -6,8 +6,8 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
     using VirtualClient.Common;
 
     /// <summary>
@@ -15,11 +15,14 @@ namespace VirtualClient
     /// </summary>
     public class InMemoryProcessManager : ProcessManager
     {
+        private PlatformID platform;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryProcessManager"/> class.
         /// </summary>
-        public InMemoryProcessManager()
+        public InMemoryProcessManager(PlatformID platform)
         {
+            this.platform = platform;
             this.Processes = new List<IProcessProxy>();
         }
 
@@ -71,9 +74,7 @@ namespace VirtualClient
         /// <list>
         /// <item>Parameters:</item>
         /// <list type="bullet">
-        /// <item><see cref="string"/> command - The command to execute.</item>
-        /// <item><see cref="string"/> arguments - The arguments to pass to the command on the command line.</item>
-        /// <item><see cref="string"/> workingDir - The working directory for the command execution.</item>
+        /// <item><see cref="IProcessProxy"/> process - The process that was created.</item>
         /// </list>
         /// </list>
         /// </summary>
@@ -95,7 +96,9 @@ namespace VirtualClient
                     {
                         FileName = command,
                         Arguments = arguments,
-                        WorkingDirectory = workingDir
+                        WorkingDirectory = workingDir ?? (this.platform == PlatformID.Unix 
+                            ? Path.GetDirectoryName(command).Replace('\\', '/')
+                            : Path.GetDirectoryName(command))
                     }
                 };
 

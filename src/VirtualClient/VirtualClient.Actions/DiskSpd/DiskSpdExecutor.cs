@@ -27,9 +27,9 @@ namespace VirtualClient.Actions
     /// https://github.com/Microsoft/diskspd/wiki/Command-line-and-parameters
     /// </remarks>
     [WindowsCompatible]
-    public class DiskSpdExecutor : DiskPerformanceWorkloadExecutor
+    public class DiskSpdExecutor : DiskWorkloadExecutor
     {
-        private readonly List<DiskPerformanceWorkloadProcess> workloadProcesses = new List<DiskPerformanceWorkloadProcess>();
+        private readonly List<DiskWorkloadProcess> workloadProcesses = new List<DiskWorkloadProcess>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DiskSpdExecutor"/> class.
@@ -267,13 +267,57 @@ namespace VirtualClient.Actions
 
                     if (this.DeleteTestFilesOnFinish)
                     {
-                        foreach (DiskPerformanceWorkloadProcess workload in this.workloadProcesses)
+                        foreach (DiskWorkloadProcess workload in this.workloadProcesses)
                         {
                             await this.DeleteTestFilesAsync(workload.TestFiles).ConfigureAwait(false);
                         }
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates mount points for any disks that do not have them already.
+        /// </summary>
+        /// <param name="disks">This disks on which to create the mount points.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        protected override async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+        {
+            bool mountPointsCreated = false;
+
+            // Don't mount any partition in OS drive.
+            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
+            {
+                // mount every volume that doesn't have an accessPath so long as it does have an index defined. On
+                // Windows systems, all volumes that are valid for disk I/O operations (i.e. not reserved, not hidden) will
+                // have indexes associated.
+                foreach (DiskVolume volume in disk.Volumes.Where(v => v.Index != null && v.AccessPaths?.Any() != true))
+                {
+                    string newMountPoint = volume.GetDefaultMountPoint();
+                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
+
+                    EventContext relatedContext = EventContext.Persisted().Clone()
+                        .AddContext(nameof(volume), volume)
+                        .AddContext("mountPoint", newMountPoint);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
+                    {
+                        string newMountPoint = volume.GetDefaultMountPoint();
+                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
+                        {
+                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                        }
+
+                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        mountPointsCreated = true;
+
+                    }).ConfigureAwait(false);
+                }
+            }
+
+            return mountPointsCreated;
         }
 
         /// <summary>
@@ -285,14 +329,14 @@ namespace VirtualClient.Actions
         /// </param>
         /// <param name="testedInstance">A name for the disks under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
         /// <param name="disksToTest">The disks under test.</param>
-        protected override DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+        protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
             string[] testFiles = disksToTest.Select(disk => this.GetTestFile(disk.GetPreferredAccessPath(this.Platform))).ToArray();
             string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
 
-            return new DiskPerformanceWorkloadProcess(process, testedInstance, testFiles);
+            return new DiskWorkloadProcess(process, testedInstance, testFiles);
         }
 
         /// <summary>
@@ -300,13 +344,13 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="workloads">The workload processes.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the workload operations.</param>
-        protected Task ExecuteWorkloadsAsync(IEnumerable<DiskPerformanceWorkloadProcess> workloads, CancellationToken cancellationToken)
+        protected Task ExecuteWorkloadsAsync(IEnumerable<DiskWorkloadProcess> workloads, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 // Execute processes and cleanup residuals if required.
                 List<Task> workloadTasks = new List<Task>();
-                foreach (DiskPerformanceWorkloadProcess workload in workloads)
+                foreach (DiskWorkloadProcess workload in workloads)
                 {
                     workloadTasks.Add(this.ExecuteWorkloadAsync(workload, cancellationToken));
                 }
@@ -380,7 +424,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureMetrics(DiskPerformanceWorkloadProcess workload, EventContext telemetryContext)
+        private void CaptureMetrics(DiskWorkloadProcess workload, EventContext telemetryContext)
         {
             string result = workload.StandardOutput.ToString();
             IList<Metric> metrics = new List<Metric>()
@@ -399,7 +443,7 @@ namespace VirtualClient.Actions
                 telemetryContext);
         }
 
-        private async Task ExecuteWorkloadAsync(DiskPerformanceWorkloadProcess workload, CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(DiskWorkloadProcess workload, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {

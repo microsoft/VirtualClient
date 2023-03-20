@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using VirtualClient;
     using VirtualClient.Contracts;
@@ -43,14 +44,31 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         public override IList<Metric> Parse()
         {
-            this.Preprocess();
-            this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, PostgreSQLSectionDelimiter);
-            this.ThrowIfInvalidOutputFormat();
-            this.CalculateThroughputResult();
+            try
+            {
+                this.Preprocess();
+                this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, PostgreSQLSectionDelimiter);
+                this.ThrowIfInvalidOutputFormat();
+                this.CalculateThroughputResult();
 
-            List<Metric> metrics = new List<Metric>();
-            metrics.AddRange(this.PostgreSQLResult.GetMetrics(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
-            return metrics;
+                List<Metric> metrics = new List<Metric>(this.PostgreSQLResult.GetMetrics(nameIndex: 1, valueIndex: 0, metricRelativity: MetricRelativity.HigherIsBetter));
+
+                metrics.Add(new Metric(
+                    "Operations/sec",
+                    metrics.First(m => m.Name == "Operations/min").Value / 60,
+                    relativity: MetricRelativity.HigherIsBetter));
+
+                metrics.Add(new Metric(
+                    "Transactions/sec",
+                    metrics.First(m => m.Name == "Transactions/min").Value / 60,
+                    relativity: MetricRelativity.HigherIsBetter));
+
+                return metrics;
+            }
+            catch (Exception exc)
+            {
+                throw new WorkloadResultsException("Failed to parse PostgreSQL metrics from results.", exc, ErrorReason.InvalidResults);
+            }
         }
 
         /// <inheritdoc/>
@@ -59,8 +77,8 @@ namespace VirtualClient.Actions
             this.PreprocessedText = Regex.Replace(this.RawText, $"{Environment.NewLine}", " ");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, $"(\n\r)|(\r\n)", " ");
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"TEST RESULT : System achieved ", $"{Environment.NewLine}{Environment.NewLine}TEST RESULT{Environment.NewLine}");
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"NOPM from ", $" Number Of Operations Per Minute{Environment.NewLine}");
-            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"PostgreSQL TPM", $" Transactions Per Minute{Environment.NewLine}{Environment.NewLine}");
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"NOPM from ", $" Operations/min{Environment.NewLine}");
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"PostgreSQL TPM", $" Transactions/min{Environment.NewLine}{Environment.NewLine}");
         }
 
         private void CalculateThroughputResult()

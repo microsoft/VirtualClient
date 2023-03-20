@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using VirtualClient;
@@ -28,6 +27,9 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class PostgreSQLExecutor : VirtualClientComponent
     {
+        internal const string CreateDBTclName = "createDB.tcl";
+        internal const string RunTransactionsTclName = "runTransactions.tcl";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLExecutor"/> class.
         /// </summary>
@@ -44,6 +46,28 @@ namespace VirtualClient.Actions
 
             this.SystemManagement = dependencies.GetService<ISystemManagement>();
             this.FileSystem = this.Dependencies.GetService<IFileSystem>();
+        }
+
+        /// <summary>
+        /// Defines the name of the benchmark (e.g. tpcc).
+        /// </summary>
+        public string Benchmark
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.Benchmark));
+            }
+        }
+
+        /// <summary>
+        /// Defines the name of the PostgreSQL database to create/use for the transactions.
+        /// </summary>
+        public string DatabaseName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseName));
+            }
         }
 
         /// <summary>
@@ -64,7 +88,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Port), 5432);
+                return this.Parameters.GetValue<int>(nameof(this.Port));
             }
         }
 
@@ -171,6 +195,8 @@ namespace VirtualClient.Actions
                 {
                     CancellationToken serverCancellationToken = this.ServerCancellationSource.Token;
 
+                    await this.InitializeExecutablesAsync(cancellationToken);
+
                     if (!isMultiRole || this.IsInRole(ClientRole.Server))
                     {
                         using (var serverExecutor = this.CreateServerExecutor())
@@ -202,45 +228,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes the commands.
+        /// Logs the list of results provide
         /// </summary>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="arguments">any extra arguments for the command</param>
-        /// <param name="workingDirectory">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>String output of the command.</returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string command, string arguments, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
+        protected void CaptureMetrics(IEnumerable<Metric> results, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
-            string output = string.Empty;
-            if (!cancellationToken.IsCancellationRequested)
+            if (results != null)
             {
-                this.Logger.LogTraceMessage($"Executing process '{command}' '{arguments}'  at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", command);
-
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL");
-                            process.ThrowIfWorkloadFailed();
-                        }
-
-                        output = process.StandardOutput.ToString();
-                    }
-
-                    return output;
-                }).ConfigureAwait(false);
+                this.Logger.LogMetrics(
+                    "PostgreSQL",
+                    "TPC-C",
+                    startTime,
+                    endTime,
+                    results.ToList(),
+                    null,
+                    null,
+                    this.Tags,
+                    telemetryContext);
             }
-
-            return output;
         }
 
         /// <summary>
@@ -261,22 +265,38 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Logs the list of results provide
+        /// Initializes the workload executables on the system (e.g. attributes them as executable).
         /// </summary>
-        protected void CaptureMetrics(IEnumerable<Metric> results, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
         {
-            if (results != null)
+            if (this.Platform == PlatformID.Unix)
             {
-                this.Logger.LogMetrics(
-                    "PostgreSQL",
-                    "TPC-C",
-                    startTime,
-                    endTime,
-                    results.ToList(),
-                    null,
-                    null,
-                    this.Tags,
-                    telemetryContext);
+                await this.SystemManagement.MakeFileExecutableAsync(
+                    this.Combine(this.HammerDBPackagePath, "hammerdbcli"),
+                    this.Platform,
+                    cancellationToken);
+
+                await this.SystemManagement.MakeFilesExecutableAsync(
+                    this.Combine(this.HammerDBPackagePath, "bin"),
+                    this.Platform,
+                    cancellationToken);
+
+                await this.SystemManagement.MakeFileExecutableAsync(
+                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "configure.sh"),
+                    this.Platform,
+                    cancellationToken);
+
+                // The path to the PostgreSQL 'bin' folder is expected to exist in the PATH environment variable
+                // for the HammerDB toolset to work correctly.
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.PostgreSqlInstallationPath, "bin"), append: true);
+
+                // The path to the HammerDB 'bin' folder is expected to exist in the PATH environment variable
+                // for the HammerDB toolset to work correctly.
+                this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.HammerDBPackagePath, "bin"), append: true);
+
+                // Add the path to the HammerDB 'lib' folder to the LD_LIBRARY_PATH variable so that the *.so files can
+                // be found.
+                this.SetEnvironmentVariable(EnvironmentVariable.LD_LIBRARY_PATH, this.Combine(this.HammerDBPackagePath, "lib"), append: true);
             }
         }
 
@@ -337,6 +357,7 @@ namespace VirtualClient.Actions
                 switch (distroInfo.LinuxDistribution)
                 {
                     case LinuxDistribution.Ubuntu:
+                    case LinuxDistribution.Debian:
                         break;
 
                     default:

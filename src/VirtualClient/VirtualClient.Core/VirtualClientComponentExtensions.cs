@@ -53,6 +53,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
         /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
         /// <returns>The process that executed the command.</returns>
         public static Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -61,9 +62,10 @@ namespace VirtualClient
             EventContext telemetryContext,
             CancellationToken cancellationToken,
             bool runElevated = false,
-            string username = null)
+            string username = null,
+            Action<IProcessProxy> beforeExecution = null)
         {
-            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username);
+            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
         }
 
         /// <summary>
@@ -77,6 +79,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
         /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
         /// <returns>The process that executed the command.</returns>
         public static async Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -86,7 +89,8 @@ namespace VirtualClient
             EventContext telemetryContext,
             CancellationToken cancellationToken,
             bool runElevated = false,
-            string username = null)
+            string username = null,
+            Action<IProcessProxy> beforeExecution = null)
         {
             component.ThrowIfNull(nameof(component));
             command.ThrowIfNullOrWhiteSpace(nameof(command));
@@ -128,6 +132,7 @@ namespace VirtualClient
                 component.CleanupTasks.Add(() => process.SafeKill());
                 component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
+                beforeExecution?.Invoke(process);
                 await process.StartAndWaitAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -316,8 +321,7 @@ namespace VirtualClient
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="blobDescriptor">The defined blob descriptor</param>
-        /// <param name="filePath">Path to the file.</param>
+        /// <param name="descriptor">The defined blob descriptor</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
@@ -326,8 +330,7 @@ namespace VirtualClient
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            BlobDescriptor blobDescriptor,
-            string filePath,
+            FileBlobDescriptor descriptor,
             CancellationToken cancellationToken,
             bool deleteFile = true,
             IAsyncPolicy retryPolicy = null)
@@ -359,30 +362,30 @@ namespace VirtualClient
 
             try
             {
+                IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
+
                 bool uploaded = false;
 
                 await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
                 {
                     try
                     {
-                        IFileInfo fileInfo = fileSystem.FileInfo.FromFileName(filePath);
-
                         // Some processes creat the files up front before writing content to them. These files will
                         // be 0 bytes in size.
-                        if (fileInfo.Length > 0)
+                        if (descriptor.File.Length > 0)
                         {
-                            using (FileStream uploadStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            using (FileStream uploadStream = new FileStream(descriptor.File.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                             {
                                 if (uploadStream.Length > 0)
                                 {
                                     EventContext telemetryContext = EventContext.Persisted()
-                                        .AddContext("file", fileInfo.Name)
-                                        .AddContext("blobContainer", blobDescriptor.ContainerName)
-                                        .AddContext("blobName", blobDescriptor.Name);
+                                        .AddContext("file", descriptor.File.FullName)
+                                        .AddContext("blobContainer", descriptor.ContainerName)
+                                        .AddContext("blobName", descriptor.Name);
 
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
                                     {
-                                        await blobManager.UploadBlobAsync(blobDescriptor, uploadStream, cancellationToken);
+                                        await blobManager.UploadBlobAsync(descriptor, uploadStream, cancellationToken);
                                         uploaded = true;
                                     });
                                 }
@@ -400,7 +403,7 @@ namespace VirtualClient
                 // down to have the best chance of getting them off the system.
                 if (deleteFile && uploaded)
                 {
-                    await fileSystem.File.DeleteAsync(filePath);
+                    await fileSystem.File.DeleteAsync(descriptor.File.FullName);
                 }
             }
             catch (Exception exc)
@@ -418,7 +421,7 @@ namespace VirtualClient
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="filePathBlobDescriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
+        /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
@@ -427,14 +430,14 @@ namespace VirtualClient
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            IEnumerable<KeyValuePair<string, BlobDescriptor>> filePathBlobDescriptors,
+            IEnumerable<FileBlobDescriptor> descriptors,
             CancellationToken cancellationToken,
             bool deleteFile = false,
             IAsyncPolicy retryPolicy = null)
         {
-            foreach (KeyValuePair<string, BlobDescriptor> pair in filePathBlobDescriptors)
+            foreach (FileBlobDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, pair.Value, pair.Key, cancellationToken, deleteFile, retryPolicy).ConfigureAwait(false);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy);
             }
         }
     }

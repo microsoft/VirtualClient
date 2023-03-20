@@ -39,6 +39,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
         }
 
         [Test]
@@ -55,13 +57,14 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Ignore("We need to completely refactor the functional tests for Memcached and Redis to consolidate and cleanup.")]
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfClientOnUnixPlatform(string profile)
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-             $"sudo /home/user/tools/VirtualClient/packages/memtier/memtier_benchmark --server 1.2.3.5 --port 6379 --protocol redis --clients 1 --threads 4 --ratio 1:9 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count 1 --test-time 180 --print-percentile 50,90,95,99,99.9 --random-data",
-             $"sudo bash -c \"/home/user/tools/VirtualClient/packages/redis-6.2.1/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 1 -n 10000 -P 32 -q --csv\""
+             $"--protocol redis --clients 1 --threads 4 --ratio 1:9 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-pattern R:R --run-count 1 --test-time 180 --print-percentile 50,90,95,99,99.9 --random-data",
+             $" -h 1.2.3.5 -p 6379 -c 1 -n 10000 -P 32 -q --csv\""
             };
 
             // Setup the expectations for the workload

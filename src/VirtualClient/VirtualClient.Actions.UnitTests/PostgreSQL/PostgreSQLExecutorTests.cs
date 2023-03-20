@@ -47,17 +47,21 @@ namespace VirtualClient.Actions
             {
                 ["PackageName"] = this.mockPostgreSqlPackage.Name,
                 ["HammerDBPackageName"] = this.mockHammerDbPackage.Name,
+                ["Benchmark"] = "tpcc",
+                ["DatabaseName"] = "tpcc",
                 ["ReuseDatabase"] = true,
                 ["Username"] = "anyuser",
                 ["Password"] = "anyvalue",
                 ["UserCount"] = 100,
-                ["WarehouseCount"] = 100
+                ["WarehouseCount"] = 100,
+                ["Port"] = 5432
             };
 
             this.mockFixture.PackageManager.OnGetPackage("postgresql").ReturnsAsync(this.mockPostgreSqlPackage);
             this.mockFixture.PackageManager.OnGetPackage("hammerdb").ReturnsAsync(this.mockHammerDbPackage);
 
             this.mockFixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]

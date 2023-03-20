@@ -87,6 +87,11 @@ namespace VirtualClient.Contracts
         /// Name = USER
         /// </summary>
         public const string USER = nameof(USER);
+
+        /// <summary>
+        /// Name = VC_PASSWORD
+        /// </summary>
+        public const string VC_PASSWORD = nameof(VC_PASSWORD);
     }
 
     /// <summary>
@@ -108,5 +113,32 @@ namespace VirtualClient.Contracts
         /// TelemetrySource
         /// </summary>
         public const string TelemetrySource = "TelemetrySource";
+    }
+
+    /// <summary>
+    /// Common HTTP content types.
+    /// </summary>
+    public static class HttpContentType
+    {
+        /// <summary>
+        /// text/plain
+        /// </summary>
+        public const string PlainText = "text/plain";
+
+        /// <summary>
+        /// application/octet-stream
+        /// </summary>
+        public const string Binary = "application/octet-stream";
+    }
+
+    /// <summary>
+    /// Common profile metadata property names.
+    /// </summary>
+    public class ProfileMetadata
+    {
+        /// <summary>
+        /// Metadata = SupportsIterations
+        /// </summary>
+        public const string SupportsIterations = nameof(SupportsIterations);
     }
 }

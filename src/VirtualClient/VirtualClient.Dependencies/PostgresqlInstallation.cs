@@ -8,8 +8,10 @@ namespace VirtualClient.Dependencies
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json;
     using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -24,6 +26,7 @@ namespace VirtualClient.Dependencies
     {
         private ISystemManagement systemManager;
         private IPackageManager packageManager;
+        private IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLInstallation"/> class.
@@ -36,6 +39,20 @@ namespace VirtualClient.Dependencies
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManager.PackageManager;
+            this.stateManager = this.systemManager.StateManager;
+        }
+
+        /// <summary>
+        /// Parameter defines the password to use for the PostgreSQL accounts that will be used
+        /// to create the DB and to run transactions against it.
+        /// </summary>
+        public string Password
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Password), out IConvertible password);
+                return password?.ToString();
+            }
         }
 
         /// <summary>
@@ -48,6 +65,11 @@ namespace VirtualClient.Dependencies
         /// The path to the PostgreSQL package for installation.
         /// </summary>
         protected string PackagePath { get; set; }
+
+        /// <summary>
+        /// The password to use for the superuser account.
+        /// </summary>
+        protected string SuperuserPassword { get; set; }
 
         /// <summary>
         /// Initializes PostgreSQL installation requirements.
@@ -70,8 +92,6 @@ namespace VirtualClient.Dependencies
                 {
                     case LinuxDistribution.Ubuntu:
                     case LinuxDistribution.Debian:
-                    case LinuxDistribution.CentOS7:
-                    case LinuxDistribution.RHEL7:
                         break;
 
                     default:
@@ -81,7 +101,7 @@ namespace VirtualClient.Dependencies
                 }
             }
 
-            DependencyPath package = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
+            DependencyPath package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.PackagePath = package.Path;
         }
 
@@ -92,59 +112,78 @@ namespace VirtualClient.Dependencies
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            InstallationState state = await this.stateManager.GetStateAsync<InstallationState>(nameof(PostgreSQLInstallation), cancellationToken);
+
+            if (state == null)
             {
-                LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
-
-                switch (distroInfo.LinuxDistribution)
+                this.SuperuserPassword = this.Password;
+                if (string.IsNullOrWhiteSpace(this.SuperuserPassword))
                 {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                        await this.InstallOnUbuntuOrDebianAsync(telemetryContext, cancellationToken);
-                        break;
-
-                    case LinuxDistribution.CentOS7:
-                    case LinuxDistribution.RHEL7:
-                        await this.InstallOnCentOSOrRHELAsync(telemetryContext, cancellationToken);
-                        break;
+                    // Use the default that is defined within the PostgreSQL package.
+                    this.SuperuserPassword = await this.GetServerCredentialAsync(cancellationToken);
                 }
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                await this.InstallOnWindowsAsync(telemetryContext, cancellationToken);
-            }
-        }
 
-        private Task InstallOnCentOSOrRHELAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string installationScript = this.Combine(this.PackagePath, "rhel", "install.sh");
-            telemetryContext.AddContext(nameof(installationScript), installationScript);
-
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", installationScript, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                if (this.Platform == PlatformID.Unix)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
+
+                    switch (distroInfo.LinuxDistribution)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLInstallation", logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
+                        case LinuxDistribution.Ubuntu:
+                        case LinuxDistribution.Debian:
+                            await this.InstallOnUbuntuOrDebianAsync(telemetryContext, cancellationToken);
+                            break;
                     }
                 }
-            });
+                else if (this.Platform == PlatformID.Win32NT)
+                {
+                    await this.InstallOnWindowsAsync(telemetryContext, cancellationToken);
+                }
+
+                await this.stateManager.SaveStateAsync(
+                    nameof(PostgreSQLInstallation),
+                    new Item<InstallationState>(nameof(PostgreSQLInstallation), new InstallationState()),
+                    cancellationToken);
+            }
         }
 
-        private Task InstallOnUbuntuOrDebianAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> GetServerCredentialAsync(CancellationToken cancellationToken)
+        {
+            string fileName = "superuser.txt";
+            string path = this.Combine(this.PackagePath, fileName);
+            if (!this.systemManager.FileSystem.File.Exists(path))
+            {
+                throw new DependencyException(
+                    $"Required file '{fileName}' missing in package '{this.PackagePath}'. The PostgreSQL server cannot be initialized. " +
+                    $"As an alternative, you can supply the '{nameof(this.Password)}' parameter on the command line.",
+                    ErrorReason.DependencyNotFound);
+            }
+
+            return (await this.systemManager.FileSystem.File.ReadAllTextAsync(path, cancellationToken)).Trim();
+        }
+
+        private async Task InstallOnUbuntuOrDebianAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installationScript = this.Combine(this.PackagePath, "ubuntu", "install.sh");
-            telemetryContext.AddContext(nameof(installationScript), installationScript);
 
-            return this.RetryPolicy.ExecuteAsync(async () =>
+            string command = "bash";
+            string commandArguments = $"-c \"{EnvironmentVariable.VC_PASSWORD}={this.SuperuserPassword} sh {installationScript}\"";
+            string workingDirectory = this.Combine(this.PackagePath, "ubuntu");
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("command", command)
+                .AddContext("commandArguments", commandArguments)
+                .AddContext("workingDirectory", workingDirectory);
+
+            await this.systemManager.MakeFileExecutableAsync(installationScript, this.Platform, cancellationToken);
+
+            await this.RetryPolicy.ExecuteAsync(async () =>
             {
-                using (IProcessProxy process = await this.ExecuteCommandAsync("bash", installationScript, Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, relatedContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLInstallation", logToFile: true);
+                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
                         process.ThrowIfDependencyInstallationFailed();
                     }
                 }
@@ -159,15 +198,40 @@ namespace VirtualClient.Dependencies
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    installerPath, $@"--mode ""unattended"" --serverport ""5432"" --superpassword ""postgres""", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    installerPath,
+                    $@"--mode ""unattended"" --serverport ""5432"" --superpassword ""{this.SuperuserPassword}""",
+                    this.PackagePath,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQLInstallation", logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                         process.ThrowIfDependencyInstallationFailed();
                     }
                 }
             });
+        }
+
+        internal class InstallationState : State
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="InstallationState"/> object.
+            /// </summary>
+            public InstallationState()
+                : base()
+            {
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="InstallationState"/> object.
+            /// </summary>
+            [JsonConstructor]
+            public InstallationState(IDictionary<string, IConvertible> properties = null)
+                : base(properties)
+            {
+            }
         }
     }
 }

@@ -24,9 +24,12 @@ namespace VirtualClient.Common
              new Regex(@"AccessKey[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
              new Regex(@"AccountKey[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
              new Regex(@"Token[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
-             new Regex(@"Password[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
-             new Regex(@"Pwd[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
-             new Regex(@"sig[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase)
+             new Regex(@"sig[=\x20]+""*([\x21\x23-\x7E]+)""*", RegexOptions.IgnoreCase),
+
+             // Passwords are tricky because they can contain any character. We are not using capture groups  (e.g. ?:) for these type
+             // of expressions to allow the handling of special cases (e.g. delimited key/value pair groups (e.g. Password=s@me,val;ue,,,Property1=Value1).
+             new Regex("(?<=Password[=\x20]+\"*)(?:,{0,2}[\x21\x23-\x2B\x2D-\x7E]+,{0,2}[\x21\x23-\x2B\x2D-\x7E]+)+\"*", RegexOptions.IgnoreCase),
+             new Regex("(?<=Pwd[=\x20]+\"*)(?:,{0,2}[\x21\x23-\x2B\x2D-\x7E]+,{0,2}[\x21\x23-\x2B\x2D-\x7E]+)+\"*", RegexOptions.IgnoreCase),
         };
 
         /// <summary>
@@ -83,19 +86,28 @@ namespace VirtualClient.Common
             {
                 foreach (Match match in matches)
                 {
+                    // There are cases where it is easier to match a particular part of an expression without using capture
+                    // groups. Depending upon how the regular expressions are defined above, we use either the match itself or
+                    // the capture groups.
                     if (match.Groups.Count <= 1)
                     {
-                        throw new FormatException(
-                            "The regular expression provided must contain at least 1 capture group defining the portion of the secret values to obscure. " +
-                            "Example of a valid expression: Secret=([a-z0-9]+)");
-                    }
-
-                    foreach (Group group in ((IList<Group>)match.Groups).Skip(1))
-                    {
-                        string key = group.Value;
+                        string key = match.Value;
                         int substringLength = (int)(key.Length * ((100 - percentage) / 100));
 
-                        obscuredString = obscuredString.Replace(key, $"{key.Substring(0, substringLength)}...", StringComparison.OrdinalIgnoreCase);
+                        obscuredString = obscuredString.Replace(match.Value, $"{key.Substring(0, substringLength)}...", StringComparison.OrdinalIgnoreCase);
+                    }
+                    else
+                    {
+                        foreach (Group group in ((IList<Group>)match.Groups).Skip(1))
+                        {
+                            if (group.Success)
+                            {
+                                string key = group.Value;
+                                int substringLength = (int)(key.Length * ((100 - percentage) / 100));
+
+                                obscuredString = obscuredString.Replace(key, $"{key.Substring(0, substringLength)}...", StringComparison.OrdinalIgnoreCase);
+                            }
+                        }
                     }
                 }
             }

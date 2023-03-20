@@ -5,17 +5,16 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
     using Polly;
-    using VirtualClient;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -53,10 +52,11 @@ namespace VirtualClient.Actions
             {
                 ["PackageName"] = this.mockPostgreSqlPackage.Name,
                 ["HammerDBPackageName"] = this.mockHammerDBPackage.Name,
+                ["Benchmark"] = "tpcc",
                 ["DatabaseName"] = "tpcc",
                 ["ReuseDatabase"] = true,
-                ["Username"] = "anyuser",
-                ["Password"] = "anyvalue",
+                ["ServerPassword"] = "anyvalue",
+                ["Port"] = 5431,
                 ["UserCount"] = 100,
                 ["WarehouseCount"] = 100
             };
@@ -67,14 +67,15 @@ namespace VirtualClient.Actions
             // Setup:
             // The server will be checking for state objects. State is how the server communicates required information
             // to the client.
+            PostgreSQLServerState state = new PostgreSQLServerState();
             this.mockFixture.ApiClient.OnGetState(nameof(PostgreSQLServerState))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState())));
+                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), state)));
 
             this.mockFixture.ApiClient.OnUpdateState<PostgreSQLServerState>(nameof(PostgreSQLServerState))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
 
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
@@ -83,18 +84,12 @@ namespace VirtualClient.Actions
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
             using (TestPostgreSQLServerExecutor executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-
-                // The createDBscript.sh must be copied from a location within the HammerDB package to the root directory
-                // of that package for the platform/architecture
-                string createDBScriptCopyFromPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "postgresql", "createDBScript.sh");
-                string createDBScriptCopyToPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "createDBScript.sh");
+                await executor.ExecuteAsync(CancellationToken.None);
 
                 // createDB.tcl
-                string createDBTclCopyFromPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "postgresql", "createDBScript.sh");
-                string createDBTclCopyToPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "createDBScript.sh");
+                string createDBTclCopyFromPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "benchmarks", "tpcc", "postgresql", "createDB.tcl");
+                string createDBTclCopyToPath = this.mockFixture.Combine(this.mockHammerDBPackage.Path, "linux-x64", "createDB.tcl");
 
-                this.mockFixture.File.Verify(f => f.Copy(createDBScriptCopyFromPath, createDBScriptCopyToPath, true));
                 this.mockFixture.File.Verify(f => f.Copy(createDBTclCopyFromPath, createDBTclCopyToPath, true));
             }
         }
@@ -107,7 +102,7 @@ namespace VirtualClient.Actions
             using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ApiClient.OnUpdateState<PostgreSQLServerState>(nameof(PostgreSQLServerState))
-                    .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.BadRequest));
+                    .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(HttpStatusCode.BadRequest));
 
                 WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
                 Assert.AreEqual(ErrorReason.Http400BadRequestResponse, error.Reason);
@@ -132,8 +127,8 @@ namespace VirtualClient.Actions
                         Assert.IsTrue(actualState.Definition.DatabaseInitialized);
                         Assert.AreEqual(100, actualState.Definition.WarehouseCount);
                         Assert.AreEqual(100, actualState.Definition.UserCount);
-                        Assert.AreEqual("anyuser", actualState.Definition.UserName);
-                        Assert.AreEqual("anyvalue", actualState.Definition.Password);
+                        Assert.AreEqual(executor.ClientUsername, actualState.Definition.UserName);
+                        Assert.AreEqual(executor.ClientPassword, actualState.Definition.Password);
                         confirmed = true;
                     })
                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
@@ -144,7 +139,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task PostgreSQLServerExecutorExecutesExpectedCommandsOnWindowsSystemsToCreateTheDatabase()
+        public async Task PostgreSQLServerExecutorExecutesExpectedCommandsOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT,Architecture.X64);
             using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -152,46 +147,42 @@ namespace VirtualClient.Actions
                 // e.g.
                 // C:\Program Files\PostgreSQL\14
                 string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-win-x64"].ToString();
-                
+
+                // e.g.
+                // C:\Users\Any\VirtualClient\packages\postgresql
+                string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
+
                 // e.g. 
-                // C:\Users\Any\VirtualClient\packages\hammerdb\win-x64
+                // C:\Users\Any\VirtualClient\packages\hammerdb
                 string hammerDBPath = this.mockHammerDBPackage.Path;
 
                 List<string> expectedCommands = new List<string>()
                 {
-                    // Set the database server configuration.
-                    $"powershell -Command \"& {{Add-Content -Path '{this.mockFixture.Combine(postgreSqlInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
-
-                    // Restart the database services.
-                    $"{postgreSqlInstallationPath}\\bin\\pg_ctl.exe restart -D \"{postgreSqlInstallationPath}\\data\"",
+                    // Format:
+                    // {command} {command_arguments} --> {working_dir}
+                    //
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"{postgreSqlPackage}\\win-x64\\configure.cmd {executor.Port} --> {postgreSqlPackage}\\win-x64",
 
                     // Drop the TPCC database if it already exists.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
-
-                    // Drop the user if it exists.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP ROLE IF EXISTS anyuser;\"",
-
-                    // Create the user for access to the database.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"CREATE USER anyuser PASSWORD 'anyvalue';\"",
+                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\" --> {postgreSqlInstallationPath}\\bin",
 
                     // Create the database and populate it with data.
-                    $"{hammerDBPath}\\win-x64\\hammerdbcli.bat auto createDB.tcl",
+                    $"{hammerDBPath}\\win-x64\\hammerdbcli.bat auto createDB.tcl --> {hammerDBPath}\\win-x64"
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove($"{file} {arguments}");
-                    return this.mockFixture.Process;
+                    expectedCommands.Remove($"{process.FullCommand()} --> {process.StartInfo.WorkingDirectory}");
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
-
                 Assert.IsEmpty(expectedCommands);
             }
         }
 
         [Test]
-        public async Task PostgreSQLServerExecutorExecutesExpectedProcessOnUnix()
+        public async Task PostgreSQLServerExecutorExecutesExpectedComandsOnUnixSystems()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
             using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -200,40 +191,118 @@ namespace VirtualClient.Actions
                 // /etc/postgresql/14/main
                 string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-linux-x64"].ToString();
 
+                // e.g.
+                // C:\Users\Any\VirtualClient\packages\postgresql
+                string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
+
                 // e.g. 
                 // /home/user/VirtualClient/packages/hammerdb/linux-x64
                 string hammerDBPath = this.mockHammerDBPackage.Path;
 
                 List<string> expectedCommands = new List<string>()
                 {
-                    // Set the database server configuration.
-                    $"powershell -Command \"& {{Add-Content -Path '{this.mockFixture.Combine(postgreSqlInstallationPath, "data", "pg_hba.conf")}' -Value 'host  all  all  0.0.0.0/0  md5'}}\"",
-
-                    // Restart the database services.
-                    $"{postgreSqlInstallationPath}\\bin\\pg_ctl.exe restart -D \"{postgreSqlInstallationPath}\\data\"",
+                    // Format:
+                    // {command} {command_arguments} --> {working_dir}
+                    //
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/configure.sh {executor.Port} --> {postgreSqlPackage}/linux-x64/ubuntu",
 
                     // Drop the TPCC database if it already exists.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
-
-                    // Drop the user if it exists.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"DROP ROLE IF EXISTS anyuser;\"",
-
-                    // Create the user for access to the database.
-                    $"{postgreSqlInstallationPath}\\bin\\psql.exe -U postgres -c \"CREATE USER anyuser PASSWORD 'anyvalue';\"",
+                    $"sudo -u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\" --> {postgreSqlInstallationPath}",
 
                     // Create the database and populate it with data.
-                    $"{hammerDBPath}\\win-x64\\hammerdbcli.bat auto createDB.tcl",
+                    $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
                 };
 
-                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
-                    expectedCommands.Remove($"{file} {arguments}");
-                    return this.mockFixture.Process;
+                    expectedCommands.Remove($"{process.FullCommand()} --> {process.StartInfo.WorkingDirectory}");
                 };
 
                 await executor.ExecuteAsync(CancellationToken.None);
-
                 Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        [TestCase(PlatformID.Win32NT)]
+        public async Task PostgreSQLServerExecutorUsesTheDefaultCredentialWhenTheServerPasswordIsNotDefinedByTheUser(PlatformID platform)
+        {
+            this.SetupDefaults(platform, Architecture.X64);
+
+            this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(f => f.EndsWith("superuser.txt")))).Returns(true);
+            this.mockFixture.File.Setup(file => file.ReadAllTextAsync(
+                It.Is<string>(f => f.EndsWith("superuser.txt")),
+                It.IsAny<CancellationToken>())).ReturnsAsync("defaultpwd");
+
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // The password is NOT defined.
+                executor.Parameters.Remove(nameof(PostgreSQLServerExecutor.Password));
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.AreEqual("defaultpwd", executor.ClientPassword);
+            }
+        }
+
+        [Test]
+        public async Task PostgreSQLServerExecutorByDefaultDoesNotIncurTheCostToRebuildTheDatabaseOnSubsequentRuns()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                List<string> commandsExecuted = new List<string>();
+
+                // The default behavior is to reuse the database.
+                executor.Parameters[nameof(PostgreSQLServerExecutor.ReuseDatabase)] = true;
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandsExecuted.Add(process.FullCommand());
+
+                PostgreSQLServerState state = new PostgreSQLServerState();
+                this.mockFixture.ApiClient.OnGetStateSequence(nameof(PostgreSQLServerState))
+                    .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(
+                        HttpStatusCode.OK,
+                        new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState())))
+                    .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(
+                        HttpStatusCode.OK,
+                        new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState() { DatabaseInitialized = true })));
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsTrue(commandsExecuted.Count(cmd => cmd == $"sudo -u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\"") == 1);
+                Assert.IsTrue(commandsExecuted.Count(cmd => cmd.EndsWith($"hammerdbcli auto createDB.tcl\"")) == 1);
+            }
+        }
+
+        [Test]
+        public async Task PostgreSQLServerExecutorWillRebuildTheDatabaseOnSubsequentRunsWhenInstructed()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                List<string> commandsExecuted = new List<string>();
+
+                // The default behavior is to reuse the database.
+                executor.Parameters[nameof(PostgreSQLServerExecutor.ReuseDatabase)] = false;
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandsExecuted.Add(process.FullCommand());
+
+                PostgreSQLServerState state = new PostgreSQLServerState();
+                this.mockFixture.ApiClient.OnGetStateSequence(nameof(PostgreSQLServerState))
+                    .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(
+                        HttpStatusCode.OK,
+                        new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState())))
+                    .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(
+                        HttpStatusCode.OK,
+                        new Item<PostgreSQLServerState>(nameof(PostgreSQLServerState), new PostgreSQLServerState() { DatabaseInitialized = true })));
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsTrue(commandsExecuted.Count(cmd => cmd == $"sudo -u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\"") == 2);
+                Assert.IsTrue(commandsExecuted.Count(cmd => cmd.EndsWith($"hammerdbcli auto createDB.tcl\"")) == 2);
             }
         }
 
@@ -242,17 +311,20 @@ namespace VirtualClient.Actions
             public TestPostgreSQLServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
                 : base(services, parameters)
             {
+                base.StabilizationWait = TimeSpan.Zero;
             }
 
             public new string HammerDBPackagePath => base.HammerDBPackagePath;
 
             public new int UserCount => base.UserCount;
 
-            public new string Password => base.ClientPassword;
+            public new string ClientPassword => base.ClientPassword;
+
+            public new string ClientUsername => base.ClientUsername;
+
+            public new TimeSpan StabilizationWait => base.StabilizationWait;
 
             public new string PostgreSqlInstallationPath => base.PostgreSqlInstallationPath;
-
-            public new string Username => base.ClientUsername;
 
             public new int WarehouseCount => base.WarehouseCount;
 

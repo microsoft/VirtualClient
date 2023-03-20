@@ -226,9 +226,15 @@ namespace VirtualClient
         WorkloadDependencyMissing = 526,
 
         /// <summary>
+        /// A workload or functional test considered to be critical to the outcome of the
+        /// run failed.
+        /// </summary>
+        CriticalWorkloadFailure = 527,
+
+        /// <summary>
         /// The package store was not defined on the command line.
         /// </summary>
-        PackageStoreNotDefined = 527,
+        PackageStoreNotDefined = 530,
 
         /// <summary>
         /// The Virtual Client API service failed to startup.

@@ -18,9 +18,9 @@ namespace VirtualClient.Actions.DiskPerformance
 
     [TestFixture]
     [Category("Unit")]
-    public class DiskPerformanceWorkloadExecutorTests
+    public class DiskWorkloadExecutorTests
     {
-        private static string dllPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DiskPerformanceWorkloadExecutorTests)).Location);
+        private static string dllPath = Path.GetDirectoryName(Assembly.GetAssembly(typeof(DiskWorkloadExecutorTests)).Location);
 
         private MockFixture mockFixture;
         private IDictionary<string, IConvertible> profileParameters;
@@ -38,79 +38,79 @@ namespace VirtualClient.Actions.DiskPerformance
             this.mockCommandLine = "--name=fio_test_1 --ioengine=libaio";
             this.profileParameters = new Dictionary<string, IConvertible>
             {
-                { nameof(DiskPerformanceWorkloadExecutor.CommandLine), this.mockCommandLine },
-                { nameof(DiskPerformanceWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
-                { nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), "true" }
+                { nameof(DiskWorkloadExecutor.CommandLine), this.mockCommandLine },
+                { nameof(DiskWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
+                { nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish), "true" }
             };
 
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
         }
 
         [Test]
-        public void IOWorkloadExecutorSelectsTheExpectedDisksForTest_RemoteDiskScenario()
+        public void DiskWorkloadExecutorSelectsTheExpectedDisksForTest_RemoteDiskScenario()
         {
             IEnumerable<Disk> expectedDisks = this.disks.Where(disk => !disk.IsOperatingSystem());
 
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
-                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.AccessPaths.First()), actualDisks.Select(d => d.AccessPaths.First()));
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
             }
         }
 
         [Test]
-        public void IOWorkloadExecutorSelectsTheExpectedDisksForTest_OSDiskScenario()
+        public void DiskWorkloadExecutorSelectsTheExpectedDisksForTest_OSDiskScenario()
         {
             IEnumerable<Disk> expectedDisks = this.disks.Where(disk => disk.IsOperatingSystem());
-            this.profileParameters[nameof(DiskPerformanceWorkloadExecutor.DiskFilter)] = "osdisk";
+            this.profileParameters[nameof(DiskWorkloadExecutor.DiskFilter)] = "osdisk";
 
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
-                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.AccessPaths.First()), actualDisks.Select(d => d.AccessPaths.First()));
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
             }
         }
 
         [Test]
-        public void IOWorkloadExecutorSelectsTheExpectedDisksForTest_AllDisksScenario()
+        public void DiskWorkloadExecutorSelectsTheExpectedDisksForTest_AllDisksScenario()
         {
             IEnumerable<Disk> expectedDisks = this.disks;
-            this.profileParameters[nameof(DiskPerformanceWorkloadExecutor.DiskFilter)] = "none";
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            this.profileParameters[nameof(DiskWorkloadExecutor.DiskFilter)] = "none";
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> actualDisks = workloadExecutor.GetDisksToTest(this.disks);
-                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.AccessPaths.First()), actualDisks.Select(d => d.AccessPaths.First()));
+                CollectionAssert.AreEquivalent(expectedDisks.Select(d => d.DevicePath), actualDisks.Select(d => d.DevicePath));
             }
         }
 
         [Test]
-        public void IOWorkloadExecutorCreatesTheExpectedProcessesInTheSingleProcessModel_RemoteDiskScenario()
+        public void DiskWorkloadExecutorCreatesTheExpectedProcessesInTheSingleProcessModel_RemoteDiskScenario()
         {
             string expectedCommand = "/home/any/path/to/fio";
             IEnumerable<Disk> remoteDisks = this.SetupWorkloadScenario(testRemoteDisks: true);
 
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
-                IEnumerable<DiskPerformanceWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, remoteDisks, "SingleProcess");
+                IEnumerable<DiskWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, remoteDisks, "SingleProcess");
 
                 Assert.IsNotNull(processes);
                 Assert.IsNotEmpty(processes);
                 Assert.AreEqual(1, processes.Count());
 
                 // The remote disk 1 and 2 process
-                DiskPerformanceWorkloadProcess process1 = processes.First();
+                DiskWorkloadProcess process1 = processes.First();
                 Assert.AreEqual(expectedCommand, process1.Command);
                 Assert.IsTrue(process1.CommandArguments.StartsWith(this.mockCommandLine));
 
                 Assert.IsNotNull(process1.TestFiles);
                 Assert.AreEqual(3, process1.TestFiles.Count());
                 Assert.AreEqual("/dev/sdd1", process1.TestFiles.ElementAt(0));
-                Assert.AreEqual("/dev/sde2", process1.TestFiles.ElementAt(1));
+                Assert.AreEqual("/dev/sde1", process1.TestFiles.ElementAt(1));
             }
         }
 
         [Test]
-        public void IOWorkloadExecutorCreatesTheExpectedProcessesInTheSingleProcessPerDriveModel_AllDisksScenario()
+        public void DiskWorkloadExecutorCreatesTheExpectedProcessesInTheSingleProcessPerDriveModel_AllDisksScenario()
         {
             string expectedCommand = "/home/any/path/to/fio";
             IEnumerable<Disk> allDisks = this.SetupWorkloadScenario(
@@ -118,14 +118,14 @@ namespace VirtualClient.Actions.DiskPerformance
                 testOSDisk: true,
                 processModel: "SingleProcessPerDisk");
 
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
-                IEnumerable<DiskPerformanceWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, allDisks, "SingleProcessPerDisk");
+                IEnumerable<DiskWorkloadProcess> processes = workloadExecutor.CreateWorkloadProcesses(expectedCommand, this.mockCommandLine, allDisks, "SingleProcessPerDisk");
 
                 Assert.AreEqual(4, processes.Count()); // one per unique disk categorization.
 
                 // The OS disk processes
-                DiskPerformanceWorkloadProcess process1 = processes.ElementAt(0);
+                DiskWorkloadProcess process1 = processes.ElementAt(0);
                 Assert.AreEqual(expectedCommand, process1.Command);
                 Assert.IsTrue(process1.CommandArguments.StartsWith(this.mockCommandLine));
 
@@ -133,7 +133,7 @@ namespace VirtualClient.Actions.DiskPerformance
                 Assert.IsTrue(process1.TestFiles.First().StartsWith("/"));
 
                 // The temp disk processes
-                DiskPerformanceWorkloadProcess process2 = processes.ElementAt(1);
+                DiskWorkloadProcess process2 = processes.ElementAt(1);
                 Assert.AreEqual(expectedCommand, process2.Command);
                 Assert.IsTrue(process2.CommandArguments.StartsWith(this.mockCommandLine));
 
@@ -141,62 +141,25 @@ namespace VirtualClient.Actions.DiskPerformance
                 Assert.AreEqual("/dev/sdd1", process2.TestFiles.ElementAt(0));
 
                 // The remote disk 1 process
-                DiskPerformanceWorkloadProcess process3 = processes.ElementAt(2);
+                DiskWorkloadProcess process3 = processes.ElementAt(2);
                 Assert.AreEqual(expectedCommand, process3.Command);
                 Assert.IsTrue(process3.CommandArguments.StartsWith(this.mockCommandLine));
 
                 Assert.AreEqual(1, process3.TestFiles.Count());
-                Assert.AreEqual("/dev/sde2", process3.TestFiles.ElementAt(0));
+                Assert.AreEqual("/dev/sde1", process3.TestFiles.ElementAt(0));
 
                 // The remote disk 2 process
-                DiskPerformanceWorkloadProcess process4 = processes.ElementAt(3);
+                DiskWorkloadProcess process4 = processes.ElementAt(3);
                 Assert.AreEqual(expectedCommand, process4.Command);
                 Assert.IsTrue(process4.CommandArguments.StartsWith(this.mockCommandLine));
 
                 Assert.AreEqual(1, process4.TestFiles.Count());
-                Assert.AreEqual("/dev/sdf3", process4.TestFiles.ElementAt(0));
+                Assert.AreEqual("/dev/sdf1", process4.TestFiles.ElementAt(0));
             }
         }
 
         [Test]
-        public async Task IOWorkloadExecutorCreatesExpectedMountPointsForDisksUnderTest_RemoteDiskScenario()
-        {
-            IEnumerable<Disk> remoteDisks = this.SetupWorkloadScenario(testRemoteDisks: true);
-
-            // Clear any access points out.
-            remoteDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
-
-            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
-
-            this.mockFixture.DiskManager
-                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
-                {
-                    mountPointsCreated.Add(new Tuple<DiskVolume, string>(volume, mountPoint));
-                })
-                .Returns(Task.CompletedTask);
-
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
-            {
-                await workloadExecutor.CreateMountPointsAsync(remoteDisks, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                Assert.IsNotEmpty(mountPointsCreated);
-                Assert.AreEqual(3, mountPointsCreated.Count);
-                Assert.IsTrue(object.ReferenceEquals(mountPointsCreated.ElementAt(0).Item1, remoteDisks.ElementAt(0).Volumes.First()));
-                Assert.IsTrue(object.ReferenceEquals(mountPointsCreated.ElementAt(1).Item1, remoteDisks.ElementAt(1).Volumes.First()));
-                Assert.IsTrue(object.ReferenceEquals(mountPointsCreated.ElementAt(2).Item1, remoteDisks.ElementAt(2).Volumes.First()));
-
-                string expectedMountPoint1 = Path.Combine(DiskPerformanceWorkloadExecutorTests.dllPath, "vcmnt_dev_sdd1");
-                Assert.AreEqual(expectedMountPoint1, mountPointsCreated.ElementAt(0).Item2);
-
-                string expectedMountPoint2 = Path.Combine(DiskPerformanceWorkloadExecutorTests.dllPath, "vcmnt_dev_sdd2");
-                Assert.AreEqual(expectedMountPoint2, mountPointsCreated.ElementAt(1).Item2);
-            }
-        }
-
-        [Test]
-        public void IOWorkloadExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined_WindowsScenario()
+        public void DiskWorkloadExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined_WindowsScenario()
         {
             // The default mock setups create 4 disks:
             // C:
@@ -209,7 +172,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
 
             this.profileParameters["DiskFilter"] = "DiskPath:C,D";
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> disksToTest = workloadExecutor.GetDisksToTest(this.disks);
 
@@ -221,7 +184,7 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
-        public void IOWorkloadExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined_LinuxScenario()
+        public void DiskWorkloadExecutorIdentifiesTheExpectedDisksWhenTheyAreExplicitlyDefined_LinuxScenario()
         {
             // The default mock setups create 4 disks:
             // /dev/sdc
@@ -233,7 +196,7 @@ namespace VirtualClient.Actions.DiskPerformance
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
 
             this.profileParameters["DiskFilter"] = "DiskPath:/dev/sdd,/dev/sde";
-            using (TestIOWorkloadExecutor workloadExecutor = new TestIOWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
             {
                 IEnumerable<Disk> disksToTest = workloadExecutor.GetDisksToTest(this.disks);
 
@@ -263,16 +226,16 @@ namespace VirtualClient.Actions.DiskPerformance
             return diskUnderTest;
         }
 
-        private class TestIOWorkloadExecutor : DiskPerformanceWorkloadExecutor
+        private class TestDiskWorkloadExecutor : DiskWorkloadExecutor
         {
-            public TestIOWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            public TestDiskWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                : base(dependencies, parameters)
             {
             }
 
             public Func<string, string> OnGetTestFile { get; set; }
 
-            public new IEnumerable<DiskPerformanceWorkloadProcess> CreateWorkloadProcesses(string executable, string templateCommand, IEnumerable<Disk> disks, string processModel)
+            public new IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string templateCommand, IEnumerable<Disk> disks, string processModel)
             {
                 return base.CreateWorkloadProcesses(executable, templateCommand, disks, processModel);
             }
@@ -282,9 +245,9 @@ namespace VirtualClient.Actions.DiskPerformance
                 return base.GetDisksToTest(disks);
             }
 
-            public new Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+            protected override Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
             {
-                return base.CreateMountPointsAsync(disks, cancellationToken);
+                return Task.FromResult(true);
             }
 
             protected override string GetTestFile(string mountPoint)
@@ -292,9 +255,9 @@ namespace VirtualClient.Actions.DiskPerformance
                 return this.OnGetTestFile?.Invoke(mountPoint) ?? Path.Combine(mountPoint, Path.GetRandomFileName());
             }
 
-            protected override DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+            protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
             {
-                return new DiskPerformanceWorkloadProcess(
+                return new DiskWorkloadProcess(
                     new InMemoryProcess()
                     {
                         StartInfo = new ProcessStartInfo
@@ -304,7 +267,7 @@ namespace VirtualClient.Actions.DiskPerformance
                         }
                     },
                     testedInstance,
-                    disksToTest.Select(disk => disk.AccessPaths.FirstOrDefault()).ToArray());
+                    disksToTest.Select(disk => disk.GetPreferredAccessPath(this.Platform)).ToArray());
             }
         }
     }

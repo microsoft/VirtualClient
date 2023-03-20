@@ -36,7 +36,7 @@ namespace VirtualClient
             this.mockFixture = new MockFixture();
             this.mockFixture.SetupMocks();
 
-            this.processManager = new InMemoryProcessManager
+            this.processManager = new InMemoryProcessManager(PlatformID.Unix)
             {
                 // Return our test process on creation.
                 OnCreateProcess = (command, args, workingDir) =>

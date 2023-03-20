@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>VirtualClient.Common</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="NUnit" Version="$(NUnit_PackageVersion)" />
+        <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapter_PackageVersion)" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(Microsoft_NET_Test_Sdk_PackageVersion)" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\VirtualClient.Common\VirtualClient.Common.csproj" />
+        <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
+    </ItemGroup>
+
+    <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
+
+</Project>

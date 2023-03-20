@@ -29,6 +29,21 @@ namespace VirtualClient.Common.Rest
         }
 
         /// <inheritdoc/>
+        public IRestClientBuilder AddAuthorizationHeader(string authToken, string headerName = "Bearer")
+        {
+            this.restClient.SetAuthorizationHeader(new AuthenticationHeaderValue(headerName, authToken));
+            return this;
+        }
+
+        /// <inheritdoc/>
+        public IRestClientBuilder AddAcceptedMediaType(MediaType mediaType)
+        {
+            mediaType.ThrowIfNull(nameof(mediaType));
+            this.restClient.AddAcceptedMediaTypeHeader(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
+            return this;
+        }
+
+        /// <inheritdoc/>
         public IRestClientBuilder AlwaysTrustServerCertificate()
         {
             HttpClientHandler handler = new HttpClientHandler();
@@ -39,21 +54,6 @@ namespace VirtualClient.Common.Rest
 
             HttpClient client = new HttpClient(handler);
             this.restClient = new RestClient(client);
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public IRestClientBuilder WithTokenAuthentication(string authToken)
-        {
-            this.restClient.SetAuthenticationHeader(new AuthenticationHeaderValue("Bearer", authToken));
-            return this;
-        }
-
-        /// <inheritdoc/>
-        public IRestClientBuilder AddAcceptedMediaType(MediaType mediaType)
-        {
-            mediaType.ThrowIfNull(nameof(mediaType));
-            this.restClient.AddAcceptedMediaTypeHeader(new MediaTypeWithQualityHeaderValue(mediaType.FieldName));
             return this;
         }
 

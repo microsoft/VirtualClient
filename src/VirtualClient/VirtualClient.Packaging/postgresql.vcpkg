@@ -5,7 +5,7 @@
     "metadata": {
         "installationPath-linux-x64": "/etc/postgresql/14/main",
         "installationPath-linux-arm64": "/etc/postgresql/14/main",
-        "installationPath-windows-x64": "C:\\Program Files\\PostgreSQL\\14",
-        "installationPath-windows-arm64": "C:\\Program Files\\PostgreSQL\\14",
+        "installationPath-win-x64": "C:\\Program Files\\PostgreSQL\\14",
+        "installationPath-win-arm64": "C:\\Program Files\\PostgreSQL\\14",
     }
 }

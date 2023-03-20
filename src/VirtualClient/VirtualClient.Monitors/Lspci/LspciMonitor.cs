@@ -72,7 +72,7 @@ namespace VirtualClient.Monitors
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             IFileSystem fileSystem = systemManagement.FileSystem;
 
-            string command = "lspci";
+            string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
             string commandArguments = "-vvv";
 
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
@@ -87,6 +87,7 @@ namespace VirtualClient.Monitors
                     {
                         DependencyPath lspciPackage = await this.GetPlatformSpecificPackageAsync(LspciMonitor.Lspci,  CancellationToken.None);
                         workingDir = lspciPackage.Path;
+                        command = this.PlatformSpecifics.Combine(workingDir, command);
                     }
 
                     using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, command, $"{commandArguments}", workingDir))
@@ -134,6 +135,8 @@ namespace VirtualClient.Monitors
                 catch (Exception exc)
                 {
                     this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                    // Always wait for the monitor frequency for the next execution.
+                    await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                 }
             }
         }

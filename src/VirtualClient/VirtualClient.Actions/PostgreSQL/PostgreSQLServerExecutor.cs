@@ -5,10 +5,12 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Polly;
     using VirtualClient;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
@@ -24,11 +26,8 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class PostgreSQLServerExecutor : PostgreSQLExecutor
     {
-        // Maintained in the HammerDB package that we use.
-        private const string CreateDBScriptName = "createDBScript.sh";
-        private const string CreateDBTclName = "createDB.tcl";
+        private readonly IAsyncPolicy stabilizationRetryPolicy;
         private Item<PostgreSQLServerState> serverState;
-        private string defaultPassword;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLServerExecutor"/> class.
@@ -38,6 +37,7 @@ namespace VirtualClient.Actions
         public PostgreSQLServerExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
            : base(dependencies, parameters)
         {
+            this.stabilizationRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(2, (retries) => this.StabilizationWait);
         }
 
         /// <summary>
@@ -50,6 +50,19 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.ReuseDatabase));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the password to use for the PostgreSQL user accounts used
+        /// to create the DB and run transactions against it.
+        /// </summary>
+        public string Password
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.Password), out IConvertible password);
+                return password?.ToString();
             }
         }
 
@@ -78,24 +91,38 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The client username to use for accessing the database to execute transactions.
+        /// The username to use for accessing the database to execute transactions.
         /// </summary>
-        protected string ClientUsername { get; } = "virtualclient";
+        protected string ClientUsername { get; } = "postgres";
 
         /// <summary>
         /// The client password to use for accessing the database to execute transactions.
         /// </summary>
-        protected string ClientPassword { get; } = Guid.NewGuid().ToString().ToLowerInvariant();
+        protected string ClientPassword { get; set; }
+
+        /// <summary>
+        /// A period of time to wait after having created the database and modified the PostgreSQL
+        /// server configuration to allow the services to come online with stability.
+        /// </summary>
+        protected TimeSpan StabilizationWait { get; set; } = TimeSpan.FromSeconds(5);
 
         /// <summary>
         /// Initializes the workload executor paths and dependencies.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.SetServerOnline(false);
-            return base.InitializeAsync(telemetryContext, cancellationToken);
+            await base.InitializeAsync(telemetryContext, cancellationToken);
+
+            this.ClientPassword = this.Password;
+            if (string.IsNullOrWhiteSpace(this.Password))
+            {
+                // Use the default that is defined within the PostgreSQL package. We use the
+                // same password for both the user account as well as the 
+                this.ClientPassword = await this.GetServerCredentialAsync(cancellationToken);
+            }
         }
 
         /// <summary>
@@ -115,12 +142,23 @@ namespace VirtualClient.Actions
                 // We do not want to drop the database on every round of processing necessarily because
                 // it takes a lot of time to rebuild the DB. We allow the user to request either reusing the
                 // existing database (the default) or to start from scratch (i.e. ReuseDatabase = false).
-                if (!this.serverState.Definition.DatabaseInitialized || this.ReuseDatabase)
+                if (!this.serverState.Definition.DatabaseInitialized || !this.ReuseDatabase)
                 {
                     await this.ConfigureDatabaseServerAsync(telemetryContext, cancellationToken);
                     await this.ConfigureWorkloadAsync(cancellationToken);
-                    await this.CreateDatabaseAsync(cancellationToken);
-                    await this.SaveServerStateAsync(cancellationToken);
+
+                    await this.stabilizationRetryPolicy.ExecuteAsync(async () =>
+                    {
+                        // We've notice the PostgreSQL services need a bit of time to come back online properly
+                        // before we can issue calls against the database.
+                        await Task.Delay(this.StabilizationWait, cancellationToken);
+
+                        await this.CreateDatabaseAsync(telemetryContext, cancellationToken);
+                        await this.SaveServerStateAsync(cancellationToken);
+
+                        // Same reasoning as above.
+                        await Task.Delay(this.StabilizationWait, cancellationToken);
+                    });
                 }
 
                 this.SetServerOnline(true);
@@ -131,339 +169,231 @@ namespace VirtualClient.Actions
                 {
                     this.Logger.LogMessage($"{this.TypeName}.KeepServerAlive", telemetryContext);
                     await this.WaitAsync(cancellationToken);
+                    this.SetServerOnline(false);
                 }
             }
-            finally
+            catch
             {
                 this.SetServerOnline(false);
+                throw;
             }
         }
 
         private async Task ConfigureDatabaseServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string pghbaConfigPath = this.Combine(this.PostgreSqlPackagePath, "pg_hba.conf");
-            string postgressqlConfigPath = this.Combine(this.PostgreSqlPackagePath, "postgresql.conf");
-            string postgressqlTempConfigPath = this.Combine(this.PostgreSqlPackagePath, "postgresql_temp.conf");
-            string pghbaConfigCopyToPath = null;
-            string postgressqlConfigCopyToPath = null;
-
-            // The PostgreSQL files are copied to protected folders that require elevated/sudo privileges. In order to 
-            // keep the moving parts to a minimum, we are using a temp file here that we can easily update before copying
-            // it in full to PostgreSQL installation directory.
-            this.FileSystem.File.Copy(postgressqlConfigPath, postgressqlTempConfigPath, true);
-
-            await this.FileSystem.File.ReplaceInFileAsync(
-                postgressqlTempConfigPath,
-                @"\{Port\}",
-                this.Port.ToString(),
-                cancellationToken);
-
-            if (this.Platform == PlatformID.Unix)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                // 1) Set the configuration files for the PostgreSQL server.
-                //
-                // e.g.
-                // /etc/postgresql/14/main
-                pghbaConfigCopyToPath = this.Combine(this.PostgreSqlInstallationPath, "pg_hba.conf");
-                postgressqlConfigCopyToPath = this.Combine(this.PostgreSqlInstallationPath, "postgresql.conf");
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    "cp",
-                    $"--force '{pghbaConfigPath}' '{pghbaConfigCopyToPath}'",
-                    this.PostgreSqlPackagePath,
-                    telemetryContext,
-                    cancellationToken,
-                    runElevated: true))
+                if (this.Platform == PlatformID.Unix)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    string workingDirectory = null;
+                    string configScript = "configure.sh";
+                    LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                    switch (distroInfo.LinuxDistribution)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        case LinuxDistribution.Ubuntu:
+                        case LinuxDistribution.Debian:
+                            workingDirectory = this.Combine(this.PostgreSqlPackagePath, "ubuntu");
+                            break;
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        this.Combine(workingDirectory, configScript),
+                        this.Port.ToString(),
+                        workingDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                        }
                     }
                 }
-
-                // Note that we are copying the 'temp' file instance of the config to the PostgreSQL installation folder
-                // here. This ensures that we do not hit permissions issues.
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    "cp",
-                    $"--force '{postgressqlTempConfigPath}' '{postgressqlConfigCopyToPath}'",
-                    this.PostgreSqlPackagePath,
-                    telemetryContext,
-                    cancellationToken,
-                    runElevated: true))
+                else
                 {
-                    if (!cancellationToken.IsCancellationRequested)
+                    string configScript = "configure.cmd";
+                    string workingDirectory = this.PostgreSqlPackagePath;
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        this.Combine(workingDirectory, configScript),
+                        $"{this.Port}",
+                        workingDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                        }
                     }
                 }
-
-                // 2) Set the password for the PostgreSQL server.
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                     "psql -c \"ALTER USER postgres PASSWORD 'postgres';\"",
-                     this.PostgreSqlInstallationPath,
-                     telemetryContext,
-                     cancellationToken,
-                     runElevated: true,
-                     username: "postgresql"))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                    }
-                }
-
-                // 3) Restart the PostgreSQL service/daemon.
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                     "systemctl restart postgresql",
-                     this.PostgreSqlInstallationPath,
-                     telemetryContext,
-                     cancellationToken,
-                     runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                    }
-                }
-
-                ////// 1) Update the database server host configuration.
-                ////string pg_hba_configPath = this.Combine(this.PostgreSqlInstallationPath, "pg_hba.conf");
-                ////string[] pg_hba_configContents = await this.FileSystem.File.ReadAllLinesAsync(pg_hba_configPath);
-                ////string[] pg_hba_hostConfig = new string[]
-                ////{
-                ////    "host  all  all  0.0.0.0/0  md5"
-                ////};
-
-                ////// This simply replaces any existing sections marked with the new host config. If the section
-                ////// does not exist, the host config will be appended.
-                ////IEnumerable<string> pg_hba_updatedConfig = pg_hba_configContents.AddOrReplaceSectionContentAsync(
-                ////    pg_hba_hostConfig,
-                ////    "# Virtual Client Section Begin",
-                ////    "# Virtual Client Section End");
-
-                ////await this.FileSystem.File.WriteAllLinesAsync(pg_hba_configPath, pg_hba_updatedConfig, cancellationToken);
-
-                ////// 2) Update the database server configuration.
-                ////string postgresql_configPath = this.Combine(this.PostgreSqlInstallationPath, "postgresql.conf");
-
-                ////string[] postgresql_configContents = await this.FileSystem.File.ReadAllLinesAsync(pg_hba_configPath);
-                ////string[] postgresql_hostConfig = new string[]
-                ////{
-                ////    "host  all  all  0.0.0.0/0  md5"
-                ////};
-
-                ////if (!currentConfigContents.Contains(pg_hba_hostConfig))
-                ////{
-                ////    StringBuilder pg_hba_config = new StringBuilder()
-                ////        .AppendLine("# [VirtualClient:Begin]")
-                ////        .AppendLine("1 a host  all  all  0.0.0.0/0  md5")
-                ////        .AppendLine("# [VirtualClient:End]");
-
-                ////    string replaceConfigFileHostAddressWithEmptyString = $"sed -i \"{pg_hba_hostConfig}\" pg_hba.conf";
-                ////    string addAddressInConfigFile = @"sed ""1 a host  all  all  0.0.0.0/0  md5"" pg_hba.conf -i";
-                ////    string changeListenAddressToAllAddresses = "sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" postgresql.conf";
-                ////    string addPortNumberToConfigFile = $"sed -i \"s/port = .*/port = {PortNumber}/g\" postgresql.conf";
-                ////    string changeUserPassword = "-u postgres psql -c \"ALTER USER postgres PASSWORD 'postgres';\"";
-
-                ////    // 1) Replace the config file host address with an empty string.
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>(
-                ////        $"sed -i \"{pg_hba_hostConfig}\" pg_hba.conf",
-                ////        null,
-                ////        this.PostgreSqlInstallationPath,
-                ////        cancellationToken);
-
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>(
-                ////        @"sed ""1 a host  all  all  0.0.0.0/0  md5"" pg_hba.conf -i",
-                ////        null,
-                ////        this.PostgreSqlInstallationPath,
-                ////        cancellationToken);
-
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>(
-                ////        "sed -i \"s/#listen_addresses = 'localhost'/listen_addresses = '*'/g\" postgresql.conf",
-                ////        null,
-                ////        this.PostgreSqlInstallationPath,
-                ////        cancellationToken);
-
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>(addPortNumberToConfigFile, null, this.PostgreSqlInstallationPath, cancellationToken);
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>(changeUserPassword, null, this.PostgreSqlInstallationPath, cancellationToken);
-                ////    await this.ExecuteCommandAsync<PostgreSQLExecutor>("systemctl restart postgresql", null, this.PostgreSqlInstallationPath, cancellationToken);
-                ////}
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                // 1) Set the configuration files for the PostgreSQL server.
-                //
-                // e.g.
-                // /etc/postgresql/14/main
-                pghbaConfigCopyToPath = this.Combine(this.PostgreSqlInstallationPath, "data", "pg_hba.conf");
-                postgressqlConfigCopyToPath = this.Combine(this.PostgreSqlInstallationPath, "data", "postgresql.conf");
-
-                this.FileSystem.File.Copy(pghbaConfigPath, pghbaConfigCopyToPath, true);
-                this.FileSystem.File.Copy(postgressqlConfigPath, postgressqlConfigCopyToPath, true);
-
-                await this.FileSystem.File.ReplaceInFileAsync(postgressqlConfigCopyToPath, @"\{Port\}", this.Port.ToString(), cancellationToken);
-
-                ////// 1) Update the database server configuration.
-                ////string configPath = this.Combine(this.PostgreSqlInstallationPath, "data", "pg_hba.conf");
-                ////string currentConfigContents = await this.FileSystem.File.ReadAllTextAsync(configPath);
-                ////string hostConfig = "'host  all  all  0.0.0.0/0  md5'";
-
-                ////await this.ExecuteCommandAsync<PostgreSQLExecutor>(
-                ////    "powershell",
-                ////    $" -Command \"& {{Add-Content -Path '{this.Combine(this.PostgreSqlInstallationPath, "data", "pg_hba.conf")}' -Value {hostConfig}}}\"",
-                ////    this.PostgreSqlInstallationPath,
-                ////    cancellationToken);
-
-                // 2) Restart the PostgreSQL service/daemon.
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                     $"{this.Combine(this.PostgreSqlInstallationPath, "bin", "pg_ctl.exe")}",
-                     $"restart -D \"{this.Combine(this.PostgreSqlInstallationPath, "data")}\"",
-                     this.Combine(this.PostgreSqlInstallationPath, "bin"),
-                     telemetryContext,
-                     cancellationToken,
-                     runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                    }
-                }
-
-                ////await this.ExecuteCommandAsync<PostgreSQLExecutor>(
-                ////    $"{this.Combine(this.PostgreSqlInstallationPath, "bin", "pg_ctl.exe")}",
-                ////    $"restart -D \"{this.Combine(this.PostgreSqlInstallationPath, "data")}\"",
-                ////    this.Combine(this.PostgreSqlInstallationPath, "bin"),
-                ////    cancellationToken);
             }
         }
 
-        private Task ConfigureWorkloadAsync(CancellationToken cancellationToken)
+        private async Task ConfigureWorkloadAsync(CancellationToken cancellationToken)
         {
-            // Each time that we run we copy the script file and the TCL file into the root HammerDB directory
-            // alongside the benchmarking toolsets (e.g. hammerdbcli).
-            string scriptPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLServerExecutor.CreateDBScriptName);
-            string tclPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLServerExecutor.CreateDBTclName);
-            string scriptCopyPath = null;
-            string tclCopyPath = null;
-
-            if (!this.FileSystem.File.Exists(tclPath))
+            if (!cancellationToken.IsCancellationRequested)
             {
-                throw new DependencyException(
-                    $"Required script file missing. The script file required in order to create the database '{PostgreSQLServerExecutor.CreateDBTclName}' " +
-                    $"does not exist in the HammerDB package.",
-                    ErrorReason.DependencyNotFound);
-            }
+                // Each time that we run we copy the script file and the TCL file into the root HammerDB directory
+                // alongside the benchmarking toolsets (e.g. hammerdbcli).
+                string tclPath = this.Combine(this.HammerDBPackagePath, "benchmarks", this.Benchmark.ToLowerInvariant(), "postgresql", PostgreSQLServerExecutor.CreateDBTclName);
+                string tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLServerExecutor.CreateDBTclName);
 
-            if (this.Platform == PlatformID.Unix)
-            {
-                if (!this.FileSystem.File.Exists(scriptPath))
+                if (!this.FileSystem.File.Exists(tclPath))
                 {
                     throw new DependencyException(
-                        $"Required script file missing. The script file required in order to create the database '{PostgreSQLServerExecutor.CreateDBScriptName}' " +
+                        $"Required script file missing. The script file required in order to create the database '{PostgreSQLServerExecutor.CreateDBTclName}' " +
                         $"does not exist in the HammerDB package.",
                         ErrorReason.DependencyNotFound);
                 }
 
-                scriptCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLServerExecutor.CreateDBScriptName);
-                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLServerExecutor.CreateDBTclName);
-
-                this.FileSystem.File.Copy(scriptPath, scriptCopyPath, true);
                 this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
+                await this.SetTclScriptParametersAsync(tclCopyPath, cancellationToken);
             }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLServerExecutor.CreateDBTclName);
-                this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
-            }
-
-            return this.SetTclScriptParametersAsync(tclCopyPath, cancellationToken);
         }
 
-        private async Task CreateDatabaseAsync(CancellationToken cancellationToken)
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Not Applicable.")]
+        private async Task CreateDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                // 1) Drop the TPCC database if it exists. This happens on a fresh start ONLY.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"-u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\"",
-                    null,
-                    this.PostgreSqlInstallationPath,
-                    cancellationToken);
+                EventContext relatedContext = telemetryContext.Clone();
 
-                // 2) Drop the user used to access the database.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"-u postgres psql -c \"DROP ROLE IF EXISTS {this.ClientUsername};\"",
-                    null,
-                    this.PostgreSqlInstallationPath,
-                    cancellationToken);
+                await this.Logger.LogMessageAsync($"{this.TypeName}.CreateDatabase", telemetryContext, async () =>
+                {
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        // 1) Drop the database if it exists. This happens on a fresh start ONLY.
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                           "psql",
+                           $"-c \"DROP DATABASE IF EXISTS {this.DatabaseName};\"",
+                           this.PostgreSqlInstallationPath,
+                           relatedContext,
+                           cancellationToken,
+                           runElevated: true,
+                           username: this.ClientUsername))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
+                                process.ThrowIfWorkloadFailed();
+                            }
+                        }
 
-                // 3) Create the user anew so that the password matches the current/expected one.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"-u postgres psql -c \"CREATE USER {this.ClientUsername} PASSWORD '{this.ClientPassword}';\"",
-                    null,
-                    this.PostgreSqlInstallationPath,
-                    cancellationToken);
+                        // 2) Create the database. DO NOT run this command as elevated. HammerDB creates files that should not be owned
+                        //    by the 'root' user or permissions issues will happen.
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                            "bash",
+                            $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.CreateDBTclName}\"",
+                            this.HammerDBPackagePath,
+                            relatedContext,
+                            cancellationToken))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+                        }
+                    }
+                    else if (this.Platform == PlatformID.Win32NT)
+                    {
+                        // this.SetEnvironmentVariable("PGPASSWORD", this.ClientPassword, EnvironmentVariableTarget.Process);
 
-                // 4) Create the TPCC database and populate it with data.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"bash {PostgreSQLServerExecutor.CreateDBScriptName}",
-                    null,
-                    this.HammerDBPackagePath,
-                    cancellationToken);
+                        Action<IProcessProxy> setEnvironmentVariables = (process) =>
+                        {
+                            string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
+
+                            process.StartInfo.EnvironmentVariables["PGPASSWORD"] = this.ClientPassword;
+                            process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH] = string.Join(';', new string[]
+                            {
+                                this.Combine(this.HammerDBPackagePath, "bin"),
+                                this.Combine(this.PostgreSqlInstallationPath, "bin"),
+                                existingPath
+                            });
+                        };
+
+                        // 1) Drop the database if it exists. This happens on a fresh start ONLY.
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                           this.Combine(this.PostgreSqlInstallationPath, "bin", "psql.exe"),
+                           $"-U {this.ClientUsername} -c \"DROP DATABASE IF EXISTS {this.DatabaseName};\"",
+                           this.Combine(this.PostgreSqlInstallationPath, "bin"),
+                           relatedContext,
+                           cancellationToken,
+                           beforeExecution: setEnvironmentVariables))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
+                                process.ThrowIfWorkloadFailed();
+                            }
+                        }
+
+                        // 2) Create the database.
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                            this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat"),
+                            $"auto {PostgreSQLServerExecutor.CreateDBTclName}",
+                            this.HammerDBPackagePath,
+                            relatedContext,
+                            cancellationToken,
+                            beforeExecution: setEnvironmentVariables))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+                        }
+                    }
+                });
             }
-            else if (this.Platform == PlatformID.Win32NT)
+        }
+
+        private async Task<string> GetServerCredentialAsync(CancellationToken cancellationToken)
+        {
+            string fileName = "superuser.txt";
+            string path = this.Combine(this.PostgreSqlPackagePath, fileName);
+            if (!this.FileSystem.File.Exists(path))
             {
-                this.SetEnvironmentVariable("PGPASSWORD", "postgres", EnvironmentVariableTarget.Process);
-
-                // 1) Drop the TPCC database if it exists. This happens on a fresh start ONLY.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"{this.Combine(this.PostgreSqlInstallationPath, "bin", "psql.exe")}",
-                    $"-U postgres -c \"DROP DATABASE IF EXISTS tpcc;\"",
-                    this.Combine(this.PostgreSqlInstallationPath, "bin"),
-                    cancellationToken);
-
-                // 2) Drop the user used to access the database.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"{this.Combine(this.PostgreSqlInstallationPath, "bin", "psql.exe")}",
-                    $"-U postgres -c \"DROP ROLE IF EXISTS {this.ClientUsername};\"",
-                    this.Combine(this.PostgreSqlInstallationPath, "bin"),
-                    cancellationToken);
-
-                // 3) Create the user anew so that the password matches the current/expected one.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"{this.Combine(this.PostgreSqlInstallationPath, "bin", "psql.exe")}",
-                    $"-U postgres -c \"CREATE USER {this.ClientUsername} PASSWORD '{this.ClientPassword}';\"",
-                    this.Combine(this.PostgreSqlInstallationPath, "bin"),
-                    cancellationToken);
-
-                // 4) Create the TPCC database and populate it with data.
-                await this.ExecuteCommandAsync<PostgreSQLServerExecutor>(
-                    $"{this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat")}",
-                    $"auto {PostgreSQLServerExecutor.CreateDBTclName}",
-                    this.HammerDBPackagePath,
-                    cancellationToken);
+                throw new DependencyException(
+                    $"Required file '{fileName}' missing in package '{this.PostgreSqlPackagePath}'. The PostgreSQL server cannot be configured. " +
+                    $"As an alternative, you can supply the '{nameof(this.Password)}' parameter on the command line.",
+                    ErrorReason.DependencyNotFound);
             }
+
+            return (await this.FileSystem.File.ReadAllTextAsync(path, cancellationToken)).Trim();
         }
 
         private async Task SaveServerStateAsync(CancellationToken cancellationToken)
         {
-            this.serverState.Definition.DatabaseInitialized = true;
-            this.serverState.Definition.WarehouseCount = this.WarehouseCount;
-            this.serverState.Definition.UserCount = this.UserCount;
-            this.serverState.Definition.UserName = this.ClientUsername;
-            this.serverState.Definition.Password = this.ClientPassword;
-
-            using (HttpResponseMessage response = await this.LocalApiClient.UpdateStateAsync<PostgreSQLServerState>(
-                nameof(PostgreSQLServerState),
-                this.serverState,
-                cancellationToken))
+            if (!cancellationToken.IsCancellationRequested)
             {
-                response.ThrowOnError<WorkloadException>();
+                this.serverState.Definition.DatabaseInitialized = true;
+                this.serverState.Definition.WarehouseCount = this.WarehouseCount;
+                this.serverState.Definition.UserCount = this.UserCount;
+                this.serverState.Definition.UserName = this.ClientUsername;
+                this.serverState.Definition.Password = this.ClientPassword;
+
+                using (HttpResponseMessage response = await this.LocalApiClient.UpdateStateAsync<PostgreSQLServerState>(nameof(PostgreSQLServerState), this.serverState, cancellationToken))
+                {
+                    response.ThrowOnError<WorkloadException>();
+                }
             }
         }
 
         private async Task SetTclScriptParametersAsync(string tclFilePath, CancellationToken cancellationToken)
         {
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                "<PORT>",
+                this.Port.ToString(),
+                cancellationToken);
+
             await this.FileSystem.File.ReplaceInFileAsync(
                 tclFilePath,
                 "<VIRTUALUSERS>",
@@ -486,6 +416,18 @@ namespace VirtualClient.Actions
                 tclFilePath,
                 "<PASSWORD>",
                 this.ClientPassword,
+                cancellationToken);
+
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                "<SUPERUSERPWD>",
+                this.ClientPassword,
+                cancellationToken);
+
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                "<DATABASENAME>",
+                this.DatabaseName,
                 cancellationToken);
         }
     }

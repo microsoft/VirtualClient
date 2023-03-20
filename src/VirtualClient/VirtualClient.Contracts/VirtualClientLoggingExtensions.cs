@@ -1062,7 +1062,14 @@ namespace VirtualClient.Contracts
                     // --------------
                     // /logs/fio/2023-02-01T122330Z-fio.log
                     // /logs/fio/2023-02-01T122745Z-fio.log
-                    string logFilePath = specifics.Combine(logPath, $"{DateTime.UtcNow.ToString("yyyy-MM-ddTHHmmssffffZ")}-{effectiveToolName}.log");
+                    //
+                    // /logs/fio/2023-02-01T122330Z-randomwrite_4k_blocksize.log
+                    // /logs/fio/2023-02-01T122745Z-randomwrite_8k_blocksize.log
+                    string effectiveLogFileName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
+                        $"{DateTime.UtcNow.ToString("yyyy-MM-ddTHHmmssffffZ")}-{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
+                        string.Empty).ToLowerInvariant().RemoveWhitespace();
+
+                    string logFilePath = specifics.Combine(logPath, effectiveLogFileName);
 
                     // Examples:
                     // --------------

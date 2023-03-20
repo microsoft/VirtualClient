@@ -1,18 +1,15 @@
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using NUnit.Framework;
-using VirtualClient.Contracts;
-using System.Text.RegularExpressions;
-using System;
-using System.Xml.Serialization;
-
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using NUnit.Framework;
+
     [TestFixture]
     [Category("Unit")]
     public class LshwDiskParserUnitTests
@@ -27,7 +24,89 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_OSDisk()
+        public void LshwDiskParserParsesExpectedDevicesFromResultsCorrectly_BeforeAddingMountPoints()
+        {
+            // Scenario: Before Mount points are added.
+            string rawText = File.ReadAllText(Path.Combine(this.ExamplePath, "lshw_2_before_mount.xml"));
+            LshwDiskParser parser = new LshwDiskParser(rawText);
+            IEnumerable<Disk> disks = parser.Parse();
+
+            Assert.IsNotNull(disks);
+            Assert.IsTrue(disks.Count() == 3);
+            Disk disk0 = disks.ElementAt(0);
+            Disk disk1 = disks.ElementAt(1);
+            Disk disk2 = disks.ElementAt(2);
+
+            // OS disk
+            Assert.AreEqual("/dev/sda", disk0.DevicePath);
+
+            // Temp/local disk
+            Assert.AreEqual("/dev/sdb", disk1.DevicePath);
+
+            // Managed/remote disk
+            Assert.AreEqual("/dev/sdc", disk2.DevicePath);
+
+            Assert.IsTrue(disk0.Volumes.Count() == 3);
+            Assert.IsTrue(disk1.Volumes.Count() == 1);
+            Assert.IsTrue(disk2.Volumes.Count() == 1);
+
+            Assert.AreEqual("/dev/sda1", disk0.Volumes.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sda14", disk0.Volumes.ElementAt(1).DevicePath);
+            Assert.AreEqual("/dev/sda15", disk0.Volumes.ElementAt(2).DevicePath);
+            Assert.AreEqual("/dev/sdb1", disk1.Volumes.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sdc1", disk2.Volumes.ElementAt(0).DevicePath);
+
+            CollectionAssert.AreEqual(disk0.Volumes.ElementAt(0).AccessPaths, new string[] { "/" });
+            CollectionAssert.AreEqual(disk0.Volumes.ElementAt(2).AccessPaths, new string[] { "/boot/efi" });
+            Assert.IsEmpty(disk0.Volumes.ElementAt(1).AccessPaths);
+
+            CollectionAssert.AreEqual(disk1.Volumes.ElementAt(0).AccessPaths, new string[] { "/mnt" });
+            Assert.IsEmpty(disk2.Volumes.ElementAt(0).AccessPaths);
+        }
+
+        [Test]
+        public void LshwDiskParserParsesExpectedDevicesFromResultsCorrectly_AfterAddingMountPoints()
+        {
+            // Scenario: Before Mount points are added.
+            string rawText = File.ReadAllText(Path.Combine(this.ExamplePath, "lshw_2_after_mount.xml"));
+            LshwDiskParser parser = new LshwDiskParser(rawText);
+            IEnumerable<Disk> disks = parser.Parse();
+
+            Assert.IsNotNull(disks);
+            Assert.IsTrue(disks.Count() == 3);
+            Disk disk0 = disks.ElementAt(0);
+            Disk disk1 = disks.ElementAt(1);
+            Disk disk2 = disks.ElementAt(2);
+
+            // OS disk
+            Assert.AreEqual("/dev/sda", disk0.DevicePath);
+
+            // Temp/local disk
+            Assert.AreEqual("/dev/sdb", disk1.DevicePath);
+
+            // Managed/remote disk
+            Assert.AreEqual("/dev/sdc", disk2.DevicePath);
+
+            Assert.IsTrue(disk0.Volumes.Count() == 3);
+            Assert.IsTrue(disk1.Volumes.Count() == 1);
+            Assert.IsTrue(disk2.Volumes.Count() == 1);
+
+            Assert.AreEqual("/dev/sda1", disk0.Volumes.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sda14", disk0.Volumes.ElementAt(1).DevicePath);
+            Assert.AreEqual("/dev/sda15", disk0.Volumes.ElementAt(2).DevicePath);
+            Assert.AreEqual("/dev/sdb1", disk1.Volumes.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sdc1", disk2.Volumes.ElementAt(0).DevicePath);
+
+            CollectionAssert.AreEqual(disk0.Volumes.ElementAt(0).AccessPaths, new string[] { "/" });
+            CollectionAssert.AreEqual(disk0.Volumes.ElementAt(2).AccessPaths, new string[] { "/boot/efi" });
+            Assert.IsEmpty(disk0.Volumes.ElementAt(1).AccessPaths);
+
+            CollectionAssert.AreEqual(disk1.Volumes.ElementAt(0).AccessPaths, new string[] { "/mnt" });
+            CollectionAssert.AreEqual(disk2.Volumes.ElementAt(0).AccessPaths, new string[] { "/home/testuser/virtualclient/linux-x64/vcmnt_dev_sdc1" });
+        }
+
+        [Test]
+        public void LshwDiskParserParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_OSDisk()
         {
             // Scenario: Before Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -70,7 +149,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_LocalTempDisk()
+        public void LshwDiskParserParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_LocalTempDisk()
         {
             // Scenario: Before Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -112,7 +191,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_BeforePartitioning()
+        public void LshwDiskParserParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_BeforePartitioning()
         {
             // Scenario: Before Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -174,7 +253,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_AfterPartitioning()
+        public void LshwDiskParserParsesLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_AfterPartitioning()
         {
             // Scenario: After Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -244,7 +323,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerHandlesNvmeDiskNamespacesInLshwCommandDiskDriveResults()
+        public void LshwDiskParserHandlesNvmeDiskNamespacesInLshwCommandDiskDriveResults()
         {
             // Scenario: Before Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -403,7 +482,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerHandlesVolumesThatDoNotHaveLogicalNames()
+        public void LshwDiskParserHandlesVolumesThatDoNotHaveLogicalNames()
         {
             // Scenario:
             // This issue was found on Gen8/ARM64 Linux systems. Some of the FAT32 boot volumes do not have a logical
@@ -491,7 +570,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerHandlesLargeArraysOfDisksInDiskDriveResults()
+        public void LshwDiskParserHandlesLargeArraysOfDisksInDiskDriveResults()
         {
             // Scenario: 
             // There are more than 10 disks on a system.
@@ -527,7 +606,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_OSDisk()
+        public void LshwDiskParserParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_OSDisk()
         {
             string outputPath = Path.Combine(this.ExamplePath, "lshw.xml");
             string rawText = File.ReadAllText(outputPath);
@@ -631,7 +710,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_LocalTempDisk()
+        public void LshwDiskParserParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_LocalTempDisk()
         {
             // Scenario:
             // Before Partitioning
@@ -685,7 +764,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_BeforePartitioning()
+        public void LshwDiskParserParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_BeforePartitioning()
         {
             // Scenario:
             // Before Partitioning, the remote disks will not have a partition nor a file system and thus
@@ -702,7 +781,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_AfterPartitioning()
+        public void LshwDiskParserParsesVolumesFromLshwCommandDiskDriveResultsCorrectly_AzureVM_RemoteDisk_AfterPartitioning()
         {
             // Scenario:
             // After Partitioning, the remote disks will now have both a partition and a file system.
@@ -785,7 +864,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void UnixDiskManagerParsesLshwCommandDiskDriveResultsCorrectly_NVME_OSDisk()
+        public void LshwDiskParserParsesLshwCommandDiskDriveResultsCorrectly_NVME_OSDisk()
         {
             // Scenario: Before Partitioning
             // Note that this test depends entirely on the schema/content of the resource XML file that contains
@@ -820,6 +899,52 @@ namespace VirtualClient.Contracts
             this.VerifyDiskProperties(disks.ElementAt(0).Properties, disk0ExpectedProperties);
         }
 
+        [Test]
+        public void LshwDiskParserHandlesAnomaliesEncounters_1()
+        {
+            // Scenario: Before Mount points are added.
+            string rawText = File.ReadAllText(Path.Combine(this.ExamplePath, "lshw_disk_storage_results_anomaly.xml"));
+            LshwDiskParser parser = new LshwDiskParser(rawText);
+            IEnumerable<Disk> disks = parser.Parse();
+
+            Assert.IsNotNull(disks);
+            Assert.IsTrue(disks.Count() == 34);
+
+            Assert.AreEqual("/dev/sda", disks.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sdb", disks.ElementAt(1).DevicePath);
+            Assert.AreEqual("/dev/sdk", disks.ElementAt(2).DevicePath);
+            Assert.AreEqual("/dev/sdl", disks.ElementAt(3).DevicePath);
+            Assert.AreEqual("/dev/sdm", disks.ElementAt(4).DevicePath);
+            Assert.AreEqual("/dev/sdn", disks.ElementAt(5).DevicePath);
+            Assert.AreEqual("/dev/sdo", disks.ElementAt(6).DevicePath);
+            Assert.AreEqual("/dev/sdp", disks.ElementAt(7).DevicePath);
+            Assert.AreEqual("/dev/sdq", disks.ElementAt(8).DevicePath);
+            Assert.AreEqual("/dev/sdr", disks.ElementAt(9).DevicePath);
+            Assert.AreEqual("/dev/sds", disks.ElementAt(10).DevicePath);
+            Assert.AreEqual("/dev/sdt", disks.ElementAt(11).DevicePath);
+            Assert.AreEqual("/dev/sdc", disks.ElementAt(12).DevicePath);
+            Assert.AreEqual("/dev/sdu", disks.ElementAt(13).DevicePath);
+            Assert.AreEqual("/dev/sdv", disks.ElementAt(14).DevicePath);
+            Assert.AreEqual("/dev/sdw", disks.ElementAt(15).DevicePath);
+            Assert.AreEqual("/dev/sdx", disks.ElementAt(16).DevicePath);
+            Assert.AreEqual("/dev/sdy", disks.ElementAt(17).DevicePath);
+            Assert.AreEqual("/dev/sdz", disks.ElementAt(18).DevicePath);
+            Assert.AreEqual("/dev/sdaa", disks.ElementAt(19).DevicePath);
+            Assert.AreEqual("/dev/sdab", disks.ElementAt(20).DevicePath);
+            Assert.AreEqual("/dev/sdac", disks.ElementAt(21).DevicePath);
+            Assert.AreEqual("/dev/sdad", disks.ElementAt(22).DevicePath);
+            Assert.AreEqual("/dev/sdd", disks.ElementAt(23).DevicePath);
+            Assert.AreEqual("/dev/sdae", disks.ElementAt(24).DevicePath);
+            Assert.AreEqual("/dev/sdaf", disks.ElementAt(25).DevicePath);
+            Assert.AreEqual("/dev/sde", disks.ElementAt(26).DevicePath);
+            Assert.AreEqual("/dev/sdf", disks.ElementAt(27).DevicePath);
+            Assert.AreEqual("/dev/sdg", disks.ElementAt(28).DevicePath);
+            Assert.AreEqual("/dev/sdh", disks.ElementAt(29).DevicePath);
+            Assert.AreEqual("/dev/sdi", disks.ElementAt(30).DevicePath);
+            Assert.AreEqual("/dev/sdj", disks.ElementAt(31).DevicePath);
+            Assert.AreEqual("/dev/sdag", disks.ElementAt(32).DevicePath);
+            Assert.AreEqual("/dev/cdrom", disks.ElementAt(33).DevicePath);
+        }
 
         private void VerifyDiskProperties(IDictionary<string, IConvertible> actualProperties, IDictionary<string, IConvertible> expectedProperties)
         {

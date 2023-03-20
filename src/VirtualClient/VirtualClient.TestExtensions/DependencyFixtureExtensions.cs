@@ -86,8 +86,12 @@ namespace VirtualClient
 
             foreach (string command in commands)
             {
+                // There are certain characters in the commands/arguments that are reserved characters in regular
+                // expressions. To work around this, we do a direct string comparison first that does not use a regular
+                // expression. If this does not resolve a match, we use the regular expression. This enables developers to
+                // use either exact matches or regular expression matches as they see fit.
                 IProcessProxy matchingProcess = processManager.Processes.FirstOrDefault(
-                    proc => Regex.IsMatch(proc.FullCommand(), command, RegexOptions.IgnoreCase)
+                    proc => (proc.FullCommand() == command || Regex.IsMatch(proc.FullCommand(), command, RegexOptions.IgnoreCase))
                     && !processesConfirmed.Any(otherProc => object.ReferenceEquals(proc, otherProc)));
 
                 if (matchingProcess == null)
@@ -172,6 +176,32 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Adds mock/fake directory to the file system.
+        /// </summary>
+        /// <param name="fixture">The mock fixture.</param>
+        /// <param name="directoryPath">The path to the file to add to the system.</param>
+        public static DependencyFixture SetupDirectory(this DependencyFixture fixture, string directoryPath)
+        {
+            fixture.FileSystem.Directory.CreateDirectory(directoryPath);
+
+            return fixture;
+        }
+
+        /// <summary>
+        /// Adds mock/fake directory to the file system.
+        /// </summary>
+        /// <param name="fixture">The mock fixture.</param>
+        /// <param name="packageName">The name of the workload package.</param>
+        /// <param name="directoryPath">The path to the file to add to the system.</param>
+        public static DependencyFixture SetupDirectory(this DependencyFixture fixture, string packageName, string directoryPath)
+        {
+            string packagePath = fixture.PlatformSpecifics.Combine(fixture.PackagesDirectory, packageName);
+            fixture.SetupDirectory(fixture.PlatformSpecifics.Combine(packagePath, directoryPath));
+
+            return fixture;
+        }
+
+        /// <summary>
         /// Adds mock/fake disks to the dependency fixture disk manager for
         /// workload profile test scenarios that operate against disks.
         /// </summary>
@@ -209,7 +239,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Adds mock/fake workload dependency package to the package manager.
+        /// Adds mock/fake file to the file system.
         /// </summary>
         /// <param name="fixture">The mock fixture.</param>
         /// <param name="filePath">The path to the file to add to the system.</param>
@@ -229,7 +259,7 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Adds mock/fake workload dependency package to the package manager.
+        /// Adds mock/fake file to the file system.
         /// </summary>
         /// <param name="fixture">The mock fixture.</param>
         /// <param name="packageName">The name of the workload package.</param>

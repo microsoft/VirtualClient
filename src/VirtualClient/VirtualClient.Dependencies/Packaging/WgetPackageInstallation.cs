@@ -10,7 +10,6 @@ namespace VirtualClient.Dependencies
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;

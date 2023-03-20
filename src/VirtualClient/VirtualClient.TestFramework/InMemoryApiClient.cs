@@ -281,18 +281,11 @@ namespace VirtualClient
             }
             else
             {
-                if (this.responses.TryGetValue(stateId, out HttpResponseInfo responseInfo))
-                {
-                    JObject stateItem = JObject.FromObject(state);
-                    response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
-                    response.Content = new StringContent(stateItem.ToJson());
+                JObject stateItem = JObject.FromObject(state);
+                response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+                response.Content = new StringContent(stateItem.ToJson());
 
-                    this.responses[stateId] = new HttpResponseInfo(HttpStatusCode.OK, state);
-                }
-                else
-                {
-                    response = new HttpResponseMessage(System.Net.HttpStatusCode.NotFound);
-                }
+                this.responses[stateId] = new HttpResponseInfo(HttpStatusCode.OK, state);
             }
             
             return Task.FromResult(response);

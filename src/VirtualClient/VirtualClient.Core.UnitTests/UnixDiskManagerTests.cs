@@ -32,7 +32,7 @@ namespace VirtualClient
         [SetUp]
         public void SetupTest()
         {
-            this.processManager = new InMemoryProcessManager
+            this.processManager = new InMemoryProcessManager(PlatformID.Unix)
             {
                 // Return our test process on creation.
                 OnCreateProcess = (command, args, workingDir) =>
@@ -184,7 +184,7 @@ namespace VirtualClient
                 return true;
             };
 
-            Disk disk = new Disk(0, "/dev/sdc", accessPaths: new List<string>());
+            Disk disk = new Disk(0, "/dev/sdc");
 
             await this.diskManager.FormatDiskAsync(disk, expectedPartitionType, expectedFileSystemType, CancellationToken.None)
                 .ConfigureAwait(false);

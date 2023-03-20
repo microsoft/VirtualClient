@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
+    <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
     <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
   </ItemGroup>
 
@@ -85,6 +86,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="DiskPerformance\" />
     <Folder Include="Examples\FIO\" />
   </ItemGroup>
 

@@ -1198,6 +1198,118 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public async Task LogProcessDetailsExtensionWritesLogsToTheExpectedLogFiles_Default()
+        {
+            // The default scenario is where the component has no 'Scenario' defined and the tool name
+            // is not provided either.
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
+            InMemoryProcess process = new InMemoryProcess();
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"{nameof(TestExecutor)}.log".ToLowerInvariant()), "Log file name not matched");
+
+                    expectedLogFileWritten = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionWritesLogsToTheExpectedLogFiles_ToolNameSupplied()
+        {
+            // The default scenario is where the component has no 'Scenario' defined and the tool name
+            // is not provided either.
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
+            InMemoryProcess process = new InMemoryProcess();
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath("AnyTool".ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith("AnyTool.log".ToLowerInvariant()), "Log file name not matched");
+
+                    expectedLogFileWritten = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: "AnyTool", logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionWritesLogsToTheExpectedLogFiles_ScenarioDefined()
+        {
+            // The default scenario is where the component has no 'Scenario' defined and the tool name
+            // is not provided either.
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters["Scenario"] = "AnyScenario";
+
+            InMemoryProcess process = new InMemoryProcess();
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath(nameof(TestExecutor).ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"AnyScenario.log".ToLowerInvariant()), "Log file name not matched");
+
+                    expectedLogFileWritten = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionWritesLogsToTheExpectedLogFiles_ToolNameSupplied_ScenarioDefined()
+        {
+            // The default scenario is where the component has no 'Scenario' defined and the tool name
+            // is not provided either.
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters["Scenario"] = "AnyScenario";
+
+            InMemoryProcess process = new InMemoryProcess();
+
+            bool expectedLogFileWritten = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    string expectedLogDirectory = this.mockFixture.GetLogsPath("AnyTool".ToLowerInvariant());
+
+                    Assert.IsTrue(path.StartsWith(expectedLogDirectory), "Log directory not matched");
+                    Assert.IsTrue(path.EndsWith($"AnyScenario.log".ToLowerInvariant()), "Log file name not matched");
+
+                    expectedLogFileWritten = true;
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: "AnyTool", logToTelemetry: false, logToFile: true)
+               .ConfigureAwait(false);
+
+            Assert.IsTrue(expectedLogFileWritten);
+        }
+
+        [Test]
         [TestCase(0, null, null, null, null, null)]
         [TestCase(0, "", "", "", "", "")]
         [TestCase(0, "C:\\any\\workload.exe", null, null, null, null)]
@@ -1205,9 +1317,12 @@ namespace VirtualClient.Contracts
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
         [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsToFileSystemAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
+        public async Task LogProcessDetailsExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystem(
             int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
         {
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
             InMemoryProcess process = new InMemoryProcess
             {
                 ExitCode = expectedExitCode,
@@ -1248,7 +1363,6 @@ namespace VirtualClient.Contracts
                     expectedLogFileWritten = true;
                 });
 
-            TestExecutor component = new TestExecutor(this.mockFixture);
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1263,7 +1377,7 @@ namespace VirtualClient.Contracts
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", null, null)]
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", null)]
         [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "output from the command", "errors in output")]
-        public async Task LogProcessDetailsToFileAsyncExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenTheToolsetNameIsProvided(
+        public async Task LogProcessDetailsExtensionWritesTheExpectedProcessInformationToLogFilesOnTheSystemWhenTheToolsetNameIsProvided(
             int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedStandardOutput, string expectedStandardError)
         {
             InMemoryProcess process = new InMemoryProcess
@@ -1309,6 +1423,7 @@ namespace VirtualClient.Contracts
                 });
 
             TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), expectedToolset, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1371,6 +1486,7 @@ namespace VirtualClient.Contracts
                 });
 
             TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: expectedResults.AsArray(), logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
@@ -1378,7 +1494,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExist()
+        public async Task LogProcessDetailsExtensionCreatesTheLogDirectoryIfItDoesNotExist()
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
@@ -1392,7 +1508,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
+        public async Task LogProcessDetailsExtensionCreatesTheLogDirectoryIfItDoesNotExistWhenTheToolsetNameIsProvided()
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
@@ -1411,7 +1527,7 @@ namespace VirtualClient.Contracts
         [TestCase("AccessToken", "AnyToken123")]
         [TestCase("Password", "AnyPass123")]
         [TestCase("Pwd", "AnyPass123")]
-        public async Task LogProcessDetailsToFileAsyncExtensionRemovesSensitiveDataFromTheProcessCommandDetailsWhenLoggingToFile(string sensitiveDataReference, string sensitiveData)
+        public async Task LogProcessDetailsExtensionRemovesSensitiveDataFromTheProcessCommandDetailsWhenLoggingToFile(string sensitiveDataReference, string sensitiveData)
         {
             InMemoryProcess process = new InMemoryProcess
             {
@@ -1439,10 +1555,11 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public async Task LogProcessDetailsToFileAsyncExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
+        public async Task LogProcessDetailsExtensionRemovesWhitespaceFromToolsetNamesWhenLoggingToFile()
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -1471,10 +1588,11 @@ namespace VirtualClient.Contracts
         [TestCase("|anytoolset|")]
         [TestCase("?anytoolset?")]
         [TestCase("*anytoolset*")]
-        public async Task LogProcessDetailsToFileAsyncExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
+        public async Task LogProcessDetailsExtensionHandlesReservedCharactersInTheToolsetNamesWhenLoggingToFile(string toolsetName)
         {
             InMemoryProcess process = new InMemoryProcess();
             TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
 
             bool confirmed = false;
             this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))

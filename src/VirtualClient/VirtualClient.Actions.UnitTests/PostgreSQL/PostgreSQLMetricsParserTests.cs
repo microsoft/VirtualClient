@@ -36,9 +36,11 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = this.testParser.Parse();
 
-            Assert.AreEqual(2, metrics.Count);
-            MetricAssert.Exists(metrics, "Transactions Per Minute", 26163);
-            MetricAssert.Exists(metrics, "Number Of Operations Per Minute", 11400);
+            Assert.AreEqual(4, metrics.Count);
+            MetricAssert.Exists(metrics, "Transactions/min", 26163);
+            MetricAssert.Exists(metrics, "Transactions/sec", 436.05);
+            MetricAssert.Exists(metrics, "Operations/min", 11400);
+            MetricAssert.Exists(metrics, "Operations/sec", 190);
         }
 
         [Test]
@@ -48,8 +50,9 @@ namespace VirtualClient.Actions
             string IncorrectPostgreSQLoutputPath = Path.Combine(workingDirectory, @"Examples\PostgreSQL\PostgresqlIncorrectResultsExample.txt");
             this.rawText = File.ReadAllText(IncorrectPostgreSQLoutputPath);
             this.testParser = new PostgreSQLMetricsParser(this.rawText);
-            SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains("The PostgreSQL output file has incorrect format for parsing", exception.Message);
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());
+            Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);
         }
     }
 }

@@ -20,15 +20,13 @@ puts "SETTING CONFIGURATION"
 dbset db pg
 dbset bm TPC-C
 diset connection pg_host <HOSTNAME>
-diset connection pg_port 5432
+diset connection pg_port <PORT>
 diset tpcc pg_superuser postgres
-diset tpcc pg_superuserpass postgres
+diset tpcc pg_superuserpass <SUPERUSERPWD>
 diset tpcc pg_defaultdbase postgres
-#diset tpcc pg_user nmalkapuramuser
-#diset tpcc pg_pass 1234
 diset tpcc pg_user <USERNAME>
 diset tpcc pg_pass <PASSWORD>
-diset tpcc pg_dbase tpcc
+diset tpcc pg_dbase <DATABASENAME>
 diset tpcc pg_driver timed
 diset tpcc pg_duration 2
 diset tpcc pg_duration 5

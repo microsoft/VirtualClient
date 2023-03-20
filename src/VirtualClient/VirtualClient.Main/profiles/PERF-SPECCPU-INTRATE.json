@@ -1,51 +1,68 @@
 {
-    "Description": "SPEC CPU 2017 Integer (SPECrate) Benchmark Workload",
-    "MinimumExecutionInterval": "00:05:00",
-    "MinimumRequiredExecutionTime": "02:00:00",
-    "Metadata": {
-        "RecommendedMinimumExecutionTime": "(8-cores)=04:00:00,(16-cores)=08:00:00,(64-cores)=10:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+  "Description": "SPEC CPU 2017 Integer (SPECrate) Benchmark Workload",
+  "MinimumExecutionInterval": "00:05:00",
+  "MinimumRequiredExecutionTime": "02:00:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "(8-cores)=04:00:00,(16-cores)=08:00:00,(64-cores)=10:00:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "CompilerName": "gcc",
+    "CompilerVersion": "10",
+    "SpecProfile": "intrate",
+    "RunPeak": false,
+    "BaseOptimizingFlags": "-g -O3 -march=native",
+    "PeakOptimizingFlags": "-g -Ofast -march=native -flto"
+  },
+  "Actions": [
+    {
+      "Type": "SpecCpuExecutor",
+      "Parameters": {
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "Scenario": "ScoreSystem",
+        "SpecProfile": "$.Parameters.SpecProfile",
+        "PackageName": "speccpu2017",
+        "RunPeak": "$.Parameters.RunPeak",
+        "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
+        "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "chocolatey"
+      }
     },
-    "Parameters": {
-        "CompilerName": "gcc",
-        "CompilerVersion": "10",
-        "RunPeak": false,
-        "BaseOptimizingFlags": "-g -O3 -march=native",
-        "PeakOptimizingFlags": "-g -Ofast -march=native -flto"
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallCompiler",
+        "PackageName": "chocolatey",
+        "Packages": "cygwin"
+      }
     },
-    "Actions": [
-        {
-            "Type": "SpecCpuExecutor",
-            "Parameters": {
-                "CompilerVersion": "$.Parameters.CompilerVersion",
-                "Scenario": "SPECrate_Integer",
-                "SpecProfile": "intrate",
-                "PackageName": "speccpu2017",
-                "RunPeak": "$.Parameters.RunPeak",
-                "BaseOptimizingFlags": "$.Parameters.BaseOptimizingFlags",
-                "PeakOptimizingFlags": "$.Parameters.PeakOptimizingFlags"
-            }
-        }
-    ],
-    "Dependencies": [
-        {
-            "Type": "CompilerInstallation",
-            "Parameters": {
-                "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
-                "CompilerVersion": "$.Parameters.CompilerVersion"
-            }
-        },
-        {
-            "Type": "DependencyPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallSPECcpu",
-                "BlobContainer": "packages",
-                "BlobName": "speccpu.2017.1.1.8.zip",
-                "PackageName": "speccpu2017",
-                "Extract": true
-            }
-        }
-    ]
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "Scenario": "InstallCompiler",
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "CygwinPackages": "gcc-g++,gcc-fortran,gcc,libiconv-devel"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSPECcpu",
+        "BlobContainer": "packages",
+        "BlobName": "speccpu.2017.1.1.8.zip",
+        "PackageName": "speccpu2017",
+        "Extract": true
+      }
+    }
+  ]
 }

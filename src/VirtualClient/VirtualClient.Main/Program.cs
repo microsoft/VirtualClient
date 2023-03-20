@@ -212,6 +212,9 @@ namespace VirtualClient
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
+                // --flush-wait
+                OptionFactory.CreateFlushWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
                 // --installDependencies
                 OptionFactory.CreateDependenciesFlag(required: false),
 

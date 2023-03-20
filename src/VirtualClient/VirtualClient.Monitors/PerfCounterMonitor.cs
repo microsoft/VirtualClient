@@ -220,18 +220,21 @@ namespace VirtualClient.Monitors
                         {
                             try
                             {
-                                // We cannot log the process details here. The output is too large.
-                                // this.Logger.LogProcessDetails<PerfCounterMonitor>(process, EventContext.Persisted());
-                                process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
-
-                                if (process.StandardOutput.Length > 0)
+                                // Atop returns an exit code of 2 when the process is cancelled. We do not want to treat this as an
+                                // error in the traditional sense.
+                                if (process.ExitCode != 2)
                                 {
-                                    AtopParser parser = new AtopParser(process.StandardOutput.ToString(), this.MetricFilters);
-                                    IList<Metric> metrics = parser.Parse();
+                                    process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
 
-                                    if (metrics?.Any() == true)
+                                    if (process.StandardOutput.Length > 0)
                                     {
-                                        this.Logger.LogPerformanceCounters("atop", metrics, startTime, endTime, telemetryContext);
+                                        AtopParser parser = new AtopParser(process.StandardOutput.ToString(), this.MetricFilters);
+                                        IList<Metric> metrics = parser.Parse();
+
+                                        if (metrics?.Any() == true)
+                                        {
+                                            this.Logger.LogPerformanceCounters("atop", metrics, startTime, endTime, telemetryContext);
+                                        }
                                     }
                                 }
                             }

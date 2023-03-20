@@ -9,7 +9,8 @@
         "DiskFillSize": "500G",
         "FileSize": "496G",
         "DiskFilter": "BiggestSize",
-        "DataIntegrityFileSize": "4G"
+        "DataIntegrityFileSize": "4G",
+        "InitializeDisksInParallel": false
     },
     "Actions": [
         {
@@ -443,7 +444,8 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "InitializeDisks"
+                "Scenario": "InitializeDisks",
+                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

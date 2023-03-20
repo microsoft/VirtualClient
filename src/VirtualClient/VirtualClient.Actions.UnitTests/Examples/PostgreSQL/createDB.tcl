@@ -11,15 +11,15 @@ puts "SETTING CONFIGURATION"
 dbset db pg
 dbset bm TPC-C
 diset connection pg_host localhost
-diset connection pg_port 5432
+diset connection pg_port <PORT>
 diset tpcc pg_count_ware <WAREHOUSECOUNT>
 diset tpcc pg_num_vu <VIRTUALUSERS>
 diset tpcc pg_superuser postgres
-diset tpcc pg_superuserpass postgres
+diset tpcc pg_superuserpass <SUPERUSERPWD>
 diset tpcc pg_defaultdbase postgres
 diset tpcc pg_user <USERNAME>
 diset tpcc pg_pass <PASSWORD>
-diset tpcc pg_dbase tpcc
+diset tpcc pg_dbase <DATABASENAME>
 print dict
 buildschema
 #vustatus

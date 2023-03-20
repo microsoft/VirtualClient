@@ -6,7 +6,6 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
@@ -87,29 +86,6 @@ namespace VirtualClient
         /// Provides features for managing/preserving state on the system.
         /// </summary>
         public IStateManager StateManager { get; internal set; }
-
-        /// <summary>
-        /// Returns true/false whether the IP address provided matches an IP address
-        /// on the local system.
-        /// </summary>
-        /// <param name="ipAddress">The IP address to verify.</param>
-        public bool IsLocalIPAddress(string ipAddress)
-        {
-            IPAddress address = IPAddress.Parse(ipAddress);
-            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-
-            bool isLocal = false;
-            if (IPAddress.IsLoopback(address))
-            {
-                isLocal = true;
-            }
-            else
-            {
-                isLocal = hostEntry.AddressList.Contains<IPAddress>(address);
-            }
-
-            return isLocal;
-        }
 
         /// <summary>
         /// Cleans up any tracked resources.
@@ -196,6 +172,29 @@ namespace VirtualClient
             }
 
             return systemMemoryInKb;
+        }
+
+        /// <summary>
+        /// Returns true/false whether the IP address provided matches an IP address
+        /// on the local system.
+        /// </summary>
+        /// <param name="ipAddress">The IP address to verify.</param>
+        public bool IsLocalIPAddress(string ipAddress)
+        {
+            IPAddress address = IPAddress.Parse(ipAddress);
+            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+            bool isLocal = false;
+            if (IPAddress.IsLoopback(address))
+            {
+                isLocal = true;
+            }
+            else
+            {
+                isLocal = hostEntry.AddressList.Contains<IPAddress>(address);
+            }
+
+            return isLocal;
         }
 
         /// <inheritdoc />

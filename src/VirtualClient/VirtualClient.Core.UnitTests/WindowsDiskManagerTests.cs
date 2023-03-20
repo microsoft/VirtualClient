@@ -27,7 +27,7 @@ namespace VirtualClient
         [SetUp]
         public void SetupTest()
         {
-            this.processManager = new InMemoryProcessManager
+            this.processManager = new InMemoryProcessManager(PlatformID.Win32NT)
             {
                 // Return our test process on creation.
                 OnCreateProcess = (command, args, workingDir) =>

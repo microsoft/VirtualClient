@@ -20,36 +20,34 @@ namespace VirtualClient.Actions
     public class MemcachedServerProfileTests
     {
         private DependencyFixture mockFixture;
-        private string clientAgentId;
-        private string serverAgentId;
 
         [SetUp]
         public void SetupFixture()
         {
             this.mockFixture = new DependencyFixture();
-            this.clientAgentId = $"{Environment.MachineName}-Client";
-            this.serverAgentId = $"{Environment.MachineName}-Server";
+            this.mockFixture
+                .Setup(PlatformID.Unix, Architecture.X64, "Server01")
+                .SetupLayout(
+                    new ClientInstance("Client01", "1.2.3.4", "Client"),
+                    new ClientInstance("Server01", "1.2.3.5", "Server"));
 
             ComponentTypeCache.Instance.LoadComponentTypes(TestDependencies.TestDirectory);
+
+            this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
+            this.mockFixture.SetupFile("memcached", "memcached-1.6.17/memcached", new byte[0]);
         }
 
         [Test]
         [TestCase("PERF-MEMCACHED.json")]
         public async Task MemcachedMemtierWorkloadProfileInstallsTheExpectedDependenciesOfServerOnUnixPlatform(string profile)
         {
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-            this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
-
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
                 // Workload dependency package expectations
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "MemtierPackage");
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "MemcachedPackage");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "memcached");
             }
         }
 
@@ -59,20 +57,13 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u username bash -c \"numactl -C 0 /home/user/tools/VirtualClient/packages/memcached-1.6.17/memcached -d -p 6379 -t 4 -m 1024",
-                $"sudo -u username /home/user/tools/VirtualClient/packages/memtier/memtier_benchmark --protocol=memcache_text --server localhost --port=6379 -c 1 -t 1 --pipeline 100 --data-size=32 --key-minimum=1 --key-maximum=10000000 --ratio=1:0 --requests=allkeys"
+                $"sudo bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -c 1000000 -m 4096\""
             };
 
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - Expected processes are executed.
-            this.mockFixture.Setup(PlatformID.Unix, Architecture.X64, this.serverAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-
-            this.mockFixture.SystemManagement.SetupGet(sm => sm.AgentId).Returns(this.serverAgentId);
-
             IPAddress.TryParse("1.2.3.5", out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient("1.2.3.5", ipAddress);
 
@@ -82,13 +73,7 @@ namespace VirtualClient.Actions
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
-            {
-                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-
-                return process;
-            };
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) => this.mockFixture.CreateProcess(command, arguments, workingDir);
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {

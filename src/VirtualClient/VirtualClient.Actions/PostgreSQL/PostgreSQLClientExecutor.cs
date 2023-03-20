@@ -6,12 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -25,10 +24,6 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class PostgreSQLClientExecutor : PostgreSQLExecutor
     {
-        // Maintained in the HammerDB package that we use.
-        private const string RunTransactionsScriptName = "runTransactionsScript.sh";
-        private const string RunTransactionsTclName = "runTransactions.tcl";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="PostgreSQLClientExecutor"/> class.
         /// </summary>
@@ -75,27 +70,53 @@ namespace VirtualClient.Actions
             // Configure the HammerDB transactions execution workload.
             await this.ConfigureWorkloadAsync(cancellationToken);
 
-            DateTime startTime = DateTime.UtcNow;
-
-            string results = string.Empty;
-            if (this.Platform == PlatformID.Unix)
+            await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
             {
-                results = await this.ExecuteCommandAsync<PostgreSQLClientExecutor>(
-                    $@"bash {PostgreSQLClientExecutor.RunTransactionsScriptName}",
-                    null,
-                    this.HammerDBPackagePath,
-                    cancellationToken);
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                results = await this.ExecuteCommandAsync<PostgreSQLClientExecutor>(
-                    $"{this.PlatformSpecifics.Combine(this.HammerDBPackagePath, "hammerdbcli.bat")}",
-                    $"auto {PostgreSQLClientExecutor.RunTransactionsTclName}",
-                    this.HammerDBPackagePath,
-                    cancellationToken);
-            }
+                DateTime startTime = DateTime.UtcNow;
 
-            this.CaptureMetricsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                string results = string.Empty;
+                if (this.Platform == PlatformID.Unix)
+                {
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        "bash",
+                        $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.RunTransactionsTclName}\"",
+                        this.HammerDBPackagePath,
+                        telemetryContext,
+                        cancellationToken))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+
+                            results = process.StandardOutput.ToString();
+                        }
+                    }
+                }
+                else if (this.Platform == PlatformID.Win32NT)
+                {
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat"),
+                        $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}",
+                        this.HammerDBPackagePath,
+                        telemetryContext,
+                        cancellationToken))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+
+                            results = process.StandardOutput.ToString();
+                        }
+                    }
+                }
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    this.CaptureMetricsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                }
+            });
         }
 
         private void CaptureMetricsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -120,10 +141,8 @@ namespace VirtualClient.Actions
         {
             // Each time that we run we copy the script file and the TCL file into the root HammerDB directory
             // alongside the benchmarking toolsets (e.g. hammerdbcli).
-            string scriptPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsScriptName);
-            string tclPath = this.Combine(this.HammerDBPackagePath, "postgresql", PostgreSQLClientExecutor.RunTransactionsTclName);
-            string scriptCopyPath = null;
-            string tclCopyPath = null;
+            string tclPath = this.Combine(this.HammerDBPackagePath, "benchmarks", this.Benchmark.ToLowerInvariant(), "postgresql", PostgreSQLServerExecutor.RunTransactionsTclName);
+            string tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
 
             if (!this.FileSystem.File.Exists(tclPath))
             {
@@ -133,32 +152,11 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            if (this.Platform == PlatformID.Unix)
-            {
-                if (!this.FileSystem.File.Exists(scriptPath))
-                {
-                    throw new DependencyException(
-                        $"Required script file missing. The script file required in order to run transactions against the database '{PostgreSQLClientExecutor.RunTransactionsScriptName}' " +
-                        $"does not exist in the HammerDB package.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                scriptCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsScriptName);
-                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
-
-                this.FileSystem.File.Copy(scriptPath, scriptCopyPath, true);
-                this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
-            }
-            else if (this.Platform == PlatformID.Win32NT)
-            {
-                tclCopyPath = this.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName);
-                this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
-            }
-
-            return this.SetTclScriptParametersAsync(cancellationToken);
+            this.FileSystem.File.Copy(tclPath, tclCopyPath, true);
+            return this.SetTclScriptParametersAsync(tclCopyPath, cancellationToken);
         }
 
-        private async Task SetTclScriptParametersAsync(CancellationToken cancellationToken)
+        private async Task SetTclScriptParametersAsync(string tclFilePath, CancellationToken cancellationToken)
         {
             Item<PostgreSQLServerState> state = await this.ServerApiClient.GetStateAsync<PostgreSQLServerState>(
                 nameof(PostgreSQLServerState),
@@ -181,28 +179,46 @@ namespace VirtualClient.Actions
             }
 
             await this.FileSystem.File.ReplaceInFileAsync(
-                    this.PlatformSpecifics.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName),
-                    @"<VIRTUALUSERS>",
-                    $"{parameters.UserCount}",
-                    cancellationToken);
+                tclFilePath,
+                "<PORT>",
+                this.Port.ToString(),
+                cancellationToken);
 
             await this.FileSystem.File.ReplaceInFileAsync(
-                    this.PlatformSpecifics.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName),
-                    @"<HOSTNAME>",
-                    $"{targetIPAddress}",
-                    cancellationToken);
+                tclFilePath,
+                "<DATABASENAME>",
+                this.DatabaseName,
+                cancellationToken);
 
             await this.FileSystem.File.ReplaceInFileAsync(
-                    this.PlatformSpecifics.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName),
-                    @"<USERNAME>",
-                    $"{parameters.UserName}",
-                    cancellationToken);
+                tclFilePath,
+                "<VIRTUALUSERS>",
+                parameters.UserCount.ToString(),
+                cancellationToken);
 
             await this.FileSystem.File.ReplaceInFileAsync(
-                    this.PlatformSpecifics.Combine(this.HammerDBPackagePath, PostgreSQLClientExecutor.RunTransactionsTclName),
-                    @"<PASSWORD>",
-                    $"{parameters.Password}",
-                    cancellationToken);
+                tclFilePath,
+                @"<HOSTNAME>",
+                targetIPAddress,
+                cancellationToken);
+
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                @"<USERNAME>",
+                parameters.UserName,
+                cancellationToken);
+
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                @"<PASSWORD>",
+                parameters.Password,
+                cancellationToken);
+
+            await this.FileSystem.File.ReplaceInFileAsync(
+                tclFilePath,
+                @"<SUPERUSERPWD>",
+                parameters.Password,
+                cancellationToken);
         }
     }
 }

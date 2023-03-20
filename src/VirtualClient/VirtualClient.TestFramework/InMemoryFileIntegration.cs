@@ -106,7 +106,7 @@ namespace VirtualClient
         /// </summary>
         public void Copy(string sourceFileName, string destFileName)
         {
-            throw new NotImplementedException();
+            this.Copy(sourceFileName, destFileName, false);
         }
 
         /// <summary>
@@ -114,7 +114,24 @@ namespace VirtualClient
         /// </summary>
         public void Copy(string sourceFileName, string destFileName, bool overwrite)
         {
-            throw new NotImplementedException();
+            InMemoryFile file = (this.FileSystem as InMemoryFileSystem).GetFile(sourceFileName);
+
+            if ((this.FileSystem as InMemoryFileSystem).TryGetFile(destFileName, out InMemoryFile existingFile))
+            {
+                if (!overwrite)
+                {
+                    throw new IOException($"File at path '{destFileName}' already exists.");
+                }
+
+                (this.FileSystem as InMemoryFileSystem).RemoveFile(destFileName);
+            }
+
+            InMemoryFile fileCopy = (this.FileSystem as InMemoryFileSystem).AddOrGetFile(destFileName);
+
+            if (file.FileBytes?.Any() == true)
+            {
+                fileCopy.SetContent(file.FileBytes.ToArray(), file.ContentEncoding);
+            }
         }
 
         /// <inheritdoc />

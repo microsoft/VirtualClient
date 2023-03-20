@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public abstract class DiskPerformanceWorkloadExecutor : VirtualClientComponent
+    public abstract class DiskWorkloadExecutor : VirtualClientComponent
     {
         /// <summary>
         /// TestFocus -> DataIntegrity
@@ -32,11 +32,11 @@ namespace VirtualClient.Actions
         public const string TestFocusDataIntegrity = "DataIntegrity";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DiskPerformanceWorkloadExecutor"/>
+        /// Initializes a new instance of the <see cref="DiskWorkloadExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the workload.</param>
         /// <param name="parameters">The set of parameters defined for the action in the profile definition.</param>
-        protected DiskPerformanceWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        protected DiskWorkloadExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
         }
@@ -48,13 +48,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.Configuration), out IConvertible configuration);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.Configuration), out IConvertible configuration);
                 return configuration?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.Configuration)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.Configuration)] = value;
             }
         }
 
@@ -65,13 +65,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.CommandLine), out IConvertible commandLine);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.CommandLine), out IConvertible commandLine);
                 return commandLine?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.CommandLine)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = value;
             }
         }
 
@@ -83,12 +83,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish), true);
+                return this.Parameters.GetValue<bool>(nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish), true);
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.DeleteTestFilesOnFinish)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.DeleteTestFilesOnFinish)] = value;
             }
         }
 
@@ -100,12 +100,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(DiskPerformanceWorkloadExecutor.DiskFill), false);
+                return this.Parameters.GetValue<bool>(nameof(DiskWorkloadExecutor.DiskFill), false);
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.DiskFill)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.DiskFill)] = value;
             }
         }
 
@@ -117,13 +117,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.DiskFillSize), out IConvertible diskFillSize);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.DiskFillSize), out IConvertible diskFillSize);
                 return diskFillSize?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.DiskFillSize)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.DiskFillSize)] = value;
             }
         }
 
@@ -134,13 +134,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.FileName), out IConvertible fileName);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileName), out IConvertible fileName);
                 return fileName?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.FileName)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.FileName)] = value;
             }
         }
 
@@ -151,13 +151,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.FileSize), out IConvertible fileSize);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.FileSize), out IConvertible fileSize);
                 return fileSize?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.FileSize)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.FileSize)] = value;
             }
         }
 
@@ -169,12 +169,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DiskPerformanceWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess);
+                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.ProcessModel), WorkloadProcessModel.SingleProcess);
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.ProcessModel)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.ProcessModel)] = value;
             }
         }
 
@@ -186,12 +186,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(DiskPerformanceWorkloadExecutor.QueueDepth), 16);
+                return this.Parameters.GetValue<int>(nameof(DiskWorkloadExecutor.QueueDepth), 16);
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.QueueDepth)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.QueueDepth)] = value;
             }
         }
 
@@ -202,13 +202,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(DiskPerformanceWorkloadExecutor.TestFocus), out IConvertible testFocus);
+                this.Parameters.TryGetValue(nameof(DiskWorkloadExecutor.TestFocus), out IConvertible testFocus);
                 return testFocus?.ToString();
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.TestFocus)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.TestFocus)] = value;
             }
         }
 
@@ -219,12 +219,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DiskPerformanceWorkloadExecutor.TestName));
+                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.TestName));
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.TestName)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.TestName)] = value;
             }
         }
 
@@ -235,12 +235,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DiskPerformanceWorkloadExecutor.DiskFilter), "BiggestSize");
+                return this.Parameters.GetValue<string>(nameof(DiskWorkloadExecutor.DiskFilter), "BiggestSize");
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.DiskFilter)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.DiskFilter)] = value;
             }
         }
 
@@ -252,12 +252,12 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(DiskPerformanceWorkloadExecutor.Threads), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(DiskWorkloadExecutor.Threads), Environment.ProcessorCount);
             }
 
             set
             {
-                this.Parameters[nameof(DiskPerformanceWorkloadExecutor.Threads)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.Threads)] = value;
             }
         }
 
@@ -329,42 +329,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="disks">This disks on which to create the mount points.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected virtual async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
-        {
-            bool mountPointsCreated = false;
-
-            // Don't mount any partition in OS drive.
-            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
-            {
-                // mount every volume that doesn't have an accessPath.
-                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
-                {
-                    string newMountPoint = volume.GetDefaultMountPoint();
-                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
-
-                    EventContext relatedContext = EventContext.Persisted().Clone()
-                        .AddContext(nameof(volume), volume)
-                        .AddContext("mountPoint", newMountPoint);
-
-                    await this.Logger.LogMessageAsync($"{this.GetType().Name}.CreateMountPoint", relatedContext, async () =>
-                    {
-                        string newMountPoint = volume.GetDefaultMountPoint();
-                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
-
-                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
-                }
-            }
-
-            return mountPointsCreated;
-        }
+        protected abstract Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken);
 
         /// <summary>
         /// Creates a process to run an I/O workload targeting the test files specified.
@@ -375,10 +340,10 @@ namespace VirtualClient.Actions
         /// </param>
         /// <param name="testedInstance">A name for the disks under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
         /// <param name="disksToTest">The disks under test.</param>
-        protected abstract DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest);
+        protected abstract DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest);
 
         /// <summary>
-        /// Create a set of <see cref="DiskPerformanceWorkloadProcess"/>.
+        /// Create a set of <see cref="DiskWorkloadProcess"/>.
         /// </summary>
         /// <param name="executable">The fully qualified path to the disk spd executable.</param>
         /// <param name="commandArguments">A templatized command to give to the disk spd executable.</param>
@@ -386,7 +351,7 @@ namespace VirtualClient.Actions
         /// <param name="processModel">
         /// The process model/strategy to use for I/O operations against the disks. Valid values include: SingleProcess, SingleProcessPerDisk.
         /// </param>
-        protected virtual IEnumerable<DiskPerformanceWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
+        protected virtual IEnumerable<DiskWorkloadProcess> CreateWorkloadProcesses(string executable, string commandArguments, IEnumerable<Disk> disks, string processModel)
         {
             executable.ThrowIfNullOrWhiteSpace(nameof(executable));
             commandArguments.ThrowIfNullOrWhiteSpace(nameof(commandArguments));
@@ -396,7 +361,7 @@ namespace VirtualClient.Actions
             EventContext telemetryContext = EventContext.Persisted();
             return this.Logger.LogMessage($"{this.GetType().Name}.CreateProcesses", telemetryContext, () =>
             {
-                List<DiskPerformanceWorkloadProcess> processes = new List<DiskPerformanceWorkloadProcess>();
+                List<DiskWorkloadProcess> processes = new List<DiskWorkloadProcess>();
 
                 if (string.Equals(processModel, WorkloadProcessModel.SingleProcess, StringComparison.OrdinalIgnoreCase))
                 {
@@ -408,7 +373,7 @@ namespace VirtualClient.Actions
                 {
                     // Example Metric Categorization
                     // SingleProcessPerDisk,BiggestSize,16
-                    processes.AddRange(new List<DiskPerformanceWorkloadProcess>(disks.Select(disk =>
+                    processes.AddRange(new List<DiskWorkloadProcess>(disks.Select(disk =>
                     {
                         return this.CreateWorkloadProcess(executable, commandArguments, $"{WorkloadProcessModel.SingleProcessPerDisk},{this.DiskFilter},1", disk);
                     })));
@@ -494,7 +459,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Kills the process associated with the workload.
         /// </summary>
-        protected virtual Task KillProcessAsync(DiskPerformanceWorkloadProcess workload)
+        protected virtual Task KillProcessAsync(DiskWorkloadProcess workload)
         {
             return Task.Run(() =>
             {

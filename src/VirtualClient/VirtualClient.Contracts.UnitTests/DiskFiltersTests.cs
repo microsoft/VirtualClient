@@ -48,11 +48,11 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersFiltersCDRomWithNoneFilter()
+        public void DiskFiltersAlwaysFiltersOutCDROMDevices()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
             Disk cdRom1 = new Disk(4, "/dev/dvd");
-            Disk cdRom2 = new Disk(5, "/dev/random", accessPaths: new List<string> { "/dev/cdrom" });
+            Disk cdRom2 = new Disk(5, "/dev/cdrom");
             this.disks = this.disks.Append(cdRom1).Append(cdRom2);
 
             string filterString = "none";
@@ -252,6 +252,56 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(2, result.Count());
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
             Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(2), result.ElementAt(1)));
+        }
+
+        [Test]
+        public void DiskFiltersHandlesAnomaliesEncounters_1()
+        {
+            // Scenario:
+            // We found an anomaly on one of the Linux systems that had 32 disks where they were not
+            // identified properly.
+            string rawText = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lshw", "lshw_disk_storage_results_anomaly.xml"));
+            LshwDiskParser parser = new LshwDiskParser(rawText);
+
+            IEnumerable<Disk> disks = parser.Parse();
+            IEnumerable<Disk> filteredDisks = DiskFilters.FilterDisks(disks, "BiggestSize", PlatformID.Unix);
+
+            Assert.IsNotNull(filteredDisks);
+            Assert.IsNotEmpty(filteredDisks);
+            Assert.IsTrue(filteredDisks.Count() == 32);
+
+            Assert.AreEqual("/dev/sda", filteredDisks.ElementAt(0).DevicePath);
+            Assert.AreEqual("/dev/sdb", filteredDisks.ElementAt(1).DevicePath);
+            Assert.AreEqual("/dev/sdk", filteredDisks.ElementAt(2).DevicePath);
+            Assert.AreEqual("/dev/sdl", filteredDisks.ElementAt(3).DevicePath);
+            Assert.AreEqual("/dev/sdm", filteredDisks.ElementAt(4).DevicePath);
+            Assert.AreEqual("/dev/sdn", filteredDisks.ElementAt(5).DevicePath);
+            Assert.AreEqual("/dev/sdo", filteredDisks.ElementAt(6).DevicePath);
+            Assert.AreEqual("/dev/sdp", filteredDisks.ElementAt(7).DevicePath);
+            Assert.AreEqual("/dev/sdq", filteredDisks.ElementAt(8).DevicePath);
+            Assert.AreEqual("/dev/sdr", filteredDisks.ElementAt(9).DevicePath);
+            Assert.AreEqual("/dev/sds", filteredDisks.ElementAt(10).DevicePath);
+            Assert.AreEqual("/dev/sdt", filteredDisks.ElementAt(11).DevicePath);
+            Assert.AreEqual("/dev/sdc", filteredDisks.ElementAt(12).DevicePath);
+            Assert.AreEqual("/dev/sdu", filteredDisks.ElementAt(13).DevicePath);
+            Assert.AreEqual("/dev/sdv", filteredDisks.ElementAt(14).DevicePath);
+            Assert.AreEqual("/dev/sdw", filteredDisks.ElementAt(15).DevicePath);
+            Assert.AreEqual("/dev/sdx", filteredDisks.ElementAt(16).DevicePath);
+            Assert.AreEqual("/dev/sdy", filteredDisks.ElementAt(17).DevicePath);
+            Assert.AreEqual("/dev/sdz", filteredDisks.ElementAt(18).DevicePath);
+            Assert.AreEqual("/dev/sdaa", filteredDisks.ElementAt(19).DevicePath);
+            Assert.AreEqual("/dev/sdab", filteredDisks.ElementAt(20).DevicePath);
+            Assert.AreEqual("/dev/sdac", filteredDisks.ElementAt(21).DevicePath);
+            Assert.AreEqual("/dev/sdad", filteredDisks.ElementAt(22).DevicePath);
+            Assert.AreEqual("/dev/sdd", filteredDisks.ElementAt(23).DevicePath);
+            Assert.AreEqual("/dev/sdae", filteredDisks.ElementAt(24).DevicePath);
+            Assert.AreEqual("/dev/sdaf", filteredDisks.ElementAt(25).DevicePath);
+            Assert.AreEqual("/dev/sde", filteredDisks.ElementAt(26).DevicePath);
+            Assert.AreEqual("/dev/sdf", filteredDisks.ElementAt(27).DevicePath);
+            Assert.AreEqual("/dev/sdg", filteredDisks.ElementAt(28).DevicePath);
+            Assert.AreEqual("/dev/sdh", filteredDisks.ElementAt(29).DevicePath);
+            Assert.AreEqual("/dev/sdi", filteredDisks.ElementAt(30).DevicePath);
+            Assert.AreEqual("/dev/sdj", filteredDisks.ElementAt(31).DevicePath);
         }
     }
 }
