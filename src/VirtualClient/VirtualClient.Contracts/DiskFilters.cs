@@ -135,6 +135,7 @@ namespace VirtualClient.Contracts
         private static IEnumerable<Disk> DiskPathFilter(IEnumerable<Disk> disks, string diskPaths)
         {
             List<string> pathList = diskPaths.Split(",", StringSplitOptions.RemoveEmptyEntries).ToList();
+
             // Find Disks where either devicepath or accessPath is exact match of one of the path provided in diskPaths.
             disks = disks.Where(d => pathList.Any(p => d.PathEquals(p)));
             return disks;
@@ -146,9 +147,9 @@ namespace VirtualClient.Contracts
             {
                 // There are NVMe disks that show up in lshw output, that are not really storage devices. This filter filters by common prefixes.
                 List<string> validPrefixes = new List<string> { "/dev/hd", "/dev/sd", "/dev/nvme", "/dev/xvd" };
+
                 // Match for either accessPath or devicePath.
-                disks = disks.Where(d => d.AccessPaths.Any(p => validPrefixes.Any(vp => p.StartsWith(vp, StringComparison.OrdinalIgnoreCase)))
-                    || validPrefixes.Any(vp => d.DevicePath.StartsWith(vp, StringComparison.OrdinalIgnoreCase)));
+                disks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
             }
 
             return disks;
@@ -162,8 +163,15 @@ namespace VirtualClient.Contracts
                 // This method is not used because there is FilterStoragePathByPrefix that supersedes this. This method might still be applicable if the 
                 // FilterStoragePathByPrefix methods is changed to accept broader prefixes.
 
-                List<string> cdromPaths = new List<string> { "/dev/cdrom", "/dev/dvd", "/dev/sr0", "/dev/cdrw", "/dev/dvdrw" };
-                disks = disks.Where(d => !d.AccessPaths.Any(p => cdromPaths.Any(cd => cd.Equals(p, StringComparison.OrdinalIgnoreCase))));
+                List<string> cdromPaths = new List<string>
+                {
+                    "/dev/cdrom",
+                    "/dev/dvd",
+                    "/dev/sr0",
+                    "/dev/cdrw",
+                    "/dev/dvdrw"
+                };
+
                 disks = disks.Where(d => !cdromPaths.Any(cd => cd.Equals(d.DevicePath, StringComparison.OrdinalIgnoreCase)));
             }
 

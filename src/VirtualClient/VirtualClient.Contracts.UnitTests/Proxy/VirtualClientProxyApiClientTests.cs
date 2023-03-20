@@ -78,6 +78,19 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("https://any.proxy.api.endpoint:5000?chunk-size=1024", 1024)]
+        [TestCase("https://any.proxy.api.endpoint:5000?chunk-size=10240&api-key=123", 10240)]
+        [TestCase("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=102400", 102400)]
+        [TestCase("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=1024000&", 1024000)]
+        public void VirtualClientProxyApiClientUsesTheExpectedChunkSizeWhenDefinedInTheApiBaseUri(string apiUri, int expectedChunkSize)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            Assert.AreEqual(expectedChunkSize, this.apiClient.ChunkSize);
+        }
+
+        [Test]
         [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
             "/api/blobs/anyfile.log?source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
         //
@@ -89,13 +102,48 @@ namespace VirtualClient.Contracts.Proxy
         //
         [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob/",
             "/api/blobs/anyfile.log?source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
-        public void VirtualClientApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
         {
-            string encodin = Encoding.UTF8.WebName;
+            string encoding = Encoding.UTF8.WebName;
             ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
 
             string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor);
             Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
+        [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
+        //
+        [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob",
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor_WhenQueryStringParametersAreProvidedOnTheBaseUri(
+            string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        {
+            string encoding = Encoding.UTF8.WebName;
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=10000");
+            string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, baseUri.Query);
+            Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForTelemetry()
+        {
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000");
+            string actualRoute = VirtualClientProxyApiClient.CreateTelemetryApiRoute();
+
+            Assert.AreEqual("/api/telemetry", actualRoute);
+        }
+
+        [Test]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForTelemetry_WhenQueryStringParametersAreProvidedOnTheBaseUri()
+        {
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123");
+            string actualRoute = VirtualClientProxyApiClient.CreateTelemetryApiRoute(baseUri.Query);
+
+            Assert.AreEqual("/api/telemetry?api-key=123", actualRoute);
         }
 
         [Test]
@@ -157,13 +205,50 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("https://1.2.3.4:5000?api-key=1234")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&chunk-size=10000")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&chunk-size=10000&any-other=true")]
+        public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobs_WhenQueryStringParametersProvidedWithTheApiUri(string apiUri)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+                {
+                    this.mockRestClient.Setup(client => client.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
+
+                    this.mockRestClient.Setup(client => client.GetAsync(
+                            It.IsAny<Uri>(),
+                            It.IsAny<CancellationToken>(),
+                            It.IsAny<HttpCompletionOption>()))
+                        .Callback<Uri, CancellationToken, HttpCompletionOption>((uri, token, option) =>
+                        {
+                            Assert.AreEqual(uri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor, baseUri.Query));
+                        })
+                        .Returns(Task.FromResult(response));
+
+                    await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    this.mockRestClient.Verify(client => client.GetAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>(), It.IsAny<HttpCompletionOption>()), Times.Once());
+                }
+            }
+        }
+
+        [Test]
         [TestCase(1024, 16, 64)]
         [TestCase(1032, 16, 65)]
         [TestCase(16, 32, 1)]
         [TestCase(99, 7, 15)]
         public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobsWhenTheBlobHasRangeEnabled_WhenDownloadingInChunks(int contentLength, int increment, int expectedInvocations)
         {
-            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"), increment);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"));
+            this.apiClient.ChunkSize = increment;
 
             ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
 
@@ -257,7 +342,8 @@ namespace VirtualClient.Contracts.Proxy
         public async Task VirtualClientProxyApiClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToDownloadBlobs_WhenDownloadingInChunks()
         {
             int chunkSize = 16;
-            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"), chunkSize);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"));
+            this.apiClient.ChunkSize = chunkSize;
 
             ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
             using (Stream stream = new InMemoryStream())
@@ -476,6 +562,41 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("https://1.2.3.4:5000?api-key=1234")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&any-other=true")]
+        public async Task VirtualClientApiProxyClientMakesTheExpectedCallToUploadTelemetry_WhenQueryStringParametersProvidedWithTheApiUri(string apiUri)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            bool expectedCallMade = false;
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+                {
+                    this.mockRestClient.Setup(client => client.PostAsync(
+                            It.IsAny<Uri>(),
+                            It.IsAny<HttpContent>(),
+                            It.IsAny<CancellationToken>()))
+                        .Callback<Uri, HttpContent, CancellationToken>((uri, content, token) =>
+                        {
+                            Assert.IsTrue(uri.PathAndQuery.Equals($"/api/telemetry{baseUri.Query.TrimEnd('&')}"));
+                            Assert.IsNotNull(content);
+                            Assert.DoesNotThrowAsync(() => content.ReadAsJsonAsync<IEnumerable<ProxyTelemetryMessage>>());
+
+                            expectedCallMade = true;
+                        })
+                        .Returns(Task.FromResult(response));
+
+                    await this.apiClient.UploadTelemetryAsync(this.fixture.CreateMany<ProxyTelemetryMessage>(), CancellationToken.None).ConfigureAwait(false);
+
+                    Assert.IsTrue(expectedCallMade);
+                }
+            }
+        }
+
+        [Test]
         public async Task VirtualClientApiProxyClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToUploadTelemetry()
         {
             using (Stream stream = new InMemoryStream())
@@ -639,7 +760,7 @@ namespace VirtualClient.Contracts.Proxy
                 withPath ? "/path/to/blob" : null);
         }
 
-        private static string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor)
+        private static string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor, string queryString = null)
         {
             string expectedSource = descriptor.Source;
             string expectedStoreType = descriptor.StoreType;
@@ -649,23 +770,28 @@ namespace VirtualClient.Contracts.Proxy
             string expectedContentEncoding = descriptor.ContentEncoding;
             string expectedBlobPath = descriptor.BlobPath;
 
-            return $"/api/blobs/{expectedBlobName}?source={expectedSource}" +
+            string fullQueryString =
+                $"source={expectedSource}" +
                 $"&storeType={expectedStoreType}" +
                 $"&containerName={expectedContainerName}" +
                 $"&contentType={expectedContentType}" +
                 $"&contentEncoding={expectedContentEncoding}" +
                 $"{(!string.IsNullOrEmpty(expectedBlobPath) ? $"&blobPath={expectedBlobPath}" : string.Empty)}";
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                fullQueryString = $"{queryString.Trim('?', '&', '/')}&{fullQueryString}";
+            }
+
+            return $"/api/blobs/{expectedBlobName}?{fullQueryString}";
         }
 
         private class TestProxyClient : VirtualClientProxyApiClient
         {
-            public TestProxyClient(IRestClient restClient, Uri baseUri, int chunkSize = 16) 
+            public TestProxyClient(IRestClient restClient, Uri baseUri) 
                 : base(restClient, baseUri)
             {
-                this.ChunkSize = chunkSize;
             }
-
-            protected override int ChunkSize { get; }
         }
     }
 }

@@ -8,16 +8,13 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Server.IIS.Core;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static System.Collections.Specialized.BitVector32;
 
     /// <summary>
     /// Manages the execution runtime of the FIO Multi Throughput workload.
@@ -541,7 +538,7 @@ namespace VirtualClient.Actions
 
                 this.CreateOrUpdateJobFile(templateJobFilePath, jobFilePath);
 
-                DiskPerformanceWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
+                DiskWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
                 metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
@@ -555,7 +552,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Creates a process to run FIO targeting the file names specified.
         /// </summary>
-        private DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string jobFile)
+        private DiskWorkloadProcess CreateWorkloadProcess(string executable, string jobFile)
         {
             string fioArguments = $"{jobFile.Trim()} {this.GetSections().Trim()} --time_based --output-format=json --thread --fallocate=none".Trim();
 
@@ -564,7 +561,7 @@ namespace VirtualClient.Actions
             string testedInstances = $"{this.randomIOFilePath},{this.sequentialIOFilePath}";
             List<string> testFiles = new List<string>() { this.randomIOFilePath, this.sequentialIOFilePath };
 
-            return new DiskPerformanceWorkloadProcess(process, testedInstances, testFiles.ToArray());
+            return new DiskWorkloadProcess(process, testedInstances, testFiles.ToArray());
         }
 
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)

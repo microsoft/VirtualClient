@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -301,6 +302,8 @@ namespace VirtualClient.Actions
             string mockProfileText = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SPEC", "mockspeccpu.cfg"));
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.mockFixture.FileInfo.Setup(file => file.FromFileName(It.IsAny<string>()))
+                .Returns(new Mock<IFileInfo>().Object);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -329,6 +332,8 @@ namespace VirtualClient.Actions
             string mockProfileText = File.ReadAllText(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "SPEC", "mockspeccpu.cfg"));
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(mockProfileText);
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+            this.mockFixture.FileInfo.Setup(file => file.FromFileName(It.IsAny<string>()))
+                .Returns(new Mock<IFileInfo>().Object);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {

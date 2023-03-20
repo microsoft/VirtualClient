@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Core;
     using Microsoft.Extensions.DependencyInjection;
+    using static VirtualClient.BlobDescriptor;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -312,13 +313,19 @@ namespace VirtualClient.Actions
                 string results = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(results, "*CPU2017*", SearchOption.TopDirectoryOnly);
 
-                IEnumerable<KeyValuePair<string, BlobDescriptor>> fileBlobDescriptorPairs = BlobDescriptor.ToBlobDescriptors(
-                    this.ExperimentId,
-                    this.AgentId,
-                    "speccpu",
-                    outputFiles);
+                if (outputFiles?.Any() == true)
+                {
+                    IEnumerable<IFileInfo> files = outputFiles.ToList().Select(path => this.fileSystem.FileInfo.FromFileName(path));
 
-                await this.UploadFilesAsync(blobManager, this.fileSystem, fileBlobDescriptorPairs, cancellationToken).ConfigureAwait(false);
+                    IEnumerable<FileBlobDescriptor> blobDescriptors = FileBlobDescriptor.ToBlobDescriptors(
+                        files,
+                        HttpContentType.PlainText,
+                        this.ExperimentId,
+                        this.AgentId,
+                        "speccpu");
+
+                    await this.UploadFilesAsync(blobManager, this.fileSystem, blobDescriptors, cancellationToken);
+                }
             }
         }
 

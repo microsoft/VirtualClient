@@ -253,8 +253,12 @@ namespace VirtualClient.Actions
             {
                 // Example Blob Store Structure:
                 // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
-                BlobDescriptor resultsBlob = BlobDescriptor.ToBlobDescriptor(
-                    this.ExperimentId, this.AgentId, "specjbb", "gc.log", DateTime.UtcNow);
+                FileBlobDescriptor resultsBlob = FileBlobDescriptor.ToBlobDescriptor(
+                    this.fileSystem.FileInfo.FromFileName(gcLogPath),
+                    HttpContentType.PlainText,
+                    this.ExperimentId,
+                    this.AgentId,
+                    "specjbb");
 
                 await blobManager.UploadBlobAsync(resultsBlob, uploadStream, cancellationToken)
                     .ConfigureAwait(false);

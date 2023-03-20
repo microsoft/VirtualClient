@@ -11,7 +11,8 @@
         "SequentialIOFileSize": "20G",
         "TargetIOPS": "5000",
         "TargetPercents": "10,40,90,98,100,102,110",
-        "DirectIO": true
+        "DirectIO": true,
+        "InitializeDisksInParallel": true
     },
     "Actions": [
         {
@@ -23,6 +24,7 @@
                 "DiskFill": true,
                 "GroupReporting": "0",
                 "PackageName": "fio",
+                "ProcessModel": "SingleProcessPerDisk",
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
@@ -67,7 +69,8 @@
         {
             "Type": "FormatDisks",
             "Parameters": {
-                "Scenario": "InitializeDisks"
+                "Scenario": "InitializeDisks",
+                "InitializeDisksInParallel": "$.Parameters.InitializeDisksInParallel"
             }
         },
         {

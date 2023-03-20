@@ -11,6 +11,7 @@ namespace VirtualClient.Contracts.Proxy
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Web;
@@ -27,7 +28,9 @@ namespace VirtualClient.Contracts.Proxy
     {
         private const string BlobsApiRoute = "/api/blobs";
         private const string TelemetryApiRoute = "/api/telemetry";
-        private const int DefaultBlobChunkSize = 1024 * 1024;
+
+        // Default = 10 MB
+        private const int DefaultBlobChunkSize = 1024 * 1024 * 10;
 
         private static IAsyncPolicy<HttpResponseMessage> defaultGetRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(
             HttpMethod.Get,
@@ -41,11 +44,11 @@ namespace VirtualClient.Contracts.Proxy
         /// Initializes a new instance of the <see cref="VirtualClientProxyApiClient"/> class.
         /// </summary>
         /// <param name="restClient">
-        /// The REST client that handles REST communications with the proxy API
-        /// service.
+        /// The REST client that handles REST communications with the proxy API service.
         /// </param>
         /// <param name="baseUri">
-        /// The base URI to the server hosting the proxy API (e.g. https://any.proxy.westUS2.webapps.net:5000).
+        /// The base URI to the server hosting the proxy API 
+        /// (e.g. https://any.proxy.westUS2.webapps.net:5000, https://any.proxy.westUS2.webapps.net:5000?api-key=123&amp;chunk-size=10000).
         /// </param>
         public VirtualClientProxyApiClient(IRestClient restClient, Uri baseUri)
         {
@@ -54,6 +57,15 @@ namespace VirtualClient.Contracts.Proxy
 
             this.RestClient = restClient;
             this.BaseUri = baseUri;
+
+            if (!string.IsNullOrWhiteSpace(baseUri.Query))
+            {
+                Match chunkSize = Regex.Match(baseUri.Query, @"chunk-size=(\d+)", RegexOptions.IgnoreCase);
+                if (chunkSize.Success)
+                {
+                    this.ChunkSize = int.Parse(chunkSize.Groups[1].Value);
+                }
+            }
         }
 
         /// <summary>
@@ -62,32 +74,36 @@ namespace VirtualClient.Contracts.Proxy
         public Uri BaseUri { get; }
 
         /// <summary>
+        /// The size (in bytes) of an individual chunk of a blob to be downloaded when using
+        /// download ranges.
+        /// </summary>
+        public int ChunkSize { get; set; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
+
+        /// <summary>
         /// Gets or sets the REST client that handles REST communications
         /// with the API service.
         /// </summary>
         protected IRestClient RestClient { get; }
 
         /// <summary>
-        /// The size (in bytes) of an individual chunk of a blob to be downloaded when using
-        /// download ranges.
-        /// </summary>
-        protected virtual int ChunkSize { get; } = VirtualClientProxyApiClient.DefaultBlobChunkSize;
-
-        /// <summary>
         /// Creates an URI route for the proxy API blob endpoints based on the information defined
         /// in the descriptor.
         /// </summary>
         /// <param name="descriptor">Describes the details of the blob to upload or download.</param>
+        /// <param name="queryString">Any additional query string properties to include in the route.</param>
         /// <returns>The URI route portion of the URI for the blob upload or download (e.g. /api/blobs/anyblob.1.0.0.zip?source=VirtualClient...).</returns>
-        public static string CreateBlobApiRoute(ProxyBlobDescriptor descriptor)
+        public static string CreateBlobApiRoute(ProxyBlobDescriptor descriptor, string queryString = null)
         {
             descriptor.ThrowIfNull(nameof(descriptor));
 
             // e.g.
             // /api/blobs/anypackage.1.0.0.zip?source=VirtualClient&storeType=Packages&containerName=A57214DC-41BA-4211-956D-07095275D73D&contentType=application/octet-stream&contentEncoding=utf-8
             // /api/blobs/anyfile.log?source=VirtualClient&storeType=Content&containerName=A57214DC-41BA-4211-956D-07095275D73D&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob
+            //
+            // With API key
+            // /api/blobs/anyfile.log?api-key=1234&source=VirtualClient&storeType=Content&containerName=A57214DC-41BA-4211-956D-07095275D73D&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob
 
-            string route = $"{VirtualClientProxyApiClient.BlobsApiRoute}/{descriptor.BlobName}?source={descriptor.Source}" +
+            string fullQueryString = $"source={descriptor.Source}" +
                 $"&storeType={descriptor.StoreType}" +
                 $"&containerName={descriptor.ContainerName}" +
                 $"&contentType={descriptor.ContentType}" +
@@ -95,7 +111,34 @@ namespace VirtualClient.Contracts.Proxy
 
             if (!string.IsNullOrWhiteSpace(descriptor.BlobPath))
             {
-                route += $"&blobPath={descriptor.BlobPath}";
+                fullQueryString += $"&blobPath={descriptor.BlobPath}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                fullQueryString = $"{queryString.Trim('?', '&', '/')}&{fullQueryString}";
+            }
+
+            string route = $"{VirtualClientProxyApiClient.BlobsApiRoute}/{descriptor.BlobName}?{fullQueryString}";
+
+            return HttpUtility.UrlPathEncode(route);
+        }
+
+        /// <summary>
+        /// Creates an URI route for the proxy API telemetry endpoints.
+        /// </summary>
+        /// <param name="queryString">Any additional query string properties to include in the route.</param>
+        /// <returns>The URI route portion of the URI for the telemetry endpoint.</returns>
+        public static string CreateTelemetryApiRoute(string queryString = null)
+        {
+            // e.g.
+            // /api/telemetry
+            // /api/telemetry?api-key=1234
+
+            string route = $"{VirtualClientProxyApiClient.TelemetryApiRoute}";
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                route = $"{route}?{queryString.Trim('?', '&', '/')}";
             }
 
             return HttpUtility.UrlPathEncode(route);
@@ -107,7 +150,7 @@ namespace VirtualClient.Contracts.Proxy
             descriptor.ThrowIfNull(nameof(descriptor));
             downloadStream.ThrowIfNull(nameof(downloadStream));
 
-            Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
+            Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, this.BaseUri.Query));
 
             HttpResponseMessage response = null;
             HttpResponseMessage headResponse = await this.RestClient.HeadAsync(requestUri, cancellationToken);
@@ -179,7 +222,7 @@ namespace VirtualClient.Contracts.Proxy
 
             using (StreamContent requestBody = new StreamContent(uploadStream))
             {
-                Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor));
+                Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, this.BaseUri.Query));
 
                 return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
@@ -198,7 +241,7 @@ namespace VirtualClient.Contracts.Proxy
 
             using (StringContent requestBody = new StringContent(messages.ToJson(), Encoding.UTF8, "application/json"))
             {
-                Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.TelemetryApiRoute);
+                Uri requestUri = new Uri(this.BaseUri, VirtualClientProxyApiClient.CreateTelemetryApiRoute(this.BaseUri.Query));
 
                 return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
@@ -237,13 +280,18 @@ namespace VirtualClient.Contracts.Proxy
 
             return Policy.HandleResult<HttpResponseMessage>(response =>
             {
-                IEnumerable<HttpStatusCode> nonTransientCodes = method == HttpMethod.Get
-                    ? nonTransientErrorCodesOnGet
-                    : nonTransientErrorCodesOnPost;
+                bool shouldRetry = false;
+                if (!response.IsSuccessStatusCode)
+                {
+                    IEnumerable<HttpStatusCode> nonTransientCodes = method == HttpMethod.Get
+                        ? nonTransientErrorCodesOnGet
+                        : nonTransientErrorCodesOnPost;
 
-                // Retry if the response status is not a success status code (i.e. 200s) but only if the status
-                // code is also not in the list of non-transient status codes.
-                bool shouldRetry = !response.IsSuccessStatusCode && !nonTransientCodes.Contains(response.StatusCode);
+                    // Retry if the response status is not a success status code (i.e. 200s) but only if the status
+                    // code is also not in the list of non-transient status codes.
+                    shouldRetry = !response.IsSuccessStatusCode && !nonTransientCodes.Contains(response.StatusCode);
+                }
+
                 return shouldRetry;
             }).WaitAndRetryAsync(10, retryWaitInterval);
         }
