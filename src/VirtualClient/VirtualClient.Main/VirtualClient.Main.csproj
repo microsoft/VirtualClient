@@ -78,6 +78,10 @@
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJBB.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECCPU-FPSPEED.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECCPU-FPRATE.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECCPU-INTSPEED.json" />
+        <WindowsProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC30.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC70.json" />

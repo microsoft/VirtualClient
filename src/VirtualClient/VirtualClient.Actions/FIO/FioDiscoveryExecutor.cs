@@ -5,19 +5,16 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.DataAnnotations;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static System.Net.WebRequestMethods;
 
     /// <summary>
     /// Manages the execution runtime of the FIO workload for Perf Engineering Discovery Scenario.
@@ -185,7 +182,7 @@ namespace VirtualClient.Actions
                     this.Logger.LogTraceMessage($"{this.Scenario}.ExecutionStarted", telemetryContext);
                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
 
-                    foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                    foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                     {
                         fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, this.Scenario, telemetryContext, cancellationToken));
                     }
@@ -270,7 +267,7 @@ namespace VirtualClient.Actions
                                                     this.WorkloadProcesses.Clear();
                                                     this.WorkloadProcesses.AddRange(this.CreateWorkloadProcesses(this.ExecutablePath, commandLine, disksToTest, this.ProcessModel));
 
-                                                    foreach (DiskPerformanceWorkloadProcess process in this.WorkloadProcesses)
+                                                    foreach (DiskWorkloadProcess process in this.WorkloadProcesses)
                                                     {
                                                         fioProcessTasks.Add(this.ExecuteWorkloadAsync(process, testName, variationContext, cancellationToken, metricsMetadata));
                                                     }
@@ -325,14 +322,14 @@ namespace VirtualClient.Actions
         /// </param>
         /// <param name="testedInstance">The disk instance under test (e.g. remote_disk, remote_disk_premium_lrs).</param>
         /// <param name="disksToTest">The disks under test.</param>
-        protected override DiskPerformanceWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
+        protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
             string[] testFiles = disksToTest.Select(disk => disk.DevicePath).ToArray();
             string fioArguments = $"{commandArguments} {string.Join(" ", testFiles.Select(file => $"--filename={file}"))}".Trim();
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateElevatedProcess(this.Platform, executable, fioArguments);
 
-            return new DiskPerformanceWorkloadProcess(process, testedInstance, testFiles);
+            return new DiskWorkloadProcess(process, testedInstance, testFiles);
         }
 
         /// <inheritdoc/>
@@ -343,7 +340,7 @@ namespace VirtualClient.Actions
 
         private async Task CleanUpWorkloadTestFilesAsync()
         {
-            foreach (DiskPerformanceWorkloadProcess workload in this.WorkloadProcesses)
+            foreach (DiskWorkloadProcess workload in this.WorkloadProcesses)
             {
                 await this.DeleteTestVerificationFilesAsync(workload.TestFiles)
                     .ConfigureAwait(false);

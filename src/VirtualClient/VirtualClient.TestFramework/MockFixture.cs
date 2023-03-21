@@ -108,6 +108,11 @@ namespace VirtualClient
         public Mock<IFile> File { get; set; }
 
         /// <summary>
+        /// Mock <see cref="IFileInfo"/> that is accessed via the <see cref="FileSystem"/> object.
+        /// </summary>
+        public Mock<IFileInfoFactory> FileInfo { get; set; }
+
+        /// <summary>
         /// Mock <see cref="IFileStreamFactory"/> used to mock out file stream interactions.
         /// </summary>
         public Mock<IFileStreamFactory> FileStream { get; set; }
@@ -209,11 +214,13 @@ namespace VirtualClient
             this.ApiClientManager = new Mock<IApiClientManager>();
             this.FileSystem = new Mock<IFileSystem>();
             this.File = new Mock<IFile>();
+            this.FileInfo = new Mock<IFileInfoFactory>();
             this.FileStream = new Mock<IFileStreamFactory>();
             this.Directory = new Mock<IDirectory>();
             this.DirectoryInfo = new Mock<IDirectoryInfo>();
             this.Directory.Setup(dir => dir.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.FileSystem.SetupGet(fs => fs.File).Returns(this.File.Object);
+            this.FileSystem.SetupGet(fs => fs.FileInfo).Returns(this.FileInfo.Object);
             this.FileSystem.SetupGet(fs => fs.FileStream).Returns(this.FileStream.Object);
             this.FileSystem.SetupGet(fs => fs.Directory).Returns(this.Directory.Object);
 

@@ -228,7 +228,7 @@ namespace VirtualClient.Common.Rest
             this.Client.DefaultRequestHeaders.Add(name, values);
         }
 
-        internal void SetAuthenticationHeader(AuthenticationHeaderValue authHeader)
+        internal void SetAuthorizationHeader(AuthenticationHeaderValue authHeader)
         {
             this.Client.DefaultRequestHeaders.Authorization = authHeader;
         }

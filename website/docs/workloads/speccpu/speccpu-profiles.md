@@ -17,6 +17,8 @@ for evaluating the performance of the CPU for processing calculations.
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -71,6 +73,8 @@ for evaluating the performance of the CPU for processing calculations.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -121,6 +125,8 @@ for evaluating the performance of the CPU for processing calculations.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -170,6 +176,8 @@ for evaluating the performance of the CPU for processing calculations.
 * **OS/Architecture Platforms**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.

@@ -5,14 +5,12 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
     using Newtonsoft.Json;
 
     /// <summary>
     /// A base disk class that could contain partitions..
     /// </summary>
-    public class Disk : DiskVolume
+    public class Disk : Device
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Disk"/> class.
@@ -20,16 +18,14 @@ namespace VirtualClient.Contracts
         /// <param name="index">The index of the physical disk on the system bus.</param>
         /// <param name="devicePath">Physical device path. Typically look like /dev/sdx, /dev/nvme in Linux or PHYSICAL0 in Windows.</param>
         /// <param name="volumes">Volumes that exist on the disk.</param>
-        /// <param name="accessPaths">Gets the set of access paths (if any) associated with the volume/device. These paths can be used to access the file system on the disk.</param>
         /// <param name="properties">Properties associated with the disk.</param>
         [JsonConstructor]
         public Disk(
             int? index,
             string devicePath = null,
             IEnumerable<DiskVolume> volumes = null,
-            IEnumerable<string> accessPaths = null,
-            IDictionary<string, IConvertible> properties = null) 
-            : base(index, devicePath, accessPaths, properties)
+            IDictionary<string, IConvertible> properties = null)
+            : base(index, devicePath, properties)
         {
             this.Volumes = volumes ?? new List<DiskVolume>();
         }
@@ -37,7 +33,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The partitions that exist on the physical disk.
         /// </summary>
-        [JsonProperty(PropertyName = "volumes", Required = Required.Default, Order = 7)]
+        [JsonProperty(PropertyName = "volumes", Required = Required.Default, Order = 20)]
         public IEnumerable<DiskVolume> Volumes { get; }
 
         /// <summary>

@@ -61,7 +61,14 @@ namespace VirtualClient
             this.ProcessManager = processManager;
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.WaitTime = TimeSpan.FromSeconds(3);
+            this.FormatTimeout = TimeSpan.FromHours(2);
         }
+
+        /// <summary>
+        /// A timeout to apply to the formatting of disks. The operation will timeout if the
+        /// disk is not initialized and formatted within this period of time.
+        /// </summary>
+        public TimeSpan FormatTimeout { get; set; }
 
         /// <summary>
         /// Enables a custom built package of the "lshw" command used to get disk 
@@ -512,7 +519,7 @@ namespace VirtualClient
                             {
                                 try
                                 {
-                                    await process.StartAndWaitAsync(cancellationToken, TimeSpan.FromSeconds(120)).ConfigureAwait(false);
+                                    await process.StartAndWaitAsync(cancellationToken, this.FormatTimeout).ConfigureAwait(false);
                                     this.Logger.LogTraceMessage(process.StandardOutput.ToString());
                                     process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, process.StandardError.ToString());
                                 }

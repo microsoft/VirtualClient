@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -12,18 +13,16 @@ namespace VirtualClient
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Polly;
-    using Serilog.Core;
-    using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Validation;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Common.Contracts;
-    using System.Globalization;
+    using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Validation;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -39,6 +38,12 @@ namespace VirtualClient
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
         public string ExperimentId { get; set; }
+
+        /// <summary>
+        /// Defines the time at which the application will wait for telemetry to be flushed before
+        /// exiting regardless.
+        /// </summary>
+        public TimeSpan FlushWait { get; set; }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -171,7 +176,11 @@ namespace VirtualClient
                 Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", Program.ApplicationContext);
                 Program.LogMessage(logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
 
-                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(2));
+                Program.LogMessage(logger, $"Flush Telemetry", Program.ApplicationContext);
+                DependencyFactory.FlushTelemetry(this.FlushWait);
+                Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
+                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
+
                 SystemManagement.Cleanup();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures

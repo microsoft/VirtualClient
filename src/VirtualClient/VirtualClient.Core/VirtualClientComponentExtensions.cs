@@ -7,14 +7,12 @@ namespace VirtualClient.Core
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.BlobDescriptor;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -23,7 +21,7 @@ namespace VirtualClient.Core
     public static class VirtualClientComponentExtensions
     {
         private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(100 * retries));
+            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(1 * (retries + 1)));
 
         /// <summary>
         /// Upload a single file with defined BlobDescriptor.
@@ -31,8 +29,7 @@ namespace VirtualClient.Core
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="blobDescriptor">The defined blob descriptor</param>
-        /// <param name="filePath">Path to the file.</param>
+        /// <param name="descriptor">The defined blob descriptor</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
@@ -41,8 +38,7 @@ namespace VirtualClient.Core
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            BlobDescriptor blobDescriptor,
-            string filePath,
+            FileBlobDescriptor descriptor,
             CancellationToken cancellationToken,
             bool deleteFile = true,
             IAsyncPolicy retryPolicy = null)
@@ -75,32 +71,30 @@ namespace VirtualClient.Core
             try
             {
                 IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
+
                 bool uploaded = false;
                 await asyncPolicy.ExecuteAsync(async () =>
                 {
                     try
                     {
-                        IFileInfo fileInfo = fileSystem.FileInfo.FromFileName(filePath);
                         // Some processes creat the files up front before writing content to them. These files will
                         // be 0 bytes in size.
-                        if (fileInfo.Length > 0)
+                        if (descriptor.File.Length > 0)
                         {
-                            using (FileStream uploadStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            using (FileStream uploadStream = new FileStream(descriptor.File.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
                             {
                                 if (uploadStream.Length > 0)
                                 {
-                                    string fileName = Path.GetFileName(filePath);
-
                                     EventContext telemetryContext = EventContext.Persisted()
-                                        .AddContext("file", filePath)
-                                        .AddContext("blobContainer", blobDescriptor.ContainerName)
-                                        .AddContext("blobName", blobDescriptor.Name);
+                                        .AddContext("file", descriptor.File.FullName)
+                                        .AddContext("blobContainer", descriptor.ContainerName)
+                                        .AddContext("blobName", descriptor.Name);
 
                                     await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
                                     {
-                                        await blobManager.UploadBlobAsync(blobDescriptor, uploadStream, cancellationToken).ConfigureAwait(false);
+                                        await blobManager.UploadBlobAsync(descriptor, uploadStream, cancellationToken);
                                         uploaded = true;
-                                    }).ConfigureAwait(false);
+                                    });
                                 }
                             }
                         }
@@ -109,14 +103,14 @@ namespace VirtualClient.Core
                     {
                         // The Azure blob upload could fail often. We skip it and we will pick it up on next iteration.
                     }
-                }).ConfigureAwait(false);
+                });
 
                 // Delete ONLY if uploaded successfully. We DO use the cancellation token supplied to the method
                 // here to ensure we cycle around quickly to uploading files while Virtual Client is trying to shut
                 // down to have the best chance of getting them off the system.
                 if (deleteFile && uploaded)
                 {
-                    await fileSystem.File.DeleteAsync(filePath).ConfigureAwait(false);
+                    await fileSystem.File.DeleteAsync(descriptor.File.FullName);
                 }
             }
             catch (Exception exc)
@@ -134,7 +128,7 @@ namespace VirtualClient.Core
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
         /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="filePathBlobDescriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
+        /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
@@ -143,14 +137,14 @@ namespace VirtualClient.Core
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            IEnumerable<KeyValuePair<string, BlobDescriptor>> filePathBlobDescriptors,
+            IEnumerable<FileBlobDescriptor> descriptors,
             CancellationToken cancellationToken,
             bool deleteFile = false,
             IAsyncPolicy retryPolicy = null)
         {
-            foreach (KeyValuePair<string, BlobDescriptor> pair in filePathBlobDescriptors)
+            foreach (FileBlobDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, pair.Value, pair.Key, cancellationToken, deleteFile, retryPolicy).ConfigureAwait(false);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy);
             }
         }
     }

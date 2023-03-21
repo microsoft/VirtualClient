@@ -89,7 +89,7 @@ namespace VirtualClient
                         if (!volume.Properties.TryGetValue(Disk.WindowsDiskProperties.Letter, out volumeIdentifier))
                         {
                             throw new ProcessException(
-                                $"The volume at index '{volume.Index}' does not have eiter a volume index nor label defined. A mount point " +
+                                $"The volume at index '{volume.Index}' does not have either a volume index nor label defined. A mount point " +
                                 $"cannot be assigned to a partition that does not have volume information associated.");
                         }
                     }
@@ -440,7 +440,6 @@ namespace VirtualClient
                                             diskIndex,
                                             $@"\\.\PHYSICALDISK{diskIndex}",
                                             diskVolumes,
-                                            new List<string>() { $@"\\.\PHYSICALDISK{diskIndex}" },
                                             diskProperties);
 
                                         disks = disks.Append(disk);
