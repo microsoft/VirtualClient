@@ -184,7 +184,7 @@ namespace VirtualClient
                 return true;
             };
 
-            Disk disk = new Disk(0, "/dev/sdc", accessPaths: new List<string>());
+            Disk disk = new Disk(0, "/dev/sdc");
 
             await this.diskManager.FormatDiskAsync(disk, expectedPartitionType, expectedFileSystemType, CancellationToken.None)
                 .ConfigureAwait(false);

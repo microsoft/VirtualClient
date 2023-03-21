@@ -11,12 +11,12 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Represents a single I/O workload process in execution.
     /// </summary>
-    public class DiskPerformanceWorkloadProcess
+    public class DiskWorkloadProcess
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DiskPerformanceWorkloadProcess"/> class.
+        /// Initializes a new instance of the <see cref="DiskWorkloadProcess"/> class.
         /// </summary>
-        public DiskPerformanceWorkloadProcess(IProcessProxy process, string testedInstance, params string[] testFiles)
+        public DiskWorkloadProcess(IProcessProxy process, string testedInstance, params string[] testFiles)
         {
             process.ThrowIfNull(nameof(process));
             testedInstance.ThrowIfNull(nameof(testedInstance));

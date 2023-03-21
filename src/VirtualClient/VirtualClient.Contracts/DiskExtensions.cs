@@ -77,10 +77,15 @@ namespace VirtualClient.Contracts
         {
             // Example:
             // /home/azureuser/VirtualClient.1.0.1585.119/linux-x64/vcmnt_dev_sda
+            //
+            // C:\Users\azureuser\VirtualClient.1.0.1585.119\win-x64\vcmt_c
+            // C:\Users\azureuser\VirtualClient.1.0.1585.119\win-x64\vcmt_d
 
             prefix = string.IsNullOrEmpty(prefix) ? $"vcmnt_{prefix}" : $"vcmnt";
-            string relativePath = $"{prefix}_{volume.DevicePath.Replace("/", "_")}";
+            string relativePath = $"{prefix}_{volume.DevicePath.ToLowerInvariant().Replace("/", "_").Replace(":", string.Empty).Replace("\\", string.Empty)}";
+
             relativePath = Regex.Replace(relativePath, @"_+", "_");
+
             string path = Path.Combine(
                 Path.GetDirectoryName(DiskExtensions.DllAssembly.Location),
                 relativePath);
@@ -187,19 +192,19 @@ namespace VirtualClient.Contracts
         /// <returns>Disk size in bytes.</returns>
         public static bool PathEquals(this Disk disk, string path)
         {
-            // trim end slashes, C:/ and C: should match. /dev/sda and /dev/sda/ should match.
+            // trim end slashes, C:\ and C: should match. /dev/sda and /dev/sda/ should match.
             path = path.TrimEnd('/', '\\', ':');
             bool matchDevicePath = string.Equals(disk.DevicePath.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase);
-            bool matchAccessPath = disk.AccessPaths.Any(ap => string.Equals(ap.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase));
             bool volumeMatchDevicePath = false;
             bool volumeMatchAccessPath = false;
+
             if (disk.Volumes.Any())
             {
                 volumeMatchDevicePath = disk.Volumes.Any(v => string.Equals(v.DevicePath.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase));
                 volumeMatchAccessPath = disk.Volumes.Any(v => v.AccessPaths.Any(ap => string.Equals(ap.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return matchDevicePath || matchAccessPath || volumeMatchAccessPath || volumeMatchAccessPath;
+            return matchDevicePath || volumeMatchAccessPath || volumeMatchAccessPath;
         }
     }
 }

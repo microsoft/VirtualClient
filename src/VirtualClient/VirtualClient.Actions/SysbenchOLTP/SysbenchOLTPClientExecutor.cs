@@ -297,26 +297,5 @@ namespace VirtualClient.Actions
             await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(makeInstallCommand, null, this.sysbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
         }
-
-        internal class SysbenchOLTPState : State
-        {
-            public SysbenchOLTPState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
-
-            public bool SysbenchInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.SysbenchInitialized), false);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
-                }
-            }
-        }
     }
 }

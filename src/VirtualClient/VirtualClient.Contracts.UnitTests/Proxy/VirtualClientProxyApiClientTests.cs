@@ -9,14 +9,11 @@ namespace VirtualClient.Contracts.Proxy
     using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Security.Policy;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Net.Http.Headers;
     using Moq;
     using NUnit.Framework;
     using Polly;
@@ -57,7 +54,7 @@ namespace VirtualClient.Contracts.Proxy
                 HttpStatusCode.Unauthorized
             };
 
-            IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(retries => TimeSpan.Zero);
+            IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Get, retries => TimeSpan.Zero);
 
             return VirtualClientProxyApiClientTests.RunDefaultRetryPolicyTests(defaultRetryPolicy, nonTransientErrorCodes);
         }
@@ -75,9 +72,22 @@ namespace VirtualClient.Contracts.Proxy
                 HttpStatusCode.Unauthorized
             };
 
-            IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+            IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Post, retries => TimeSpan.Zero);
 
             return VirtualClientProxyApiClientTests.RunDefaultRetryPolicyTests(defaultRetryPolicy, nonTransientErrorCodes);
+        }
+
+        [Test]
+        [TestCase("https://any.proxy.api.endpoint:5000?chunk-size=1024", 1024)]
+        [TestCase("https://any.proxy.api.endpoint:5000?chunk-size=10240&api-key=123", 10240)]
+        [TestCase("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=102400", 102400)]
+        [TestCase("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=1024000&", 1024000)]
+        public void VirtualClientProxyApiClientUsesTheExpectedChunkSizeWhenDefinedInTheApiBaseUri(string apiUri, int expectedChunkSize)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            Assert.AreEqual(expectedChunkSize, this.apiClient.ChunkSize);
         }
 
         [Test]
@@ -92,13 +102,48 @@ namespace VirtualClient.Contracts.Proxy
         //
         [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob/",
             "/api/blobs/anyfile.log?source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
-        public void VirtualClientApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor(string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
         {
-            string encodin = Encoding.UTF8.WebName;
+            string encoding = Encoding.UTF8.WebName;
             ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
 
             string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor);
             Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
+        [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", null,
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8")]
+        //
+        [TestCase("VirtualClient", "Content", "anyfile.log", "anycontainer", "application/octet-stream", "utf-8", "/any/path/to/blob",
+            "/api/blobs/anyfile.log?api-key=123&chunk-size=10000&source=VirtualClient&storeType=Content&containerName=anycontainer&contentType=application/octet-stream&contentEncoding=utf-8&blobPath=/any/path/to/blob")]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForAGivenDescriptor_WhenQueryStringParametersAreProvidedOnTheBaseUri(
+            string source, string storeType, string blobName, string containerName, string contentType, string contentEncoding, string blobPath, string expectedRoute)
+        {
+            string encoding = Encoding.UTF8.WebName;
+            ProxyBlobDescriptor descriptor = new ProxyBlobDescriptor(source, storeType, blobName, containerName, contentType, contentEncoding, blobPath);
+
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123&chunk-size=10000");
+            string actualRoute = VirtualClientProxyApiClient.CreateBlobApiRoute(descriptor, baseUri.Query);
+            Assert.AreEqual(expectedRoute, actualRoute);
+        }
+
+        [Test]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForTelemetry()
+        {
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000");
+            string actualRoute = VirtualClientProxyApiClient.CreateTelemetryApiRoute();
+
+            Assert.AreEqual("/api/telemetry", actualRoute);
+        }
+
+        [Test]
+        public void VirtualClientProxyApiClientFormsTheCorrectUriRouteForTelemetry_WhenQueryStringParametersAreProvidedOnTheBaseUri()
+        {
+            Uri baseUri = new Uri("https://any.proxy.api.endpoint:5000?api-key=123");
+            string actualRoute = VirtualClientProxyApiClient.CreateTelemetryApiRoute(baseUri.Query);
+
+            Assert.AreEqual("/api/telemetry?api-key=123", actualRoute);
         }
 
         [Test]
@@ -160,65 +205,108 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("https://1.2.3.4:5000?api-key=1234")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&chunk-size=10000")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&chunk-size=10000&any-other=true")]
+        public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobs_WhenQueryStringParametersProvidedWithTheApiUri(string apiUri)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+                {
+                    this.mockRestClient.Setup(client => client.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
+
+                    this.mockRestClient.Setup(client => client.GetAsync(
+                            It.IsAny<Uri>(),
+                            It.IsAny<CancellationToken>(),
+                            It.IsAny<HttpCompletionOption>()))
+                        .Callback<Uri, CancellationToken, HttpCompletionOption>((uri, token, option) =>
+                        {
+                            Assert.AreEqual(uri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor, baseUri.Query));
+                        })
+                        .Returns(Task.FromResult(response));
+
+                    await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    this.mockRestClient.Verify(client => client.GetAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>(), It.IsAny<HttpCompletionOption>()), Times.Once());
+                }
+            }
+        }
+
+        [Test]
         [TestCase(1024, 16, 64)]
         [TestCase(1032, 16, 65)]
         [TestCase(16, 32, 1)]
         [TestCase(99, 7, 15)]
-        public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobsWhenTheBlobHasRangeEnabled(int contentLength, int increment, int expectedInvocations)
+        public async Task VirtualClientProxyApiClientMakesTheExpectedCallToDownloadBlobsWhenTheBlobHasRangeEnabled_WhenDownloadingInChunks(int contentLength, int increment, int expectedInvocations)
         {
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"));
+            this.apiClient.ChunkSize = increment;
+
             ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
-            using Stream stream = new InMemoryStream();
-            using HttpResponseMessage headResponse = new HttpResponseMessage(HttpStatusCode.OK);
-            headResponse.Headers.Add("Accept-Ranges", "bytes");
-            headResponse.Content.Headers.Add("Content-Length", contentLength.ToString());
 
-            byte[] expectedBytes = new byte[contentLength];
-            Random.Shared.NextBytes(expectedBytes);
-
-            this.mockRestClient.Setup(rc => rc.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
-                .Callback<Uri, CancellationToken>((actualUri, cancellationToken) =>
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage headResponse = new HttpResponseMessage(HttpStatusCode.OK))
                 {
-                    Assert.AreEqual(actualUri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
-                }).ReturnsAsync(headResponse);
+                    headResponse.Headers.Add("Accept-Ranges", "bytes");
+                    headResponse.Content.Headers.Add("Content-Length", contentLength.ToString());
 
-            int expectedFrom = 0;
-            int expectedTo = increment;
-            this.mockRestClient.Setup(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
-                .Callback<HttpRequestMessage, CancellationToken>((request, cancellationToken) =>
-                {
-                    Uri actualUri = request.RequestUri;
-                    Assert.AreEqual(actualUri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
-                    Assert.AreEqual(HttpMethod.Get, request.Method);
+                    byte[] expectedBytes = new byte[contentLength];
+                    Random.Shared.NextBytes(expectedBytes);
 
-                    RangeHeaderValue range = request.Headers.Range;
-                    Assert.IsNotNull(range);
-                    Assert.AreEqual(1, range.Ranges.Count);
+                    this.mockRestClient.Setup(rc => rc.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                        .Callback<Uri, CancellationToken>((actualUri, cancellationToken) =>
+                        {
+                            Assert.AreEqual(actualUri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
+                        }).ReturnsAsync(headResponse);
 
-                    RangeItemHeaderValue rangeItem = range.Ranges.First();
-                    Assert.AreEqual(expectedFrom, rangeItem.From);
-                    Assert.AreEqual(expectedTo, rangeItem.To);
-                })
-                .ReturnsAsync(() =>
-                {
-                    HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
-                    {
-                        Content = new ByteArrayContent(expectedBytes[expectedFrom..Math.Min(expectedTo, contentLength)])
-                    };
+                    int expectedFrom = 0;
+                    int expectedTo = increment;
+                    this.mockRestClient.Setup(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
+                        .Callback<HttpRequestMessage, CancellationToken>((request, cancellationToken) =>
+                        {
+                            Uri actualUri = request.RequestUri;
+                            Assert.AreEqual(actualUri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
+                            Assert.AreEqual(HttpMethod.Get, request.Method);
 
-                    expectedFrom = expectedTo;
-                    expectedTo = expectedTo + increment;
-                    return response;
-                });
+                            RangeHeaderValue range = request.Headers.Range;
+                            Assert.IsNotNull(range);
+                            Assert.AreEqual(1, range.Ranges.Count);
 
-            this.apiClient.PublicBlobChunkSize = increment;
-            await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None);
+                            RangeItemHeaderValue rangeItem = range.Ranges.First();
+                            Assert.AreEqual(expectedFrom, rangeItem.From);
+                            Assert.AreEqual(expectedTo, rangeItem.To);
+                        })
+                        .ReturnsAsync(() =>
+                        {
+                            HttpResponseMessage response = new HttpResponseMessage(HttpStatusCode.OK)
+                            {
+                                Content = new ByteArrayContent(expectedBytes[expectedFrom..Math.Min(expectedTo, contentLength)])
+                            };
 
-            this.mockRestClient.Verify(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(expectedInvocations));
+                            expectedFrom = expectedTo;
+                            expectedTo = expectedTo + increment;
+                            return response;
+                        });
 
-            byte[] actualBytes = new byte[stream.Length];
-            await stream.ReadAsync(actualBytes, CancellationToken.None);
+                    await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None);
 
-            CollectionAssert.AreEqual(expectedBytes, actualBytes);
+                    this.mockRestClient.Verify(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(expectedInvocations));
+
+                    byte[] actualBytes = new byte[stream.Length];
+                    await stream.ReadAsync(actualBytes, CancellationToken.None);
+
+                    CollectionAssert.AreEqual(expectedBytes, actualBytes);
+                }
+            }
         }
 
         [Test]
@@ -241,11 +329,80 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Get, retries => TimeSpan.Zero);
 
                     await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None, defaultRetryPolicy);
 
                     Assert.IsTrue(attempts == expectedRetries + 1);
+                }
+            }
+        }
+
+        [Test]
+        public async Task VirtualClientProxyApiClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToDownloadBlobs_WhenDownloadingInChunks()
+        {
+            int chunkSize = 16;
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, new Uri("https://1.2.3.4:5000"));
+            this.apiClient.ChunkSize = chunkSize;
+
+            ProxyBlobDescriptor descriptor = VirtualClientProxyApiClientTests.GetBlobDescriptor();
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage headResponse = new HttpResponseMessage(HttpStatusCode.OK))
+                {
+                    int contentLength = 1024;
+                    headResponse.Headers.Add("Accept-Ranges", "bytes");
+                    headResponse.Content.Headers.Add("Content-Length", contentLength.ToString());
+
+                    byte[] expectedBytes = new byte[contentLength];
+                    Random.Shared.NextBytes(expectedBytes);
+
+                    // First call to get the HEAD response will indicate if the server supports downloading
+                    // content/packages in chunks or ranges.
+                    this.mockRestClient.Setup(rc => rc.HeadAsync(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+                        .Callback<Uri, CancellationToken>((actualUri, cancellationToken) =>
+                        {
+                            Assert.AreEqual(actualUri.PathAndQuery, VirtualClientProxyApiClientTests.GetExpectedBlobPathAndQuery(descriptor));
+                        }).ReturnsAsync(headResponse);
+
+                    int requestCount = 0;
+                    int bytesDownloaded = 0;
+                    this.mockRestClient.Setup(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(() =>
+                        {
+                            // Every second call returns a success response.
+                            // e.g.
+                            // Status = RequestTimeout
+                            // Status = OK
+                            // Status = RequestTimeout
+                            // Status = OK
+                            requestCount++;
+                            if (requestCount % 2 != 0)
+                            {
+                                return new HttpResponseMessage(HttpStatusCode.RequestTimeout);
+                            }
+                            else
+                            {
+                                IEnumerable<byte> nextBytes = expectedBytes.Skip(bytesDownloaded).Take(chunkSize);
+                                bytesDownloaded += chunkSize;
+
+                                return new HttpResponseMessage(HttpStatusCode.OK)
+                                {
+                                    Content = new ByteArrayContent(nextBytes.ToArray())
+                                };
+                            }
+                        });
+
+                    await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None, Policy.HandleResult<HttpResponseMessage>(response => true).RetryAsync(1));
+
+                    // The content length is 1024 bytes and we are downloading 16 bytes at a time. It will take thus 64 requests to download
+                    // everything. Given a retry on each request, we will make exactly 128 requests.
+                    this.mockRestClient.Verify(rc => rc.SendAsync(It.IsAny<HttpRequestMessage>(), It.IsAny<CancellationToken>()), Times.Exactly(128));
+
+                    byte[] actualBytes = new byte[stream.Length];
+                    await stream.ReadAsync(actualBytes, CancellationToken.None);
+
+                    CollectionAssert.AreEqual(expectedBytes, actualBytes);
                 }
             }
         }
@@ -275,7 +432,7 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpGetRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Get, retries => TimeSpan.Zero);
 
                     await this.apiClient.DownloadBlobAsync(descriptor, stream, CancellationToken.None, defaultRetryPolicy);
 
@@ -331,7 +488,7 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Post, retries => TimeSpan.Zero);
 
                     await this.apiClient.UploadBlobAsync(descriptor, stream, CancellationToken.None, defaultRetryPolicy)
                         .ConfigureAwait(false);
@@ -365,7 +522,7 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Post, retries => TimeSpan.Zero);
 
                     await this.apiClient.UploadBlobAsync(descriptor, stream, CancellationToken.None, defaultRetryPolicy)
                         .ConfigureAwait(false);
@@ -405,6 +562,41 @@ namespace VirtualClient.Contracts.Proxy
         }
 
         [Test]
+        [TestCase("https://1.2.3.4:5000?api-key=1234")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&")]
+        [TestCase("https://1.2.3.4:5000?api-key=1234&any-other=true")]
+        public async Task VirtualClientApiProxyClientMakesTheExpectedCallToUploadTelemetry_WhenQueryStringParametersProvidedWithTheApiUri(string apiUri)
+        {
+            Uri baseUri = new Uri(apiUri);
+            this.apiClient = new TestProxyClient(this.mockRestClient.Object, baseUri);
+
+            bool expectedCallMade = false;
+            using (Stream stream = new InMemoryStream())
+            {
+                using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+                {
+                    this.mockRestClient.Setup(client => client.PostAsync(
+                            It.IsAny<Uri>(),
+                            It.IsAny<HttpContent>(),
+                            It.IsAny<CancellationToken>()))
+                        .Callback<Uri, HttpContent, CancellationToken>((uri, content, token) =>
+                        {
+                            Assert.IsTrue(uri.PathAndQuery.Equals($"/api/telemetry{baseUri.Query.TrimEnd('&')}"));
+                            Assert.IsNotNull(content);
+                            Assert.DoesNotThrowAsync(() => content.ReadAsJsonAsync<IEnumerable<ProxyTelemetryMessage>>());
+
+                            expectedCallMade = true;
+                        })
+                        .Returns(Task.FromResult(response));
+
+                    await this.apiClient.UploadTelemetryAsync(this.fixture.CreateMany<ProxyTelemetryMessage>(), CancellationToken.None).ConfigureAwait(false);
+
+                    Assert.IsTrue(expectedCallMade);
+                }
+            }
+        }
+
+        [Test]
         public async Task VirtualClientApiProxyClientAppliesTheExpectedDefaultRetryPolicyOnFailuresToUploadTelemetry()
         {
             using (Stream stream = new InMemoryStream())
@@ -422,7 +614,7 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Post, retries => TimeSpan.Zero);
 
                     await this.apiClient.UploadTelemetryAsync(this.fixture.CreateMany<ProxyTelemetryMessage>(), CancellationToken.None, defaultRetryPolicy).ConfigureAwait(false);
 
@@ -454,7 +646,7 @@ namespace VirtualClient.Contracts.Proxy
                         .Returns(Task.FromResult(response));
 
                     // Apply the same default policy used by the client (differing only in the retry wait time).
-                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+                    IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientProxyApiClient.GetDefaultRetryPolicy(HttpMethod.Post, retries => TimeSpan.Zero);
 
                     await this.apiClient.UploadTelemetryAsync(this.fixture.CreateMany<ProxyTelemetryMessage>(), CancellationToken.None, defaultRetryPolicy).ConfigureAwait(false);
 
@@ -568,7 +760,7 @@ namespace VirtualClient.Contracts.Proxy
                 withPath ? "/path/to/blob" : null);
         }
 
-        private static string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor)
+        private static string GetExpectedBlobPathAndQuery(ProxyBlobDescriptor descriptor, string queryString = null)
         {
             string expectedSource = descriptor.Source;
             string expectedStoreType = descriptor.StoreType;
@@ -578,29 +770,27 @@ namespace VirtualClient.Contracts.Proxy
             string expectedContentEncoding = descriptor.ContentEncoding;
             string expectedBlobPath = descriptor.BlobPath;
 
-            return $"/api/blobs/{expectedBlobName}?source={expectedSource}" +
+            string fullQueryString =
+                $"source={expectedSource}" +
                 $"&storeType={expectedStoreType}" +
                 $"&containerName={expectedContainerName}" +
                 $"&contentType={expectedContentType}" +
                 $"&contentEncoding={expectedContentEncoding}" +
                 $"{(!string.IsNullOrEmpty(expectedBlobPath) ? $"&blobPath={expectedBlobPath}" : string.Empty)}";
+
+            if (!string.IsNullOrWhiteSpace(queryString))
+            {
+                fullQueryString = $"{queryString.Trim('?', '&', '/')}&{fullQueryString}";
+            }
+
+            return $"/api/blobs/{expectedBlobName}?{fullQueryString}";
         }
 
         private class TestProxyClient : VirtualClientProxyApiClient
         {
-            public int PublicBlobChunkSize = 1024;
-
             public TestProxyClient(IRestClient restClient, Uri baseUri) 
                 : base(restClient, baseUri)
             {
-            }
-
-            protected override int BlobChunkSize 
-            { 
-                get 
-                {
-                    return this.PublicBlobChunkSize;
-                } 
             }
         }
     }

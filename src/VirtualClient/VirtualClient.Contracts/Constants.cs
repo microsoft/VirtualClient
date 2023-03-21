@@ -72,6 +72,22 @@ namespace VirtualClient.Contracts
     }
 
     /// <summary>
+    /// Common HTTP content types.
+    /// </summary>
+    public static class HttpContentType
+    {
+        /// <summary>
+        /// text/plain
+        /// </summary>
+        public const string PlainText = "text/plain";
+
+        /// <summary>
+        /// application/octet-stream
+        /// </summary>
+        public const string Binary = "application/octet-stream";
+    }
+
+    /// <summary>
     /// Common profile metadata property names.
     /// </summary>
     public class ProfileMetadata

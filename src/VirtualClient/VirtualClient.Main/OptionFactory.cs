@@ -217,6 +217,29 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the duration/timeout to wait for telemetry to be flushed.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateFlushWaitOption(bool required = true, object defaultValue = null)
+        {
+            Option<TimeSpan> option = new Option<TimeSpan>(
+                new string[] { "--flush-wait", "--fw" },
+                new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
+            {
+                Name = "FlushWait",
+                Description = "An explicit timeout to apply before exiting to allow all telemetry to be flushed (i.e. to prevent loss). " +
+                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). ",
+                ArgumentHelpName = "timespan",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// An option to set IP address of a Virtual Client API to target/monitor.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -616,7 +639,7 @@ namespace VirtualClient
             {
                 Name = "Timeout",
                 Description = "An explicit timeout to apply to profile operations (e.g. action/workload execution timeout). " +
-                    "This may be a valid timespan (e.g. 01.00:00:00) or simple numeric value representing total minutes (e.g. 1440). " +
+                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). " +
                     "To set the application to timeout only after a current running action completes, include a 'deterministic' instruction (e.g. 1440,deterministic). " +
                     "To set the application to timeout only after all profile actions complete, include a 'deterministic*' instruction (e.g. 1440,deterministic*). " +
                     "This option cannot be used with a profile iterations option.",
@@ -738,6 +761,38 @@ namespace VirtualClient
             }
 
             return store;
+        }
+
+        private static TimeSpan ParseTimeSpan(ArgumentResult parsedResult)
+        {
+            // Example Format:
+            // --flush-wait=00:10:00
+            // --flush-wait=60
+
+            string argument = parsedResult.Tokens.First().Value;
+            TimeSpan timeout = TimeSpan.Zero;
+
+            try
+            {
+                if (int.TryParse(argument, out int minutes))
+                {
+                    // The value is an integer representing minutes.
+                    timeout = TimeSpan.FromMinutes(minutes);
+                }
+                else
+                {
+                    // The value is a timespan format: 01.00:00:00.
+                    timeout = TimeSpan.Parse(argument);
+                }
+            }
+            catch (FormatException)
+            {
+                throw new ArgumentException(
+                    $"Invalid timespan value provided. The parameter must be " +
+                    $"either a valid timespan or numeric value (e.g. 01.00:00:00 or 1440).");
+            }
+
+            return timeout;
         }
 
         private static ProfileTiming ParseProfileIterations(ArgumentResult parsedResult)

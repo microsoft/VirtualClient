@@ -71,6 +71,8 @@ namespace VirtualClient
         [TestCase("--experimentid", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--experiment", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
         [TestCase("--e", "0B692DEB-411E-4AC1-80D5-AF539AE1D6B2")]
+        [TestCase("--flush-wait", "00:10:00")]
+        [TestCase("--fw", "00:10:00")]
         [TestCase("--i", "3")]
         [TestCase("--iterations", "3")]
         [TestCase("--layoutPath", "C:\\any\\path\\to\\layout.json")]
