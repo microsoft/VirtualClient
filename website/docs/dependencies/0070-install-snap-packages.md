@@ -25,14 +25,16 @@ In this example, VC installs the snapd service and a few packages using both the
 
 For SUSE distributions, confirm that the version in the zypper repository link matches the specific distribution that is being used on the VM (ie. Leap 15.4 vs. Leap 15.2 vs. Tumbleweed). More info on installing snapd on SUSE can be found [in the offical snap documentation](https://snapcraft.io/docs/installing-snap-on-opensuse).
 
+For CentOS7 distributions, the epel-release repository must be installed before the snapd service. More info on that can be found [here](https://snapcraft.io/install/snapd/centos).
+For RHEL7 distributions, the latest repository name can be found [here](https://snapcraft.io/install/snapd/rhel).
+
 ```json
 {
     "Type": "LinuxPackageInstallation",
     "Parameters": {
         "Packages-Apt": "snapd",
         "Packages-Dnf": "snapd",
-        "Repositories-Yum": "ngompa/snapcore-el7",
-        "Packages-Yum": "snapd",
+        "Packages-Yum": "epel-release,snapd",
         "Repositories-Zypper": "https://download.opensuse.org/repositories/system:/snappy/openSUSE_Leap_15.4 snappy",
         "Packages-Zypper": "snapd"
     }
