@@ -16,7 +16,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for downloading and installing Yum packages
+    /// Provides functionality for downloading and installing snap packages
     /// on the system.
     /// </summary>
     public class SnapPackageInstallation : VirtualClientComponent
@@ -152,6 +152,8 @@ namespace VirtualClient.Dependencies
         {
             var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
                 .ConfigureAwait(false);
+
+            // for ubuntu, debian, centos8, rhel8, etc. no socket enabling needed
 
             switch (linuxDistributionInfo.LinuxDistribution)
             {

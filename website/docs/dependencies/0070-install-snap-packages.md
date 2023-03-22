@@ -16,13 +16,14 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
-| Packages      | Yes          | Comma delimitered list of packages to be installed via snap.                                              |
+| Packages      | Yes          | Comma-delimited list of packages to be installed via snap.                                              |
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line).                                                      |
+| AllowUpgrades | No          | True/False. If true, previously installed packages will be upgraded during the process of installation.  If false, the package will be skipped.        |
 
 ## Examples
 In this example, VC installs the snapd service and a few packages using both the SnapPackageInstallation and LinuxPackageInstallation dependencies.
 
-For SUSE distributions, confirm that the version in the zypper repository link matches the one that is being used (ie. Leap 15.4 vs. Leap 15.2 vs. Tumbleweed).
+For SUSE distributions, confirm that the version in the zypper repository link matches the one that is being used (ie. Leap 15.4 vs. Leap 15.2 vs. Tumbleweed). More info on installing snapd on SUSE can be found [in the offical snap documentation](https://snapcraft.io/docs/installing-snap-on-opensuse).
 
 ```json
 {
