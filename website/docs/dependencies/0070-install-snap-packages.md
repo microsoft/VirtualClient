@@ -23,7 +23,7 @@ The following section describes the parameters used by the individual component 
 ## Examples
 In this example, VC installs the snapd service and a few packages using both the SnapPackageInstallation and LinuxPackageInstallation dependencies.
 
-For SUSE distributions, confirm that the version in the zypper repository link matches the one that is being used (ie. Leap 15.4 vs. Leap 15.2 vs. Tumbleweed). More info on installing snapd on SUSE can be found [in the offical snap documentation](https://snapcraft.io/docs/installing-snap-on-opensuse).
+For SUSE distributions, confirm that the version in the zypper repository link matches the specific distribution that is being used on the VM (ie. Leap 15.4 vs. Leap 15.2 vs. Tumbleweed). More info on installing snapd on SUSE can be found [in the offical snap documentation](https://snapcraft.io/docs/installing-snap-on-opensuse).
 
 ```json
 {
