@@ -40,13 +40,8 @@ namespace VirtualClient.Monitors
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
-                    {
-                        await this.ListPciAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                    }
-
-                    // skipping if running ARM64
+                    // Do nothing on Windows for now. The binary we are using have error:
+                    // lspci: Cannot find any working access method.
                     break;
 
                 case PlatformID.Unix:
@@ -75,17 +70,18 @@ namespace VirtualClient.Monitors
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             IFileSystem fileSystem = systemManagement.FileSystem;
 
-            string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
-            string commandArguments = "-vvv";
-
             await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
                 .ConfigureAwait(false);
 
             while (!cancellationToken.IsCancellationRequested)
             {
+                string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
+                string commandArguments = "-vvv";
+
                 try
                 {
                     string workingDir = Environment.CurrentDirectory;
+
                     if (this.Platform == PlatformID.Win32NT)
                     {
                         DependencyPath lspciPackage = await systemManagement.PackageManager.GetPackageAsync(LspciMonitor.Lspci, CancellationToken.None).ConfigureAwait(false);
