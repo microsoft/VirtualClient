@@ -21,7 +21,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.LzbenchExecutor;
 
     /// <summary>
     /// The HPL(High Performance Linpack) workload executor.
@@ -85,7 +84,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        /// <summary>
+        /*/// <summary>
         /// The name of the package where the ARMPerformanceLibraries package is downloaded.
         /// </summary>
         public string ARMPerformanceLibrariesPackageName
@@ -95,7 +94,7 @@ namespace VirtualClient.Actions
                 this.Parameters.TryGetValue(nameof(HPLinpackExecutor.ARMPerformanceLibrariesPackageName), out IConvertible armperformancelibraries);
                 return armperformancelibraries?.ToString();
             }
-        }
+        }*/
 
         /// <summary>
         /// Version of HPL being used.
@@ -143,7 +142,7 @@ namespace VirtualClient.Actions
         {
             this.ThrowIfPlatformIsNotSupported();
             this.coreCount = this.systemManagement.GetSystemCoreCount();
-            if (this.CpuArchitecture == Architecture.Arm64)
+            /*if (this.CpuArchitecture == Architecture.Arm64)
             {
                 DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
                 .ConfigureAwait(false);
@@ -151,7 +150,7 @@ namespace VirtualClient.Actions
                 await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
 
                 await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, true, telemetryContext, cancellationToken);
-            }
+            }*/
 
             HPLinpackState state = await this.stateManager.GetStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", cancellationToken)
                 ?? new HPLinpackState();
@@ -161,7 +160,6 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("wget", $"http://www.netlib.org/benchmark/hpl/hpl-{this.Version}.tar.gz -O {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("tar", $"-zxvf {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
                 state.HPLInitialized = true;
-
             }
 
             this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.Version}");
@@ -193,9 +191,11 @@ namespace VirtualClient.Actions
             this.SetParameters();
             await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            string results;
-            if (this.CpuArchitecture == Architecture.X64)
+            string results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            /*if (this.CpuArchitecture == Architecture.X64)
             {
+                // works for both x64 and arm64 machines. perfect.Use hyperthreading which means use "--use-hwthread-cpus" parameter while running mpirun.
                 results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
             }
@@ -203,7 +203,7 @@ namespace VirtualClient.Actions
             {
                 results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
-            }
+            }*/
 
             DateTime endTime = DateTime.UtcNow;
             this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
@@ -250,9 +250,11 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"TOPdir *= *[^\n]*", $"TOPdir = {this.HPLDirectory}", cancellationToken);
 
+            string architecture;
             if (this.CpuArchitecture == Architecture.Arm64)
             {
-                await this.fileSystem.File.ReplaceInFileAsync(
+                architecture = "aarch64";
+                /*await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"LAdir *=", "LAdir = $(ARMPL_DIR)", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
@@ -262,22 +264,24 @@ namespace VirtualClient.Actions
                         makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"CCFLAGS *= *[^\n]*", $"CCFLAGS = {this.CCFlags}", cancellationToken);
+                        makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);*/
             }
-            else if (this.CpuArchitecture == Architecture.X64)
+            else
             {
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"MPinc *=", $"MPinc =  -I/usr/lib/x86_64-linux-gnu/openmpi", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"MPlib *=", "MPlib =  /usr/lib/x86_64-linux-gnu/openmpi/lib/libmpi.so", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LAinc *=", "LAinc = -I/usr/lib/x86_64-linux-gnu", cancellationToken);
+                architecture = "x86_64";
             }
+
+            await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"MPinc *=", $"MPinc =  -I/usr/lib/{architecture}-linux-gnu/openmpi", cancellationToken);
+
+            await this.fileSystem.File.ReplaceInFileAsync(
+                    makeFilePath, @"MPlib *=", $"MPlib =  /usr/lib/{architecture}-linux-gnu/openmpi/lib/libmpi.so", cancellationToken);
+
+            await this.fileSystem.File.ReplaceInFileAsync(
+                    makeFilePath, @"LAinc *=", $"LAinc = -I/usr/lib/{architecture}-linux-gnu", cancellationToken);
+
+            await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"CCFLAGS *= *[^\n]*", $"CCFLAGS = $(HPL_DEFS) {this.CCFlags}", cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken); 

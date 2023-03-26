@@ -8,7 +8,10 @@
   "Parameters": {
     "Username": "null",
     "CompilerName": "gcc",
-    "CompilerVersion": "11"
+    "CompilerVersion": "11",
+    "ProblemSizeN": null,
+    "BlockSizeNB": "256",
+    "CCFLAGS": "-march=native"
   },
   "Actions": [
     {
@@ -16,12 +19,11 @@
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "Username": "$.Parameters.Username",
+        "ProblemSizeN": "$.Parameters.ProblemSizeN",
+        "BlockSizeNB": "$.Parameters.BlockSizeNB",
+        "CCFLAGS": "$.Parameters.CCFLAGS",
         "PackageName": "HPL",
-        "ProblemSizeN": null,
-        "BlockSizeNB": "256",
-        "CCFLAGS": "$(HPL_DEFS) -Ofast -march=armv8-a",
-        "Version": "2.3",
-        "ARMPerformanceLibrariesPackageName": "arm_performance_libraries"
+        "Version": "2.3"
       }
     }
   ],
@@ -39,16 +41,6 @@
       "Parameters": {
         "CompilerName": "$.Parameters.CompilerName",
         "CompilerVersion": "$.Parameters.CompilerVersion"
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallARMPerformanceLibrariesPackage",
-        "BlobContainer": "packages",
-        "BlobName": "armperformancelibraries.zip",
-        "PackageName": "arm_performance_libraries",
-        "Extract": true
       }
     }
   ]
