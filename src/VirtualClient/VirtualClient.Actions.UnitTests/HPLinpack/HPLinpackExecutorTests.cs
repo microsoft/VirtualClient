@@ -54,8 +54,7 @@ namespace VirtualClient.Actions
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                string workloadExpectedPath = this.fixture.PlatformSpecifics.Combine(
-                    this.fixture.PlatformSpecifics.GetPackagePath(), $"hpl-{this.fixture.Parameters["Version"]}");
+                string workloadExpectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platform, architecture).Path;
 
                 Assert.AreEqual(workloadExpectedPath, executor.GetHPLDirectory);
             }
@@ -63,46 +62,8 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuArmPlatform(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultMockBehavior(platform, architecture);
-
-            using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
-            {
-                List<string> expectedCommands = new List<string>()
-                {
-                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path,"arm-performance-libraries_22.1_Ubuntu-20.04.sh")}",
-                    $"sudo ./arm-performance-libraries_22.1_Ubuntu-20.04.sh -a",
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["Version"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
-                    $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
-                    $"sudo bash -c \"source make_generic\"",
-                    $"mv Make.UNKNOWN Make.Linux_GCC",
-                    $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
-                    $"make arch=Linux_GCC",
-                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun -np 16 ./xhpl"
-                };
-
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                {
-                    expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun -np 16 ./xhpl")
-                    {
-                        this.fixture.Process.StandardOutput.Append(this.rawString);
-                    }
-
-                    return this.fixture.Process;
-                };
-
-                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                Assert.AreEqual(expectedCommands.Count, 0);
-            }
-        }
-
-        [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuX64Platform(PlatformID platform, Architecture architecture)
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuPlatform(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
@@ -110,8 +71,6 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.fixture.Parameters["Version"]}.tar.gz -O {this.fixture.Parameters["PackageName"]}.tar.gz",
-                    $"tar -zxvf {this.fixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
@@ -126,6 +85,7 @@ namespace VirtualClient.Actions
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
                     }
+
                     return this.fixture.Process;
                 };
 

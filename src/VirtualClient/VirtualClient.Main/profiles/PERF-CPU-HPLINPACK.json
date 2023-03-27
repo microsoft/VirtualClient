@@ -22,8 +22,7 @@
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "CCFLAGS": "$.Parameters.CCFLAGS",
-        "PackageName": "HPL",
-        "Version": "2.3"
+        "PackageName": "hplinpack"
       }
     }
   ],
@@ -41,6 +40,16 @@
       "Parameters": {
         "CompilerName": "$.Parameters.CompilerName",
         "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallHPLinpackPackage",
+        "BlobContainer": "packages",
+        "BlobName": "hpl.2.3.zip",
+        "PackageName": "hplinpack",
+        "Extract": true
       }
     }
   ]

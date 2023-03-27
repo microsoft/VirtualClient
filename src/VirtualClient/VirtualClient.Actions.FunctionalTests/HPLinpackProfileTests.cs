@@ -58,7 +58,7 @@ namespace VirtualClient.Actions
 
                 // Workload dependency package expectations
                 // The workload dependency package should have been installed at this point.
-                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "arm_performance_libraries");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "hplinpack");
             }
         }
 
@@ -71,19 +71,17 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.X64);
-            this.mockFixture.Parameters.Add("PackageName", "HPL");
-            this.mockFixture.Parameters.Add("Version", "2.3");
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
             {
-                @"setup/Make.Linux_GCC",
-                @"Make.Linux_GCC",
-                @"bin/Linux_GCC/HPL.dat"
+                @"linux-x64/setup/Make.Linux_GCC",
+                @"linux-x64/Make.Linux_GCC",
+                @"linux-x64/bin/Linux_GCC/HPL.dat"
             };
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
-            this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
+            this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
@@ -102,11 +100,11 @@ namespace VirtualClient.Actions
                 {
                     expectedFiles = new string[]
                     {
-                        @"setup/Make.Linux_GCC",
-                        @"Make.Linux_GCC",
+                        @"linux-x64/setup/Make.Linux_GCC",
+                        @"linux-x64/Make.Linux_GCC",
                     };
 
-                    this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
+                    this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
                 }
 
                 return process;
@@ -129,20 +127,18 @@ namespace VirtualClient.Actions
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.Arm64);
-            this.mockFixture.Parameters.Add("PackageName", "HPL");
-            this.mockFixture.Parameters.Add("Version", "2.3");
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
             {
-                @"setup/Make.Linux_GCC",
-                @"Make.Linux_GCC",
-                @"bin/Linux_GCC/HPL.dat"
+                @"linux-arm64/setup/Make.Linux_GCC",
+                @"linux-arm64/Make.Linux_GCC",
+                @"linux-arm64/bin/Linux_GCC/HPL.dat"
             };
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
-            this.mockFixture.SetupWorkloadPackage("armperformancelibraries", expectedFiles: @"arm-performance-libraries_22.1_Ubuntu-20.04.sh");
-            this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
+
+            this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
@@ -161,11 +157,11 @@ namespace VirtualClient.Actions
                 {
                     expectedFiles = new string[]
                     {
-                        @"setup/Make.Linux_GCC",
-                        @"Make.Linux_GCC",
+                        @"linux-arm64/setup/Make.Linux_GCC",
+                        @"linux-arm64/Make.Linux_GCC",
                     };
 
-                    this.mockFixture.SetupWorkloadPackage("hpl-2.3", expectedFiles: expectedFiles);
+                    this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
                 }
 
                 return process;
@@ -181,29 +177,12 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands()
         {
-            if (this.mockFixture.CpuArchitecture == Architecture.X64)
-            {
-                return new List<string>
+            return new List<string>
                 {
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["Version"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
-                    $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
                     $"sudo runuser -u null -- mpirun --use-hwthread-cpus -np 16 ./xhpl"
                 };
-            }
-            else
-            {
-                return new List<string>
-                {
-                    $"sudo ./arm-performance-libraries_22.1_Ubuntu-20.04.sh -a",
-                    $"wget http://www.netlib.org/benchmark/hpl/hpl-{this.mockFixture.Parameters["Version"]}.tar.gz -O {this.mockFixture.Parameters["PackageName"]}.tar.gz",
-                    $"tar -zxvf {this.mockFixture.Parameters["PackageName"]}.tar.gz",
-                    $"sudo bash -c \"source make_generic\"",
-                    $"make arch=Linux_GCC",
-                    $"sudo runuser -u null -- mpirun -np 16 ./xhpl"
-                };
-            }
         }
     }
 }

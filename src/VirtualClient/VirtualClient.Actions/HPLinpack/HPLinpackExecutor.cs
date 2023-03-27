@@ -5,17 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -84,18 +78,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        /*/// <summary>
-        /// The name of the package where the ARMPerformanceLibraries package is downloaded.
-        /// </summary>
-        public string ARMPerformanceLibrariesPackageName
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.ARMPerformanceLibrariesPackageName), out IConvertible armperformancelibraries);
-                return armperformancelibraries?.ToString();
-            }
-        }*/
-
         /// <summary>
         /// Version of HPL being used.
         /// </summary>
@@ -142,28 +124,11 @@ namespace VirtualClient.Actions
         {
             this.ThrowIfPlatformIsNotSupported();
             this.coreCount = this.systemManagement.GetSystemCoreCount();
-            /*if (this.CpuArchitecture == Architecture.Arm64)
-            {
-                DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
-                .ConfigureAwait(false);
-                string armPackageLibrariesPath = armPerformanceLibrariesPackage.Path;
-                await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, true, telemetryContext, cancellationToken);
-            }*/
+            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                                                    .ConfigureAwait(false);
 
-            HPLinpackState state = await this.stateManager.GetStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", cancellationToken)
-                ?? new HPLinpackState();
-
-            if (!state.HPLInitialized)
-            {
-                await this.ExecuteCommandAsync("wget", $"http://www.netlib.org/benchmark/hpl/hpl-{this.Version}.tar.gz -O {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("tar", $"-zxvf {this.PackageName}.tar.gz", this.PlatformSpecifics.PackagesDirectory, false, telemetryContext, cancellationToken);
-                state.HPLInitialized = true;
-            }
-
-            this.HPLDirectory = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, $"hpl-{this.Version}");
-            await this.stateManager.SaveStateAsync<HPLinpackState>($"{nameof(HPLinpackState)}", state, cancellationToken);
+            this.HPLDirectory = workloadPackage.Path;
 
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName))
                 .ConfigureAwait(false);
@@ -193,18 +158,7 @@ namespace VirtualClient.Actions
 
             string results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
-            /*if (this.CpuArchitecture == Architecture.X64)
-            {
-                // works for both x64 and arm64 machines. perfect.Use hyperthreading which means use "--use-hwthread-cpus" parameter while running mpirun.
-                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-            }
-            else
-            {
-                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-            }*/
-
+            
             DateTime endTime = DateTime.UtcNow;
             this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
         }
@@ -254,17 +208,6 @@ namespace VirtualClient.Actions
             if (this.CpuArchitecture == Architecture.Arm64)
             {
                 architecture = "aarch64";
-                /*await this.fileSystem.File.ReplaceInFileAsync(
-                    makeFilePath, @"LAdir *=", "LAdir = $(ARMPL_DIR)", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);*/
             }
             else
             {
