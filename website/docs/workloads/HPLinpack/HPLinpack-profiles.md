@@ -21,11 +21,6 @@ This profile is designed to identify general/broad regressions when compared aga
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
-  * Arm Performance Libraries provides optimized standard core math libraries for high-performance computing applications on Arm processors. It has BLAS(Basic Linear Algebraic Subroutines) implementation and math libraries specific to ARM processors to run HPL.
-  To achieve the best performance with HPL, it is important to optimize the code for the specific hardware architecture being used. This is where ARM Performance Libraries can be helpful. ARM Performance Libraries provide highly optimized routines for linear algebra operations, including matrix multiplication, which are used by HPL on Arm based machines.
-
-    * [Arm Performance Libraries](https://developer.arm.com/downloads/-/arm-performance-libraries)
-    * [Performance analysis of HPLinpack with different BLAS implementations](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/profiling-and-tuning-linpack-step-step-guide)
   * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
@@ -41,6 +36,7 @@ This profile is designed to identify general/broad regressions when compared aga
   | CompilerVersion | Version of compiler | 11 |
   |   ProblemSizeN       |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of processors* 10000 (This value is machine dependent) |
   |   BlockSizeNB       |  The partitioning blocking factor  | 256 |
+  | CCFLAGS | compiler flags| -march=native  |
 
   There are two other input values for HPLinpack. They are 
   * P (The number of process rows)
@@ -52,7 +48,7 @@ This profile is designed to identify general/broad regressions when compared aga
       * P <= Q 
       * Q-P to be the minimum possible value 
 
-  * [Resources for above input parameters configuration setting](https://netlib.org/utk/people/JackDongarra/faq-linpack.html#_For_HPL_What_problem%20size%20N%20should)
+  * [Resources for above input parameters(ProblemSizeN,BlockSizeNB) configuration setting](https://netlib.org/utk/people/JackDongarra/faq-linpack.html#_For_HPL_What_problem%20size%20N%20should)
 
   * [Inputs Tuning](https://community.arm.com/arm-community-blogs/b/high-performance-computing-blog/posts/profiling-and-tuning-linpack-step-step-guide)
 
@@ -60,7 +56,7 @@ This profile is designed to identify general/broad regressions when compared aga
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
