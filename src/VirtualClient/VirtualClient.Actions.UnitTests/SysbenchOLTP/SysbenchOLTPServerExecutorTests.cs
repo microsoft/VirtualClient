@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
             };
 
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(1000);
+            cancellationTokenSource.CancelAfter(100);
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             await executor.ExecuteAsync(cancellationToken);
