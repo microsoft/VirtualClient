@@ -16,22 +16,23 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for downloading and installing Zypper packages
+    /// Provides functionality for downloading and installing snap packages
     /// on the system.
     /// </summary>
-    public class ZypperPackageInstallation : VirtualClientComponent
+    public class SnapPackageInstallation : VirtualClientComponent
     {
-        private const string ZypperCommand = "zypper";
+        private const string SnapCommand = "snap";
+        private const string SystemCtlCommand = "systemctl";
         private ISystemManagement systemManagement;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ZypperPackageInstallation"/> class.
+        /// Initializes a new instance of the <see cref="SnapPackageInstallation"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">
         /// Parameters defined in the execution profile or supplied to the Virtual Client on the command line.
         /// </param>
-        public ZypperPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public SnapPackageInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -45,46 +46,34 @@ namespace VirtualClient.Dependencies
             .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2));
 
         /// <summary>
-        /// The name of the Zypper package to download and install from the feed.
+        /// The name of the Snap package to download and install from the feed.
         /// </summary>
         public string Packages
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(ZypperPackageInstallation.Packages), string.Empty).Trim();
+                return this.Parameters.GetValue<string>(nameof(SnapPackageInstallation.Packages), string.Empty).Trim();
             }
 
             set
             {
-                this.Parameters[nameof(ZypperPackageInstallation.Packages)] = value;
+                this.Parameters[nameof(SnapPackageInstallation.Packages)] = value;
             }
         }
 
         /// <summary>
-        /// Repository to add, if not in the default sources.list.d
-        /// It could only be add one by one. And could look like this: Zypper-add-repository 'deb http://myserver/path/to/repo stable myrepo'
-        /// </summary>
-        public string Repositories
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(ZypperPackageInstallation.Repositories), string.Empty).Trim();
-            }
-        }
-
-        /// <summary>
-        /// The name of the Zypper package to download and install from the feed.
+        /// Bool to check if installer should upgrade packages as well.
         /// </summary>
         public bool AllowUpgrades
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(ZypperPackageInstallation.AllowUpgrades), true);
+                return this.Parameters.GetValue<bool>(nameof(SnapPackageInstallation.AllowUpgrades), true);
             }
         }
 
         /// <summary>
-        /// Executes the Zypper package download/installation operation.
+        /// Executes the Snap package download/installation operation.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -94,26 +83,14 @@ namespace VirtualClient.Dependencies
             List<string> packages = this.Packages.Split(',', ';', StringSplitOptions.RemoveEmptyEntries).ToList();
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
-            // Zypper installtion only applies to Linux.
+            // Snap installation only applies to Linux.
             if (this.Platform != PlatformID.Unix || packages == null || !packages.Any())
             {
                 return;
             }
 
-            if (!string.IsNullOrEmpty(this.Repositories))
-            {
-                List<string> repos = this.Packages.Split(',', ';').ToList();
-                // Repo could only be add one by one
-                foreach (string repo in repos)
-                {
-                    await this.ExecuteCommandAsync(
-                        ZypperPackageInstallation.ZypperCommand, 
-                        $"ar -f {repo}", 
-                        Environment.CurrentDirectory, 
-                        telemetryContext, 
-                        cancellationToken).ConfigureAwait(false);
-                }
-            }
+            await this.SetupSnapdSockets(telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
 
             // Determine which packages should be installed, and which can be skipped.
             List<string> toInstall = new List<string>();
@@ -135,19 +112,19 @@ namespace VirtualClient.Dependencies
                 return;
             }
 
-            string formattedArguments = $"--non-interactive install -y {string.Join(' ', toInstall)}";
+            string formattedArguments = $"install {string.Join(' ', toInstall)}";
 
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {
-                // Runs Zypper update first.
-                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                // Runs Snap update first.
+                await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, $"refresh", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
 
                 // Runs the installation command with retries and throws if the command fails after all
                 // retries are expended.
-                await this.ExecuteCommandAsync(ZypperPackageInstallation.ZypperCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync(SnapPackageInstallation.SnapCommand, formattedArguments, Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
             }).ConfigureAwait(false);
 
-            this.Logger.LogTraceMessage($"VirtualClient installed Zypper package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
+            this.Logger.LogTraceMessage($"VirtualClient installed Snap package(s): '[{string.Join(' ', toInstall)}]'.", EventContext.Persisted());
 
             // Then, confirms that the packages were installed.
             List<string> failedPackages = toInstall.Where(package => !(this.IsPackageInstalledAsync(package, cancellationToken).GetAwaiter().GetResult())).ToList();
@@ -171,11 +148,33 @@ namespace VirtualClient.Dependencies
             return shouldExecute;
         }
 
+        private async Task SetupSnapdSockets(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            // for ubuntu, debian, centos8, rhel8, etc. no socket enabling needed
+
+            switch (linuxDistributionInfo.LinuxDistribution)
+            {
+                case LinuxDistribution.CentOS7:
+                case LinuxDistribution.RHEL7:
+                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.socket", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    break;
+                case LinuxDistribution.SUSE:
+                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(SnapPackageInstallation.SystemCtlCommand, $"enable --now snapd.apparmor", Environment.CurrentDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         private async Task<bool> IsPackageInstalledAsync(string packageName, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
 
-            using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, ZypperPackageInstallation.ZypperCommand, $"list {packageName}"))
+            using (IProcessProxy process = systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, SnapPackageInstallation.SnapCommand, $"list {packageName}"))
             {
                 this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -184,7 +183,7 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<ZypperPackageInstallation>(process, EventContext.Persisted());
+                    this.Logger.LogProcessDetails<SnapPackageInstallation>(process, EventContext.Persisted());
                     process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                 }
 
@@ -207,7 +206,7 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<ZypperPackageInstallation>(process, relatedContext);
+                        this.Logger.LogProcessDetails<SnapPackageInstallation>(process, relatedContext);
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
