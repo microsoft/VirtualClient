@@ -54,11 +54,6 @@ namespace VirtualClient
         WorkloadResultsParsingFailed = 316,
 
         /// <summary>
-        /// The profiling monitor execution failed.
-        /// </summary>
-        ProfilerMonitorFailed = 317,
-
-        /// <summary>
         /// The monitor failed during execution.
         /// </summary>
         MonitorFailed = 318,

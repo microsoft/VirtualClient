@@ -50,12 +50,14 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(34);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             // 87040MB is 85GB
-            string expectedCommand = @$"java.exe -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads=34 -Xms87040m -Xmx87040m -Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+            string expectedCommand =
+                @$"java.exe -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -90,11 +92,15 @@ namespace VirtualClient.Actions
         public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinux()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
+
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = @$"sudo java -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads=71 -Xms87040m -Xmx87040m -Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+            string expectedCommand = 
+                @$"sudo java -XX:+AlwaysPreTouch -XX:+UseLargePages -XX:+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -129,11 +135,16 @@ namespace VirtualClient.Actions
         public async Task SpecJbbExecutorRunsTheExpectedWorkloadCommandInLinuxWithUserOverwriteCommand()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
+
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = @$"sudo java -Flag1 -Flag2 -Xms1234m -XX:ParallelGCThreads=71 -Xmx87040m -Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+            string expectedCommand = 
+                @$"sudo java -Flag1 -Flag2 -Xms1234m -XX:ParallelGCThreads={Environment.ProcessorCount} -Xmx87040m " +
+                $"-Xlog:gc*,gc+ref=debug,gc+phases=debug,gc+age=trace,safepoint:file=gc.log -jar specjbb2015.jar -m composite -ikv";
+
             this.mockFixture.Parameters["JavaFlags"] = "-Flag1 -Flag2 -Xms1234m";
 
             bool commandExecuted = false;

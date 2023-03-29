@@ -96,21 +96,21 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = string.Empty;
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(StressAppTestExecutor.Scenario)] = "ApplyStress";
             this.fixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "-l logfile.txt";
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(StressAppTestExecutor.CommandLine)] = "";
             this.fixture.Parameters[nameof(StressAppTestExecutor.TimeInSeconds)] = "0";
             using (TestStressAppTestExecutor executor = new TestStressAppTestExecutor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
         }
 
@@ -191,9 +191,9 @@ namespace VirtualClient.Actions
                 return base.InitializeAsync(telemetryContext, cancellationToken);
             }
 
-            public new void ValidateParameters()
+            public new void Validate()
             {
-                base.ValidateParameters();
+                base.Validate();
             }
         }
     }

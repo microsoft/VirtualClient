@@ -29,12 +29,14 @@ namespace VirtualClient.Actions
         public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux()
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
+
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string expectedCommand = @$"sudo stress-ng --cpu 71 --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedCommand = @$"sudo stress-ng --cpu {Environment.ProcessorCount} --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

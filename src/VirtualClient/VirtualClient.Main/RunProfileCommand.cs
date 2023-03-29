@@ -646,7 +646,7 @@ namespace VirtualClient
             }
 
             // Only dependencies defined in the profile will be considered.
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
@@ -709,7 +709,7 @@ namespace VirtualClient
 
             this.Validate(dependencies, profile);
 
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
 

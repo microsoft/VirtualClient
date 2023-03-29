@@ -9,6 +9,7 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Reflection;
     using NUnit.Framework;
+    using VirtualClient.Contracts.Parser;
 
     [TestFixture]
     [Category("Unit")]

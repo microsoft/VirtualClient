@@ -69,12 +69,10 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CoreMarkExecutorExecutesTheExpectedCommand()
         {
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
-
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD=71 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
+                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
                 return this.mockFixture.Process;
             };
 

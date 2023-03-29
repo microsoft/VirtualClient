@@ -80,37 +80,6 @@ namespace VirtualClient.Actions
         private string ExecutableName { get; set; }
 
         /// <summary>
-        /// Validates the parameters provided to the profile.
-        /// </summary>
-        protected override void ValidateParameters()
-        {
-            if (string.IsNullOrWhiteSpace(this.Scenario))
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition. The action in the profile does not contain the " +
-                    $"required '{nameof(this.Scenario)}' arguments defined.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (this.TimeInSeconds <= 0)
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.TimeInSeconds)}' arguments defined. {nameof(this.TimeInSeconds)} should be an integer greater than 0",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (this.CommandLine.Contains("-l"))
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
-                    $"-l parameter. That is being appended programatically",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-        }
-
-        /// <summary>
         /// Initializes the environment for execution of the StressAppTest workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -152,9 +121,38 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ValidateParameters();
-
             return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Validates the parameters provided to the profile.
+        /// </summary>
+        protected override void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(this.Scenario))
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The action in the profile does not contain the " +
+                    $"required '{nameof(this.Scenario)}' arguments defined.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.TimeInSeconds <= 0)
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition.The action in the profile does not contain the " +
+                    $"required value for'{nameof(this.TimeInSeconds)}' arguments defined. {nameof(this.TimeInSeconds)} should be an integer greater than 0",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.CommandLine.Contains("-l"))
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition.The action in the profile does not contain the " +
+                    $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
+                    $"-l parameter. That is being appended programatically",
+                    ErrorReason.InvalidProfileDefinition);
+            }
         }
 
         /// <summary>

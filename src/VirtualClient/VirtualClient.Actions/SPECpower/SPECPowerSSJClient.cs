@@ -52,12 +52,15 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Start a calculated number of SSJ Client processes.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.SetupConfiguration();
 
-            long totalMemoryKiloBytes = this.systemManagement.GetTotalSystemMemoryKiloBytes();
+            MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
+
+            long totalMemoryKiloBytes = memoryInfo.TotalMemory;
             int coreCount = Environment.ProcessorCount;
+
             telemetryContext.AddContext(nameof(totalMemoryKiloBytes), totalMemoryKiloBytes);
             telemetryContext.AddContext(nameof(coreCount), coreCount);
 
@@ -78,8 +81,6 @@ namespace VirtualClient.Actions
                     this.StartClientSSJInstanceAsync(megaBytesPerInstance, instanceCount, telemetryContext, cancellationToken);
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>

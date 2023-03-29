@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
         {
             List<string> commands = new List<string>
             {
-                @"sudo stress-ng --cpu 71 --timeout 60 --metrics --yaml /home/user/tools/VirtualClient/packages/stressNg/vcStressNg.yaml"
+                $@"sudo stress-ng --cpu {Environment.ProcessorCount} --timeout 60 --metrics --yaml /home/user/tools/VirtualClient/packages/stressNg/vcStressNg.yaml"
             };
 
             return commands;
@@ -81,7 +81,6 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Setup(PlatformID.Unix);
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
             this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.Directory.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.SystemManagement.Setup(mgr => mgr.FileSystem.File.ReadAllText(It.IsAny<string>())).Returns(TestDependencies.GetResourceFileContents("Results_StressNg.txt"));
         }

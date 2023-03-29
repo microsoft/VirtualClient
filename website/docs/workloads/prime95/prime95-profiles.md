@@ -8,6 +8,8 @@ The following profiles run customer-representative or benchmarking scenarios usi
 Runs the Prime95 workload for a specific period of time on the system. This profile is designed to allow the user to run the workload for the purpose of evaluating
 the performance of the CPU over various periods of time while also allowing the user to apply a longer-term stress to the system if desired.
 
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-PRIME95.json)
+
 * **Supported Platform/Architectures**
   * linux-x64
   * win-x64

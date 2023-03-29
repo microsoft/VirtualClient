@@ -59,6 +59,7 @@ namespace VirtualClient.Contracts
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
+            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Dependencies = dependencies;
             this.Logger = NullLogger.Instance;
 
@@ -78,7 +79,6 @@ namespace VirtualClient.Contracts
             this.LogSuccessFailMetrics = true;
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
-            this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(this.systemInfo.Platform, this.systemInfo.CpuArchitecture, false);
             this.CpuArchitecture = this.systemInfo.CpuArchitecture;
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
@@ -134,6 +134,11 @@ namespace VirtualClient.Contracts
         /// The Logger for this component
         /// </summary>
         public ILogger Logger { get; set; }
+
+        /// <summary>
+        /// Metadata provided to the application on the command line.
+        /// </summary>
+        public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
         /// Defines the metric filter as provided in the profile. This defines the list of metrics to include in 
@@ -208,6 +213,13 @@ namespace VirtualClient.Contracts
         /// Any parameters necessary for this workload action
         /// </summary>
         public IDictionary<string, IConvertible> Parameters { get; internal set; }
+
+        /// <summary>
+        /// True/false whether the parameters have been evaluated. Parameter evaluation allows
+        /// placeholders and well-known terms to be replaced in the values of the parameters before
+        /// execution of workloads, monitors or dependencies.
+        /// </summary>
+        public bool ParametersEvaluated { get; internal set; }
 
         /// <summary>
         /// The OS/system platform (e.g. Windows, Unix).
@@ -392,7 +404,13 @@ namespace VirtualClient.Contracts
         /// The name of the platform/architecture for the system on which the application is
         /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64).
         /// </summary>
-        protected string PlatformArchitectureName { get; }
+        protected string PlatformArchitectureName
+        {
+            get
+            {
+                return this.PlatformSpecifics.PlatformArchitectureName;
+            }
+        }
 
         /// <summary>
         /// The toolname or component name to use when logging completion metrics.
@@ -436,10 +454,10 @@ namespace VirtualClient.Contracts
 
                     try
                     {
-                        this.ValidateParameters();
+                        await this.InitializeAsync(telemetryContext, cancellationToken);
+                        this.Validate();
 
-                        await this.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-                        await this.ExecuteAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.ExecuteAsync(telemetryContext, cancellationToken);
                         succeeded = true;
                     }
                     catch (OperationCanceledException)
@@ -469,7 +487,7 @@ namespace VirtualClient.Contracts
                             }
                         }
 
-                        await this.CleanupAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.CleanupAsync(telemetryContext, cancellationToken);
                     }
                 }, displayErrors: true);
             }
@@ -587,14 +605,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         protected virtual void Validate()
         {
-            this.ValidateParameters();
-        }
-
-        /// <summary>
-        /// Allows components to validate the parameters provided.
-        /// </summary>
-        protected virtual void ValidateParameters()
-        {
+            // For derived component classes to implement.
         }
 
         /// <summary>

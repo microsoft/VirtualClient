@@ -107,9 +107,8 @@ namespace VirtualClient.Actions
             // guide: https://github.com/eembc/coremark-pro/blob/main/docs/EEMBC%20Symmetric%20Multicore%20Benchmark%20User%20Guide%202.1.4.pdf
             // make TARGET=linux64 XCMD='-c4' certify-all
             // Even when using cygwin, the TARGET is still linux64.
-            int coreCount = this.Dependencies.GetService<ISystemManagement>().GetSystemCoreCount();
 
-            return @$"TARGET=linux64 XCMD='-c{coreCount}' certify-all";
+            return @$"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all";
         }
 
         private void CheckPlatformSupport()

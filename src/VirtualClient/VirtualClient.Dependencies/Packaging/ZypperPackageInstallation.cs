@@ -108,7 +108,7 @@ namespace VirtualClient.Dependencies
                 {
                     await this.ExecuteCommandAsync(
                         ZypperPackageInstallation.ZypperCommand, 
-                        $"ar -f {repo} -y", 
+                        $"ar -f {repo}", 
                         Environment.CurrentDirectory, 
                         telemetryContext, 
                         cancellationToken).ConfigureAwait(false);
@@ -135,7 +135,7 @@ namespace VirtualClient.Dependencies
                 return;
             }
 
-            string formattedArguments = $"--non-interactive install {string.Join(' ', toInstall)}";
+            string formattedArguments = $"--non-interactive install -y {string.Join(' ', toInstall)}";
 
             await this.InstallRetryPolicy.ExecuteAsync(async () =>
             {

@@ -251,9 +251,9 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Validates the parameters provided to the executor.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
-            base.ValidateParameters();
+            base.Validate();
 
             if (this.TestDuration <= 0)
             {

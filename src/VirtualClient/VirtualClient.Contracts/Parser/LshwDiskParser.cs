@@ -53,7 +53,7 @@ namespace VirtualClient.Contracts
                 {
                     foreach (XElement xmlDiskNode in nodes)
                     {
-                        disks.Add(LshwDiskParser.ParseDisk(xmlDiskNode));
+                        disks.Add(ParseDisk(xmlDiskNode));
                     }
                 }
             }
@@ -70,15 +70,15 @@ namespace VirtualClient.Contracts
 
         private static DiskVolume ParseVolume(XElement xmlVolume)
         {
-            IDictionary<string, IConvertible> volumeProperties = LshwDiskParser.ReadProperties(xmlVolume);
-            IDictionary<string, IConvertible> volumeConfigurations = LshwDiskParser.ReadConfigurations(xmlVolume);
-            IDictionary<string, IConvertible> volumeCapabilities = LshwDiskParser.ReadCapabilities(xmlVolume);
+            IDictionary<string, IConvertible> volumeProperties = ReadProperties(xmlVolume);
+            IDictionary<string, IConvertible> volumeConfigurations = ReadConfigurations(xmlVolume);
+            IDictionary<string, IConvertible> volumeCapabilities = ReadCapabilities(xmlVolume);
 
             volumeProperties.AddRange(volumeConfigurations);
             volumeProperties.AddRange(volumeCapabilities);
 
-            IList<string> accessPath = LshwDiskParser.ReadLogicalNames(xmlVolume, out string devicePath);
-            int lun = LshwDiskParser.ReadLogicalUnit(xmlVolume);
+            IList<string> accessPath = ReadLogicalNames(xmlVolume, out string devicePath);
+            int lun = ReadLogicalUnit(xmlVolume);
 
             return new DiskVolume(
                 lun,
@@ -89,15 +89,15 @@ namespace VirtualClient.Contracts
 
         private static Disk ParseDisk(XElement xmlDiskNode)
         {
-            IDictionary<string, IConvertible> diskProperties = LshwDiskParser.ReadProperties(xmlDiskNode);
-            IDictionary<string, IConvertible> diskConfigurations = LshwDiskParser.ReadConfigurations(xmlDiskNode);
-            IDictionary<string, IConvertible> diskCapabilities = LshwDiskParser.ReadCapabilities(xmlDiskNode);
+            IDictionary<string, IConvertible> diskProperties = ReadProperties(xmlDiskNode);
+            IDictionary<string, IConvertible> diskConfigurations = ReadConfigurations(xmlDiskNode);
+            IDictionary<string, IConvertible> diskCapabilities = ReadCapabilities(xmlDiskNode);
 
             diskProperties.AddRange(diskConfigurations);
             diskProperties.AddRange(diskCapabilities);
 
-            LshwDiskParser.ReadLogicalNames(xmlDiskNode, out string devicePath);
-            int lun = LshwDiskParser.ReadLogicalUnit(xmlDiskNode);
+            ReadLogicalNames(xmlDiskNode, out string devicePath);
+            int lun = ReadLogicalUnit(xmlDiskNode);
 
             List<DiskVolume> volumes = new List<DiskVolume>();
             IEnumerable<XElement> diskVolumes = xmlDiskNode.Elements("node");
@@ -105,7 +105,7 @@ namespace VirtualClient.Contracts
             {
                 foreach (XElement xmlVolume in diskVolumes)
                 {
-                    DiskVolume volume = LshwDiskParser.ParseVolume(xmlVolume);
+                    DiskVolume volume = ParseVolume(xmlVolume);
                     volumes.Add(volume);
                 }
             }
@@ -121,7 +121,7 @@ namespace VirtualClient.Contracts
         {
             // Sometimes the physical id will be like 0.0.3, translating that to 3.
             string hex = xmlElement.Element(Disk.UnixDiskProperties.PhysicalId).Value.Replace(".", string.Empty).Trim();
-            int lun = int.Parse(hex, System.Globalization.NumberStyles.HexNumber); 
+            int lun = int.Parse(hex, System.Globalization.NumberStyles.HexNumber);
 
             return lun;
         }
@@ -136,7 +136,7 @@ namespace VirtualClient.Contracts
                 logicalNames.Add(logicalName.Value);
             }
 
-            devicePath = logicalNames.FirstOrDefault(n => LshwDiskParser.DevicePathPrefixs.Any(prefex => prefex.StartsWith(prefex, StringComparison.OrdinalIgnoreCase)));
+            devicePath = logicalNames.FirstOrDefault(n => DevicePathPrefixs.Any(prefex => prefex.StartsWith(prefex, StringComparison.OrdinalIgnoreCase)));
             logicalNames.Remove(devicePath);
 
             return logicalNames;
@@ -182,7 +182,7 @@ namespace VirtualClient.Contracts
                 if (xmlElement.Elements(property).Any())
                 {
                     diskProperties.Add(property, string.Join(",", xmlElement.Elements(property).Select(e => e.Value.Trim())));
-                }   
+                }
             }
 
             return diskProperties;

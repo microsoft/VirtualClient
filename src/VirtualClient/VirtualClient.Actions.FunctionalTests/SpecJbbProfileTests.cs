@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient;
     using global::VirtualClient.Common;
     using global::VirtualClient.Contracts;
+    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -160,7 +161,8 @@ namespace VirtualClient.Actions
                     commands = new List<string>
                     {
                         // @"java\.exe -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseTransparentHugePages -XX:\+UseParallelGC -XX:ParallelGCThreads=71 -Xms87040m -Xmx87040m -Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
-                        @"java\.exe -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseParallelGC -XX:ParallelGCThreads=71 -Xms87040m -Xmx87040m -Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
+                        $@"java\.exe -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                        $@"-Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
                     };
                     break;
 
@@ -168,7 +170,8 @@ namespace VirtualClient.Actions
                     commands = new List<string>
                     {
                         // @"sudo java -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseTransparentHugePages -XX:\+UseParallelGC -XX:ParallelGCThreads=71 -Xms87040m -Xmx87040m -Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
-                        @"sudo java -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseParallelGC -XX:ParallelGCThreads=71 -Xms87040m -Xmx87040m -Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
+                        $@"sudo java -XX:\+AlwaysPreTouch -XX:\+UseLargePages -XX:\+UseParallelGC -XX:ParallelGCThreads={Environment.ProcessorCount} -Xms87040m -Xmx87040m " +
+                        $@"-Xlog:gc\*,gc\+ref=debug,gc\+phases=debug,gc\+age=trace,safepoint:file=gc.log -jar specjbb2015\.jar -m composite -ikv"
                     };
                     break;
             }
@@ -204,8 +207,9 @@ namespace VirtualClient.Actions
             }
 
             this.mockFixture.SetupDisks(withRemoteDisks: false);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
 
             // Remove any mock blob managers so that we do not evaluate the code paths that

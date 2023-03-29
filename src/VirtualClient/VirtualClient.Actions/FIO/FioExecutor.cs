@@ -210,8 +210,6 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    this.ValidateParameters();
-
                     if (this.DiskFill && await this.IsDiskFillCompleteAsync(cancellationToken))
                     {
                         return;
@@ -435,7 +433,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Validates the parameters provided to the profile.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
             if (string.IsNullOrWhiteSpace(this.CommandLine))
             {

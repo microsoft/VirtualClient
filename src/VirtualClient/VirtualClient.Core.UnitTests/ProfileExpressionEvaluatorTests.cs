@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Castle.Components.DictionaryAdapter.Xml;
     using Moq;
@@ -419,6 +420,29 @@ namespace VirtualClient
                     $"--port=1234 --threads={Environment.ProcessorCount} --someFlag --clients={Environment.ProcessorCount}"
                 }
             };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = ProfileExpressionEvaluator.Evaluate(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public void ProfileExpressionEvaluatorSupportsPhysicalCoreCountReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{PhysicalCoreCount}", "4" },
+                { "--port=1234 --threads={PhysicalCoreCount}", $"--port=1234 --threads=4" },
+                { "--port=1234 --threads={PhysicalCoreCount} --someFlag --clients={PhysicalCoreCount}", $"--port=1234 --threads=4 --someFlag --clients=4" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("Any CPU", "Any description", physicalCoreCount: 4, logicalCoreCount: 8, socketCount: 2, numaNodeCount: 1, hyperThreadingEnabled: true));
 
             foreach (var entry in expressions)
             {

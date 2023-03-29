@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -199,9 +198,9 @@ namespace VirtualClient.Actions
         /// developer to ensure the definitions in the workload profile are valid and have defined
         /// required information.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
-            base.ValidateParameters();
+            base.Validate();
             this.ThrowIfParameterNotDefined(nameof(this.ServerPort));
         }
 

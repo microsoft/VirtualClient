@@ -44,8 +44,9 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             string expectedCommand = @$"sudo chmod +x ""{this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh""";
 
@@ -84,8 +85,9 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             string expectedCommand = @$"sudo bash {this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh";
 
@@ -126,8 +128,9 @@ namespace VirtualClient.Actions
             string datFilePath = $"{this.mockFixture.GetPackagePath()}/hpcg/hpcg.dat";
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             this.mockFixture.File.Setup(f => f.Exists(datFilePath))
                 .Returns(false);
 
@@ -162,8 +165,9 @@ namespace VirtualClient.Actions
             string runShellPath = $"{this.mockFixture.GetPackagePath()}/hpcg/runhpcg.sh";
 
             // Mocking 100GB of memory
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetTotalSystemMemoryKiloBytes()).Returns(1024 * 1024 * 100);
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             // First time set the file to not exist so it writes the file. Second return true so that the code will make the shell executable.
             this.mockFixture.File.SetupSequence(f => f.Exists(runShellPath))
                 .Returns(false)
@@ -172,7 +176,7 @@ namespace VirtualClient.Actions
             string expectedFile = $". {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit/share/spack/setup-env.sh" + Environment.NewLine
                     + "spack install --reuse -n -y hpcg@9.8 %gcc +openmp ^openmpi@6.66.666" + Environment.NewLine
                     + $"spack load hpcg@9.8 %gcc ^openmpi@6.66.666" + Environment.NewLine
-                    + $"mpirun --np 71 --use-hwthread-cpus --allow-run-as-root xhpcg";
+                    + $"mpirun --np {Environment.ProcessorCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
 
             bool fileWritten = false;
             this.mockFixture.File.OnWriteAllTextAsync(runShellPath)

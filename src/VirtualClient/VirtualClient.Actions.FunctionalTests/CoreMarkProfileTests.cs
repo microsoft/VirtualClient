@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
@@ -53,7 +54,7 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-                @"sudo make XCFLAGS=""-DMULTITHREAD=71 -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread",
+                $@"sudo make XCFLAGS=""-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread",
             };
 
             this.mockFixture.Setup(PlatformID.Unix);
@@ -63,8 +64,6 @@ namespace VirtualClient.Actions
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
-
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
 
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -92,7 +91,7 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-                @"make TARGET=linux64 XCMD='-c71' certify-all"
+                $@"make TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all"
             };
 
             this.mockFixture.Setup(PlatformID.Unix);
@@ -102,8 +101,6 @@ namespace VirtualClient.Actions
                 { "gcc", "10" }, // Should match profile defaults.
                 { "cc", "10" }
             });
-
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
 
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

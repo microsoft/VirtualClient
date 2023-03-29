@@ -455,7 +455,7 @@ namespace VirtualClient.Actions
         }
 
         /// <inheritdoc/>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
             // Not required as parameters themselves can throw error if they are null.
         }

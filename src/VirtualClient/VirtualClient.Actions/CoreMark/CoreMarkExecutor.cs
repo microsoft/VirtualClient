@@ -49,8 +49,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                // Default to system core count, but overwritable with parameters.
-                int threadCount = this.systemManagement.GetSystemCoreCount();
+                // Default to system logical core count, but overwritable with parameters.
+                int threadCount = Environment.ProcessorCount;
 
                 if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
                 {

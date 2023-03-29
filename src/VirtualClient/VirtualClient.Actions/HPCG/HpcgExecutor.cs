@@ -197,7 +197,9 @@ namespace VirtualClient.Actions
             string filePath = this.PlatformSpecifics.Combine(this.hpcgDirectory, "hpcg.dat");
             if (!this.fileSystem.File.Exists(filePath))
             {
-                long totalMemoryKiloBytes = this.systemManagement.GetTotalSystemMemoryKiloBytes();
+                MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
+                long totalMemoryKiloBytes = memoryInfo.TotalMemory;
+
                 // The standard of the HPCG size is to set it to consume 25% of the total memory.
                 // The memory the benchmark uses is propotional to the 3rd-power of the size.
                 // In another word, the size is propotional to the cubic root of total memory.
@@ -221,13 +223,16 @@ namespace VirtualClient.Actions
             {
                 // . spack/share/spack/setup-env.sh
                 string spackSetupCommand = $". {this.spackDirectory}/share/spack/setup-env.sh";
+
                 // If gcc>= 9, use zen2. if <=8, use zen.
                 // spack install -n -y hpcg %gcc@10.3.0 +openmp target=zen2 ^openmpi@4.1.1
                 string installCommand = $"spack install --reuse -n -y hpcg@{this.HpcgVersion} %gcc +openmp ^openmpi@{this.OpenMpiVersion}";
+
                 // spack load hpcg %gcc@10.3.0
                 string loadCommand = $"spack load hpcg@{this.HpcgVersion} %gcc ^openmpi@{this.OpenMpiVersion}";
+
                 // mpirun --np 4 --use-hwthread-cpus xhpcg
-                int coreCount = this.systemManagement.GetSystemCoreCount();
+                int coreCount = Environment.ProcessorCount;
                 string mpirunCommand = $"mpirun --np {coreCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
 
                 this.runShellText = string.Join(Environment.NewLine, spackSetupCommand, installCommand, loadCommand, mpirunCommand);

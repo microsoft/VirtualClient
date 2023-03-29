@@ -42,6 +42,7 @@ namespace VirtualClient.Contracts
         protected PlatformSpecifics(PlatformID platform, Architecture architecture, string currentDirectory)
         {
             this.Platform = platform;
+            this.PlatformArchitectureName = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
             this.CpuArchitecture = architecture;
             this.CurrentDirectory = currentDirectory;
             this.LogsDirectory = this.Combine(currentDirectory, "logs");
@@ -80,6 +81,11 @@ namespace VirtualClient.Contracts
         /// The OS platform (e.g. Windows, Unix).
         /// </summary>
         public PlatformID Platform { get; }
+
+        /// <summary>
+        /// The OS platform (e.g. Windows, Unix).
+        /// </summary>
+        public string PlatformArchitectureName { get; }
 
         /// <summary>
         /// The directory where scripts related to workloads exist.

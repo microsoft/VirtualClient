@@ -352,7 +352,8 @@ namespace VirtualClient.Actions
         {
             // runcpu arguments document: https://www.spec.org/cpu2017/Docs/runcpu.html#strict
             string configurationFile = this.GetConfigurationFileName();
-            int coreCount = this.systemManager.GetSystemCoreCount();
+            int coreCount = Environment.ProcessorCount;
+
             string cmd = @$"--config {configurationFile} --iterations 2 --copies {coreCount} --threads {coreCount} --tune {this.tuning}";
 
             // For linux runs we are doing reportable. For windows since not all benchmarks could be run, it will be noreportable.

@@ -43,6 +43,12 @@ namespace VirtualClient
             @"\{LogicalCoreCount\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // e.g.
+        // {PhysicalCoreCount}
+        private static readonly Regex PhysicalCoreCountExpression = new Regex(
+            @"\{PhysicalCoreCount\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// The set of expressions and evaluators supported by the editor. Additional expressions
         /// and evaluators can be added (e.g. {PackagePath/Special:redis}).
@@ -126,6 +132,27 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, Environment.ProcessorCount.ToString());
+                    }
+                }
+
+                return evaluatedExpression;
+            }),
+            // Expression: {PhysicalCoreCount}
+            // Resolves to the count of the physical cores on the system.
+            new Func<IServiceCollection, string, string>((dependencies, expression) =>
+            {
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.PhysicalCoreCountExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
+                    CpuInfo cpuInfo = systemInfo.GetCpuInfoAsync(CancellationToken.None)
+                        .GetAwaiter().GetResult();
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, cpuInfo.PhysicalCoreCount.ToString());
                     }
                 }
 

@@ -99,49 +99,49 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = string.Empty;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = "Prime95Workload";
             this.fixture.Parameters[nameof(Prime95Executor.CommandLine)] = null;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.CommandLine)] = "-t";
             this.fixture.Parameters[nameof(Prime95Executor.TimeInMins)] = "0";
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.TimeInMins)] = "1";
             this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = "-1";
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = "8";
             this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = "4";
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = "8192";
             this.fixture.Parameters[nameof(Prime95Executor.FFTConfiguration)] = "5";
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
             this.fixture.Parameters[nameof(Prime95Executor.FFTConfiguration)] = "0";
             this.fixture.Parameters[nameof(Prime95Executor.TortureHyperthreading)] = "5";
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
-                Assert.Throws<WorkloadException>(() => executor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => executor.Validate());
             }
         }
 
@@ -231,9 +231,9 @@ namespace VirtualClient.Actions
                 return base.InitializeAsync(telemetryContext, cancellationToken);
             }
 
-            public new void ValidateParameters()
+            public new void Validate()
             {
-                base.ValidateParameters();
+                base.Validate();
             }
         }
     }

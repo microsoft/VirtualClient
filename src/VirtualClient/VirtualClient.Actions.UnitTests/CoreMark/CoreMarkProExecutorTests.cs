@@ -55,12 +55,10 @@ namespace VirtualClient.Actions
         [Test]
         public async Task CoreMarkProExecutorExcutesAsExpected()
         {
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
-
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
-                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c71' certify-all");
+                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all");
                 this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
                 return this.mockFixture.Process;
             };

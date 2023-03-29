@@ -147,13 +147,13 @@ namespace VirtualClient.Actions.DiskPerformance
             this.profileParameters[nameof(DiskSpdExecutor.CommandLine)] = null;
             using (TestDiskSpdExecutor diskSpdExecutor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
             {
-                Assert.Throws<WorkloadException>(() => diskSpdExecutor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => diskSpdExecutor.Validate());
             }
 
             this.profileParameters[nameof(DiskSpdExecutor.ProcessModel)] = "notallowed";
             using (TestDiskSpdExecutor diskSpdExecutor = new TestDiskSpdExecutor(this.fixture.Dependencies, this.profileParameters))
             {
-                Assert.Throws<WorkloadException>(() => diskSpdExecutor.ValidateParameters());
+                Assert.Throws<WorkloadException>(() => diskSpdExecutor.Validate());
             }
         }
 
@@ -396,9 +396,9 @@ namespace VirtualClient.Actions.DiskPerformance
                 return base.ExecuteWorkloadsAsync(workloads, cancellationToken);
             }
 
-            public new void ValidateParameters()
+            public new void Validate()
             {
-                base.ValidateParameters();
+                base.Validate();
             }
 
             protected override Task DeleteTestFilesAsync(IEnumerable<string> testFiles, IAsyncPolicy retryPolicy = null)

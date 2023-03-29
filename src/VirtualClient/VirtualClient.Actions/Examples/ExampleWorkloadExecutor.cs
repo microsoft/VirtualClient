@@ -100,7 +100,7 @@ namespace VirtualClient.Actions
             //    - Does this component support the current distro of the operating system.
             //    - Should this component be executed? 
             //
-            // 2) ValidateParameters
+            // 2) Validate
             //    Was the component given the information it needs? Allows the developer to perform validations/checks on the 
             //    parameters provided to ensure they are correct and that expected parameters exist.
             // 
@@ -283,9 +283,9 @@ namespace VirtualClient.Actions
         /// developer to ensure the definitions in the workload profile are valid and have defined
         /// required information.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
-            base.ValidateParameters();
+            base.Validate();
             this.ThrowIfParameterNotDefined(nameof(this.ExampleParameter1));
             this.ThrowIfParameterNotDefined(nameof(this.ExampleParameter2));
         }

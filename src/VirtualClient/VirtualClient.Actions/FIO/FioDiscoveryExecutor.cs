@@ -333,7 +333,7 @@ namespace VirtualClient.Actions
         }
 
         /// <inheritdoc/>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
             // Parameters themselves throw on being null.
         }

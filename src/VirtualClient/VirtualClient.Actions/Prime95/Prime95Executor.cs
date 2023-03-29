@@ -190,7 +190,6 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.ApplyFFTConfiguration();
-            this.ValidateParameters();
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
@@ -202,7 +201,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Validates the parameters provided to the profile.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
             if (string.IsNullOrWhiteSpace(this.Scenario))
             {

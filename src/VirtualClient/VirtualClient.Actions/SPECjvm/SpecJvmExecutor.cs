@@ -189,9 +189,13 @@ namespace VirtualClient.Actions
 
         private string CalculateJavaOptions()
         {
-            long totalMemoryKiloBytes = this.systemManagement.GetTotalSystemMemoryKiloBytes();
+            MemoryInfo memoryInfo = this.systemManagement.GetMemoryInfoAsync(CancellationToken.None)
+                .GetAwaiter().GetResult();
+
+            long totalMemoryKiloBytes = memoryInfo.TotalMemory;
             int jvmMemoryInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.85 / 1024);
-            int coreCount = this.systemManagement.GetSystemCoreCount();
+            int coreCount = Environment.ProcessorCount;
+
             // -Xms size in bytes Sets the initial size of the Java heap. The default size is 2097152(2MB).
             // -Xmx size in bytes Sets the maximum size to which the Java heap can grow. The default size is 64M.
             // -Xmn size in bytes Sets the initial Java heap size for the Eden generation. The default value is 640K.

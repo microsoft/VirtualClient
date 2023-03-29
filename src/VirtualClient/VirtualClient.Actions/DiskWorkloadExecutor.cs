@@ -516,7 +516,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Validates the parameters provided to the profile.
         /// </summary>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
             if (this.ProcessModel != WorkloadProcessModel.SingleProcess && this.ProcessModel != WorkloadProcessModel.SingleProcessPerDisk)
             {

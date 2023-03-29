@@ -598,15 +598,18 @@ method is required to be implemented. The other methods are optional and may be 
   for a given system include:
   * The component or its dependencies cannot run on the current platform/architecture (e.g. win-arm64, linux-arm64).
   * The component or its dependencies cannot run on the current distro of the operating system (e.g. Ubuntu, Redhat).
- 
-* **ValidateParameters**  
-  Method allows the developer to validate the parameters that were passed to the component in the constructor.
 
 * **InitializeAsync**  
   Method allows the developer to perform initial/preliminary validations and to set local member variables/properties that will be used when the 
   component ExecuteAsync() method is called. Some common things that are implemented in this method include:
   * Checks to ensure the component has the dependencies it needs to succeed (e.g. dependency packages, system settings)
   * Setting member variables on the class instance that can be used later during the ExecuteAsync() call.
+
+* **Validate**  
+  Method allows the developer to validate the component and parameters that were passed to the component in the constructor. This happens after
+  the initialization step to allow for any parameters that have "calculated" or replacement values to be evaluated. The developer should call the
+  "EvaluateParametersAsync" method to apply any well-known placeholders to the parameters. See the documentation on [profiles](https://microsoft.github.io/VirtualClient/docs/guides/0011-profiles/)
+  for more information on parameter references and well-known parameter values.
 
 * **ExecuteAsync**  
   Method is where the developer should perform the main body of work for the component. For example, this method may execute a workload binary

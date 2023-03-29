@@ -131,7 +131,8 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            int coreCount = this.systemManagement.GetSystemCoreCount();
+            int coreCount = Environment.ProcessorCount;
+
             // stress-ng --cpu 16 -vm 2 --timeout 60 --metrics --yaml vcStressNg.yaml
             return @$"--cpu {coreCount} --timeout {this.DurationInSecond} --metrics --yaml {this.stressNgOutputFilePath}";
         }

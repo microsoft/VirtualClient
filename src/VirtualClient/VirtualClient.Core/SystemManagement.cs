@@ -27,6 +27,28 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// The ID of the Virtual Client/agent for the context of the larger
+        /// experiment in operation.
+        /// </summary>
+        public string AgentId { get; internal set; }
+
+        /// <summary>
+        /// The ID of the larger experiment in operation.
+        /// </summary>
+        public string ExperimentId { get; internal set; }
+
+        /// <summary>
+        /// The CPU/processor architecture.
+        /// </summary>
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                return this.PlatformSpecifics.CpuArchitecture;
+            }
+        }
+
+        /// <summary>
         /// A set of one or more cleanup tasks registered to execute on application
         /// shutdown/exit.
         /// </summary>
@@ -38,25 +60,7 @@ namespace VirtualClient
         public static bool IsRebootRequested { get; set; }
 
         /// <inheritdoc />
-        public string AgentId { get; internal set; }
-
-        /// <inheritdoc />
-        public Architecture CpuArchitecture
-        {
-            get
-            {
-                return this.PlatformSpecifics.CpuArchitecture;
-            }
-        }
-
-        /// <inheritdoc />
-        public bool RunningInContainer { get; internal set; }
-
-        /// <inheritdoc />
         public IDiskManager DiskManager { get; internal set; }
-
-        /// <inheritdoc />
-        public string ExperimentId { get; internal set; }
 
         /// <inheritdoc />
         public IFileSystem FileSystem { get; internal set; }
@@ -67,7 +71,9 @@ namespace VirtualClient
         /// <inheritdoc />
         public IPackageManager PackageManager { get; internal set; }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// The system OS/platform.
+        /// </summary>
         public PlatformID Platform
         {
             get
@@ -76,11 +82,30 @@ namespace VirtualClient
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// The name of the platform/architecture for the system on which the application is
+        /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64).
+        /// </summary>
+        public string PlatformArchitectureName
+        {
+            get
+            {
+                return VirtualClient.Contracts.PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture);
+            }
+        }
+
+        /// <summary>
+        /// The system OS/platform specific information.
+        /// </summary>
         public PlatformSpecifics PlatformSpecifics { get; internal set; }
 
         /// <inheritdoc />
         public ProcessManager ProcessManager { get; internal set; }
+
+        /// <summary>
+        /// Whether VC is running in container.
+        /// </summary>
+        public bool RunningInContainer { get; } = PlatformSpecifics.IsRunningInContainer();
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.
@@ -109,17 +134,146 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Returns the core counts on the system.
+        /// Returns information about the CPU on the system.
         /// </summary>
-        public int GetSystemCoreCount()
+        public async Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
         {
-            return Environment.ProcessorCount;
+            CpuInfo info = null;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                string command = "CoreInfo64.exe";
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    command = "CoreInfo64a.exe";
+                }
+
+                DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
+                    VirtualClient.PackageManager.BuiltInCoreInfoPackageName,
+                    this.Platform,
+                    this.CpuArchitecture,
+                    CancellationToken.None);
+
+                string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);
+                using (IProcessProxy process = this.ProcessManager.CreateProcess(coreInfoExe, "-nobanner /accepteula"))
+                {
+                    await process.StartAndWaitAsync(CancellationToken.None);
+                    process.ThrowIfWorkloadFailed();
+
+                    CoreInfoParser parser = new CoreInfoParser(process.StandardOutput.ToString());
+                    info = parser.Parse();
+                }
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                using (IProcessProxy process = this.ProcessManager.CreateProcess("lscpu"))
+                {
+                    await process.StartAndWaitAsync(CancellationToken.None);
+                    process.ThrowIfWorkloadFailed();
+
+                    LscpuParser parser = new LscpuParser(process.StandardOutput.ToString());
+                    info = parser.Parse();
+                }
+            }
+
+            return info;
         }
 
         /// <summary>
-        /// Returns the total memory (in kilobytes) installed/available on the system.
+        /// Returns information about the specific Linux distribution (e.g. Ubuntu, CentOS).
         /// </summary>
-        public long GetTotalSystemMemoryKiloBytes()
+        public async Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken)
+        {
+            using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
+            {
+                await process.StartAndWaitAsync(cancellationToken);
+                process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, "hostnamectl failed.", errorReason: ErrorReason.LinuxDistributionNotSupported);
+                HostnamectlParser parser = new HostnamectlParser(process.StandardOutput.ToString());
+
+                return parser.Parse();
+            }
+        }
+
+        /// <summary>
+        /// Returns information about memory on the system.
+        /// </summary>
+        public Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new MemoryInfo(this.GetTotalSystemMemoryKiloBytes()));
+        }
+
+        /// <summary>
+        /// Checks if the local IP Address is defined on current system.
+        /// </summary>
+        /// <param name="ipAddress">IP address present in the environment layout for the agent</param>
+        /// <returns>True/False is an IP is defined on current system.</returns>
+        public bool IsLocalIPAddress(string ipAddress)
+        {
+            IPAddress address = IPAddress.Parse(ipAddress);
+            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
+
+            bool isLocal = false;
+            if (IPAddress.IsLoopback(address))
+            {
+                isLocal = true;
+            }
+            else
+            {
+                isLocal = hostEntry.AddressList.Contains<IPAddress>(address);
+            }
+
+            return isLocal;
+        }
+
+        /// <summary>
+        /// Causes the process to idle until the operations are cancelled.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
+        public async Task WaitAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Causes the process to idle until the time defined by the timeout or until the operations
+        /// are cancelled.
+        /// </summary>
+        /// <param name="timeout">The date/time at which the wait ends and execution should continue.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
+        public async Task WaitAsync(DateTime timeout, CancellationToken cancellationToken)
+        {
+            DateTime effectiveTimeout = timeout;
+            if (timeout.Kind != DateTimeKind.Utc)
+            {
+                effectiveTimeout = timeout.ToUniversalTime();
+            }
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (DateTime.UtcNow >= effectiveTimeout)
+                {
+                    break;
+                }
+
+                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Causes the process to idle for the period of time defined by the timeout or until the operations
+        /// are cancelled.
+        /// </summary>
+        /// <param name="timeout">The maximum time to wait before continuing.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>
+        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            return Task.Delay(timeout, cancellationToken);
+        }
+
+        private long GetTotalSystemMemoryKiloBytes()
         {
             PlatformSpecifics.ThrowIfNotSupported(this.Platform);
             long systemMemoryInKb = 0;
@@ -174,79 +328,11 @@ namespace VirtualClient
             return systemMemoryInKb;
         }
 
-        /// <summary>
-        /// Returns true/false whether the IP address provided matches an IP address
-        /// on the local system.
-        /// </summary>
-        /// <param name="ipAddress">The IP address to verify.</param>
-        public bool IsLocalIPAddress(string ipAddress)
-        {
-            IPAddress address = IPAddress.Parse(ipAddress);
-            IPHostEntry hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-
-            bool isLocal = false;
-            if (IPAddress.IsLoopback(address))
-            {
-                isLocal = true;
-            }
-            else
-            {
-                isLocal = hostEntry.AddressList.Contains<IPAddress>(address);
-            }
-
-            return isLocal;
-        }
-
-        /// <inheritdoc />
-        public async Task WaitAsync(CancellationToken cancellationToken)
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        /// <inheritdoc />
-        public async Task WaitAsync(DateTime timeout, CancellationToken cancellationToken)
-        {
-            DateTime effectiveTimeout = timeout;
-            if (timeout.Kind != DateTimeKind.Utc)
-            {
-                effectiveTimeout = timeout.ToUniversalTime();
-            }
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (DateTime.UtcNow >= effectiveTimeout)
-                {
-                    break;
-                }
-
-                await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        /// <inheritdoc />
-        public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            return Task.Delay(timeout, cancellationToken);
-        }
-
-        /// <inheritdoc/>
-        public async Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken)
-        {
-            using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "hostnamectl", string.Empty, Environment.CurrentDirectory))
-            {
-                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-                process.ThrowIfErrored<ProcessException>(ProcessProxy.DefaultSuccessCodes, "hostnamectl failed.", errorReason: ErrorReason.LinuxDistributionNotSupported);
-                HostnamectlParser parser = new HostnamectlParser(process.StandardOutput.ToString());
-                return parser.Parse();
-            }
-        }
-
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Interop code.")]
         internal static class WindowsInterop
         {
+            internal static readonly IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
+
             [DllImport("kernel32.dll")]
             [return: MarshalAs(UnmanagedType.Bool)]
             [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1313:Parameter names should begin with lower-case letter", Justification = "Windows Interop")]

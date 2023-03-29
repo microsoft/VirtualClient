@@ -31,8 +31,9 @@ namespace VirtualClient
         /// <param name="profile">The profile to execute.</param>
         /// <param name="dependencies">Shared platform dependencies to pass along to individual components in the profile.</param>
         /// <param name="scenarios">A specific set of profile scenarios to execute or to exclude.</param>
+        /// <param name="metadata">Metadata supplied</param>
         /// <param name="logger">A logger to use for capturing telemetry.</param>
-        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
+        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, IDictionary<string, IConvertible> metadata = null, ILogger logger = null)
         {
             profile.ThrowIfNull(nameof(profile));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -45,6 +46,12 @@ namespace VirtualClient
             this.ExecuteDependencies = true;
             this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
+
+            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            if (metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(metadata, true);
+            }
         }
 
         /// <summary>
@@ -106,6 +113,11 @@ namespace VirtualClient
         /// Logs things to various sources
         /// </summary>
         public ILogger Logger { get; }
+
+        /// <summary>
+        /// Metadata supplied to the application on the command line.
+        /// </summary>
+        public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
         /// The profile to execute.
@@ -668,6 +680,10 @@ namespace VirtualClient
                     {
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
+                        if (this.Metadata?.Any() == true)
+                        {
+                            runtimeComponent.Metadata.AddRange(this.Metadata, true);
+                        }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
                         {

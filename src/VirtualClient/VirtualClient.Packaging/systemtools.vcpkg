@@ -1,0 +1,8 @@
+{
+    "name": "systemtools",
+    "description": "Toolsets used to access information from the system.",
+    "version": null,
+    "metadata": {
+        "coreInfo": "https://learn.microsoft.com/en-us/sysinternals/downloads/coreinfo"
+    }
+}

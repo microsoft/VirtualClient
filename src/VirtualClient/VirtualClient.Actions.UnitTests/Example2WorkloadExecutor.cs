@@ -141,8 +141,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ValidateParameters();
-
             // Almost all workload executors access the workloads via structure packages.
             DependencyPath workloadPackage = await this.InitializeWorkloadPackageAsync(telemetryContext, cancellationToken);
             await this.InitializeWorkloadExecutablesAsync(workloadPackage, telemetryContext, cancellationToken);

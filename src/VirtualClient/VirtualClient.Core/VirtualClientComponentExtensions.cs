@@ -33,13 +33,19 @@ namespace VirtualClient
         /// </summary>
         /// <param name="component">The component whose parameters to evaluate.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken)
+        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
+        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken, bool force = false)
         {
             component.ThrowIfNull(nameof(component));
 
-            if (component.Parameters?.Any() == true)
+            if (!component.ParametersEvaluated || force)
             {
-                await ProfileExpressionEvaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
+                if (component.Parameters?.Any() == true)
+                {
+                    await ProfileExpressionEvaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
+                }
+
+                component.ParametersEvaluated = true;
             }
         }
 

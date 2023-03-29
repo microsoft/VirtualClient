@@ -158,6 +158,10 @@ namespace VirtualClient.Actions
             // The Java process exited!
             this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
 
+            // Mocking 100GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
+
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);

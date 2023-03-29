@@ -51,9 +51,9 @@ namespace VirtualClient.Monitors
         }
 
         /// <inheritdoc/>
-        protected override void ValidateParameters()
+        protected override void Validate()
         {
-            base.ValidateParameters();
+            base.Validate();
             if (this.MonitorFrequency <= TimeSpan.Zero)
             {
                 throw new MonitorException(

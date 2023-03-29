@@ -49,13 +49,15 @@ namespace VirtualClient.Actions
         {
             this.SetupLinux();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
+
+            int coreCount = Environment.ProcessorCount;
             List<string> expectedCommands = new List<string>
             {
                 $"sudo mount -t iso9660 -o ro,exec,loop {this.mockPackage.Path}/speccpu.iso {this.mockFixture.GetPackagePath()}/speccpu_mount",
                 $"sudo ./install.sh -f -d {this.mockPackage.Path}",
                 $"sudo chmod -R ugo=rwx {this.mockPackage.Path}",
                 $"sudo umount {this.mockFixture.GetPackagePath()}/speccpu_mount",
-                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --reportable intrate\""
+                $"sudo bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intrate\""
             };
 
             int processCount = 0;
@@ -90,13 +92,15 @@ namespace VirtualClient.Actions
         {
             this.SetupWindows();
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
+
+            int coreCount = Environment.ProcessorCount;
             List<string> expectedCommands = new List<string>
             {
                 $"powershell -Command \"Mount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
                 $"powershell -Command \"(Get-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso| Get-Volume).DriveLetter\"",
                 $"cmd /c echo 1 | X:\\install.bat {this.mockPackage.Path}",
                 $"powershell -Command \"Dismount-DiskImage -ImagePath {this.mockPackage.Path}\\speccpu.iso\"",
-                $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --noreportable intrate"
+                $"cmd /c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --noreportable intrate"
             };
 
             int processCount = 0;
@@ -147,7 +151,8 @@ namespace VirtualClient.Actions
             bool commandCalled = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 71 --threads 71 --tune base --reportable fprate\"")
+                int coreCount = Environment.ProcessorCount;
+                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --reportable fprate\"")
                 {
                     commandCalled = true;
                 }
@@ -180,9 +185,11 @@ namespace VirtualClient.Actions
             };
 
             commandCalled = false;
+            int coreCount = Environment.ProcessorCount;
+
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --reportable intspeed\"")
+                if (arguments == $"bash runspeccpu.sh \"--config vc-linux-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --reportable intspeed\"")
                 {
                     commandCalled = true;
                 }
@@ -221,9 +228,11 @@ namespace VirtualClient.Actions
             };
 
             bool commandCalled = false;
+            int coreCount = Environment.ProcessorCount;
+
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune base --noreportable fprate")
+                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune base --noreportable fprate")
                 {
                     commandCalled = true;
                 }
@@ -258,7 +267,7 @@ namespace VirtualClient.Actions
             commandCalled = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
-                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies 71 --threads 71 --tune all --noreportable intspeed")
+                if (arguments == $"/c runspeccpu.bat --config vc-win-x64.cfg --iterations 2 --copies {coreCount} --threads {coreCount} --tune all --noreportable intspeed")
                 {
                     commandCalled = true;
                 }
@@ -294,7 +303,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
                 .Returns(new string[] { this.mockFixture.Combine(this.mockPackage.Path, "speccpu.iso") });
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
@@ -324,7 +333,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Directory.Setup(dir => dir.GetFiles(It.IsAny<string>(), "*.iso", It.IsAny<SearchOption>()))
                 .Returns(new string[] { this.mockFixture.Combine(this.mockPackage.Path, "speccpu.iso") });
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(71);
+
             this.mockFixture.File.Reset();
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);

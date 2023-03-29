@@ -24,8 +24,6 @@ namespace VirtualClient.Actions
     [UnixCompatible]
     public class RedisExecutor : VirtualClientComponent
     {
-        private bool parametersEvaluated;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RedisExecutor"/> class.
         /// </summary>
@@ -128,12 +126,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.ValidatePlatformSupportAsync(cancellationToken);
-
-            if (!this.parametersEvaluated)
-            {
-                await this.EvaluateParametersAsync(cancellationToken);
-                this.parametersEvaluated = true;
-            }
+            await this.EvaluateParametersAsync(cancellationToken);
 
             if (this.IsMultiRoleLayout())
             {

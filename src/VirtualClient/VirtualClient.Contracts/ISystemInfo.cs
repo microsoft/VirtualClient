@@ -35,6 +35,12 @@ namespace VirtualClient.Contracts
         PlatformID Platform { get; }
 
         /// <summary>
+        /// The name of the platform/architecture for the system on which the application is
+        /// running (e.g. linux-x64, linux-arm64, win-x64, win-arm64).
+        /// </summary>
+        public string PlatformArchitectureName { get; }
+
+        /// <summary>
         /// The system OS/platform specific information.
         /// </summary>
         PlatformSpecifics PlatformSpecifics { get; }
@@ -47,9 +53,24 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Checks if the local IP Address is defined on current system.
         /// </summary>
-        /// <param name="ipAddressString">IP address present in the environment layout for the agent</param>
+        /// <param name="ipAddress">IP address present in the environment layout for the agent</param>
         /// <returns>True/False is an IP is defined on current system.</returns>
-        bool IsLocalIPAddress(string ipAddressString);
+        bool IsLocalIPAddress(string ipAddress);
+
+        /// <summary>
+        /// Returns information about the CPU on the system.
+        /// </summary>
+        Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns information about the specific Linux distribution (e.g. Ubuntu, CentOS).
+        /// </summary>
+        Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns information about memory on the system.
+        /// </summary>
+        Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Causes the process to idle until the operations are cancelled.

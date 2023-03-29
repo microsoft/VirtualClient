@@ -13,6 +13,7 @@ namespace VirtualClient.Contracts
     using VirtualClient.Common;
     using Microsoft.Extensions.Azure;
     using NUnit.Framework;
+    using VirtualClient.Contracts.Parser;
 
     [TestFixture]
     [Category("Unit")]

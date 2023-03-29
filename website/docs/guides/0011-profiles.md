@@ -51,6 +51,80 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
+## Inline Parameter References
+There are scenarios where the author of a profile would like to reference parameters defined in the set associated with the action, monitor or dependency within the value
+for another parameter. This is typically used to allow global parameters to be defined at the profile level and then referenced parameters defined at the action level.
+This technique is also used to help make profiles as "self-describing" as possible by avoiding the need to define values within the code itself (and thus out of site for a user
+of the application + profile). The following example illustrates how this works with a few variations on the concept.
+
+* **Global Parameter References**  
+  The parameters at the top of a profile are "global" parameters meaning that they can be applied to any of the action, monitor or dependency components within the profile.
+  Global profile parameters can be overridden on the command line by a user of the Virtual Client. This is helpful for allowing a user to have a bit more flexibility into the
+  behavior of Virtual Client when running the profile. For example, a common use case it to allow the user to explicitly define the number of threads that should be used when
+  running a workload thus enabling he/she to tailor the workload to systems with different amounts of CPU resources.
+
+  ``` json
+  // The 'ThreadCount' parameter defined in the profile global parameters is
+  // referenced in an individual action.
+  {
+    "Description": "CoreMark Performance Workload",
+    "Metadata": {
+    },
+    "Parameters": {
+        "ThreadCount": 8
+    },
+    "Actions": [
+        {
+            "Type": "CoreMarkExecutor",
+            "Parameters": {
+                "Scenario": "ScoreSystem",
+                "PackageName": "coremark",
+                "ThreadCount": "$.Parameters.ThreadCount"
+            }
+        }
+    ]
+  }
+  ```
+
+  ``` bash
+  # A user of the Virtual Client could then define different values for the 'ThreadCount' parameter on the 
+  # command line if desired.
+  VirtualClient.exe --profile=EXAMPLE-PROFILE.json --parameters="ThreadCount=4"
+  VirtualClient.exe --profile=EXAMPLE-PROFILE.json --parameters="ThreadCount=16"
+  VirtualClient.exe --profile=EXAMPLE-PROFILE.json --parameters="ThreadCount=32"
+  ```
+* **Component Inline Parameter References**
+  The parameters within a given component can themselves reference the values of other parameters within the same component. This is often used to make
+  usage patterns clear and self-describing within the profile. Note that this is not supported for all profiles. There is an implementation requirement in
+  Virtual Client required. However, the user can typical determine if a profile supports it because it will be using it already.
+
+  ``` json
+  // Below the parameters FileSize, QueueDepth and ThreadCount are used in the value of the CommandLine parameter.
+  // Additionally, the FileSize parameter is a global parameter. This illustrates combining the 2 techniques together 
+  // in a single profile.
+  {
+    "Description": "FIO I/O Stress Performance Workload",
+    "Metadata": {
+    },
+    "Parameters": {
+        "FileSize": "496G"
+    },
+    "Actions": [
+        {
+            "Type": "FioExecutor",
+            "Parameters": {
+                "Scenario": "RandomWrite_4k_BlockSize",
+                "PackageName": "fio",
+                "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth} ...",
+                "FileSize": "$.Parameters.FileSize",
+                "QueueDepth": 32,
+                "ThreadCount": 16
+            }
+        }
+    ]
+  }
+  ```
+
 ## Well-Known Parameters
 There are certain parameters that can be used in a profile that represent aspects of the system that differ from one to another. These parameters are used to allow
 designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
@@ -60,8 +134,9 @@ the system. The following table describes the set of well-known parameters that 
 | Parameter                           | Description |
 |-------------------------------------|-------------|
 | LogicalCoreCount                    | Represents the number of logical cores/vCPUs on the system. |
-| PackagePath:{package_name}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. /home/users/virtualclient/packages/openssl). |
-| PackagePath/Platform:{package_name} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+| PhysicalCoreCount                   | Represents the number of physical cores on the system. |
+| PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
+| PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
 
 ``` json
 "Actions": [

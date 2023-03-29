@@ -28,6 +28,11 @@ namespace VirtualClient
     public class PackageManager : IPackageManager, IDisposable
     {
         /// <summary>
+        /// The name of the built-in package containing the CoreInfo.exe toolset.
+        /// </summary>
+        public const string BuiltInCoreInfoPackageName = "coreinfo";
+
+        /// <summary>
         /// The name of the built-in package containing the lshw toolset.
         /// </summary>
         public const string BuiltInLshwPackageName = "lshw";

@@ -212,15 +212,20 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
+            string options = this.CalculateJavaOptions();
+
             // Looks like this: java -jar specjbb2015.jar -ikv
-            return @$"{this.CalculateJavaOptions()} -jar specjbb2015.jar -m composite -ikv";
+            return @$"{options} -jar specjbb2015.jar -m composite -ikv";
         }
 
         private string CalculateJavaOptions()
         {
-            long totalMemoryKiloBytes = this.systemManagement.GetTotalSystemMemoryKiloBytes();
+            MemoryInfo memoryInfo = this.systemManagement.GetMemoryInfoAsync(CancellationToken.None)
+                .GetAwaiter().GetResult();
+
+            long totalMemoryKiloBytes = memoryInfo.TotalMemory;
             int jbbMemoryInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.85 / 1024);
-            int coreCount = this.systemManagement.GetSystemCoreCount();
+            int coreCount = Environment.ProcessorCount;
 
             // -Xms size in bytes Sets the initial size of the Java heap. The default size is 2097152(2MB).
             // -Xmx size in bytes Sets the maximum size to which the Java heap can grow. The default size is 64M.

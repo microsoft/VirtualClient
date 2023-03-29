@@ -3,10 +3,7 @@
 
 namespace VirtualClient
 {
-    using System;
     using System.IO.Abstractions;
-    using System.Threading;
-    using System.Threading.Tasks;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
 
@@ -45,23 +42,5 @@ namespace VirtualClient
         /// Provides features for managing/preserving state on the system.
         /// </summary>
         IStateManager StateManager { get; }
-
-        /// <summary>
-        /// Read local Linux Distribution.
-        /// </summary>
-        /// <returns>Linux Distribution information.</returns>
-        Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        /// Returns the total memory (in kilobytes) installed/available on the system.
-        /// </summary>
-        /// <returns>Total system memory in KiloBytes</returns>
-        long GetTotalSystemMemoryKiloBytes();
-
-        /// <summary>
-        /// Returns the core counts on the system.
-        /// </summary>
-        /// <returns>System core count.</returns>
-        int GetSystemCoreCount();
     }
 }
