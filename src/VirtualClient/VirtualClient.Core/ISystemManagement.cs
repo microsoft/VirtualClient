@@ -39,6 +39,11 @@ namespace VirtualClient
         ProcessManager ProcessManager { get; }
 
         /// <summary>
+        /// Provides features for creating and managing processes on the system.
+        /// </summary>
+        SshClientManager SshClientManager { get; }
+
+        /// <summary>
         /// Provides features for managing/preserving state on the system.
         /// </summary>
         IStateManager StateManager { get; }

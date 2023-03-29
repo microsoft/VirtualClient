@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using Renci.SshNet;
+using VirtualClient.Common;
 using VirtualClient.Common.Extensions;
 using VirtualClient.Common.Telemetry;
 using VirtualClient.Contracts;
@@ -17,6 +18,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SOCStressSysbenchExecutor : VirtualClientComponent
     {
+        private ISystemManagement systemManagement;
+
         /// <summary>
         /// Constructor for <see cref="SOCStressSysbenchExecutor"/>.
         /// </summary>
@@ -25,6 +28,7 @@ namespace VirtualClient.Actions
         public SOCStressSysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null) 
             : base(dependencies, parameters)
         {
+            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
         }
 
         /// <summary>
@@ -100,7 +104,7 @@ namespace VirtualClient.Actions
         {
             return Task.Run(() =>
             {
-                using (SshClient sshClient = new SshClient(this.Host, this.UserName, this.Password))
+                using (ISshClientProxy sshClient = this.systemManagement.SshClientManager.CreateSshClient(this.Host, this.UserName, this.Password))
                 {
                     sshClient.Connect();
 

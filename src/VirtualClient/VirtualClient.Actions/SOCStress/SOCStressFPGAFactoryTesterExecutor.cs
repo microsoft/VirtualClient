@@ -6,7 +6,7 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Renci.SshNet;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -16,6 +16,8 @@
     /// </summary>
     public class SOCStressFPGAFactoryTesterExecutor : VirtualClientComponent
     {
+        private ISystemManagement systemManagement;
+
         /// <summary>
         /// Constructor for <see cref="SOCStressFPGAFactoryTesterExecutor"/>.
         /// </summary>
@@ -24,6 +26,7 @@
         public SOCStressFPGAFactoryTesterExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
+            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
         }
 
         /// <summary>
@@ -121,7 +124,7 @@
         {
             return Task.Run(() =>
             {
-                using (SshClient sshClient = new SshClient(this.Host, this.UserName, this.Password))
+                using (ISshClientProxy sshClient = this.systemManagement.SshClientManager.CreateSshClient(this.Host, this.UserName, this.Password))
                 {
                     sshClient.Connect();
 

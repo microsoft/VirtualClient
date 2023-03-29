@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿ <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -12,6 +12,7 @@
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(Microsoft_AspNetCore_Hosting_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
+        <PackageReference Include="SSH.NET" Version="2020.0.2" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
     </ItemGroup>
 
