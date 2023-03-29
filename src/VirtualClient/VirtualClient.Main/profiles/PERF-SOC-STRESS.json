@@ -1,0 +1,37 @@
+{
+    "Description": "SOC Stress Workload",
+    "Parameters": {
+    },
+    "Actions": [
+        {
+            "Type": "SOCStressFPGAFactoryTesterExecutor",
+            "Parameters": {
+                "Scenario": "ApplyStress",
+                "Host": "",
+                "UserName": "stuser",
+                "Password": "overlake",
+                "DisableSOCPCIe": "false",
+                "DisableSOCDRAM": "false",
+                "DisableSOCPowerVirus": "false",
+                "FPGAStressVerbose":  "true",
+                "FPGAFacotryTesterTimeout": "300"
+            }
+        },
+        {
+            "Type": "SOCStressSysbenchExecutor",
+            "Parameters": {
+                "Scenario": "ApplyStress",
+                "Host": "",
+                "UserName": "stuser",
+                "Password": "overlake",
+                "SysbenchMemoryParameters": "--test=memory --memory-block-size=1M --memory-total-size=200T --num-threads=8 --max-time=10 run",
+                "SysbenchCPUParameters": "--test=cpu --num-threads=8 --cpu-max-prime=2000000 --max-time=10 run",
+                "SysbenchTimeout": "300"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+        }
+    ]
+}

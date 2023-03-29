@@ -170,6 +170,11 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
+        /// Mock ssh client manager.
+        /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
+
+        /// <summary>
         /// The mock process that will be created by the process manager.
         /// </summary>
         public InMemoryProcess Process { get; set; }
@@ -263,7 +268,8 @@ namespace VirtualClient
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
-            this.ProcessManager = new InMemoryProcessManager(platform);
+            this.ProcessManager = new InMemoryProcessManager();
+            this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
             this.PackageManager = new Mock<IPackageManager>();
             this.PackageManager.SetupGet(pm => pm.PlatformSpecifics).Returns(this.PlatformSpecifics);
@@ -334,6 +340,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -355,6 +362,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
+            this.Dependencies.AddSingleton<SshClientManager>((p) => this.SshClientManager);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);
