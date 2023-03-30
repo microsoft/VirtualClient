@@ -103,8 +103,9 @@ namespace VirtualClient.Actions
         private async Task ConfigureMySQLPrivilegesAsync(CancellationToken cancellationToken)
         {
             string workingDirectory = this.GetPackagePath(this.PackageName);
+            this.SystemManager.FileSystem.Directory.CreateDirectory(workingDirectory);
 
-            string dropUserCommand = $"mysql --execute=\"DROP USER 'sbtest'@'{this.ClientIpAddress}'\"";
+            string dropUserCommand = $"mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'{this.ClientIpAddress}'\"";
             string configureNetworkCommand = $"sed -i \"s/.*bind-address.*/bind-address = {this.ServerIpAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf";
             string restartmySQLCommand = "systemctl restart mysql.service";
             string createUserCommand = $"mysql --execute=\"CREATE USER 'sbtest'@'{this.ClientIpAddress}'\"";
