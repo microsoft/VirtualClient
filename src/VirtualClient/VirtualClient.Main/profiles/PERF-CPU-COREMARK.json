@@ -15,7 +15,7 @@
         {
             "Type": "CoreMarkExecutor",
             "Parameters": {
-                "Scenario": "ScoreSystem",
+                "Scenario": "ExecuteCoremarkBenchmark",
                 "PackageName": "coremark",
                 "ThreadCount": "$.Parameters.ThreadCount"
             }

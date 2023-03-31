@@ -46,7 +46,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallLAPACK",
+                "Scenario": "InstallLAPACKPackage",
                 "BlobContainer": "packages",
                 "BlobName": "lapack.3.10.0.zip",
                 "PackageName": "lapack",

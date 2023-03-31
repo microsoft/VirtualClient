@@ -31,7 +31,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGraph500",
+                "Scenario": "InstallGraph500Package",
                 "BlobContainer": "packages",
                 "BlobName": "graph500.3.0.0.zip",
                 "PackageName": "graph500",

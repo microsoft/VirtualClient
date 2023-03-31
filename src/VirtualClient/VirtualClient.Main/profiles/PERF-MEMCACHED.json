@@ -194,7 +194,7 @@
         {
             "Type": "WgetPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallMemcached",
+                "Scenario": "InstallMemcachedPackage",
                 "PackageName": "memcached",
                 "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
                 "SubPath": "memcached-1.6.17",
@@ -215,7 +215,7 @@
         {
             "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "InstallMemtier",
+                "Scenario": "CloneMemtierRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }

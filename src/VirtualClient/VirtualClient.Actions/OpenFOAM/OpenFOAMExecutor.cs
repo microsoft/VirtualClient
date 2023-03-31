@@ -77,12 +77,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Specific Simulation Folder
         /// </summary>
-        public string SimulationFolder
+        public string Simulation
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(OpenFOAMExecutor.Scenario), out IConvertible simulationFolder);
-                return simulationFolder?.ToString();
+                this.Parameters.TryGetValue(nameof(OpenFOAMExecutor.Simulation), out IConvertible simulation);
+                return simulation?.ToString();
             }
         }
 
@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.CpuArchitecture == Architecture.Arm64 && this.SimulationFolder.Equals("motorBike"))
+            if (this.CpuArchitecture == Architecture.Arm64 && this.Simulation.Equals("motorBike"))
             {
                 this.Logger.LogMessage($"{nameof(OpenFOAMExecutor)}.MotorBikeNotSupported", telemetryContext);
             }
@@ -180,13 +180,13 @@ namespace VirtualClient.Actions
             }
                 
             this.AllRunWrapperExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, "tools", "AllrunWrapper");
-            this.AllRunExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "Allrun");
+            this.AllRunExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "Allrun");
             string allRunExecutionCommand = $"{this.AllRunWrapperExecutablePath} {this.AllRunExecutablePath}";
-            this.AllCleanExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "Allclean");
-            this.IterationsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "system", "controlDict");
+            this.AllCleanExecutablePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "Allclean");
+            this.IterationsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "system", "controlDict");
 
             this.ResultsFileName = "log." + this.Solver;
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, this.ResultsFileName);
+            this.ResultsFilePath = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, this.ResultsFileName);
 
             this.executionCommands = new List<string>
             {
@@ -217,21 +217,21 @@ namespace VirtualClient.Actions
             };
 
             string simulationSourceDir0;
-            string simulationSourceDirConstant = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.SimulationFolder], this.SimulationFolder, "constant");
-            string simulationSourceDirSystem = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.SimulationFolder], this.SimulationFolder, "system");
+            string simulationSourceDirConstant = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.Simulation], this.Simulation, "constant");
+            string simulationSourceDirSystem = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.Simulation], this.Simulation, "system");
             
-            if (this.SimulationFolder.Equals("lockExchange") || this.SimulationFolder.Equals("motorBike"))
+            if (this.Simulation.Equals("lockExchange") || this.Simulation.Equals("motorBike"))
             {
-                simulationSourceDir0 = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.SimulationFolder], this.SimulationFolder, "0.orig");
+                simulationSourceDir0 = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.Simulation], this.Simulation, "0.orig");
             }
             else
             {
-                simulationSourceDir0 = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.SimulationFolder], this.SimulationFolder, "0");
+                simulationSourceDir0 = this.PlatformSpecifics.Combine(simulationBaseDirectory, simulationPaths[this.Simulation], this.Simulation, "0");
             }
 
-            string simulationDestDir0 = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "0");
-            string simulationDestDirConstant = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "constant");
-            string simulationDestDirSystem = this.PlatformSpecifics.Combine(this.PackagePath, this.SimulationFolder, "system");
+            string simulationDestDir0 = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "0");
+            string simulationDestDirConstant = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "constant");
+            string simulationDestDirSystem = this.PlatformSpecifics.Combine(this.PackagePath, this.Simulation, "system");
 
             this.fileSystem.Directory.CreateDirectory(simulationDestDir0);
             this.fileSystem.Directory.CreateDirectory(simulationDestDirConstant);
@@ -332,7 +332,7 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogMetrics(
                         "OpenFOAM",
-                        this.SimulationFolder,
+                        this.Simulation,
                         process.StartTime,
                         process.ExitTime,
                         metrics,

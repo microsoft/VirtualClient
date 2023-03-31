@@ -31,7 +31,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallLMbench",
+                "Scenario": "InstallLMbenchPackages",
                 "BlobContainer": "packages",
                 "BlobName": "lmbench.1.0.0-2alpha8.zip",
                 "PackageName": "lmbench",

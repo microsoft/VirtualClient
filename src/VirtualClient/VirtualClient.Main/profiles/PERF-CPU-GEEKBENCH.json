@@ -10,7 +10,7 @@
         {
             "Type": "GeekbenchExecutor",
             "Parameters": {
-                "Scenario": "ScoreSystem",
+                "Scenario": "ExecuteGeekBench5Benchmark",
                 "CommandLine": "--no-upload",
                 "PackageName": "geekbench5"
             }
@@ -20,7 +20,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGeekBench5",
+                "Scenario": "InstallGeekBench5Package",
                 "BlobContainer": "packages",
                 "BlobName": "geekbench5.1.0.0.zip",
                 "PackageName": "geekbench5",

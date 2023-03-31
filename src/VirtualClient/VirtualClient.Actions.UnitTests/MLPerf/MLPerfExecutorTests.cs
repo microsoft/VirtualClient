@@ -300,7 +300,7 @@ namespace VirtualClient.Actions
             {
                 { nameof(MLPerfExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfExecutor.Username), "anyuser" },
-                { nameof(MLPerfExecutor.Scenario), "bert"}
+                { nameof(MLPerfExecutor.Model), "bert"}
             };
         }
 

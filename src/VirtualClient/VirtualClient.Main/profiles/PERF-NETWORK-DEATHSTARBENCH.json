@@ -58,7 +58,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallDeathStarBench",
+                "Scenario": "InstallDeathStarBenchPackage",
                 "BlobContainer": "packages",
                 "BlobName": "deathstarbench.2.0.0.zip",
                 "PackageName": "deathstarbench",

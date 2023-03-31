@@ -15,7 +15,7 @@
         {
             "Type": "CoreMarkProExecutor",
             "Parameters": {
-                "Scenario": "CoreMarkProBenchmark",
+                "Scenario": "ExecuteCoremarkProBenchmark",
                 "PackageName": "coremarkpro"
             }
         }

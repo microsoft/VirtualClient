@@ -129,7 +129,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallOpenSSL",
+                "Scenario": "InstallOpenSSLPackage",
                 "BlobContainer": "packages",
                 "BlobName": "openssl.3.0.0.zip",
                 "PackageName": "openssl",

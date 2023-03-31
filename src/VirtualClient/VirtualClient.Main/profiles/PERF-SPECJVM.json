@@ -11,7 +11,7 @@
         {
             "Type": "SpecJvmExecutor",
             "Parameters": {
-                "Scenario": "JavaPerformance",
+                "Scenario": "ExecuteJavaPerformanceBenchmark",
                 "PackageName": "specjvm2008",
                 "JdkPackageName": "javadevelopmentkit",
                 "Workloads": "compress,crypto,derby,mpegaudio,scimark,serial,sunflow",
@@ -31,7 +31,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallSPECjvm",
+                "Scenario": "InstallSPECjvmPackage",
                 "BlobContainer": "packages",
                 "BlobName": "specjvm.2008.0.0.zip",
                 "PackageName": "specjvm2008",
@@ -41,7 +41,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallJavaSDK",
+                "Scenario": "InstallJDKPackage",
                 "BlobContainer": "packages",
                 "BlobName": "microsoft-jdk-17.0.5.zip",
                 "PackageName": "javadevelopmentkit",
@@ -51,7 +51,7 @@
         {
             "Type": "JavaDevelopmentKitInstallation",
             "Parameters": {
-                "Scenario": "InstallJdk",
+                "Scenario": "InstallJDK",
                 "PackageName": "javadevelopmentkit"
             }
         }

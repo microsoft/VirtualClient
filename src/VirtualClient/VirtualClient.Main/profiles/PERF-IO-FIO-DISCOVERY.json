@@ -508,7 +508,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallFIO",
+                "Scenario": "InstallFIOPackage",
                 "BlobContainer": "packages",
                 "BlobName": "fio.3.30.0.zip",
                 "PackageName": "fio",

@@ -318,7 +318,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallNetworkToolsets",
+                "Scenario": "InstallNetworkToolsetPackage",
                 "BlobContainer": "packages",
                 "BlobName": "networking.2.0.0.zip",
                 "PackageName": "networking",

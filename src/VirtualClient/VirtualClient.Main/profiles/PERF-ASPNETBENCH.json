@@ -14,7 +14,7 @@
         {
             "Type": "AspNetBenchExecutor",
             "Parameters": {
-                "Scenario": "JsonSerialization",
+                "Scenario": "ExecuteJsonSerializationBenchmark",
                 "PackageName": "aspnetbenchmarks",
                 "BombardierPackageName": "bombardier",
                 "DotNetSdkPackageName": "dotnetsdk",
@@ -57,7 +57,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallBombardier",
+                "Scenario": "InstallBombardierPackage",
                 "BlobContainer": "packages",
                 "BlobName": "bombardier.1.2.5.zip",
                 "PackageName": "bombardier",

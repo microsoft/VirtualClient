@@ -17,7 +17,7 @@
         {
             "Type": "Prime95Executor",
             "Parameters": {
-                "Scenario": "ApplyStress",
+                "Scenario": "ApplyCPUStress",
                 "CommandLine": "-t",
                 "TimeInMins": "$.Parameters.TimeInMins",
                 "MinTortureFFT": "$.Parameters.MinTortureFFT",
@@ -33,7 +33,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallPrime95",
+                "Scenario": "InstallPrime95Package",
                 "BlobContainer": "packages",
                 "BlobName": "prime95-v308b16.zip",
                 "PackageName": "prime95",

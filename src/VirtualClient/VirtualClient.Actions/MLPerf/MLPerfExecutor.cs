@@ -88,6 +88,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The MLPerf model name (e.g. bert, rnnt, ssd-mobilenet).
+        /// </summary>
+        public string Model
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.Model));
+            }
+        }
+
+        /// <summary>
         /// The user who has the ssh identity registered for.
         /// </summary>
         public string Username => this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username));
@@ -128,16 +139,16 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                foreach (string config in this.benchmarkConfigs[this.Scenario])
+                foreach (string config in this.benchmarkConfigs[this.Model])
                 {
                     string perfModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
                         $"sudo bash -c \"{this.ExportScratchSpace} && " +
-                        $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
+                        $"make run RUN_ARGS=\'--benchmarks={this.Model} --scenarios={this.scenarios[this.Model]} " +
                         $"--config_ver={config} --test_mode=PerformanceOnly --fast\'\"";
 
                     string accuracyModeExecCommand = $"docker exec -u {this.Username} {this.GetContainerName()} " +
                         $"sudo bash -c \"{this.ExportScratchSpace} && " +
-                        $"make run RUN_ARGS=\'--benchmarks={this.Scenario} --scenarios={this.scenarios[this.Scenario]} " +
+                        $"make run RUN_ARGS=\'--benchmarks={this.Model} --scenarios={this.scenarios[this.Model]} " +
                         $"--config_ver={config} --test_mode=AccuracyOnly --fast\'\"";
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", perfModeExecCommand, this.NvidiaDirectory, telemetryContext, cancellationToken)
@@ -370,7 +381,7 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMetrics(
                         "MLPerf",
-                        this.Scenario,
+                        this.Model,
                         process.StartTime,
                         process.ExitTime,
                         metrics,
@@ -396,7 +407,7 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMetrics(
                         "MLPerf",
-                        this.Scenario,
+                        this.Model,
                         process.StartTime,
                         process.ExitTime,
                         metrics,

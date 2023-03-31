@@ -13,7 +13,7 @@
         {
             "Type": "SysbenchOLTPServerExecutor",
             "Parameters": {
-                "Scenario": "Server",
+                "Scenario": "mysql_server",
                 "Role": "Server"
             }
         },
@@ -378,7 +378,7 @@
         {
             "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneRepo",
+                "Scenario": "CloneSysbenchRepo",
                 "RepoUri": "https://github.com/akopytov/sysbench.git",
                 "PackageName": "sysbench",
                 "Role": "Client"
@@ -387,7 +387,7 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureServer",
+                "Scenario": "ConfigureMySQLServer",
                 "Action": "StartServer",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"
@@ -396,7 +396,7 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "CreateDatabase",
+                "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"
@@ -405,7 +405,7 @@
         {
             "Type": "MySQLServerConfiguration",
             "Parameters": {
-                "Scenario": "ConfigureDatabase",
+                "Scenario": "ConfigureMySQLDatabase",
                 "Action": "RaisedStatementCount",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "Role": "Server"

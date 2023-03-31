@@ -14,7 +14,7 @@
         {
             "Type": "PostgreSQLExecutor",
             "Parameters": {
-                "Scenario": "TPC-C",
+                "Scenario": "ExecuteTPCCBenchmark",
                 "PackageName": "postgresql",
                 "Benchmark": "tpcc",
                 "HammerDBPackageName": "hammerdb",
@@ -28,7 +28,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallPostgreSQL",
+                "Scenario": "InstallPostgreSQLPackage",
                 "BlobContainer": "packages",
                 "BlobName": "postgresql.14.0.0.zip",
                 "PackageName": "postgresql",
@@ -38,7 +38,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallHammerDB",
+                "Scenario": "InstallHammerDBPackage",
                 "BlobContainer": "packages",
                 "BlobName": "hammerdb.4.7.0.zip",
                 "PackageName": "hammerdb",

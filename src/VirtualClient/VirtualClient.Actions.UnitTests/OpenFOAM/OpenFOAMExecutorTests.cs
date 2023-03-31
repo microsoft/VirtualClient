@@ -141,7 +141,7 @@ namespace VirtualClient.Actions
                     }
 
                 }
-                Assert.IsNull(workingDirectory);              
+                Assert.IsNull(workingDirectory);
                 return this.fixture.Process;
 
             };
@@ -223,7 +223,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(OpenFOAMExecutor.PackageName), "OpenFOAM" },
-                { nameof(OpenFOAMExecutor.Scenario), "elbow" },
+                { nameof(OpenFOAMExecutor.Simulation), "elbow" },
                 { nameof(OpenFOAMExecutor.Solver), "icoFoam" }
             };
 

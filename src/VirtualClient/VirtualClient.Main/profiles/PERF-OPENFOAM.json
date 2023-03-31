@@ -12,7 +12,8 @@
         {
             "Type": "OpenFOAMExecutor",
             "Parameters": {
-                "Scenario": "airFoil2D",
+                "Scenario": "AirFoil2D",
+                "Simulation": "airFoil2D",
                 "Iterations": "$.Parameters.Iterations",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
@@ -22,7 +23,8 @@
         {
             "Type": "OpenFOAMExecutor",
             "Parameters": {
-                "Scenario": "elbow",
+                "Scenario": "Elbow",
+                "Simulation": "elbow",
                 "Iterations": "$.Parameters.Iterations",
                 "Solver": "icoFoam",
                 "PackageName": "openfoam",
@@ -32,7 +34,8 @@
         {
             "Type": "OpenFOAMExecutor",
             "Parameters": {
-                "Scenario": "lockExchange",
+                "Scenario": "LockExchange",
+                "Simulation": "lockExchange",
                 "Iterations": "$.Parameters.Iterations",
                 "Solver": "twoLiquidMixingFoam",
                 "PackageName": "openfoam",
@@ -42,7 +45,8 @@
         {
             "Type": "OpenFOAMExecutor",
             "Parameters": {
-                "Scenario": "motorBike",
+                "Scenario": "MotorBike",
+                "Simulation": "motorBike",
                 "Iterations": "$.Parameters.Iterations",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
@@ -52,7 +56,8 @@
         {
             "Type": "OpenFOAMExecutor",
             "Parameters": {
-                "Scenario": "pitzDaily",
+                "Scenario": "PitzDaily",
+                "Simulation": "pitzDaily",
                 "Iterations": "$.Parameters.Iterations",
                 "Solver": "simpleFoam",
                 "PackageName": "openfoam",
@@ -64,7 +69,7 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallOpenFOAM",
+                "Scenario": "InstallOpenFOAMPackage",
                 "BlobContainer": "packages",
                 "BlobName": "openfoam.1.4.0.zip",
                 "PackageName": "openfoam",
@@ -74,7 +79,7 @@
         {
             "Type": "OpenFOAMInstallation",
             "Parameters": {
-                "Scenario": "InstallToolsets",
+                "Scenario": "InstallOpenFOAM",
                 "PackageName": "openfoam"
             }
         }

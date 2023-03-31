@@ -17,7 +17,8 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "bert",
+                "Scenario": "inferencemodels-bert",
+                "Model": "bert",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter"
             }
@@ -25,7 +26,8 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "rnnt",
+                "Scenario": "inferencemodels-rnnt",
+                "Model": "rnnt",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter"
             }
@@ -33,7 +35,8 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "ssd-mobilenet",
+                "Scenario": "inferencemodels-ssd-mobilenet",
+                "Model": "ssd-mobilenet",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter"
             }
@@ -41,7 +44,8 @@
         {
             "Type": "MLPerfExecutor",
             "Parameters": {
-                "Scenario": "ssd-resnet34",
+                "Scenario": "inferencemodels-ssd-resnet34",
+                "Model": "ssd-resnet34",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter"
             }
@@ -57,7 +61,7 @@
         {
             "Type": "CloneRepo",
             "Parameters": {
-                "Scenario": "CloneRepo",
+                "Scenario": "CloneMLCommonsRepo",
                 "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
                 "PackageName": "mlperf"
             }
