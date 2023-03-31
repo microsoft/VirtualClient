@@ -9,8 +9,10 @@
     "Username": "null",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
+    "HyperThreadingON": true,
     "ProblemSizeN": null,
     "BlockSizeNB": "256",
+    "NumberOfProcesses": null,
     "CCFLAGS": "-march=native"
   },
   "Actions": [
@@ -19,8 +21,10 @@
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "Username": "$.Parameters.Username",
+        "HyperThreadingON": "$.Parameters.HyperThreadingON",
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
+        "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
         "CCFLAGS": "$.Parameters.CCFLAGS",
         "PackageName": "hplinpack"
       }

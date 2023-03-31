@@ -31,12 +31,14 @@ This profile is designed to identify general/broad regressions when compared aga
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Username | Mandatory.User which needs to run HPLinpack |null|
+  | Username | Mandatory.Which user needs to run HPLinpack |null|
   | CompilerName | Name of compiler used | gcc |
   | CompilerVersion | Version of compiler | 11 |
-  |   ProblemSizeN       |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of processors* 10000 (This value is machine dependent) |
+  |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of cores* 10000 (This value is machine dependent) |
   |   BlockSizeNB       |  The partitioning blocking factor  | 256 |
   | CCFLAGS | compiler flags| -march=native  |
+  | HyperThreadingON | True is hyperthreading to be on | True |
+  | NumberOfProcesses | Number of processes to be launched for the parallel program | null (By default it is equal to number of cores of the machine)|
 
   There are two other input values for HPLinpack. They are 
   * P (The number of process rows)

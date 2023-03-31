@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -56,6 +57,22 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True if Hyperthreading is on
+        /// </summary>
+        public bool HyperThreadingON
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingON), true);
+            }
+
+            set
+            {
+                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingON)] = value;
+            }
+        }
+
+        /// <summary>
         /// The order of the coefficient matrix also known as problem size (N)
         /// </summary>
         public string ProblemSizeN
@@ -75,6 +92,17 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(HPLinpackExecutor.BlockSizeNB), out IConvertible nb);
                 return nb?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The order of the coefficient matrix also known as problem size (N)
+        /// </summary>
+        public string NumberOfProcesses
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.NumberOfProcesses), this.systemManagement.GetSystemCoreCount());
             }
         }
 
@@ -156,8 +184,17 @@ namespace VirtualClient.Actions
             this.SetParameters();
             await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            string results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.coreCount} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
+            string results;
+            if (this.HyperThreadingON)
+            {
+                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+            }
+            else
+            {
+                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            }
             
             DateTime endTime = DateTime.UtcNow;
             this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
