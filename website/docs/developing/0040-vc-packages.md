@@ -194,6 +194,26 @@ folder structure should match the platform/architectures that are supported. The
 
   </div>
 
+## Zipping Up Your Packages
+Once you have created the folder structure for your package and have placed all of the binaries, scripts, etc... into the folders where you like,
+the next step is to zip it up so that it can be uploaded to a package store location (or to a shared folder location on your system or network).
+There is a handy PowerShell script in source that makes it very easy and ensures the folder structure within the .zip file created remains exactly
+as you defined it. If you have cloned the Virtual Client repo, you will already have the script. You can download it or copy the contents into your own
+file if not. Note that this requires PowerShell 7.
+
+:::note
+> Why a Script?  
+> Windows out-of-box "Send to Compressed (zipped) folder" places your directory in a zip file whose name is the same. This duplication of hierarchy is
+> not desirable which is why the VC team uses the custom PowerShell script noted below
+:::
+
+* [Create-ZipFile.ps1](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/Create-ZipFile.ps1)
+
+``` powershell
+# Open the PowerShell 7 console and execute the command to zip your package.
+C:\source\repos\virtualclient\src\VirtualClient> .\Create-ZipFile "C:\Users\Any\Desktop\customworkload.1.2.3" "C:\Users\Any\Desktop\customworkload.1.2.3.zip"
+```
+
 ## What Packages Are Required
 The packages that are used as part of a Virtual Client profile are defined in the 'Dependencies' section of the profile. If custom package locations
 are used, the package name <u>MUST match the name in the profile dependencies</u> (e.g. 'geekbench5' in the example below).
