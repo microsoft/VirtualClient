@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
                 @"linux-x64/bin/Linux_GCC/HPL.dat"
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
+            // this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -136,7 +136,7 @@ namespace VirtualClient.Actions
                 @"linux-arm64/bin/Linux_GCC/HPL.dat"
             };
 
-            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
+            // this.mockFixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
 
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -181,7 +181,7 @@ namespace VirtualClient.Actions
                 {
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u null -- mpirun --use-hwthread-cpus -np 16 ./xhpl"
+                    $"sudo runuser -u null -- mpirun --use-hwthread-cpus -np 8 ./xhpl"
                 };
         }
     }

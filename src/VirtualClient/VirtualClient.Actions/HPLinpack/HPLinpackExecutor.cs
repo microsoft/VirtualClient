@@ -79,7 +79,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), this.systemManagement.GetSystemCoreCount() * 10000);
+                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), Environment.ProcessorCount * 10000);
             }
         }
 
@@ -102,7 +102,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.NumberOfProcesses), this.systemManagement.GetSystemCoreCount());
+                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.NumberOfProcesses), Environment.ProcessorCount);
             }
         }
 
@@ -151,7 +151,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.ThrowIfPlatformIsNotSupported();
-            this.coreCount = this.systemManagement.GetSystemCoreCount();
+            this.coreCount = Environment.ProcessorCount;
 
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                                                     .ConfigureAwait(false);
@@ -164,11 +164,11 @@ namespace VirtualClient.Actions
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName))
                 .ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), true, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
 
             await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, false, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
 
         }
 
@@ -177,27 +177,43 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DateTime startTime = DateTime.UtcNow;
-            await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, false, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-
-            this.SetParameters();
-            await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
-            string results;
-            if (this.HyperThreadingON)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+                DateTime startTime = DateTime.UtcNow;
+                await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                this.SetParameters();
+                await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+
+                // string results;
+                IProcessProxy process;
+                // if()
+                if (this.HyperThreadingON)
+                {
+                    process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                }
+                else
+                {
+                    process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                }
+
+                using (process)
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true)
+                            .ConfigureAwait();
+
+                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+
+                    }
+                }
+
+                // DateTime endTime = DateTime.UtcNow;
+                // this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
             }
-            else
-            {
-                results = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), true, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-            }
-            
-            DateTime endTime = DateTime.UtcNow;
-            this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
         }
 
         private void SetParameters()
@@ -233,7 +249,7 @@ namespace VirtualClient.Actions
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string makeFilePath = this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName);
-            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN {this.makeFileName}", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), false, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("mv", $"Make.UNKNOWN {this.makeFileName}", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken);
 
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"ARCH *= *[^\n]*", "ARCH = Linux_GCC", cancellationToken);
@@ -327,7 +343,7 @@ namespace VirtualClient.Actions
 
         }
 
-        private async Task<string> ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, bool runElevated, EventContext telemetryContext, CancellationToken cancellationToken)
+        /*private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, bool runElevated, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string output = string.Empty;
 
@@ -353,25 +369,31 @@ namespace VirtualClient.Actions
 
                     using (process)
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            // this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
+                            // await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true);
+                            // process.ThrowIfWorkloadFailed();
+                            this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait();
+
+                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            // process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                         }
 
-                        output = process.StandardOutput.ToString();
+                        // output = process.StandardOutput.ToString();
 
                     }
                 }).ConfigureAwait(false);
             }
 
             return output;
-        }
+        }*/
 
-        private void LogMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
             IList<Metric> metrics = parser.Parse();
