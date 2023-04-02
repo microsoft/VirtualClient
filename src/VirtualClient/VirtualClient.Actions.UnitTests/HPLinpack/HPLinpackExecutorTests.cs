@@ -75,13 +75,13 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np 8 ./xhpl"
+                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np 8 ./xhpl")
+                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
                     }
@@ -130,7 +130,6 @@ namespace VirtualClient.Actions
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
-            // this.fixture.SystemManagement.Setup(mgr => mgr.GetSystemCoreCount()).Returns(16);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -141,7 +140,8 @@ namespace VirtualClient.Actions
                 ["Version"] = "2.3",
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
-                ["Scenario"] = "ProcessorSpeed"
+                ["Scenario"] = "ProcessorSpeed",
+                ["NumberOfProcesses"] = "10"
             };
         }
 

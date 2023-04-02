@@ -186,9 +186,7 @@ namespace VirtualClient.Actions
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-                // string results;
                 IProcessProxy process;
-                // if()
                 if (this.HyperThreadingON)
                 {
                     process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
@@ -210,9 +208,6 @@ namespace VirtualClient.Actions
 
                     }
                 }
-
-                // DateTime endTime = DateTime.UtcNow;
-                // this.LogMetrics(results, startTime, endTime, telemetryContext, cancellationToken);
             }
         }
 
@@ -342,56 +337,6 @@ namespace VirtualClient.Actions
             }
 
         }
-
-        /*private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, bool runElevated, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string output = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-                EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", pathToExe)
-                .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(HPLinpackExecutor)}.ExecuteWorkload", relatedContext, async () =>
-                {
-                    DateTime start = DateTime.Now;
-                    IProcessProxy process;
-                    if (runElevated)
-                    {
-                        process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory);
-                    }
-                    else
-                    {
-                        process = this.systemManagement.ProcessManager.CreateProcess(pathToExe, commandLineArguments, workingDirectory);
-                    }
-
-                    using (process)
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait();
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            // this.Logger.LogProcessDetails<HPLinpackExecutor>(process, telemetryContext);
-                            // await this.LogProcessDetailsAsync(process, telemetryContext, "HPLinpack", logToFile: true);
-                            // process.ThrowIfWorkloadFailed();
-                            this.LogProcessDetailsAsync(process, telemetryContext)
-                                .ConfigureAwait();
-
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                            // process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                        }
-
-                        // output = process.StandardOutput.ToString();
-
-                    }
-                }).ConfigureAwait(false);
-            }
-
-            return output;
-        }*/
 
         private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
