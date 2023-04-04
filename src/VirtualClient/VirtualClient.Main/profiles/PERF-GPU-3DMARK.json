@@ -1,0 +1,45 @@
+{
+  "Description": "3DMark TimeSpy GPU Performance Workload",
+  "Actions": [
+    {
+      "Type": "ThreeDMarkExecutor",
+      "Parameters": {
+        "Scenario": "TimeSpy",
+        "LisenceKey": "",
+        "PackageName": "3dmark",
+        "Tags": "GPU,3DMark,Gaming"
+      }
+    }
+  ],
+  "Monitors": [
+    {
+      "Type": "AmdSmiMonitor",
+      "Parameters": {
+        "MonitorFrequency": "00:00:05",
+        "MonitorWarmupPeriod": "00:00:10"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "AMDGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallDriver",
+        "BlobContainer": "packages",
+        "BlobName": "",
+        "PackageName": "",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "Install3DMarkWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "3DMark.zip",
+        "PackageName": "3DMark",
+        "Extract": true
+      }
+    }
+  ]
+}
