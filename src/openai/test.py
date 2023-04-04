@@ -19,7 +19,7 @@ while(True):
     user_input = input()      
     conversation.append({"role": "user", "content": user_input})
     response = openai.ChatCompletion.create(
-      engine="crc",
+      engine="chat",
       messages = conversation,
       temperature=1,
       max_tokens=400,
@@ -30,7 +30,7 @@ while(True):
 
     conversation.append({"role": "assistant", "content": response['choices'][0]['message']['content']})
     print("\n" + response['choices'][0]['message']['content'] + "\n")
-
+    print("------------------------------------------")
 
 
 
