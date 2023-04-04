@@ -96,13 +96,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The order of the coefficient matrix also known as problem size (N)
+        /// The number of instances of program to start. Defaults to number of logical processor count and can be overwritten from command line.
         /// </summary>
-        public string NumberOfProcesses
+        public int NumberOfProcesses
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.NumberOfProcesses), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(HPLinpackExecutor.NumberOfProcesses), Environment.ProcessorCount);
             }
         }
 
@@ -152,6 +152,8 @@ namespace VirtualClient.Actions
         {
             this.ThrowIfPlatformIsNotSupported();
             this.coreCount = Environment.ProcessorCount;
+
+            this.ValidateParameters();
 
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                                                     .ConfigureAwait(false);
@@ -213,14 +215,14 @@ namespace VirtualClient.Actions
 
         private void SetParameters()
         {
-            // gives you P*Q = Environment.ProcessorCount and P <= Q and  Q-P to be the minimum possible value.
+            // gives you P*Q = Number of processes( Default: Environment.ProcessorCount, overwrite to value from command line to VC if supplied) and P <= Q and  Q-P to be the minimum possible value.
             this.ProcessRows = 1;
-            this.ProcessColumns = this.coreCount;
-            for (int i = 2; i <= Math.Sqrt(this.coreCount); i++)
+            this.ProcessColumns = this.NumberOfProcesses;
+            for (int i = 2; i <= Math.Sqrt(this.NumberOfProcesses); i++)
             {
-                if (this.coreCount % i == 0)
+                if (this.NumberOfProcesses % i == 0)
                 {
-                    int j = this.coreCount / i;
+                    int j = this.NumberOfProcesses / i;
                     if (j - i < this.ProcessColumns - this.ProcessRows)
                     {
                         this.ProcessRows = i;
@@ -238,6 +240,15 @@ namespace VirtualClient.Actions
                     $"The HPL workload is currently only supported on the following platform/architectures: " +
                     $"'{PlatformSpecifics.LinuxX64}', '{PlatformSpecifics.LinuxArm64}'.",
                     ErrorReason.PlatformNotSupported);
+            }
+        }
+
+        private void ValidateParameters()
+        {
+            if (this.HyperThreadingON && this.NumberOfProcesses > this.coreCount)
+            {
+                throw new Exception(
+                    $"NumberOfProcesses parameter value should be less than or equal to number of logical cores");
             }
         }
 

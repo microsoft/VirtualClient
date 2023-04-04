@@ -9,7 +9,6 @@
     "Username": "null",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
-    "HyperThreadingON": true,
     "ProblemSizeN": null,
     "BlockSizeNB": "256",
     "NumberOfProcesses": null,
@@ -21,7 +20,7 @@
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "Username": "$.Parameters.Username",
-        "HyperThreadingON": "$.Parameters.HyperThreadingON",
+        "HyperThreadingON": true,
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",

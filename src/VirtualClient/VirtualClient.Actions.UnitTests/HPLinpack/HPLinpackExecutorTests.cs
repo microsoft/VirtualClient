@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common.Telemetry;
     using System.CodeDom.Compiler;
+    using Microsoft.Azure.Amqp.Framing;
 
     [TestFixture]
     [Category("Unit")]
@@ -57,6 +58,22 @@ namespace VirtualClient.Actions
                 string workloadExpectedPath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPath, platform, architecture).Path;
 
                 Assert.AreEqual(workloadExpectedPath, executor.GetHPLDirectory);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public void HPLinpackExecutorThrowsOnValidateParametersFailing(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            this.fixture.Parameters["NumberOfProcesses"] = 10;
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
+            {
+                Exception exception = Assert.ThrowsAsync<Exception>(
+                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
+
+                StringAssert.Contains("NumberOfProcesses parameter value should be less than or equal to number of logical cores", exception.Message);
             }
         }
 
@@ -141,7 +158,7 @@ namespace VirtualClient.Actions
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "10"
+                ["NumberOfProcesses"] = "2"
             };
         }
 
