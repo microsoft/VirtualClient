@@ -5,7 +5,7 @@ openai.api_base = "https://vc-openai.openai.azure.com/"
 openai.api_version = "2023-03-15-preview"
 openai.api_key = os.getenv("vc-openai-key")
 
-with open('src/openai/prompt.txt', 'r') as file:
+with open('src/openai/vc-chatbot-prompt.txt', 'r') as file:
     prompt = file.read()
 
 conversation = [
