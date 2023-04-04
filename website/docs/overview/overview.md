@@ -60,6 +60,7 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [Graph500](../workloads/graph500/graph500.md) | 3D Simulation | linux-x64, linux-arm64 | [Custom](https://github.com/graph500/graph500/blob/newreference/license.txt)  |
 | [gzip](../workloads/compression/gzip.md) | pbzip2 compression | linux-x64, linux-arm64 | [GPL](https://www.gnu.org/software/gzip/)  |
 | [HPCG](../workloads/hpcg/hpcg.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [Custom](https://github.com/hpcg-benchmark/hpcg/blob/master/COPYING)  |
+| [HPLinpack](../workloads/HPLinpack/HPLinpack.md) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
 | [LAPACK](../workloads/lapack/lapack.md) | Linear Equations | linux-x64, linux-arm64, win-x64, win-arm64 | [Custom](https://github.com/Reference-LAPACK/lapack/blob/master/LICENSE)  |
 | [Latte](../workloads/network-suite/network-suite.md) | Network latency | win-x64, win-arm64 | [MIT](https://github.com/microsoft/latte/blob/main/LICENSE)  |
 | [LMbench](../workloads/lmbench/lmbench.md) | Generic Memory | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |

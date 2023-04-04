@@ -20,6 +20,26 @@ namespace VirtualClient.Contracts
     public class PlatformSpecifics
     {
         /// <summary>
+        /// LinuxX64 platformArchitecture Name.
+        /// </summary>
+        public static readonly string LinuxX64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64);
+
+        /// <summary>
+        /// LinuxArm64 platformArchitecture Name.
+        /// </summary>
+        public static readonly string LinuxArm64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64);
+
+        /// <summary>
+        /// WinX64 platformArchitecture Name.
+        /// </summary>
+        public static readonly string WinX64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.X64);
+
+        /// <summary>
+        /// WinArm64 platformArchitecture Name.
+        /// </summary>
+        public static readonly string WinArm64 = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64);
+
+        /// <summary>
         /// Initializes a new version of the <see cref="PlatformSpecifics"/> class.
         /// </summary>
         public PlatformSpecifics(PlatformID platform, Architecture architecture)
