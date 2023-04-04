@@ -1,7 +1,7 @@
 ﻿# HPLinpack Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the HPLinpack workload.  
 
-* [Workload Details](./HPLinpack.md)  
+* [Workload Details](./hplinpack.md)  
 
 ## PERF-CPU-HPLINPACK.json
 HPL (High Performance Linpack) is a software package that solves a (random) dense linear system in double precision (64 bits) arithmetic on distributed-memory computers. It can thus be regarded as a portable as well as freely available implementation of the High Performance Computing Linpack Benchmark.
