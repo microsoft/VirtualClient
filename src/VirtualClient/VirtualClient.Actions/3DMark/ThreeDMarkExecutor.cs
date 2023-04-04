@@ -1,0 +1,346 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Actions
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Drawing;
+    using System.IO.Abstractions;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
+    using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
+
+    /// <summary>
+    /// Executes the 3DMark workload.
+    /// </summary>
+    [WindowsCompatible]
+    public class ThreeDMarkExecutor : VirtualClientComponent
+    {
+        private IFileSystem fileSystem;
+        private ISystemManagement systemManagement;
+
+        /// <summary>
+        /// ConstructorD
+        /// </summary>
+        /// <param name="dependencies">Provides required dependencies to the component.</param>
+        /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
+        public ThreeDMarkExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            : base(dependencies, parameters)
+        {
+            this.fileSystem = dependencies.GetService<IFileSystem>();
+            this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
+            this.Definitions = new List<string>();
+            if (this.Scenario == "TimeSpy")
+            {
+                this.Definitions.Add("custom_TSGT1.3dmdef");
+                this.Definitions.Add("custom_TSGT2.3dmdef");
+                this.Definitions.Add("custom_TSCT.3dmdef");
+            }
+        }
+
+        /// <summary>
+        /// 3DMark enterprise lisence key
+        /// </summary>
+        public string LisenceKey
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(ThreeDMarkExecutor.LisenceKey));
+            }
+        }
+
+        /// <summary>
+        /// The 3D Mark defintion file to execute.
+        /// </summary>
+        public List<string> Definitions { get; set; }
+
+        /// <summary>
+        /// The path for the intermediate results file.
+        /// </summary>
+        public string OutFileName { get; set; }
+
+        /// <summary>
+        /// The path to the 3DMark executable.
+        /// </summary>
+        public string ExecutablePath { get; set; }
+
+        /// <summary>
+        /// The path to the 3DMark executable.
+        /// </summary>
+        public string DLCPath { get; set; }
+
+        /// <summary>
+        /// Defines the path to the 3DMark package that contains the workload
+        /// executable.
+        /// </summary>
+        protected DependencyPath Package { get; set; }
+
+        /// <summary>
+        /// Executes the 3DMark workload.
+        /// </summary>
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Initializes the environment
+        /// </summary>
+#pragma warning disable AsyncFixer01 // Unnecessary async/await usage
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
+
+            await this.InitializePackageLocationAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "3DMark", "3DMarkCmd.exe");
+            this.DLCPath = this.PlatformSpecifics.Combine(this.Package.Path, "DLC", "3DMark");
+        }
+#pragma warning restore AsyncFixer01 // Unnecessary async/await usage
+
+        private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string commandArguments, string definition, EventContext telemetryContext)
+        {
+            if (workloadProcess.ExitCode == 0)
+            {
+                try
+                {
+                    string resultsFilePath = this.PlatformSpecifics.Combine(this.Package.Path, "3DMark", "result.xml");
+                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
+                    ThreeDMarkMetricsParser resultsParser = new ThreeDMarkMetricsParser(resultsContent, definition);
+                    return resultsParser.Parse();
+
+                }
+                catch (SchemaException exc)
+                {
+                    EventContext relatedContext = telemetryContext.Clone()
+                        .AddError(exc);
+
+                    this.Logger.LogMessage($"{nameof(ThreeDMarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    return new List<Metric>();
+                }
+            }
+            else
+            {
+                return new List<Metric>();
+            }
+        }
+
+        private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            IList<Metric> metrics = new List<Metric>();
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("executable", this.ExecutablePath);
+
+            return this.Logger.LogMessageAsync($"{nameof(ThreeDMarkExecutor)}.ExecuteWorkload", relatedContext, async () =>
+            {
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                {
+                    // Point 3DMark to DLC Path
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, $"--path={this.DLCPath}"))
+                    {
+                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
+                        try
+                        {
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                this.Logger.LogInformation("Registering 3DMark License");
+                                this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+
+                            }
+                        }
+                        finally
+                        {
+                            if (!process.HasExited)
+                            {
+                                process.Kill();
+                            }
+                        }
+                    }
+
+                    // Lisence Registry
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, $"--register={this.LisenceKey}"))
+                    {
+                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
+                        try
+                        {
+                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                this.Logger.LogInformation("Initializing 3DMark DLC");
+                                this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+
+                            }
+                        }
+                        finally
+                        {
+                            if (!process.HasExited)
+                            {
+                                process.Kill();
+                            }
+                        }
+                    }
+
+                    DateTime startTime = DateTime.UtcNow;
+                    foreach (string definition in this.Definitions)
+                    {
+                        this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
+
+                        // Workload execution
+                        string commandArguments = this.GenerateCommandArguments(definition);
+
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                        {
+                            SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
+                            try
+                            {
+                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+
+                                }
+                            }
+                            finally
+                            {
+                                if (!process.HasExited)
+                                {
+                                    process.Kill();
+                                }
+                            }
+                        }
+
+                        // Result Preparation
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, $"--in={this.OutFileName} --export=result.xml"))
+                        {
+                            SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+
+                            try
+                            {
+                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
+                                    {
+                                        metrics.Add(metric);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                if (!process.HasExited)
+                                {
+                                    process.Kill();
+                                }
+                            }
+                        }
+                    }
+
+                    DateTime endTime = DateTime.UtcNow;
+
+                    foreach (Metric metric in this.CalculateAggregates(metrics))
+                    {
+                        metrics.Add(metric);
+                    }
+
+                    this.Logger.LogMetrics(
+                        "3DMark",
+                        $"3DMark {this.Scenario} Results",
+                        startTime,
+                        endTime,
+                        metrics,
+                        null,
+                        string.Empty,
+                        this.Tags,
+                        telemetryContext);
+                }
+            });
+        }
+
+        private IList<Metric> CalculateAggregates(IList<Metric> metrics)
+        {
+            IList<Metric> aggregates = new List<Metric>();
+            double tsgt1 = 0;
+            double tsgt2 = 0;
+            double tsct = 0;
+            foreach (Metric metric in metrics)
+            {
+                if (metric.Name == "timespy.graphics.1")
+                {
+                    tsgt1 = metric.Value;
+                }
+                else if (metric.Name == "timespy.graphics.2")
+                {
+                    tsgt2 = metric.Value;
+                }
+                else if (metric.Name == "timespy.cpu")
+                {
+                    tsct = metric.Value;
+                }
+            }
+
+            // Harmonic Mean
+            if (tsgt1 != 0 && tsgt2 != 0 && tsct != 0)
+            {
+                double graphicsScore = 165 * (2 / ((1 / tsgt1) + (1 / tsgt2)));
+                double cpuScore = 298 * tsct;
+                double aggScore = 1 / ((0.85 / graphicsScore) + (0.15 / cpuScore));
+                aggregates.Add(new Metric("timespy.graphics.agg", graphicsScore, "score", MetricRelativity.HigherIsBetter));
+                aggregates.Add(new Metric("timespy.cpu.agg", cpuScore, "score", MetricRelativity.HigherIsBetter));
+                aggregates.Add(new Metric("timespy.finalscore", aggScore, "score", MetricRelativity.HigherIsBetter));
+            }
+
+            return aggregates;
+        }
+
+        private string GenerateCommandArguments(string definition)
+        {
+            return $"--definition={definition} --out={this.OutFileName}";
+        }
+
+        private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                DependencyPath workloadPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                if (workloadPackage == null)
+                {
+                    throw new DependencyException(
+                        $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+                }
+
+                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+
+                this.Package = workloadPackage;
+            }
+        }
+
+    }
+}
