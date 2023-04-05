@@ -12,7 +12,7 @@
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// 
+    /// SOC Stress running FPGA factory tester.
     /// </summary>
     public class SOCStressFPGAFactoryTesterExecutor : VirtualClientComponent
     {
@@ -63,7 +63,7 @@
         }
 
         /// <summary>
-        /// The Host name.
+        /// Flag used for disabling SOC PCIe.
         /// </summary>
         public bool DisableSOCPCIe
         {
@@ -74,7 +74,7 @@
         }
 
         /// <summary>
-        /// The Host name.
+        /// Flag used for disabling SOC DRam.
         /// </summary>
         public bool DisableSOCDRAM
         {
@@ -85,7 +85,7 @@
         }
 
         /// <summary>
-        /// The Host name.
+        /// Flag used for disabling SOC Power Virus.
         /// </summary>
         public bool DisableSOCPowerVirus
         {
@@ -96,7 +96,7 @@
         }
 
         /// <summary>
-        /// The Host name.
+        /// Flag used for verbose.
         /// </summary>
         public bool FPGAStressVerbose
         {
@@ -107,18 +107,18 @@
         }
 
         /// <summary>
-        /// 
+        /// Timeout for FPGA factory tester.
         /// </summary>
-        public string FPGAFacotryTesterTimeout
+        public string FPGAFactoryTesterTimeout
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SOCStressFPGAFactoryTesterExecutor.FPGAFacotryTesterTimeout));
+                return this.Parameters.GetValue<string>(nameof(SOCStressFPGAFactoryTesterExecutor.FPGAFactoryTesterTimeout));
             }
         }
 
         /// <summary>
-        /// 
+        /// Executes the workload.
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -128,7 +128,7 @@
                 {
                     sshClient.Connect();
 
-                    string fpgaFactoryTesterCommand = $"fpgafactorytester -duration {this.FPGAFacotryTesterTimeout}";
+                    string fpgaFactoryTesterCommand = $"fpgafactorytester -duration {this.FPGAFactoryTesterTimeout}";
                     if (this.DisableSOCPCIe)
                     {
                         fpgaFactoryTesterCommand += " -pcie 0";
@@ -149,7 +149,13 @@
                         fpgaFactoryTesterCommand += " -verbose";
                     }
 
-                    string fpgaFactoryTesterOutput = sshClient.CreateCommand(fpgaFactoryTesterCommand).Execute();
+                    ISshCommandProxy sshCommand = sshClient.CreateCommand(fpgaFactoryTesterCommand);
+                    string fpgaFactoryTesterOutput = sshCommand.Execute();
+
+                    if (sshCommand.ExitStatus != 0)
+                    {
+                        throw new WorkloadException($"ExitCode:{sshCommand.ExitStatus} ErrorMessage:\"{sshCommand.Error}\"", ErrorReason.WorkloadFailed);
+                    }
 
                     this.Logger.LogMessage(
                        $"{typeof(SOCStressFPGAFactoryTesterExecutor)}.ProcessDetails",

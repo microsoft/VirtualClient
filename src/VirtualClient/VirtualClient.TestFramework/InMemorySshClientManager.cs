@@ -19,10 +19,16 @@ namespace VirtualClient
         /// </summary>
         public InMemorySshClientManager()
         {
+            this.SshClients = new List<ISshClientProxy>();
         }
 
         /// <summary>
-        /// Delegate allows user to control the <see cref="IProcessProxy"/> that is provided
+        /// The set of ssh clients created by Ssh Client Manager.
+        /// </summary>
+        public IEnumerable<ISshClientProxy> SshClients { get; }
+
+        /// <summary>
+        /// Delegate allows user to control the <see cref="ISshClientProxy"/> that is provided
         /// to the test.
         /// <list>
         /// <item>Parameters:</item>
@@ -53,6 +59,7 @@ namespace VirtualClient
                 };
             }
 
+            (this.SshClients as List<ISshClientProxy>).Add(sshClient);
             return sshClient;
         }
     }

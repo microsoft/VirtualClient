@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
-using Renci.SshNet;
 using VirtualClient.Common;
 using VirtualClient.Common.Extensions;
 using VirtualClient.Common.Telemetry;
@@ -14,7 +13,8 @@ using VirtualClient.Contracts;
 namespace VirtualClient.Actions
 {
     /// <summary>
-    /// 
+    /// SOC stress running using sysbench workload.
+    /// It stresses out CPU and Memory.
     /// </summary>
     public class SOCStressSysbenchExecutor : VirtualClientComponent
     {
@@ -65,24 +65,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameters for sysbench memory.
+        /// Sysbench memory command line.
         /// </summary>
-        public string SysbenchMemoryParameters
+        public string SysbenchMemoryCommandLine
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SOCStressSysbenchExecutor.SysbenchMemoryParameters));
+                return this.Parameters.GetValue<string>(nameof(SOCStressSysbenchExecutor.SysbenchMemoryCommandLine));
             }
         }
 
         /// <summary>
-        /// Parameters for sysbench CPU.
+        /// Sysbench CPU command line.
         /// </summary>
-        public string SysbenchCPUParameters
+        public string SysbenchCPUCommandLine
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SOCStressSysbenchExecutor.SysbenchCPUParameters));
+                return this.Parameters.GetValue<string>(nameof(SOCStressSysbenchExecutor.SysbenchCPUCommandLine));
             }
         }
 
@@ -98,7 +98,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Executes SOC stress using sysbench workload.
+        /// Executes the workload.
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -108,14 +108,14 @@ namespace VirtualClient.Actions
                 {
                     sshClient.Connect();
 
-                    string sysbenchMemoryCommandParameters = this.ApplyParameter(this.SysbenchMemoryParameters, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
-                    string sysbenchCPUCommandParameters = this.ApplyParameter(this.SysbenchCPUParameters, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
+                    string sysbenchMemoryCommandParameters = this.ApplyParameter(this.SysbenchMemoryCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
+                    string sysbenchCPUCommandParameters = this.ApplyParameter(this.SysbenchCPUCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
 
                     DateTime startTime = DateTime.UtcNow;
 
-                    sshClient.CreateCommand($"sysbench {sysbenchMemoryCommandParameters} > mem.txt & sysbench {sysbenchCPUCommandParameters} > cpu.txt").Execute();
-                    string memoryResults = sshClient.CreateCommand("cat mem.txt").Execute();
-                    string cpuResults = sshClient.CreateCommand("cat cpu.txt").Execute();
+                    this.ExecuteSshCommand(sshClient.CreateCommand($"sysbench {sysbenchMemoryCommandParameters} > mem.txt & sysbench {sysbenchCPUCommandParameters} > cpu.txt"));
+                    string memoryResults = this.ExecuteSshCommand(sshClient.CreateCommand("cat mem.txt"));
+                    string cpuResults = this.ExecuteSshCommand(sshClient.CreateCommand("cat cpu.txt"));
 
                     this.Logger.LogMessage(
                         $"{typeof(SOCStressSysbenchExecutor)}Memory.ProcessDetails",
@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
                        (Microsoft.Extensions.Logging.LogLevel)LogLevel.Info,
                        telemetryContext.Clone().AddContext("processDetails", cpuResults));
 
-                    sshClient.CreateCommand("rm mem.txt & rm cpu.txt").Execute();
+                    this.ExecuteSshCommand(sshClient.CreateCommand("rm mem.txt & rm cpu.txt"));
 
                     SysbenchMetricsParser sysbenchMemoryMetricsParser = new SysbenchMetricsParser(memoryResults);
                     IList<Metric> sysbenchMemoryMetrics = sysbenchMemoryMetricsParser.Parse().ToList();
@@ -162,6 +162,18 @@ namespace VirtualClient.Actions
                         telemetryContext);
                 }
             });
+        }
+
+        private string ExecuteSshCommand(ISshCommandProxy sshCommand)
+        {
+            string result = sshCommand.Execute();
+
+            if (sshCommand.ExitStatus != 0)
+            {
+                throw new WorkloadException($"ExitCode:{sshCommand.ExitStatus} ErrorMessage:\"{sshCommand.Error}\"", ErrorReason.WorkloadFailed);
+            }
+
+            return result;
         }
     }
 }

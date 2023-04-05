@@ -6,7 +6,7 @@ namespace VirtualClient.Common
     using System;
 
     /// <summary>
-    /// 
+    /// Proxy for a Ssh Client.
     /// </summary>
     public interface ISshClientProxy : IDisposable
     {

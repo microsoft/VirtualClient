@@ -19,7 +19,13 @@ namespace VirtualClient
         /// </summary>
         public InMemorySshClient()
         {
+            this.SshCommands = new List<ISshCommandProxy>();
         }
+
+        /// <summary>
+        /// The set of ssh commands created by Ssh Client.
+        /// </summary>
+        public IEnumerable<ISshCommandProxy> SshCommands { get; }
 
         /// <summary>
         /// The host name.
@@ -82,6 +88,8 @@ namespace VirtualClient
                     CommandText = commandText
                 };
             }
+
+            (this.SshCommands as List<ISshCommandProxy>).Add(sshCommand);
 
             return sshCommand;
         }

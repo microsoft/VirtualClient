@@ -1,37 +1,42 @@
 {
     "Description": "SOC Stress Workload",
     "Parameters": {
+        "Host":"HostIP",
+        "UserName":"username",
+        "Password":"password",
+        "DisableSOCPCIe": false,
+        "DisableSOCDRAM": false,
+        "DisableSOCPowerVirus": false,
+        "FPGAStressVerbose": true,
+        "FPGAFactoryTesterTimeout": 300,
+        "SysbenchTimeout": 300
     },
     "Actions": [
         {
             "Type": "SOCStressFPGAFactoryTesterExecutor",
             "Parameters": {
-                "Scenario": "ApplyStress",
-                "Host": "",
-                "UserName": "stuser",
-                "Password": "overlake",
-                "DisableSOCPCIe": "false",
-                "DisableSOCDRAM": "false",
-                "DisableSOCPowerVirus": "false",
-                "FPGAStressVerbose":  "true",
-                "FPGAFacotryTesterTimeout": "300"
+                "Scenario": "ApplyFPGAFactoryTesterStress",
+                "Host": "$.Parameters.Host",
+                "UserName": "$.Parameters.UserName",
+                "Password": "$.Parameters.Password",
+                "DisableSOCPCIe": "$.Parameters.DisableSOCPCIe",
+                "DisableSOCDRAM": "$.Parameters.DisableSOCDRAM",
+                "DisableSOCPowerVirus": "$.Parameters.DisableSOCPowerVirus",
+                "FPGAStressVerbose":  "$.Parameters.FPGAStressVerbose",
+                "FPGAFactoryTesterTimeout": "$.Parameters.FPGAFactoryTesterTimeout"
             }
         },
         {
             "Type": "SOCStressSysbenchExecutor",
             "Parameters": {
-                "Scenario": "ApplyStress",
-                "Host": "",
-                "UserName": "stuser",
-                "Password": "overlake",
-                "SysbenchMemoryParameters": "--test=memory --memory-block-size=1M --memory-total-size=200T --num-threads=8 --max-time=10 run",
-                "SysbenchCPUParameters": "--test=cpu --num-threads=8 --cpu-max-prime=2000000 --max-time=10 run",
-                "SysbenchTimeout": "300"
+                "Scenario": "ApplySysbenchStress",
+                "Host": "$.Parameters.Host",
+                "UserName": "$.Parameters.UserName",
+                "Password": "$.Parameters.Password",
+                "SysbenchMemoryCommandLine": "--test=memory --memory-block-size=1M --memory-total-size=200T --num-threads=8 --max-time=[sysbenchtimeout] run",
+                "SysbenchCPUCommandLine": "--test=cpu --num-threads=8 --cpu-max-prime=2000000 --max-time=[sysbenchtimeout] run",
+                "SysbenchTimeout": "$.Parameters.SysbenchTimeout"
             }
-        }
-    ],
-    "Dependencies": [
-        {
         }
     ]
 }

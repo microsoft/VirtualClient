@@ -160,6 +160,11 @@ namespace VirtualClient
         /// </summary>
         public InMemoryProcessManager ProcessManager { get; set; }
 
+         /// <summary>
+         /// Test/fake Ssh Client manager.
+         /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
+
         /// <summary>
         /// Test/fake state manager.
         /// </summary>
@@ -231,7 +236,8 @@ namespace VirtualClient
             this.Logger = new InMemoryLogger();
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            this.ProcessManager = new InMemoryProcessManager(platform);
+            this.ProcessManager = new InMemoryProcessManager();
+            this.SshClientManager = new InMemorySshClientManager();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
 
@@ -242,6 +248,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(this.FileSystem);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
@@ -320,6 +327,7 @@ namespace VirtualClient
                 .AddSingleton<ISystemManagement>((provider) => this.SystemManagement.Object)
                 .AddSingleton<PlatformSpecifics>((provider) => this.PlatformSpecifics)
                 .AddSingleton<ProcessManager>(this.ProcessManager)
+                .AddSingleton<SshClientManager>(this.SshClientManager)
                 .AddSingleton<IDiskManager>(this.DiskManager)
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
