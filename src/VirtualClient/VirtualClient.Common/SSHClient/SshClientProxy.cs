@@ -8,7 +8,8 @@ namespace VirtualClient.Common
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// 
+    /// Acts as a proxy for a <see cref="SshClient"/> running on the local
+    /// system.
     /// </summary>
     public class SshClientProxy : ISshClientProxy
     {
