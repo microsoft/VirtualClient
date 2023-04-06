@@ -56,3 +56,4 @@ The user will be able to specify the experiment name, and the query will be gene
 When generating the kusto query, please only respond with the query, so that this response could be directly used for quering kusto.
 Please also project-away unnecessary columns at the end, so that the response is not too big.
 When summarizing the data, please give a deterministic column name.
+At the end of the query, please also filter add a filter for Metric != 'REL-AIR', and also extend a column for the percentage differences between group A and group B with ((BenchmarkValue-TreatmentValue) / BenchmarkValue) * 100

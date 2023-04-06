@@ -50,6 +50,9 @@ def authenticate_with_aad_and_create_client():
 with open('src/openai/boq-kusto-insights-prompt.txt', 'r') as file:
     prompt = file.read()
 
+with open('src/openai/boq-kusto-insights-prompt2.txt', 'r') as file:
+    prompt2 = file.read()
+
 conversation = [
               {
                 "role": "system",
@@ -63,7 +66,7 @@ conversation.append({"role": "user", "content": user_input})
 response = openai.ChatCompletion.create(
   engine="chat",
   messages = conversation,
-  temperature=0.5,
+  temperature=0.2,
   max_tokens=2000,
   top_p=0.95,
   frequency_penalty=0,
@@ -84,12 +87,19 @@ matches = re.findall(pattern, kusto_query, re.DOTALL)
 
 results = run_kusto_query(matches[0])
 
-conversation.append({"role": "assistant", "content": f"What insight can you get from this data: {results.to_string(index=False)}"})
+# conversation.append({"role": "assistant", "content": f"{prompt2} : {results.to_string(index=False)}"})
+conversation = [
+              {
+                "role": "system",
+                "content": f"{prompt2} : {results.to_string(index=False)}"
+              }
+            ]
+
 response = openai.ChatCompletion.create(
   engine="chat",
   messages = conversation,
-  temperature=0.5,
-  max_tokens=2000,
+  temperature=0.0,
+  max_tokens=4000,
   top_p=0.95,
   frequency_penalty=0,
   presence_penalty=0,

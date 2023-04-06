@@ -84,7 +84,7 @@ matches = re.findall(pattern, kusto_query, re.DOTALL)
 
 results = run_kusto_query(matches[0])
 
-conversation.append({"role": "assistant", "content": f"What insight can you get from this data: {results.to_string(index=False)}"})
+conversation.append({"role": "assistant", "content": f"What insight can you get from this data, be as quantitative and in detail as possible: {results.to_string(index=False)}"})
 response = openai.ChatCompletion.create(
   engine="chat",
   messages = conversation,

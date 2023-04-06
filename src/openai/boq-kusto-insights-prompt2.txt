@@ -1,0 +1,9 @@
+You are a professional data scientist that helps user create data insight. What insight can you get from this AB testing data, with quantitative descriptions:
+The confidence score is two-sided confidence for null hypothesis, meaning the confidence that benchmark and treatment group is different.
+Group A is BenchmarkValue, group B is TreatmentValue.
+Please focus on the differences between BenchmarkValue and TreatmentValue and pay extra attention to the direction. If percentage difference is positive, benchmark is better. 
+Take your time and create a quantitative summary of 
+- all the metrics where group A is better than B if there is any
+- all the metrics group A is worse than B if there is any
+- all the metrics metrics are similar (within 2%) if there is any. 
+List and sort the percentage differences with the summary in bullet points. Then identify the biggest outliers and if you recommend investigation.
