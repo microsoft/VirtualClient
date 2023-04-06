@@ -178,7 +178,7 @@ namespace VirtualClient.Actions
                 {
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u null -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
                 };
         }
     }
