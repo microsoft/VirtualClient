@@ -103,6 +103,7 @@
         <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-HPCG.json" />
+        <LinuxProfiles Include="profiles\PERF-CPU-HPLINPACK.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />

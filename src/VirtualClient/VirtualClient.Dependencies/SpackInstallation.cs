@@ -52,9 +52,12 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallSpackAsync(CancellationToken cancellationToken, EventContext telemetryContext)
         {
-            string spackDirectory = this.PlatformSpecifics.GetPackagePath(this.PackageName.ToLowerInvariant());
+            State installationState = await this.SystemManager.StateManager.GetStateAsync<State>(nameof(SpackInstallation), cancellationToken)
+                .ConfigureAwait(false);
 
-            DependencyPath spackPackage = new DependencyPath(
+            if (installationState == null)
+            {
+                DependencyPath spackPackage = new DependencyPath(
                 this.PackageName,
                 this.spackDirectory,
                 "Spack Package Manager",
@@ -63,11 +66,18 @@ namespace VirtualClient.Dependencies
                     { PackageMetadata.ExecutablePath, this.spackExecutablePath }
                 });
 
-            await this.ExecuteCommandAsync("git", $"clone https://github.com/spack/spack {this.spackDirectory}", telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+                if (!this.SystemManager.FileSystem.Directory.Exists(this.spackDirectory))
+                {
+                    await this.ExecuteCommandAsync("git", $"clone https://github.com/spack/spack {this.spackDirectory}", telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
-            await this.SystemManager.PackageManager.RegisterPackageAsync(spackPackage, cancellationToken)
-                .ConfigureAwait(false);
+                await this.SystemManager.PackageManager.RegisterPackageAsync(spackPackage, cancellationToken)
+                    .ConfigureAwait(false);
+
+                await this.SystemManager.StateManager.SaveStateAsync(nameof(SpackInstallation), new State(), cancellationToken)
+                    .ConfigureAwait(false);
+            }
         }
 
         private async Task ExecuteCommandAsync(string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)
