@@ -23,6 +23,8 @@ namespace VirtualClient.Common
         /// </summary>
         public static readonly IEnumerable<int> DefaultSuccessCodes = new int[] { 0 };
 
+        private DateTime startTime;
+        private DateTime exitTime;
         private bool disposed;
 
         /// <summary>
@@ -50,7 +52,18 @@ namespace VirtualClient.Common
         public virtual int ExitCode => this.UnderlyingProcess.ExitCode;
 
         /// <inheritdoc />
-        public DateTime ExitTime => this.UnderlyingProcess.ExitTime.ToUniversalTime();
+        public DateTime ExitTime
+        {
+            get
+            {
+                return this.exitTime;
+            }
+
+            set
+            {
+                this.exitTime = value;
+            }
+        }
 
         /// <inheritdoc />
         public IntPtr? Handle => this.UnderlyingProcess?.Handle;
@@ -127,7 +140,18 @@ namespace VirtualClient.Common
         public ProcessStartInfo StartInfo => this.UnderlyingProcess.StartInfo;
 
         /// <inheritdoc />
-        public DateTime StartTime => this.UnderlyingProcess.StartTime.ToUniversalTime();
+        public DateTime StartTime
+        {
+            get
+            {
+                return this.startTime;
+            }
+
+            set
+            {
+                this.startTime = value;
+            }
+        }
 
         /// <summary>
         /// Gets the underlying process itself.
@@ -226,6 +250,7 @@ namespace VirtualClient.Common
 
             if (processStarted)
             {
+                this.startTime = DateTime.UtcNow;
                 if (this.RedirectStandardError)
                 {
                     this.UnderlyingProcess.BeginErrorReadLine();
@@ -265,10 +290,12 @@ namespace VirtualClient.Common
             if (timeout == null)
             {
                 await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                this.exitTime = DateTime.UtcNow;
             }
             else
             {
                 await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
+                this.exitTime = DateTime.UtcNow;
             }
         }
 
