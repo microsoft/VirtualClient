@@ -82,7 +82,19 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The username to execute superbench, required.
         /// </summary>
-        public string Username => this.Parameters.GetValue<string>(nameof(SuperBenchmarkExecutor.Username));
+        public string Username
+        {
+            get
+            {
+                string username = this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username));
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
+            }
+        }
 
         /// <summary>
         /// The name of the package where the SuperBenchmark is cloned.
