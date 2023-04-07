@@ -59,7 +59,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMLCommonsRepo",
                 "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",
