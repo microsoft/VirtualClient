@@ -13,30 +13,21 @@
   ],
   "Monitors": [
     {
-      "Type": "AmdSmiMonitor",
+      "Type": "PerfCounterMonitor",
       "Parameters": {
-        "MonitorFrequency": "00:00:05",
-        "MonitorWarmupPeriod": "00:00:10"
+        "Scenario": "CaptureCounters",
+        "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
     }
   ],
   "Dependencies": [
     {
-      "Type": "AMDGPUDriverInstallation",
-      "Parameters": {
-        "Scenario": "InstallDriver",
-        "BlobContainer": "packages",
-        "BlobName": "",
-        "PackageName": "",
-        "Extract": true
-      }
-    },
-    {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
         "Scenario": "Install3DMarkWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "3DMark.zip",
+        "BlobName": "",
         "PackageName": "3DMark",
         "Extract": true
       }
