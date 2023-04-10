@@ -34,7 +34,6 @@ namespace VirtualClient.Monitors
             List<Metric> metrics = new List<Metric>();
             DataTable dataTable = DataTableExtensions.DataTableFromCsv(replacedText);
 
-
             foreach (DataRow row in dataTable.Rows)
             {
                 Dictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>()

@@ -59,6 +59,12 @@ namespace VirtualClient.Monitors
             }
         }
 
+        /// <summary>
+        /// Query the gpu for utilization information
+        /// </summary>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task QueryGpuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
