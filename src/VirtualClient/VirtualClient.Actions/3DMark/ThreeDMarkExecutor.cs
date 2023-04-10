@@ -165,7 +165,7 @@ namespace VirtualClient.Actions
                             if (!cancellationToken.IsCancellationRequested)
                             {
                                 this.Logger.LogInformation("Registering 3DMark License");
-                                this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
                                 process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
                             }
@@ -191,7 +191,7 @@ namespace VirtualClient.Actions
                             if (!cancellationToken.IsCancellationRequested)
                             {
                                 this.Logger.LogInformation("Initializing 3DMark DLC");
-                                this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
                                 process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
                             }
@@ -224,7 +224,7 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext);
                                     process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
                                 }
@@ -249,7 +249,7 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    this.Logger.LogProcessDetails<ThreeDMarkExecutor>(process, telemetryContext);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext);
                                     process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                                     foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
                                     {

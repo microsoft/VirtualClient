@@ -161,7 +161,7 @@ namespace VirtualClient.Actions
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.Logger.LogProcessDetails<DXFLOPSExecutor>(process, telemetryContext);
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
                                 process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                                 string output = process.StandardOutput.ToString();
                                 foreach (Metric metric in this.CaptureResults(process, output, telemetryContext))

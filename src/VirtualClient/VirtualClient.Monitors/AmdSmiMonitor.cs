@@ -47,9 +47,8 @@ namespace VirtualClient.Monitors
         }
 
         /// <inheritdoc/>
-        protected override void ValidateParameters()
+        protected void ValidateParameters()
         {
-            base.ValidateParameters();
             if (this.MonitorFrequency <= TimeSpan.Zero)
             {
                 throw new MonitorException(
@@ -111,7 +110,7 @@ namespace VirtualClient.Monitors
                             }
                             catch
                             {
-                                this.Logger.LogProcessDetails<AmdSmiMonitor>(process, EventContext.Persisted());
+                                await this.LogProcessDetailsAsync(process, EventContext.Persisted());
                                 throw;
                             }
                         }

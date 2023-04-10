@@ -71,7 +71,7 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        this.Logger.LogProcessDetails<AMDGPUDriverInstallation>(process, telemetryContext);
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
                     }
                 }
