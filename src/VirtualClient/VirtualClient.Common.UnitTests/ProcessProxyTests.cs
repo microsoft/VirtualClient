@@ -1,7 +1,11 @@
 ﻿namespace VirtualClient.Common
 {
+    using System;
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
     using NUnit.Framework;
 
     [TestFixture]
@@ -63,6 +67,54 @@
             {
                 Assert.IsNotNull(process.EnvironmentVariables);
             }
+        }
+
+        [Test]
+        public async Task ProcessProxyStartTimesAreNotAffectedByTheProcessHavingBeenDisposed()
+        {
+            IProcessProxy process = null;
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "whoami",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            using (process = new ProcessProxy(new Process { StartInfo = startInfo }))
+            {
+                await process.StartAndWaitAsync(CancellationToken.None);
+                await Task.Delay(500);
+            }
+
+            // This will throw if the object is disposed.
+            DateTime startTime = process.StartTime;
+            Assert.IsTrue(startTime != DateTime.MinValue);
+        }
+
+        [Test]
+        public async Task ProcessProxyExitTimesAreNotAffectedByTheProcessHavingBeenDisposed()
+        {
+            IProcessProxy process = null;
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+                FileName = "whoami",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+            };
+
+            using (process = new ProcessProxy(new Process { StartInfo = startInfo }))
+            {
+                await process.StartAndWaitAsync(CancellationToken.None);
+                await Task.Delay(500);
+            }
+
+            // This will throw if the object is disposed.
+            DateTime exitTime = process.ExitTime;
+            Assert.IsTrue(exitTime != DateTime.MinValue);
         }
     }
 }

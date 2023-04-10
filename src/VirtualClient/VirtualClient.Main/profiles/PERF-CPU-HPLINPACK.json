@@ -1,0 +1,59 @@
+{
+  "Description": "High Performance Linpack Performance workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:01:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64",
+    "SupportedOperatingSystems": "Ubuntu"
+  },
+  "Parameters": {
+    "Username": "null",
+    "CompilerName": "gcc",
+    "CompilerVersion": "11",
+    "ProblemSizeN": null,
+    "BlockSizeNB": "256",
+    "NumberOfProcesses": null,
+    "CCFLAGS": "-march=native"
+  },
+  "Actions": [
+    {
+      "Type": "HPLinpackExecutor",
+      "Parameters": {
+        "Scenario": "ProcessorSpeed",
+        "Username": "$.Parameters.Username",
+        "HyperThreadingON": true,
+        "ProblemSizeN": "$.Parameters.ProblemSizeN",
+        "BlockSizeNB": "$.Parameters.BlockSizeNB",
+        "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
+        "CCFLAGS": "$.Parameters.CCFLAGS",
+        "PackageName": "hplinpack"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRequiredLinuxPackagesForHPL",
+        "Repositories-Apt": "ppa:ubuntu-toolchain-r/test",
+        "Packages": "build-essential,linux-generic,libmpich-dev,libopenmpi-dev,libatlas-base-dev"
+      }
+    },
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallHPLinpackPackage",
+        "BlobContainer": "packages",
+        "BlobName": "hpl.2.3.zip",
+        "PackageName": "hplinpack",
+        "Extract": true
+      }
+    }
+  ]
+}

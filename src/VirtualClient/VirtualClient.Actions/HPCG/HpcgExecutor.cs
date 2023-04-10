@@ -100,18 +100,18 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath spackExecutable = await this.packageManager.GetPackageAsync(this.SpackPackageName, CancellationToken.None)
+            DependencyPath spackPackage = await this.packageManager.GetPackageAsync(this.SpackPackageName, CancellationToken.None)
                 .ConfigureAwait(false);
 
-            if (spackExecutable == null || !spackExecutable.Metadata.ContainsKey(PackageMetadata.ExecutablePath))
+            if (spackPackage == null)
             {
                 throw new DependencyException(
                     $"The expected spack executable does not exist on the system or is not registered.",
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            this.spackFilePath = spackExecutable.Metadata[PackageMetadata.ExecutablePath].ToString();
-            this.spackDirectory = spackExecutable.Path.ToString();
+            this.spackDirectory = spackPackage.Path.ToString();
+            this.spackFilePath = this.PlatformSpecifics.Combine(this.spackDirectory, "bin", "spack");
 
             if (!this.fileSystem.Directory.Exists(this.hpcgDirectory))
             {
