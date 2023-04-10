@@ -41,27 +41,15 @@ namespace VirtualClient.Actions
             {
                 if (this.Defintion == "custom_TSGT1.3dmdef")
                 {
-                    string pattern = "<TimeSpyPerformanceGraphicsTest1.*>((.|\\n)*?)<\\/TimeSpyPerformanceGraphicsTest1>";
-                    Match m = Regex.Match(this.RawText, pattern);
-                    XElement tag = XElement.Parse(m.Value);
-                    double val = double.Parse(tag.Value);
-                    metrics.Add(new Metric("timespy.graphics.1", val, "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("timespy.graphics.1 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
                 }
                 else if (this.Defintion == "custom_TSGT2.3dmdef")
                 {
-                    string pattern = "<TimeSpyPerformanceGraphicsTest2.*>((.|\\n)*?)<\\/TimeSpyPerformanceGraphicsTest2>";
-                    Match m = Regex.Match(this.RawText, pattern);
-                    XElement tag = XElement.Parse(m.Value);
-                    double val = double.Parse(tag.Value);
-                    metrics.Add(new Metric("timespy.graphics.2", val, "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("timespy.graphics.2 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest2"), "fps", MetricRelativity.HigherIsBetter));
                 }
                 else if (this.Defintion == "custom_TSCT.3dmdef")
                 {
-                    string pattern = "<TimeSpyPerformanceCpuSection2.*>((.|\\n)*?)<\\/TimeSpyPerformanceCpuSection2>";
-                    Match m = Regex.Match(this.RawText, pattern);
-                    XElement tag = XElement.Parse(m.Value);
-                    double val = double.Parse(tag.Value);
-                    metrics.Add(new Metric("timespy.cpu", val, "fps", MetricRelativity.HigherIsBetter));
+                    metrics.Add(new Metric("timespy.cpu [fps]", this.ParseXMLTag("TimeSpyPerformanceCpuSection2"), "fps", MetricRelativity.HigherIsBetter));
                 }
             }
             catch (Exception exc)
@@ -70,6 +58,20 @@ namespace VirtualClient.Actions
             }
 
             return metrics;
+        }
+
+        /// <summary>
+        /// Gets the value sandwiched between the given XML tags
+        /// </summary>
+        /// <param name="tagName"></param>
+        /// <returns></returns>
+        private double ParseXMLTag(string tagName)
+        {
+            string pattern = $"<{tagName}.*>((.|\\n)*?)<\\/{tagName}>";
+            Match m = Regex.Match(this.RawText, pattern);
+            XElement tag = XElement.Parse(m.Value);
+            double val = double.Parse(tag.Value);
+            return val;
         }
     }
 }

@@ -109,6 +109,9 @@ namespace VirtualClient.Actions
         }
 #pragma warning restore AsyncFixer01 // Unnecessary async/await usage
 
+        /// <summary>
+        /// Processes benchmark results
+        /// </summary>
         private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string commandArguments, string definition, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
@@ -136,6 +139,9 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Run the 3DMark Definitions
+        /// </summary>
         private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IList<Metric> metrics = new List<Metric>();
@@ -199,6 +205,7 @@ namespace VirtualClient.Actions
                         }
                     }
 
+                    // Run Workload
                     DateTime startTime = DateTime.UtcNow;
                     foreach (string definition in this.Definitions)
                     {
@@ -262,7 +269,7 @@ namespace VirtualClient.Actions
 
                     DateTime endTime = DateTime.UtcNow;
 
-                    foreach (Metric metric in this.CalculateAggregates(metrics))
+                    foreach (Metric metric in this.CalculateTimeSpyAggregates(metrics))
                     {
                         metrics.Add(metric);
                     }
@@ -281,7 +288,10 @@ namespace VirtualClient.Actions
             });
         }
 
-        private IList<Metric> CalculateAggregates(IList<Metric> metrics)
+        /// <summary>
+        /// Calculates the 3DMark TimeSpy aggregate scores
+        /// </summary>
+        private IList<Metric> CalculateTimeSpyAggregates(IList<Metric> metrics)
         {
             IList<Metric> aggregates = new List<Metric>();
             double tsgt1 = 0;
@@ -303,7 +313,7 @@ namespace VirtualClient.Actions
                 }
             }
 
-            // Harmonic Mean
+            // Weighted Harmonic Mean of Individual Scores
             if (tsgt1 != 0 && tsgt2 != 0 && tsct != 0)
             {
                 double graphicsScore = 165 * (2 / ((1 / tsgt1) + (1 / tsgt2)));
@@ -317,11 +327,17 @@ namespace VirtualClient.Actions
             return aggregates;
         }
 
+        /// <summary>
+        /// Generate the 3DMark Command Arguments
+        /// </summary>
         private string GenerateCommandArguments(string definition)
         {
             return $"--definition={definition} --out={this.OutFileName}";
         }
 
+        /// <summary>
+        /// Validate the 3DMark Package
+        /// </summary>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
