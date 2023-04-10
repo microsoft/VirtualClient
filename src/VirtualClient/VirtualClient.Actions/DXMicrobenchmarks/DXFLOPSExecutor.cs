@@ -195,6 +195,12 @@ namespace VirtualClient.Actions
             });
         }
 
+        /// <summary>
+        /// Validates the package installation
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="DependencyException"></exception>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)

@@ -30,7 +30,7 @@ namespace VirtualClient.Monitors
         {
             List<Metric> result = new List<Metric>
             {
-                new Metric("performance.gpu", double.Parse(Regex.Match(this.RawText, @"[+-]?([0-9]*[.])?[0-9]+").Value), "TFLOPs", MetricRelativity.HigherIsBetter)
+                new Metric("performance.gpu [TFLOPs]", double.Parse(Regex.Match(this.RawText, @"[+-]?([0-9]*[.])?[0-9]+").Value), "TFLOPs", MetricRelativity.HigherIsBetter)
             };
             return result;
         }
