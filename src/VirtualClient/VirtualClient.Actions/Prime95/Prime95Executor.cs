@@ -322,7 +322,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored(this.successExitCodes))
                             {
-                                this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", logToFile: true);
+                                process.LogResults.ToolSet = "Prim95";
+                                this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                                 // The exit code on SafeKill is -1 which is not a part of the default success codes.
                                 process.ThrowIfWorkloadFailed(this.successExitCodes);
@@ -402,7 +403,9 @@ namespace VirtualClient.Actions
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results.AsArray(), logToFile: true);
+                process.LogResults.ToolSet = "Prime95";
+                process.LogResults.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {

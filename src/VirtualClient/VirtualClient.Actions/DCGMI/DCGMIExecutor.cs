@@ -274,7 +274,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "DCGMI", logToFile: true);
+                            process.LogResults.ToolSet = "DCGMI";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                             process.ThrowIfWorkloadFailed();
                         }
 

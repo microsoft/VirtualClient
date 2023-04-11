@@ -274,7 +274,9 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true);
+                                    process.LogResults.ToolSet = "CPS";
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                        .ConfigureAwait(false);
 
                                     process.ThrowIfWorkloadFailed();
                                     this.results = process.StandardOutput.ToString();

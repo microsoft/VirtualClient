@@ -37,9 +37,14 @@ namespace VirtualClient.Common
         int ExitCode { get; }
 
         /// <summary>
-        /// 
+        /// Gets the exit time for the underlying process.
         /// </summary>
         DateTime ExitTime { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        LogResults LogResults { get; }
 
         /// <summary>
         /// A pointer to the process module control handle.

@@ -57,7 +57,8 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Latte", logToFile: true);
+                                    process.LogResults.ToolSet = "Latte";
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                                     process.ThrowIfWorkloadFailed();
                                     await this.SystemManagement.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());

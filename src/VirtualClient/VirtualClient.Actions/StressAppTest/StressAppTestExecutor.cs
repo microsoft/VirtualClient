@@ -173,17 +173,20 @@ namespace VirtualClient.Actions
                 string resultsFileName = $"stressapptestLogs_{DateTime.UtcNow.ToString("yyyyMMddHHmmssffff")}.txt";
                 commandLineArguments += " -l " + resultsFileName;
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments.Trim(), this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments.Trim(), this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         if (process.IsErrored())
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
+                            process.LogResults.ToolSet = "StressAppTest";
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
 
-                        await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
             }
@@ -197,9 +200,13 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
-                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
+                string results = await this.LoadResultsAsync(resultsPath, cancellationToken)
+                    .ConfigureAwait(false);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results.AsArray(), logToFile: true);
+                process.LogResults.ToolSet = "StressAppTest";
+                process.LogResults.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                    .ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {

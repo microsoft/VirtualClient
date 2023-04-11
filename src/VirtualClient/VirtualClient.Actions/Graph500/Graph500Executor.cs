@@ -101,7 +101,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Graph500", logToFile: true);
+                        process.LogResults.ToolSet = "Graph500";
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext, cancellationToken);

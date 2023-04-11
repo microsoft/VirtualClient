@@ -457,7 +457,8 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, "DiskSpd", logToFile: true);
+                        workload.Process.LogResults.ToolSet = "DiskSpd";
+                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, logToFile: true);
 
                         if (this.DiskFill)
                         {

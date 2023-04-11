@@ -124,27 +124,33 @@ namespace VirtualClient.Actions
 
                 if (this.Platform == PlatformID.Unix)
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                            process.LogResults.ToolSet = "SPECcpu";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
 
-                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
                         }
                     }
                 }
                 else
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                            process.LogResults.ToolSet = "SPECcpu";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
 
-                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
                         }
                     }
                 }
@@ -152,7 +158,8 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                await this.UploadSpecCpuLogsAsync(cancellationToken).ConfigureAwait(false);
+                await this.UploadSpecCpuLogsAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -161,7 +168,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
+                .ConfigureAwait(false);
 
             if (workloadPackage == null)
             {
@@ -175,7 +183,8 @@ namespace VirtualClient.Actions
             string imageFile = this.GetIsoFilePath(workloadPackage);
             telemetryContext.AddContext(nameof(imageFile), imageFile);
 
-            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+            await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private string GetConfigurationFileName()
@@ -222,7 +231,7 @@ namespace VirtualClient.Actions
 
         private async Task SetupSpecCpuAsync(string isoFilePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            SpecCpuState state = await this.stateManager.GetStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", cancellationToken)
+            SpecCpuState state = await this.stateManager.GetStateAsync<SpecCpuState>($"{nameof(SpecCpuState)}", cancellationToken).ConfigureAwait(false)
                 ?? new SpecCpuState();
 
             if (!state.SpecCpuInitialized)
@@ -232,32 +241,32 @@ namespace VirtualClient.Actions
 
                 if (this.Platform == PlatformID.Unix)
                 {
-                    await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken);
-                    await this.WriteSpecCpuConfigAsync(cancellationToken);
-                    await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken);
-                    await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("mount", $"-t iso9660 -o ro,exec,loop {isoFilePath} {mountPath}", this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("./install.sh", $"-f -d {this.PackageDirectory}", mountPath, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.WriteSpecCpuConfigAsync(cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("chmod", $"-R ugo=rwx {this.PackageDirectory}", this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync("umount", mountPath, this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
                 }
                 else
                 {
                     // powershell -Command "Mount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
                     string mountIsoCmd = $"-Command \"Mount-DiskImage -ImagePath {isoFilePath}\"";
-                    await this.ExecuteCommandAsync("powershell", mountIsoCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("powershell", mountIsoCmd, this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
 
                     // powershell -Command "(Get-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso" | Get-Volume).DriveLetter "
                     string getDriveLetterCmd = $"-Command \"(Get-DiskImage -ImagePath {isoFilePath}| Get-Volume).DriveLetter\"";
-                    string driveLetter = await this.ExecuteCommandAsync("powershell", getDriveLetterCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    string driveLetter = await this.ExecuteCommandAsync("powershell", getDriveLetterCmd, this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
 
                     // The reason for the echo is that there is a "pause" in the install.bat. The echo skips it.
                     // echo 1 | install.bat  C:\cpu2017
                     string installCmd = $"/c echo 1 | {this.PlatformSpecifics.Combine($"{driveLetter.Trim()}:", "install.bat")} {this.PackageDirectory}";
-                    await this.ExecuteCommandAsync("cmd", installCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("cmd", installCmd, this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
 
-                    await this.WriteSpecCpuConfigAsync(cancellationToken);
+                    await this.WriteSpecCpuConfigAsync(cancellationToken).ConfigureAwait(false);
 
                     // powershell -Command "Dismount-DiskImage -ImagePath "C:\Users\azureuser\Desktop\cpu2017-1.1.8.iso""
                     string dismountCmd = $"-Command \"Dismount-DiskImage -ImagePath {isoFilePath}\"";
-                    await this.ExecuteCommandAsync("powershell", dismountCmd, this.PackageDirectory, telemetryContext, cancellationToken);
+                    await this.ExecuteCommandAsync("powershell", dismountCmd, this.PackageDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
                 }
 
                 state.SpecCpuInitialized = true;
@@ -277,13 +286,15 @@ namespace VirtualClient.Actions
                 this.CleanupTasks.Add(() => process.SafeKill());
                 this.LogProcessTrace(process);
 
-                await process.StartAndWaitAsync(cancellationToken);
+                await process.StartAndWaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     if (process.IsErrored())
                     {
-                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
+                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true)
+                            .ConfigureAwait(false);
                         process.ThrowIfWorkloadFailed();
                     }
                 }
@@ -303,7 +314,11 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", results: results.AsArray(), logToFile: true);
+
+                    process.LogResults.ToolSet = "SPECcpu";
+                    process.LogResults.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                        .ConfigureAwait(false);
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
@@ -319,7 +334,8 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    await this.fileSystem.File.DeleteAsync(file);
+                    await this.fileSystem.File.DeleteAsync(file)
+                        .ConfigureAwait(false);
                 }
             }
         }
@@ -343,7 +359,8 @@ namespace VirtualClient.Actions
                         this.AgentId,
                         "speccpu");
 
-                    await this.UploadFilesAsync(blobManager, this.fileSystem, blobDescriptors, cancellationToken);
+                    await this.UploadFilesAsync(blobManager, this.fileSystem, blobDescriptors, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
         }
@@ -366,7 +383,8 @@ namespace VirtualClient.Actions
         {
             // Copy SPECcpu configuration file to the config folder.
             string configurationFile = this.GetConfigurationFileName();
-            string templateText = await this.fileSystem.File.ReadAllTextAsync(this.PlatformSpecifics.GetScriptPath("speccpu", configurationFile));
+            string templateText = await this.fileSystem.File.ReadAllTextAsync(this.PlatformSpecifics.GetScriptPath("speccpu", configurationFile))
+                .ConfigureAwait(false);
 
             // Copy SPECcpu run shell to the config folder.
             if (this.Platform == PlatformID.Unix) 
@@ -391,7 +409,8 @@ namespace VirtualClient.Actions
                 Convert.ToInt32(this.CompilerVersion) >= 10 ? SpecCpuConfigPlaceHolder.Gcc10WorkaroundContent : string.Empty,
                 StringComparison.OrdinalIgnoreCase);
 
-            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken);
+            await this.fileSystem.File.WriteAllTextAsync(this.Combine(this.PackageDirectory, "config", configurationFile), templateText, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         internal class SpecCpuState : State

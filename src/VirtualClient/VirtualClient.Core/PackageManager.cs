@@ -870,7 +870,8 @@ namespace VirtualClient
                 await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails(process, nameof(PackageManager), EventContext.Persisted(), "Tar");
+                    process.LogResults.ToolSet = "Tar";
+                    this.Logger.LogProcessDetails(process, nameof(PackageManager), EventContext.Persisted());
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.SystemOperationFailed);
                 }
             }

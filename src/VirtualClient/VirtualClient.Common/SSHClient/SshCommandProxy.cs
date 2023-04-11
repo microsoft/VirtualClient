@@ -20,6 +20,8 @@ namespace VirtualClient.Common
 
         private bool disposed;
 
+        private LogResults logResults;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SshCommandProxy"/> class.
         /// </summary>
@@ -27,6 +29,7 @@ namespace VirtualClient.Common
         public SshCommandProxy(SshCommand sshCommand)
         {
             sshCommand.ThrowIfNull(nameof(sshCommand));
+            this.logResults = new LogResults();
             this.UnderlyingSSHCommand = sshCommand;
         }
 
@@ -41,6 +44,20 @@ namespace VirtualClient.Common
 
         /// <inheritdoc />
         public virtual string CommandText => this.UnderlyingSSHCommand.CommandText;
+
+        /// <inheritdoc />
+        public LogResults LogResults
+        {
+            get
+            {
+                this.logResults.CommandLine = SensitiveData.ObscureSecrets($"{this.CommandText}".Trim());
+                this.logResults.ExitCode = this.ExitStatus;
+                this.logResults.StandardError = this.Error;
+                this.logResults.StandardOutput = this.Result;
+
+                return this.logResults;
+            }
+        }
 
         /// <summary>
         /// Gets the underlying ssh command itself.

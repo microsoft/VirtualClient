@@ -331,7 +331,10 @@ namespace VirtualClient.Actions
                             ConsoleLogger.Default.LogMessage($"Memtier benchmark process exited (server port = {serverPort})...", telemetryContext);
 
                             string output = process.StandardOutput.ToString();
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results: output.AsArray(), logToFile: true);
+
+                            process.LogResults.ToolSet = "Memcached-Memtier";
+                            process.LogResults.StandardOutput = output;
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                             process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
 
                             // We don't capture metrics on warm up operations.

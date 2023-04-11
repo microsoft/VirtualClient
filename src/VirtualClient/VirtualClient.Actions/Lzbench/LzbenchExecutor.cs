@@ -109,7 +109,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench");
+                            process.LogResults.ToolSet = "LZbench";
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
                             process.ThrowIfWorkloadFailed();
                         }
 
@@ -176,7 +177,10 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string contents = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents.AsArray(), logToFile: true);
+
+                    process.LogResults.ToolSet = "LZbench";
+                    process.LogResults.GeneratedResults = contents;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                     LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
                     IList<Metric> metrics = parser.Parse();

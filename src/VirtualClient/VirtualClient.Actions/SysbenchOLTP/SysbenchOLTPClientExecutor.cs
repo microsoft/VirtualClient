@@ -253,8 +253,23 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                            process.LogResults.ToolSet = "Sysbench";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                .ConfigureAwait(false);
+                        }
+
+                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                cleanupProcess.LogResults.ToolSet = "Sysbench";
+                                await this.LogProcessDetailsAsync(cleanupProcess, telemetryContext, logToFile: true)
+                                    .ConfigureAwait(false);
+
+                                process.ThrowIfWorkloadFailed();
+                                cleanupProcess.ThrowIfWorkloadFailed();
+                                this.CaptureMetrics(process, telemetryContext, cancellationToken);
+                            }
                         }
                     }
                 }

@@ -72,7 +72,8 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true);
+                        process.LogResults.ToolSet = "LMbench";
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                         process.ThrowIfWorkloadFailed();
 
                         if (process.StandardOutput.Length > 0)
@@ -177,7 +178,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "LMbench", logToFile: true)
+                            process.LogResults.ToolSet = "LMbench";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
                                 .ConfigureAwait(false);
 
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);

@@ -14,7 +14,12 @@ namespace VirtualClient.Common
         /// Gets the command exit status.
         /// </summary>
         int ExitStatus { get; }
-        
+
+        /// <summary>
+        /// 
+        /// </summary>
+        LogResults LogResults { get; }
+
         /// <summary>
         /// Gets the command execution result.
         /// </summary>

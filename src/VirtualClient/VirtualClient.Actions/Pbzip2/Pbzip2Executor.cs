@@ -89,7 +89,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "PBZip2", logToFile: true);
+                        process.LogResults.ToolSet = "PBZip2";
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, commandLineArguments, telemetryContext, cancellationToken);

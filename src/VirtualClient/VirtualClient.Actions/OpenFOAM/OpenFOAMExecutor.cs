@@ -302,8 +302,12 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
-                    process.ThrowIfWorkloadFailed();
+                    if (process.IsErrored())
+                    {
+                        process.LogResults.ToolSet = "OpenFOAM";
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
 
                     // clean commands do not produce metrics, so no need of capturing metrics
                     if (!arguments.Contains("clean"))
@@ -326,7 +330,10 @@ namespace VirtualClient.Actions
                 }
 
                 string results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results: results.AsArray(), logToFile: true);
+
+                process.LogResults.ToolSet = "OpenFOAM";
+                process.LogResults.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                 OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();

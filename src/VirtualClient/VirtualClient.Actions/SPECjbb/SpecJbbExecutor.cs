@@ -92,17 +92,18 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.javaExecutableDirectory, commandLineArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         if (process.IsErrored())
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", logToFile: true);
+                            process.LogResults.ToolSet = "SPECjbb";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true).ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
 
-                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -120,7 +121,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // No initiation needed, just check if the packages and JDK is there.
-            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None).ConfigureAwait(false);
 
             if (workloadPackage == null)
             {
@@ -131,7 +132,7 @@ namespace VirtualClient.Actions
 
             this.packageDirectory = workloadPackage.Path;
 
-            DependencyPath javaExecutable = await this.packageManager.GetPackageAsync(this.JdkPackageName, CancellationToken.None);
+            DependencyPath javaExecutable = await this.packageManager.GetPackageAsync(this.JdkPackageName, CancellationToken.None).ConfigureAwait(false);
 
             if (javaExecutable == null || !javaExecutable.Metadata.ContainsKey(PackageMetadata.ExecutablePath))
             {
@@ -155,7 +156,11 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", results: results.AsArray(), logToFile: true);
+
+                    process.LogResults.ToolSet = "SPECjbb";
+                    process.LogResults.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                        .ConfigureAwait(false);
 
                     try
                     {
@@ -172,7 +177,8 @@ namespace VirtualClient.Actions
                             this.Tags,
                             telemetryContext);
 
-                        await this.fileSystem.File.DeleteAsync(file);
+                        await this.fileSystem.File.DeleteAsync(file)
+                            .ConfigureAwait(false);
                     }
                     catch (Exception exc)
                     {
@@ -196,13 +202,17 @@ namespace VirtualClient.Actions
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
                         this.LogProcessTrace(process);
-                        await process.StartAndWaitAsync(cancellationToken);
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
-                        await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken);
+                        await this.ValidateProcessExitedAsync(process.Id, TimeSpan.FromMinutes(10), cancellationToken)
+                            .ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb");
+                            process.LogResults.ToolSet = "SPECjbb";
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }

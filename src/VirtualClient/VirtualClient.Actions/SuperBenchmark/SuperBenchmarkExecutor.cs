@@ -127,17 +127,20 @@ namespace VirtualClient.Actions
             {
                 string commandArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         if (process.IsErrored())
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench", logToFile: true);
+                            process.LogResults.ToolSet = "SuperBench";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
 
-                        await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken);
+                        await this.CaptureMetricsAsync(process, commandArguments, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                 }
             }
@@ -148,14 +151,16 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken)
+            SuperBenchmarkState state = await this.stateManager.GetStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", cancellationToken).ConfigureAwait(false)
                 ?? new SuperBenchmarkState();
 
             if (!state.SuperBenchmarkInitialized)
             {
                 // This is to grant directory folders for 
-                await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
-                await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+                await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken)
+                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
                 {
@@ -165,13 +170,16 @@ namespace VirtualClient.Actions
                         true);
                 }
 
-                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, cancellationToken);
-                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, cancellationToken)
+                    .ConfigureAwait(false);
 
                 state.SuperBenchmarkInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
+            await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
@@ -188,11 +196,13 @@ namespace VirtualClient.Actions
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
                         this.LogProcessTrace(process);
-                        await process.StartAndWaitAsync(cancellationToken);
+                        await process.StartAndWaitAsync(cancellationToken)
+                            .ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                                .ConfigureAwait(false);
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }
@@ -209,7 +219,9 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = this.fileSystem.File.ReadAllText(file);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SuperBench", logToFile: true);
+                    process.LogResults.ToolSet = "SuperBench";
+                    process.LogResults.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                     SuperBenchmarkMetricsParser parser = new SuperBenchmarkMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();

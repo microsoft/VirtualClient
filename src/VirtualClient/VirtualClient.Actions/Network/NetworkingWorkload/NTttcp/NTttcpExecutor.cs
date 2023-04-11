@@ -283,7 +283,8 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysctl", logToFile: true);
+                            process.LogResults.ToolSet = "Sysctl";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                             process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
 
                             results = process.StandardOutput.ToString();
@@ -323,16 +324,18 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
+                                    process.LogResults.ToolSet = "NTttcp";
                                     if (process.IsErrored())
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp");
+                                        await this.LogProcessDetailsAsync(process, telemetryContext);
                                         process.ThrowIfWorkloadFailed();
                                     }
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", results: results.AsArray(), logToFile: true);
+                                    process.LogResults.GeneratedResults = results;
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)

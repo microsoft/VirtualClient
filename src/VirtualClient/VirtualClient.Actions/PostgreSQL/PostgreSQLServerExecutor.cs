@@ -296,7 +296,8 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.LogResults.ToolSet = "PostgreSQL";
+                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
                         }
@@ -345,7 +346,8 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.LogResults.ToolSet = "PostgreSQL";
+                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
                         }

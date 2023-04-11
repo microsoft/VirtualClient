@@ -108,17 +108,22 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    process.LogResults.ToolSet = "CoreMark";
                     if (process.IsErrored())
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                         process.ThrowIfWorkloadFailed();
                     }
 
                     IEnumerable<string> results = await this.LoadResultsAsync(
                         new string[] { this.OutputFile1Path, this.OutputFile2Path },
                         cancellationToken);
+                    foreach (string result in results)
+                    {
+                        process.LogResults.GeneratedResults = result;
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    }
 
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results, logToFile: true);
                     await this.CaptureMetricsAsync(process, results, commandLineArguments, telemetryContext, cancellationToken);
                 }
             }
@@ -137,7 +142,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (string results in workloadResults)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results.AsArray(), logToFile: true);
+                        process.LogResults.ToolSet = "CoreMark";
+                        process.LogResults.GeneratedResults = results;
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                         if (!string.IsNullOrWhiteSpace(results))
                         {

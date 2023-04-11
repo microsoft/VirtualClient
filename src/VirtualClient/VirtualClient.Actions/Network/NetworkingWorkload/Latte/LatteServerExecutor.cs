@@ -51,9 +51,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                             {
+                                process.LogResults.ToolSet = "Latte";
                                 if (!process.Start())
                                 {
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+                                    await this.LogProcessDetailsAsync(process, relatedContext);
                                     process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                                 }
 
@@ -62,7 +63,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromMilliseconds(this.Iterations * .5);
                                 await this.WaitAsync(serverWaitTime, cancellationToken);
-                                await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
+                                await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
                             }
                         }
                         catch (Exception exc)

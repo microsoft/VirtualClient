@@ -128,7 +128,7 @@
                 {
                     sshClient.Connect();
 
-                    string fpgaFactoryTesterCommand = $"fpgafactorytester -duration {this.FPGAFactoryTesterTimeout}";
+                    string fpgaFactoryTesterCommand = $"sudo fpgafactorytester -duration {this.FPGAFactoryTesterTimeout}";
                     if (this.DisableSOCPCIe)
                     {
                         fpgaFactoryTesterCommand += " -pcie 0";

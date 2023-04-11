@@ -274,7 +274,8 @@ namespace VirtualClient.Actions
                     {
                         // ALWAYS log the details for the process. This helper method will ensure we capture the exit code, standard output, standard
                         // error etc... This is very helpful for triage/debugging.
-                        await this.LogProcessDetailsAsync(workloadProcess, telemetryContext, "ExampleWorkload")
+                        workloadProcess.LogResults.ToolSet = "ExampleWorkload";
+                        await this.LogProcessDetailsAsync(workloadProcess, telemetryContext)
                             .ConfigureAwait(false);
 
                         // If the workload process returned a non-success exit code, we throw an exception typically. The ErrorReason used here

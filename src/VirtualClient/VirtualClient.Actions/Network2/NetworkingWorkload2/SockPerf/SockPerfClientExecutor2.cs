@@ -330,19 +330,21 @@ namespace VirtualClient.Actions
                             {
                                 this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
+                                process.LogResults.ToolSet = "SockPerf";
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
                                     if (process.IsErrored())
                                     {
-                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
                                         process.ThrowIfWorkloadFailed();
                                     }
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.SystemManager.FileSystem.File.ReadAllTextAsync(this.ResultsPath);
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", results: results.AsArray(), logToFile: true);
+                                    process.LogResults.GeneratedResults = results;
+                                    await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)

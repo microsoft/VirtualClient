@@ -728,8 +728,6 @@ namespace VirtualClient.Contracts
         /// <param name="component">The component requesting the logging.</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolName">The name of the toolset running in the process.</param>
-        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
         /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
         /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
         /// <param name="logToTelemetryMaxChars">
@@ -739,7 +737,7 @@ namespace VirtualClient.Contracts
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static async Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
@@ -753,17 +751,7 @@ namespace VirtualClient.Contracts
                 {
                     if (component.Dependencies.TryGetService<ILogger>(out logger))
                     {
-                        if (results?.Any() == true)
-                        {
-                            foreach (string result in results)
-                            {
-                                logger.LogProcessDetails(process, component.TypeName, telemetryContext, toolName, result, logToTelemetryMaxChars);
-                            }
-                        }
-                        else
-                        {
-                            logger.LogProcessDetails(process, component.TypeName, telemetryContext, toolName, null, logToTelemetryMaxChars);
-                        }
+                        logger.LogProcessDetails(process, component.TypeName, telemetryContext, logToTelemetryMaxChars);
                     }
                 }
                 catch (Exception exc)
@@ -778,17 +766,7 @@ namespace VirtualClient.Contracts
             {
                 try
                 {
-                    if (results?.Any() == true)
-                    {
-                        foreach (string result in results)
-                        {
-                            await component.LogProcessDetailsToFileAsync(process, telemetryContext, toolName, result);
-                        }
-                    }
-                    else
-                    {
-                        await component.LogProcessDetailsToFileAsync(process, telemetryContext, toolName, null);
-                    }
+                    await component.LogProcessDetailsToFileAsync(process.LogResults, telemetryContext);
                 }
                 catch (Exception exc)
                 {
@@ -980,15 +958,13 @@ namespace VirtualClient.Contracts
         /// <param name="componentType">The type of component (e.g. GeekbenchExecutor).</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolset">The name of the toolset running in the process.</param>
-        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
         /// <param name="logToTelemetryMaxChars">
         /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
         /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        internal static void LogProcessDetails(this ILogger logger, IProcessProxy process, string componentType, EventContext telemetryContext, string toolset = null, string results = null, int logToTelemetryMaxChars = 125000)
+        internal static void LogProcessDetails(this ILogger logger, IProcessProxy process, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000)
         {
             logger.ThrowIfNull(nameof(logger));
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
@@ -1004,7 +980,7 @@ namespace VirtualClient.Contracts
                 // GeekbenchExecutor.ProcessResults
                 // GeekbenchExecutor.Geekbench.ProcessResults
                 string eventNamePrefix = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                    !string.IsNullOrWhiteSpace(toolset) ? $"{componentType}.{toolset}" : componentType,
+                    !string.IsNullOrWhiteSpace(process.LogResults.ToolSet) ? $"{componentType}.{process.LogResults.ToolSet}" : componentType,
                     string.Empty);
 
                 logger.LogMessage(
@@ -1012,12 +988,12 @@ namespace VirtualClient.Contracts
                     LogLevel.Information,
                     telemetryContext.Clone().AddProcessContext(process, maxChars: logToTelemetryMaxChars));
 
-                if (!string.IsNullOrWhiteSpace(results))
+                if (!string.IsNullOrWhiteSpace(process.LogResults.GeneratedResults))
                 {
                     logger.LogMessage(
                         $"{eventNamePrefix}.ProcessResults",
                         LogLevel.Information,
-                        telemetryContext.Clone().AddProcessContext(process, results: results, maxChars: logToTelemetryMaxChars));
+                        telemetryContext.Clone().AddProcessContext(process, process.LogResults.GeneratedResults, maxChars: logToTelemetryMaxChars));
                 }
             }
             catch
@@ -1031,14 +1007,12 @@ namespace VirtualClient.Contracts
         /// on the system.
         /// </summary>
         /// <param name="component">The component that ran the process.</param>
-        /// <param name="process">The process whose details will be captured.</param>
+        /// <param name="logResults">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolset">The name of the toolset running in the process.</param>
-        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
-        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolset, string results)
+        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, LogResults logResults, EventContext telemetryContext)
         {
             component.ThrowIfNull(nameof(component));
-            process.ThrowIfNull(nameof(process));
+            logResults.ThrowIfNull(nameof(logResults));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
             try
@@ -1047,10 +1021,10 @@ namespace VirtualClient.Contracts
                     && component.Dependencies.TryGetService<PlatformSpecifics>(out PlatformSpecifics specifics))
                 {
                     string effectiveToolName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                        (!string.IsNullOrWhiteSpace(toolset) ? toolset : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
+                        (!string.IsNullOrWhiteSpace(logResults.ToolSet) ? logResults.ToolSet : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
                         string.Empty);
 
-                    string effectiveCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
+                    string effectiveCommand = $"{logResults.CommandLine}".Trim();
                     string logPath = specifics.GetLogsPath(effectiveToolName.ToLowerInvariant().RemoveWhitespace());
 
                     if (!fileSystem.Directory.Exists(logPath))
@@ -1094,28 +1068,25 @@ namespace VirtualClient.Contracts
                     // Any results from the output of the process
 
                     StringBuilder outputBuilder = new StringBuilder();
-                    outputBuilder.AppendLine($"Command           : {SensitiveData.ObscureSecrets(effectiveCommand)}");
-                    outputBuilder.AppendLine($"Working Directory : {process.StartInfo?.WorkingDirectory}");
-                    outputBuilder.AppendLine($"Exit Code         : {process.ExitCode}");
+                    outputBuilder.AppendLine($"Command           : {SensitiveData.ObscureSecrets(logResults?.CommandLine)}");
+                    outputBuilder.AppendLine($"Working Directory : {logResults?.WorkingDirectory}");
+                    outputBuilder.AppendLine($"Exit Code         : {logResults?.ExitCode}");
                     outputBuilder.AppendLine();
-                    outputBuilder.AppendLine("##Output##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
+                    outputBuilder.AppendLine("##StandardOutput##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
+                    outputBuilder.AppendLine(logResults.StandardOutput);
 
-                    if (process.StandardOutput?.Length > 0 == true)
-                    {
-                        outputBuilder.AppendLine(process.StandardOutput.ToString());
-                    }
-
-                    if (process.StandardError?.Length > 0 == true)
+                    if (!string.IsNullOrEmpty(logResults.StandardError))
                     {
                         outputBuilder.AppendLine();
-                        outputBuilder.AppendLine(process.StandardError.ToString());
+                        outputBuilder.AppendLine("##StandardError##");
+                        outputBuilder.AppendLine(logResults.StandardError);
                     }
 
-                    if (results != null)
+                    if (!string.IsNullOrWhiteSpace(logResults.GeneratedResults))
                     {
                         outputBuilder.AppendLine();
                         outputBuilder.AppendLine("##Results##");
-                        outputBuilder.AppendLine(results);
+                        outputBuilder.AppendLine(logResults.GeneratedResults);
                     }
 
                     await VirtualClientLoggingExtensions.FileSystemAccessRetryPolicy.ExecuteAsync(async () =>

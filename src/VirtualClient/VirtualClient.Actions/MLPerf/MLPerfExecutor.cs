@@ -170,7 +170,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", logToFile: true);
+                                process.LogResults.ToolSet = "MLPerf"; 
+                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
 
@@ -386,7 +387,10 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+
+                    process.LogResults.ToolSet = "MLPerf";
+                    process.LogResults.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
@@ -412,7 +416,10 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
+
+                    process.LogResults.ToolSet = "MLPerf";
+                    process.LogResults.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();

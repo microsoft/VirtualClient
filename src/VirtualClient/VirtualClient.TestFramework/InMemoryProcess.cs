@@ -20,6 +20,8 @@ namespace VirtualClient
     [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "This is a test/mock class with no real resources.")]
     public class InMemoryProcess : Dictionary<string, IConvertible>, IProcessProxy
     {
+        private LogResults logResults;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryProcess"/>
         /// </summary>
@@ -41,6 +43,7 @@ namespace VirtualClient
                 FileName = @"C:\any\path\command.exe",
                 Arguments = "--argument1=123 --argument2=value"
             };
+            this.logResults = new LogResults();
         }
 
         /// <summary>
@@ -151,6 +154,21 @@ namespace VirtualClient
         /// 'Start' method is called.
         /// </summary>
         public Func<bool> OnStart { get; set; }
+
+        /// <inheritdoc />
+        public LogResults LogResults
+        {
+            get
+            {
+                this.logResults.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
+                this.logResults.ExitCode = this.ExitCode;
+                this.logResults.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
+                this.logResults.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
+                this.logResults.WorkingDirectory = this.StartInfo?.WorkingDirectory;
+
+                return this.logResults;
+            }
+        }
 
         /// <summary>
         /// Dispose of resources.

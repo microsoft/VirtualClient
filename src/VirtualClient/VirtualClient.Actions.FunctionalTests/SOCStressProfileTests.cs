@@ -13,7 +13,7 @@
         private DependencyFixture fixture;
         private List<string> expectedCommands = new List<string>
         {
-            "fpgafactorytester -duration 300 -verbose",
+            "sudo fpgafactorytester -duration 300 -verbose",
             "sysbench --test=memory --memory-block-size=1M --memory-total-size=200T --num-threads=8 --max-time=300 run > mem.txt & sysbench --test=cpu --num-threads=8 --cpu-max-prime=2000000 --max-time=300 run > cpu.txt",
             "cat mem.txt",
             "cat cpu.txt",

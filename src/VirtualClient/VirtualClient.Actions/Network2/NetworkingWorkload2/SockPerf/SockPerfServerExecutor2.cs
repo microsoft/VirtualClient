@@ -356,7 +356,8 @@ namespace VirtualClient.Actions
                             {
                                 if (!process.Start())
                                 {
-                                    await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+                                    process.LogResults.ToolSet = "Latte";
+                                    await this.LogProcessDetailsAsync(process, relatedContext);
 
                                     // ************** Server will throw 137 sometimes
                                     // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
@@ -370,7 +371,7 @@ namespace VirtualClient.Actions
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromSeconds(this.TestDuration + 10);
                                 await this.WaitAsync(serverWaitTime, cancellationToken);
-                                await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
+                                await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
                             }
                             catch (Exception exc)
                             {
