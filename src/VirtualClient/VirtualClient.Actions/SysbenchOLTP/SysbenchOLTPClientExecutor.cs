@@ -217,10 +217,7 @@ namespace VirtualClient.Actions
 
             // prepares database based on prepare arguments in profile 
             this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-
-            string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            this.sysbenchExecutionArguments = $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
 
             await this.stateManager.SaveStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", state, cancellationToken);
         }
@@ -258,20 +255,27 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.sysbenchExecutionArguments = 
-                    $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} " +
-                    $"--mysql-host={this.ServerIpAddress}";
+                    string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
+                    this.sysbenchExecutionArguments += $"--mysql-host={this.ServerIpAddress} ";
+
+                    // For resiliency, cleanup the sysbench environment (ie. delete tables) in the case that a run failed before, and skipped cleanup
+
+                    await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken);
+
+                    // Then, prepare the database for a sysbench workload run.
+
+                    await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
+                        .ConfigureAwait(false);
 
                     // gets executor arguments, combines with path & directory to get full command; metrics are stdout
-                    string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                         }
 
-                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
