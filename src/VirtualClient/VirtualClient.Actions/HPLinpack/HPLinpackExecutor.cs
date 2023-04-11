@@ -51,8 +51,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Username), out IConvertible username);
-                return username?.ToString();
+                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username));
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
             }
         }
 

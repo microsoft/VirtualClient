@@ -39,7 +39,7 @@
       }
     },
     {
-      "Type": "CloneRepo",
+      "Type": "GitRepoClone",
       "Parameters": {
         "Scenario": "CloneRepo",
         "RepoUri": "https://github.com/spack/spack.git",

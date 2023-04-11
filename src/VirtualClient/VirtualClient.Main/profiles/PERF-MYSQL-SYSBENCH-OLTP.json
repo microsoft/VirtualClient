@@ -376,7 +376,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneSysbenchRepo",
                 "RepoUri": "https://github.com/akopytov/sysbench.git",
