@@ -82,6 +82,7 @@ namespace VirtualClient.Actions
                 $"sudo ./configure",
                 $"sudo make -j",
                 $"sudo make install",
+                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup"
@@ -147,6 +148,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
+                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
                 $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup"
