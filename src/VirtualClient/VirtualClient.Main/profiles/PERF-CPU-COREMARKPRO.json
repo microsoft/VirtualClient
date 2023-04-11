@@ -30,7 +30,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "InstallCoreMarkPro",
                 "RepoUri": "https://github.com/eembc/coremark-pro.git",
