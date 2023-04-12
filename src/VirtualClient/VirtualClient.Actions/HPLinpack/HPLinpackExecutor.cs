@@ -190,6 +190,9 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
+                await this.ExecuteCommandAsync("useradd", $" -m {this.Username}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false);
+
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
@@ -373,7 +376,8 @@ namespace VirtualClient.Actions
                     $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     this.Tags,
                     telemetryContext,
-                    result.Relativity);
+                    result.Relativity,
+                    metricMetadata: result.Metadata);
             }
         }
 

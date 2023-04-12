@@ -6,7 +6,7 @@
     "SupportedOperatingSystems": "Ubuntu"
   },
   "Parameters": {
-    "Username": "",
+    "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
     "ProblemSizeN": null,
