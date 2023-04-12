@@ -233,7 +233,7 @@ toolsets associated with the 'Actions' and 'Monitors'. For example, there may be
         }
     },
     {
-        "Type": "CloneRepo",
+        "Type": "GitRepoClone",
         "Parameters": {
             "Scenario": "InstallCoreMarkPro",
             "RepoUri": "https://github.com/eembc/coremark-pro.git",

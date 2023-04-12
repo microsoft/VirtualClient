@@ -91,7 +91,19 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// The user who has the ssh identity registered for.
         /// </summary>
-        public string Username => this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.Username));
+        public string Username
+        {
+            get
+            {
+                string username = this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.Username));
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
+            }
+        }
 
         /// <summary>
         /// A policy that defines how the component will retry when

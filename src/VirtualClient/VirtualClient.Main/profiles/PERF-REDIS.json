@@ -319,7 +319,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMemtierRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",

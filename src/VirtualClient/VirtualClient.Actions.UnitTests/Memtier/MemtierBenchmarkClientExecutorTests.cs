@@ -116,7 +116,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Run the Memtier benchmark. Values based on the default parameter values set at the top
-                    $"sudo -u testuser {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
