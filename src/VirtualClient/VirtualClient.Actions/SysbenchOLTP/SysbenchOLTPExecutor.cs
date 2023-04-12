@@ -113,15 +113,16 @@ namespace VirtualClient.Actions
 
             if (isSingleVM)
             {
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+                this.ServerIpAddress = IPAddress.Loopback.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
             }
             else
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.ServerIpAddress = serverIPAddress.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
 
                 ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
