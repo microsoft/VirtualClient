@@ -7,8 +7,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-      "DatabaseName": "sbtest",
-      "ReuseDatabase": false
+      "DatabaseName": "sbtest"
     },
     "Actions": [
         {
@@ -29,7 +28,6 @@
                 "RecordCount": "500",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -44,7 +42,6 @@
                 "RecordCount": "1000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -59,7 +56,6 @@
                 "RecordCount": "5000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -74,7 +70,6 @@
                 "RecordCount": "10000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -89,7 +84,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -104,7 +98,6 @@
                 "RecordCount": "500000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -119,7 +112,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -134,7 +126,6 @@
                 "RecordCount": "100000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_write",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -149,7 +140,6 @@
                 "RecordCount": "500",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -164,7 +154,6 @@
                 "RecordCount": "1000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -179,7 +168,6 @@
                 "RecordCount": "5000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -194,7 +182,6 @@
                 "RecordCount": "10000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -209,7 +196,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -224,7 +210,6 @@
                 "RecordCount": "500000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -239,7 +224,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -254,7 +238,6 @@
                 "RecordCount": "100000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_read_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -269,7 +252,6 @@
                 "RecordCount": "500",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -284,7 +266,6 @@
                 "RecordCount": "1000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -299,7 +280,6 @@
                 "RecordCount": "5000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -314,7 +294,6 @@
                 "RecordCount": "10000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -329,7 +308,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -344,7 +322,6 @@
                 "RecordCount": "500000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -359,7 +336,6 @@
                 "RecordCount": "50000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         },
@@ -374,7 +350,6 @@
                 "RecordCount": "100000",
                 "DurationSecs": "1800",
                 "Workload": "oltp_write_only",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
                 "PackageName": "sysbench"
             }
         }
