@@ -7,7 +7,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-      "DatabaseName": "sbtest"
+        "DatabaseName": "sbtest"
     },
     "Actions": [
         {
