@@ -92,6 +92,7 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
+                    $"sudo useradd -m {this.fixture.Parameters["Username"]}",
                     $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
                 };
 
