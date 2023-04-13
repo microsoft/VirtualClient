@@ -174,11 +174,25 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands()
         {
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                ["Username"] = "testuser",
+                ["CompilerName"] = "gcc",
+                ["CompilerVersion"] = "11",
+                ["PackageName"] = "HPL",
+                ["Version"] = "2.3",
+                ["ProblemSizeN"] = "20000",
+                ["BlockSizeNB"] = "256",
+                ["Scenario"] = "ProcessorSpeed",
+                ["NumberOfProcesses"] = "2"
+            };
+
             return new List<string>
                 {
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo useradd  -m {this.mockFixture.Parameters["Username"]}",
+                    $"sudo runuser -u {this.mockFixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
                 };
         }
     }
