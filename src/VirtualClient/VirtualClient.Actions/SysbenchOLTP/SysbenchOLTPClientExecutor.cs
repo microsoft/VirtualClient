@@ -254,6 +254,7 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
                         }
                     }
                 }
