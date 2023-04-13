@@ -414,7 +414,8 @@
         {
             "Type": "ApiServer",
             "Parameters": {
-                "Scenario": "StartAPIServer"
+                "Scenario": "StartAPIServer",
+                "Role": "Server"
             }
         }
     ]
