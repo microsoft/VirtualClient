@@ -65,6 +65,8 @@ namespace VirtualClient
         /// (e.g. given 2 files /dev/a/b/c.txt and /dev/a/b.txt and instruction to preserve subpath after '/dev/a', the final blob paths will be 
         /// {experimentId}/{agentId}/.../b/c.txt and {experimentId}/{agentId}/.../b.txt respectively).
         /// </param>
+        /// <param name="fileNamePrefix">Prefix to be added to the file name</param>
+        /// <param name="fileNameSuffix">Suffix to be added to the file name</param>
         public static FileBlobDescriptor ToBlobDescriptor(
             IFileInfo file,
             string contentType,
@@ -74,7 +76,9 @@ namespace VirtualClient
             string componentScenario = null,
             string role = null,
             string subPath = null,
-            string subPathAfter = null)
+            string subPathAfter = null,
+            string fileNamePrefix = null,
+            string fileNameSuffix = null)
         {
             file.ThrowIfNull(nameof(file));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
@@ -88,12 +92,12 @@ namespace VirtualClient
             List<string> pathSegments = new List<string>();
 
             // Examples:
-            // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/2022-03-18T10:00:05.1276589Z-toolset.log
-            // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/ntttcp_tcp_4k_buffer_t1/2022-03-18T10:00:05.1276589Z-toolset.log
+            // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/2022-03-18T10:00:05.1276589Z-PrefixToolsetSuffix.log
+            // /b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/ntttcp_tcp_4k_buffer_t1/2022-03-18T10:00:05.1276589Z-PrefixToolsetSuffix.log
 
             string filePath = file.FullName;
             string normalizedFileName = Path.GetFileName(filePath);
-            string blobName = $"{file.CreationTimeUtc.ToString("O")}-{normalizedFileName}";
+            string blobName = $"{file.CreationTimeUtc.ToString("O")}-{fileNamePrefix}{normalizedFileName}{fileNameSuffix}";
 
             string effectiveAgentId = agentId;
             if (!string.IsNullOrWhiteSpace(agentId) && !string.IsNullOrWhiteSpace(role))
@@ -173,6 +177,8 @@ namespace VirtualClient
         /// (e.g. given 2 files /dev/a/b/c.txt and /dev/a/b.txt and instruction to preserve subpath after '/dev/a', the final blob paths will be 
         /// {experimentId}/{agentId}/.../b/c.txt and {experimentId}/{agentId}/.../b.txt respectively).
         /// </param>
+        /// <param name="fileNamePrefix">Prefix to be added to the file name</param>
+        /// <param name="fileNameSuffix">Suffix to be added to the file name</param>
         public static IEnumerable<FileBlobDescriptor> ToBlobDescriptors(
             IEnumerable<IFileInfo> files,
             string contentType,
@@ -182,7 +188,9 @@ namespace VirtualClient
             string componentScenario = null,
             string role = null,
             string subPath = null,
-            string subPathAfter = null)
+            string subPathAfter = null,
+            string fileNamePrefix = null,
+            string fileNameSuffix = null)
         {
             files.ThrowIfNullOrEmpty(nameof(files));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
@@ -192,7 +200,7 @@ namespace VirtualClient
 
             foreach (IFileInfo file in files)
             {
-                result.Add(FileBlobDescriptor.ToBlobDescriptor(file, contentType, experimentId, agentId, componentName, componentScenario, role, subPath, subPathAfter));
+                result.Add(FileBlobDescriptor.ToBlobDescriptor(file, contentType, experimentId, agentId, componentName, componentScenario, role, subPath, subPathAfter, fileNamePrefix, fileNameSuffix));
             }
 
             return result;
