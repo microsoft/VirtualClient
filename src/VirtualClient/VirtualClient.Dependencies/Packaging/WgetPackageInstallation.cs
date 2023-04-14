@@ -103,9 +103,8 @@ namespace VirtualClient.Dependencies
 
                     telemetryContext.AddContext("wgetPackagePath", wgetPackage.Path);
 
-                    // We download the file or directory into the 'packages' folder. We compiled wget2 for Linux
-                    // operations.
-                    string wgetExe = this.Combine(wgetPackage.Path, this.Platform == PlatformID.Unix ? "wget2" : "wget.exe");
+                    // For windows we are using the wget we download. In Linux we are using wget from the package managers.
+                    string wgetExe = this.Platform == PlatformID.Unix ? "wget" : this.Combine(wgetPackage.Path, "wget.exe");
 
                     await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                     {
