@@ -103,9 +103,8 @@ namespace VirtualClient.Dependencies
 
                     telemetryContext.AddContext("wgetPackagePath", wgetPackage.Path);
 
-                    // We download the file or directory into the 'packages' folder. We compiled wget2 for Linux
-                    // operations.
-                    string wgetExe = this.Combine(wgetPackage.Path, this.Platform == PlatformID.Unix ? "wget2" : "wget.exe");
+                    // For windows we are using the wget we download. In Linux we are using wget from the package managers.
+                    string wgetExe = this.Platform == PlatformID.Unix ? "wget" : this.Combine(wgetPackage.Path, "wget.exe");
 
                     await (this.RetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                     {
@@ -123,15 +122,6 @@ namespace VirtualClient.Dependencies
                         if (this.fileSystem.File.Exists(downloadedPackagePath))
                         {
                             await this.fileSystem.File.DeleteAsync(downloadedPackagePath);
-                        }
-
-                        if (this.Platform == PlatformID.Unix)
-                        {
-                            await this.systemManagement.MakeFileExecutableAsync(wgetExe, this.Platform, cancellationToken);
-
-                            // wget will look for a set of shared libraries. The paths to these libraries can be configured in the
-                            // LD_LIBRARY_PATH environment variable on Unix systems.
-                            this.SetEnvironmentVariable(EnvironmentVariable.LD_LIBRARY_PATH, wgetPackage.Path, append: true);
                         }
 
                         using (IProcessProxy process = await this.ExecuteCommandAsync(wgetExe, this.PackageUri.ToString(), packagesDirectory, telemetryContext, cancellationToken))

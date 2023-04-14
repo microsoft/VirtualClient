@@ -398,6 +398,7 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                DateTime endtime = DateTime.UtcNow;
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
@@ -409,28 +410,21 @@ namespace VirtualClient.Actions
                 }
 
                 double runTimeInSeconds = process.ExitTime.Subtract(process.StartTime).TotalSeconds;
-
+                
                 Prime95MetricsParser parser = new Prime95MetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
                 workloadMetrics.Add(new Metric("testTime", runTimeInSeconds, "seconds", MetricRelativity.HigherIsBetter));
 
-                foreach (Metric metric in workloadMetrics)
-                {
-                    this.Logger.LogMetrics(
-                        "Prime95",
-                        // example Scenario: ApplyStress_60mins_4K-8192K_8threads
-                        scenarioName: this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
-                        process.StartTime,
-                        process.ExitTime,
-                        metric.Name,
-                        metric.Value,
-                        metric.Unit,
-                        metricCategorization: "Prime95",
-                        scenarioArguments: this.CommandLine,
-                        this.Tags,
-                        telemetryContext,
-                        metric.Relativity);
-                }
+                this.Logger.LogMetrics(
+                    $"Prime95",
+                    this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
+                    process.StartTime,
+                    endtime,
+                    workloadMetrics,
+                    null,
+                    this.CommandLine,
+                    this.Tags,
+                    telemetryContext);
 
                 await this.fileSystem.File.DeleteAsync(resultsPath);
             }
