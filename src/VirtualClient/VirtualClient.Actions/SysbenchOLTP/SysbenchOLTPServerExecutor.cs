@@ -57,6 +57,7 @@ namespace VirtualClient.Actions
             {
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
+                    this.SetServerOnline(true);
                     await this.WaitAsync(cancellationToken)
                             .ConfigureAwait(false);
                 }
