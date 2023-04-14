@@ -106,7 +106,7 @@ namespace VirtualClient.Dependencies.Packaging
                 await installation.ExecuteAsync(CancellationToken.None);
 
                 // On Windows, we use the 'wget2' toolset that we compiled from the source code.
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget2 {installation.PackageUri}"), "Wget download command incorrect.");
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget {installation.PackageUri}"), "Wget download command incorrect.");
                 Assert.IsTrue(downloadPathConfirmed, "Archive file path incorrect.");
                 Assert.IsTrue(installationPathConfirmed, "Package installation path incorrect.");
                 Assert.IsTrue(packageRegistrationConfirmed, "Package registration incorrect.");

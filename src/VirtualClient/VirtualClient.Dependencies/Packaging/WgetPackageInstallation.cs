@@ -124,15 +124,6 @@ namespace VirtualClient.Dependencies
                             await this.fileSystem.File.DeleteAsync(downloadedPackagePath);
                         }
 
-                        if (this.Platform == PlatformID.Unix)
-                        {
-                            await this.systemManagement.MakeFileExecutableAsync(wgetExe, this.Platform, cancellationToken);
-
-                            // wget will look for a set of shared libraries. The paths to these libraries can be configured in the
-                            // LD_LIBRARY_PATH environment variable on Unix systems.
-                            this.SetEnvironmentVariable(EnvironmentVariable.LD_LIBRARY_PATH, wgetPackage.Path, append: true);
-                        }
-
                         using (IProcessProxy process = await this.ExecuteCommandAsync(wgetExe, this.PackageUri.ToString(), packagesDirectory, telemetryContext, cancellationToken))
                         {
                             if (!cancellationToken.IsCancellationRequested)
