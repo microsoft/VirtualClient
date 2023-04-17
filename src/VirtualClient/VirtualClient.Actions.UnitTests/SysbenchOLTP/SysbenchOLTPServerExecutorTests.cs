@@ -52,7 +52,7 @@ namespace VirtualClient.Actions
             int commandExecuted = 0;
             using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            string[] expectedCommands =
+            string[] notExpectedCommands =
 {
                 $"sudo mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'1.2.3.5'\"",
                 $"sudo sed -i \"s/.*bind-address.*/bind-address = 1.2.3.4/\" /etc/mysql/mysql.conf.d/mysqld.cnf",
@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
             {
-                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                if (notExpectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
                     commandExecuted++;
                 }
@@ -77,7 +77,7 @@ namespace VirtualClient.Actions
 
             await executor.ExecuteAsync(cancellationToken);
 
-            Assert.AreEqual(5, commandExecuted);
+            Assert.AreEqual(0, commandExecuted);
         }
 
         private class TestSysbenchOLTPServerExecutor : SysbenchOLTPServerExecutor
