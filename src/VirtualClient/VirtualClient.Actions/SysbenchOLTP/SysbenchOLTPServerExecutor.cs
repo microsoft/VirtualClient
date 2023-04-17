@@ -5,12 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -59,78 +56,11 @@ namespace VirtualClient.Actions
             {
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
-                    if (!this.IsMultiRoleLayout())
-                    {
-                        await this.WaitAsync(cancellationToken)
+                    this.SetServerOnline(true);
+                    await this.WaitAsync(cancellationToken)
                             .ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        try
-                        {
-                            IEnumerable<IProcessProxy> processProxyList = this.ProcessesRunning("mysqld");
-
-                            this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
-
-                            this.SetServerOnline(true);
-
-                            if (processProxyList != null)
-                            {
-                                foreach (IProcessProxy process in processProxyList)
-                                {
-                                    this.CleanupTasks.Add(() => process.SafeKill());
-                                    await process.WaitForExitAsync(cancellationToken)
-                                        .ConfigureAwait(false);
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                        }
-                        finally
-                        {
-                            // Always signal to clients that the server is offline before exiting. This helps to ensure that the client
-                            // and server have consistency in handshakes even if one side goes down and returns at some other point.
-                            this.SetServerOnline(false);
-                        }
-                    }
                 }
             });
-        }
-
-        /// <summary>
-        /// Returns list of processes running.
-        /// </summary>
-        /// <param name="processName">Name of the process.</param>
-        /// <returns>List of processes running.</returns>
-        private IEnumerable<IProcessProxy> ProcessesRunning(string processName)
-        {
-            IEnumerable<IProcessProxy> processProxyList = null;
-            List<Process> processlist = new List<Process>(Process.GetProcesses());
-            foreach (Process process in processlist)
-            {
-                if (process.ProcessName.Contains(processName))
-                {
-                    Process[] processesByName = Process.GetProcessesByName(process.ProcessName);
-                    if (processesByName?.Any() ?? false)
-                    {
-                        if (processProxyList == null)
-                        {
-                            processProxyList = processesByName.Select((Process process) => new ProcessProxy(process));
-                        }
-                        else
-                        {
-                            foreach (Process proxy in processesByName)
-                            {
-                                processProxyList.Append(new ProcessProxy(proxy));
-                            }
-                        }
-                    }
-                }
-            }
-
-            return processProxyList;
         }
     }
 }

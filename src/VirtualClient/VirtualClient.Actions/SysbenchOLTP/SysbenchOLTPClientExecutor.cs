@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +25,7 @@ namespace VirtualClient.Actions
         private string sysbenchPrepareArguments;
         private string sysbenchExecutionArguments;
         private string sysbenchDirectory;
+        private string sysbenchPath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPClientExecutor"/> class.
@@ -42,17 +42,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The database name option passed to Sysbench.
-        /// </summary>
-        public string DatabaseName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.DatabaseName));
-            }
-        }
-
-        /// <summary>
         /// The total time of execution option passed to Sysbench.
         /// </summary>
         public string DurationSecs
@@ -64,14 +53,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Number of runs the client executes load on server.
+        /// The database name option passed to Sysbench.
         /// </summary>
-        public string RunCount
+        public string DatabaseName
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RunCount), out IConvertible runCount);
-                return runCount?.ToString();
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.DatabaseName));
             }
         }
 
@@ -137,7 +125,6 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPAddress ipAddress;
             List<Task> clientWorkloadTasks = new List<Task>();
 
             if (this.IsMultiRoleLayout())
@@ -150,20 +137,18 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
-
                             // 1) Confirm server is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
 
-                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
+                            await this.ServerApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
                                 .ConfigureAwait(false);
 
                             // 2) Confirm the server-side application (e.g. web server) is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
 
-                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
+                            await this.ServerApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
                                 .ConfigureAwait(false);
 
                             this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
@@ -171,8 +156,7 @@ namespace VirtualClient.Actions
 
                             // 3) Execute the client workload.
                             // ===========================================================================
-                            ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken)
+                            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                         }
                     }));
@@ -180,12 +164,11 @@ namespace VirtualClient.Actions
             }
             else
             {
-                ipAddress = IPAddress.Loopback;
                 clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.ExecuteWorkloadAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
                 }));
             }
@@ -205,7 +188,9 @@ namespace VirtualClient.Actions
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None).ConfigureAwait(false);
             this.sysbenchDirectory = this.GetPackagePath(this.PackageName);
 
-            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", cancellationToken)
+            // store state with initialization status & record/table counts, if does not exist already
+            
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
 
             if (!state.SysbenchInitialized)
@@ -215,14 +200,16 @@ namespace VirtualClient.Actions
                 state.SysbenchInitialized = true;
             }
 
-            // prepares database based on prepare arguments in profile 
+            state.TableCount = state.TableCount < 0 ? 0 : state.TableCount;
+            state.RecordCount = state.RecordCount < 0 ? 0 : state.RecordCount;
+
+            await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
+
+            // set arguments & path up based on prepare arguments in profile 
+
             this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-
-            string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
-                .ConfigureAwait(false);
-
-            await this.stateManager.SaveStateAsync<SysbenchOLTPState>($"{nameof(SysbenchOLTPState)}", state, cancellationToken);
+            this.sysbenchExecutionArguments = $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} ";
+            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -252,35 +239,22 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task ExecuteWorkloadAsync(IPAddress serverIpAddress, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext.Clone(), async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.sysbenchExecutionArguments = 
-                    $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} " +
-                    $"--mysql-host={this.ServerIpAddress}";
+                    // first, prepare database if needed; then run the sysbench command
 
-                    // gets executor arguments, combines with path & directory to get full command; metrics are stdout
-                    string sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    await this.PrepareMySQLDatabase(cancellationToken);
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                        }
-
-                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
-                        {
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(cleanupProcess, telemetryContext, "Sysbench", logToFile: true);
-
-                                process.ThrowIfWorkloadFailed();
-                                cleanupProcess.ThrowIfWorkloadFailed();
-                                this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                            }
+                            this.CaptureMetrics(process, telemetryContext, cancellationToken);
                         }
                     }
                 }
@@ -306,6 +280,32 @@ namespace VirtualClient.Actions
 
             await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(makeInstallCommand, null, this.sysbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        private async Task PrepareMySQLDatabase(CancellationToken cancellationToken)
+        {
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
+
+            int tableCount = int.Parse(this.NumTables);
+            int recordCount = int.Parse(this.RecordCount);
+
+            if (tableCount != state.TableCount || recordCount != state.RecordCount)
+            {
+                // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
+
+                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+                
+                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // update the state object accordingly
+
+                state.TableCount = tableCount;
+                state.RecordCount = recordCount;
+
+                await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
+            }
         }
     }
 }

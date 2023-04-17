@@ -31,7 +31,7 @@ This profile is designed to identify general/broad regressions when compared aga
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Username | Mandatory.Which user needs to run HPLinpack |null|
+  | Username | Which user needs to run HPLinpack | testuser |
   | CompilerName | Name of compiler used | gcc |
   | CompilerVersion | Version of compiler | 11 |
   |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of cores* 10000 (This value is machine dependent) |

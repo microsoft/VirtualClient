@@ -7,7 +7,7 @@
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {
-        "Username": "testuser",
+        "Username": "",
         "DiskFilter": "SizeGreaterThan:1000gb",
         "CudaVersion": "12.0",
         "DriverVersion": "525",
@@ -59,7 +59,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneMLCommonsRepo",
                 "RepoUri": "https://github.com/mlcommons/inference_results_v2.0.git",

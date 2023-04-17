@@ -51,8 +51,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Username), out IConvertible username);
-                return username?.ToString();
+                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username));
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
             }
         }
 
@@ -183,6 +188,9 @@ namespace VirtualClient.Actions
             {
                 DateTime startTime = DateTime.UtcNow;
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                await this.ExecuteCommandAsync("useradd", $" -m {this.Username}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true)
                     .ConfigureAwait(false);
 
                 this.SetParameters();
@@ -368,7 +376,8 @@ namespace VirtualClient.Actions
                     $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     this.Tags,
                     telemetryContext,
-                    result.Relativity);
+                    result.Relativity,
+                    metricMetadata: result.Metadata);
             }
         }
 
