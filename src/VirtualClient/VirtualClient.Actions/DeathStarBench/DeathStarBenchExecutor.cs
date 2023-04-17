@@ -553,8 +553,16 @@ namespace VirtualClient.Actions
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait();
 
+            string pipUpgradeCommand = "python3 -m pip install -U pip";
+            await this.ExecuteCommandAsync(pipUpgradeCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
+            string setupToolsUpgradeCommand = "python3 -m pip install -U setuptools";
+            await this.ExecuteCommandAsync(setupToolsUpgradeCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
             // python3-pip installs pip3 and not pip, better to leave it on python which version of pip to use
-            string pipInstallPackagesCommand = "python3 -m pip install aiohttp asyncio";
+            string pipInstallPackagesCommand = "-H python3 -m pip install aiohttp asyncio";
             await this.ExecuteCommandAsync(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 
