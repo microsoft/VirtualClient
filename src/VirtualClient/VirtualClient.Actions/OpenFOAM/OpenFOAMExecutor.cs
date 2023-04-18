@@ -302,13 +302,13 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    if (process.IsErrored())
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-                    }
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
 
-                    await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                    if (!arguments.Contains("clean"))
+                    {
+                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                    }
                 }
             }
         }
