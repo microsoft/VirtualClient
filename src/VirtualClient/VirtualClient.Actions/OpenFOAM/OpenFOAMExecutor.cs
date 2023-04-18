@@ -305,6 +305,7 @@ namespace VirtualClient.Actions
                     await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
                     process.ThrowIfWorkloadFailed();
 
+                    // clean commands do not produce metrics, so no need of capturing metrics
                     if (!arguments.Contains("clean"))
                     {
                         await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);

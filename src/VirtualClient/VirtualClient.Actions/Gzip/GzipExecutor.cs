@@ -170,6 +170,7 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)
         {
+            // Gzip workload produces metrics in standard error
             GzipMetricsParser parser = new GzipMetricsParser(process.StandardError.ToString());
             IList<Metric> metrics = parser.Parse();
 
