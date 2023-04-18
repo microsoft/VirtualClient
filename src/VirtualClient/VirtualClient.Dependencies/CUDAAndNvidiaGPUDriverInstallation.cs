@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net.Http;
@@ -407,10 +408,10 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            string runFileName = this.LocalRunFile.Split('/').Last();
+            string runFileName = this.LocalRunFileForLinux.Split('/').Last();
             List<string> commands = new List<string>()
             {
-                $"wget {this.LocalRunFile}",
+                $"wget {this.LocalRunFileForLinux}",
                 $"sh {runFileName} --silent"
             };
 
@@ -441,25 +442,25 @@ namespace VirtualClient.Dependencies
 
         private List<string> PostInstallationCommands()
         {
-            List<string> commands = new List<string>();
-
-            commands.Add($"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
+            return new List<string>
+            {
+                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersionForLinux}/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"",
 
-                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersionForLinux}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\""
             };
         }
 
-        private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
 
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
