@@ -56,14 +56,14 @@ namespace VirtualClient.Dependencies
             this.component.Dispose();
         }
 
-        [Test]
-        public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForPlatformsOtherThanUnix()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT, "11.6");
-
-            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
-        }
+        // [Test]
+        // public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForPlatformsOtherThanUnix()
+        // {
+        //     this.SetupDefaultMockBehavior(PlatformID.Win32NT, "11.6");
+        // 
+        //     WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
+        //     Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
+        // }
 
         [Test]
         public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForUnsupportedDistros()
@@ -145,10 +145,10 @@ namespace VirtualClient.Dependencies
             this.mockProcessManager = new Mock<ProcessManager>();
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "CudaVersion", "11.6" },
-                { "DriverVersion", "510" },
+                { "CudaVersionForLinux", "11.6" },
+                { "DriverVersionForLinux", "510" },
                 { "Username", "anyuser" },
-                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" }
+                { "LocalRunFileForLinux", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" }
             };
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
