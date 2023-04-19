@@ -302,13 +302,14 @@ namespace VirtualClient.Actions
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    if (process.IsErrored())
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-                    }
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
 
-                    await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                    // clean commands do not produce metrics, so no need of capturing metrics
+                    if (!arguments.Contains("clean"))
+                    {
+                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                    }
                 }
             }
         }
