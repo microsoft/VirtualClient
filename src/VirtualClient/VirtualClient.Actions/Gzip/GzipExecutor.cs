@@ -93,7 +93,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes the environment for execution of the Lzbench workload.
+        /// Initializes the environment for execution of the Gzip workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -170,7 +170,8 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)
         {
-            GzipMetricsParser parser = new GzipMetricsParser(process.StandardOutput.ToString());
+            // Gzip workload produces metrics in standard error
+            GzipMetricsParser parser = new GzipMetricsParser(process.StandardError.ToString());
             IList<Metric> metrics = parser.Parse();
 
             this.Logger.LogMetrics(
