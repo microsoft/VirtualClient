@@ -232,7 +232,8 @@ namespace VirtualClient.Actions
                 string loadCommand = $"spack load hpcg@{this.HpcgVersion} %gcc ^openmpi@{this.OpenMpiVersion}";
 
                 // mpirun --np 4 --use-hwthread-cpus xhpcg
-                int coreCount = Environment.ProcessorCount;
+                CpuInfo cpuInfo = await this.systemManagement.GetCpuInfoAsync(CancellationToken.None);
+                int coreCount = cpuInfo.PhysicalCoreCount;
                 string mpirunCommand = $"mpirun --np {coreCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
 
                 this.runShellText = string.Join(Environment.NewLine, spackSetupCommand, installCommand, loadCommand, mpirunCommand);
