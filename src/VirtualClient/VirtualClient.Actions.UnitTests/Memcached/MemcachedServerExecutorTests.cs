@@ -77,7 +77,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
+                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
+                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

@@ -57,8 +57,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.Username), out IConvertible username);
-                return username?.ToString();
+                string username = this.Parameters.GetValue<string>(nameof(MemcachedExecutor.Username), string.Empty);
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
             }
 
             private set
