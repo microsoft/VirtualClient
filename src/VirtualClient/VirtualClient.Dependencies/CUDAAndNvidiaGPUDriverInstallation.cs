@@ -17,6 +17,7 @@ namespace VirtualClient.Dependencies
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -48,11 +49,11 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// The Cuda Toolkit Windows executable Command Line Arguments.
         /// </summary>
-        public string CommandLineArgsForWindows
+        public string WinCommandLineArgs
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.CommandLineArgsForWindows), "-y -s");
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCommandLineArgs), "-y -s");
             }
         }
 
@@ -60,11 +61,11 @@ namespace VirtualClient.Dependencies
         /// If this is true, VC expects CUDA and NVIDIA Drivers Installer Package from Blob Storage.
         /// If false, CUDA and NVIDIA Drivers installer will be downloaded from Web based on link provided.
         /// </summary>
-        public bool CudaDriversPackageDownloadedFromBlobForWindows
+        public bool WinCudaDriversPackageDownloadedFromBlob
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaDriversPackageDownloadedFromBlobForWindows), false);
+                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCudaDriversPackageDownloadedFromBlob), false);
             }
         }
 
@@ -72,59 +73,59 @@ namespace VirtualClient.Dependencies
         /// The Cuda Toolkit executable downloaded from web to install Cuda and Nvidia GPU driver.
         /// Alternatively, the package can also be downloaded from Blob storage using DependencyPackageInstallation.
         /// </summary>
-        public string CudaToolkitExeFromWebForWindows
+        public string WinCudaToolkitExeLink
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaToolkitExeFromWebForWindows), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCudaToolkitExeLink), string.Empty);
             }
         }
 
         /// <summary>
         /// The version of CUDA to be installed in Linux Systems
         /// </summary>
-        public string CudaVersionForLinux
+        public string LinuxCudaVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaVersionForLinux), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxCudaVersion), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.CudaVersionForLinux)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxCudaVersion)] = value;
             }
         }
 
         /// <summary>
         /// The version of Nvidia GPU driver to be installed in Linux Systems
         /// </summary>
-        public string DriverVersionForLinux
+        public string LinuxDriverVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.DriverVersionForLinux), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxDriverVersion), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.DriverVersionForLinux)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxDriverVersion)] = value;
             }
         }
 
         /// <summary>
         /// The local runfile to install Cuda and Nvidia GPU driver in Linux Systems
         /// </summary>
-        public string LocalRunFileForLinux
+        public string LinuxLocalRunFile
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LocalRunFileForLinux), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxLocalRunFile), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LocalRunFileForLinux)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxLocalRunFile)] = value;
             }
         }
 
@@ -221,10 +222,10 @@ namespace VirtualClient.Dependencies
                 {
                     // CUDA and Nvidia driver installation for other platforms to be added.
                     throw new WorkloadException(
-                                $"CUDA and Nvidia GPU Driver Installtion is not supported on VirtualClient on the current platform {this.Platform}" +
-                                $"Supported Platforms include:" +
-                                $" Unix, Windows ",
-                                ErrorReason.PlatformNotSupported);
+                        $"CUDA and Nvidia GPU Driver Installtion is not supported on VirtualClient on the current platform {this.Platform}" +
+                        $"Supported Platforms include:" +
+                        $" Unix, Windows ",
+                        ErrorReason.PlatformNotSupported);
                 }
             }
 
@@ -279,10 +280,68 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        /// <summary>
+        /// Downloads the CUDA and Nvidia GPU driver installer from web
+        /// </summary>
+        /// <returns></returns>
+        private async Task DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(string installerPath, CancellationToken cancellationToken)
+        {
+            using var restClient = new RestClientBuilder().Build();
+
+            try
+            {
+                HttpResponseMessage httpResponse = await restClient.GetAsync(new Uri(this.WinCudaToolkitExeLink), cancellationToken,  HttpCompletionOption.ResponseHeadersRead);
+
+                if (httpResponse.IsSuccessStatusCode)
+                {
+                    using Stream fileStream = this.systemManager.FileSystem.FileStream.Create(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    // using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await httpResponse.Content.CopyToAsync(fileStream);
+                }
+                else
+                {
+                    throw new DependencyException(
+                    $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", ErrorReason.DependencyInstallationFailed);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new DependencyException(
+                    $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", e, ErrorReason.DependencyInstallationFailed);
+            }
+        }
+
+        // private async Task DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(string installerPath)
+        // {
+        //     using var httpClient = new HttpClient();
+        // 
+        //     try
+        //     {
+        //         HttpResponseMessage httpResponse = await httpClient.GetAsync(this.WinCudaToolkitExeLink, HttpCompletionOption.ResponseHeadersRead);
+        // 
+        //         if (httpResponse.IsSuccessStatusCode)
+        //         {
+        //             using Stream fileStream = this.systemManager.FileSystem.FileStream.Create(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        //             // using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        //             await httpResponse.Content.CopyToAsync(fileStream);
+        //         }
+        //         else
+        //         {
+        //             throw new DependencyException(
+        //             $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", ErrorReason.DependencyInstallationFailed);
+        //         }
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         throw new DependencyException(
+        //             $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", e, ErrorReason.DependencyInstallationFailed);
+        //     }
+        // }
+
         private async Task CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installerPath = string.Empty;
-            if (this.CudaDriversPackageDownloadedFromBlobForWindows)
+            if (this.WinCudaDriversPackageDownloadedFromBlob)
             {
                 DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
                 this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
@@ -294,13 +353,15 @@ namespace VirtualClient.Dependencies
             else
             {
                 this.systemManager.FileSystem.Directory.CreateDirectory("NvidiaDriversForWindows");
-                string packageDir = this.PlatformSpecifics.Combine(this.systemManager.FileSystem.Directory.GetCurrentDirectory(), "NvidiaDriversForWindows");
-                installerPath = this.PlatformSpecifics.Combine(packageDir, "nvidiaDriversInstaller.exe");
+                installerPath = this.PlatformSpecifics.Combine(
+                    this.systemManager.FileSystem.Directory.GetCurrentDirectory(), 
+                    "NvidiaDriversForWindows", 
+                    "nvidiaDriversInstaller.exe");
 
-                await this.DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(installerPath);
+                await this.DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(installerPath, cancellationToken);
             }
 
-            await this.ExecuteCommandAsync(installerPath, this.CommandLineArgsForWindows, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+            await this.ExecuteCommandAsync(installerPath, this.WinCommandLineArgs, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -350,32 +411,6 @@ namespace VirtualClient.Dependencies
             return commands;
         }
 
-        private async Task DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(string installerPath)
-        {
-            using var httpClient = new HttpClient();
-
-            try
-            {
-                var httpResponse = await httpClient.GetAsync(this.CudaToolkitExeFromWebForWindows);
-
-                if (httpResponse.IsSuccessStatusCode)
-                {
-                    using var fileStream = new FileStream(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
-                    await httpResponse.Content.CopyToAsync(fileStream);
-                }
-                else
-                {
-                    throw new DependencyException(
-                    $"Failed to download NVIDIA drivers from given link {this.CudaToolkitExeFromWebForWindows}.", ErrorReason.DependencyInstallationFailed);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new DependencyException(
-                    $"Failed to download NVIDIA drivers from given link {this.CudaToolkitExeFromWebForWindows}.", e, ErrorReason.DependencyInstallationFailed);
-            }
-        }
-
         private List<string> PrerequisiteCommands(LinuxDistribution linuxDistribution)
         {
             List<string> commands = new List<string>();
@@ -408,10 +443,10 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            string runFileName = this.LocalRunFileForLinux.Split('/').Last();
+            string runFileName = this.LinuxLocalRunFile.Split('/').Last();
             List<string> commands = new List<string>()
             {
-                $"wget {this.LocalRunFileForLinux}",
+                $"wget {this.LinuxLocalRunFile}",
                 $"sh {runFileName} --silent"
             };
 
@@ -421,19 +456,19 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt update");
                     commands.Add("apt upgrade -y");
-                    commands.Add($"apt install nvidia-driver-{this.DriverVersionForLinux} nvidia-dkms-{this.DriverVersionForLinux} -y");
-                    commands.Add($"apt install cuda-drivers-fabricmanager-{this.DriverVersionForLinux} -y");
+                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion} nvidia-dkms-{this.LinuxDriverVersion} -y");
+                    commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
 
                     break;
 
                 case LinuxDistribution.CentOS7:
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL7:
-                    commands.Add($"dnf module install nvidia-driver:{this.DriverVersionForLinux}/fm");
+                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}/fm");
                     break;
 
                 case LinuxDistribution.SUSE:
-                    commands.Add($"zypper install cuda-drivers-fabricmanager-{this.DriverVersionForLinux}");
+                    commands.Add($"zypper install cuda-drivers-fabricmanager-{this.LinuxDriverVersion}");
                     break;
             }
             
@@ -444,10 +479,10 @@ namespace VirtualClient.Dependencies
         {
             return new List<string>
             {
-                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersionForLinux}/bin${{PATH:+:${{PATH}}}}' | " +
+                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.LinuxCudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"",
 
-                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersionForLinux}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.LinuxCudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\""
             };
         }

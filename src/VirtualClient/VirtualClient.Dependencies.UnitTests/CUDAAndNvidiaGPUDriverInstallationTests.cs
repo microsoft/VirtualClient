@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -43,6 +44,7 @@ namespace VirtualClient.Dependencies
         private TestComponent component;
         private Mock<ProcessManager> mockProcessManager;
         private State mockState;
+        private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupTests()
@@ -59,7 +61,7 @@ namespace VirtualClient.Dependencies
         // [Test]
         // public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForPlatformsOtherThanUnix()
         // {
-        //     this.SetupDefaultMockBehavior(PlatformID.Win32NT, "11.6");
+        //     this.SetupDefaultMockBehavior(PlatformID.Other);
         // 
         //     WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
         //     Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
@@ -82,10 +84,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecute(string version)
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecute()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
@@ -103,10 +104,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyDoesNotInstallCUDAAndNvidiaGPUDriverIfAlreadyInstalled(string version)
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyDoesNotInstallCUDAAndNvidiaGPUDriverIfAlreadyInstalled()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.fixture.StateManager.OnGetState(nameof(CudaAndNvidiaGPUDriverInstallation)).ReturnsAsync(JObject.FromObject(this.mockState));
 
@@ -117,10 +117,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public void CUDAAndNvidiaGPUDriverInstallationDependencySurfacesExceptionWhenProcessDoesNotExitSuccessfullyOnExecute(string version)
+        public void CUDAAndNvidiaGPUDriverInstallationDependencySurfacesExceptionWhenProcessDoesNotExitSuccessfullyOnExecute()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
@@ -138,17 +137,55 @@ namespace VirtualClient.Dependencies
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID, string version = "")
+        [Test]
+        [TestCase(false)]
+        [TestCase(true)]
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyExecutesCorrectInsatllerCommandOnWindows(bool driversDownloadedFromBlob)
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
+            this.fixture.Parameters["WinCudaDriversPackageDownloadedFromBlob"] = driversDownloadedFromBlob;
+            this.fixture.Parameters["packageName"] = "NvidiaDrivers";
+            this.fixture.Directory.Setup(di => di.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.fixture.FileSystem.Setup(fe => fe.FileStream.Create(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
+                .Returns(Stream.Null);
+
+            this.fixture.FileSystem.Setup(fe => fe.Directory.GetCurrentDirectory())
+                .Returns(this.mockPackage.Path);
+
+            if (driversDownloadedFromBlob)
+            {
+                this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "win-x64", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
+            }
+            else
+            {
+                this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "NvidiaDriversForWindows", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
+            }
+
+            this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+
+            await this.component.ExecuteAsync(CancellationToken.None);
+            this.mockProcessManager.Verify();                            
+        }
+
+        private void SetupDefaultMockBehavior(PlatformID platformID)
         {
             this.fixture.Setup(platformID);
-
+            this.mockPackage = new DependencyPath("NvidiaDrivers", this.fixture.GetPackagePath("NvidiaDrivers"));
+            this.fixture.PackageManager.OnGetPackage("NvidiaDrivers").ReturnsAsync(this.mockPackage);
             this.mockProcessManager = new Mock<ProcessManager>();
+
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "CudaVersionForLinux", "11.6" },
-                { "DriverVersionForLinux", "510" },
+                { "LinuxCudaVersion", "11.6" },
+                { "LinuxDriverVersion", "510" },
                 { "Username", "anyuser" },
-                { "LocalRunFileForLinux", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" }
+                { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
+                { "WinCommandLineArgs", "-y -s" },
+                { "WinCudaDriversPackageDownloadedFromBlob", false },
+                { "WinCudaToolkitExeLink", "https://in.download.nvidia.com/tesla/527.41/527.41-data-center-tesla-desktop-win10-win11-64bit-dch-international.exe" },
+                { "RebootRequired", false }
             };
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
