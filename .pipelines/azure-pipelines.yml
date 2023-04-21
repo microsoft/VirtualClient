@@ -10,7 +10,7 @@ trigger:
   paths:
     exclude:
     - website
-
+    
 pr: none
 
 pool:
@@ -22,7 +22,7 @@ variables:
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
   GitVersion.SemVer: ''
-
+  
 
 steps:
 - task: UseDotNet@2
@@ -50,7 +50,7 @@ steps:
   # Ensure the artifact output/bin/obj directories are clean.
 - script: $(Build.SourcesDirectory)\clean.cmd
   displayName: 'Clean Output Directories'
-
+  
   # Build the repo.
 - script: $(Build.SourcesDirectory)\build.cmd $(VcVersion)
   displayName: 'Build Solutions'
@@ -66,7 +66,7 @@ steps:
     Pattern: '*.nupkg'
     signConfigType: 'inlineSignParams'
     inlineOperation: |
-      [
+      [    
           {
             "KeyCode": "CP-401405",
             "OperationCode": "NuGetSign",
