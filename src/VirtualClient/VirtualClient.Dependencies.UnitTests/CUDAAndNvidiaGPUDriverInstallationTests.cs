@@ -58,15 +58,6 @@ namespace VirtualClient.Dependencies
             this.component.Dispose();
         }
 
-        // [Test]
-        // public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForPlatformsOtherThanUnix()
-        // {
-        //     this.SetupDefaultMockBehavior(PlatformID.Other);
-        // 
-        //     WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
-        //     Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
-        // }
-
         [Test]
         public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForUnsupportedDistros()
         {
