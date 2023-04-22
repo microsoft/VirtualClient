@@ -236,7 +236,7 @@ namespace VirtualClient
             this.Logger = new InMemoryLogger();
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            this.ProcessManager = new InMemoryProcessManager();
+            this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));

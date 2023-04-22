@@ -101,7 +101,8 @@ namespace VirtualClient.Monitors
                         {
                             // The output is rather large, but we account for it by applying a maximum number of characters
                             // to the output.
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Lspci", logToFile: true);
+                            process.LogResults.ToolSet = "Lspci";
+                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                             process.ThrowIfMonitorFailed();
 
                             if (process.StandardOutput.Length > 0)

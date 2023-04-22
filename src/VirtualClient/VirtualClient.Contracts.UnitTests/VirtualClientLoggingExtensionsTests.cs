@@ -95,9 +95,10 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, results: expectedResults);
+            process.LogResults.GeneratedResults = expectedResults;
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessResults(process);
 
-            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("processResults", out object processContext));
 
             string expectedProcessInfo = new
             {

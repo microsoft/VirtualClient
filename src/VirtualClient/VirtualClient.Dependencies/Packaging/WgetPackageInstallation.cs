@@ -128,7 +128,8 @@ namespace VirtualClient.Dependencies
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Wget", logToFile: true);
+                                process.LogResults.ToolSet = "Wget";
+                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                                 process.ThrowIfDependencyInstallationFailed();
 
                                 // Technique:

@@ -191,7 +191,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "NetworkConfiguration")
+                        process.LogResults.ToolSet = "NetworkConfiguration";
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
@@ -251,7 +252,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "NetworkConfiguration")
+                        process.LogResults.ToolSet = "NetworkConfiguration";
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

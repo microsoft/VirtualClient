@@ -157,7 +157,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion")
+                        process.LogResults.ToolSet = "CompilerVersion";
+                        await this.LogProcessDetailsAsync(process, EventContext.Persisted())
                             .ConfigureAwait(false);
 
                         ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());

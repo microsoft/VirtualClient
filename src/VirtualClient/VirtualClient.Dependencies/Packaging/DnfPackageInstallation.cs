@@ -186,7 +186,8 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Dnf")
+                    process.LogResults.ToolSet = "Dnf";
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted())
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
@@ -211,7 +212,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Dnf")
+                        process.LogResults.ToolSet = "Dnf";
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

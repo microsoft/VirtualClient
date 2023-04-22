@@ -82,7 +82,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Git")
+                        process.LogResults.ToolSet = "Git";
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

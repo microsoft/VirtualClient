@@ -52,14 +52,13 @@ namespace VirtualClient.Contracts
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="name">The property name to use for the process telemetry.</param>
-        /// <param name="results">Results produced by the process execution to log.</param>
         /// <param name="maxChars">
         /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
         /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static EventContext AddProcessContext(this EventContext telemetryContext, IProcessProxy process, string name = null, string results = null, int maxChars = 125000)
+        public static EventContext AddProcessContext(this EventContext telemetryContext, IProcessProxy process, string name = null, int maxChars = 125000)
         {
             process.ThrowIfNull(nameof(process));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -108,68 +107,126 @@ namespace VirtualClient.Contracts
                     fullCommand = SensitiveData.ObscureSecrets(fullCommand);
                 }
 
-                if (string.IsNullOrWhiteSpace(results))
+                // Note that 'totalOutputChars' represents the total # of characters in both the
+                // standard output and error.
+                if (finalStandardOutput != null && totalOutputChars > maxChars)
                 {
-                    // Note that 'totalOutputChars' represents the total # of characters in both the
-                    // standard output and error.
-                    if (finalStandardOutput != null && totalOutputChars > maxChars)
+                    // e.g.
+                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                    // 
+                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                    // The total will be 125,000 chars, right at the max.
+                    int substringLength = finalStandardOutput.Length - (totalOutputChars - maxChars);
+                    if (substringLength > 0)
                     {
-                        // e.g.
-                        // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
-                        // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
-                        // 
-                        // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
-                        // The total will be 125,000 chars, right at the max.
-                        int substringLength = finalStandardOutput.Length - (totalOutputChars - maxChars);
-                        if (substringLength > 0)
-                        {
-                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                            finalStandardOutput = finalStandardOutput.Substring(0, finalStandardOutput.Length - (totalOutputChars - maxChars));
-                        }
-                        else
-                        {
-                            finalStandardOutput = string.Empty;
-                        }
-
-                        // Refresh the total character count
-                        totalOutputChars = (finalStandardOutput?.Length ?? 0) + (finalStandardError?.Length ?? 0);
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalStandardOutput = finalStandardOutput.Substring(0, finalStandardOutput.Length - (totalOutputChars - maxChars));
+                    }
+                    else
+                    {
+                        finalStandardOutput = string.Empty;
                     }
 
-                    if (finalStandardError != null && totalOutputChars > maxChars)
-                    {
-                        int substringLength = finalStandardError.Length - (totalOutputChars - maxChars);
-                        if (substringLength > 0)
-                        {
-                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                            finalStandardError = finalStandardError.Substring(0, finalStandardError.Length - (totalOutputChars - maxChars));
-                        }
-                        else
-                        {
-                            finalStandardError = string.Empty;
-                        }
-                    }
+                    // Refresh the total character count
+                    totalOutputChars = (finalStandardOutput?.Length ?? 0) + (finalStandardError?.Length ?? 0);
+                }
 
-                    telemetryContext.Properties[name ?? "process"] = new
-                    {
-                        id = process.Id,
-                        command = fullCommand ?? string.Empty,
-                        workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
-                        exitCode = finalExitCode,
-                        standardOutput = finalStandardOutput ?? string.Empty,
-                        standardError = finalStandardError ?? string.Empty
-                    };
-                }
-                else
+                if (finalStandardError != null && totalOutputChars > maxChars)
                 {
-                    telemetryContext.Properties[name ?? "process"] = new
+                    int substringLength = finalStandardError.Length - (totalOutputChars - maxChars);
+                    if (substringLength > 0)
                     {
-                        id = process.Id,
-                        command = fullCommand ?? string.Empty,
-                        workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
-                        exitCode = finalExitCode,
-                        results = results ?? string.Empty,
-                    };
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalStandardError = finalStandardError.Substring(0, finalStandardError.Length - (totalOutputChars - maxChars));
+                    }
+                    else
+                    {
+                        finalStandardError = string.Empty;
+                    }
                 }
+
+                telemetryContext.Properties[name ?? "process"] = new
+                {
+                    id = process.Id,
+                    command = fullCommand ?? string.Empty,
+                    workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
+                    exitCode = finalExitCode,
+                    standardOutput = finalStandardOutput ?? string.Empty,
+                    standardError = finalStandardError ?? string.Empty
+                };
+            }
+            catch
+            {
+                // Best effort.
+            }
+
+            return telemetryContext;
+        }
+
+        /// <summary>
+        /// Adds the generated results of the process to telemetry
+        /// and exit code to the telemetry context.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="process">The process whose details will be captured.</param>
+        /// <param name="name">The property name to use for the process telemetry.</param>
+        /// <param name="maxChars">
+        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static EventContext AddProcessResults(this EventContext telemetryContext, IProcessProxy process, string name = null, int maxChars = 125000)
+        {
+            process.ThrowIfNull(nameof(process));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            maxChars.ThrowIfInvalid(
+                nameof(maxChars),
+                (count) => count >= 0,
+                $"Invalid max character count. The value provided must be greater than or equal to zero.");
+
+            try
+            {
+                int? finalExitCode = null;
+                string finalResults = null;
+
+                try
+                {
+                    finalExitCode = process.ExitCode;
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    finalResults = process?.LogResults?.GeneratedResults;
+                }
+                catch
+                {
+                }
+
+                if (finalResults != null && finalResults.Length > maxChars)
+                {
+                    finalResults = finalResults.Substring(0, maxChars);
+                }
+
+                string fullCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
+                if (!string.IsNullOrWhiteSpace(fullCommand))
+                {
+                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                }
+
+                telemetryContext.Properties[name ?? "processResults"] = new
+                {
+                    id = process.Id,
+                    command = fullCommand ?? string.Empty,
+                    workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
+                    exitCode = finalExitCode,
+                    results = finalResults ?? string.Empty,
+                };
             }
             catch
             {
@@ -993,7 +1050,8 @@ namespace VirtualClient.Contracts
                     logger.LogMessage(
                         $"{eventNamePrefix}.ProcessResults",
                         LogLevel.Information,
-                        telemetryContext.Clone().AddProcessContext(process, process.LogResults.GeneratedResults, maxChars: logToTelemetryMaxChars));
+                        telemetryContext.Clone().
+                        AddProcessResults(process, maxChars: logToTelemetryMaxChars));
                 }
             }
             catch
@@ -1051,7 +1109,7 @@ namespace VirtualClient.Contracts
                     // Working Directory : /home/user/nuget/virtualclient/packages/fio/linux-x64
                     // Exit Code         : 0
                     //
-                    // ##Output##
+                    // ##StandardOutput##
                     // {
                     //    "fio version" : "fio-3.26-19-ge7e53",
                     //      "timestamp" : 1646873555,
@@ -1064,7 +1122,7 @@ namespace VirtualClient.Contracts
                     //      ]
                     // }
                     // 
-                    // ##Results##
+                    // ##GeneratedResults##
                     // Any results from the output of the process
 
                     StringBuilder outputBuilder = new StringBuilder();
@@ -1085,7 +1143,7 @@ namespace VirtualClient.Contracts
                     if (!string.IsNullOrWhiteSpace(logResults.GeneratedResults))
                     {
                         outputBuilder.AppendLine();
-                        outputBuilder.AppendLine("##Results##");
+                        outputBuilder.AppendLine("##GeneratedResults##");
                         outputBuilder.AppendLine(logResults.GeneratedResults);
                     }
 

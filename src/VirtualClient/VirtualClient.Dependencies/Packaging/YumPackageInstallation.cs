@@ -185,7 +185,8 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "Yum")
+                    process.LogResults.ToolSet = "Yum";
+                    await this.LogProcessDetailsAsync(process, EventContext.Persisted())
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
@@ -210,7 +211,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Yum")
+                        process.LogResults.ToolSet = "Yum";
+                        await this.LogProcessDetailsAsync(process, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
