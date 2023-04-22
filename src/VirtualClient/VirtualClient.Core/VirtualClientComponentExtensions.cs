@@ -157,21 +157,16 @@ namespace VirtualClient
         public static string GetCurrentUserName(this VirtualClientComponent component, bool nonSudo = false)
         {
             string currentUser = component.GetEnvironmentVariable(EnvironmentVariable.USER);
-            if (string.IsNullOrEmpty(currentUser))
-            {
-                currentUser = Environment.UserName;
-            }
 
             if (nonSudo && string.Equals(currentUser, "root", StringComparison.OrdinalIgnoreCase))
             {
                 currentUser = component.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
+            }
 
-                if (string.IsNullOrWhiteSpace(currentUser))
-                {
-                    throw new DependencyException(
-                        $"The non-sudo username could not be determined. The expected environment variable was not set.",
-                        ErrorReason.DependencyNotFound);
-                }
+            // Use Environment.Username as last resort
+            if (string.IsNullOrEmpty(currentUser))
+            {
+                currentUser = Environment.UserName;
             }
 
             return currentUser;
