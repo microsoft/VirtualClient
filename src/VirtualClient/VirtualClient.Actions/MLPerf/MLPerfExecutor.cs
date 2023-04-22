@@ -435,7 +435,7 @@ namespace VirtualClient.Actions
 
         private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
         {
-            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles")))
+            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "gpuconfigfiles")))
             {
                 this.fileSystem.File.Copy(
                     file,
@@ -444,7 +444,7 @@ namespace VirtualClient.Actions
             }
 
             foreach (string directory in this.fileSystem.Directory.GetDirectories(
-                this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
+                this.PlatformSpecifics.GetScriptPath("mlperf", "gpuconfigfiles"), "*", SearchOption.AllDirectories))
             {
                 foreach (string subDirectory in this.fileSystem.Directory.GetDirectories(directory))
                 {
