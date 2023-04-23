@@ -165,6 +165,123 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Adds the details of the ssh command including standard output, standard error
+        /// and exit code to the telemetry context.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="sshCommand">The ssh command whose details will be captured.</param>
+        /// <param name="name">The property name to use for the process telemetry.</param>
+        /// <param name="maxChars">
+        /// The maximum number of characters that will be logged in the telemetry event from standard output + error. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static EventContext AddSshCommandContext(this EventContext telemetryContext, ISshCommandProxy sshCommand, string name = null, int maxChars = 125000)
+        {
+            sshCommand.ThrowIfNull(nameof(sshCommand));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            maxChars.ThrowIfInvalid(
+                nameof(maxChars),
+                (count) => count >= 0,
+                $"Invalid max character count. The value provided must be greater than or equal to zero.");
+
+            try
+            {
+                int? finalExitCode = null;
+                string finalStandardOutput = null;
+                string finalStandardError = null;
+                int totalOutputChars = 0;
+
+                try
+                {
+                    finalExitCode = sshCommand.ExitStatus;
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    finalStandardOutput = sshCommand.Result?.ToString();
+                    totalOutputChars += finalStandardOutput?.Length ?? 0;
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    finalStandardError = sshCommand.Error?.ToString();
+                    totalOutputChars += finalStandardError?.Length ?? 0;
+                }
+                catch
+                {
+                }
+
+                string fullCommand = $"{sshCommand.CommandText}".Trim();
+                if (!string.IsNullOrWhiteSpace(fullCommand))
+                {
+                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
+                }
+
+                // Note that 'totalOutputChars' represents the total # of characters in both the
+                // standard output and error.
+                if (finalStandardOutput != null && totalOutputChars > maxChars)
+                {
+                    // e.g.
+                    // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
+                    // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
+                    // 
+                    // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
+                    // The total will be 125,000 chars, right at the max.
+                    int substringLength = finalStandardOutput.Length - (totalOutputChars - maxChars);
+                    if (substringLength > 0)
+                    {
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalStandardOutput = finalStandardOutput.Substring(0, finalStandardOutput.Length - (totalOutputChars - maxChars));
+                    }
+                    else
+                    {
+                        finalStandardOutput = string.Empty;
+                    }
+
+                    // Refresh the total character count
+                    totalOutputChars = (finalStandardOutput?.Length ?? 0) + (finalStandardError?.Length ?? 0);
+                }
+
+                if (finalStandardError != null && totalOutputChars > maxChars)
+                {
+                    int substringLength = finalStandardError.Length - (totalOutputChars - maxChars);
+                    if (substringLength > 0)
+                    {
+                        // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
+                        finalStandardError = finalStandardError.Substring(0, finalStandardError.Length - (totalOutputChars - maxChars));
+                    }
+                    else
+                    {
+                        finalStandardError = string.Empty;
+                    }
+                }
+
+                telemetryContext.Properties[name ?? "process"] = new
+                {
+                    command = fullCommand ?? string.Empty,
+                    exitCode = finalExitCode,
+                    standardOutput = finalStandardOutput ?? string.Empty,
+                    standardError = finalStandardError ?? string.Empty
+                };
+            }
+            catch
+            {
+                // Best effort.
+            }
+
+            return telemetryContext;
+        }
+
+        /// <summary>
         /// Adds the generated results of the process to telemetry
         /// and exit code to the telemetry context.
         /// </summary>
@@ -779,6 +896,62 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Captures the details of the sshcommand including standard output, standard error and exit codes to 
+        /// telemetry on the system.
+        /// </summary>
+        /// <param name="component">The component requesting the logging.</param>
+        /// <param name="sshCommand">The process whose details will be captured.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
+        /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
+        /// <param name="logToTelemetryMaxChars">
+        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static async Task LogSshCommandDetailsAsync(
+            this VirtualClientComponent component, ISshCommandProxy sshCommand, EventContext telemetryContext, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+        {
+            component.ThrowIfNull(nameof(component));
+            sshCommand.ThrowIfNull(nameof(sshCommand));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            ILogger logger = null;
+
+            if (logToTelemetry)
+            {
+                try
+                {
+                    if (component.Dependencies.TryGetService<ILogger>(out logger))
+                    {
+                        logger.LogSshCommandDetails(sshCommand, component.TypeName, telemetryContext, logToTelemetryMaxChars);
+                    }
+                }
+                catch (Exception exc)
+                {
+                    // Best effort but we should never crash VC if the logging fails. Metric capture
+                    // is more important to the operations of VC. We do want to log the failure.
+                    logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            }
+
+            if (VirtualClientComponent.LogToFile && logToFile)
+            {
+                try
+                {
+                    await component.LogResultsToFileAsync(sshCommand.LogResults, telemetryContext);
+                }
+                catch (Exception exc)
+                {
+                    // Best effort but we should never crash VC if the logging fails. Metric capture
+                    // is more important to the operations of VC. We do want to log the failure.
+                    logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                }
+            }
+        }
+
+        /// <summary>
         /// Captures the details of the process including standard output, standard error and exit codes to 
         /// telemetry and log files on the system.
         /// </summary>
@@ -823,7 +996,7 @@ namespace VirtualClient.Contracts
             {
                 try
                 {
-                    await component.LogProcessDetailsToFileAsync(process.LogResults, telemetryContext);
+                    await component.LogResultsToFileAsync(process.LogResults, telemetryContext);
                 }
                 catch (Exception exc)
                 {
@@ -1013,6 +1186,50 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="logger">The telemetry logger.</param>
         /// <param name="componentType">The type of component (e.g. GeekbenchExecutor).</param>
+        /// <param name="sshCommand">The process whose details will be captured.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="logToTelemetryMaxChars">
+        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        internal static void LogSshCommandDetails(this ILogger logger, ISshCommandProxy sshCommand, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
+            sshCommand.ThrowIfNull(nameof(sshCommand));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            try
+            {
+                // Examples:
+                // --------------
+                // GeekbenchExecutor.ProcessDetails
+                // GeekbenchExecutor.Geekbench.ProcessDetails
+                // GeekbenchExecutor.ProcessResults
+                // GeekbenchExecutor.Geekbench.ProcessResults
+                string eventNamePrefix = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
+                    !string.IsNullOrWhiteSpace(sshCommand.LogResults.ToolSet) ? $"{componentType}.{sshCommand.LogResults.ToolSet}" : componentType,
+                    string.Empty);
+
+                logger.LogMessage(
+                    $"{eventNamePrefix}.SshCommandDetails",
+                    LogLevel.Information,
+                    telemetryContext.Clone().AddSshCommandContext(sshCommand, maxChars: logToTelemetryMaxChars));
+            }
+            catch
+            {
+                // Best effort.
+            }
+        }
+
+        /// <summary>
+        /// Captures the details of the process including standard output, standard error
+        /// and exit code.
+        /// </summary>
+        /// <param name="logger">The telemetry logger.</param>
+        /// <param name="componentType">The type of component (e.g. GeekbenchExecutor).</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="logToTelemetryMaxChars">
@@ -1067,7 +1284,7 @@ namespace VirtualClient.Contracts
         /// <param name="component">The component that ran the process.</param>
         /// <param name="logResults">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, LogResults logResults, EventContext telemetryContext)
+        internal static async Task LogResultsToFileAsync(this VirtualClientComponent component, LogResults logResults, EventContext telemetryContext)
         {
             component.ThrowIfNull(nameof(component));
             logResults.ThrowIfNull(nameof(logResults));

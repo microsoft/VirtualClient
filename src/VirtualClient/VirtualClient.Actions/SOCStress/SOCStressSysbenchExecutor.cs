@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="dependencies"></param>
         /// <param name="parameters"></param>
-        public SOCStressSysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null) 
+        public SOCStressSysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
@@ -100,71 +100,76 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the workload.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
+            using (ISshClientProxy sshClient = this.systemManagement.SshClientManager.CreateSshClient(this.Host, this.UserName, this.Password))
             {
-                using (ISshClientProxy sshClient = this.systemManagement.SshClientManager.CreateSshClient(this.Host, this.UserName, this.Password))
-                {
-                    sshClient.Connect();
+                sshClient.Connect();
 
-                    string sysbenchMemoryCommandParameters = this.ApplyParameter(this.SysbenchMemoryCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
-                    string sysbenchCPUCommandParameters = this.ApplyParameter(this.SysbenchCPUCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
+                string sysbenchMemoryCommandParameters = this.ApplyParameter(this.SysbenchMemoryCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
+                string sysbenchCPUCommandParameters = this.ApplyParameter(this.SysbenchCPUCommandLine, nameof(this.SysbenchTimeout), this.SysbenchTimeout);
 
-                    DateTime startTime = DateTime.UtcNow;
+                DateTime startTime = DateTime.UtcNow;
 
-                    this.ExecuteSshCommand(sshClient.CreateCommand($"sysbench {sysbenchMemoryCommandParameters} > mem.txt & sysbench {sysbenchCPUCommandParameters} > cpu.txt"));
-                    string memoryResults = this.ExecuteSshCommand(sshClient.CreateCommand("cat mem.txt"));
-                    string cpuResults = this.ExecuteSshCommand(sshClient.CreateCommand("cat cpu.txt"));
+                await this.ExecuteSshCommandAsync(
+                    sshClient.CreateCommand($"sysbench {sysbenchMemoryCommandParameters} > mem.txt & sysbench {sysbenchCPUCommandParameters} > cpu.txt"),
+                    telemetryContext,
+                    cancellationToken)
+                    .ConfigureAwait(false);
 
-                    this.Logger.LogMessage(
-                        $"{typeof(SOCStressSysbenchExecutor)}Memory.ProcessDetails",
-                        (Microsoft.Extensions.Logging.LogLevel)LogLevel.Info,
-                        telemetryContext.Clone().AddContext("processDetails", memoryResults));
+                string memoryResults = await this.ExecuteSshCommandAsync(
+                    sshClient.CreateCommand("cat mem.txt"),
+                    telemetryContext,
+                    cancellationToken)
+                    .ConfigureAwait(false);
 
-                    this.Logger.LogMessage(
-                       $"{typeof(SOCStressSysbenchExecutor)}CPU.ProcessDetails",
-                       (Microsoft.Extensions.Logging.LogLevel)LogLevel.Info,
-                       telemetryContext.Clone().AddContext("processDetails", cpuResults));
+                string cpuResults = await this.ExecuteSshCommandAsync(
+                    sshClient.CreateCommand("cat cpu.txt"),
+                    telemetryContext,
+                    cancellationToken)
+                    .ConfigureAwait(false);
 
-                    this.ExecuteSshCommand(sshClient.CreateCommand("rm mem.txt & rm cpu.txt"));
+                await this.ExecuteSshCommandAsync(
+                    sshClient.CreateCommand("rm mem.txt & rm cpu.txt"),
+                    telemetryContext,
+                    cancellationToken)
+                    .ConfigureAwait(false);
 
-                    SysbenchMetricsParser sysbenchMemoryMetricsParser = new SysbenchMetricsParser(memoryResults);
-                    IList<Metric> sysbenchMemoryMetrics = sysbenchMemoryMetricsParser.Parse().ToList();
+                SysbenchMetricsParser sysbenchMemoryMetricsParser = new SysbenchMetricsParser(memoryResults);
+                IList<Metric> sysbenchMemoryMetrics = sysbenchMemoryMetricsParser.Parse().ToList();
 
-                    SysbenchMetricsParser sysbenchCPUMetricsParser = new SysbenchMetricsParser(cpuResults);
-                    IList<Metric> sysbenchCPUMetrics = sysbenchCPUMetricsParser.Parse().ToList();
+                SysbenchMetricsParser sysbenchCPUMetricsParser = new SysbenchMetricsParser(cpuResults);
+                IList<Metric> sysbenchCPUMetrics = sysbenchCPUMetricsParser.Parse().ToList();
 
-                    DateTime endTime = DateTime.UtcNow;
+                DateTime endTime = DateTime.UtcNow;
 
-                    sshClient.Disconnect();
+                sshClient.Disconnect();
 
-                    this.Logger.LogMetrics(
-                        "SOC Stress Sysbench",
-                        "SOC Stress Sysbench Memory",
-                        startTime,
-                        endTime,
-                        sysbenchMemoryMetrics,
-                        null,
-                        sysbenchMemoryCommandParameters,
-                        this.Tags,
-                        telemetryContext);
+                this.Logger.LogMetrics(
+                    "SOC Stress Sysbench",
+                    "SOC Stress Sysbench Memory",
+                    startTime,
+                    endTime,
+                    sysbenchMemoryMetrics,
+                    null,
+                    sysbenchMemoryCommandParameters,
+                    this.Tags,
+                    telemetryContext);
 
-                    this.Logger.LogMetrics(
-                        "SOC Stress Sysbench",
-                        "SOC Stress Sysbench CPU",
-                        startTime,
-                        endTime,
-                        sysbenchCPUMetrics,
-                        null,
-                        sysbenchCPUCommandParameters,
-                        this.Tags,
-                        telemetryContext);
-                }
-            });
+                this.Logger.LogMetrics(
+                    "SOC Stress Sysbench",
+                    "SOC Stress Sysbench CPU",
+                    startTime,
+                    endTime,
+                    sysbenchCPUMetrics,
+                    null,
+                    sysbenchCPUCommandParameters,
+                    this.Tags,
+                    telemetryContext);
+            }
         }
 
-        private string ExecuteSshCommand(ISshCommandProxy sshCommand)
+        private async Task<string> ExecuteSshCommandAsync(ISshCommandProxy sshCommand, EventContext telemetryContext,  CancellationToken cancellationToken)
         {
             string result = sshCommand.Execute();
 
@@ -173,6 +178,8 @@ namespace VirtualClient.Actions
                 throw new WorkloadException($"ExitCode:{sshCommand.ExitStatus} ErrorMessage:\"{sshCommand.Error}\"", ErrorReason.WorkloadFailed);
             }
 
+            await this.LogSshCommandDetailsAsync(sshCommand, telemetryContext, logToFile: true)
+                .ConfigureAwait(false);
             return result;
         }
     }
