@@ -81,7 +81,7 @@ namespace VirtualClient.Contracts
         [Test]
         [TestCase(0, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 1")]
         [TestCase(123, "C:\\any\\workload.exe", "--any-argument=value", "C:\\any", "Any results 2")]
-        public void AddProcessContextExtensionAddsTheExpectedProcessInformationToTheEventContextWhenResultsAreProvided(
+        public void AddProcessResultsExtensionAddsTheExpectedProcessInformationToTheEventContextWhenResultsAreProvided(
            int expectedExitCode, string expectedCommand, string expectedArguments, string expectedWorkingDir, string expectedResults)
         {
             InMemoryProcess process = new InMemoryProcess
@@ -280,6 +280,172 @@ namespace VirtualClient.Contracts
             Assert.Throws<ArgumentException>(() => new EventContext(Guid.NewGuid()).AddProcessContext(process, maxChars: -1));
         }
 
+        [Test]
+        [TestCase(0, null, null, null)]
+        [TestCase(0, "", "", "")]
+        [TestCase(0, "anyCommand --any-argument=value", null, null)]
+        [TestCase(0, "anyCommand --any-argument=value", "output from the command", null)]
+        [TestCase(123, "anyCommand --any-argument=value", "output from the command", "errors in output")]
+        public void AddSshCommandContextExtensionAddsTheExpectedProcessInformationToTheEventContext(
+           int expectedExitCode, string expectedCommand, string expectedStandardOutput, string expectedStandardError)
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = expectedExitCode,
+                CommandText = expectedCommand,
+                Result = expectedStandardOutput,
+                Error = expectedStandardError
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand);
+
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            string expectedSshCommandInfo = new
+            {
+                command = expectedCommand,
+                exitCode = expectedExitCode,
+                standardOutput = expectedStandardOutput ?? string.Empty,
+                standardError = expectedStandardError ?? string.Empty
+            }.ToJson();
+
+            string actualSshCommandInfo = sshCommandContext.ToJson();
+            SerializationAssert.JsonEquals(expectedSshCommandInfo, actualSshCommandInfo);
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputOnlyScenario()
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments",
+                Result = "Standard output from the sshCommand.",
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand, maxChars: 15);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            JObject sshCommandDetails = JObject.FromObject(sshCommandContext);
+            string standardOutput = sshCommandDetails.SelectToken("standardOutput").ToString();
+            string standardError = sshCommandDetails.SelectToken("standardError").ToString();
+
+            Assert.IsTrue(standardOutput.Length == 15);
+            Assert.IsTrue(standardOutput == "Standard output");
+            Assert.IsTrue(standardOutput.Length + standardError.Length == 15);
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardErrorOnlyScenario()
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments",
+                Error = "Standard error from the sshCommand."
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand, maxChars: 14);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            JObject processDetails = JObject.FromObject(sshCommandContext);
+            string standardOutput = processDetails.SelectToken("standardOutput").ToString();
+            string standardError = processDetails.SelectToken("standardError").ToString();
+
+            Assert.IsTrue(standardError.Length == 14);
+            Assert.IsTrue(standardError == "Standard error");
+            Assert.IsTrue(standardOutput.Length + standardError.Length == 14);
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_StandardOutputPlusErrorScenario()
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments",
+                Result = "Standard output from the sshCommand.",
+                // 35 total chars (max 50 - 35 means that there can only be 15 in standard output)
+                Error = "Standard error from the sshCommand."
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand, maxChars: 50);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            JObject sshCommandDetails = JObject.FromObject(sshCommandContext);
+            string standardOutput = sshCommandDetails.SelectToken("standardOutput").ToString();
+            string standardError = sshCommandDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 15);
+            Assert.IsTrue(standardOutput == "Standard output");
+            Assert.IsTrue(standardError.Length == 35);
+            Assert.IsTrue(standardError == "Standard error from the sshCommand.");
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThresholdWhichIsLargerThanTheEntiretyOfStandardOutput()
+        {
+            InMemorySshCommand process = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments",
+                // 35 total chars (max 14 - 35 means that there can only be none left in standard output)
+                Result = "Standard output from the sshCommand.",
+                Error = "Standard error from the sshCommand."
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(process, maxChars: 14);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            JObject sshCommandDetails = JObject.FromObject(sshCommandContext);
+            string standardOutput = sshCommandDetails.SelectToken("standardOutput").ToString();
+            string standardError = sshCommandDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 0);
+            Assert.IsTrue(standardError.Length == 14);
+            Assert.IsTrue(standardError == "Standard error");
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionHandlesOutputThatExceedsTheMaximumCharacterThreshold_WorseCaseScenario()
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments",
+                // 32 total chars (max 0 means that there can only be none left in standard output & standard error)
+                Result = "Standard output from the sshCommand.",
+                Error = "Standard error from the sshCommand."
+            };
+
+            EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand, maxChars: 0);
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("sshCommand", out object sshCommandContext));
+
+            JObject sshCommandDetails = JObject.FromObject(sshCommandContext);
+            string standardOutput = sshCommandDetails.SelectToken("standardOutput").ToString();
+            string standardError = sshCommandDetails.SelectToken("standardError").ToString();
+
+            // When the combination of the standard output and error exceed the limitation, the standard
+            // output is trimmed down in attempts to preserve the standard error.
+            Assert.IsTrue(standardOutput.Length == 0);
+            Assert.IsTrue(standardError.Length == 0);
+        }
+
+        [Test]
+        public void AddSshCommandContextExtensionValidatesTheMaxCharacterCount()
+        {
+            InMemorySshCommand sshCommand = new InMemorySshCommand
+            {
+                ExitStatus = 0,
+                CommandText = "AnyCommand --any=arguments"
+            };
+
+            Assert.Throws<ArgumentException>(() => new EventContext(Guid.NewGuid()).AddSshCommandContext(sshCommand, maxChars: -1));
+        }
 
         [Test]
         [TestCase("PropertyName", "propertyName")]

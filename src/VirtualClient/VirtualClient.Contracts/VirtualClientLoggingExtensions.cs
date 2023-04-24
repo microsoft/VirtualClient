@@ -265,7 +265,7 @@ namespace VirtualClient.Contracts
                     }
                 }
 
-                telemetryContext.Properties[name ?? "process"] = new
+                telemetryContext.Properties[name ?? "sshCommand"] = new
                 {
                     command = fullCommand ?? string.Empty,
                     exitCode = finalExitCode,
