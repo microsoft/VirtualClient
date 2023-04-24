@@ -109,8 +109,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            process.LogResults.ToolSet = "LZbench";
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ProcessDetails.ToolSet = "LZbench";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext);
                             process.ThrowIfWorkloadFailed();
                         }
 
@@ -178,9 +178,9 @@ namespace VirtualClient.Actions
                 {
                     string contents = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "LZbench";
-                    process.LogResults.GeneratedResults = contents;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ProcessDetails.ToolSet = "LZbench";
+                    process.ProcessDetails.GeneratedResults = contents;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                     LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
                     IList<Metric> metrics = parser.Parse();
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait(false);
 
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);

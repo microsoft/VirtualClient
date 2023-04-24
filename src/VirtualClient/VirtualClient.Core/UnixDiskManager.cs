@@ -204,7 +204,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     localContext.AddContext(nameof(retries), retries);
-                                    localContext.AddProcessContext(process);
+                                    localContext.AddProcessContext(process.ProcessDetails);
                                 }
                             }
                         }
@@ -254,7 +254,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     localContext.AddContext(nameof(retries), retries);
-                                    localContext.AddProcessContext(process, "partprobeProcess");
+                                    localContext.AddProcessContext(process.ProcessDetails, "partprobeProcess");
                                 }
                             }
                         }
@@ -275,7 +275,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     localContext.AddContext(nameof(retries), retries);
-                                    localContext.AddProcessContext(process, "mklabelProcess");
+                                    localContext.AddProcessContext(process.ProcessDetails, "mklabelProcess");
                                 }
                             }
                         }
@@ -312,7 +312,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     localContext.AddContext(nameof(retries), retries);
-                                    localContext.AddProcessContext(process, "partedProcess");
+                                    localContext.AddProcessContext(process.ProcessDetails, "partedProcess");
                                 }
                             }
                         }
@@ -335,7 +335,7 @@ namespace VirtualClient
                                 finally
                                 {
                                     localContext.AddContext(nameof(retries), retries);
-                                    localContext.AddProcessContext(process, "partprobeProcess");
+                                    localContext.AddProcessContext(process.ProcessDetails, "partprobeProcess");
                                 }
                             }
                         }
@@ -390,7 +390,7 @@ namespace VirtualClient
                                         finally
                                         {
                                             localContext.AddContext(nameof(retries), retries);
-                                            localContext.AddProcessContext(process, "umountProcess");
+                                            localContext.AddProcessContext(process.ProcessDetails, "umountProcess");
                                         }
                                     }
                                 }
@@ -460,7 +460,7 @@ namespace VirtualClient
                                     finally
                                     {
                                         localContext.AddContext(nameof(retries), retries);
-                                        localContext.AddProcessContext(process, "partedProcess");
+                                        localContext.AddProcessContext(process.ProcessDetails, "partedProcess");
                                     }
                                 }
                             }
@@ -525,7 +525,7 @@ namespace VirtualClient
                                 }
                                 finally
                                 {
-                                    localContext.AddProcessContext(process, "mkfsProcess");
+                                    localContext.AddProcessContext(process.ProcessDetails, "mkfsProcess");
                                 }
                             }
                         }

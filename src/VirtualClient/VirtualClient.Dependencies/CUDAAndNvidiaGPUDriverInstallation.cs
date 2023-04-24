@@ -355,8 +355,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "GpuDriverInstallation";
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                        process.ProcessDetails.ToolSet = "GpuDriverInstallation";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

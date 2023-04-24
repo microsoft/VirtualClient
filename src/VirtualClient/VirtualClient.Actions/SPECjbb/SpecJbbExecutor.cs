@@ -98,8 +98,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            process.LogResults.ToolSet = "SPECjbb";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true).ConfigureAwait(false);
+                            process.ProcessDetails.ToolSet = "SPECjbb";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true).ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
 
@@ -157,9 +157,9 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "SPECjbb";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                    process.ProcessDetails.ToolSet = "SPECjbb";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                         .ConfigureAwait(false);
 
                     try
@@ -210,8 +210,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.LogResults.ToolSet = "SPECjbb";
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                            process.ProcessDetails.ToolSet = "SPECjbb";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait(false);
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }

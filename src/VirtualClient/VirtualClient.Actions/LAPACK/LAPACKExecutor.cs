@@ -109,8 +109,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                process.LogResults.ToolSet = "LAPACK";
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "LAPACK";
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
 
@@ -141,8 +141,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                process.LogResults.ToolSet = "LAPACK";
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "LAPACK";
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
 
@@ -172,7 +172,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.LogProcessDetailsAsync(process, telemetryContext)
+                            this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait();
 
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
@@ -195,9 +195,9 @@ namespace VirtualClient.Actions
 
                 string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
 
-                process.LogResults.ToolSet = "LAPACK";
-                process.LogResults.GeneratedResults = results;
-                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                process.ProcessDetails.ToolSet = "LAPACK";
+                process.ProcessDetails.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                 LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results);
                 IList<Metric> metrics = lapackParser.Parse();

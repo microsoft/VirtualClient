@@ -204,8 +204,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.LogResults.ToolSet = "Geekbench5";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                            process.ProcessDetails.ToolSet = "Geekbench5";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                             process.ThrowIfWorkloadFailed();
                             await this.CaptureMetricsAsync(process, this.ResultsFilePath, commandLineArguments, telemetryContext, cancellationToken);

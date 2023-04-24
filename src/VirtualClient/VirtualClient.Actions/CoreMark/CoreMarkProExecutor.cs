@@ -91,8 +91,8 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "CoreMark Pro";
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.ToolSet = "CoreMark Pro";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                         process.ThrowIfWorkloadFailed();
                     }
 

@@ -210,8 +210,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "HPLinpack";
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                        process.ProcessDetails.ToolSet = "HPLinpack";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                             .ConfigureAwait();
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);

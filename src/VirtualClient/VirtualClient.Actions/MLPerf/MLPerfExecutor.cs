@@ -170,8 +170,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                process.LogResults.ToolSet = "MLPerf"; 
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "MLPerf"; 
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
 
@@ -184,7 +184,7 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait();
 
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
@@ -388,9 +388,9 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "MLPerf";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ProcessDetails.ToolSet = "MLPerf";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
@@ -417,9 +417,9 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "MLPerf";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ProcessDetails.ToolSet = "MLPerf";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();
@@ -527,7 +527,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext).ConfigureAwait();
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
                     }

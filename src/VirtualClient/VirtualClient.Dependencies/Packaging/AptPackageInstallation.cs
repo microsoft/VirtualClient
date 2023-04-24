@@ -196,8 +196,8 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    process.LogResults.ToolSet = "Apt";
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted())
+                    process.ProcessDetails.ToolSet = "Apt";
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, EventContext.Persisted())
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
@@ -222,8 +222,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "Apt";
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                        process.ProcessDetails.ToolSet = "Apt";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

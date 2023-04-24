@@ -157,8 +157,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "CompilerVersion";
-                        await this.LogProcessDetailsAsync(process, EventContext.Persisted())
+                        process.ProcessDetails.ToolSet = "CompilerVersion";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, EventContext.Persisted())
                             .ConfigureAwait(false);
 
                         ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());
@@ -261,7 +261,7 @@ namespace VirtualClient.Dependencies
 
                      if (!cancellationToken.IsCancellationRequested)
                      {
-                         await this.LogProcessDetailsAsync(process, telemetryContext)
+                         await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                             .ConfigureAwait(false);
 
                          process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

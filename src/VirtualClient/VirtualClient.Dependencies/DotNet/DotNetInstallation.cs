@@ -116,7 +116,7 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, relatedContext)
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext)
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);

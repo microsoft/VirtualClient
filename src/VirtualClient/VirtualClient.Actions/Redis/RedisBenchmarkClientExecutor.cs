@@ -297,8 +297,8 @@ namespace VirtualClient.Actions
                         {
                             ConsoleLogger.Default.LogMessage($"Redis benchmark process exited (server port = {serverPort})...", telemetryContext);
 
-                            process.LogResults.ToolSet = "Redis-Benchmark";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                            process.ProcessDetails.ToolSet = "Redis-Benchmark";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                             process.ThrowIfWorkloadFailed();
 
                             if (!this.WarmUp)

@@ -61,18 +61,18 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    process.LogResults.ToolSet = "SockPerf";
+                                    process.ProcessDetails.ToolSet = "SockPerf";
                                     if (process.IsErrored())
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                         process.ThrowIfWorkloadFailed();
                                     }
 
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    process.LogResults.GeneratedResults = results;
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                    process.ProcessDetails.GeneratedResults = results;
+                                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)

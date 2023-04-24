@@ -166,7 +166,7 @@ namespace VirtualClient.Dependencies
                                 {
                                     if (!cancellationToken.IsCancellationRequested)
                                     {
-                                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                         process.ThrowIfDependencyInstallationFailed();
                                     }
                                 }

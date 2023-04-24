@@ -188,8 +188,8 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    process.LogResults.ToolSet = "Zypper";
-                    await this.LogProcessDetailsAsync(process, EventContext.Persisted())
+                    process.ProcessDetails.ToolSet = "Zypper";
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, EventContext.Persisted())
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
@@ -214,8 +214,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "Zypper";
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                        process.ProcessDetails.ToolSet = "Zypper";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

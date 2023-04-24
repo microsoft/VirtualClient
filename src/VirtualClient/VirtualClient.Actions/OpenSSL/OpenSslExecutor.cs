@@ -143,8 +143,8 @@ namespace VirtualClient.Actions
 
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                process.LogResults.ToolSet = "OpenSSL";
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "OpenSSL";
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                                 process.ThrowIfWorkloadFailed();
                                 this.CaptureMetrics(process, commandArguments, telemetryContext);

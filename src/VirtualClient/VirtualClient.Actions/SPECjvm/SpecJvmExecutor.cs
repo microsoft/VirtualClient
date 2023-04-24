@@ -138,8 +138,8 @@ namespace VirtualClient.Actions
                             {
                                 if (process.IsErrored())
                                 {
-                                    process.LogResults.ToolSet = "SPECjvm";
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                                    process.ProcessDetails.ToolSet = "SPECjvm";
+                                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                                         .ConfigureAwait(false);
                                     process.ThrowIfWorkloadFailed();
                                 }
@@ -164,9 +164,9 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "SPECjvm";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ProcessDetails.ToolSet = "SPECjvm";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                     SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results);
 

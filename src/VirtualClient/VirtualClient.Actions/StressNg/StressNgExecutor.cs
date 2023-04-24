@@ -72,8 +72,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            process.LogResults.ToolSet = "Stress-ng";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                            process.ProcessDetails.ToolSet = "Stress-ng";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                                 .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
@@ -110,9 +110,9 @@ namespace VirtualClient.Actions
                     string results = await this.LoadResultsAsync(this.stressNgOutputFilePath, cancellationToken)
                         .ConfigureAwait(false);
 
-                    process.LogResults.ToolSet = "Stress-ng";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                    process.ProcessDetails.ToolSet = "Stress-ng";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                         .ConfigureAwait(false);
 
                     StressNgMetricsParser parser = new StressNgMetricsParser(results);

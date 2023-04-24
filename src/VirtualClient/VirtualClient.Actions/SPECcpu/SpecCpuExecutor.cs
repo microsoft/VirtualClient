@@ -128,8 +128,8 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.LogResults.ToolSet = "SPECcpu";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                            process.ProcessDetails.ToolSet = "SPECcpu";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                                 .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
 
@@ -144,8 +144,8 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.LogResults.ToolSet = "SPECcpu";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                            process.ProcessDetails.ToolSet = "SPECcpu";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                                 .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
 
@@ -293,7 +293,7 @@ namespace VirtualClient.Actions
                 {
                     if (process.IsErrored())
                     {
-                        await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true)
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext, logToFile: true)
                             .ConfigureAwait(false);
                         process.ThrowIfWorkloadFailed();
                     }
@@ -315,9 +315,9 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                    process.LogResults.ToolSet = "SPECcpu";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                    process.ProcessDetails.ToolSet = "SPECcpu";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                         .ConfigureAwait(false);
 
                     SpecCpuMetricsParser parser = new SpecCpuMetricsParser(results);

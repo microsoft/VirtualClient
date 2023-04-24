@@ -118,8 +118,8 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            process.LogResults.ToolSet = "NASParallelBench";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                            process.ProcessDetails.ToolSet = "NASParallelBench";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                             process.ThrowIfWorkloadFailed();
                             this.CaptureMetrics(process, scenarioArguments, telemetryContext);

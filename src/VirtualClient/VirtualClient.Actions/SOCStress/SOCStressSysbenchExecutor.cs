@@ -178,7 +178,7 @@ namespace VirtualClient.Actions
                 throw new WorkloadException($"ExitCode:{sshCommand.ExitStatus} ErrorMessage:\"{sshCommand.Error}\"", ErrorReason.WorkloadFailed);
             }
 
-            await this.LogSshCommandDetailsAsync(sshCommand, telemetryContext, logToFile: true)
+            await this.LogProcessDetailsAsync(sshCommand.ProcessDetails, telemetryContext, logToFile: true)
                 .ConfigureAwait(false);
             return result;
         }

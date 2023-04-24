@@ -174,7 +174,7 @@ namespace VirtualClient.Actions
                 await workload.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                 DateTime endTime = DateTime.UtcNow;
 
-                await this.LogProcessDetailsAsync(workload, telemetryContext);
+                await this.LogProcessDetailsAsync(workload.ProcessDetails, telemetryContext);
                 workload.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
                 this.CaptureMetrics(workload, startTime, endTime, telemetryContext);

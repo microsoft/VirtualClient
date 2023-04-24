@@ -108,10 +108,10 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    process.LogResults.ToolSet = "CoreMark";
+                    process.ProcessDetails.ToolSet = "CoreMark";
                     if (process.IsErrored())
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                         process.ThrowIfWorkloadFailed();
                     }
 
@@ -120,8 +120,8 @@ namespace VirtualClient.Actions
                         cancellationToken);
                     foreach (string result in results)
                     {
-                        process.LogResults.GeneratedResults = result;
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.GeneratedResults = result;
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                     }
 
                     await this.CaptureMetricsAsync(process, results, commandLineArguments, telemetryContext, cancellationToken);
@@ -142,9 +142,9 @@ namespace VirtualClient.Actions
                 {
                     foreach (string results in workloadResults)
                     {
-                        process.LogResults.ToolSet = "CoreMark";
-                        process.LogResults.GeneratedResults = results;
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.ToolSet = "CoreMark";
+                        process.ProcessDetails.GeneratedResults = results;
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                         if (!string.IsNullOrWhiteSpace(results))
                         {

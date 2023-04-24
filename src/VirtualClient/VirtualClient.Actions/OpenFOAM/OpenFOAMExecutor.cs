@@ -304,8 +304,8 @@ namespace VirtualClient.Actions
                 {
                     if (process.IsErrored())
                     {
-                        process.LogResults.ToolSet = "OpenFOAM";
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.ToolSet = "OpenFOAM";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                         process.ThrowIfWorkloadFailed();
                     }
 
@@ -331,9 +331,9 @@ namespace VirtualClient.Actions
 
                 string results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
 
-                process.LogResults.ToolSet = "OpenFOAM";
-                process.LogResults.GeneratedResults = results;
-                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                process.ProcessDetails.ToolSet = "OpenFOAM";
+                process.ProcessDetails.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                 OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();

@@ -332,9 +332,9 @@ namespace VirtualClient.Actions
 
                             string output = process.StandardOutput.ToString();
 
-                            process.LogResults.ToolSet = "Memcached-Memtier";
-                            process.LogResults.StandardOutput = output;
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                            process.ProcessDetails.ToolSet = "Memcached-Memtier";
+                            process.ProcessDetails.StandardOutput = output;
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                             process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
 
                             // We don't capture metrics on warm up operations.

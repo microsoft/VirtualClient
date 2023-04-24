@@ -18,7 +18,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Log Results.
         /// </summary>
-        LogResults LogResults { get; }
+        ProcessDetails ProcessDetails { get; }
 
         /// <summary>
         /// Gets the command execution result.

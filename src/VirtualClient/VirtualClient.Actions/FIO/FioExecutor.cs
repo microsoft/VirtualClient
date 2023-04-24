@@ -480,8 +480,8 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        workload.Process.LogResults.ToolSet = "FIO";
-                        await this.LogProcessDetailsAsync(workload.Process, telemetryContext, logToFile: true);
+                        workload.Process.ProcessDetails.ToolSet = "FIO";
+                        await this.LogProcessDetailsAsync(workload.Process.ProcessDetails, telemetryContext, logToFile: true);
 
                         if (this.DiskFill)
                         {

@@ -345,8 +345,8 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    process.LogResults.ToolSet = "Latte";
-                                    await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
+                                    process.ProcessDetails.ToolSet = "Latte";
+                                    await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext, logToFile: true);
 
                                     process.ThrowIfWorkloadFailed();
                                     await this.SystemManager.FileSystem.File.WriteAllTextAsync(this.ResultsPath, process.StandardOutput.ToString());

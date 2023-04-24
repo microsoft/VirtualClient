@@ -158,9 +158,9 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
-                process.LogResults.ToolSet = "DeathStarBench";
-                process.LogResults.GeneratedResults = results;
-                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                process.ProcessDetails.ToolSet = "DeathStarBench";
+                process.ProcessDetails.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                 DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
                 IList<Metric> metrics = deathStarBenchMetricsParser.Parse();
@@ -305,8 +305,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                process.LogResults.ToolSet = "DeathStarBench";
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "DeathStarBench";
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
   

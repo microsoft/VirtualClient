@@ -101,8 +101,8 @@ namespace VirtualClient.Monitors
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             // We cannot log the process details here. The output is too large.
-                            process.LogResults.ToolSet = "Nvidia-Smi";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                            process.ProcessDetails.ToolSet = "Nvidia-Smi";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                             process.ThrowIfErrored<MonitorException>(errorReason: ErrorReason.MonitorFailed);
 
                             if (process.StandardOutput.Length > 0)

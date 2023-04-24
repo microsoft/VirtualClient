@@ -199,8 +199,8 @@ namespace VirtualClient.Dependencies
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "NvidiaToolkitInstallation";
-                        await this.LogProcessDetailsAsync(process, relatedContext)
+                        process.ProcessDetails.ToolSet = "NvidiaToolkitInstallation";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext)
                             .ConfigureAwait(false);
 
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);

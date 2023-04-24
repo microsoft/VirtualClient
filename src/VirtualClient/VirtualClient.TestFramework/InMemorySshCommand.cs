@@ -11,14 +11,14 @@
     [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "This is a test/mock class with no real resources.")]
     public class InMemorySshCommand : Dictionary<string, IConvertible>, ISshCommandProxy
     {
-        private LogResults logResults;
+        private ProcessDetails processDetails;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemorySshCommand"/>
         /// </summary>
         public InMemorySshCommand()
         {
-            this.logResults = new LogResults();
+            this.processDetails = new ProcessDetails();
         }
 
         public int ExitStatus { get; set; }
@@ -32,16 +32,16 @@
         /// <summary>
         /// 
         /// </summary>
-        public LogResults LogResults
+        public ProcessDetails ProcessDetails
         {
             get
             {
-                this.logResults.CommandLine = SensitiveData.ObscureSecrets($"{this.CommandText}".Trim());
-                this.logResults.ExitCode = this.ExitStatus;
-                this.logResults.StandardError = this.Error;
-                this.logResults.StandardOutput = this.Result;
+                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.CommandText}".Trim());
+                this.processDetails.ExitCode = this.ExitStatus;
+                this.processDetails.StandardError = this.Error;
+                this.processDetails.StandardOutput = this.Result;
 
-                return this.logResults;
+                return this.processDetails;
             }
         }
 

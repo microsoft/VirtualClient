@@ -137,9 +137,9 @@ namespace VirtualClient.Actions
                     {
                         string contents = await this.LoadResultsAsync(file, cancellationToken);
 
-                        process.LogResults.ToolSet = "Hpcg";
-                        process.LogResults.GeneratedResults = contents;
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.ToolSet = "Hpcg";
+                        process.ProcessDetails.GeneratedResults = contents;
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                         HpcgMetricsParser parser = new HpcgMetricsParser(contents);
                         IList<Metric> metrics = parser.Parse();
@@ -177,8 +177,8 @@ namespace VirtualClient.Actions
                         {
                             if (process.IsErrored())
                             {
-                                process.LogResults.ToolSet = "Hpcg";
-                                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                                process.ProcessDetails.ToolSet = "Hpcg";
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
                                 process.ThrowIfWorkloadFailed();
                             }
 

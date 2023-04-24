@@ -210,8 +210,8 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.LogResults.ToolSet = "AspNetBench";
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                        process.ProcessDetails.ToolSet = "AspNetBench";
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                         process.ThrowIfWorkloadFailed();
                         this.CaptureMetrics(process, telemetryContext);
@@ -242,7 +242,7 @@ namespace VirtualClient.Actions
                         
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext);
 
                         if (!isServer)
                         {

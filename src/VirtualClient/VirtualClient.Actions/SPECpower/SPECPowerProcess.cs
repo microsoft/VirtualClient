@@ -81,8 +81,8 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                process.LogResults.ToolSet = "SPECpower";
-                await this.LogProcessDetailsAsync(process, EventContext.Persisted(), logToFile: true);
+                process.ProcessDetails.ToolSet = "SPECpower";
+                await this.LogProcessDetailsAsync(process.ProcessDetails, EventContext.Persisted(), logToFile: true);
                 process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
             }
         }

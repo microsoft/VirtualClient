@@ -27,7 +27,7 @@ namespace VirtualClient.Common
         private DateTime exitTime;
         private bool disposed;
 
-        private LogResults logResults;
+        private ProcessDetails processDetails;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProcessProxy"/> class.
@@ -39,7 +39,7 @@ namespace VirtualClient.Common
             this.UnderlyingProcess = process;
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
-            this.logResults = new LogResults();
+            this.processDetails = new ProcessDetails();
         }
 
         /// <inheritdoc />
@@ -131,17 +131,18 @@ namespace VirtualClient.Common
         }
 
         /// <inheritdoc />
-        public LogResults LogResults 
+        public ProcessDetails ProcessDetails 
         {
             get
             {
-                this.logResults.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
-                this.logResults.ExitCode = this.ExitCode;
-                this.logResults.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
-                this.logResults.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
-                this.logResults.WorkingDirectory = this.StartInfo?.WorkingDirectory;
+                this.processDetails.Id = this.Id;
+                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
+                this.processDetails.ExitCode = this.ExitCode;
+                this.processDetails.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
+                this.processDetails.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
+                this.processDetails.WorkingDirectory = this.StartInfo?.WorkingDirectory;
 
-                return this.logResults;
+                return this.processDetails;
             }
         }
 

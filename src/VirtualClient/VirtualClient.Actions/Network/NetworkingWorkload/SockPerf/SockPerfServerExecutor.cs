@@ -51,10 +51,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             using (process = this.SystemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                             {
-                                process.LogResults.ToolSet = "SockPerf";
+                                process.ProcessDetails.ToolSet = "SockPerf";
                                 if (!process.Start())
                                 {
-                                    await this.LogProcessDetailsAsync(process, relatedContext);
+                                    await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext);
 
                                     // ************** Server will throw 137 sometimes
                                     // PORT =  8201 # TCP sockperf: ERROR: Message received was larger than expected, message ignored. 
@@ -68,7 +68,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 // Run the server slightly longer than the test duration.
                                 TimeSpan serverWaitTime = TimeSpan.FromSeconds(this.TestDuration + 10);
                                 await this.WaitAsync(serverWaitTime, cancellationToken);
-                                await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
+                                await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext, logToFile: true);
                             }
                         }
                         catch (Exception exc)

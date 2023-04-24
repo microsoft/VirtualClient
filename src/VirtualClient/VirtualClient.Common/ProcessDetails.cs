@@ -1,10 +1,15 @@
 ﻿namespace VirtualClient.Common
 {
     /// <summary>
-    /// Log Results.
+    /// Process details.
     /// </summary>
-    public class LogResults
+    public class ProcessDetails
     {
+        /// <summary>
+        /// Id of the process that ran.
+        /// </summary>
+        public int Id { get; set; }
+        
         /// <summary>
         /// Command line executed.
         /// </summary>

@@ -179,8 +179,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            process.LogResults.ToolSet = "StressAppTest";
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                            process.ProcessDetails.ToolSet = "StressAppTest";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
@@ -203,9 +203,9 @@ namespace VirtualClient.Actions
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken)
                     .ConfigureAwait(false);
 
-                process.LogResults.ToolSet = "StressAppTest";
-                process.LogResults.GeneratedResults = results;
-                await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                process.ProcessDetails.ToolSet = "StressAppTest";
+                process.ProcessDetails.GeneratedResults = results;
+                await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                     .ConfigureAwait(false);
 
                 if (string.IsNullOrWhiteSpace(results))

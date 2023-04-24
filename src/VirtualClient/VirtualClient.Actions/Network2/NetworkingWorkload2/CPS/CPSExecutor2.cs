@@ -354,8 +354,8 @@ namespace VirtualClient.Actions
 
                                 if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    process.LogResults.ToolSet = "CPS";
-                                    await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
+                                    process.ProcessDetails.ToolSet = "CPS";
+                                    await this.LogProcessDetailsAsync(process.ProcessDetails, relatedContext, logToFile: true);
 
                                     process.ThrowIfWorkloadFailed();
                                     this.Results = process.StandardOutput.ToString();

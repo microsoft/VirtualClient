@@ -42,9 +42,9 @@ namespace VirtualClient.Common
         DateTime ExitTime { get; }
 
         /// <summary>
-        /// The log results.
+        /// The underlying process details.
         /// </summary>
-        LogResults LogResults { get; }
+        ProcessDetails ProcessDetails { get; }
 
         /// <summary>
         /// A pointer to the process module control handle.

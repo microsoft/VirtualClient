@@ -163,7 +163,7 @@ namespace VirtualClient.Actions
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(makeProcess, telemetryContext)
+                        await this.LogProcessDetailsAsync(makeProcess.ProcessDetails, telemetryContext)
                             .ConfigureAwait();
 
                         makeProcess.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);

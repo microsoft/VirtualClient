@@ -155,12 +155,8 @@
                     throw new WorkloadException($"ExitCode:{sshCommand.ExitStatus} ErrorMessage:\"{sshCommand.Error}\"", ErrorReason.WorkloadFailed);
                 }
 
-                await this.LogSshCommandDetailsAsync(sshCommand, telemetryContext, logToFile: true)
+                await this.LogProcessDetailsAsync(sshCommand.ProcessDetails, telemetryContext, logToFile: true)
                 .ConfigureAwait(false);
-                this.Logger.LogMessage(
-                   $"{typeof(SOCStressFPGAFactoryTesterExecutor)}.ProcessDetails",
-                   (Microsoft.Extensions.Logging.LogLevel)LogLevel.Information,
-                   telemetryContext.Clone().AddContext("processDetails", fpgaFactoryTesterOutput));
 
                 sshClient.Disconnect();
             }

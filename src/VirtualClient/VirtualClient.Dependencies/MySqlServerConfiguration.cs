@@ -160,8 +160,8 @@ namespace VirtualClient.Dependencies
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    process.LogResults.ToolSet = "MySqlConfiguration";
-                    await this.LogProcessDetailsAsync(process, telemetryContext)
+                    process.ProcessDetails.ToolSet = "MySqlConfiguration";
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                         .ConfigureAwait(false);
 
                     process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.DependencyInstallationFailed);

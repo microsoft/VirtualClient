@@ -109,7 +109,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.LogProcessDetailsAsync(process, telemetryContext);
+                            this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext);
 
                             process.ThrowIfErrored<WorkloadException>(
                                 successCodes ?? ProcessProxy.DefaultSuccessCodes,

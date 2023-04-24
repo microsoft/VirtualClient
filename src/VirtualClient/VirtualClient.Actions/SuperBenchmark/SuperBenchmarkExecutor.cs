@@ -133,8 +133,8 @@ namespace VirtualClient.Actions
                     {
                         if (process.IsErrored())
                         {
-                            process.LogResults.ToolSet = "SuperBench";
-                            await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true)
+                            process.ProcessDetails.ToolSet = "SuperBench";
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true)
                                 .ConfigureAwait(false);
                             process.ThrowIfWorkloadFailed();
                         }
@@ -201,7 +201,7 @@ namespace VirtualClient.Actions
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext)
+                            await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext)
                                 .ConfigureAwait(false);
                             process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                         }
@@ -219,9 +219,9 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = this.fileSystem.File.ReadAllText(file);
-                    process.LogResults.ToolSet = "SuperBench";
-                    process.LogResults.GeneratedResults = results;
-                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ProcessDetails.ToolSet = "SuperBench";
+                    process.ProcessDetails.GeneratedResults = results;
+                    await this.LogProcessDetailsAsync(process.ProcessDetails, telemetryContext, logToFile: true);
 
                     SuperBenchmarkMetricsParser parser = new SuperBenchmarkMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
