@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
                         }
 
-                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        using (IProcessProxy cleanupProcess = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + " cleanup", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {

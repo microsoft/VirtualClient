@@ -42,7 +42,7 @@ namespace VirtualClient.Common
         DateTime ExitTime { get; }
 
         /// <summary>
-        /// 
+        /// The log results.
         /// </summary>
         LogResults LogResults { get; }
 

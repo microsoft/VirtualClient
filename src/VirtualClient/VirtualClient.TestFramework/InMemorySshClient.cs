@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using Renci.SshNet;
     using VirtualClient.Common;
 
     /// <summary>
@@ -22,25 +23,13 @@ namespace VirtualClient
             this.SshCommands = new List<ISshCommandProxy>();
         }
 
+        /// <inheritdoc />
+        public ConnectionInfo ConnectionInfo { get; set; }
+
         /// <summary>
         /// The set of ssh commands created by Ssh Client.
         /// </summary>
         public IEnumerable<ISshCommandProxy> SshCommands { get; }
-
-        /// <summary>
-        /// The host name.
-        /// </summary>
-        public string Host { get; set; }
-
-        /// <summary>
-        /// The host username.
-        /// </summary>
-        public string UserName { get; set; }
-
-        /// <summary>
-        /// The host password.
-        /// </summary>
-        public string Password { get; set; }
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 

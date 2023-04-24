@@ -25,6 +25,9 @@ namespace VirtualClient.Common
             this.UnderlyingSSHClient = sshClient;
         }
 
+        /// <inheritdoc />
+        public virtual ConnectionInfo ConnectionInfo => this.UnderlyingSSHClient.ConnectionInfo;
+
         /// <summary>
         /// Gets the underlying ssh client itself.
         /// </summary>

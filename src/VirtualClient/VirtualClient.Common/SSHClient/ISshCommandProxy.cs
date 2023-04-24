@@ -16,7 +16,7 @@ namespace VirtualClient.Common
         int ExitStatus { get; }
 
         /// <summary>
-        /// 
+        /// Log Results.
         /// </summary>
         LogResults LogResults { get; }
 

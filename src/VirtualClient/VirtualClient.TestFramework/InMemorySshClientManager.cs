@@ -5,8 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
+    using Renci.SshNet;
     using VirtualClient.Common;
 
     /// <summary>
@@ -51,11 +50,10 @@ namespace VirtualClient
             }
             else
             {
+                ConnectionInfo connectionInfo = new PasswordConnectionInfo(host, 22, userName, password);
                 sshClient = new InMemorySshClient
                 {
-                    Host = host,
-                    UserName = userName,
-                    Password = password
+                    ConnectionInfo = connectionInfo
                 };
             }
 

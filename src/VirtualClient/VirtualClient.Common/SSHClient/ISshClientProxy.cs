@@ -4,12 +4,18 @@
 namespace VirtualClient.Common
 {
     using System;
+    using Renci.SshNet;
 
     /// <summary>
     /// Proxy for a Ssh Client.
     /// </summary>
     public interface ISshClientProxy : IDisposable
     {
+        /// <summary>
+        /// Remote connection information of the SshClient.
+        /// </summary>
+        ConnectionInfo ConnectionInfo { get; }
+
         /// <summary>
         /// Creates the command to be executed.
         /// </summary>
