@@ -146,18 +146,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The Cuda Toolkit executable downloaded from web to install Cuda and Nvidia GPU driver.
-        /// Alternatively, the package can also be downloaded from Blob storage using DependencyPackageInstallation.
-        /// </summary>
-        public string WinCudaToolkitExeLink
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCudaToolkitExeLink), string.Empty);
-            }
-        }
-
-        /// <summary>
         /// A policy that defines how the component will retry when
         /// it experiences transient issues.
         /// </summary>
@@ -217,15 +205,6 @@ namespace VirtualClient.Dependencies
                         .ConfigureAwait(false);
 
                     SystemManagement.IsRebootRequested = this.RebootRequired;
-                }
-                else
-                {
-                    // CUDA and Nvidia driver installation for other platforms to be added.
-                    throw new WorkloadException(
-                        $"CUDA and Nvidia GPU Driver Installtion is not supported on VirtualClient on the current platform {this.Platform}" +
-                        $"Supported Platforms include:" +
-                        $" Unix, Windows ",
-                        ErrorReason.PlatformNotSupported);
                 }
             }
 
@@ -402,36 +381,6 @@ namespace VirtualClient.Dependencies
             };
         }
 
-        /// <summary>
-        /// Downloads the CUDA and Nvidia GPU driver installer from web
-        /// </summary>
-        /// <returns></returns>
-        private async Task DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(string installerPath, CancellationToken cancellationToken)
-        {
-            using var restClient = new RestClientBuilder().Build();
-
-            try
-            {
-                HttpResponseMessage httpResponse = await restClient.GetAsync(new Uri(this.WinCudaToolkitExeLink), cancellationToken, HttpCompletionOption.ResponseHeadersRead);
-
-                if (httpResponse.IsSuccessStatusCode)
-                {
-                    using Stream fileStream = this.systemManager.FileSystem.FileStream.Create(installerPath, FileMode.Create, FileAccess.Write, FileShare.None);
-                    await httpResponse.Content.CopyToAsync(fileStream);
-                }
-                else
-                {
-                    throw new DependencyException(
-                    $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", ErrorReason.DependencyInstallationFailed);
-                }
-            }
-            catch (Exception e)
-            {
-                throw new DependencyException(
-                    $"Failed to download NVIDIA drivers from given link {this.WinCudaToolkitExeLink}.", e, ErrorReason.DependencyInstallationFailed);
-            }
-        }
-
         private async Task CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installerPath = string.Empty;
@@ -446,13 +395,16 @@ namespace VirtualClient.Dependencies
             }
             else
             {
-                this.systemManager.FileSystem.Directory.CreateDirectory("NvidiaDriversForWindows");
-                installerPath = this.PlatformSpecifics.Combine(
-                    this.systemManager.FileSystem.Directory.GetCurrentDirectory(),
-                    "NvidiaDriversForWindows",
-                    "nvidiaDriversInstaller.exe");
+                DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+                this.PackageName, cancellationToken)
+                    .ConfigureAwait(false);
 
-                await this.DownloadCudaAndNvidiaGPUDriverForWindowsFromWeb(installerPath, cancellationToken);
+                if (this.systemManager.FileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path).Length == 0)
+                {
+                    throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
+                }
+
+                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path)[0];
             }
 
             await this.ExecuteCommandAsync(installerPath, this.WinCommandLineArgs, Environment.CurrentDirectory, telemetryContext, cancellationToken)

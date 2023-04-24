@@ -142,6 +142,9 @@ namespace VirtualClient.Dependencies
             this.fixture.FileSystem.Setup(fe => fe.FileStream.Create(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
                 .Returns(Stream.Null);
 
+            this.fixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>()))
+                .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "NvidiaDrivers", "nvidiaDriversInstaller.exe") });
+
             this.fixture.FileSystem.Setup(fe => fe.Directory.GetCurrentDirectory())
                 .Returns(this.mockPackage.Path);
 
@@ -151,7 +154,7 @@ namespace VirtualClient.Dependencies
             }
             else
             {
-                this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "NvidiaDriversForWindows", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
+                this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "NvidiaDrivers", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
             }
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
@@ -175,7 +178,6 @@ namespace VirtualClient.Dependencies
                 { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
                 { "WinCommandLineArgs", "-y -s" },
                 { "WinCudaDriversPackageDownloadedFromBlob", false },
-                { "WinCudaToolkitExeLink", "https://in.download.nvidia.com/tesla/527.41/527.41-data-center-tesla-desktop-win10-win11-64bit-dch-international.exe" },
                 { "RebootRequired", false }
             };
 
