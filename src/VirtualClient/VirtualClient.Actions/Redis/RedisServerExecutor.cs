@@ -357,7 +357,10 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             ConsoleLogger.Default.LogMessage($"Redis server process exited (port = {port})...", telemetryContext);
-                            process.ThrowIfWorkloadFailed();
+                            // Redis will give 137 if it thinks memory is constraint but will still accept connection, example:
+                            // WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+                            // Ready to accept connections
+                            process.ThrowIfWorkloadFailed(successCodes: new int[] { 0, 137 });
                         }
                     }
                 }
