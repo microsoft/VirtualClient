@@ -35,7 +35,7 @@ namespace VirtualClient.Actions
             {
                 ["Scenario"] = "Memtier_Scenario",
                 ["PackageName"] = this.mockMemcachedPackage.Name,
-                ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -c 1000000 -m {ServerMemoryCacheSizeInMB}",
+                ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -c 1000000 -m {ServerMemoryCacheSizeInMB} -d",
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
                 ["Username"] = "testuser",
@@ -77,7 +77,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
+                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64 -d\""
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64\""
+                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64 -d\""
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
