@@ -57,39 +57,42 @@ namespace VirtualClient.Actions
                 new MetricInfo("latency sum", MilliSecond, MetricRelativity.LowerIsBetter),
             };
 
-            // Split Standard Output to only consider SQL statistics
-            string stats = Regex.Split(this.RawText, "SQL statistics:")[1];
-
-            // Get all ints and decimals
-            MatchCollection mc = Regex.Matches(stats, "-?\\d+(\\.\\d+)?");
-
-            // list of indices to skip in MatchCollection MC (Total Queries, Events/s, Total Number of Events, Thread Fairness averages and stddevs, and 95)
-            List<int> dropIndices = new List<int>()
+            if (!string.IsNullOrEmpty(this.PreprocessedText))
             {
-                3,
-                12,
-                14,
-                18,
-                21,
-                22,
-                23,
-                24
-            };
+                // Split Standard Output to only consider SQL statistics
+                string stats = Regex.Split(this.PreprocessedText, "SQL statistics:")[1];
 
-            int mcIndex = 0;
-            int metricInfoIndex = 0;
+                // Get all ints and decimals
+                MatchCollection mc = Regex.Matches(stats, "-?\\d+(\\.\\d+)?");
 
-            while (metricInfoIndex < 17)
-            {
-                if (!dropIndices.Contains(mcIndex))
+                // list of indices to skip in MatchCollection MC (Total Queries, Events/s, Total Number of Events, Thread Fairness averages and stddevs, and 95)
+                List<int> dropIndices = new List<int>()
                 {
-                    MetricInfo metricInfo = metricInfoList[metricInfoIndex];
-                    Match m = mc[mcIndex];
-                    metrics.Add(new Metric($"{metricInfo.Name}", Convert.ToDouble(m.Value), metricInfo.Unit, metricInfo.Relativity));
-                    metricInfoIndex++;
-                }
+                    3,
+                    12,
+                    14,
+                    18,
+                    21,
+                    22,
+                    23,
+                    24
+                };
 
-                mcIndex++;
+                int mcIndex = 0;
+                int metricInfoIndex = 0;
+
+                while (metricInfoIndex < 17)
+                {
+                    if (!dropIndices.Contains(mcIndex))
+                    {
+                        MetricInfo metricInfo = metricInfoList[metricInfoIndex];
+                        Match m = mc[mcIndex];
+                        metrics.Add(new Metric($"{metricInfo.Name}", Convert.ToDouble(m.Value), metricInfo.Unit, metricInfo.Relativity));
+                        metricInfoIndex++;
+                    }
+
+                    mcIndex++;
+                }
             }
 
             return metrics;

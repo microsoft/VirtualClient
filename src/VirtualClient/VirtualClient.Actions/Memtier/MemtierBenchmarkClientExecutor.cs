@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// MemcachedMemtier Client Executor.
+    /// Redis/Memcached Memtier Client Executor.
     /// </summary>
     public class MemtierBenchmarkClientExecutor : MemcachedExecutor
     {
@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
 
         /// <summary>
-        /// True/false whether the Memcached server instance has been warmed up.
+        /// True/false whether the Memcached/Redis server instance has been warmed up.
         /// </summary>
         protected bool IsServerWarmedUp { get; set; }
 
@@ -116,7 +116,7 @@ namespace VirtualClient.Actions
         protected string MemtierExecutablePath { get; set; }
 
         /// <summary>
-        /// Path to Redis Package.
+        /// Path to Memtier Package.
         /// </summary>
         protected string MemtierPackagePath { get; set; }
 
@@ -331,7 +331,7 @@ namespace VirtualClient.Actions
                             ConsoleLogger.Default.LogMessage($"Memtier benchmark process exited (server port = {serverPort})...", telemetryContext);
 
                             string output = process.StandardOutput.ToString();
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results: output.AsArray(), logToFile: true);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, $"Memtier-{this.Benchmark}", results: output.AsArray(), logToFile: true);
                             process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
 
                             // We don't capture metrics on warm up operations.
