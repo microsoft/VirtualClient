@@ -35,7 +35,11 @@ namespace VirtualClient.Actions
             {
                 ["Scenario"] = "Memtier_Scenario",
                 ["PackageName"] = this.mockMemcachedPackage.Name,
+<<<<<<< Updated upstream
                 ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -c 1000000 -m {ServerMemoryCacheSizeInMB} -d",
+=======
+                ["CommandLine"] = "-p {Port} -t {ServerThreadCount} -m {ServerMemoryCacheSizeInMB}",
+>>>>>>> Stashed changes
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
                 ["Username"] = "testuser",
@@ -77,7 +81,11 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
+<<<<<<< Updated upstream
                     $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64 -d\""
+=======
+                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64\""
+>>>>>>> Stashed changes
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -104,7 +112,11 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
+<<<<<<< Updated upstream
                     $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -c 1000000 -m 64 -d\""
+=======
+                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64\""
+>>>>>>> Stashed changes
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

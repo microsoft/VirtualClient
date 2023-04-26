@@ -19,7 +19,11 @@
       "Parameters": {
         "Scenario": "Server",
         "PackageName": "memcached",
+<<<<<<< Updated upstream
         "CommandLine": "-p {Port} -t {ServerThreadCount} -c 10000 -m {ServerMemoryCacheSizeInMB} -d",
+=======
+        "CommandLine": "-p {Port} -t {ServerThreadCount} -m {ServerMemoryCacheSizeInMB}",
+>>>>>>> Stashed changes
         "BindToCores": true,
         "Port": "$.Parameters.ServerPort",
         "Username": "$.Parameters.Username",

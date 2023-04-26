@@ -57,7 +57,11 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
+<<<<<<< Updated upstream
                 $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -c 10000 -m 4096 -d\""
+=======
+                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 4096\""
+>>>>>>> Stashed changes
             };
 
             // Setup the expectations for the workload
