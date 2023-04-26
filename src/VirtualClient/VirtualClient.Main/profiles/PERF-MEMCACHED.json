@@ -19,7 +19,7 @@
       "Parameters": {
         "Scenario": "Server",
         "PackageName": "memcached",
-        "CommandLine": "-p {Port} -t {ServerThreadCount} -m {ServerMemoryCacheSizeInMB}",
+        "CommandLine": "-p {Port} -t {ServerThreadCount} -m {ServerMemoryCacheSizeInMB} -d",
         "BindToCores": true,
         "Port": "$.Parameters.ServerPort",
         "Username": "$.Parameters.Username",
