@@ -315,6 +315,9 @@ namespace VirtualClient.Actions
                         // https://github.com/memcached/memcached/wiki/Commands#flushall
                         // https://docs.oracle.com/cd/E17952_01/mysql-5.6-en/ha-memcached-cmdline-options.html#:~:text=Set%20the%20amount%20of%20memory%20allocated%20to%20memcached,amount%20of%20RAM%20to%20be%20allocated%20%28in%20megabytes%29.
 
+                        // We could also add -c parameter for the command which has a hard limit for it's value which is defined by system configuration. We can get the hard limit using this command "ulimit -Hn". Value for -c should be <= ulimit -Hn.
+                        // e.g.
+                        // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/memcached/memcached --port 6389 -t 4 -c 10000 -m 1024
                         commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine}\"";
                     }
                     else
