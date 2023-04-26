@@ -111,7 +111,7 @@ namespace VirtualClient
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
             DependencyFactory.telemetryChannels.Add(channel);
-            SystemManagement.CleanupTasks.Add(() => channel.Dispose());
+            VirtualClientRuntime.ExitTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
 
@@ -201,7 +201,7 @@ namespace VirtualClient
 
                 loggerProvider = new SerilogFileLoggerProvider(logConfiguration);
 
-                SystemManagement.CleanupTasks.Add(() => loggerProvider.Dispose());
+                VirtualClientRuntime.ExitTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
             return loggerProvider;
@@ -239,28 +239,28 @@ namespace VirtualClient
                 ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleTraceEvents();
 
-                SystemManagement.CleanupTasks.Add(() => tracesLoggerProvider.Dispose());
+                VirtualClientRuntime.ExitTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
                 ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(5), metricsExcludes)
                     .HandleMetricsEvents();
 
-                SystemManagement.CleanupTasks.Add(() => metricsLoggerProvider.Dispose());
+                VirtualClientRuntime.ExitTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Performance Counters
                 ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
                     .HandlePerformanceCounterEvents();
 
-                SystemManagement.CleanupTasks.Add(() => countersLoggerProvider.Dispose());
+                VirtualClientRuntime.ExitTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
                 ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleSystemEvents();
 
-                SystemManagement.CleanupTasks.Add(() => eventsLoggerProvider.Dispose());
+                VirtualClientRuntime.ExitTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));
                 loggerProviders.Add(eventsLoggerProvider);
             }
 

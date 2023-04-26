@@ -53,11 +53,6 @@ namespace VirtualClient.Api
         }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public bool ApiOnline { get; private set; }
-
-        /// <summary>
         /// The logger to use for capturing API telemetry.
         /// </summary>
         public ILogger Logger { get; }
@@ -65,7 +60,6 @@ namespace VirtualClient.Api
         /// <summary>
         /// Returns a response of 'OK' if the eventing API is online/ready or 'Locked' if it is not.
         /// </summary>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <response code="200">OK. The eventing API is online and ready to service requests.</response>
         /// <response code="423">Locked. The eventing API is awaiting signal before servicing requests.</response>
         /// <response code="500">Internal Server Error. An unexpected error occurred on the server.</response>
@@ -77,7 +71,7 @@ namespace VirtualClient.Api
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status423Locked)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-        public Task<IActionResult> ConfirmOnlineAsync(CancellationToken cancellationToken)
+        public Task<IActionResult> ConfirmOnlineAsync()
         {
             IActionResult response = null;
             EventContext telemetryContext = EventContext.Persisted();
@@ -86,7 +80,7 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    if (VirtualClientEventing.IsApiOnline)
+                    if (VirtualClientRuntime.IsApiOnline)
                     {
                         response = this.Ok();
                     }
@@ -141,13 +135,13 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    if (!VirtualClientEventing.IsApiOnline)
+                    if (!VirtualClientRuntime.IsApiOnline)
                     {
                         response = this.StatusCode(StatusCodes.Status423Locked);
                     }
                     else
                     {
-                        VirtualClientEventing.OnReceiveInstructions(this, instructions);
+                        VirtualClientRuntime.OnReceiveInstructions(this, instructions);
                         response = this.Ok();
                     }
                 }
@@ -197,14 +191,14 @@ namespace VirtualClient.Api
             {
                 try
                 {
-                    if (!VirtualClientEventing.IsApiOnline)
+                    if (!VirtualClientRuntime.IsApiOnline)
                     {
                         response = this.StatusCode(StatusCodes.Status423Locked);
                     }
                     else
                     {
                         Guid instructionsId = Guid.NewGuid();
-                        VirtualClientEventing.OnSendReceiveInstructions(this, new InstructionsEventArgs(instructionsId, instructions, CancellationToken.None));
+                        VirtualClientRuntime.OnSendReceiveInstructions(this, new InstructionsEventArgs(instructionsId, instructions, CancellationToken.None));
 
                         response = this.Ok(new Item<Instructions>(instructionsId.ToString(), instructions));
                     }

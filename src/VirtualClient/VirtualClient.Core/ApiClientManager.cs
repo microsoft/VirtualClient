@@ -91,6 +91,24 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Gets all existing/cached API clients.
+        /// </summary>
+        /// <returns>
+        /// A set of <see cref="IApiClient"/> that can be used to interface with target
+        /// Virtual Client API services.
+        /// </returns>
+        public IEnumerable<IApiClient> GetApiClients()
+        {
+            List<IApiClient> clients = new List<IApiClient>();
+            if (this.apiClients.Any())
+            {
+                clients.AddRange(this.apiClients.Values);
+            }
+
+            return clients;
+        }
+
+        /// <summary>
         /// Returns the effective port to use for hosting the API service. The port can be defined/overridden
         /// on the command line.
         /// </summary>

@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
                 // A reboot happens out-of-band from the executor to ensure all threads/processes running have a 
                 // chance to exit gracefully and for telemetry to be fully emitted from off of the system before
                 // processing the actual reboot request.
-                SystemManagement.IsRebootRequested = true;
+                VirtualClientRuntime.IsRebootRequested = true;
             }
             else
             {
@@ -168,8 +168,6 @@ namespace VirtualClient.Actions
         {
             using (IProcessProxy workload = this.processManager.CreateProcess(this.ExecutablePath, this.CommandLine))
             {
-                SystemManagement.CleanupTasks.Add(() => workload.SafeKill());
-
                 DateTime startTime = DateTime.UtcNow;
                 await workload.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
                 DateTime endTime = DateTime.UtcNow;

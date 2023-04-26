@@ -40,12 +40,6 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
-        /// Defines the time at which the application will wait for telemetry to be flushed before
-        /// exiting regardless.
-        /// </summary>
-        public TimeSpan FlushWait { get; set; }
-
-        /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
         /// the profile actions and monitors should also be considered.
         /// </summary>
@@ -168,25 +162,34 @@ namespace VirtualClient
             }
             finally
             {
-                if (SystemManagement.IsRebootRequested)
+                // Allow components to handle any
+                VirtualClientRuntime.OnExiting();
+
+                if (VirtualClientRuntime.IsRebootRequested)
                 {
                     Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", Program.ApplicationContext);
                 }
 
                 Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", Program.ApplicationContext);
                 Program.LogMessage(logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
-
                 Program.LogMessage(logger, $"Flush Telemetry", Program.ApplicationContext);
-                DependencyFactory.FlushTelemetry(this.FlushWait);
-                Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
-                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
 
-                SystemManagement.Cleanup();
+                TimeSpan remainingWait = TimeSpan.FromMinutes(2);
+                if (this.ExitWaitTimeout != DateTime.MinValue)
+                {
+                    remainingWait = this.ExitWaitTimeout.SafeSubtract(DateTime.UtcNow);
+                }
+
+                DependencyFactory.FlushTelemetry(remainingWait);
+                Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
+                DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(10));
+
+                
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
                 // we suddenly reboot the system.
-                if (SystemManagement.IsRebootRequested)
+                if (VirtualClientRuntime.IsRebootRequested)
                 {
                     await CommandBase.RebootSystemAsync(dependencies)
                         .ConfigureAwait(false);
@@ -651,6 +654,15 @@ namespace VirtualClient
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
 
+                if (this.ExitWait != null)
+                {
+                    profileExecutor.BeforeExiting += (source, args) =>
+                    {
+                        this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait.Value);
+                        profileExecutor.ExitWait = this.ExitWait.Value;
+                    };
+                }
+
                 await profileExecutor.ExecuteAsync(ProfileTiming.OneIteration(), cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -712,6 +724,15 @@ namespace VirtualClient
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
+
+                if (this.ExitWait != null)
+                {
+                    profileExecutor.BeforeExiting += (source, args) =>
+                    {
+                        this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait.Value);
+                        profileExecutor.ExitWait = this.ExitWait.Value;
+                    };
+                }
 
                 // Profile timeout and iterations options are mutually-exclusive on the command line. They cannot be used
                 // at the same time.

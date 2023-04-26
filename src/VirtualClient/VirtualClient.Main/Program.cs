@@ -65,18 +65,18 @@ namespace VirtualClient
                 // the loggers setup.
                 Program.InitializeStartupLogging(args);
 
-                using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+                using (CancellationTokenSource cancellationSource = VirtualClientRuntime.CancellationSource)
                 {
                     try
                     {
-                        CancellationToken cancellationToken = cancellationTokenSource.Token;
+                        CancellationToken cancellationToken = cancellationSource.Token;
                         Console.CancelKeyPress += (sender, e) =>
                         {
-                            cancellationTokenSource.Cancel();
+                            cancellationSource.Cancel();
                             e.Cancel = true;
                         };
 
-                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationTokenSource);
+                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
@@ -93,7 +93,7 @@ namespace VirtualClient
                             {
                                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                                 {
-                                    Program.RunAsWindowsService(cancellationTokenSource);
+                                    Program.RunAsWindowsService(cancellationSource);
                                 }
                             }
                         });
@@ -104,7 +104,7 @@ namespace VirtualClient
                     {
                         // Occasionally some of the workloads throw exceptions right as VC receives a
                         // cancellation/exit request.
-                        if (!cancellationTokenSource.IsCancellationRequested)
+                        if (!cancellationSource.IsCancellationRequested)
                         {
                             throw;
                         }
@@ -212,8 +212,8 @@ namespace VirtualClient
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
-                // --flush-wait
-                OptionFactory.CreateFlushWaitOption(required: false, TimeSpan.FromMinutes(30)),
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --installDependencies
                 OptionFactory.CreateDependenciesFlag(required: false),
@@ -297,6 +297,9 @@ namespace VirtualClient
 
                 // --eventHubConnectionString
                 OptionFactory.CreateEventHubConnectionStringOption(required: false),
+
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),

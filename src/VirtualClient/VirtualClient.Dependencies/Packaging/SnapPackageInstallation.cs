@@ -199,7 +199,7 @@ namespace VirtualClient.Dependencies
                 string output = string.Empty;
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill());
                     this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
 
                     await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);

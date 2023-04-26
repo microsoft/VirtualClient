@@ -27,7 +27,8 @@
             "Parameters": {
                 "Scenario": "Scenario2",
                 "CommandLine": "Workload --duration=00:0:30",
-                "ExampleParameter1": "AnyValue1",
+                "ExampleParameter1": "AnyValue2",
+                "ExampleParameter2": 9876,
                 "PackageName": "exampleworkload",
                 "ProfilingScenario": "Scenario2",
                 "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -45,6 +46,8 @@
                     "Parameters": {
                         "Scenario": "ParallelScenario1",
                         "CommandLine": "Workload --duration=00:0:45",
+                        "ExampleParameter1": "AnyValue3",
+                        "ExampleParameter2": 777,
                         "PackageName": "exampleworkload",
                         "ProfilingScenario": "Scenario3",
                         "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -58,6 +61,8 @@
                     "Parameters": {
                         "Scenario": "ParallelScenario2",
                         "CommandLine": "Workload --duration=00:0:45",
+                        "ExampleParameter1": "AnyValue=4",
+                        "ExampleParameter2": 888,
                         "PackageName": "exampleworkload",
                         "ProfilingScenario": "Scenario3",
                         "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
@@ -67,6 +72,18 @@
                     }
                 }
             ]
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallExampleWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "exampleworkload",
+                "Extract": true
+            }
         }
     ]
 }

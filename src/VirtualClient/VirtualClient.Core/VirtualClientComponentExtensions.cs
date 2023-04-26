@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -304,6 +305,65 @@ namespace VirtualClient
                         process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.SystemOperationFailed);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Adds a cleanup task to the application that sends an exit notification to the target
+        /// Virtual Client instances via the API clients supplied. Note that the addition of this
+        /// application level exit task is idempotent and will be added to the set of tasks only once.
+        /// </summary>
+        /// <param name="component">The component registering the exit notification sends.</param>
+        /// <param name="apiClients">The API clients to which to send notifications.</param>
+        /// <param name="taskId">An identifier that can be used to distinguish the registered notification task from others.</param>
+        public static void RegisterToSendExitNotifications(this VirtualClientComponent component, string taskId, params IApiClient[] apiClients)
+        {
+            component.ThrowIfNull(nameof(component));
+            apiClients.ThrowIfNullOrEmpty(nameof(apiClients));
+            taskId.ThrowIfNullOrWhiteSpace(nameof(taskId));
+
+            if (!VirtualClientRuntime.ExitTasks.Any(task => task.Id == taskId))
+            {
+                // This logic executes just before the application exits fully allowing
+                // client role instances to request server role instances to exit.
+                VirtualClientRuntime.ExitTasks.Add(new Action_(taskId, () =>
+                {
+                    if (component.Dependencies.TryGetService<IApiClientManager>(out IApiClientManager clientManager))
+                    {
+                        ILogger logger = component.Logger;
+                        EventContext telemetryContext = EventContext.Persisted();
+
+                        Parallel.ForEach(apiClients, (client) =>
+                        {
+                            EventContext relatedContext = telemetryContext.Clone()
+                                .AddContext("clientUri", client.BaseUri.ToString());
+
+                            try
+                            {
+                                logger.LogMessage($"{component.TypeName}.SendExitNotification", relatedContext);
+
+                                using (HttpResponseMessage response = client.SendApplicationExitInstructionAsync(CancellationToken.None)
+                                    .GetAwaiter().GetResult())
+                                {
+                                    if (!response.IsSuccessStatusCode)
+                                    {
+                                        component.Logger.LogMessage(
+                                            $"{component.TypeName}.SendExitNotificationError",
+                                            LogLevel.Error,
+                                            relatedContext.Clone().AddResponseContext(response));
+                                    }
+                                }
+                            }
+                            catch (Exception exc)
+                            {
+                                logger.LogMessage(
+                                    $"{component.TypeName}.SendExitNotificationError",
+                                    LogLevel.Error,
+                                    relatedContext.Clone().AddError(exc));
+                            }
+                        });
+                    }
+                }));
             }
         }
 

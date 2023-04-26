@@ -154,7 +154,7 @@ namespace VirtualClient.Dependencies
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
                         .ConfigureAwait(false);
 
-                    SystemManagement.IsRebootRequested = true;
+                    VirtualClientRuntime.IsRebootRequested = true;
                 }
                 else
                 {

@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
 
-            SystemManagement.IsRebootRequested = false;
+            VirtualClientRuntime.IsRebootRequested = false;
         }
 
         [Test]

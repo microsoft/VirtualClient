@@ -206,7 +206,7 @@ namespace VirtualClient.Dependencies
                 // all other components that might be running as part of a profile. Thus the profile execution
                 // handler itself is responsible for handling reboots.
                 this.Logger.LogMessage($"{nameof(NetworkConfigurationSetup)}.RequestReboot", LogLevel.Information, EventContext.Persisted());
-                SystemManagement.IsRebootRequested = true;
+                VirtualClientRuntime.IsRebootRequested = true;
             }
         }
 
@@ -237,7 +237,7 @@ namespace VirtualClient.Dependencies
                 // all other components that might be running as part of a profile. Thus the profile execution
                 // handler itself is responsible for handling reboots.
                 this.Logger.LogMessage($"{nameof(NetworkConfigurationSetup)}.RequestReboot", LogLevel.Information, telemetryContext);
-                SystemManagement.IsRebootRequested = true;
+                VirtualClientRuntime.IsRebootRequested = true;
             }
             else
             {
