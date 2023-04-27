@@ -299,8 +299,8 @@ namespace VirtualClient.Actions
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            string commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine} --test-time {this.Duration.TotalSeconds}";
-
+                            string commandArguments = commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine}";
+                            
                             commands.Add(commandArguments);
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
 
