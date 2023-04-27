@@ -391,6 +391,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFileAsync(
             this VirtualClientComponent component,
@@ -399,7 +400,8 @@ namespace VirtualClient
             FileBlobDescriptor descriptor,
             CancellationToken cancellationToken,
             bool deleteFile = true,
-            IAsyncPolicy retryPolicy = null)
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
             /*
              * Azure Storage blob naming limit
@@ -444,12 +446,12 @@ namespace VirtualClient
                             {
                                 if (uploadStream.Length > 0)
                                 {
-                                    EventContext telemetryContext = EventContext.Persisted()
+                                    EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
                                         .AddContext("file", descriptor.File.FullName)
                                         .AddContext("blobContainer", descriptor.ContainerName)
                                         .AddContext("blobName", descriptor.Name);
 
-                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
+                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         await blobManager.UploadBlobAsync(descriptor, uploadStream, cancellationToken);
                                         uploaded = true;
