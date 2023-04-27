@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
     public class MemcachedServerProfileTests
     {
         private DependencyFixture mockFixture;
+        private long mockMaxConnections = 1000;
 
         [SetUp]
         public void SetupFixture()
@@ -43,6 +44,13 @@ namespace VirtualClient.Actions
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+                {
+                    IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                    process.StandardOutput.Append(this.mockMaxConnections);
+                    return process;
+                };
+
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
 
@@ -57,7 +65,7 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 4096 -d\""
+                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 4096 -d -c {this.mockMaxConnections}\""
             };
 
             // Setup the expectations for the workload
@@ -73,7 +81,12 @@ namespace VirtualClient.Actions
             });
 
             await apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None);
-            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) => this.mockFixture.CreateProcess(command, arguments, workingDir);
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                process.StandardOutput.Append(this.mockMaxConnections);
+                return process;
+            };
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {

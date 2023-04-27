@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockMemcachedPackage;
+        private long mockMaxconnections = 1000;
 
         [SetUp]
         public void SetupDefaults()
@@ -61,6 +62,12 @@ namespace VirtualClient.Actions
         {
             using (var component = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
+                this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+                {
+                    this.fixture.Process.StandardOutput.Append(mockMaxconnections);
+                    return this.fixture.Process;
+                };
+
                 await component.InitializeAsync(EventContext.None, CancellationToken.None);
                 this.fixture.PackageManager.Verify(mgr => mgr.GetPackageAsync(this.mockMemcachedPackage.Name, It.IsAny<CancellationToken>()));
             }
@@ -73,17 +80,20 @@ namespace VirtualClient.Actions
             {
                 List<string> expectedCommands = new List<string>()
                 {
+                     $"sudo bash -c \"ulimit -Hn\"",
+
                     // Make the Memcached server toolset executable
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64 -d\""
+                    $"sudo -u testuser bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} {this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64 -d -c {this.mockMaxconnections}\""
 
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(mockMaxconnections);
                     return this.fixture.Process;
                 };
 
@@ -101,17 +111,19 @@ namespace VirtualClient.Actions
 
                 List<string> expectedCommands = new List<string>()
                 {
+                    $"sudo bash -c \"ulimit -Hn\"",
                     // Make the Memcached server toolset executable
                     $"sudo chmod +x \"{this.mockMemcachedPackage.Path}/memcached\"",
 
                     // Run the Memcached server. We run 1 server instance bound to each of the logical cores on the system.
-                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64 -d\""
+                    $"sudo -u testuser bash -c \"{this.mockMemcachedPackage.Path}/memcached -p {executor.Port} -t 4 -m 64 -d -c {this.mockMaxconnections}\""
 
                };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove($"{exe} {arguments}");
+                    this.fixture.Process.StandardOutput.Append(mockMaxconnections);
                     return this.fixture.Process;
                 };
 

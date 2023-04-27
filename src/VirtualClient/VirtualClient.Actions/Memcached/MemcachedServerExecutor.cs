@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -26,6 +27,7 @@ namespace VirtualClient.Actions
     {
         private List<Task> serverProcesses;
         private bool disposed;
+        private long maxConnections;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemcachedServerExecutor"/> class.
@@ -211,6 +213,10 @@ namespace VirtualClient.Actions
             this.MemcachedPackagePath = memcachedPackage.Path;
             this.MemcachedExecutablePath = this.Combine(this.MemcachedPackagePath, "memcached");
 
+            IProcessProxy process = await this.ExecuteCommandAsync("bash", "-c \"ulimit -Hn\"", this.MemcachedPackagePath, telemetryContext, cancellationToken, runElevated: true)
+                                                 .ConfigureAwait(false);
+            this.maxConnections = long.Parse(process.StandardOutput.ToString());
+
             await this.SystemManagement.MakeFileExecutableAsync(this.MemcachedExecutablePath, this.Platform, cancellationToken);
 
             this.InitializeApiClients();
@@ -315,14 +321,12 @@ namespace VirtualClient.Actions
                         // https://github.com/memcached/memcached/wiki/Commands#flushall
                         // https://docs.oracle.com/cd/E17952_01/mysql-5.6-en/ha-memcached-cmdline-options.html#:~:text=Set%20the%20amount%20of%20memory%20allocated%20to%20memcached,amount%20of%20RAM%20to%20be%20allocated%20%28in%20megabytes%29.
 
-                        // We could also add -c parameter for the command which has a hard limit for it's value which is defined by system configuration. We can get the hard limit using this command "ulimit -Hn". Value for -c should be <= ulimit -Hn.
-                        // e.g.
-                        // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/memcached/memcached --port 6389 -t 4 -c 10000 -m 1024
-                        commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine}\"";
+                        commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine} -c {this.maxConnections}\"";
+
                     }
                     else
                     {
-                        commandArguments = $"-c \"{this.MemcachedExecutablePath} {this.CommandLine}\"";
+                        commandArguments = $"-c \"{this.MemcachedExecutablePath} {this.CommandLine} -c {this.maxConnections}\"";
                     }
 
                     relatedContext.AddContext("command", command);
