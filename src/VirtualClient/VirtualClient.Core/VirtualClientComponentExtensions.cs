@@ -501,11 +501,12 @@ namespace VirtualClient
             IEnumerable<FileBlobDescriptor> descriptors,
             CancellationToken cancellationToken,
             bool deleteFile = false,
-            IAsyncPolicy retryPolicy = null)
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
             foreach (FileBlobDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy, telemetryContext);
             }
         }
     }
