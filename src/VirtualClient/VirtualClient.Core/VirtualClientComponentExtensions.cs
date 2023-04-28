@@ -493,6 +493,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFilesAsync(
             this VirtualClientComponent component,
