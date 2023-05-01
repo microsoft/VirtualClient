@@ -184,8 +184,6 @@ namespace VirtualClient
                 Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
                 DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(10));
 
-                
-
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
                 // we suddenly reboot the system.
@@ -653,15 +651,12 @@ namespace VirtualClient
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
+                profileExecutor.ExitWait = this.ExitWait;
 
-                if (this.ExitWait != null)
+                profileExecutor.BeforeExiting += (source, args) =>
                 {
-                    profileExecutor.BeforeExiting += (source, args) =>
-                    {
-                        this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait.Value);
-                        profileExecutor.ExitWait = this.ExitWait.Value;
-                    };
-                }
+                    this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
+                };
 
                 await profileExecutor.ExecuteAsync(ProfileTiming.OneIteration(), cancellationToken)
                     .ConfigureAwait(false);
@@ -724,15 +719,12 @@ namespace VirtualClient
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
+                profileExecutor.ExitWait = this.ExitWait;
 
-                if (this.ExitWait != null)
+                profileExecutor.BeforeExiting += (source, args) =>
                 {
-                    profileExecutor.BeforeExiting += (source, args) =>
-                    {
-                        this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait.Value);
-                        profileExecutor.ExitWait = this.ExitWait.Value;
-                    };
-                }
+                    this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
+                };
 
                 // Profile timeout and iterations options are mutually-exclusive on the command line. They cannot be used
                 // at the same time.

@@ -81,7 +81,7 @@ namespace VirtualClient
         /// Defines the time at which the application will wait for the application to wait for processes
         /// to exit or for telemetry to be flushed before exiting regardless.
         /// </summary>
-        public TimeSpan? ExitWait { get; set; }
+        public TimeSpan ExitWait { get; set; }
 
         /// <summary>
         /// Defines an explicit time for which the application will wait before exiting. This is correlated with

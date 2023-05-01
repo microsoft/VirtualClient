@@ -299,7 +299,7 @@ namespace VirtualClient
                 OptionFactory.CreateEventHubConnectionStringOption(required: false),
 
                 // --exit-wait
-                OptionFactory.CreateExitWaitOption(required: false),
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
