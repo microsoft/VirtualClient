@@ -31,8 +31,6 @@ namespace VirtualClient
     /// </summary>
     public sealed class Program
     {
-        internal static EventContext ApplicationContext { get; set; }
-
         internal static ILogger Logger { get; set; }
 
         /// <summary>
@@ -55,11 +53,6 @@ namespace VirtualClient
                 // when a user defines the profile by name only (no full or relative path, --profile=ANY-PROFILE.json),
                 // the working directory will matter.
                 Environment.CurrentDirectory = Path.GetDirectoryName(VirtualClientComponent.ExecutingAssembly.Location);
-
-                // Persist an activity ID that will be used in all telemetry events for correlation of events
-                // down the stack. This ID is the "parent correlation ID" of all events. All events will reference
-                // this parent ID.
-                Program.ApplicationContext = EventContext.Persist(Guid.NewGuid());
 
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
@@ -121,7 +114,6 @@ namespace VirtualClient
             }
             catch (Exception exc)
             {
-                Program.LogErrorMessage(Program.Logger, exc, Program.ApplicationContext);
                 exitCode = 1;
                 Console.Error.WriteLine(exc.StackTrace);
             }

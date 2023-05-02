@@ -15,6 +15,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -27,6 +28,53 @@ namespace VirtualClient
     {
         private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
             .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
+
+        private static readonly IAsyncPolicy NotificationFileSystemAccessRetryPolicy = Policy.Handle<IOException>()
+            .WaitAndRetryAsync(20, (retries) => TimeSpan.FromSeconds(retries + 1));
+
+        /// <summary>
+        /// Captures the details of the process including standard output, standard error and exit codes to 
+        /// telemetry and log files on the system.
+        /// </summary>
+        /// <param name="component">The component requesting the logging.</param>
+        /// <param name="descriptor"></param>
+        /// <param name="retryPolicy"></param>
+        public static async Task CreateFileUploadNotificationAsync(this VirtualClientComponent component, FileBlobDescriptor descriptor, IAsyncPolicy retryPolicy = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            descriptor.ThrowIfNull(nameof(descriptor));
+
+            try
+            {
+                PlatformSpecifics platformSpecifics = component.PlatformSpecifics;
+                IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+
+                FileUploadNotification notification = new FileUploadNotification
+                {
+                    BlobName = descriptor.Name,
+                    ContainerName = descriptor.ContainerName,
+                    ContentEncoding = descriptor.ContentEncoding.WebName,
+                    ContentType = descriptor.ContentType,
+                    FilePath = descriptor.File.FullName
+                };
+
+                await (retryPolicy ?? VirtualClientComponentExtensions.NotificationFileSystemAccessRetryPolicy).ExecuteAsync(async () =>
+                {
+                    string contentUploadFilePath = component.Combine(
+                        platformSpecifics.ContentUploadsDirectory,
+                        $"{DateTime.UtcNow.ToString("o")}_upload.json");
+
+                    await fileSystem.File.WriteAllTextAsync(contentUploadFilePath, notification.ToJson());
+                });
+            }
+            catch (Exception exc)
+            {
+                throw new DependencyException(
+                    $"File upload notification creation failed for file at path '{descriptor.File.FullName}' after having exhausted all retries.",
+                    exc,
+                    ErrorReason.FileUploadNotificationCreationFailed);
+            }
+        }
 
         /// <summary>
         /// Evaluates each of the parameters provided to the component to replace

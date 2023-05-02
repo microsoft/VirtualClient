@@ -173,7 +173,7 @@ namespace CRC.VirtualClient.Monitors
 
                 string markerFileContent = await this.fileSystem.File.ReadAllTextAsync(markerFile, cancellationToken);
 
-                ContentUploadMarker contentUploadMarker = JsonConvert.DeserializeObject<ContentUploadMarker>(markerFileContent);
+                FileUploadNotification contentUploadMarker = JsonConvert.DeserializeObject<FileUploadNotification>(markerFileContent);
 
                 if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                 {

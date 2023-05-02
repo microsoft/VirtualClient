@@ -10,7 +10,6 @@ namespace VirtualClient.Contracts
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
-    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -66,11 +65,17 @@ namespace VirtualClient.Contracts
             this.CpuArchitecture = architecture;
             this.CurrentDirectory = currentDirectory;
             this.LogsDirectory = this.Combine(currentDirectory, "logs");
+            this.ContentUploadsDirectory = this.Combine(currentDirectory, "logs", "contentuploads");
             this.PackagesDirectory = this.Combine(currentDirectory, "packages");
             this.ProfilesDirectory = this.Combine(currentDirectory, "profiles");
             this.ScriptsDirectory = this.Combine(currentDirectory, "scripts");
             this.StateDirectory = this.Combine(currentDirectory, "state");
         }
+
+        /// <summary>
+        /// The directory for file/content upload notifications (e.g. /logs/contentuploads).
+        /// </summary>
+        public string ContentUploadsDirectory { get; }
 
         /// <summary>
         /// The CPU architecture (e.g. x64, arm64).

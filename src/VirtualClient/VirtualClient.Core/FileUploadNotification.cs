@@ -1,42 +1,44 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts
+namespace VirtualClient
 {
+    using System;
+    using System.Collections;
     using Newtonsoft.Json;
+    using VirtualClient.Contracts;
 
     /// <summary>
-    /// JSON Structure for Marker File to Upload Logs to Blob Storage
+    /// Provides information required to upload content to a target storage system.
     /// </summary>
-    public class ContentUploadMarker
+    public class FileUploadNotification
     {
         /// <summary>
-        /// ContainerName where logs should be uploaded
+        /// The name of the container in the storage location.
         /// </summary>
         [JsonProperty("containerName")]
         public string ContainerName { get; set; }
 
         /// <summary>
-        /// Virtual Folder Path in Blob Storage
+        /// The name or full virtual path for the file/blob.
         /// </summary>
         [JsonProperty("blobName")]
         public string BlobName { get; set; }
 
         /// <summary>
-        /// Content encoding for upload to blob
+        /// The web content encoding for the file/blob (e.g. utf-8).
         /// </summary>
         [JsonProperty("contentEncoding")]
         public string ContentEncoding { get; set; }
-        // NEED TO CHECK ON CONVERSION FROM STRING TO ENCODING
 
         /// <summary>
-        /// Content Type for upload to blob
+        /// The web content type for the file/blob (e.g. application/octet-stream).
         /// </summary>
         [JsonProperty("contentType")]
         public string ContentType { get; set; }
 
         /// <summary>
-        /// Local Path of File to uploaded to blob storage
+        /// The full path to the file to upload.
         /// </summary>
         [JsonProperty("filePath")]
         public string FilePath { get; set; }

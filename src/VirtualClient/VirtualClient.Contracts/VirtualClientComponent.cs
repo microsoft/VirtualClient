@@ -100,6 +100,24 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
+        /// Parameter defines the content log structure to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentLogStructure
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ContentLogStructure), out IConvertible logStructure);
+                return logStructure?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.ContentLogStructure)] = value;
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }

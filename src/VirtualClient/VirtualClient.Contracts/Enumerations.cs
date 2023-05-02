@@ -121,6 +121,11 @@ namespace VirtualClient
         /// </summary>
         WorkloadUnexpectedAnomaly = 430,
 
+        /// <summary>
+        /// A file upload notification write failed.
+        /// </summary>
+        FileUploadNotificationCreationFailed = 440,
+
         // VC Error Handling (500s):
         // --------------------------------------------------------------------------
         // Exceptions with an error value >= 500 are exceptions from which the
