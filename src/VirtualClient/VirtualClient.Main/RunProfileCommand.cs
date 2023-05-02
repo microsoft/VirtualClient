@@ -147,32 +147,35 @@ namespace VirtualClient
             }
             catch (NotSupportedException exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)ErrorReason.NotSupported;
             }
             catch (VirtualClientException exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)exc.Reason;
             }
             catch (Exception exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = 1;
             }
             finally
             {
-                // Allow components to handle any
+                // In order to include all of the experiment + agent etc... context, we need to
+                // get the current/persisted context.
+                EventContext exitingContext = EventContext.Persisted();
+
+                // Allow components to handle any final exit operations.
                 VirtualClientRuntime.OnExiting();
 
                 if (VirtualClientRuntime.IsRebootRequested)
                 {
-                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", Program.ApplicationContext);
+                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", exitingContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", Program.ApplicationContext);
-                Program.LogMessage(logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
-                Program.LogMessage(logger, $"Flush Telemetry", Program.ApplicationContext);
+                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", exitingContext);
+                Program.LogMessage(logger, $"Exit Code: {exitCode}", exitingContext);
 
                 TimeSpan remainingWait = TimeSpan.FromMinutes(2);
                 if (this.ExitWaitTimeout != DateTime.MinValue)
@@ -185,9 +188,14 @@ namespace VirtualClient
                     remainingWait = TimeSpan.FromMinutes(2);
                 }
 
+                Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
                 DependencyFactory.FlushTelemetry(remainingWait);
-                Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
+
+                Program.LogMessage(logger, $"Flushed", exitingContext);
                 DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
+
+                // Allow components to handle any final cleanup operations.
+                VirtualClientRuntime.OnCleanup();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
