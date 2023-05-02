@@ -1122,16 +1122,16 @@ namespace VirtualClient.Contracts
 
                     await VirtualClientLoggingExtensions.FileSystemAccessRetryPolicy.ExecuteAsync(async () =>
                     {
-                        await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
+                        await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());                        
 
-                        // ADD A CHECK FOR CONTENT STORE PRESENCE
+                        // ADD A CHECK HERE TO SEE IF CONTENT STORE IS PROVIDED.
 
                         string contentUploadFilePath = specifics.Combine(specifics.LogsDirectory, "contentuploads", "contentUpload_" + DateTime.UtcNow.ToString("yyyyMMddHHmmssffff") + ".json");
 
-                        string[] folderNames = { effectiveToolName.ToLowerInvariant().RemoveWhitespace(), effectiveLogFileName };
-                        string blobSuffix = string.Join("/", folderNames.Where(str => !string.IsNullOrWhiteSpace(str)));
+                        string[] virtualFolderStructure = { component.ExperimentId, component.AgentId, component.Scenario, effectiveToolName.ToLowerInvariant().RemoveWhitespace(), effectiveLogFileName };
+                        string blobName = string.Join("/", virtualFolderStructure.Where(str => !string.IsNullOrWhiteSpace(str)));
                         
-                        string contentUploadFileContent = GetContentUploadFileContent(blobSuffix, logFilePath);
+                        string contentUploadFileContent = GetContentUploadFileContent(blobName, logFilePath);
 
                         await fileSystem.File.WriteAllTextAsync(contentUploadFilePath, contentUploadFileContent);
                     });
@@ -1220,11 +1220,11 @@ namespace VirtualClient.Contracts
             }
         }
 
-        private static string GetContentUploadFileContent(string blobSuffix, string filePath)
+        private static string GetContentUploadFileContent(string blobName, string filePath)
         {
             string contentUploadFileContent = $"{{\r\n    " +
                 $"\"containerName\": \"crclabslogcontainer\",\r\n    " + // This should come as a parameter of VirtualClient
-                $"\"blobName\": \"{blobSuffix}\",\r\n    " +
+                $"\"blobName\": \"{blobName}\",\r\n    " +
                 $"\"contentEncoding\": \"utf-8\",\r\n    " + // Not being ued currently, see if we need it.
                 $"\"contentType\": \"text/plain\",\r\n    " +
                 $"\"filePath\": \"{filePath.Replace("\\", "\\\\")}\"\r\n}}";

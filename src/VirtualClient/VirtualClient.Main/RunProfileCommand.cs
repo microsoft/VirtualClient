@@ -33,6 +33,7 @@ namespace VirtualClient
         private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
         private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
         private const string NoMonitorsProfile = "MONITORS-NONE.json";
+        private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
@@ -379,7 +380,17 @@ namespace VirtualClient
                 }
             }
 
-            // ADD THE CHECK HERE!
+            // Adding the FileUploadMonitorProfile if ogToFile is enabled and ContentStore connection string is provided.
+            if (this.ContentStore != null && VirtualClientComponent.LogToFile == true)
+            {
+                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
+                ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
+                    .ConfigureAwait(false);
+
+                this.InitializeProfile(fileUploadMonitorProfile);
+                profile = profile.MergeWith(fileUploadMonitorProfile);
+            }
 
             return profile;
         }
@@ -452,11 +463,11 @@ namespace VirtualClient
                 }
             }
 
-            if (this.ContentStore != null && VirtualClientComponent.LogToFile == true)
-            {
-                var fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath("MONITORS-FILE-UPLOAD.json");
-                effectiveProfiles.Add(fileUploadMonitorProfilePath);
-            }
+            // if (this.ContentStore != null && VirtualClientComponent.LogToFile == true)
+            // {
+            //     var fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(FileUploadMonitorProfile);
+            //     effectiveProfiles.Add(fileUploadMonitorProfilePath);
+            // }
 
             return effectiveProfiles;
         }

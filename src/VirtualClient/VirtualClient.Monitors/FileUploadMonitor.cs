@@ -72,67 +72,38 @@ namespace CRC.VirtualClient.Monitors
 
         private async Task UploadFilesToBlobAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string[] folderNames = { this.ExperimentId, this.AgentId, this.Scenario };
-            string blobNamePrefix = string.Join("/", folderNames.Where(str => !string.IsNullOrWhiteSpace(str)));
-
-            // while (!cancellationToken.IsCancellationRequested)
-            while (!cancellationToken.IsCancellationRequested || (this.fileSystem.Directory.GetFiles(this.contentsUploadDirectory).Length != 0))
+            // while (!cancellationToken.IsCancellationRequested || (this.fileSystem.Directory.GetFiles(this.contentsUploadDirectory).Length != 0))
+            while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var filesToBeUploaded = this.fileSystem.Directory.GetFiles(this.contentsUploadDirectory);
+                    await this.UploadLogsAsPerMarkerFiles(cancellationToken);
 
-                    foreach (var markerFile in filesToBeUploaded)
-                    {
-                        // Assuming a following format of the JSON Marker file that points to filePath to upload.
-                        // {
-                        //     containerName: "csitoolkitlogcontainer",
-                        //     blobName: "/anyvm-01/geekbench5/scoresystem/2023-04-29T01_00_05_1284676z-geekbench5.log",
-                        //     contentEncoding: "utf-8",
-                        //     contentType: "text/plain",
-                        //     filePath: "C:\\VirtualClient\\content\\win-x64\\logs\\geekbench5\\scoresystem\\2023-04-29T01_00_05_1284676z-geekbench5.log"
-                        // }
-
-                        string markerFileContent = await this.fileSystem.File.ReadAllTextAsync(markerFile, cancellationToken);
-
-                        ContentUploadMarker contentUploadMarker = JsonConvert.DeserializeObject<ContentUploadMarker>(markerFileContent);
-                        contentUploadMarker.BlobName = blobNamePrefix + "/" + contentUploadMarker.BlobName;
-
-                        if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-                        {
-                            using FileStream uploadStream = new (contentUploadMarker.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                            await this.UploadFileStream(blobManager, contentUploadMarker.ContainerName, contentUploadMarker.BlobName, Encoding.UTF8, contentUploadMarker.ContentType, uploadStream, cancellationToken)
-                                .ConfigureAwait(false);
-                        }
-
-                        await this.fileSystem.File.DeleteAsync(markerFile);
-                    }
-
-                    // CHECK IF THIS IS NEEDED
                     await Task.Delay(this.MonitorFrequency, cancellationToken)
                         .ConfigureAwait(false);
                 }
                 catch (OperationCanceledException)
                 {
-                    // Expected whenever ctrl-C is used.
-                    // ADD 100ms DELAY
+                    // Expected whenever ctrl-C is used. Do a check once more, without cancellationToken and break;
+                    await this.UploadLogsAsPerMarkerFiles(CancellationToken.None);
+                    break;
                 }
                 catch (IOException)
                 {
                     // Retry in case of IO Exceptions to ensure no file is left to be uploaded on account of transient IO issues.
-                    // ADD 500ms DELAY
+                    await Task.Delay(500, cancellationToken);
                 }
                 catch (Exception exc)
                 {
                     this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                    // ADD 500ms DELAY
+                    await Task.Delay(500, cancellationToken);
                 }
             }
         }
 
         private async Task UploadManifestFileAsync(string containerName, CancellationToken cancellationToken, string userEmail = null, string source = null)
         {
-            // GET ALL DATA FROM METADATA AS A DICT
+            // GET ALL DATA FROM METADATA AS A DICTIONARY
             if (string.IsNullOrEmpty(userEmail))
             {
                 userEmail = "adityaa@microsoft.com";
@@ -184,26 +155,35 @@ namespace CRC.VirtualClient.Monitors
 
             return;
         }
-    }
 
-    internal class ContentUploadMarker
-    {
-        // MOVE THE CLASS TO CONTRACTS
+        private async Task UploadLogsAsPerMarkerFiles(CancellationToken cancellationToken)
+        {
+            var filesToBeUploaded = this.fileSystem.Directory.GetFiles(this.contentsUploadDirectory);
 
-        [JsonProperty("containerName")]
-        public string ContainerName { get; set; }
+            foreach (var markerFile in filesToBeUploaded)
+            {
+                // Assuming a following format of the JSON Marker file that points to filePath to upload.
+                // {
+                //     containerName: "csitoolkitlogcontainer",
+                //     blobName: "/anyvm-01/geekbench5/scoresystem/2023-04-29T01_00_05_1284676z-geekbench5.log",
+                //     contentEncoding: "utf-8",
+                //     contentType: "text/plain",
+                //     filePath: "C:\\VirtualClient\\content\\win-x64\\logs\\geekbench5\\scoresystem\\2023-04-29T01_00_05_1284676z-geekbench5.log"
+                // }
 
-        [JsonProperty("blobName")]
-        public string BlobName { get; set; }
+                string markerFileContent = await this.fileSystem.File.ReadAllTextAsync(markerFile, cancellationToken);
 
-        [JsonProperty("contentEncoding")]
-        public string ContentEncoding { get; set; }
-        // NEED TO CHECK ON CONVERSION FROM STTRING TO ENCODING
+                ContentUploadMarker contentUploadMarker = JsonConvert.DeserializeObject<ContentUploadMarker>(markerFileContent);
 
-        [JsonProperty("contentType")]
-        public string ContentType { get; set; }
+                if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+                {
+                    using FileStream uploadStream = new (contentUploadMarker.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                    await this.UploadFileStream(blobManager, contentUploadMarker.ContainerName, contentUploadMarker.BlobName, Encoding.UTF8, contentUploadMarker.ContentType, uploadStream, cancellationToken)
+                        .ConfigureAwait(false);
+                }
 
-        [JsonProperty("filePath")]
-        public string FilePath { get; set; }
+                await this.fileSystem.File.DeleteAsync(markerFile);
+            }
+        }
     }
 }

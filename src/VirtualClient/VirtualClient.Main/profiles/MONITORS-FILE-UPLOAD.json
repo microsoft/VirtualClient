@@ -14,7 +14,7 @@
         {
             "Type": "FileUploadMonitor",
             "Parameters": {
-                "Scenario": "UploadFilesToBlob",
+                "Scenario": "UploadToContentStore",
                 "MonitorFrequency": "$.Parameters.MonitorFrequency"
             }
         }
