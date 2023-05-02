@@ -12,7 +12,6 @@ namespace VirtualClient.Common.Telemetry
     using System.Threading.Tasks;
     using global::Azure.Messaging.EventHubs;
     using global::Azure.Messaging.EventHubs.Producer;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -27,7 +26,7 @@ namespace VirtualClient.Common.Telemetry
         /// <summary>
         /// The default interval at which buffered events will be transmitted.
         /// </summary>
-        public static readonly TimeSpan DefaultAutoFlushSendInterval = TimeSpan.FromSeconds(30);
+        public static readonly TimeSpan DefaultAutoFlushSendInterval = TimeSpan.FromSeconds(5);
 
         // Each EventDataBatch has a limit of one megabyte, regardless of the number of
         // EventData objects within. An offset of 16 bytes seems to allow for the size of

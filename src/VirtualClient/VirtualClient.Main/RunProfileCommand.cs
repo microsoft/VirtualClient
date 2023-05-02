@@ -180,9 +180,14 @@ namespace VirtualClient
                     remainingWait = this.ExitWaitTimeout.SafeSubtract(DateTime.UtcNow);
                 }
 
+                if (remainingWait <= TimeSpan.Zero && this.ExitWait > TimeSpan.Zero)
+                {
+                    remainingWait = TimeSpan.FromMinutes(2);
+                }
+
                 DependencyFactory.FlushTelemetry(remainingWait);
                 Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
-                DependencyFactory.FlushTelemetry(TimeSpan.FromSeconds(10));
+                DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
