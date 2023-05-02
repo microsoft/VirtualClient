@@ -13,6 +13,8 @@ namespace VirtualClient.Contracts
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
@@ -1121,6 +1123,17 @@ namespace VirtualClient.Contracts
                     await VirtualClientLoggingExtensions.FileSystemAccessRetryPolicy.ExecuteAsync(async () =>
                     {
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
+
+                        // ADD A CHECK FOR CONTENT STORE PRESENCE
+
+                        string contentUploadFilePath = specifics.Combine(specifics.LogsDirectory, "contentuploads", "contentUpload_" + DateTime.UtcNow.ToString("yyyyMMddHHmmssffff") + ".json");
+
+                        string[] folderNames = { effectiveToolName.ToLowerInvariant().RemoveWhitespace(), effectiveLogFileName };
+                        string blobSuffix = string.Join("/", folderNames.Where(str => !string.IsNullOrWhiteSpace(str)));
+                        
+                        string contentUploadFileContent = GetContentUploadFileContent(blobSuffix, logFilePath);
+
+                        await fileSystem.File.WriteAllTextAsync(contentUploadFilePath, contentUploadFileContent);
                     });
                 }
             }
@@ -1205,6 +1218,18 @@ namespace VirtualClient.Contracts
                     metricCategorization,
                     toolVersion);
             }
+        }
+
+        private static string GetContentUploadFileContent(string blobSuffix, string filePath)
+        {
+            string contentUploadFileContent = $"{{\r\n    " +
+                $"\"containerName\": \"crclabslogcontainer\",\r\n    " + // This should come as a parameter of VirtualClient
+                $"\"blobName\": \"{blobSuffix}\",\r\n    " +
+                $"\"contentEncoding\": \"utf-8\",\r\n    " + // Not being ued currently, see if we need it.
+                $"\"contentType\": \"text/plain\",\r\n    " +
+                $"\"filePath\": \"{filePath.Replace("\\", "\\\\")}\"\r\n}}";
+
+            return contentUploadFileContent;
         }
     }
 }

@@ -379,6 +379,8 @@ namespace VirtualClient
                 }
             }
 
+            // ADD THE CHECK HERE!
+
             return profile;
         }
 
@@ -448,6 +450,12 @@ namespace VirtualClient
 
                     effectiveProfiles.Add(profileFullPath);
                 }
+            }
+
+            if (this.ContentStore != null && VirtualClientComponent.LogToFile == true)
+            {
+                var fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath("MONITORS-FILE-UPLOAD.json");
+                effectiveProfiles.Add(fileUploadMonitorProfilePath);
             }
 
             return effectiveProfiles;

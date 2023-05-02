@@ -1,0 +1,22 @@
+{
+    "Description": "Background Monitor Service to Upload Logs to Blob Storage",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "ProfilingEnabled": false,
+        "ProfilingMode": "Interval",
+        "MonitorFrequency": "00:00:05"
+    },
+    "Dependencies": [ ],
+    "Monitors": [
+        {
+            "Type": "FileUploadMonitor",
+            "Parameters": {
+                "Scenario": "UploadFilesToBlob",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency"
+            }
+        }
+    ]
+}
