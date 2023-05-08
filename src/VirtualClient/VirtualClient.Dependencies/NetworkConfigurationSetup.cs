@@ -63,7 +63,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(NetworkConfigurationSetup.EnableBusyPoll), true);
+                return this.Parameters.GetValue<bool>(nameof(NetworkConfigurationSetup.EnableBusyPoll), false);
             }
         }
 

@@ -36,6 +36,13 @@
         </None>
     </ItemGroup>
 
+
+    <ItemGroup>
+      <None Update="Examples\CoreInfo\CoreInfo_Results_Ampere_2.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

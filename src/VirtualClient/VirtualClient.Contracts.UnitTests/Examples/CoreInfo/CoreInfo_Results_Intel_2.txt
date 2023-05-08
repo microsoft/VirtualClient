@@ -117,8 +117,8 @@ Maximum implemented address width: 48 bits (virtual), 46 bits (physical).
 Processor signature: 000606A6
 
 Logical to Physical Processor Map:
-**--  Physical Processor 0 (Hyperthreaded)
---**  Physical Processor 1 (Hyperthreaded)
+*-  Physical Processor 0
+-*  Physical Processor 1
 
 Logical Processor to Socket Map:
 ****  Socket 0

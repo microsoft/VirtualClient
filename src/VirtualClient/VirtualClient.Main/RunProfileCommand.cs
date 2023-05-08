@@ -637,6 +637,7 @@ namespace VirtualClient
             logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
             logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
             logger.LogTraceMessage($"Agent ID: {this.AgentId}");
+            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
@@ -692,6 +693,7 @@ namespace VirtualClient
             logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
             logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
             logger.LogTraceMessage($"Agent ID: {this.AgentId}");
+            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.

@@ -405,19 +405,23 @@ namespace VirtualClient
         {
             this.SetupDefaults(PlatformID.Win32NT);
 
+            int expectedLogicalCores = 4;
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
+
             Dictionary<string, string> expressions = new Dictionary<string, string>
             {
                 { 
                     "{LogicalCoreCount}",
-                    Environment.ProcessorCount.ToString()
+                    expectedLogicalCores.ToString()
                 },
                 {
                     "--port=1234 --threads={LogicalCoreCount}",
-                    $"--port=1234 --threads={Environment.ProcessorCount}"
+                    $"--port=1234 --threads={expectedLogicalCores}"
                 },
                 {
                     "--port=1234 --threads={LogicalCoreCount} --someFlag --clients={LogicalCoreCount}",
-                    $"--port=1234 --threads={Environment.ProcessorCount} --someFlag --clients={Environment.ProcessorCount}"
+                    $"--port=1234 --threads={expectedLogicalCores} --someFlag --clients={expectedLogicalCores}"
                 }
             };
 
@@ -521,6 +525,10 @@ namespace VirtualClient
             string packagePath = this.mockFixture.GetPackagePath("anyPackage");
             string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, "linux-x64");
 
+            int expectedLogicalCores = 4;
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("Any", "AnyDescription", 1, expectedLogicalCores, 1, 0, true));
+
             // The package MUST be actually registered with VC.
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
 
@@ -532,7 +540,7 @@ namespace VirtualClient
             ProfileExpressionEvaluator.Evaluate(this.mockFixture.Dependencies, parameters);
 
             Assert.AreEqual(
-                $"--port=1234 --threads={Environment.ProcessorCount} --package={packagePath} --package2={packagePath}/linux-x64",
+                $"--port=1234 --threads={expectedLogicalCores} --package={packagePath} --package2={packagePath}/linux-x64",
                 parameters["CommandLine"].ToString());
         }
 

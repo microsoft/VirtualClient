@@ -260,10 +260,13 @@ namespace VirtualClient
                         // and telemetry flushes more time to complete.
                         this.BeforeExiting?.Invoke(this, new EventArgs());
 
+                        ConsoleLogger.Default.LogInformation("Profile: Wait for Exit...");
+
                         // Attempt to allow a graceful exit for any background tasks, actions or monitors
                         // that are running. There is an exit wait grace period before we will definitively exit.
                         await Task.WhenAny(Task.WhenAll(profileActionsTask, profileMonitorsTask), Task.Delay(this.ExitWait));
 
+                        ConsoleLogger.Default.LogInformation("Profile: Exited");
                         profileActionsTask.ThrowIfErrored();
                         profileMonitorsTask.ThrowIfErrored();
                     }

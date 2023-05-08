@@ -189,7 +189,8 @@ namespace VirtualClient.Common.Extensions
         }
 
         /// <summary>
-        /// Parses the dictionary entry value into a <see cref="TimeSpan"/> value.
+        /// Parses the dictionary entry value into a <see cref="TimeSpan"/> value. Integer values are supported and will be converted
+        /// into seconds (e.g. 60 = a timespan of 60 seconds).
         /// </summary>
         /// <param name="dictionary">Dictionary containing the key with a value to parse.</param>
         /// <param name="key">The key in the dictionary.</param>
@@ -213,7 +214,12 @@ namespace VirtualClient.Common.Extensions
             }
             else
             {
-                if (!TimeSpan.TryParse(dictionary[key]?.ToString(), out value))
+                string keyValue = dictionary[key]?.ToString();
+                if (int.TryParse(keyValue, out int seconds))
+                {
+                    value = TimeSpan.FromSeconds(seconds);
+                }
+                else if (!TimeSpan.TryParse(keyValue, out value))
                 {
                     throw new FormatException(
                         $"Invalid timespan type conversion.  The value of key '{key}': value '{dictionary[key]?.ToString()}' is expected to be formatted as a '{typeof(TimeSpan).Name}' data type.");
