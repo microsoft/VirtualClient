@@ -17,8 +17,6 @@ The following section describes the parameters used by the individual component 
 |---------------|--------------|----------------------------|-------------------------------------------------|
 | PackageName   | Yes          | The logical name of the package that will be registered with the Virtual Client runtime. This name can be used by other profile components to reference the installation parent directory location for Drivers. |  |
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line). |  |
-| WinCommandLineArgs | No | The command line arguments that will be used with the Windows exe installer. | -y -s |
-| WinCudaDriversPackageDownloadedFromBlob | No | A 'true' value would mean that drivers package is downloaded from Blob and DependencyPackageInstallation is present in dependencies. A 'false' value would imply that WgetPackageInstallation is present in dependencies to download the NVIDIA drivers installer from Web | false |
 | RebootRequired | No | Whether or not reboot is required after installing the drivers. | false |
 
 ## Profile Component Parameters for Linux
@@ -54,9 +52,7 @@ A sample URL for NVIDIA Drivers for Windows 10/11 is mentioned in example. The e
       "Type": "CudaAndNvidiaGPUDriverInstallation",
       "Parameters": {
           "Scenario": "InstallCudaAndNvidiaGPUDriverForWindows",
-          "WinCudaDriversPackageDownloadedFromBlob": false,
           "RebootRequired": false,
-          "WinCommandLineArgs": "-y -s",
           "PackageName": "nvidiaDrivers"  
       }
   }
@@ -82,9 +78,7 @@ A sample URL for NVIDIA Drivers for Windows 10/11 is mentioned in example. The e
       "Type": "CudaAndNvidiaGPUDriverInstallation",
       "Parameters": {
           "Scenario": "InstallCudaAndNvidiaGPUDriverForWindows",
-          "WinCudaDriversPackageDownloadedFromBlob": true,
           "RebootRequired": false,
-          "WinCommandLineArgs": "-y -s",
           "PackageName": "nvidiaDrivers"  
       }
   }
@@ -101,10 +95,10 @@ A sample URL for NVIDIA Drivers RunFile for Linux Ubuntu is mentioned in example
       "Type": "NvidiaCudaInstallation",
       "Parameters": {
           "Scenario": "InstallNvidiaCuda",
-          "CudaVersion": "12.0",
-          "DriverVersion": "525",
+          "LinuxCudaVersion": "12.0",
+          "LinuxDriverVersion": "525",
           "Username": "",
-          "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+          "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
       }
   },
   ```

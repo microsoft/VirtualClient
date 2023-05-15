@@ -105,6 +105,18 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        // /// <summary>
+        // /// If this is true, VC expects CUDA and NVIDIA Drivers Installer Package from Blob Storage.
+        // /// If false, CUDA and NVIDIA Drivers installer will be downloaded from Web based on link provided.
+        // /// </summary>
+        // public bool WinCudaDriversPackageDownloadedFromBlob
+        // {
+        //     get
+        //     {
+        //         return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCudaDriversPackageDownloadedFromBlob), false);
+        //     }
+        // }
+
         /// <summary>
         /// The user who has the ssh identity registered for.
         /// </summary>
@@ -119,29 +131,6 @@ namespace VirtualClient.Dependencies
                 }
 
                 return username;
-            }
-        }
-
-        /// <summary>
-        /// The Cuda Toolkit Windows executable Command Line Arguments.
-        /// </summary>
-        public string WinCommandLineArgs
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCommandLineArgs), "-y -s");
-            }
-        }
-
-        /// <summary>
-        /// If this is true, VC expects CUDA and NVIDIA Drivers Installer Package from Blob Storage.
-        /// If false, CUDA and NVIDIA Drivers installer will be downloaded from Web based on link provided.
-        /// </summary>
-        public bool WinCudaDriversPackageDownloadedFromBlob
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.WinCudaDriversPackageDownloadedFromBlob), false);
             }
         }
 
@@ -384,30 +373,44 @@ namespace VirtualClient.Dependencies
         private async Task CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installerPath = string.Empty;
-            if (this.WinCudaDriversPackageDownloadedFromBlob)
-            {
-                DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                    .ConfigureAwait(false);
 
-                installerPath = this.PlatformSpecifics.Combine(nvidiaDriverInstallerPackage.Path, "nvidiaDriversInstaller.exe");
-
-            }
-            else
-            {
-                DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
                 this.PackageName, cancellationToken)
                     .ConfigureAwait(false);
 
-                if (this.systemManager.FileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path).Length == 0)
-                {
-                    throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
-                }
-
-                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path)[0];
+            if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
+            {
+                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
+            }
+            else
+            {
+                throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
             }
 
-            await this.ExecuteCommandAsync(installerPath, this.WinCommandLineArgs, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+            // if (this.WinCudaDriversPackageDownloadedFromBlob)
+            // {
+            //     DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
+            //     this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+            //         .ConfigureAwait(false);
+            // 
+            //     installerPath = this.PlatformSpecifics.Combine(nvidiaDriverInstallerPackage.Path, "nvidiaDriversInstaller.exe");
+            // 
+            // }
+            // else
+            // {
+            //     DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+            //     this.PackageName, cancellationToken)
+            //         .ConfigureAwait(false);
+            // 
+            //     if (this.systemManager.FileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path).Length == 0)
+            //     {
+            //         throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
+            //     }
+            // 
+            //     installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path)[0];
+            // }
+
+            await this.ExecuteCommandAsync(installerPath, "-y -s", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
         }
 

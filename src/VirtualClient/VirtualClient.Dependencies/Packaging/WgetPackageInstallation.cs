@@ -151,12 +151,13 @@ namespace VirtualClient.Dependencies
                                 }
                                 else
                                 {
-                                    // This section is for the standalone files which are not zipped. The file will be copied to a location in installationPath and then
+                                    // This section is for the standalone files which are not zipped. The file will be copied to a location in
+                                    // directory 'installationPath' under a name as defined by 'downloadedFileCopyPath' and then
                                     // file at original download path is deleted as in above case for zip file.
-                                    string installationFilePath = this.GetPackagePath(this.PackageName, Path.GetFileName(this.PackageUri.ToString()));
+                                    string downloadedFileCopyPath = this.GetPackagePath(this.PackageName, Path.GetFileName(this.PackageUri.ToString()));
                                     installationPath = this.GetPackagePath(this.PackageName);
                                     this.fileSystem.Directory.CreateDirectory(installationPath);
-                                    this.fileSystem.File.Copy(downloadedPackagePath, installationFilePath);
+                                    this.fileSystem.File.Copy(downloadedPackagePath, downloadedFileCopyPath, true);
                                 }
 
                                 // Note that installation path is the final path even though we are using the packages path above
