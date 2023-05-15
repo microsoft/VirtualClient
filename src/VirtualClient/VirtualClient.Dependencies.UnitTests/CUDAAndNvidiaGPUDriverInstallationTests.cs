@@ -147,15 +147,6 @@ namespace VirtualClient.Dependencies
 
             this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
 
-            // if (driversDownloadedFromBlob)
-            // {
-            //     this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "win-x64", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
-            // }
-            // else
-            // {
-            //     this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "NvidiaDrivers", "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
-            // }
-
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
 
             await this.component.ExecuteAsync(CancellationToken.None);
@@ -175,7 +166,6 @@ namespace VirtualClient.Dependencies
                 { "LinuxDriverVersion", "510" },
                 { "Username", "anyuser" },
                 { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
-                // { "WinCudaDriversPackageDownloadedFromBlob", false },
                 { "RebootRequired", false }
             };
 
