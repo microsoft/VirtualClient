@@ -186,9 +186,9 @@ namespace VirtualClient.Dependencies.Packaging
                 bool installationPathConfirmed = false;
                 bool packageRegistrationConfirmed = false;
 
-                // The package will be copied to installationPath on the system once it is downloaded.
+                // The package will be copied to expectedDownloadedFileCopyPath on the system once it is downloaded.
                 // e.g.
-                // /packages/any-package.1.0.0.tar.gz -> /packages/any-package.1.0.0
+                // /packages/any-file.1.0.0.exe -> /packages/any-package/any-file.1.0.0.exe
                 this.mockFixture.FileSystem.Setup(fe => fe.File.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
                     .Callback<string, string, bool>((downloadFilePath, destinationPath, overWrite) =>
                     {
