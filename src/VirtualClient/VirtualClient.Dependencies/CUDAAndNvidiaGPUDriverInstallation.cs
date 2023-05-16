@@ -6,22 +6,27 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Provides functionality for installing specific version of CUDA and supported Nvidia GPU driver on linux.
+    /// Provides functionality for installing specific version of CUDA and supported Nvidia GPU driver on linux and Windows.
     /// </summary>
     public class CudaAndNvidiaGPUDriverInstallation : VirtualClientComponent
     {
+        private IPackageManager packageManager;
         private IFileSystem fileSystem;
         private ISystemManagement systemManager;
         private IStateManager stateManager;
@@ -38,53 +43,72 @@ namespace VirtualClient.Dependencies
             this.systemManager = dependencies.GetService<ISystemManagement>();
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
-        }
+            this.packageManager = this.systemManager.PackageManager;
+        }        
 
         /// <summary>
-        /// The version of CUDA to be installed.
+        /// The version of CUDA to be installed in Linux Systems
         /// </summary>
-        public string CudaVersion
+        public string LinuxCudaVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.CudaVersion), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxCudaVersion), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.CudaVersion)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxCudaVersion)] = value;
             }
         }
 
         /// <summary>
-        /// The version of Nvidia GPU driver to be installed.
+        /// The version of Nvidia GPU driver to be installed in Linux Systems
         /// </summary>
-        public string DriverVersion
+        public string LinuxDriverVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.DriverVersion), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxDriverVersion), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.DriverVersion)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxDriverVersion)] = value;
             }
         }
 
         /// <summary>
-        /// The local runfile to install Cuda and Nvidia GPU driver.
+        /// The local runfile to install Cuda and Nvidia GPU driver in Linux Systems
         /// </summary>
-        public string LocalRunFile
+        public string LinuxLocalRunFile
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LocalRunFile), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.LinuxLocalRunFile), string.Empty);
             }
 
             set
             {
-                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LocalRunFile)] = value;
+                this.Parameters[nameof(CudaAndNvidiaGPUDriverInstallation.LinuxLocalRunFile)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether Reboot is required or not after Driver installation
+        /// </summary>
+        public bool RebootRequired
+        {
+            get
+            {
+                switch (this.Platform)
+                {
+                    case PlatformID.Win32NT:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), false);
+
+                    default:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), true);
+                }
             }
         }
 
@@ -153,18 +177,17 @@ namespace VirtualClient.Dependencies
 
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
                         .ConfigureAwait(false);
-
-                    VirtualClientRuntime.IsRebootRequested = true;
                 }
-                else
+                else if (this.Platform == PlatformID.Win32NT)
                 {
-                    // CUDA and Nvidia driver installation for other platforms to be added.
-                    throw new WorkloadException(
-                        $"CUDA and Nvidia GPU driver Installation is not supported by Virtual Client on the current platform '{this.Platform}'." +
-                        $"Supported Platforms include:" +
-                        $" Unix ",
-                        ErrorReason.PlatformNotSupported);
+                    await this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(telemetryContext, cancellationToken)
+                               .ConfigureAwait(false);
+
+                    await this.stateManager.SaveStateAsync(nameof(this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync), new State(), cancellationToken)
+                        .ConfigureAwait(false);                    
                 }
+
+                VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
             }
 
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
@@ -212,11 +235,11 @@ namespace VirtualClient.Dependencies
             {
                 foreach (string command in commandsList)
                 {
-                    await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(command, null, Environment.CurrentDirectory, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
-        }
+        }        
 
         private List<string> CleanupCommands(LinuxDistribution linuxDistribution)
         {
@@ -296,10 +319,10 @@ namespace VirtualClient.Dependencies
 
         private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
         {
-            string runFileName = this.LocalRunFile.Split('/').Last();
-            List<string> commands = new List<string>
+            string runFileName = this.LinuxLocalRunFile.Split('/').Last();
+            List<string> commands = new List<string>()
             {
-                $"wget {this.LocalRunFile}",
+                $"wget {this.LinuxLocalRunFile}",
                 $"sh {runFileName} --silent"
             };
 
@@ -309,19 +332,19 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt update");
                     commands.Add("apt upgrade -y");
-                    commands.Add($"apt install nvidia-driver-{this.DriverVersion} nvidia-dkms-{this.DriverVersion} -y");
-                    commands.Add($"apt install cuda-drivers-fabricmanager-{this.DriverVersion} -y");
+                    commands.Add($"apt install nvidia-driver-{this.LinuxDriverVersion} nvidia-dkms-{this.LinuxDriverVersion} -y");
+                    commands.Add($"apt install cuda-drivers-fabricmanager-{this.LinuxDriverVersion} -y");
 
                     break;
 
                 case LinuxDistribution.CentOS7:
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL7:
-                    commands.Add($"dnf module install nvidia-driver:{this.DriverVersion}/fm");
+                    commands.Add($"dnf module install nvidia-driver:{this.LinuxDriverVersion}/fm");
                     break;
 
                 case LinuxDistribution.SUSE:
-                    commands.Add($"zypper install cuda-drivers-fabricmanager-{this.DriverVersion}");
+                    commands.Add($"zypper install cuda-drivers-fabricmanager-{this.LinuxDriverVersion}");
                     break;
             }
             
@@ -332,20 +355,41 @@ namespace VirtualClient.Dependencies
         {
             return new List<string>
             {
-                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.CudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
+                $"bash -c \"echo 'export PATH=/usr/local/cuda-{this.LinuxCudaVersion}/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"",
 
-                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.CudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
+                $"bash -c \"echo 'export LD_LIBRARY_PATH=/usr/local/cuda-{this.LinuxCudaVersion}/lib64${{LD_LIBRARY_PATH:+:${{LD_LIBRARY_PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\""
             };
         }
 
-        private Task ExecuteCommandAsync(string commandLine, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string installerPath = string.Empty;
+
+            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+                this.PackageName, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
+            {
+                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
+            }
+            else
+            {
+                throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
+            }
+
+            await this.ExecuteCommandAsync(installerPath, "-y -s", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        private Task ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
             {
                 string output = string.Empty;
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, null, workingDirectory))
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
                     this.LogProcessTrace(process);

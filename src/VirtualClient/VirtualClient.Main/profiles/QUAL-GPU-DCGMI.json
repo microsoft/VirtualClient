@@ -68,10 +68,10 @@
             "Type": "NvidiaCudaInstallation",
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
-                "CudaVersion": "11.6",
-                "DriverVersion": "510",
+                "LinuxCudaVersion": "11.6",
+                "LinuxDriverVersion": "510",
                 "Username": "$.Parameters.Username",
-                "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
+                "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run"
             }
         },
         {
