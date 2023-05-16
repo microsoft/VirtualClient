@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["PackageName"] = this.mockRedisPackage.Name,
-                ["CommandLine"] = "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+                ["CommandLine"] = "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes",
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
                 ["ServerInstances"] = 1,
@@ -75,7 +75,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockRedisPackage.Path}/src/redis-server\"",
 
                     // Start the server binded to the logical core. Values based on the parameters set at the top.
-                    $"sudo bash -c \"numactl -C 0 {this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\""
+                    $"sudo bash -c \"numactl -C 0 {this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\""
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -102,10 +102,10 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockRedisPackage.Path}/src/redis-server\"",
 
                     // Server instance #1 bound to core 0 and running on port 6379
-                    $"sudo bash -c \"numactl -C 0 {this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\"",
+                    $"sudo bash -c \"numactl -C 0 {this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\"",
 
                     // Server instance #2 bound to core 1 and running on port 6380
-                    $"sudo bash -c \"numactl -C 1 {this.mockRedisPackage.Path}/src/redis-server --port 6380 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\""
+                    $"sudo bash -c \"numactl -C 1 {this.mockRedisPackage.Path}/src/redis-server --port 6380 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\""
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -132,7 +132,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockRedisPackage.Path}/src/redis-server\"",
 
                     // Start the server binded to the logical core. Values based on the parameters set at the top.
-                    $"sudo bash -c \"{this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\""
+                    $"sudo bash -c \"{this.mockRedisPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\""
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

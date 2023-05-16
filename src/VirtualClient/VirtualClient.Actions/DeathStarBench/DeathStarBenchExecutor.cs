@@ -189,8 +189,8 @@ namespace VirtualClient.Actions
                                 // Subscribe to notifications from the Events API. The client passes instructions
                                 // to the server via this API.
                                 this.Logger.LogTraceMessage("subscribing to the listeners");
-                                VirtualClientEventing.ReceiveInstructions += this.OnInstructionsReceived;
-                                VirtualClientEventing.SetEventingApiOnline(true);
+                                VirtualClientRuntime.ReceiveInstructions += this.OnInstructionsReceived;
+                                VirtualClientRuntime.SetEventingApiOnline(true);
 
                                 await this.WaitAsync(this.ServerCancellationSource.Token);
                             }
@@ -202,8 +202,8 @@ namespace VirtualClient.Actions
                             {
                                 // Cleanup the event subscription to avoid any issues with memory leaks.
                                 this.Logger.LogTraceMessage("unsubscribing to the listeners");
-                                VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
-                                VirtualClientEventing.SetEventingApiOnline(false);
+                                VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
+                                VirtualClientRuntime.SetEventingApiOnline(false);
                             }
                         }
                         else
@@ -249,7 +249,7 @@ namespace VirtualClient.Actions
                     EventContext telemetryContext = EventContext.Persisted()
                         .AddContext("instructions", instructions);
 
-                    if (VirtualClientEventing.IsApiOnline)
+                    if (VirtualClientRuntime.IsApiOnline)
                     {
                         this.Logger.LogMessageAsync($"{nameof(DeathStarBenchExecutor)}.InstructionsReceived", telemetryContext, async () =>
                         {

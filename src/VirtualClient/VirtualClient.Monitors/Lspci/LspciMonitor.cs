@@ -68,9 +68,9 @@ namespace VirtualClient.Monitors
             ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
             IFileSystem fileSystem = systemManagement.FileSystem;
 
-            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken)
-                .ConfigureAwait(false);
+            await Task.Delay(this.MonitorWarmupPeriod, cancellationToken);
 
+            bool firstRun = true;
             while (!cancellationToken.IsCancellationRequested)
             {
                 string command = (this.Platform == PlatformID.Unix) ? "lspci" : "lspci.exe";
@@ -78,11 +78,18 @@ namespace VirtualClient.Monitors
 
                 try
                 {
+                    if (!firstRun)
+                    {
+                        // Wait on the monitor frequency.
+                        await Task.Delay(this.MonitorFrequency, cancellationToken);
+                    }
+
+                    firstRun = false;
                     string workingDir = Environment.CurrentDirectory;
 
                     if (this.Platform == PlatformID.Win32NT)
                     {
-                        DependencyPath lspciPackage = await this.GetPlatformSpecificPackageAsync(LspciMonitor.Lspci,  CancellationToken.None);
+                        DependencyPath lspciPackage = await this.GetPlatformSpecificPackageAsync(LspciMonitor.Lspci, CancellationToken.None);
                         workingDir = lspciPackage.Path;
                         command = this.PlatformSpecifics.Combine(workingDir, command);
                     }
@@ -121,8 +128,6 @@ namespace VirtualClient.Monitors
                                 }
                             }
                         }
-
-                        await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                     }
                 }
                 catch (OperationCanceledException)
@@ -132,8 +137,6 @@ namespace VirtualClient.Monitors
                 catch (Exception exc)
                 {
                     this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                    // Always wait for the monitor frequency for the next execution.
-                    await Task.Delay(this.MonitorFrequency).ConfigureAwait(false);
                 }
             }
         }

@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -308,6 +309,65 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Adds a cleanup task to the application that sends an exit notification to the target
+        /// Virtual Client instances via the API clients supplied. Note that the addition of this
+        /// application level exit task is idempotent and will be added to the set of tasks only once.
+        /// </summary>
+        /// <param name="component">The component registering the exit notification sends.</param>
+        /// <param name="apiClients">The API clients to which to send notifications.</param>
+        /// <param name="taskId">An identifier that can be used to distinguish the registered notification task from others.</param>
+        public static void RegisterToSendExitNotifications(this VirtualClientComponent component, string taskId, params IApiClient[] apiClients)
+        {
+            component.ThrowIfNull(nameof(component));
+            apiClients.ThrowIfNullOrEmpty(nameof(apiClients));
+            taskId.ThrowIfNullOrWhiteSpace(nameof(taskId));
+
+            if (!VirtualClientRuntime.ExitTasks.Any(task => task.Id == taskId))
+            {
+                // This logic executes just before the application exits fully allowing
+                // client role instances to request server role instances to exit.
+                VirtualClientRuntime.ExitTasks.Add(new Action_(taskId, () =>
+                {
+                    if (component.Dependencies.TryGetService<IApiClientManager>(out IApiClientManager clientManager))
+                    {
+                        ILogger logger = component.Logger;
+                        EventContext telemetryContext = EventContext.Persisted();
+
+                        Parallel.ForEach(apiClients, (client) =>
+                        {
+                            EventContext relatedContext = telemetryContext.Clone()
+                                .AddContext("clientUri", client.BaseUri.ToString());
+
+                            try
+                            {
+                                logger.LogMessage($"{component.TypeName}.SendExitNotification", relatedContext);
+
+                                using (HttpResponseMessage response = client.SendApplicationExitInstructionAsync(CancellationToken.None)
+                                    .GetAwaiter().GetResult())
+                                {
+                                    if (!response.IsSuccessStatusCode)
+                                    {
+                                        component.Logger.LogMessage(
+                                            $"{component.TypeName}.SendExitNotificationError",
+                                            LogLevel.Error,
+                                            relatedContext.Clone().AddResponseContext(response));
+                                    }
+                                }
+                            }
+                            catch (Exception exc)
+                            {
+                                logger.LogMessage(
+                                    $"{component.TypeName}.SendExitNotificationError",
+                                    LogLevel.Error,
+                                    relatedContext.Clone().AddError(exc));
+                            }
+                        });
+                    }
+                }));
+            }
+        }
+
+        /// <summary>
         /// Sets the value of the environment variable or appends a value to the end of it.
         /// </summary>
         /// <param name="component">The component setting the environment variable.</param>
@@ -331,6 +391,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFileAsync(
             this VirtualClientComponent component,
@@ -339,7 +400,8 @@ namespace VirtualClient
             FileBlobDescriptor descriptor,
             CancellationToken cancellationToken,
             bool deleteFile = true,
-            IAsyncPolicy retryPolicy = null)
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
             /*
              * Azure Storage blob naming limit
@@ -384,12 +446,12 @@ namespace VirtualClient
                             {
                                 if (uploadStream.Length > 0)
                                 {
-                                    EventContext telemetryContext = EventContext.Persisted()
+                                    EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
                                         .AddContext("file", descriptor.File.FullName)
                                         .AddContext("blobContainer", descriptor.ContainerName)
                                         .AddContext("blobName", descriptor.Name);
 
-                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
+                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
                                         await blobManager.UploadBlobAsync(descriptor, uploadStream, cancellationToken);
                                         uploaded = true;
@@ -431,6 +493,7 @@ namespace VirtualClient
         /// <param name="cancellationToken">The cancellationToken.</param>
         /// <param name="deleteFile">Whether to delete file after upload.</param>
         /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFilesAsync(
             this VirtualClientComponent component,
@@ -439,11 +502,12 @@ namespace VirtualClient
             IEnumerable<FileBlobDescriptor> descriptors,
             CancellationToken cancellationToken,
             bool deleteFile = false,
-            IAsyncPolicy retryPolicy = null)
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
             foreach (FileBlobDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy, telemetryContext);
             }
         }
     }

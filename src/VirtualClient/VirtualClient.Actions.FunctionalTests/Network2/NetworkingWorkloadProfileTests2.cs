@@ -98,7 +98,7 @@ namespace VirtualClient.Actions
                 WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "networking");
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
 
-                SystemManagement.IsRebootRequested = false;
+                VirtualClientRuntime.IsRebootRequested = false;
             }
         }
 

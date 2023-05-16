@@ -128,10 +128,12 @@ namespace VirtualClient
                 if (matches?.Any() == true)
                 {
                     ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    CpuInfo cpuInfo = systemManagement.GetCpuInfoAsync(CancellationToken.None)
+                        .GetAwaiter().GetResult();
 
                     foreach (Match match in matches)
                     {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, Environment.ProcessorCount.ToString());
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, cpuInfo.LogicalCoreCount.ToString());
                     }
                 }
 

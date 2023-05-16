@@ -12,7 +12,6 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient;
@@ -525,7 +524,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     if (this.IsInServerRole)
                     {
-                        VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
+                        VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
                         this.ServerCancellationSource?.Dispose();
                     }
                 }
@@ -704,6 +703,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 // new connection from the connection pool typically for each instance created. Especially for the case with
                 // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
                 NetworkingWorkloadExecutor.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.Name, serverInstance);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", NetworkingWorkloadExecutor.ServerApiClient);
             }
         }
 
@@ -719,7 +719,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                     EventContext telemetryContext = EventContext.Persisted()
                         .AddContext("instructions", instructions);
 
-                    if (VirtualClientEventing.IsApiOnline)
+                    if (VirtualClientRuntime.IsApiOnline)
                     {
                         this.Logger.LogMessage($"{nameof(NetworkingWorkloadExecutor)}.InstructionsReceived", telemetryContext, () =>
                         {
@@ -989,8 +989,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                     {
                         // Subscribe to notifications from the Events API. The client passes instructions
                         // to the server via this API.
-                        VirtualClientEventing.ReceiveInstructions += this.OnInstructionsReceived;
-                        VirtualClientEventing.SetEventingApiOnline(true);
+                        VirtualClientRuntime.ReceiveInstructions += this.OnInstructionsReceived;
+                        VirtualClientRuntime.SetEventingApiOnline(true);
 
                         await this.WaitAsync(this.ServerCancellationSource.Token)
                             .ConfigureAwait(false);
@@ -1002,8 +1002,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                     finally
                     {
                         // Cleanup the event subscription to avoid any issues with memory leaks.
-                        VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
-                        VirtualClientEventing.SetEventingApiOnline(false);
+                        VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
+                        VirtualClientRuntime.SetEventingApiOnline(false);
                     }
                 }
             });

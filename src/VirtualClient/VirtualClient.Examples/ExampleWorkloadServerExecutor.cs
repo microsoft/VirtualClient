@@ -37,7 +37,7 @@ namespace VirtualClient
         {
             // Subscribe to the system-wide notifications. This is how we can receive events/notifications
             // from other clients in a direct push-based model.
-            VirtualClientEventing.ReceiveInstructions += (sender, instructions) =>
+            VirtualClientRuntime.ReceiveInstructions += (sender, instructions) =>
             {
                 State notification = instructions.ToObject<State>();
 

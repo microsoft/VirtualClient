@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             component.ServerCancellationSource = new CancellationTokenSource();
-            VirtualClientEventing.SetEventingApiOnline(true);
+            VirtualClientRuntime.SetEventingApiOnline(true);
             component.OnClientInstructionsReceived.Invoke(mockSender.Object, mockJobject);
 
             // Not failing signies that component is found and created
