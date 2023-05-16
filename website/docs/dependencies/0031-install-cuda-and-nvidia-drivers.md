@@ -30,6 +30,7 @@ The following section describes the parameters used by the individual component 
 | LinuxDriverVersion | Yes | The version of Nvidia GPU driver to be installed in Linux Systems |  |
 | LinuxLocalRunFile | Yes | The link to local runfile to install Cuda and Nvidia GPU driver in Linux Systems | |
 | Username | No | The user who has the ssh identity registered for. | <Current UserName> |
+| RebootRequired | No | Whether or not reboot is required after installing the drivers. | true |
 
 ## Example
 The following sections provides examples for how to integrate the component into a profile.

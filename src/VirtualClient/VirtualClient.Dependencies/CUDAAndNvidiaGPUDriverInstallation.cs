@@ -101,7 +101,14 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), false);
+                switch (this.Platform)
+                {
+                    case PlatformID.Win32NT:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), false);
+
+                    default:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), true);
+                }
             }
         }
 
@@ -170,8 +177,6 @@ namespace VirtualClient.Dependencies
 
                     await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
                         .ConfigureAwait(false);
-
-                    VirtualClientRuntime.IsRebootRequested = true;
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
@@ -179,10 +184,10 @@ namespace VirtualClient.Dependencies
                                .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync), new State(), cancellationToken)
-                        .ConfigureAwait(false);
-
-                    VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
+                        .ConfigureAwait(false);                    
                 }
+
+                VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
             }
 
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
