@@ -110,6 +110,7 @@ namespace VirtualClient.Actions
 
                 this.ServerIpAddress = serverIPAddress.ToString();
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
 
                 ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);

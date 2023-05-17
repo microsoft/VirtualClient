@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -24,6 +25,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class NASParallelBenchClientExecutor : NASParallelBenchExecutor
     {
+        private List<IApiClient> apiClients;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="NASParallelBenchClientExecutor"/> class.
         /// </summary>
@@ -33,6 +36,7 @@ namespace VirtualClient.Actions
             : base(dependencies, parameters)
         {
             this.ClientHeartbeatPollingTimeout = TimeSpan.FromMinutes(20);
+            this.apiClients = new List<IApiClient>();
         }
 
         /// <summary>
@@ -175,11 +179,21 @@ namespace VirtualClient.Actions
             {
                 IEnumerable<ClientInstance> instances = this.GetLayoutClientInstances(ClientRole.Server);
                 IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-                foreach (ClientInstance client in instances)
+
+                try
                 {
-                    IApiClient apiClient = clientManager.GetOrCreateApiClient(client.IPAddress, IPAddress.Parse(client.IPAddress));
-                    await apiClient.PollForExpectedStateAsync(nameof(this.NpbBuildState), JObject.FromObject(this.NpbBuildState), this.ClientHeartbeatPollingTimeout, DefaultStateComparer.Instance, cancellationToken)
-                        .ConfigureAwait(false);
+                    foreach (ClientInstance client in instances)
+                    {
+                        IApiClient apiClient = clientManager.GetOrCreateApiClient(client.IPAddress, IPAddress.Parse(client.IPAddress));
+                        this.apiClients.Add(apiClient);
+
+                        await apiClient.PollForExpectedStateAsync(nameof(this.NpbBuildState), JObject.FromObject(this.NpbBuildState), this.ClientHeartbeatPollingTimeout, DefaultStateComparer.Instance, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                }
+                finally
+                {
+                    this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.apiClients.ToArray());
                 }
             }
         }
