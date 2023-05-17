@@ -412,6 +412,24 @@
             }
         },
         {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureMySQLServer",
+                "Action": "ConfigureNetwork",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "MySQLServerConfiguration",
+            "Parameters": {
+                "Scenario": "ConfigureMySQLDatabase",
+                "Action": "CreateUser",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "Role": "Server"
+            }
+        },
+        {
             "Type": "ApiServer",
             "Parameters": {
                 "Scenario": "StartAPIServer",

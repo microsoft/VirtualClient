@@ -43,7 +43,6 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
-            await this.ConfigureMySQLPrivilegesAsync(cancellationToken);
         }
 
         /// <summary>
@@ -62,32 +61,6 @@ namespace VirtualClient.Actions
                             .ConfigureAwait(false);
                 }
             });
-        }
-
-        private async Task ConfigureMySQLPrivilegesAsync(CancellationToken cancellationToken)
-        {
-            string workingDirectory = this.GetPackagePath(this.PackageName);
-            this.SystemManager.FileSystem.Directory.CreateDirectory(workingDirectory);
-
-            if (this.IsMultiRoleLayout()) 
-            {
-                string dropUserCommand = $"mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'{this.ClientIpAddress}'\"";
-                string configureNetworkCommand = $"sed -i \"s/.*bind-address.*/bind-address = {this.ServerIpAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf";
-                string restartmySQLCommand = "systemctl restart mysql.service";
-                string createUserCommand = $"mysql --execute=\"CREATE USER 'sbtest'@'{this.ClientIpAddress}'\"";
-                string grantPrivilegesCommand = $"mysql --execute=\"GRANT ALL ON sbtest.* TO 'sbtest'@'{this.ClientIpAddress}'\"";
-
-                await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(dropUserCommand, null, workingDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-                await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(configureNetworkCommand, null, workingDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-                await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(restartmySQLCommand, null, workingDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-                await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(createUserCommand, null, workingDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-                await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(grantPrivilegesCommand, null, workingDirectory, cancellationToken)
-                        .ConfigureAwait(false);
-            }
         }
     }
 }
