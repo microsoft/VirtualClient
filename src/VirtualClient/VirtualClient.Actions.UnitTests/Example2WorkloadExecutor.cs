@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
                 // A reboot happens out-of-band from the executor to ensure all threads/processes running have a 
                 // chance to exit gracefully and for telemetry to be fully emitted from off of the system before
                 // processing the actual reboot request.
-                VirtualClientRuntime.IsRebootRequested = true;
+                this.RequestReboot();
             }
             else
             {

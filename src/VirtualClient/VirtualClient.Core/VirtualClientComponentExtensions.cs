@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -365,6 +366,15 @@ namespace VirtualClient
                     }
                 }));
             }
+        }
+
+        /// <summary>
+        /// Requests a system reboot.
+        /// </summary>
+        public static void RequestReboot(this VirtualClientComponent component)
+        {
+            component.ThrowIfNull(nameof(component));
+            VirtualClientRuntime.IsRebootRequested = true;
         }
 
         /// <summary>
