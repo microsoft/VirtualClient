@@ -20,7 +20,6 @@ namespace VirtualClient.Actions
     public class MemcachedServerProfileTests
     {
         private DependencyFixture mockFixture;
-        private long mockMaxConnections = 1000;
 
         [SetUp]
         public void SetupFixture()
@@ -47,7 +46,6 @@ namespace VirtualClient.Actions
                 this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
                 {
                     IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                    process.StandardOutput.Append(this.mockMaxConnections);
                     return process;
                 };
 
@@ -65,7 +63,7 @@ namespace VirtualClient.Actions
         {
             IEnumerable<string> expectedCommands = new List<string>
             {
-                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 4096 -d -c {this.mockMaxConnections}\""
+                $"sudo -u {Environment.UserName} bash -c \"numactl -C {string.Join(",", Enumerable.Range(0, Environment.ProcessorCount))} /.+/memcached -p 6379 -t 4 -m 30720 -c 16384\""
             };
 
             // Setup the expectations for the workload
@@ -84,7 +82,6 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                process.StandardOutput.Append(this.mockMaxConnections);
                 return process;
             };
 

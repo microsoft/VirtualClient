@@ -17,8 +17,6 @@
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="$(Swashbuckle_AspNetCore_PackageVersion)" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
-        <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
-        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -69,6 +67,7 @@
         <WindowsProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-DISKSPD-2.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />

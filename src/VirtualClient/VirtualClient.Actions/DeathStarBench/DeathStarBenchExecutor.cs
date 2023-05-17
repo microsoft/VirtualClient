@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -534,6 +535,7 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 

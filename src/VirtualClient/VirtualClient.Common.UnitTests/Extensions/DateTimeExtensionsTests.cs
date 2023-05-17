@@ -1,4 +1,7 @@
-﻿namespace VirtualClient.Common.Extensions
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Common.Extensions
 {
     using System;
     using NUnit.Framework;

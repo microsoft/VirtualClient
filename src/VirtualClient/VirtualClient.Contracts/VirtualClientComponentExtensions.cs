@@ -5,6 +5,8 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
@@ -12,7 +14,8 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
+    using Polly;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -25,6 +28,9 @@ namespace VirtualClient.Contracts
         // Example Format:
         // fio_{IOType}_{BlockSize}_{FileSize}_thmax{MaxThreads}
         private static readonly Regex ParameterReferenceExpression = new Regex(@"(\x7B[\x20-\x7A\x7C\x7D-\x7E]+\x7D)|(\x5B[\x20-\x5A\x5C\x5E-\x7E]+\x5D)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly IAsyncPolicy NotificationFileSystemAccessRetryPolicy = Policy.Handle<IOException>()
+            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
         /// Applies the parameter value to any parameter references/placeholders within the text.
@@ -87,6 +93,38 @@ namespace VirtualClient.Contracts
         {
             component.ThrowIfNull(nameof(component));
             return component.PlatformSpecifics.Combine(pathSegments);
+        }
+
+        /// <summary>
+        /// Creates a descriptor that can be used to publish a request
+        /// </summary>
+        /// <param name="component">The component requesting the file upload descriptor.</param>
+        /// <param name="file">The file to upload.</param>
+        /// <param name="contentType">The web content type of the file (e.g. text/plain, text/csv, application/octet-stream).</param>
+        /// <param name="contentEncoding">The content encoding for the file (e.g. utf-8).</param>
+        /// <param name="toolname">The name of the tool that produced the file or content within it.</param>
+        /// <param name="fileTimestamp">A timestamp to include in the name of the file when uploaded (e.g. 2023-05023T11-00-00-28463Z-file.log).</param>
+        /// <param name="manifest">A set of additional properties to include in the manifest for the file.</param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            file.ThrowIfNull(nameof(file));
+            contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
+            contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
+
+            string identifier = null;
+            if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
+            {
+                identifier = component.ContentPathFormat;
+            }
+
+            IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
+            FileUploadDescriptor descriptor = factory.CreateDescriptor(component, file, contentType, contentEncoding, toolname, fileTimestamp, manifest);
+
+            // The content path format...
+            descriptor.Manifest["pathFormat"] = identifier ?? FileUploadDescriptorFactory.Default;
+
+            return descriptor;
         }
 
         /// <summary>
@@ -184,6 +222,48 @@ namespace VirtualClient.Contracts
             }
 
             return isMultiRole;
+        }
+
+        /// <summary>
+        /// Creates a file upload request on the system.
+        /// </summary>
+        /// <param name="component">The component that produced the file.</param>
+        /// <param name="descriptor">Provides information required to upload the file to storage.</param>
+        /// <param name="requestsDirectory">The directory to which the file upload request/notification should be written.</param>
+        /// <param name="retryPolicy">A retry policy to apply for handling transient issues.</param>
+        public static async Task RequestFileUploadAsync(this VirtualClientComponent component, FileUploadDescriptor descriptor, string requestsDirectory = null, IAsyncPolicy retryPolicy = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            descriptor.ThrowIfNull(nameof(descriptor));
+
+            try
+            {
+                PlatformSpecifics platformSpecifics = component.PlatformSpecifics;
+                IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+
+                await (retryPolicy ?? VirtualClientComponentExtensions.NotificationFileSystemAccessRetryPolicy).ExecuteAsync(async () =>
+                {
+                    // e.g.
+                    // /home/user/VirtualClient/content/linux-x64/contentuploads/2022-05-21T09-23-32-23745Z-upload.json
+                    string targetDirectory = requestsDirectory ?? platformSpecifics.ContentUploadsDirectory;
+                    if (!fileSystem.Directory.Exists(targetDirectory))
+                    {
+                        fileSystem.Directory.CreateDirectory(targetDirectory);
+                    }
+
+                    string fileName = FileUploadDescriptor.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
+                    string filePath = component.Combine(targetDirectory, fileName.ToLowerInvariant());
+
+                    await fileSystem.File.WriteAllTextAsync(filePath, descriptor.ToJson());
+                });
+            }
+            catch (Exception exc)
+            {
+                throw new DependencyException(
+                    $"File upload notification creation failed for file at path '{descriptor.FilePath}' after having exhausted all retries.",
+                    exc,
+                    ErrorReason.FileUploadNotificationCreationFailed);
+            }
         }
 
         /// <summary>

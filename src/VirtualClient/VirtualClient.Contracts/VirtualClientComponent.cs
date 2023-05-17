@@ -100,20 +100,20 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
-        /// Parameter defines the content log structure to use when uploading content
+        /// Parameter defines the content path format/structure to use when uploading content
         /// to target storage resources. When not defined the 'Default' structure is used.
         /// </summary>
-        public string ContentLogStructure
+        public string ContentPathFormat
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.ContentLogStructure), out IConvertible logStructure);
-                return logStructure?.ToString();
+                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
+                return format?.ToString();
             }
 
-            protected set
+            set
             {
-                this.Parameters[nameof(this.ContentLogStructure)] = value;
+                this.Parameters[nameof(this.ContentPathFormat)] = value;
             }
         }
 

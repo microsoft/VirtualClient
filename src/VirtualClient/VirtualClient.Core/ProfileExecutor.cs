@@ -12,7 +12,6 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
@@ -22,8 +21,9 @@ namespace VirtualClient
     /// </summary>
     public class ProfileExecutor : IDisposable
     {
+        private static int currentIteration;
         private bool disposed;
-
+        
         /// <summary>
         /// Constructs an instance of a profile executor, the main class that will execute a profile
         /// </summary>
@@ -85,6 +85,17 @@ namespace VirtualClient
         /// executed.
         /// </summary>
         public event EventHandler IterationEnd;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static int CurrentIteration
+        {
+            get
+            {
+                return currentIteration;
+            }
+        }
 
         /// <summary>
         /// Shared platform dependencies to pass along to individual components in the profile.
@@ -260,10 +271,13 @@ namespace VirtualClient
                         // and telemetry flushes more time to complete.
                         this.BeforeExiting?.Invoke(this, new EventArgs());
 
+                        ConsoleLogger.Default.LogInformation("Profile: Wait for Exit...");
+
                         // Attempt to allow a graceful exit for any background tasks, actions or monitors
                         // that are running. There is an exit wait grace period before we will definitively exit.
                         await Task.WhenAny(Task.WhenAll(profileActionsTask, profileMonitorsTask), Task.Delay(this.ExitWait));
 
+                        ConsoleLogger.Default.LogInformation("Profile: Exited");
                         profileActionsTask.ThrowIfErrored();
                         profileMonitorsTask.ThrowIfErrored();
                     }
@@ -317,7 +331,6 @@ namespace VirtualClient
                             parameters = d.Parameters?.ObscureSecrets()
                         })));
 
-                    int rounds = 0;
                     DateTime? nextRoundOfExecution = null;
 
                     while (!cancellationToken.IsCancellationRequested && !timing.IsTimedOut)
@@ -332,8 +345,7 @@ namespace VirtualClient
                                 break;
                             }
 
-                            rounds++;
-                            await this.UpdateGlobalStateAsync(rounds == 1, rounds, parentContext, cancellationToken);
+                            Interlocked.Increment(ref currentIteration);
 
                             DateTime startTime = DateTime.UtcNow;
                             this.IterationBegin?.Invoke(this, new EventArgs());
@@ -355,7 +367,7 @@ namespace VirtualClient
 
                             EventContext actionExecutionContext = EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId)
                                 .AddContext("timing", timing)
-                                .AddContext("iteration", rounds)
+                                .AddContext("iteration", currentIteration)
                                 .AddContext("components", this.ProfileActions.Select(d => new
                                 {
                                     type = d.TypeName,
@@ -397,7 +409,7 @@ namespace VirtualClient
                                             EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
 
                                             VirtualClientComponent action = this.ProfileActions.ElementAt(i);
-                                            action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = rounds;
+                                            action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
 
                                             this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
@@ -719,30 +731,6 @@ namespace VirtualClient
             }
 
             return components;
-        }
-
-        private async Task UpdateGlobalStateAsync(bool isFirstRun, int profileIterations, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    IStateManager stateManager = this.Dependencies.GetService<IStateManager>();
-                    
-                    await stateManager.SaveStateAsync(
-                        nameof(GlobalState),
-                        new Item<GlobalState>(nameof(GlobalState), new GlobalState
-                        {
-                            IsFirstRun = isFirstRun,
-                            ProfileIteration = profileIterations
-                        }),
-                        cancellationToken);
-                }
-                catch (Exception exc)
-                {
-                    this.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                }
-            }
         }
     }
 }

@@ -32,7 +32,6 @@ namespace VirtualClient.Actions
         {
             try
             {
-                this.ThrowIfInvalidOutputFormat();
                 this.Preprocess();
 
                 // Example Format:
@@ -61,11 +60,17 @@ namespace VirtualClient.Actions
                 List<Metric> metrics = new List<Metric>();
                 this.AddMetricsFromCsv(metrics);
 
+                if (metrics.Count <= 0)
+                {
+                    throw new SchemaException(
+                        $"Invalid/unpexpected format. The Redis benchmark workload results were not in the expected CSV format or did not contain valid measurements.");
+                }
+
                 return metrics;
             }
             catch (Exception exc)
             {
-                throw new WorkloadResultsException("Failed to parse Redis metrics from results.", exc, ErrorReason.InvalidResults);
+                throw new WorkloadResultsException("Failed to parse Redis benchmark metrics from results.", exc, ErrorReason.InvalidResults);
             }
         }
 
@@ -166,39 +171,6 @@ namespace VirtualClient.Actions
                             description: "Maximum latency for requests/operations during the period of time."));
                     }
                 }
-            }
-        }
-
-        /// <inheritdoc/>
-        private void ThrowIfInvalidOutputFormat()
-        {
-            string[] metricNames =
-            {
-                "PING_INLINE",
-                "PING_MBULK",
-                "SET",
-                "GET",
-                "INCR",
-                "LPUSH",
-                "RPUSH",
-                "LPOP",
-                "RPOP",
-                "SADD",
-                "HSET",
-                "SPOP",
-                "ZADD",
-                "ZPOPMIN",
-                "LPUSH (needed to benchmark LRANGE)",
-                "LRANGE_100 (first 100 elements)",
-                "LRANGE_300 (first 300 elements)",
-                "LRANGE_500 (first 450 elements)",
-                "LRANGE_600 (first 600 elements)",
-                "MSET (10 keys)"
-            };
-
-            if (!metricNames.All(substring => this.RawText.Contains(substring, StringComparison.CurrentCultureIgnoreCase)))
-            {
-                throw new SchemaException("The Redis output file has incorrect format for parsing");
             }
         }
     }

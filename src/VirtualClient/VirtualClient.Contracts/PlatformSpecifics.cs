@@ -65,7 +65,7 @@ namespace VirtualClient.Contracts
             this.CpuArchitecture = architecture;
             this.CurrentDirectory = currentDirectory;
             this.LogsDirectory = this.Combine(currentDirectory, "logs");
-            this.ContentUploadsDirectory = this.Combine(currentDirectory, "logs", "contentuploads");
+            this.ContentUploadsDirectory = this.Combine(currentDirectory, "contentuploads");
             this.PackagesDirectory = this.Combine(currentDirectory, "packages");
             this.ProfilesDirectory = this.Combine(currentDirectory, "profiles");
             this.ScriptsDirectory = this.Combine(currentDirectory, "scripts");

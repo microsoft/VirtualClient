@@ -881,12 +881,12 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                         // 1) Confirm server is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken, this.Logger)
+                        await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger)
                             .ConfigureAwait(false);
 
                         // 2) Wait for the server to signal the eventing API is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken, this.Logger)
+                        await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger)
                             .ConfigureAwait(false);
 
                         // 3) Request the server to stop ALL workload processes

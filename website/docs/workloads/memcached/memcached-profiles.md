@@ -74,8 +74,8 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | ServerInstances           | Optional. Defines the number of distinct instances of the Memcached server to run. There will be 1 client for each 1 server instance running in parallel. | # of logical cores on system |
-  | ServerMemoryCacheSizeInMB | Optional. The amount of memory (in megabytes) to be created/staged for use on the server-side by each instance of a Memcached server (allowance for scaling).  | 1024 (megabytes) |
+  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against the server concurrently. |  |
+  | ServerMaxConnections      | Optional. The Maxium number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
   | ServerPort                | Optional. The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | 6379 |
   | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
 
@@ -87,10 +87,10 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
   | BenchmarkPackageName      | The name of the  | |
   | BindToCores               | True to instruct the Memcached servers to bind to explicit cores on the system (e.g. 0, 1, 2,3 ) | |
+  | ClientInstances           | Defines the number of distinct client instances that to execute requests against the server concurrently. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  |  |
   | PackageName               | The name of the package that contains the Memcached server binaries/scripts.    |               |
   | Port                      | The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
   | ServerInstances           | Defines the number of distinct instances of the Memcached server to run. There will be 1 client for each 1 server instance running in parallel. | # of logical cores on system |
-  | ServerMemoryCacheSizeInMB | The amount of memory (in megabytes) to be created/staged for use on the server-side by each instance of a Memcached server (allowance for scaling).  | |
   | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |

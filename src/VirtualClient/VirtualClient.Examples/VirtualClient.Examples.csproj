@@ -25,8 +25,6 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(Microsoft_Extensions_Configuration_Json_PackageVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(Microsoft_Extensions_Logging_Console_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
-        <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
-        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
     </ItemGroup>
 
     <ItemGroup>

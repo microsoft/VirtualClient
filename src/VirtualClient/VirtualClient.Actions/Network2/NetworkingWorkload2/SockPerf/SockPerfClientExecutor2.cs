@@ -257,7 +257,7 @@ namespace VirtualClient.Actions
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
                 await this.ServerApiClient.PollForExpectedStateAsync<SockPerfWorkloadState>(
-                    nameof(SockPerfWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
+                    nameof(SockPerfWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, logger: this.Logger)
                    .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");

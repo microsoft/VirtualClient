@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.ServiceProcess;
     using System.Threading;
@@ -73,8 +74,7 @@ namespace VirtualClient
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
-                        Program.InitializeFileLogging(args);
-
+                        Program.InitializeFileLogging(parseResult);
                         Task<int> executionTask = parseResult.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
@@ -322,7 +322,7 @@ namespace VirtualClient
             runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");
             runResetCommand.AddAlias("clean");
-            runResetCommand.Handler = CommandHandler.Create<RunResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
@@ -331,15 +331,15 @@ namespace VirtualClient
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
 
-        private static void InitializeFileLogging(string[] args)
+        private static void InitializeFileLogging(ParseResult parsingResult)
         {
             // Log to file. Instructs the application to log the output of processes
             // to files in the logs directory.
             Option logToFile = OptionFactory.CreateLogToFileFlag();
 
-            foreach (string arg in args)
+            foreach (Token token in parsingResult.Tokens.Where(token => token.Type == TokenType.Option))
             {
-                if (logToFile.HasAlias(arg))
+                if (logToFile.Aliases.Contains(token.Value, StringComparer.OrdinalIgnoreCase))
                 {
                     VirtualClientComponent.LogToFile = true;
                     break;

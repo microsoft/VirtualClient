@@ -57,8 +57,7 @@
             "Type": "PostgreSQLInstallation",
             "Parameters": {
                 "Scenario": "InstallPostgreSQLServer",
-                "PackageName": "postgresql",
-                "Role": "Server"
+                "PackageName": "postgresql"
             }
         },
         {

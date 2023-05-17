@@ -60,11 +60,19 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Unix)]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Win32NT)]
-        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ClientRole(string profile, PlatformID platform)
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependenciesOnUnix_ClientRole_Windows(string profile)
         {
-            this.SetupClientRole(platform);
+            this.SetupClientRole(PlatformID.Win32NT);
+
+            this.mockFixture.SetupWorkloadPackage("postgresql", metadata: new Dictionary<string, IConvertible>
+            {
+                // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                // the package store (i.e. in the *.vcpkg file).
+                [$"{PackageMetadata.InstallationPath}-win-x64"] = "C:\\Program Files\\PostgreSQL\\14",
+            });
+
+            this.mockFixture.SetupFile("postgresql", "win-x64\\superuser.txt", "superuser");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
@@ -78,11 +86,77 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Unix)]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Win32NT)]
-        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole(string profile, PlatformID platform)
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ClientRole_Unix(string profile)
         {
-            this.SetupClientRole(platform);
+            this.SetupClientRole(PlatformID.Unix);
+
+            this.mockFixture.SetupWorkloadPackage(
+                "postgresql",
+                metadata: new Dictionary<string, IConvertible>
+                {
+                    // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                    // the package store (i.e. in the *.vcpkg file).
+                    [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
+                },
+                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+
+            this.mockFixture.SetupFile("postgresql", $"linux-x64/superuser.txt", "superuser");
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
+
+                // Workload dependency package expectations
+                // The workload dependency package should have been installed at this point.
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "postgresql");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "hammerdb");
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole_Windows(string profile)
+        {
+            this.SetupClientRole(PlatformID.Win32NT);
+
+            this.mockFixture.SetupWorkloadPackage("postgresql", metadata: new Dictionary<string, IConvertible>
+            {
+                // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                // the package store (i.e. in the *.vcpkg file).
+                [$"{PackageMetadata.InstallationPath}-win-x64"] = "C:\\Program Files\\PostgreSQL\\14",
+            });
+
+            this.mockFixture.SetupFile("postgresql", "win-x64\\superuser.txt", "superuser");
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
+
+                // Workload dependency package expectations
+                // The workload dependency package should have been installed at this point.
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "postgresql");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "hammerdb");
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole_Unix(string profile)
+        {
+            this.SetupClientRole(PlatformID.Unix);
+
+            this.mockFixture.SetupWorkloadPackage(
+                "postgresql",
+                metadata: new Dictionary<string, IConvertible>
+                {
+                    // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                    // the package store (i.e. in the *.vcpkg file).
+                    [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
+                },
+                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+
+            this.mockFixture.SetupFile("postgresql", $"linux-x64/superuser.txt", "superuser");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {

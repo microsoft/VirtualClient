@@ -4,11 +4,15 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Generic;
+    using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -20,6 +24,75 @@ namespace VirtualClient
         {
             this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform);
+        }
+
+        [Test]
+        public void CreateFileUploadDescriptorExtensionReturnsTheExpectedDefaultDescriptor()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
+            mockFile.Setup(f => f.Name).Returns("file.log");
+            mockFile.Setup(f => f.FullName).Returns("/home/any/path/to/file.log");
+            mockFile.Setup(f => f.CreationTime).Returns(DateTime.Now);
+            mockFile.Setup(f => f.CreationTimeUtc).Returns(DateTime.UtcNow);
+
+            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            {
+                lock (ComponentTypeCache.LockObject)
+                {
+                    try
+                    {
+                        ComponentTypeCache.Instance.Clear();
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(mockFile.Object, "text/plain", "utf-8");
+
+                        Assert.IsNotNull(descriptor);
+                        Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
+                        Assert.AreEqual(FileUploadDescriptorFactory.Default, format.ToString());
+                    }
+                    finally
+                    {
+                        ComponentTypeCache.Instance.Clear();
+                        ComponentTypeCache.Instance.DescriptorFactoryCache.Clear();
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void CreateFileUploadDescriptorExtensionReturnsTheExpectedDescriptorForASpecificPathStructure()
+        {
+            this.SetupDefaults(PlatformID.Unix);
+
+            Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
+            mockFile.Setup(f => f.Name).Returns("file.log");
+            mockFile.Setup(f => f.FullName).Returns("/home/any/path/to/file.log");
+            mockFile.Setup(f => f.CreationTime).Returns(DateTime.Now);
+            mockFile.Setup(f => f.CreationTimeUtc).Returns(DateTime.UtcNow);
+
+            using (TestExecutor component = new TestExecutor(this.mockFixture))
+            {
+                component.ContentPathFormat = "Format1234";
+
+                lock (ComponentTypeCache.LockObject)
+                {
+                    try
+                    {
+                        ComponentTypeCache.Instance.Clear();
+                        ComponentTypeCache.Instance.Add(new ComponentType(typeof(TestFileUploadDescriptorFactory_A)));
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(mockFile.Object, "text/plain", "utf-8");
+
+                        Assert.IsNotNull(descriptor);
+                        Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
+                        Assert.AreEqual("Format1234", format.ToString());
+                    }
+                    finally
+                    {
+                        ComponentTypeCache.Instance.Clear();
+                        ComponentTypeCache.Instance.DescriptorFactoryCache.Clear();
+                    }
+                }
+            }
         }
 
         [Test]
@@ -158,6 +231,21 @@ namespace VirtualClient
             {
                 Assert.ThrowsAsync<NotSupportedException>(
                     () => component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, username: "notsupported"));
+            }
+        }
+
+        [ComponentDescription(Id = "Format1234")]
+        private class TestFileUploadDescriptorFactory_A : IFileUploadDescriptorFactory
+        {
+            public FileUploadDescriptor CreateDescriptor(VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
+            {
+                return new FileUploadDescriptor(
+                    $"/any/path/to/blob/{file.Name}",
+                    "anyContainer",
+                    "utf-8",
+                    "text/plain",
+                    file.FullName,
+                    manifest);
             }
         }
     }

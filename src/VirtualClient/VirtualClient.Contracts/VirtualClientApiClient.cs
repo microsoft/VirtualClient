@@ -87,7 +87,7 @@ namespace VirtualClient
         /// The default amount of time to wait in-between polling operations before making subsequent
         /// calls.
         /// </summary>
-        public static TimeSpan DefaultPollingWaitTime { get; set; } = TimeSpan.FromSeconds(5);
+        public static TimeSpan DefaultPollingWaitTime { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Gets the base URI to the server hosting the API.

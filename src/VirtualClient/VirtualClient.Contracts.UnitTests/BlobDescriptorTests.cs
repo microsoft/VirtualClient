@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient
+namespace VirtualClient.Contracts
 {
     using System.Text;
     using NUnit.Framework;
@@ -92,11 +92,11 @@ namespace VirtualClient
         [Test]
         public void BlobDescriptorHashCodesAreNotCaseSensitive()
         {
-            DependencyDescriptor instance1 = new DependencyDescriptor(this.description);
+            BlobDescriptor instance1 = new BlobDescriptor(this.description);
             instance1.Name = instance1.Name.ToLowerInvariant();
             instance1.PackageName = instance1.PackageName.ToLowerInvariant();
 
-            DependencyDescriptor instance2 = new DependencyDescriptor(this.description);
+            BlobDescriptor instance2 = new BlobDescriptor(this.description);
             instance1.Name = instance1.Name.ToUpperInvariant();
             instance1.PackageName = instance1.PackageName.ToUpperInvariant();
 

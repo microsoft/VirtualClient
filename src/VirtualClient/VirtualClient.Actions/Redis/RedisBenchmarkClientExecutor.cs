@@ -209,7 +209,7 @@ namespace VirtualClient.Actions
             this.InitializeApiClients();
         }
 
-        private void CaptureMetrics(string output, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string output, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -220,16 +220,16 @@ namespace VirtualClient.Actions
                     lock (this.lockObject)
                     {
                         RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(output);
-                        IList<Metric> metrics = redisBenchmarkMetricsParser.Parse();
+                        IList<Metric> workloadMetrics = redisBenchmarkMetricsParser.Parse();
 
                         this.Logger.LogMetrics(
                             "Redis-Benchmark",
                             scenarioName: this.Scenario,
                             startTime,
                             endTime,
-                            this.MetricFilters?.Any() == true ? metrics.FilterBy(this.MetricFilters) : metrics,
-                            string.Empty,
+                            workloadMetrics,
                             null,
+                            commandArguments,
                             this.Tags,
                             telemetryContext);
                     }
@@ -290,21 +290,34 @@ namespace VirtualClient.Actions
             {
                 await (this.ClientRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                 {
-                    DateTime startTime = DateTime.UtcNow;
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    try
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        DateTime startTime = DateTime.UtcNow;
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                         {
-                            ConsoleLogger.Default.LogMessage($"Redis benchmark process exited (server port = {serverPort})...", telemetryContext);
-
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
-
-                            if (!this.WarmUp)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.CaptureMetrics(process.StandardOutput.ToString(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                ConsoleLogger.Default.LogMessage($"Redis benchmark process exited (server port = {serverPort})...", telemetryContext);
+
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+
+                                if (!this.WarmUp)
+                                {
+                                    string output = process.StandardOutput.ToString();
+                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                }
                             }
                         }
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.WorkloadStartError",
+                            LogLevel.Warning,
+                            telemetryContext.Clone().AddError(exc));
+
+                        throw;
                     }
                 });
             }

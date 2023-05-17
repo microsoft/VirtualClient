@@ -171,7 +171,7 @@ namespace VirtualClient.Actions
                         await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
                         .ConfigureAwait(false);
 
-                        VirtualClientRuntime.IsRebootRequested = true;
+                        this.RequestReboot();
                     }
                 }
 

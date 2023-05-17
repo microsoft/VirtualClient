@@ -78,6 +78,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void MemtierBenchmarkClientExecutorHandlesDurationsAsBothIntegerAndTimeSpanFormats()
+        {
+            this.fixture.Parameters["Duration"] = 30;
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(30, component.Duration);
+            }
+
+            this.fixture.Parameters["Duration"] = TimeSpan.FromMinutes(1).ToString();
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(60, component.Duration);
+            }
+        }
+
+        [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommands()
         {
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))

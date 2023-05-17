@@ -114,7 +114,7 @@ namespace VirtualClient
         /// <param name="componentType">The type of component (e.g. GeekbenchExecutor).</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolset">The name of the toolset running in the process.</param>
+        /// <param name="toolName">The name of the toolset running in the process.</param>
         /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
         /// <param name="logToTelemetryMaxChars">
         /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
@@ -122,7 +122,7 @@ namespace VirtualClient
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        internal static void LogProcessDetails(this ILogger logger, IProcessProxy process, string componentType, EventContext telemetryContext, string toolset = null, string results = null, int logToTelemetryMaxChars = 125000)
+        internal static void LogProcessDetails(this ILogger logger, IProcessProxy process, string componentType, EventContext telemetryContext, string toolName = null, string results = null, int logToTelemetryMaxChars = 125000)
         {
             logger.ThrowIfNull(nameof(logger));
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
@@ -138,7 +138,7 @@ namespace VirtualClient
                 // GeekbenchExecutor.ProcessResults
                 // GeekbenchExecutor.Geekbench.ProcessResults
                 string eventNamePrefix = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                    !string.IsNullOrWhiteSpace(toolset) ? $"{componentType}.{toolset}" : componentType,
+                    !string.IsNullOrWhiteSpace(toolName) ? $"{componentType}.{toolName}" : componentType,
                     string.Empty);
 
                 logger.LogMessage(
@@ -167,9 +167,9 @@ namespace VirtualClient
         /// <param name="component">The component that ran the process.</param>
         /// <param name="process">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolset">The name of the toolset running in the process.</param>
+        /// <param name="toolName">The name of the toolset running in the process.</param>
         /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
-        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolset, string results)
+        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName, string results)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
@@ -181,7 +181,7 @@ namespace VirtualClient
                     && component.Dependencies.TryGetService<PlatformSpecifics>(out PlatformSpecifics specifics))
                 {
                     string effectiveToolName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                        (!string.IsNullOrWhiteSpace(toolset) ? toolset : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
+                        (!string.IsNullOrWhiteSpace(toolName) ? toolName : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
                         string.Empty);
 
                     string effectiveCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
@@ -199,9 +199,9 @@ namespace VirtualClient
                     //
                     // /logs/fio/2023-02-01T122330Z-randomwrite_4k_blocksize.log
                     // /logs/fio/2023-02-01T122745Z-randomwrite_8k_blocksize.log
-                    string effectiveLogFileName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                        $"{DateTime.UtcNow.ToString("yyyy-MM-ddTHHmmssffffZ")}-{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
-                        string.Empty).ToLowerInvariant().RemoveWhitespace();
+                    string effectiveLogFileName = FileUploadDescriptor.GetFileName(
+                        $"{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
+                        DateTime.UtcNow);
 
                     string logFilePath = specifics.Combine(logPath, effectiveLogFileName);
 
@@ -259,6 +259,10 @@ namespace VirtualClient
 
                     if (component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
+                        IFileInfo file = fileSystem.FileInfo.FromFileName(logFilePath);
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(file, HttpContentType.PlainText, Encoding.UTF8.WebName, toolName);
+
+                        await component.RequestFileUploadAsync(descriptor);
                     }
                 }
             }

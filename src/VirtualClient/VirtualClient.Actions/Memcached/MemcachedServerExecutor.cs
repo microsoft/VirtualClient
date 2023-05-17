@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
     {
         private List<Task> serverProcesses;
         private bool disposed;
-        private long maxConnections;
+        // private long maxConnections;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemcachedServerExecutor"/> class.
@@ -77,14 +77,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the size (in megabytes) to use for caching items in memory for the Memcached
+        /// Parameter defines the maximum number of connections to set for the
         /// server.
         /// </summary>
-        public int ServerMemoryCacheSizeInMB
+        public int ServerMaxConnections
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(MemcachedServerExecutor.ServerMemoryCacheSizeInMB));
+                return this.Parameters.GetValue<int>(nameof(MemcachedServerExecutor.ServerMaxConnections));
             }
         }
 
@@ -213,10 +213,6 @@ namespace VirtualClient.Actions
             this.MemcachedPackagePath = memcachedPackage.Path;
             this.MemcachedExecutablePath = this.Combine(this.MemcachedPackagePath, "memcached");
 
-            IProcessProxy process = await this.ExecuteCommandAsync("bash", "-c \"ulimit -Hn\"", this.MemcachedPackagePath, telemetryContext, cancellationToken, runElevated: true)
-                                                 .ConfigureAwait(false);
-            this.maxConnections = long.Parse(process.StandardOutput.ToString());
-
             await this.SystemManagement.MakeFileExecutableAsync(this.MemcachedExecutablePath, this.Platform, cancellationToken);
 
             this.InitializeApiClients();
@@ -301,7 +297,7 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("port", this.Port)
                 .AddContext("bindToCores", this.BindToCores)
-                .AddContext("serverMemoryCacheSizeInMB", this.ServerMemoryCacheSizeInMB)
+                .AddContext("serverMaxConnections", this.ServerMaxConnections)
                 .AddContext("serverThreadCount", this.ServerThreadCount);
 
             this.Logger.LogMessage($"{this.TypeName}.StartServerInstances", relatedContext, () =>
@@ -321,12 +317,12 @@ namespace VirtualClient.Actions
                         // https://github.com/memcached/memcached/wiki/Commands#flushall
                         // https://docs.oracle.com/cd/E17952_01/mysql-5.6-en/ha-memcached-cmdline-options.html#:~:text=Set%20the%20amount%20of%20memory%20allocated%20to%20memcached,amount%20of%20RAM%20to%20be%20allocated%20%28in%20megabytes%29.
 
-                        commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine} -c {this.maxConnections}\"";
+                        commandArguments = $"-c \"numactl -C {string.Join(',', coreBindings)} {this.MemcachedExecutablePath} {this.CommandLine}\"";
 
                     }
                     else
                     {
-                        commandArguments = $"-c \"{this.MemcachedExecutablePath} {this.CommandLine} -c {this.maxConnections}\"";
+                        commandArguments = $"-c \"{this.MemcachedExecutablePath} {this.CommandLine}\"";
                     }
 
                     relatedContext.AddContext("command", command);

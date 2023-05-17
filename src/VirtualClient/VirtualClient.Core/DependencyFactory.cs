@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;

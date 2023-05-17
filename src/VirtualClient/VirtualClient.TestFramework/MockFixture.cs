@@ -48,6 +48,8 @@ namespace VirtualClient
         /// </summary>
         public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
 
+        private string experimentId;
+
         static MockFixture()
         {
             VirtualClientComponent.LogToFile = true;
@@ -58,6 +60,7 @@ namespace VirtualClient
         /// </summary>
         public MockFixture()
         {
+            this.experimentId = Guid.NewGuid().ToString();
             this.Setup(Environment.OSVersion.Platform, Architecture.X64);
         }
 
@@ -87,6 +90,18 @@ namespace VirtualClient
         /// content blob store.
         /// </summary>
         public Mock<IBlobManager> ContentBlobManager { get; set; }
+
+        /// <summary>
+        /// The targeted CPU architecture for the fixture and test scenarios
+        /// (e.g. x64, arm64).
+        /// </summary>
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                return this.PlatformSpecifics.CpuArchitecture;
+            }
+        }
 
         /// <summary>
         /// Collection of services used for dependency injection.
@@ -158,6 +173,29 @@ namespace VirtualClient
         /// Mock parameters.
         /// </summary>
         public IDictionary<string, IConvertible> Parameters { get; set; }
+
+        /// <summary>
+        /// The targeted OS platform for the fixture and test scenarios
+        /// (e.g. Windows, Unix).
+        /// </summary>
+        public PlatformID Platform
+        {
+            get
+            {
+                return this.PlatformSpecifics.Platform;
+            }
+        }
+
+        /// <summary>
+        /// The name of the platform/architecture (win-x64, win-arm64, linux-x64).
+        /// </summary>
+        public string PlatformArchitectureName
+        {
+            get
+            {
+                return this.PlatformSpecifics.PlatformArchitectureName;
+            }
+        }
 
         /// <summary>
         /// Test/fake platform-specifics information provider.
@@ -325,6 +363,7 @@ namespace VirtualClient
 
             this.SystemManagement = new Mock<ISystemManagement>();
             this.SystemManagement.SetupGet(sm => sm.AgentId).Returns(effectiveAgentId);
+            this.SystemManagement.SetupGet(sm => sm.ExperimentId).Returns(this.experimentId);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.CpuArchitecture).Returns(architecture);
