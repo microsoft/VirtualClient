@@ -223,7 +223,7 @@ namespace VirtualClient.Actions
                     (state) => state.ServiceName == this.ServiceName && state.ServiceState == true,
                     DeathStarBenchExecutor.StateConfirmationPollingTimeout,
                     cancellationToken,
-                    this.Logger);
+                    logger: this.Logger);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                 this.Logger.LogTraceMessage("Synchronization: Start client workload...");

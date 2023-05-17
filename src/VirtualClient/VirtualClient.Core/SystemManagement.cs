@@ -117,7 +117,7 @@ namespace VirtualClient
                 }
 
                 DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
-                    VirtualClient.PackageManager.BuiltInCoreInfoPackageName,
+                    VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
                     this.Platform,
                     this.CpuArchitecture,
                     CancellationToken.None);

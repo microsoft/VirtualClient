@@ -9,8 +9,6 @@ namespace VirtualClient.Contracts
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
@@ -201,8 +199,9 @@ namespace VirtualClient.Contracts
         /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
         /// <param name="comparer">A comparer to use to determine equality between the client-side state and the server-side state.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="pollingInterval">The interval at which the polling requests should be made.</param>
         /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForExpectedStateAsync(this IApiClient client, string stateId, JObject state, TimeSpan timeout, IEqualityComparer<JObject> comparer, CancellationToken cancellationToken, ILogger logger = null)
+        public static Task PollForExpectedStateAsync(this IApiClient client, string stateId, JObject state, TimeSpan timeout, IEqualityComparer<JObject> comparer, CancellationToken cancellationToken, TimeSpan? pollingInterval = null, ILogger logger = null)
         {
             stateId.ThrowIfNullOrWhiteSpace(nameof(stateId));
             state.ThrowIfNull(nameof(state));
@@ -226,6 +225,8 @@ namespace VirtualClient.Contracts
 
                     try
                     {
+                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for expected state.");
+
                         using (HttpResponseMessage response = await client.GetStateAsync(stateId, cancellationToken).ConfigureAwait(false))
                         {
                             responses.Add(new
@@ -275,7 +276,7 @@ namespace VirtualClient.Contracts
                                 ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                        await Task.Delay(pollingInterval ?? VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
@@ -291,8 +292,9 @@ namespace VirtualClient.Contracts
         /// <param name="comparer">A comparer function to use to determine if the server-side state matches expected.</param>
         /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="pollingInterval">The interval at which the polling requests should be made.</param>
         /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForExpectedStateAsync<TState>(this IApiClient client, string stateId, Func<TState, bool> comparer, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        public static Task PollForExpectedStateAsync<TState>(this IApiClient client, string stateId, Func<TState, bool> comparer, TimeSpan timeout, CancellationToken cancellationToken, TimeSpan? pollingInterval = null, ILogger logger = null)
         {
             stateId.ThrowIfNullOrWhiteSpace(nameof(stateId));
             comparer.ThrowIfNull(nameof(comparer));
@@ -316,6 +318,8 @@ namespace VirtualClient.Contracts
 
                     try
                     {
+                        ConsoleLogger.Default.LogTraceMessage("...............................Polling for expected state.");
+
                         using (HttpResponseMessage response = await client.GetStateAsync(stateId, cancellationToken).ConfigureAwait(false))
                         {
                             responses.Add(new
@@ -366,7 +370,7 @@ namespace VirtualClient.Contracts
                                 ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                        await Task.Delay(pollingInterval ?? VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
@@ -380,8 +384,9 @@ namespace VirtualClient.Contracts
         /// <param name="client">The API client instance.</param>
         /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="pollingInterval">The interval at which the polling requests should be made.</param>
         /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForHeartbeatAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        public static Task PollForHeartbeatAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, TimeSpan? pollingInterval = null, ILogger logger = null)
         {
             client.ThrowIfNull(nameof(client));
 
@@ -439,7 +444,7 @@ namespace VirtualClient.Contracts
                             throw new WorkloadException($"Polling for an API heartbeat timed out (timeout={timeout}).", ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                        await Task.Delay(pollingInterval ?? VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
@@ -453,8 +458,9 @@ namespace VirtualClient.Contracts
         /// <param name="client">The API client instance.</param>
         /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="pollingInterval">The interval at which the polling requests should be made.</param>
         /// <param name="logger">A logger to capture the responses from the server-side.</param>
-        public static Task PollForServerOnlineAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        public static Task PollForServerOnlineAsync(this IApiClient client, TimeSpan timeout, CancellationToken cancellationToken, TimeSpan? pollingInterval = null, ILogger logger = null)
         {
             client.ThrowIfNull(nameof(client));
 
@@ -515,7 +521,7 @@ namespace VirtualClient.Contracts
                                 ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
+                        await Task.Delay(pollingInterval ?? VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken)
                             .ConfigureAwait(false);
                     }
                 }
@@ -530,11 +536,12 @@ namespace VirtualClient.Contracts
         /// <param name="stateId">The unique ID of the state object.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <param name="timeout">The period of time for which the client tries to get the state before timing out. </param>
+        /// <param name="pollingInterval">The interval at which the polling requests should be made.</param>
         /// <param name="logger">A logger to use for capturing API telemetry.</param>
         /// <returns>
         /// An <see cref="HttpResponseMessage"/> containing the state object/definition at last poll call.
         /// </returns>
-        public static Task PollForStateDeletedAsync(this IApiClient client, string stateId, TimeSpan timeout, CancellationToken cancellationToken, ILogger logger = null)
+        public static Task PollForStateDeletedAsync(this IApiClient client, string stateId, TimeSpan timeout, CancellationToken cancellationToken, TimeSpan? pollingInterval = null, ILogger logger = null)
         {
             client.ThrowIfNull(nameof(client));
             stateId.ThrowIfNullOrWhiteSpace(nameof(stateId));
@@ -596,7 +603,7 @@ namespace VirtualClient.Contracts
                                 ErrorReason.ApiStatePollingTimeout);
                         }
 
-                        await Task.Delay(VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken).ConfigureAwait(false);
+                        await Task.Delay(pollingInterval ?? VirtualClientApiClient.DefaultPollingWaitTime, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 while (stateExists && !cancellationToken.IsCancellationRequested);

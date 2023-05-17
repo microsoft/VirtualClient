@@ -271,6 +271,8 @@ namespace VirtualClient.Actions
         {
             if (this.Platform == PlatformID.Unix)
             {
+                // https://stackoverflow.com/questions/40779757/connect-postgresql-to-hammerdb
+
                 await this.SystemManagement.MakeFileExecutableAsync(
                     this.Combine(this.HammerDBPackagePath, "hammerdbcli"),
                     this.Platform,
@@ -345,6 +347,7 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 
