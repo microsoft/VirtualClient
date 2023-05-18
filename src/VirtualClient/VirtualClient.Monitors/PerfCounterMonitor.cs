@@ -98,7 +98,8 @@ namespace VirtualClient.Monitors
                 new WindowsPerformanceCounter("Hyper-V Hypervisor Logical Processor", "% Hypervisor Run Time", "_Total", CaptureStrategy.Average),
                 new WindowsPerformanceCounter("Hyper-V Hypervisor Logical Processor", "Hypervisor Microarchitectural Buffer Flushes/sec", "_Total", CaptureStrategy.Average),
                 new WindowsPerformanceCounter("Hyper-V Hypervisor Root Virtual Processor", "% Total Run Time", "_Total", CaptureStrategy.Average),
-                new WindowsPerformanceCounter("Hyper-V Hypervisor Virtual Processor", "% Total Run Time", "_Total", CaptureStrategy.Average)
+                new WindowsPerformanceCounter("Hyper-V Hypervisor Virtual Processor", "% Total Run Time", "_Total", CaptureStrategy.Average),
+                new WindowsPerformanceCounter("Hyper-V Hypervisor Virtual Processor", "% VTL2 Run Time", "_Total", CaptureStrategy.Average)
             };
         }
 
