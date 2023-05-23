@@ -212,8 +212,9 @@ namespace VirtualClient.Actions
         protected override void Validate()
         {
             base.Validate();
+            CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            if (this.BindToCores && this.ServerInstances > Environment.ProcessorCount)
+            if (this.BindToCores && this.ServerInstances > cpuInfo.LogicalCoreCount)
             {
                 throw new WorkloadException(
                     $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system.",
