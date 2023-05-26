@@ -245,6 +245,12 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
+        public Task<HttpResponseMessage> SendApplicationExitInstructionAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        {
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        }
+
+        /// <inheritdoc />
         public Task<HttpResponseMessage> SendInstructionsAsync(JObject instructions, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
         {
             HttpResponseMessage response = null;
@@ -257,7 +263,7 @@ namespace VirtualClient
             {
                 response = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
             }
-                       
+
             return Task.FromResult(response);
         }
 

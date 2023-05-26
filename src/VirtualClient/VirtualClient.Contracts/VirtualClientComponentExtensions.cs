@@ -193,7 +193,7 @@ namespace VirtualClient.Contracts
         /// <param name="isOnline">True to signal the server-side is ready, false to signal it is not.</param>
         public static void SetServerOnline(this VirtualClientComponent component, bool isOnline)
         {
-            VirtualClientEventing.SetEventingApiOnline(isOnline);
+            VirtualClientRuntime.SetEventingApiOnline(isOnline);
         }
 
         /// <summary>

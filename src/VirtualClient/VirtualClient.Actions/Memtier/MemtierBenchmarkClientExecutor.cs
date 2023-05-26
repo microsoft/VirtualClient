@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// MemcachedMemtier Client Executor.
+    /// Redis/Memcached Memtier Client Executor.
     /// </summary>
     public class MemtierBenchmarkClientExecutor : MemcachedExecutor
     {
@@ -41,6 +41,10 @@ namespace VirtualClient.Actions
                 .WaitAndRetryAsync(3, (retries) => TimeSpan.FromSeconds(retries));
 
             this.PollingTimeout = TimeSpan.FromMinutes(40);
+
+            // Ensure the duration is in integer (seconds) form.
+            int duration = this.Duration;
+            this.Parameters[nameof(this.Duration)] = duration;
         }
 
         /// <summary>
@@ -69,11 +73,14 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter defines the length of time the Memtier benchmark should be executed.
         /// </summary>
-        public TimeSpan Duration
+        public int Duration
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(nameof(this.Duration), TimeSpan.FromSeconds(60));
+                // The command line expects the value in Seconds. We allow the user to use either
+                // an integer or timespan format in the profile.
+                TimeSpan duration = this.Parameters.GetTimeSpanValue(nameof(this.Duration), TimeSpan.FromSeconds(60));
+                return (int)duration.TotalSeconds;
             }
         }
 
@@ -106,7 +113,7 @@ namespace VirtualClient.Actions
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
 
         /// <summary>
-        /// True/false whether the Memcached server instance has been warmed up.
+        /// True/false whether the Memcached/Redis server instance has been warmed up.
         /// </summary>
         protected bool IsServerWarmedUp { get; set; }
 
@@ -116,7 +123,7 @@ namespace VirtualClient.Actions
         protected string MemtierExecutablePath { get; set; }
 
         /// <summary>
-        /// Path to Redis Package.
+        /// Path to Memtier Package.
         /// </summary>
         protected string MemtierPackagePath { get; set; }
 
@@ -256,7 +263,7 @@ namespace VirtualClient.Actions
 
                         this.Logger.LogMetrics(
                             $"Memtier-{this.Benchmark}",
-                            this.Scenario.ToLowerInvariant(),
+                            this.Scenario,
                             startTime,
                             endTime,
                             workloadMetrics,
@@ -299,8 +306,8 @@ namespace VirtualClient.Actions
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            string commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine} --test-time {this.Duration.TotalSeconds}";
-
+                            string commandArguments = commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine}";
+                            
                             commands.Add(commandArguments);
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
 
@@ -323,23 +330,35 @@ namespace VirtualClient.Actions
             {
                 await (this.ClientRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
                 {
-                    DateTime startTime = DateTime.UtcNow;
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    try
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        DateTime startTime = DateTime.UtcNow;
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
                         {
-                            ConsoleLogger.Default.LogMessage($"Memtier benchmark process exited (server port = {serverPort})...", telemetryContext);
-
-                            string output = process.StandardOutput.ToString();
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Memcached-Memtier", results: output.AsArray(), logToFile: true);
-                            process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
-
-                            // We don't capture metrics on warm up operations.
-                            if (!this.WarmUp)
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                ConsoleLogger.Default.LogMessage($"Memtier benchmark process exited (server port = {serverPort})...", telemetryContext);
+
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Memtier", logToFile: true);
+                                process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
+
+                                // We don't capture metrics on warm up operations.
+                                if (!this.WarmUp)
+                                {
+                                    string output = process.StandardOutput.ToString();
+                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                }
                             }
                         }
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.WorkloadStartError",
+                            LogLevel.Warning,
+                            telemetryContext.Clone().AddError(exc));
+
+                        throw;
                     }
                 });
             }

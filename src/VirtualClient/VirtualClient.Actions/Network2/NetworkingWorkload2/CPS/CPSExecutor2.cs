@@ -407,6 +407,7 @@ namespace VirtualClient.Actions
                 // new connection from the connection pool typically for each instance created. Especially for the case with
                 // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.IPAddress, serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 

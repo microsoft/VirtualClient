@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -57,8 +58,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(this.Username), out IConvertible username);
-                return username?.ToString();
+                string username = this.Parameters.GetValue<string>(nameof(MemcachedExecutor.Username), string.Empty);
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = this.GetCurrentUserName(true);
+                }
+
+                return username;
             }
 
             private set
@@ -189,7 +195,7 @@ namespace VirtualClient.Actions
                 if (string.Equals(this.Username, "root", StringComparison.Ordinal))
                 {
                     this.Username = this.GetCurrentUserName(nonSudo: true);
-                    this.Logger.LogTraceMessage($"Memcached cannot be ran with root privileges. Running Memcached as non-sudo user '{this.Username}'");
+                    this.Logger.LogTraceMessage($"Workload cannot be ran with root privileges. Running workload as non-sudo user '{this.Username}'");
                 }
             }
         }
@@ -212,6 +218,7 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 
@@ -234,7 +241,7 @@ namespace VirtualClient.Actions
                                 break;
                             default:
                                 throw new WorkloadException(
-                                    $"The Memcached Memtier benchmark workload is not supported on the current Linux distro " +
+                                    $"The workload/benchmark is not supported on the current Linux distro " +
                                     $"'{distroInfo.LinuxDistribution}'.  Supported distros include: " +
                                     $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
                                     $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
@@ -245,7 +252,7 @@ namespace VirtualClient.Actions
 
                     default:
                         throw new WorkloadException(
-                            $"The Memcached Memtier benchmark workload is currently not supported on the current platform/architecture " +
+                            $"The workload/benchmark workload is currently not supported on the current platform/architecture " +
                             $"'{this.PlatformArchitectureName}'. Supported platform/architectures include: " +
                             $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
                             $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",

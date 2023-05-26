@@ -77,7 +77,13 @@ namespace VirtualClient
         /// The targeted CPU architecture for the fixture and test scenarios
         /// (e.g. x64, arm64).
         /// </summary>
-        public Architecture CpuArchitecture { get; private set; }
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                return this.PlatformSpecifics.CpuArchitecture;
+            }
+        }
 
         /// <summary>
         /// Collection of services used for dependency injection with workload
@@ -148,7 +154,24 @@ namespace VirtualClient
         /// The targeted OS platform for the fixture and test scenarios
         /// (e.g. Windows, Unix).
         /// </summary>
-        public PlatformID Platform { get; private set; }
+        public PlatformID Platform
+        {
+            get
+            {
+                return this.PlatformSpecifics.Platform;
+            }
+        }
+
+        /// <summary>
+        /// The name of the platform/architecture (win-x64, win-arm64, linux-x64).
+        /// </summary>
+        public string PlatformArchitectureName
+        {
+            get
+            {
+                return this.PlatformSpecifics.PlatformArchitectureName;
+            }
+        }
 
         /// <summary>
         /// Test/fake platform-specifics information provider.
@@ -221,9 +244,7 @@ namespace VirtualClient
             this.ApiClient = new InMemoryApiClient(ipAddress);
             this.ApiClientManager = new InMemoryApiClientManager();
             this.ApiManager = new InMemoryApiManager();
-            this.Platform = platform;
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
-            this.CpuArchitecture = architecture;
             this.Configuration = new ConfigurationBuilder().Build();
             this.DiskManager = new InMemoryDiskManager();
             this.FileSystem = new InMemoryFileSystem(this.PlatformSpecifics);

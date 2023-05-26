@@ -148,7 +148,7 @@ namespace VirtualClient.Actions
             {
                 if (!this.disposed)
                 {
-                    VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
+                    VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
                     this.ServerCancellationSource?.Dispose();
                 }
 

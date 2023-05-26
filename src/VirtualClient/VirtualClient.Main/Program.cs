@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.ServiceProcess;
     using System.Threading;
@@ -31,8 +32,6 @@ namespace VirtualClient
     /// </summary>
     public sealed class Program
     {
-        internal static EventContext ApplicationContext { get; set; }
-
         internal static ILogger Logger { get; set; }
 
         /// <summary>
@@ -56,32 +55,26 @@ namespace VirtualClient
                 // the working directory will matter.
                 Environment.CurrentDirectory = Path.GetDirectoryName(VirtualClientComponent.ExecutingAssembly.Location);
 
-                // Persist an activity ID that will be used in all telemetry events for correlation of events
-                // down the stack. This ID is the "parent correlation ID" of all events. All events will reference
-                // this parent ID.
-                Program.ApplicationContext = EventContext.Persist(Guid.NewGuid());
-
                 // We do not want to miss any startup errors that happen before we can get the rest of
                 // the loggers setup.
                 Program.InitializeStartupLogging(args);
 
-                using (CancellationTokenSource cancellationTokenSource = new CancellationTokenSource())
+                using (CancellationTokenSource cancellationSource = VirtualClientRuntime.CancellationSource)
                 {
                     try
                     {
-                        CancellationToken cancellationToken = cancellationTokenSource.Token;
+                        CancellationToken cancellationToken = cancellationSource.Token;
                         Console.CancelKeyPress += (sender, e) =>
                         {
-                            cancellationTokenSource.Cancel();
+                            cancellationSource.Cancel();
                             e.Cancel = true;
                         };
 
-                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationTokenSource);
+                        CommandLineBuilder commandBuilder = Program.SetupCommandLine(args, cancellationSource);
                         ParseResult parseResult = commandBuilder.Build().Parse(args);
                         parseResult.ThrowOnUsageError();
 
-                        Program.InitializeFileLogging(args);
-
+                        Program.InitializeFileLogging(parseResult);
                         Task<int> executionTask = parseResult.InvokeAsync();
 
                         // On Windows systems, this is required when running Virtual Client as a service.
@@ -93,7 +86,7 @@ namespace VirtualClient
                             {
                                 if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                                 {
-                                    Program.RunAsWindowsService(cancellationTokenSource);
+                                    Program.RunAsWindowsService(cancellationSource);
                                 }
                             }
                         });
@@ -104,7 +97,7 @@ namespace VirtualClient
                     {
                         // Occasionally some of the workloads throw exceptions right as VC receives a
                         // cancellation/exit request.
-                        if (!cancellationTokenSource.IsCancellationRequested)
+                        if (!cancellationSource.IsCancellationRequested)
                         {
                             throw;
                         }
@@ -121,7 +114,6 @@ namespace VirtualClient
             }
             catch (Exception exc)
             {
-                Program.LogErrorMessage(Program.Logger, exc, Program.ApplicationContext);
                 exitCode = 1;
                 Console.Error.WriteLine(exc.StackTrace);
             }
@@ -212,8 +204,8 @@ namespace VirtualClient
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
-                // --flush-wait
-                OptionFactory.CreateFlushWaitOption(required: false, TimeSpan.FromMinutes(30)),
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
                 // --installDependencies
                 OptionFactory.CreateDependenciesFlag(required: false),
@@ -298,6 +290,9 @@ namespace VirtualClient
                 // --eventHubConnectionString
                 OptionFactory.CreateEventHubConnectionStringOption(required: false),
 
+                // --exit-wait
+                OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
+
                 // --experimentId
                 OptionFactory.CreateExperimentIdOption(required: false, Guid.NewGuid().ToString()),
 
@@ -336,15 +331,15 @@ namespace VirtualClient
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }
 
-        private static void InitializeFileLogging(string[] args)
+        private static void InitializeFileLogging(ParseResult parsingResult)
         {
             // Log to file. Instructs the application to log the output of processes
             // to files in the logs directory.
             Option logToFile = OptionFactory.CreateLogToFileFlag();
 
-            foreach (string arg in args)
+            foreach (Token token in parsingResult.Tokens.Where(token => token.Type == TokenType.Option))
             {
-                if (logToFile.HasAlias(arg))
+                if (logToFile.Aliases.Contains(token.Value, StringComparer.OrdinalIgnoreCase))
                 {
                     VirtualClientComponent.LogToFile = true;
                     break;

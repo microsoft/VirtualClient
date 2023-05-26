@@ -168,6 +168,9 @@ namespace VirtualClient.Actions
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 100));
 
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 8, 9, 10, false));
+
             // First time set the file to not exist so it writes the file. Second return true so that the code will make the shell executable.
             this.mockFixture.File.SetupSequence(f => f.Exists(runShellPath))
                 .Returns(false)
@@ -176,7 +179,7 @@ namespace VirtualClient.Actions
             string expectedFile = $". {this.mockFixture.GetPackagePath()}/JavaDevelopmentKit/share/spack/setup-env.sh" + Environment.NewLine
                     + "spack install --reuse -n -y hpcg@9.8 %gcc +openmp ^openmpi@6.66.666" + Environment.NewLine
                     + $"spack load hpcg@9.8 %gcc ^openmpi@6.66.666" + Environment.NewLine
-                    + $"mpirun --np {Environment.ProcessorCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
+                    + $"mpirun --np 7 --use-hwthread-cpus --allow-run-as-root xhpcg";
 
             bool fileWritten = false;
             this.mockFixture.File.OnWriteAllTextAsync(runShellPath)

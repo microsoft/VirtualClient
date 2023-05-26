@@ -213,23 +213,24 @@ namespace VirtualClient
 
 
         [Test]
+        [TestCase("--exit-wait")]
         [TestCase("--flush-wait")]
-        [TestCase("--fw")]
-        public void FlushWaitOptionSupportsExpectedAliases(string alias)
+        [TestCase("--wt")]
+        public void ExitWaitOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateFlushWaitOption();
+            Option option = OptionFactory.CreateExitWaitOption();
             ParseResult result = option.Parse($"{alias}=1234");
             Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]
-        public void FlushWaitOptionValueMustBeAValidTimeSpanOrIntegerFormat()
+        public void ExitWaitOptionValueMustBeAValidTimeSpanOrIntegerFormat()
         {
-            Option option = OptionFactory.CreateFlushWaitOption();
-            Assert.Throws<ArgumentException>(() => option.Parse("--flush-wait=NotValid"));
-            Assert.DoesNotThrow(() => option.Parse("--flush-wait=01.00:30:00"));
-            Assert.DoesNotThrow(() => option.Parse("--flush-wait=00:30:00"));
-            Assert.DoesNotThrow(() => option.Parse("--flush-wait=1440"));
+            Option option = OptionFactory.CreateExitWaitOption();
+            Assert.Throws<ArgumentException>(() => option.Parse("--exit-wait=NotValid"));
+            Assert.DoesNotThrow(() => option.Parse("--exit-wait=01.00:30:00"));
+            Assert.DoesNotThrow(() => option.Parse("--exit-wait=00:30:00"));
+            Assert.DoesNotThrow(() => option.Parse("--exit-wait=1440"));
         }
 
         [Test]

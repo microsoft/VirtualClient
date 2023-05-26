@@ -29,8 +29,6 @@ namespace VirtualClient.Actions
         public SysbenchOLTPExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
-            this.ApiClientManager = dependencies.GetService<IApiClientManager>();
-
             // Supported roles for this client/server workload.
             this.SupportedRoles = new List<string>
             {
@@ -44,17 +42,6 @@ namespace VirtualClient.Actions
         /// Virtual Client API at server side.
         /// </summary>
         public IApiClient ServerApiClient { get; set; }
-
-        /// <summary>
-        /// State representing server Instances.
-        /// </summary>
-        public State ServerCopiesCount { get; set; }
-
-        /// <summary>
-        /// Provides the ability to create API clients for interacting with local as well as remote instances
-        /// of the Virtual Client API service.
-        /// </summary>
-        protected IApiClientManager ApiClientManager { get; }
 
         /// <summary>
         /// Cancellation Token Source for Server.
@@ -113,15 +100,17 @@ namespace VirtualClient.Actions
 
             if (isSingleVM)
             {
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+                this.ServerIpAddress = IPAddress.Loopback.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
             }
             else
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.ServerIpAddress = serverIPAddress.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
 
                 ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
@@ -154,7 +143,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, command, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
                         process.RedirectStandardOutput = true;
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -236,6 +225,38 @@ namespace VirtualClient.Actions
                 set
                 {
                     this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
+                }
+            }
+
+            /// <summary>
+            /// Workload/action scenario/tableCount
+            /// </summary>
+            public int TableCount
+            {
+                get
+                {
+                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.TableCount), -1);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.TableCount)] = value;
+                }
+            }
+
+            /// <summary>
+            /// Workload/action scenario/recordCount
+            /// </summary>
+            public int RecordCount
+            {
+                get
+                {
+                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.RecordCount), -1);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.RecordCount)] = value;
                 }
             }
         }

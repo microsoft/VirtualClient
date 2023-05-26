@@ -24,7 +24,7 @@ namespace VirtualClient.Dependencies
     public class ExecuteCommand : VirtualClientComponent
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="WgetPackageInstallation"/> class.
+        /// Initializes a new instance of the <see cref="ExecuteCommand"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>

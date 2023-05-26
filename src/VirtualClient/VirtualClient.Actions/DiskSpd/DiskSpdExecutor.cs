@@ -39,6 +39,19 @@ namespace VirtualClient.Actions
         public DiskSpdExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Ensure that the Duration parameter is in "seconds" format.
+            this.Parameters[nameof(this.Duration)] = this.Duration.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Parameter defines the Duration (in seconds) for running the DiskSpd workload.
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(DiskSpdExecutor.Duration), TimeSpan.FromSeconds(60));
+            }
         }
 
         /// <summary>
@@ -195,16 +208,17 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    if (this.DiskFill && await this.IsDiskFillCompleteAsync(cancellationToken))
-                    {
-                        return;
-                    }
+                    ////if (this.DiskFill && await this.IsDiskFillCompleteAsync(cancellationToken))
+                    ////{
+                    ////    return;
+                    ////}
 
                     if (this.Configuration != null)
                     {
                         this.ApplyConfiguration(this.Configuration, telemetryContext);
                     }
 
+                    await this.EvaluateParametersAsync(cancellationToken);
                     this.ApplyParameters(telemetryContext);
 
                     IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)

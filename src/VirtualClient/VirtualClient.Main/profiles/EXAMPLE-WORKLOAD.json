@@ -10,7 +10,7 @@
             "Type": "ExampleWorkloadExecutor",
             "Parameters": {
                 "Scenario": "Scenario1",
-                "CommandLine": "Workload --duration=00:01:00",
+                "CommandLine": "Workload --duration=00:00:15",
                 "ExampleParameter1": "AnyValue1",
                 "ExampleParameter2": 4567,
                 "PackageName": "exampleworkload",
@@ -21,52 +21,18 @@
                 "ProfilingWarmUpPeriod": "00:00:05",
                 "Tags": "Test,VC"
             }
-        },
+        }
+    ],
+    "Dependencies": [
         {
-            "Type": "ExampleWorkloadExecutor",
+            "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "Scenario2",
-                "CommandLine": "Workload --duration=00:0:30",
-                "ExampleParameter1": "AnyValue1",
+                "Scenario": "InstallExampleWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
                 "PackageName": "exampleworkload",
-                "ProfilingScenario": "Scenario2",
-                "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                "ProfilingMode": "$.Parameters.ProfilingMode",
-                "ProfilingPeriod": "00:00:30",
-                "ProfilingWarmUpPeriod": "00:00:00",
-                "Tags": "Test,VC"
+                "Extract": true
             }
-        },
-        {
-            "Type": "ParallelExecution",
-            "Components": [
-                {
-                    "Type": "ExampleWorkloadExecutor",
-                    "Parameters": {
-                        "Scenario": "ParallelScenario1",
-                        "CommandLine": "Workload --duration=00:0:45",
-                        "PackageName": "exampleworkload",
-                        "ProfilingScenario": "Scenario3",
-                        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                        "ProfilingMode": "$.Parameters.ProfilingMode",
-                        "ProfilingWarmUpPeriod": "00:00:00",
-                        "Tags": "Test,VC"
-                    }
-                },
-                {
-                    "Type": "ExampleWorkloadExecutor",
-                    "Parameters": {
-                        "Scenario": "ParallelScenario2",
-                        "CommandLine": "Workload --duration=00:0:45",
-                        "PackageName": "exampleworkload",
-                        "ProfilingScenario": "Scenario3",
-                        "ProfilingEnabled": "$.Parameters.ProfilingEnabled",
-                        "ProfilingMode": "$.Parameters.ProfilingMode",
-                        "ProfilingWarmUpPeriod": "00:00:00",
-                        "Tags": "Test,VC"
-                    }
-                }
-            ]
         }
     ]
 }

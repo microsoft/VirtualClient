@@ -161,6 +161,7 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64  
 
 * **Supported Operating Systems**
   * Ubuntu 18
@@ -318,6 +319,7 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64  
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.

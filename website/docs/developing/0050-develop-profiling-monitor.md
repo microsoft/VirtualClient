@@ -113,7 +113,7 @@ approach to how a background monitor that runs a profiler should work when suppo
 .NET events to support on-demand behaviors. This enables real-time support for in-process notifications between workload executors and background
 monitors.
 
-* [VirtualClientEventing Class](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientEventing.cs)
+* [VirtualClientRuntime Class](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Contracts/VirtualClientRuntime.cs)
 * [.NET Events](https://docs.microsoft.com/en-us/dotnet/standard/events/)
 
 ### Recommendations:

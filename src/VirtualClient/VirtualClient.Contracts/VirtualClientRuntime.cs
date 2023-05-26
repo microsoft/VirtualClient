@@ -4,18 +4,22 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Events to which local components can subscribe to enable requests/instructions to 
-    /// be passed to them in a push-based eventing model.
+    /// Runtime Resources, settings and events that are global the Virtual Client application.
     /// </summary>
-    public static class VirtualClientEventing
+    public static class VirtualClientRuntime
     {
-        private static readonly object LockObject = new object();
+        /// <summary>
+        /// Application level lock object.
+        /// </summary>
+        public static readonly object LockObject = new object();
 
         /// <summary>
         /// Event is fired anytime special instructions are received by a component within a Virtual
@@ -35,10 +39,83 @@ namespace VirtualClient
         public static event EventHandler<InstructionsEventArgs> SendReceiveInstructions;
 
         /// <summary>
+        /// The global application cancellation token source. This can be used to instruct the
+        /// Virtual Client to exit.
+        /// </summary>
+        public static CancellationTokenSource CancellationSource { get; } = new CancellationTokenSource();
+
+        /// <summary>
+        /// A set of one or more tasks (cleanup) registered to execute before the application
+        /// exits completely. The dictionary key can be used to determine if a particular task exists
+        /// in the set of not.
+        /// </summary>
+        public static List<Action_> CleanupTasks { get; } = new List<Action_>();
+
+        /// <summary>
+        /// A set of one or more tasks (exit) registered to execute before the application
+        /// exits completely. The dictionary key can be used to determine if a particular task exists
+        /// in the set of not.
+        /// </summary>
+        public static List<Action_> ExitTasks { get; } = new List<Action_>();
+
+        /// <summary>
         /// Returns true/false whether eventing is online for the instance of Virtual Client. By default,
         /// eventing is turned off.
         /// </summary>
         public static bool IsApiOnline { get; private set; }
+
+        /// <summary>
+        /// Set to true to request a system reboot of the system..
+        /// </summary>
+        public static bool IsRebootRequested { get; set; }
+
+        /// <summary>
+        /// Cleans up any tracked resources.
+        /// </summary>
+        public static void OnCleanup()
+        {
+            if (VirtualClientRuntime.CleanupTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.CleanupTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Cleans up any tracked resources.
+        /// </summary>
+        public static void OnExiting()
+        {
+            if (VirtualClientRuntime.ExitTasks.Any())
+            {
+                lock (VirtualClientRuntime.LockObject)
+                {
+                    foreach (var entry in VirtualClientRuntime.ExitTasks)
+                    {
+                        try
+                        {
+                            entry.Invoke();
+                        }
+                        catch
+                        {
+                            // Best effort here.
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Invokes the <see cref="ReceiveInstructions"/> event to notify subscribers
@@ -50,7 +127,7 @@ namespace VirtualClient
         {
             // .NET Events are multicast, but they are no parallelized. The logic for each subscriber will
             // be executed sequentially. We want a parallel multicast functionality in the Virtual Client.
-            Delegate[] subscribers = VirtualClientEventing.ReceiveInstructions?.GetInvocationList();
+            Delegate[] subscribers = VirtualClientRuntime.ReceiveInstructions?.GetInvocationList();
             if (subscribers?.Any() == true)
             {
                 foreach (Delegate subscriber in subscribers)
@@ -81,7 +158,7 @@ namespace VirtualClient
         {
             // .NET Events are multicast, but they are no parallelized. The logic for each subscriber will
             // be executed sequentially. We want a parallel multicast functionality in the Virtual Client.
-            Delegate[] subscribers = VirtualClientEventing.SendReceiveInstructions?.GetInvocationList();
+            Delegate[] subscribers = VirtualClientRuntime.SendReceiveInstructions?.GetInvocationList();
             if (subscribers?.Any() == true)
             {
                 foreach (Delegate subscriber in subscribers)
@@ -110,9 +187,9 @@ namespace VirtualClient
         /// <param name="online">True to set API eventing online. False to turn it off.</param>
         public static void SetEventingApiOnline(bool online)
         {
-            lock (VirtualClientEventing.LockObject)
+            lock (VirtualClientRuntime.LockObject)
             {
-                VirtualClientEventing.IsApiOnline = online;
+                VirtualClientRuntime.IsApiOnline = online;
             }
         }
     }

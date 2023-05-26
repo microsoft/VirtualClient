@@ -178,7 +178,7 @@ namespace VirtualClient.Contracts.Proxy
                         ErrorReason.ApiRequestFailed);
                 }
 
-                for (int latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
+                for (long latestRequestLength = 0, totalDownloadedLength = 0; totalDownloadedLength < fileLength; totalDownloadedLength += latestRequestLength)
                 {
                     response = await (retryPolicy ?? defaultGetRetryPolicy).ExecuteAsync(async () =>
                     {

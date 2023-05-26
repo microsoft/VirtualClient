@@ -30,6 +30,8 @@ The following section describes the different options for the 'Action' parameter
 | StartDatabaseServer        | Starts the MySQL server.                                                                                        |
 | CreateDatabase             | Creates a database under {Database Name} in the MySQL server.                                                   |
 | RaisedStatementCount       | Increases number of statements MySQL can prepare (only recommended for larger VMs).                             |
+| ConfigureNetwork           | Modifies the configuration file to make MySQL server accessible to the private network of VMs.                  |
+| CreateUser                 | Creates user access to the server for each client VM in the provided environment layout.                        |
 
 ## Example
 Here is the usage of the dependency by the Sysbench OLTP workload as an example, that uses all three actions to configure the server.
@@ -62,6 +64,24 @@ Here is the usage of the dependency by the Sysbench OLTP workload as an example,
     "Parameters": {
     "Scenario": "RaisedStatementCount",
     "Action": "RaisedStatementCount",
+    "DatabaseName": "$.Parameters.DatabaseName",
+    "Role": "Server"
+    }
+},
+{
+    "Type": "MySQLServerConfiguration",
+    "Parameters": {
+    "Scenario": "ConfigureNetwork",
+    "Action": "ConfigureNetwork",
+    "DatabaseName": "$.Parameters.DatabaseName",
+    "Role": "Server"
+    }
+},
+{
+    "Type": "MySQLServerConfiguration",
+    "Parameters": {
+    "Scenario": "CreateUser",
+    "Action": "CreateUser",
     "DatabaseName": "$.Parameters.DatabaseName",
     "Role": "Server"
     }

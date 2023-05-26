@@ -64,7 +64,7 @@ namespace VirtualClient
                         InstructionsType.Profiling,
                         component.Parameters);
 
-                    VirtualClientEventing.OnSendReceiveInstructions(component, new InstructionsEventArgs(instructions, cancellationToken));
+                    VirtualClientRuntime.OnSendReceiveInstructions(component, new InstructionsEventArgs(instructions, cancellationToken));
                 });
             }
 

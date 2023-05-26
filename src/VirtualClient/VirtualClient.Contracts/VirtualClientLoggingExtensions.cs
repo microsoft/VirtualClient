@@ -739,7 +739,7 @@ namespace VirtualClient.Contracts
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static async Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));

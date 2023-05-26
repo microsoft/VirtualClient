@@ -89,6 +89,18 @@ namespace VirtualClient
         public Mock<IBlobManager> ContentBlobManager { get; set; }
 
         /// <summary>
+        /// The targeted CPU architecture for the fixture and test scenarios
+        /// (e.g. x64, arm64).
+        /// </summary>
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                return this.PlatformSpecifics.CpuArchitecture;
+            }
+        }
+
+        /// <summary>
         /// Collection of services used for dependency injection.
         /// </summary>
         public IServiceCollection Dependencies { get; private set; }
@@ -158,6 +170,29 @@ namespace VirtualClient
         /// Mock parameters.
         /// </summary>
         public IDictionary<string, IConvertible> Parameters { get; set; }
+
+        /// <summary>
+        /// The targeted OS platform for the fixture and test scenarios
+        /// (e.g. Windows, Unix).
+        /// </summary>
+        public PlatformID Platform
+        {
+            get
+            {
+                return this.PlatformSpecifics.Platform;
+            }
+        }
+
+        /// <summary>
+        /// The name of the platform/architecture (win-x64, win-arm64, linux-x64).
+        /// </summary>
+        public string PlatformArchitectureName
+        {
+            get
+            {
+                return this.PlatformSpecifics.PlatformArchitectureName;
+            }
+        }
 
         /// <summary>
         /// Test/fake platform-specifics information provider.

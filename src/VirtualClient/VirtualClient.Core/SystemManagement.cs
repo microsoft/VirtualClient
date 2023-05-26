@@ -48,17 +48,6 @@ namespace VirtualClient
             }
         }
 
-        /// <summary>
-        /// A set of one or more cleanup tasks registered to execute on application
-        /// shutdown/exit.
-        /// </summary>
-        public static List<Action> CleanupTasks { get; } = new List<Action>();
-
-        /// <summary>
-        /// Set to true to request a system reboot during profile execution steps.
-        /// </summary>
-        public static bool IsRebootRequested { get; set; }
-
         /// <inheritdoc />
         public IDiskManager DiskManager { get; internal set; }
 
@@ -113,27 +102,6 @@ namespace VirtualClient
         public IStateManager StateManager { get; internal set; }
 
         /// <summary>
-        /// Cleans up any tracked resources.
-        /// </summary>
-        public static void Cleanup()
-        {
-            if (SystemManagement.CleanupTasks.Any())
-            {
-                SystemManagement.CleanupTasks.ForEach(cleanup =>
-                {
-                    try
-                    {
-                        cleanup.Invoke();
-                    }
-                    catch
-                    {
-                        // Best effort here.
-                    }
-                });
-            }
-        }
-
-        /// <summary>
         /// Returns information about the CPU on the system.
         /// </summary>
         public async Task<CpuInfo> GetCpuInfoAsync(CancellationToken cancellationToken)
@@ -149,7 +117,7 @@ namespace VirtualClient
                 }
 
                 DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
-                    VirtualClient.PackageManager.BuiltInCoreInfoPackageName,
+                    VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
                     this.Platform,
                     this.CpuArchitecture,
                     CancellationToken.None);
