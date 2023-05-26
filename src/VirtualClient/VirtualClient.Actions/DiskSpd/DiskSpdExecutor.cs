@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
         {
             EventContext relatedContext = telemetryContext.Clone();
 
-            return this.Logger.LogMessageAsync($"{nameof(DiskSpdExecutor)}.EvaluateParameters", relatedContext, async () =>
+            return this.Logger.LogMessageAsync($"{this.TypeName}.EvaluateParameters", relatedContext, async () =>
             {
                 string fileSize = this.FileSize;
                 if (!string.IsNullOrWhiteSpace(fileSize))
