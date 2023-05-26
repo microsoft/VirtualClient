@@ -248,16 +248,16 @@ namespace VirtualClient.Actions
         /// The number of threads to use for running disk I/O operations. 
         /// Default = system logical processor count.
         /// </summary>
-        public int Threads
+        public int ThreadCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(DiskWorkloadExecutor.Threads), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(DiskWorkloadExecutor.ThreadCount), Environment.ProcessorCount);
             }
 
             set
             {
-                this.Parameters[nameof(DiskWorkloadExecutor.Threads)] = value;
+                this.Parameters[nameof(DiskWorkloadExecutor.ThreadCount)] = value;
             }
         }
 
@@ -308,7 +308,7 @@ namespace VirtualClient.Actions
 
             if (threads > 0)
             {
-                updatedText = ProfilePlaceholders.Replace(nameof(this.Threads), threads, updatedText);
+                updatedText = ProfilePlaceholders.Replace(nameof(this.ThreadCount), threads, updatedText);
             }
 
             return updatedText;

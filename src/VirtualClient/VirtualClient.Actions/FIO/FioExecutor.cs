@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -33,6 +32,19 @@ namespace VirtualClient.Actions
         public FioExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Ensure that the Duration parameter is in "seconds" format.
+            this.Parameters[nameof(this.Duration)] = this.Duration.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Parameter defines the Duration (in seconds) for running the DiskSpd workload.
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(DiskSpdExecutor.Duration), TimeSpan.FromSeconds(60));
+            }
         }
 
         /// <summary>
@@ -75,74 +87,43 @@ namespace VirtualClient.Actions
         /// Applies the configuration specificed to the parameters of the profile
         /// workload action.
         /// </summary>
-        /// <param name="configuration">The name of the configuration (e.g. Stress).</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        protected void ApplyConfiguration(string configuration, EventContext telemetryContext)
-        {
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("configuration", configuration);
-
-            this.Logger.LogMessage($"{nameof(FioExecutor)}.ApplyConfiguration", relatedContext, () =>
-            {
-                switch (configuration)
-                {
-                    case "Stress":
-                        int logicalCores = Environment.ProcessorCount;
-                        int threads = logicalCores / 2;
-                        threads = (threads == 0) ? 1 : threads;
-                        int queueDepth = 512 / threads;
-
-                        this.CommandLine = this.ApplyParameters(
-                            this.CommandLine,
-                            this.FileSize,
-                            this.DiskFillSize,
-                            queueDepth,
-                            threads);
-
-                        this.TestName = this.ApplyParameters(
-                            this.TestName,
-                            this.FileSize,
-                            this.DiskFillSize,
-                            queueDepth,
-                            threads);
-
-                        relatedContext.AddContext("commandLine", this.CommandLine);
-                        relatedContext.AddContext("testName", this.TestName);
-                        relatedContext.AddContext(nameof(logicalCores), logicalCores);
-                        relatedContext.AddContext(nameof(threads), threads);
-                        relatedContext.AddContext(nameof(queueDepth), queueDepth);
-
-                        break;
-
-                    default:
-                        throw new WorkloadException(
-                            $"Invalid configuration. The configuration '{configuration}' defined in the profile arguments is not a supported configuration.",
-                            ErrorReason.InvalidProfileDefinition);
-                }
-            });
-        }
-
-        /// <summary>
-        /// Applies any placeholder replacements to the parameters of the profile
-        /// workload action.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        protected void ApplyParameters(EventContext telemetryContext)
+        protected Task EvaluateParametersAsync(EventContext telemetryContext)
         {
             EventContext relatedContext = telemetryContext.Clone();
-            this.Logger.LogMessage($"{nameof(FioExecutor)}.ApplyParameters", relatedContext, () =>
+
+            return this.Logger.LogMessageAsync($"{nameof(DiskSpdExecutor)}.EvaluateParameters", relatedContext, async () =>
             {
-                if (!string.IsNullOrWhiteSpace(this.CommandLine))
+                if (this.Configuration != null)
                 {
-                    this.CommandLine = this.ApplyParameters(this.CommandLine, this.FileSize, this.DiskFillSize, this.QueueDepth, this.Threads);
-                    relatedContext.AddContext("commandLine", this.CommandLine);
+                    switch (this.Configuration)
+                    {
+                        case "Stress":
+                            int logicalCores = Environment.ProcessorCount;
+                            int threads = logicalCores / 2;
+                            int queueDepth = 512 / threads;
+
+                            this.Parameters["ThreadCount"] = threads;
+                            this.Parameters["QueueDepth"] = queueDepth;
+
+                            relatedContext.AddContext("configuration", this.Configuration);
+                            relatedContext.AddContext(nameof(logicalCores), logicalCores);
+                            relatedContext.AddContext(nameof(threads), threads);
+                            relatedContext.AddContext(nameof(queueDepth), queueDepth);
+
+                            break;
+
+                        default:
+                            throw new WorkloadException(
+                                $"Invalid configuration. The configuration '{this.Configuration}' defined in the profile arguments is not a supported configuration.",
+                                ErrorReason.InvalidProfileDefinition);
+                    }
                 }
 
-                if (!string.IsNullOrWhiteSpace(this.TestName))
-                {
-                    this.TestName = this.ApplyParameters(this.TestName, this.FileSize, this.DiskFillSize, this.QueueDepth, this.Threads);
-                    relatedContext.AddContext("testName", this.TestName);
-                }
+                await this.EvaluateParametersAsync(CancellationToken.None);
+
+                relatedContext.AddContext("commandLine", this.CommandLine);
+                relatedContext.AddContext("testName", this.TestName);
             });
         }
 
@@ -215,12 +196,8 @@ namespace VirtualClient.Actions
                         return;
                     }
 
-                    if (this.Configuration != null)
-                    {
-                        this.ApplyConfiguration(this.Configuration, telemetryContext);
-                    }
-
-                    this.ApplyParameters(telemetryContext);
+                    // Apply parameters to the FIO command line options.
+                    await this.EvaluateParametersAsync(telemetryContext);
 
                     string ioEngine = FioExecutor.GetIOEngine(Environment.OSVersion.Platform);
 
