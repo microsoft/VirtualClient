@@ -39,6 +39,8 @@ namespace VirtualClient.Actions
                 .Returns(true);
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+            this.mockFixture.Directory.Setup(f => f.Exists(It.IsRegex("superbenchmark")))
+                .Returns(false);
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
 
