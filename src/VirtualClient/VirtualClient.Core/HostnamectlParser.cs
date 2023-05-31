@@ -28,6 +28,7 @@ namespace VirtualClient.Contracts
         {
             this.Preprocess();
             Regex ubuntuRegex = new Regex("Operating System: Ubuntu", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            Regex debianRegex = new Regex("Operating System: Debian", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex rhel7Regex = new Regex(@"Operating System: Red Hat Enterprise Linux 7", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex rhel8Regex = new Regex(@"Operating System: Red Hat Enterprise Linux 8.", RegexOptions.Multiline | RegexOptions.IgnoreCase);
             Regex flatcarRegex = new Regex("Operating System: Flatcar", RegexOptions.Multiline | RegexOptions.IgnoreCase);
@@ -39,6 +40,7 @@ namespace VirtualClient.Contracts
             Dictionary<Regex, LinuxDistribution> distroMapping = new Dictionary<Regex, LinuxDistribution>()
             {
                 { ubuntuRegex, LinuxDistribution.Ubuntu },
+                { debianRegex, LinuxDistribution.Debian },
                 { rhel7Regex, LinuxDistribution.RHEL7 },
                 { rhel8Regex, LinuxDistribution.RHEL8 },
                 { flatcarRegex, LinuxDistribution.Flatcar },
