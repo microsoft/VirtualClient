@@ -7,14 +7,11 @@ namespace VirtualClient.Dependencies
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Moq;
     using NUnit.Framework;
-    using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
-    internal class BufferTimeWaiterTests
+    internal class WaitExecutorTests
     {
         private MockFixture mockFixture;
 
@@ -29,14 +26,15 @@ namespace VirtualClient.Dependencies
         public async Task BufferTimeWaiterWaitsForExpectedAmountOfTime(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaults(platform, architecture);
-            this.mockFixture.Parameters[nameof(BufferTimeWaiter.BufferTimeInSec)] = 1;
+            this.mockFixture.Parameters[nameof(WaitExecutor.TimeInterval)] = new TimeSpan(0, 0, 0, 0, 10).ToString();
 
-            using (TestBufferTimeWaiter testBufferTimeWaiter = new TestBufferTimeWaiter(this.mockFixture))
+            using (TestWaitExecutor testBufferTimeWaiter = new TestWaitExecutor(this.mockFixture))
             {
                 DateTime startTime = DateTime.Now;
                 await testBufferTimeWaiter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 DateTime endTime = DateTime.Now;
-                if ((endTime - startTime).TotalSeconds > long.Parse(this.mockFixture.Parameters[nameof(BufferTimeWaiter.BufferTimeInSec)].ToString()))
+
+                if ((endTime - startTime) >= TimeSpan.Parse(this.mockFixture.Parameters[nameof(WaitExecutor.TimeInterval)].ToString()))
                 {
                     Assert.IsTrue(true);
                 }
@@ -47,21 +45,11 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private class TestBufferTimeWaiter : BufferTimeWaiter
+        private class TestWaitExecutor : WaitExecutor
         {
-            public TestBufferTimeWaiter(MockFixture mockFixture)
+            public TestWaitExecutor(MockFixture mockFixture)
                 : base(mockFixture?.Dependencies, mockFixture?.Parameters)
             {
-            }
-
-            public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-            {
-                return base.InitializeAsync(telemetryContext, cancellationToken);
-            }
-
-            public new Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-            {
-                return base.ExecuteAsync(telemetryContext, cancellationToken);
             }
         }
     }
