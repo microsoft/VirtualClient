@@ -1,0 +1,10 @@
+   Static hostname: debian
+Transient hostname: i-19294bc530d-0
+         Icon name: computer-vm
+           Chassis: vm
+        Machine ID: 02459e548e056cab0d6fdb2ddf37f0ee
+           Boot ID: b15202b3e88746a2a8f1dee48f9615bc
+    Virtualization: kvm
+  Operating System: Debian GNU/Linux 10 (buster)
+            Kernel: Linux 4.19.0-24-cloud-amd64
+      Architecture: x86-64

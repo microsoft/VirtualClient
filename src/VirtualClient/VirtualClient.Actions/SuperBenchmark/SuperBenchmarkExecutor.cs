@@ -155,7 +155,12 @@ namespace VirtualClient.Actions
             {
                 // This is to grant directory folders for 
                 await this.systemManager.MakeFilesExecutableAsync(this.PlatformSpecifics.CurrentDirectory, this.Platform, cancellationToken);
-                await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+
+                string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
+                if (!this.fileSystem.Directory.Exists(cloneDir))
+                {
+                    await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+                }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
                 {
