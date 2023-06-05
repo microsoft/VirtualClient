@@ -194,7 +194,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileRedis",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "make",
                 "WorkingDirectory": "{PackagePath:redis}"
             }
@@ -211,7 +211,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }
