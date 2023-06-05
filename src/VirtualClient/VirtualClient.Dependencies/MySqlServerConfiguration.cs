@@ -163,72 +163,78 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigureMySQLNetwork(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
-
-            ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-            if (this.Platform == PlatformID.Win32NT)
+            if (this.IsMultiRoleLayout())
             {
-                // need to know how to set up password and start server, get path
-                await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                ProcessManager manager = this.SystemManager.ProcessManager;
 
-                await this.ExecuteCommandAsync(manager, $"net stop mysql", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                await this.ExecuteCommandAsync(manager, $"net start mysql", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    // need to know how to set up password and start server, get path
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync(manager, $"systemctl restart mysql.service", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(manager, $"net stop mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"net start mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"systemctl restart mysql.service", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
 
         private async Task CreateMySQLUser(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
-
-            IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
-            List<string> clientIpAddresses = new List<string>();
-
-            foreach (ClientInstance instance in clientInstances)
+            if (this.IsMultiRoleLayout())
             {
-                IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
-                clientIpAddresses.Add(clientIPAddress.ToString());
-            }
+                ProcessManager manager = this.SystemManager.ProcessManager;
 
-            if (this.Platform == PlatformID.Win32NT)
-            {
-                foreach (string clientIp in clientIpAddresses)
+                IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
+                List<string> clientIpAddresses = new List<string>();
+
+                foreach (ClientInstance instance in clientInstances)
                 {
-                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
+                    clientIpAddresses.Add(clientIPAddress.ToString());
                 }
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                foreach (string clientIp in clientIpAddresses)
+
+                if (this.Platform == PlatformID.Win32NT)
                 {
-                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-
-                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    foreach (string clientIp in clientIpAddresses)
+                    {
+                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    foreach (string clientIp in clientIpAddresses)
+                    {
+                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
+
+                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
                 }
             }
         }
