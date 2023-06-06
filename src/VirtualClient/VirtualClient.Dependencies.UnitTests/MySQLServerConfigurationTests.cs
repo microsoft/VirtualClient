@@ -261,6 +261,9 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
+                $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"DROP USER IF EXISTS '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\" --user=root",
+                $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"CREATE USER '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\" --user=root",
+                $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"GRANT ALL ON {this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\" --user=root",
                 $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"DROP USER IF EXISTS '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\" --user=root",
                 $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"CREATE USER '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\" --user=root",
                 $"C:\\tools\\mysql\\current\\bin\\mysql.exe --execute=\"GRANT ALL ON {this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\" --user=root"
