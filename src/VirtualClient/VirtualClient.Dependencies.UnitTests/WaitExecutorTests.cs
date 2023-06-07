@@ -26,7 +26,7 @@ namespace VirtualClient.Dependencies
         public async Task BufferTimeWaiterWaitsForExpectedAmountOfTime(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaults(platform, architecture);
-            this.mockFixture.Parameters[nameof(WaitExecutor.TimeInterval)] = new TimeSpan(0, 0, 0, 0, 10).ToString();
+            this.mockFixture.Parameters[nameof(WaitExecutor.Duration)] = new TimeSpan(0, 0, 0, 0, 10).ToString();
 
             using (TestWaitExecutor testBufferTimeWaiter = new TestWaitExecutor(this.mockFixture))
             {
@@ -34,7 +34,7 @@ namespace VirtualClient.Dependencies
                 await testBufferTimeWaiter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
                 DateTime endTime = DateTime.Now;
 
-                if ((endTime - startTime) >= TimeSpan.Parse(this.mockFixture.Parameters[nameof(WaitExecutor.TimeInterval)].ToString()))
+                if ((endTime - startTime) >= TimeSpan.Parse(this.mockFixture.Parameters[nameof(WaitExecutor.Duration)].ToString()))
                 {
                     Assert.IsTrue(true);
                 }

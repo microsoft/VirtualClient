@@ -1,5 +1,5 @@
 ﻿# Wait Executor Dependency
-Virtual Client has a dependency component that can be added to a workload or monitor profile to wait for given amount of time between actions/ steps in VC. The following section illustrates the
+Virtual Client has a dependency component that can be added to a workload or monitor profile to wait for given amount of time between actions/dependencies steps in VC. The following section illustrates the
 details for integrating this into the profile.
 
 ## Supported Platform/Architectures
@@ -13,7 +13,7 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
-| TimeInterval  | No           | Default= "00:05:00". The amount of time required to wait.               |
+| Duration      | No           | Default= "00:05:00". The amount of time required to wait.                      |
 | Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line). |
 
 ### Example
@@ -37,7 +37,7 @@ The following sections provides examples for how to integrate the component into
     "RunPeak": false,
     "BaseOptimizingFlags": "-g -O3 -march=native",
     "PeakOptimizingFlags": "-g -Ofast -march=native -flto",
-    "TimeInterval": "00:05:00"
+    "Duration": "00:05:00"
   },
   "Actions": [
     {
@@ -56,7 +56,7 @@ The following sections provides examples for how to integrate the component into
       "Type": "WaitExecutor",
       "Parameters": {
         "Scenario": "WaitForTimeProvided",
-        "TimeInterval": "$.Parameters.TimeInterval"
+        "Duration": "$.Parameters.Duration"
       }
     },
     {
@@ -73,6 +73,13 @@ The following sections provides examples for how to integrate the component into
     }
   ],
   "Dependencies": [
+  {
+      "Type": "WaitExecutor",
+      "Parameters": {
+        "Scenario": "WaitForTimeProvided",
+        "Duration": "$.Parameters.Duration"
+      }
+    },
     {
       "Type": "ChocolateyInstallation",
       "Parameters": {

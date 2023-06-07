@@ -17,7 +17,7 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class WaitExecutor : VirtualClientComponent
     {
-        private static readonly TimeSpan DefaultTimeInterval = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan DefaultDuration = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WaitExecutor"/> class.
@@ -30,13 +30,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The performance snapshot interval defined in the profile arguments.
+        /// The duration for which we want to wait.
         /// </summary>
-        public TimeSpan TimeInterval
+        public TimeSpan Duration
         {
             get
             {
-                return this.Parameters.GetTimeSpanValue(nameof(WaitExecutor.TimeInterval), WaitExecutor.DefaultTimeInterval);
+                return this.Parameters.GetTimeSpanValue(nameof(WaitExecutor.Duration), WaitExecutor.DefaultDuration);
             }
         }
 
@@ -48,7 +48,7 @@ namespace VirtualClient.Dependencies
         /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await Task.Delay(this.TimeInterval, cancellationToken).ConfigureAwait();
+            await Task.Delay(this.Duration, cancellationToken).ConfigureAwait();
             return;
         }
     }
