@@ -25,6 +25,11 @@ namespace VirtualClient.Actions
     {
         private readonly object lockObject = new object();
         private static readonly Regex ProtocolExpression = new Regex(@"--protocol[=\s]*([a-z0-9_]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly List<Regex> StandardErrorExpressions = new List<Regex>
+        {
+            new Regex(@"connection\s+dropped", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            new Regex(@"connection\s+refused", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierBenchmarkClientExecutor"/> class.
@@ -341,6 +346,17 @@ namespace VirtualClient.Actions
 
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Memtier", logToFile: true);
                                 process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
+
+                                // The Memtier workload for whatever reason emits the following statement in standard error:
+                                // 'Writing results to stdout'. We will throw if there is any other information in standard error. Certain
+                                // other issues are reported in standard out even though the exit code of 0 (success) is returned. Not the best
+                                // choices for a benchmark, but handling these here.
+                                if (process.StandardError.Length > 0)
+                                {
+                                    process.ThrowOnStandardError<WorkloadException>(
+                                        errorReason: ErrorReason.WorkloadFailed,
+                                        expressions: MemtierBenchmarkClientExecutor.StandardErrorExpressions.ToArray());
+                                }
 
                                 // We don't capture metrics on warm up operations.
                                 if (!this.WarmUp)

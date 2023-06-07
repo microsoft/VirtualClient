@@ -1,0 +1,285 @@
+\Disk(sda)\# Reads
+\Disk(sda)\# Writes
+\Disk(sda)\% Busy Time
+\Disk(sda)\Avg. Request Time
+\Disk\# Reads
+\Disk\# Writes
+\Disk\Avg. % Busy Time
+\Disk\Avg. Request Time
+\Memory\Buffer Bytes
+\Memory\Cached Bytes
+\Memory\Free Bytes
+\Memory\Kernel Bytes
+\Memory\Page Reclaims
+\Memory\Page Scans
+\Memory\Page Steals
+\Memory\Swap Space Free Bytes
+\Memory\Swap Space Reads
+\Memory\Swap Space Total Bytes
+\Memory\Swap Space Virtual Committed Bytes
+\Memory\Swap Space Virtual Limit Bytes
+\Memory\Swap Space Writes
+\Memory\Total Bytes
+\Network(enP1008)\% Usage
+\Network(enP1008)\KB/sec Received
+\Network(enP1008)\KB/sec Transmitted
+\Network(enP1008)\Packets Received
+\Network(enP1008)\Packets Transmitted
+\Network(enP1048)\% Usage
+\Network(enP1048)\KB/sec Received
+\Network(enP1048)\KB/sec Transmitted
+\Network(enP1048)\Packets Received
+\Network(enP1048)\Packets Transmitted
+\Network(enP2177)\% Usage
+\Network(enP2177)\KB/sec Received
+\Network(enP2177)\KB/sec Transmitted
+\Network(enP2177)\Packets Received
+\Network(enP2177)\Packets Transmitted
+\Network(enP2738)\% Usage
+\Network(enP2738)\KB/sec Received
+\Network(enP2738)\KB/sec Transmitted
+\Network(enP2738)\Packets Received
+\Network(enP2738)\Packets Transmitted
+\Network(enP4537)\% Usage
+\Network(enP4537)\KB/sec Received
+\Network(enP4537)\KB/sec Transmitted
+\Network(enP4537)\Packets Received
+\Network(enP4537)\Packets Transmitted
+\Network(enP5205)\% Usage
+\Network(enP5205)\KB/sec Received
+\Network(enP5205)\KB/sec Transmitted
+\Network(enP5205)\Packets Received
+\Network(enP5205)\Packets Transmitted
+\Network(enP5427)\% Usage
+\Network(enP5427)\KB/sec Received
+\Network(enP5427)\KB/sec Transmitted
+\Network(enP5427)\Packets Received
+\Network(enP5427)\Packets Transmitted
+\Network(enP5435)\% Usage
+\Network(enP5435)\KB/sec Received
+\Network(enP5435)\KB/sec Transmitted
+\Network(enP5435)\Packets Received
+\Network(enP5435)\Packets Transmitted
+\Network(enP6125)\% Usage
+\Network(enP6125)\KB/sec Received
+\Network(enP6125)\KB/sec Transmitted
+\Network(enP6125)\Packets Received
+\Network(enP6125)\Packets Transmitted
+\Network(enP8248)\% Usage
+\Network(enP8248)\KB/sec Received
+\Network(enP8248)\KB/sec Transmitted
+\Network(enP8248)\Packets Received
+\Network(enP8248)\Packets Transmitted
+\Network(enP8840)\% Usage
+\Network(enP8840)\KB/sec Received
+\Network(enP8840)\KB/sec Transmitted
+\Network(enP8840)\Packets Received
+\Network(enP8840)\Packets Transmitted
+\Network(enP9892)\% Usage
+\Network(enP9892)\KB/sec Received
+\Network(enP9892)\KB/sec Transmitted
+\Network(enP9892)\Packets Received
+\Network(enP9892)\Packets Transmitted
+\Network(eth0)\% Usage
+\Network(eth0)\KB/sec Received
+\Network(eth0)\KB/sec Transmitted
+\Network(eth0)\Packets Received
+\Network(eth0)\Packets Transmitted
+\Network\Avg. % Usage
+\Network\Avg. KB/sec Received
+\Network\Avg. KB/sec Transmitted
+\Network\IP Datagrams Delivered
+\Network\IP Datagrams Forwarded
+\Network\IP Datagrams Received
+\Network\IP Datagrams Transmitted
+\Network\Packets Received
+\Network\Packets Transmitted
+\Network\TCP Segments Received
+\Network\TCP Segments Transmitted
+\Network\UDP Segments Received
+\Network\UDP Segments Transmitted
+\Processor Information(_Total)\% IOWait Time
+\Processor Information(_Total)\% IOWait Time Max
+\Processor Information(_Total)\% IOWait Time Median
+\Processor Information(_Total)\% IOWait Time Min
+\Processor Information(_Total)\% IRQ Time
+\Processor Information(_Total)\% IRQ Time Max
+\Processor Information(_Total)\% IRQ Time Median
+\Processor Information(_Total)\% IRQ Time Min
+\Processor Information(_Total)\% Idle Time
+\Processor Information(_Total)\% Idle Time Max
+\Processor Information(_Total)\% Idle Time Median
+\Processor Information(_Total)\% Idle Time Min
+\Processor Information(_Total)\% System Time
+\Processor Information(_Total)\% System Time Max
+\Processor Information(_Total)\% System Time Median
+\Processor Information(_Total)\% System Time Min
+\Processor Information(_Total)\% User Time
+\Processor Information(_Total)\% User Time Max
+\Processor Information(_Total)\% User Time Median
+\Processor Information(_Total)\% User Time Min
+\Processor Information(_Total)\Available Threads (Avg1)
+\Processor Information(_Total)\Available Threads (Avg15)
+\Processor Information(_Total)\Available Threads (Avg5)
+\Processor Information(_Total)\CSwitches
+\Processor Information(_Total)\Serviced Interrupts
+\Processor(cpu000)\% IOWait Time
+\Processor(cpu000)\% IRQ Time
+\Processor(cpu000)\% Idle Time
+\Processor(cpu000)\% System Time
+\Processor(cpu000)\% User Time
+\Processor(cpu001)\% IOWait Time
+\Processor(cpu001)\% IRQ Time
+\Processor(cpu001)\% Idle Time
+\Processor(cpu001)\% System Time
+\Processor(cpu001)\% User Time
+\Processor(cpu002)\% IOWait Time
+\Processor(cpu002)\% IRQ Time
+\Processor(cpu002)\% Idle Time
+\Processor(cpu002)\% System Time
+\Processor(cpu002)\% User Time
+\Processor(cpu003)\% IOWait Time
+\Processor(cpu003)\% IRQ Time
+\Processor(cpu003)\% Idle Time
+\Processor(cpu003)\% System Time
+\Processor(cpu003)\% User Time
+\Processor(cpu004)\% IOWait Time
+\Processor(cpu004)\% IRQ Time
+\Processor(cpu004)\% Idle Time
+\Processor(cpu004)\% System Time
+\Processor(cpu004)\% User Time
+\Processor(cpu005)\% IOWait Time
+\Processor(cpu005)\% IRQ Time
+\Processor(cpu005)\% Idle Time
+\Processor(cpu005)\% System Time
+\Processor(cpu005)\% User Time
+\Processor(cpu006)\% IOWait Time
+\Processor(cpu006)\% IRQ Time
+\Processor(cpu006)\% Idle Time
+\Processor(cpu006)\% System Time
+\Processor(cpu006)\% User Time
+\Processor(cpu007)\% IOWait Time
+\Processor(cpu007)\% IRQ Time
+\Processor(cpu007)\% Idle Time
+\Processor(cpu007)\% System Time
+\Processor(cpu007)\% User Time
+\Processor(cpu008)\% IOWait Time
+\Processor(cpu008)\% IRQ Time
+\Processor(cpu008)\% Idle Time
+\Processor(cpu008)\% System Time
+\Processor(cpu008)\% User Time
+\Processor(cpu009)\% IOWait Time
+\Processor(cpu009)\% IRQ Time
+\Processor(cpu009)\% Idle Time
+\Processor(cpu009)\% System Time
+\Processor(cpu009)\% User Time
+\Processor(cpu010)\% IOWait Time
+\Processor(cpu010)\% IRQ Time
+\Processor(cpu010)\% Idle Time
+\Processor(cpu010)\% System Time
+\Processor(cpu010)\% User Time
+\Processor(cpu011)\% IOWait Time
+\Processor(cpu011)\% IRQ Time
+\Processor(cpu011)\% Idle Time
+\Processor(cpu011)\% System Time
+\Processor(cpu011)\% User Time
+\Processor(cpu012)\% IOWait Time
+\Processor(cpu012)\% IRQ Time
+\Processor(cpu012)\% Idle Time
+\Processor(cpu012)\% System Time
+\Processor(cpu012)\% User Time
+\Processor(cpu013)\% IOWait Time
+\Processor(cpu013)\% IRQ Time
+\Processor(cpu013)\% Idle Time
+\Processor(cpu013)\% System Time
+\Processor(cpu013)\% User Time
+\Processor(cpu014)\% IOWait Time
+\Processor(cpu014)\% IRQ Time
+\Processor(cpu014)\% Idle Time
+\Processor(cpu014)\% System Time
+\Processor(cpu014)\% User Time
+\Processor(cpu015)\% IOWait Time
+\Processor(cpu015)\% IRQ Time
+\Processor(cpu015)\% Idle Time
+\Processor(cpu015)\% System Time
+\Processor(cpu015)\% User Time
+\Processor(cpu016)\% IOWait Time
+\Processor(cpu016)\% IRQ Time
+\Processor(cpu016)\% Idle Time
+\Processor(cpu016)\% System Time
+\Processor(cpu016)\% User Time
+\Processor(cpu017)\% IOWait Time
+\Processor(cpu017)\% IRQ Time
+\Processor(cpu017)\% Idle Time
+\Processor(cpu017)\% System Time
+\Processor(cpu017)\% User Time
+\Processor(cpu018)\% IOWait Time
+\Processor(cpu018)\% IRQ Time
+\Processor(cpu018)\% Idle Time
+\Processor(cpu018)\% System Time
+\Processor(cpu018)\% User Time
+\Processor(cpu019)\% IOWait Time
+\Processor(cpu019)\% IRQ Time
+\Processor(cpu019)\% Idle Time
+\Processor(cpu019)\% System Time
+\Processor(cpu019)\% User Time
+\Processor(cpu020)\% IOWait Time
+\Processor(cpu020)\% IRQ Time
+\Processor(cpu020)\% Idle Time
+\Processor(cpu020)\% System Time
+\Processor(cpu020)\% User Time
+\Processor(cpu021)\% IOWait Time
+\Processor(cpu021)\% IRQ Time
+\Processor(cpu021)\% Idle Time
+\Processor(cpu021)\% System Time
+\Processor(cpu021)\% User Time
+\Processor(cpu022)\% IOWait Time
+\Processor(cpu022)\% IRQ Time
+\Processor(cpu022)\% Idle Time
+\Processor(cpu022)\% System Time
+\Processor(cpu022)\% User Time
+\Processor(cpu023)\% IOWait Time
+\Processor(cpu023)\% IRQ Time
+\Processor(cpu023)\% Idle Time
+\Processor(cpu023)\% System Time
+\Processor(cpu023)\% User Time
+\Processor(cpu024)\% IOWait Time
+\Processor(cpu024)\% IRQ Time
+\Processor(cpu024)\% Idle Time
+\Processor(cpu024)\% System Time
+\Processor(cpu024)\% User Time
+\Processor(cpu025)\% IOWait Time
+\Processor(cpu025)\% IRQ Time
+\Processor(cpu025)\% Idle Time
+\Processor(cpu025)\% System Time
+\Processor(cpu025)\% User Time
+\Processor(cpu026)\% IOWait Time
+\Processor(cpu026)\% IRQ Time
+\Processor(cpu026)\% Idle Time
+\Processor(cpu026)\% System Time
+\Processor(cpu026)\% User Time
+\Processor(cpu027)\% IOWait Time
+\Processor(cpu027)\% IRQ Time
+\Processor(cpu027)\% Idle Time
+\Processor(cpu027)\% System Time
+\Processor(cpu027)\% User Time
+\Processor(cpu028)\% IOWait Time
+\Processor(cpu028)\% IRQ Time
+\Processor(cpu028)\% Idle Time
+\Processor(cpu028)\% System Time
+\Processor(cpu028)\% User Time
+\Processor(cpu029)\% IOWait Time
+\Processor(cpu029)\% IRQ Time
+\Processor(cpu029)\% Idle Time
+\Processor(cpu029)\% System Time
+\Processor(cpu029)\% User Time
+\Processor(cpu030)\% IOWait Time
+\Processor(cpu030)\% IRQ Time
+\Processor(cpu030)\% Idle Time
+\Processor(cpu030)\% System Time
+\Processor(cpu030)\% User Time
+\Processor(cpu031)\% IOWait Time
+\Processor(cpu031)\% IRQ Time
+\Processor(cpu031)\% Idle Time
+\Processor(cpu031)\% System Time
+\Processor(cpu031)\% User Time

@@ -15,6 +15,16 @@ namespace VirtualClient
         Average,
 
         /// <summary>
+        /// Capture the minimum of the metric values.
+        /// </summary>
+        Max,
+
+        /// <summary>
+        /// Capture the maximum of the metric values.
+        /// </summary>
+        Min,
+
+        /// <summary>
         /// Simply capture the metric value.
         /// </summary>
         Raw

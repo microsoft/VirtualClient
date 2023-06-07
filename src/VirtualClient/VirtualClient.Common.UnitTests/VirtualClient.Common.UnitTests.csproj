@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <RootNamespace>VirtualClient.Common</RootNamespace>
+		<NoWarn>CA1001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
