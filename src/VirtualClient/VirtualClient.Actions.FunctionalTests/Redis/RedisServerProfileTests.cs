@@ -64,10 +64,7 @@ namespace VirtualClient.Actions
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
-            List<string> expectedCommands = new List<string>
-            {
-                 $"sudo pkill -f redis-server",
-            };
+            List<string> expectedCommands = new List<string>();
 
             int port = 6379;
             Enumerable.Range(0, 4).ToList().ForEach(core =>
