@@ -256,8 +256,22 @@ namespace VirtualClient.Actions
 
         private async Task InstallSysbenchOLTPPackage(CancellationToken cancellationToken)
         {
-            const string updateAptCommand = "su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"";
+            string updateAptCommand;
             const string installSysbenchCommand = "apt install sysbench";
+
+            LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+            
+            switch (distributionInfo.LinuxDistribution)
+            {
+                case LinuxDistribution.Ubuntu:
+                case LinuxDistribution.Debian:
+                    updateAptCommand = "su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"";
+                    break;
+                default:
+                    throw new DependencyException(
+                        $"You are on Linux distrubution {distributionInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
+                        ErrorReason.LinuxDistributionNotSupported);
+            }
 
             // install sysbench binaries
             await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(updateAptCommand, null, Environment.CurrentDirectory, cancellationToken)
