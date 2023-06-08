@@ -19,7 +19,7 @@
             "Parameters": {
                 "Scenario": "redis_server",
                 "PackageName": "redis",
-                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &",
                 "BindToCores": true,
                 "Port": "$.Parameters.ServerPort",
                 "ServerInstances": "$.Parameters.ServerInstances",
