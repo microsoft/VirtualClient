@@ -27,6 +27,7 @@ namespace VirtualClient.Monitors
 
         private ConcurrentBag<PerformanceCounterCategory> categories;
         private SemaphoreSlim semaphore;
+        private bool disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WindowsPerformanceCounterMonitor"/> class.
@@ -192,6 +193,21 @@ namespace VirtualClient.Monitors
                     }
                 }
             });
+        }
+
+        /// <summary>
+        /// Disposes of resources used by the monitor.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (!this.disposed)
+                {
+                    this.semaphore.Dispose();
+                    this.disposed = true;
+                }
+            }
         }
 
         /// <summary>
