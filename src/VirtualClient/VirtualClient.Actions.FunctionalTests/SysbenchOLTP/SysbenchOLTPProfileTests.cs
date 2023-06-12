@@ -33,6 +33,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json")]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP-ARM64.json")]
         public void SysbenchOLTPWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))

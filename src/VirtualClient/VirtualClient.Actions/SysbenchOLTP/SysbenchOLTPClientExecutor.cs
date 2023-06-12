@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -242,12 +243,18 @@ namespace VirtualClient.Actions
 
                     await this.PrepareMySQLDatabase(cancellationToken);
 
+                    this.Logger.LogMessage("prepared db", telemetryContext);
+
                     using (IProcessProxy process = await this.ExecuteCommandAsync(SysbenchFileName, this.sysbenchExecutionArguments + "run", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
+                            this.Logger.LogMessage("starting process", telemetryContext);
+
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                             this.CaptureMetrics(process, telemetryContext, cancellationToken);
+
+                            this.Logger.LogMessage("captured metrics", telemetryContext);
                         }
                     }
                 }
@@ -287,6 +294,16 @@ namespace VirtualClient.Actions
 
             int tableCount = int.Parse(this.NumTables);
             int recordCount = int.Parse(this.RecordCount);
+
+            // sysbench has a bug in preparing the 12th table on arm64 architecture
+
+            if (this.CpuArchitecture == Architecture.Arm64 && tableCount > 11)
+            {
+                throw new WorkloadException(
+                        $"The Sysbench OLTP workload does not support a configuration of 12 or more tables on Arm64 architecture." +
+                        $"Please reconfigure your parameters and try again.",
+                        ErrorReason.PlatformNotSupported);
+            }
 
             if (tableCount != state.TableCount || recordCount != state.RecordCount)
             {
