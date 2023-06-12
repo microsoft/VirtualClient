@@ -10,7 +10,6 @@
         "ServerPort": 6379,
         "ServerMaxConnections": 16384,
         "ClientInstances": 8,
-        "ConfigureNetwork": false,
         "Duration": "00:02:00",
         "Username": null
     },
@@ -196,7 +195,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemcached",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memcached}",
                 "Role": "Server"
@@ -214,17 +213,9 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
-            }
-        },
-        {
-            "Type": "NetworkConfigurationSetup",
-            "Parameters": {
-                "Scenario": "ConfigureNetwork",
-                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
-                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
             }
         },
         {

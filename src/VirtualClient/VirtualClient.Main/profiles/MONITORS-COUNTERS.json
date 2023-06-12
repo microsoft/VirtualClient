@@ -1,0 +1,65 @@
+{
+    "Description": "Default Monitors",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    },
+    "Parameters": {
+        "MonitorFrequency": "00:05:00",
+        "MonitorWarmupPeriod": "00:02:00"
+    },
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallEpelPackage",
+                "Packages-Mariner": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
+                "Packages-RHEL8": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm",
+                "Packages-RHEL7": "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
+                "Packages-CentOS7": "epel-release"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallAtop",
+                "Packages": "atop",
+                "AllowUpgrades": true
+            }
+        }
+    ],
+    "Monitors": [
+        {
+            "Type": "LinuxPerformanceCounterMonitor",
+            "Parameters": {
+                "Scenario": "CaptureCounters",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+            }
+        },
+        {
+            "Type": "WindowsPerformanceCounterMonitor",
+            "Parameters": {
+                "Scenario": "CaptureCounters",
+                "MonitorFrequency": "$.Parameters.MonitorFrequency",
+                "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod",
+                "Counters01": "Hyper-V Hypervisor Logical Processor=\\(_Total\\)",
+                "Counters02": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
+                "Counters03": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Long Spin Wait Hypercalls/sec)",
+                "Counters04": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(Total Intercepts Cost|Total Intercepts/sec)",
+                "Counters05": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
+                "Counters06": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Logical Processor Migrations/sec|Long Spin Wait Hypercalls/sec)",
+                "Counters07": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(Nested Page Fault Intercepts/sec|Posted Interrupt Notifications/sec|Posted Interrupt Scans/sec|Total Intercepts Cost|Total Intercepts/sec)",
+                "Counters08": "IPv4=.",
+                "Counters09": "Memory=(Available|Cache|Committed) Bytes",
+                "Counters10": "Memory=Faults/sec",
+                "Counters11": "Memory=(Page Reads/sec|Page Writes/sec|Pages/sec|Pages Input/sec|Pages Output/sec)",
+                "Counters12": "PhysicalDisk=\\(_Total\\)",
+                "Counters13": "Processor=\\(_Total\\)",
+                "Counters14": "Processor=\\([0-9]+\\)\\\\% (C[0-9]+|Idle|Interrupt|Privileged|Processor|User) Time",
+                "Counters15": "System=.",
+                "Comments": "The counters defined are formatted as {category}={counter_match_expression}. The match expression is a regular expression to allow for handling variability of counters available on different systems. JSON content has eccentricities. Use 4-backslashes to represent a single backslash and 2-backslashes to represent a regular expression character escape."
+            }
+        }
+    ]
+}

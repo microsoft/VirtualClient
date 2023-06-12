@@ -5,31 +5,33 @@
         "SupportedOperatingSystems": "Ubuntu"
     },
     "Parameters": {
+        "ServerPort": 6379,
+        "ServerThreadCount": 4,
+        "ServerInstances": 1,
+        "ClientInstances": 1
     },
     "Actions": [
         {
             "Type": "RedisServerExecutor",
             "Parameters": {
-                "Scenario": "RedisServer",
-                "Role": "Server",
-                "Port": "6379",
-                "PackageName": "Redis",
-                "Bind": 1
+                "Scenario": "redis_server",
+                "PackageName": "redis",
+                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &",
+                "BindToCores": true,
+                "Port": "$.Parameters.ServerPort",
+                "ServerInstances": "$.Parameters.ServerInstances",
+                "ServerThreadCount": "$.Parameters.ServerThreadCount",
+                "Role": "Server"
             }
         },
         {
-            "Type": "RedisMemtierClientExecutor",
+            "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "Memtier_4t_1c",
-                "Role": "Client",
-                "Port": "6379",
-                "PackageName": "Redis",
-                "ThreadCount": "4",
-                "ClientCount": "1",
-                "RunCount": "1",
-                "DurationInSecs": "60",
-                "PipelineDepth": "32",
-                "Bind": 1
+                "Scenario": "memtier_8t_16c_32b_r1:1",
+                "PackageName": "memtier",
+                "CommandLine": "--protocol redis --threads 8 --clients 16  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time 60",
+                "ClientInstances": "$.Parameters.ClientInstances",
+                "Role": "Client"
             }
         }
     ],
@@ -37,7 +39,7 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForMemtier",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
                 "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
                 "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
@@ -46,38 +48,53 @@
         {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallRequiredLinuxPackagesForRedis",
+                "Scenario": "InstallLinuxPackages",
                 "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
                 "Packages-Yum": "wget,numactl,tcl-devel",
                 "Packages-Dnf": "wget,numactl,tcl-devel"
             }
         },
         {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallRedisPackage",
+                "PackageName": "redis",
+                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
+                "SubPath": "redis-6.2.1",
+                "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileRedis",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "make",
+                "WorkingDirectory": "{PackagePath:redis}"
+            }
+        },
+        {
             "Type": "GitRepoClone",
             "Parameters": {
-                "Scenario": "CloneMemtierBenchmarkRepo",
+                "Scenario": "CloneMemtierRepo",
                 "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
                 "PackageName": "memtier"
             }
         },
         {
-            "Type": "RedisInstallation",
+            "Type": "ExecuteCommand",
             "Parameters": {
-                "Scenario": "InstallRedis",
-                "Version": "6.2.1",
-                "PackageName": "redis"
+                "Scenario": "CompileMemtier",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+                "WorkingDirectory": "{PackagePath:memtier}"
             }
         },
         {
-            "Type": "MemtierInstallation",
+            "Type": "ApiServer",
             "Parameters": {
-                "Scenario": "InstallMemtier",
-                "Version": "1.4.0",
-                "PackageName": "memtier"
+                "Scenario": "StartAPIServer"
             }
-        },
-        {
-            "Type": "ApiServer"
         }
     ]
 }

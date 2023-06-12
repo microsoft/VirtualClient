@@ -11,7 +11,6 @@
         "ServerThreadCount": 4,
         "ServerInstances": "{LogicalCoreCount}",
         "ClientInstances": 1,
-        "ConfigureNetwork": false,
         "Duration": "00:02:00"
     },
     "Actions": [
@@ -20,7 +19,7 @@
             "Parameters": {
                 "Scenario": "redis_server",
                 "PackageName": "redis",
-                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+                "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &",
                 "BindToCores": true,
                 "Port": "$.Parameters.ServerPort",
                 "ServerInstances": "$.Parameters.ServerInstances",
@@ -194,7 +193,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileRedis",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "make",
                 "WorkingDirectory": "{PackagePath:redis}"
             }
@@ -211,17 +210,9 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
-            }
-        },
-        {
-            "Type": "NetworkConfigurationSetup",
-            "Parameters": {
-                "Scenario": "ConfigureNetwork",
-                "ConfigureNetwork": "$.Parameters.ConfigureNetwork",
-                "VisualStudioCRuntimePackageName": "visualstudiocruntime"
             }
         },
         {

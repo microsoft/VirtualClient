@@ -57,6 +57,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Parameter defines whether the /etc/systemd/system.conf file should be updated on Unix/Linux systems.
+        /// Default = true;
+        /// </summary>
+        public bool ConfigureSystemConfig
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(NetworkConfigurationSetup.ConfigureSystemConfig), true);
+            }
+        }
+
+        /// <summary>
         /// Parameter defines whether the BusyPoll should be enabled.
         /// </summary>
         public bool EnableBusyPoll
@@ -305,59 +317,65 @@ namespace VirtualClient.Dependencies
 
         private async Task ApplySecurityLimitsConfigurationOnUnixAsync(CancellationToken cancellationToken)
         {
-            // Configure: /etc/security/limits.conf
-            // ================================================================================================================================
-            string[] limitsFileContent = await this.systemManagement.FileSystem.File.ReadAllLinesAsync(NetworkConfigurationSetup.LimitsConfigPath, cancellationToken)
-                .ConfigureAwait(false);
+            if (this.systemManagement.FileSystem.File.Exists(NetworkConfigurationSetup.LimitsConfigPath))
+            {
+                // Configure: /etc/security/limits.conf
+                // ================================================================================================================================
+                string[] limitsFileContent = await this.systemManagement.FileSystem.File.ReadAllLinesAsync(NetworkConfigurationSetup.LimitsConfigPath, cancellationToken)
+                    .ConfigureAwait(false);
 
-            IList<string> limitConfigContents = this.RemovePreviouslyAppliedSettings(limitsFileContent);
+                IList<string> limitConfigContents = this.RemovePreviouslyAppliedSettings(limitsFileContent);
 
-            // The default 'soft' and 'hard' limits for the maximum number of open file handles/descriptors.
-            // https://linux.die.net/man/5/limits.conf
-            limitConfigContents.Add(NetworkConfigurationSetup.SettingsBeginComment);
-            limitConfigContents.Add($"*   soft    nofile  {NetworkConfigurationSetup.NoFileLimit}");
-            limitConfigContents.Add($"*   hard    nofile  {NetworkConfigurationSetup.NoFileLimit}");
-            limitConfigContents.Add(NetworkConfigurationSetup.SettingsEndComment);
+                // The default 'soft' and 'hard' limits for the maximum number of open file handles/descriptors.
+                // https://linux.die.net/man/5/limits.conf
+                limitConfigContents.Add(NetworkConfigurationSetup.SettingsBeginComment);
+                limitConfigContents.Add($"*   soft    nofile  {NetworkConfigurationSetup.NoFileLimit}");
+                limitConfigContents.Add($"*   hard    nofile  {NetworkConfigurationSetup.NoFileLimit}");
+                limitConfigContents.Add(NetworkConfigurationSetup.SettingsEndComment);
 
-            await this.systemManagement.FileSystem.File.WriteAllLinesAsync(NetworkConfigurationSetup.LimitsConfigPath, limitConfigContents)
-                .ConfigureAwait(false);
+                await this.systemManagement.FileSystem.File.WriteAllLinesAsync(NetworkConfigurationSetup.LimitsConfigPath, limitConfigContents)
+                    .ConfigureAwait(false);
+            }
         }
 
         private async Task ApplySystemdConfigurationOnUnixAsync(CancellationToken cancellationToken)
         {
-            IFileSystem fileSystem = this.systemManagement.FileSystem;
-
-            string settingName = "DefaultLimitNOFILE";
-            Regex defaultLimitNoFileExpression = new Regex($@"\s*#*\s*{settingName}=[0-9,]*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-
-            List<string> configFiles = new List<string>
+            if (this.ConfigureSystemConfig)
             {
-                NetworkConfigurationSetup.SystemdConfigPath,
-                NetworkConfigurationSetup.SystemdUserConfigPath
-            };
+                IFileSystem fileSystem = this.systemManagement.FileSystem;
 
-            foreach (string configFile in configFiles)
-            {
-                if (fileSystem.File.Exists(configFile))
+                string settingName = "DefaultLimitNOFILE";
+                Regex defaultLimitNoFileExpression = new Regex($@"\s*#*\s*{settingName}=[0-9,\:]*", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+                List<string> configFiles = new List<string>
                 {
-                    // Configure: /etc/systemd/system.conf
-                    // https://superuser.com/questions/1200539/cannot-increase-open-file-limit-past-4096-ubuntu/1200818#_=_
-                    // ================================================================================================================================
-                    string configFileContent = await this.systemManagement.FileSystem.File.ReadAllTextAsync(configFile, cancellationToken)
-                        .ConfigureAwait(false);
+                    NetworkConfigurationSetup.SystemdConfigPath,
+                    NetworkConfigurationSetup.SystemdUserConfigPath
+                };
 
-                    string setting = $"{Environment.NewLine}{settingName}={NetworkConfigurationSetup.NoFileLimit}";
-                    if (defaultLimitNoFileExpression.IsMatch(configFileContent))
+                foreach (string configFile in configFiles)
+                {
+                    if (fileSystem.File.Exists(configFile))
                     {
-                        configFileContent = defaultLimitNoFileExpression.Replace(configFileContent, setting);
-                    }
-                    else
-                    {
-                        configFileContent += setting;
-                    }
+                        // Configure: /etc/systemd/system.conf
+                        // https://superuser.com/questions/1200539/cannot-increase-open-file-limit-past-4096-ubuntu/1200818#_=_
+                        // ================================================================================================================================
+                        string configFileContent = await this.systemManagement.FileSystem.File.ReadAllTextAsync(configFile, cancellationToken)
+                            .ConfigureAwait(false);
 
-                    await this.systemManagement.FileSystem.File.WriteAllTextAsync(configFile, configFileContent)
-                        .ConfigureAwait(false);
+                        string setting = $"{Environment.NewLine}{settingName}={NetworkConfigurationSetup.NoFileLimit}";
+                        if (defaultLimitNoFileExpression.IsMatch(configFileContent))
+                        {
+                            configFileContent = defaultLimitNoFileExpression.Replace(configFileContent, setting);
+                        }
+                        else
+                        {
+                            configFileContent += setting;
+                        }
+
+                        await this.systemManagement.FileSystem.File.WriteAllTextAsync(configFile, configFileContent)
+                            .ConfigureAwait(false);
+                    }
                 }
             }
         }

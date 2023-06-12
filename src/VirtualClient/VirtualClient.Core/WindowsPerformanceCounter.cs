@@ -21,8 +21,37 @@ namespace VirtualClient
         private PerformanceCounter counter;
         private ConcurrentBag<float> counterValues;
         private SemaphoreSlim semaphore;
+        private DateTime? captureStartTime;
         private DateTime nextCounterVerificationTime;
         private bool disposed;
+
+        /// <summary>
+        /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
+        /// </summary>
+        /// <param name="counter">The performance counter category.</param>
+        /// <param name="captureStrategy">The capture strategy to use over time while capturing performance values.</param>
+        public WindowsPerformanceCounter(PerformanceCounter counter, CaptureStrategy captureStrategy)
+        {
+            counter.ThrowIfNull(nameof(counter));
+
+            this.counter = counter;
+            this.Category = counter.CategoryName;
+            this.Name = counter.CounterName;
+            this.InstanceName = !string.IsNullOrWhiteSpace(counter.InstanceName)
+                ? counter.InstanceName
+                : null;
+
+            this.Strategy = captureStrategy;
+            this.MetricName = string.IsNullOrWhiteSpace(counter.InstanceName)
+                ? WindowsPerformanceCounter.GetCounterName(counter.CategoryName, counter.CounterName)
+                : WindowsPerformanceCounter.GetCounterName(counter.CategoryName, counter.CounterName, counter.InstanceName);
+
+            this.MetricRelativity = MetricRelativity.Undefined;
+
+            this.counterValues = new ConcurrentBag<float>();
+            this.semaphore = new SemaphoreSlim(1);
+            this.nextCounterVerificationTime = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// Intialize a new instance of the <see cref="WindowsPerformanceCounter"/> class.
@@ -39,7 +68,7 @@ namespace VirtualClient
             this.Name = counterName;
             this.Strategy = captureStrategy;
             this.counterValues = new ConcurrentBag<float>();
-            this.MetricName = $"\\{counterCategory}\\{counterName}"; // It is the standard way of writing 
+            this.MetricName = WindowsPerformanceCounter.GetCounterName(counterCategory, counterName); 
             this.MetricRelativity = MetricRelativity.Undefined;
             this.semaphore = new SemaphoreSlim(1);
             this.nextCounterVerificationTime = DateTime.UtcNow;
@@ -69,7 +98,7 @@ namespace VirtualClient
             : this(counterCategory, counterName, captureStrategy)
         {
             this.InstanceName = instanceName;
-            this.MetricName = $"\\{counterCategory}({instanceName})\\{counterName}";
+            this.MetricName = WindowsPerformanceCounter.GetCounterName(counterCategory, counterName, instanceName);
         }
 
         /// <summary>
@@ -107,6 +136,12 @@ namespace VirtualClient
         public MetricRelativity MetricRelativity { get; set; }
 
         /// <summary>
+        /// The maximum amount of time the logic will wait to successfully confirm the existence
+        /// of the performance counter before ceasing to check. Default = 1 hour.
+        /// </summary>
+        public TimeSpan VerificationPeriod { get; set; }
+
+        /// <summary>
         /// The name of the performance counter (e.g. % Processor Time).
         /// </summary>
         public string Name { get; }
@@ -133,15 +168,41 @@ namespace VirtualClient
             }
         }
 
+        /// <summary>
+        /// Returns the name for the counter (e.g. \system\processes, \Processor(_Total)\% processor time).
+        /// </summary>
+        /// <param name="category">The performance counter category name.</param>
+        /// <param name="counterName">The performance counter name.</param>
+        /// <param name="instanceName">The performance counter instance name if applicable.</param>
+        /// <returns></returns>
+        public static string GetCounterName(string category, string counterName, string instanceName = null)
+        {
+            // It is the standard way of writing performance counters in Windows.
+            if (string.IsNullOrWhiteSpace(instanceName))
+            {
+                return $"\\{category}\\{counterName}";
+            }
+            else
+            {
+                return $"\\{category}({instanceName})\\{counterName}";
+            }
+        }
+
         /// <inheritdoc />
         public void Capture()
         {
             try
             {
                 this.semaphore.Wait(CancellationToken.None);
+
                 if (this.TryGetCounterValue(out float? counterValue))
                 {
                     this.counterValues.Add(counterValue.Value);
+
+                    if (this.captureStartTime == null)
+                    {
+                        this.captureStartTime = DateTime.UtcNow;
+                    }
                 }
             }
             finally
@@ -165,6 +226,7 @@ namespace VirtualClient
             try
             {
                 this.semaphore.Wait(CancellationToken.None);
+                this.captureStartTime = null;
                 this.counterValues.Clear();
             }
             finally
@@ -188,13 +250,15 @@ namespace VirtualClient
                 switch (this.Strategy)
                 {
                     case CaptureStrategy.Average:
-                        float sum = 0;
-                        foreach (float captureValue in this.counterValues)
-                        {
-                            sum += captureValue;
-                        }
+                        value = this.counterValues.Average();
+                        break;
 
-                        value = sum / this.counterValues.Count;
+                    case CaptureStrategy.Max:
+                        value = this.counterValues.Max();
+                        break;
+
+                    case CaptureStrategy.Min:
+                        value = this.counterValues.Min();
                         break;
 
                     case CaptureStrategy.Raw:
@@ -207,11 +271,18 @@ namespace VirtualClient
                             ErrorReason.MonitorUnexpectedAnomaly);
                 }
 
-                this.counterValues.Clear();
-                return new Metric(this.MetricName, value, null, this.MetricRelativity);
+                return new Metric(this.MetricName, value, null, this.MetricRelativity)
+                {
+                    StartTime = this.captureStartTime != null
+                        ? this.captureStartTime.Value
+                        : DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow
+                };
             }
             finally
             {
+                this.captureStartTime = null;
+                this.counterValues.Clear();
                 this.semaphore.Release();
             }
         }
