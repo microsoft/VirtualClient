@@ -3,7 +3,7 @@
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
-        "SupportedPlatforms": "linux-x64,arm64",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "Debian,Ubuntu"
     },
     "Parameters": {
