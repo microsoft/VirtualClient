@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
             commands = new List<string>
             {
                 $"sudo su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"",
-                $"sudo apt install sysbench",
+                $"sudo apt install sysbench --yes --quiet",
 
                 $"sudo sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
                 $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",

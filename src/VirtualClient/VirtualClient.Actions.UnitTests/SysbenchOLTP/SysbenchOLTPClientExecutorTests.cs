@@ -86,7 +86,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"sudo su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"",
-                $"sudo apt install sysbench",
+                $"sudo apt install sysbench --yes --quiet",
                 $"sudo sysbench oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
                 $"sudo sysbench oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo sysbench oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
