@@ -3,8 +3,8 @@
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "04:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "SupportedOperatingSystems": "Debian,Ubuntu"
     },
     "Parameters": {
         "DatabaseName": "sbtest"
@@ -359,29 +359,8 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "make, automake, libtool, pkg-config",
-                "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
-                "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
-                "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
-                "Packages-Zypper": "libaio-dev, libmysqlclient-devel, openssl-devel",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
                 "Packages": "mysql-server",
                 "Role": "Server"
-            }
-        },
-        {
-            "Type": "GitRepoClone",
-            "Parameters": {
-                "Scenario": "CloneSysbenchRepo",
-                "RepoUri": "https://github.com/akopytov/sysbench.git",
-                "PackageName": "sysbench",
-                "Role": "Client"
             }
         },
         {

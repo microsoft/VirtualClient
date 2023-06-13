@@ -195,46 +195,50 @@ namespace VirtualClient.Dependencies
 
         private async Task CreateMySQLUser(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            ProcessManager manager = this.SystemManager.ProcessManager;
+
+            List<string> clientIpAddresses = new List<string>
+            {
+                IPAddress.Loopback.ToString()
+            };
+
             if (this.IsMultiRoleLayout())
             {
-                ProcessManager manager = this.SystemManager.ProcessManager;
-
                 IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
-                List<string> clientIpAddresses = new List<string>();
 
                 foreach (ClientInstance instance in clientInstances)
                 {
                     IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
                     clientIpAddresses.Add(clientIPAddress.ToString());
                 }
-
-                if (this.Platform == PlatformID.Win32NT)
+            }
+            
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                foreach (string clientIp in clientIpAddresses)
                 {
-                    foreach (string clientIp in clientIpAddresses)
-                    {
-                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
-                else if (this.Platform == PlatformID.Unix)
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                foreach (string clientIp in clientIpAddresses)
                 {
-                    foreach (string clientIp in clientIpAddresses)
-                    {
-                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
             }
         }
