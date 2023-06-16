@@ -20,6 +20,7 @@ namespace VirtualClient.Actions
     /// The CoreMarkPro workload executor.
     /// </summary>
     [UnixCompatible]
+    [WindowsCompatible]
     public class CoreMarkProExecutor : VirtualClientComponent
     {
         /// <summary>
@@ -45,17 +46,45 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
 
-            string commandLineArguments = this.GetCommandLineArguments();
+            // guide: https://github.com/eembc/coremark-pro/blob/main/docs/EEMBC%20Symmetric%20Multicore%20Benchmark%20User%20Guide%202.1.4.pdf
+            // make TARGET=linux64 XCMD='-c4' certify-all
+            // Even when using cygwin, the TARGET is still linux64.
+            string argument = string.Empty;
+            switch (this.Platform)
+            {
+                case PlatformID.Unix:
+                    argument = @$"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all";
+                    break;
+                case PlatformID.Win32NT:
+                    DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                    break;
+            }
 
             this.StartTime = DateTime.UtcNow;
-            string output = await this.ExecuteCommandAsync("make", commandLineArguments, telemetryContext, cancellationToken);
+
+            string output = string.Empty;
+            using (IProcessProxy process = await this.ExecuteCommandAsync("make", commandLineArguments, this.CoreMarkProDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    if (process.IsErrored())
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
+
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                    output = process.StandardOutput.ToString();
+                }
+            }
+
             this.EndTime = DateTime.UtcNow;
 
             CoreMarkProMetricsParser parser = new CoreMarkProMetricsParser(output);
             IList<Metric> metrics = parser.Parse();
-
             this.Logger.LogMetrics(
                 toolName: "CoreMarkPro",
                 scenarioName: this.Scenario,
@@ -66,66 +95,6 @@ namespace VirtualClient.Actions
                 scenarioArguments: this.Parameters.ToString(),
                 this.Tags,
                 telemetryContext);
-        }
-
-        /// <summary>
-        /// Executes the given command.
-        /// </summary>
-        /// <returns>Output of the command.</returns>
-        private Task<string> ExecuteCommandAsync(string command, string argument, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("command", command);
-
-            string output = string.Empty;
-
-            return this.Logger.LogMessageAsync($"{nameof(CoreMarkProExecutor)}.ExecuteCommand", relatedContext, async () =>
-            {
-                ISystemManagement systemManagement = this.Dependencies.GetService<ISystemManagement>();
-                using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess(command, argument, this.CoreMarkProDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-
-                    await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-                    }
-
-                    output = process.StandardOutput.ToString();
-                }
-
-                return output;
-            });
-        }
-
-        private string GetCommandLineArguments()
-        {
-            // guide: https://github.com/eembc/coremark-pro/blob/main/docs/EEMBC%20Symmetric%20Multicore%20Benchmark%20User%20Guide%202.1.4.pdf
-            // make TARGET=linux64 XCMD='-c4' certify-all
-            // Even when using cygwin, the TARGET is still linux64.
-
-            return @$"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all";
-        }
-
-        private void CheckPlatformSupport()
-        {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The CoreMarkPro workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
-            }
         }
     }
 }
