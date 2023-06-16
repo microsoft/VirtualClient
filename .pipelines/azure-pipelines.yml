@@ -7,7 +7,7 @@
 trigger:
   branches:
     include:
-    - $(Branch)
+    - main
   paths:
     exclude:
     - website
