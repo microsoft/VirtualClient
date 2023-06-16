@@ -7,7 +7,7 @@
 trigger:
   branches:
     include:
-    - main
+    - $(Branch)
   paths:
     exclude:
     - website
@@ -18,7 +18,7 @@ pool:
   vmImage: windows-latest
 
 variables:
-  VcVersion : 0.21.1
+  VcVersion : 1.0.0
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
