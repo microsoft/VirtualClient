@@ -32,8 +32,8 @@ namespace VirtualClient.Contracts
             List<string> filters = filterString.Split("&", StringSplitOptions.RemoveEmptyEntries).ToList();
 
             disks = DiskFilters.FilterStoragePathByPrefix(disks, platform);
-            disks = DiskFilters.FilterOfflineDisks(disks, platform);
-            disks = DiskFilters.FilterReadOnlyDisks(disks, platform);
+            disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            disks = DiskFilters.FilterReadOnlyDisksOnWindows(disks, platform);
 
             foreach (string filter in filters)
             {
@@ -158,7 +158,7 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
-        private static IEnumerable<Disk> FilterOfflineDisks(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterOfflineDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
         {
             if (platform == PlatformID.Win32NT)
             {
@@ -169,7 +169,7 @@ namespace VirtualClient.Contracts
             return disks;
         }
 
-        private static IEnumerable<Disk> FilterReadOnlyDisks(IEnumerable<Disk> disks, PlatformID platform)
+        private static IEnumerable<Disk> FilterReadOnlyDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
         {
             if (platform == PlatformID.Win32NT)
             {

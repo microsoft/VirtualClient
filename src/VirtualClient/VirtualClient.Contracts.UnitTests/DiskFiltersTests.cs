@@ -66,7 +66,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersAlwaysFiltersOutOfflineDisks()
+        public void DiskFiltersAlwaysFiltersOutOfflineDisksOnWindows()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(0).Properties["Status"] = "Online";
@@ -82,7 +82,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void DiskFiltersAlwaysFiltersOutReadOnlyDisks()
+        public void DiskFiltersAlwaysFiltersOutReadOnlyDisksOnWindows()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
             this.disks.ElementAt(2).Properties["Read-only"] = "Yes";
