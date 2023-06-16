@@ -208,6 +208,44 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates logger providers for writing telemetry to local CSV files.
+        /// </summary>
+        /// <param name="logFileDirectory">The full path for the log file directory (e.g. C:\users\any\VirtualClient\logs\).</param>
+        /// <param name="logFileName">The fileName for the log file (e.g. metrics.csv).</param>
+        /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
+        /// <param name="includeFields">Properties to include in the csv Logs File.</param>
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string logFileDirectory, string logFileName, TimeSpan flushInterval, IEnumerable<string> includeFields = null)
+        {
+            string logFilePath = Path.Combine(logFileDirectory, logFileName);
+            logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
+
+            // FileName of the log file when RollingFile Configuration is used in Serilog
+            string rollingLogFileName = logFileName.Replace(".csv", $"-" + DateTime.UtcNow.Date.ToString("yyyyMMdd") + $".csv");
+            string rollingLogFilePath = Path.Combine(logFileDirectory, rollingLogFileName);
+
+            // 100MB
+            const long maxFileSizeBytes = 100000000;
+
+            ILoggerProvider loggerProvider = null;
+
+            if (!string.IsNullOrWhiteSpace(logFilePath))
+            {
+                LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
+                    new CsvTextFormatter(includeFields),
+                    logFilePath,
+                    fileSizeLimitBytes: maxFileSizeBytes,
+                    retainedFileCountLimit: 10,
+                    flushToDiskInterval: flushInterval);
+
+                loggerProvider = new SerilogCsvFileLoggerProvider(logConfiguration, includeFields, rollingLogFilePath);
+
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
+            }
+
+            return loggerProvider;
+        }
+
+        /// <summary>
         /// Creates logger providers for writing telemetry to local log files.
         /// </summary>
         /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
@@ -233,6 +271,33 @@ namespace VirtualClient
                 "operatingSystemPlatform"
             };
 
+            List<string> metricsIncludeInCsv = new List<string>
+            {
+                "timeStamp",
+                "experimentId",
+                "agentId",
+                "executionProfileName",
+                "executionProfilePath",
+                "toolName",
+                "scenarioName",
+                "scenarioStartTime",
+                "scenarioEndTime",
+                "scenarioArguments",
+                "parameters",
+                "metricCategorization",
+                "metricName",
+                "metricValue",
+                "metricUnit",
+                "metricDescription",
+                "metricRelativity",
+                "executionSystem",
+                "platformArchitecture",
+                "systemInfo",
+                "appVersion",
+                "tags",
+                "metadata"
+            };
+
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
@@ -248,6 +313,13 @@ namespace VirtualClient
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
+
+                // Metrics/Results in CSV Format
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(logFileDirectory, settings.MetricsCsvFileName, TimeSpan.FromSeconds(5), metricsIncludeInCsv)
+                    .HandleMetricsEvents();
+
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
+                loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
                 ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
