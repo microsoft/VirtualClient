@@ -7,6 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -136,8 +137,8 @@ namespace VirtualClient.Dependencies
             this.fixture.Directory.Setup(di => di.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.fixture.FileSystem.Setup(fe => fe.FileStream.Create(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
-                .Returns(Stream.Null);
+            this.fixture.FileSystem.Setup(fe => fe.FileStream.New(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
+                .Returns(new Mock<InMemoryFileSystemStream>().Object);
 
             this.fixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>(), It.IsAny<string>(), SearchOption.AllDirectories))
                 .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe") });
