@@ -26,7 +26,7 @@ namespace VirtualClient.Api
     {
         private MockFixture mockFixture;
         private IConfiguration mockConfiguration;
-        private Mock<FileSystemStream> mockFileStream;
+        private Mock<InMemoryFileSystemStream> mockFileStream;
         private State mockState;
         private Item<JObject> mockStateInstance;
         private StateController controller;
@@ -36,7 +36,7 @@ namespace VirtualClient.Api
         {
             this.mockFixture = new MockFixture();
             this.mockConfiguration = new ConfigurationBuilder().Build();
-            this.mockFileStream = new Mock<FileSystemStream>();
+            this.mockFileStream = new Mock<InMemoryFileSystemStream>();
             this.mockState = new State(new Dictionary<string, IConvertible>
             {
                 ["property1"] = 1234

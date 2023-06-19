@@ -138,7 +138,7 @@ namespace VirtualClient.Dependencies
                 .Returns(true);
 
             this.fixture.FileSystem.Setup(fe => fe.FileStream.New(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
-                .Returns(new Mock<FileSystemStream>().Object);
+                .Returns(new Mock<InMemoryFileSystemStream>().Object);
 
             this.fixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>(), It.IsAny<string>(), SearchOption.AllDirectories))
                 .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe") });

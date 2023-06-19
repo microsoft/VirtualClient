@@ -135,25 +135,25 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public Stream Create(string path)
+        public FileSystemStream Create(string path)
         {
-            Stream stream = this.Open(path, FileMode.CreateNew);
+            FileSystemStream stream = this.Open(path, FileMode.CreateNew);
             (this.FileSystem as InMemoryFileSystem).OnCreateFile?.Invoke(path);
             return stream;
         }
 
         /// <inheritdoc />
-        public Stream Create(string path, int bufferSize)
+        public FileSystemStream Create(string path, int bufferSize)
         {
-            Stream stream = this.Open(path, FileMode.CreateNew);
+            FileSystemStream stream = this.Open(path, FileMode.CreateNew);
             (this.FileSystem as InMemoryFileSystem).OnCreateFile?.Invoke(path);
             return stream;
         }
 
         /// <inheritdoc />
-        public Stream Create(string path, int bufferSize, FileOptions options)
+        public FileSystemStream Create(string path, int bufferSize, FileOptions options)
         {
-            Stream stream = this.Open(path, FileMode.CreateNew);
+            FileSystemStream stream = this.Open(path, FileMode.CreateNew);
             (this.FileSystem as InMemoryFileSystem).OnCreateFile?.Invoke(path);
             return stream;
         }
@@ -276,19 +276,19 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public Stream Open(string path, FileMode mode)
+        public FileSystemStream Open(string path, FileMode mode)
         {
             return this.Open(path, mode, FileAccess.ReadWrite, FileShare.ReadWrite);
         }
 
         /// <inheritdoc />
-        public Stream Open(string path, FileMode mode, FileAccess access)
+        public FileSystemStream Open(string path, FileMode mode, FileAccess access)
         {
             return this.Open(path, mode, access, FileShare.ReadWrite);
         }
 
         /// <inheritdoc />
-        public Stream Open(string path, FileMode mode, FileAccess access, FileShare share)
+        public FileSystemStream Open(string path, FileMode mode, FileAccess access, FileShare share)
         {
             InMemoryFile file = null;
 
@@ -326,7 +326,8 @@ namespace VirtualClient
             }
 
             (this.FileSystem as InMemoryFileSystem).OnReadFile?.Invoke(path);
-            return new MemoryStream(file.FileBytes.ToArray());
+            
+            return new InMemoryFileSystemStream(new MemoryStream(file.FileBytes.ToArray()), path, false);
         }
 
         public FileSystemStream Open(string path, FileStreamOptions options)
@@ -335,7 +336,7 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public Stream OpenRead(string path)
+        public FileSystemStream OpenRead(string path)
         {
             return this.Open(path, FileMode.Open);
         }
@@ -347,7 +348,7 @@ namespace VirtualClient
         }
 
         /// <inheritdoc />
-        public Stream OpenWrite(string path)
+        public FileSystemStream OpenWrite(string path)
         {
             return this.Open(path, FileMode.OpenOrCreate);
         }
@@ -593,46 +594,6 @@ namespace VirtualClient
         {
             this.WriteAllText(path, contents, encoding);
             return Task.CompletedTask;
-        }
-
-        FileSystemStream IFile.Create(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.Create(string path, int bufferSize)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.Create(string path, int bufferSize, FileOptions options)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.Open(string path, FileMode mode)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.Open(string path, FileMode mode, FileAccess access)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.Open(string path, FileMode mode, FileAccess access, FileShare share)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.OpenRead(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        FileSystemStream IFile.OpenWrite(string path)
-        {
-            throw new NotImplementedException();
         }
     }
 }
