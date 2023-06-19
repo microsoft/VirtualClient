@@ -33,6 +33,12 @@ namespace VirtualClient.Configuration
         public string MetricsFileName { get; set; }
 
         /// <summary>
+        /// The file name to use for the csv file that contains workload metrics/results
+        /// output.
+        /// </summary>
+        public string MetricsCsvFileName { get; set; }
+
+        /// <summary>
         /// The file name to use for the file that contains general traces and
         /// errors.
         /// </summary>

@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
             {
                 string commandArguments = this.GetCommandLineArguments();
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true))
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sb", commandArguments, this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -159,7 +159,7 @@ namespace VirtualClient.Actions
                 string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
-                    await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, cancellationToken);
+                    await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, runElevated: true);
                 }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
@@ -170,39 +170,13 @@ namespace VirtualClient.Actions
                         true);
                 }
 
-                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, cancellationToken);
-                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true);
+                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false);
 
                 state.SuperBenchmarkInitialized = true;
             }
 
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
-        }
-
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(SuperBenchmarkExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        this.LogProcessTrace(process);
-                        await process.StartAndWaitAsync(cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                });
-            }
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
