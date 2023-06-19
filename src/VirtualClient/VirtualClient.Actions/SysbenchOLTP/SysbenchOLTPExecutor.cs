@@ -170,7 +170,7 @@ namespace VirtualClient.Actions
                     break;
                 default:
                     throw new WorkloadException(
-                        $"The Memcached Memtier benchmark workload is currently not supported on the current platform/architecture " +
+                        $"The Sysbench OLTP workload is currently not supported on the current platform/architecture " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
                         $" Supported platform/architectures include: " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
@@ -192,16 +192,12 @@ namespace VirtualClient.Actions
                     {
                         case LinuxDistribution.Ubuntu:
                         case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS8:
-                        case LinuxDistribution.RHEL8:
-                        case LinuxDistribution.Mariner:
                             break;
                         default:
                             throw new WorkloadException(
                                 $"The Sysbench OLTP workload is not supported on the current Linux distro - " +
                                 $"{linuxDistributionInfo.LinuxDistribution}.  Supported distros include:" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
                 }

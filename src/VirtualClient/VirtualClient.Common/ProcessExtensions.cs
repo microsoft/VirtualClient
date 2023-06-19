@@ -4,7 +4,6 @@
 namespace VirtualClient.Common
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -14,7 +13,7 @@ namespace VirtualClient.Common
     /// <summary>
     /// Extension methods for process execution objects and results.
     /// </summary>
-    public static class ProcessExecutionExtensions
+    public static class ProcessExtensions
     {
         /// <summary>
         /// Sets the process for interactive mode (e.g. standard output and input redirected).
@@ -64,29 +63,6 @@ namespace VirtualClient.Common
             if (process.Start())
             {
                 await process.WaitForExitAsync(cancellationToken, timeout).ConfigureAwait(false);
-            }
-        }
-
-        /// <summary>
-        /// Throws an exception if the process has received any error information in standard error.
-        /// </summary>
-        /// <param name="process">Represents a process running on the system.</param>
-        public static void ThrowOnStandardError<TError>(this IProcessProxy process)
-            where TError : Exception
-        {
-            process.ThrowIfNull(nameof(process));
-            if (process.StandardError.ToString().Trim().Length > 0)
-            {
-                try
-                {
-                    TError exception = (TError)Activator.CreateInstance(typeof(TError), process.StandardError.ToString());
-                    throw exception;
-                }
-                catch (MissingMethodException)
-                {
-                    throw new MissingMethodException(
-                        $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in a single 'message' parameter.");
-                }
             }
         }
 

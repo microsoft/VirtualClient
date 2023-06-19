@@ -163,30 +163,33 @@ namespace VirtualClient.Dependencies
 
         private async Task ConfigureMySQLNetwork(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ProcessManager manager = this.SystemManager.ProcessManager;
-
-            ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-            if (this.Platform == PlatformID.Win32NT)
+            if (this.IsMultiRoleLayout())
             {
-                // need to know how to set up password and start server, get path
-                await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                ProcessManager manager = this.SystemManager.ProcessManager;
 
-                await this.ExecuteCommandAsync(manager, $"net stop mysql", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                await this.ExecuteCommandAsync(manager, $"net start mysql", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            else if (this.Platform == PlatformID.Unix)
-            {
-                await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    // need to know how to set up password and start server, get path
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync(manager, $"systemctl restart mysql.service", null, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                    await this.ExecuteCommandAsync(manager, $"net stop mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"net start mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"systemctl restart mysql.service", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
 
@@ -194,15 +197,22 @@ namespace VirtualClient.Dependencies
         {
             ProcessManager manager = this.SystemManager.ProcessManager;
 
-            IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
-            List<string> clientIpAddresses = new List<string>();
-
-            foreach (ClientInstance instance in clientInstances)
+            List<string> clientIpAddresses = new List<string>
             {
-                IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
-                clientIpAddresses.Add(clientIPAddress.ToString());
-            }
+                IPAddress.Loopback.ToString()
+            };
 
+            if (this.IsMultiRoleLayout())
+            {
+                IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
+
+                foreach (ClientInstance instance in clientInstances)
+                {
+                    IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
+                    clientIpAddresses.Add(clientIPAddress.ToString());
+                }
+            }
+            
             if (this.Platform == PlatformID.Win32NT)
             {
                 foreach (string clientIp in clientIpAddresses)

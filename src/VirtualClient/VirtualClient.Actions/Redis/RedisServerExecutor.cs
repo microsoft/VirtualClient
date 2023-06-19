@@ -125,6 +125,7 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
+                        Console.WriteLine("Disposed");
                         // We MUST stop the server instances from running before VC exits or they will
                         // continue running until explicitly stopped. This is a problem for running Redis
                         // workloads back to back because the requisite ports will be in use already on next
@@ -212,8 +213,9 @@ namespace VirtualClient.Actions
         protected override void Validate()
         {
             base.Validate();
+            CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            if (this.BindToCores && this.ServerInstances > Environment.ProcessorCount)
+            if (this.BindToCores && this.ServerInstances > cpuInfo.LogicalCoreCount)
             {
                 throw new WorkloadException(
                     $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system.",
@@ -237,11 +239,20 @@ namespace VirtualClient.Actions
             });
         }
 
-        private async Task KillServerInstancesAsync(CancellationToken cancellationToken)
+        private Task KillServerInstancesAsync(CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-            await this.ExecuteCommandAsync("pkill -f redis-server", this.RedisPackagePath, cancellationToken);
-            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+            IEnumerable<IProcessProxy> processes = this.SystemManagement.ProcessManager.GetProcesses("redis-server");
+
+            if (processes?.Any() == true)
+            {
+                foreach (IProcessProxy process in processes)
+                {
+                    process.SafeKill();
+                }
+            }
+
+            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
         private bool ResetServer(EventContext telemetryContext)
@@ -357,8 +368,11 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             ConsoleLogger.Default.LogMessage($"Redis server process exited (port = {port})...", telemetryContext);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis");
+
                             // Redis will give 137 if it thinks memory is constraint but will still accept connection, example:
-                            // WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+                            // WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1'
+                            // for this to take effect.
                             // Ready to accept connections
                             process.ThrowIfWorkloadFailed(successCodes: new int[] { 0, 137 });
                         }

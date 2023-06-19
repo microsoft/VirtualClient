@@ -46,6 +46,16 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void HostnamectlParserRecognizeDebian10()
+        {
+            string outputPath = Path.Combine(this.ExamplePath, "Debian10Example.txt");
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new HostnamectlParser(this.rawText);
+            Assert.AreEqual(LinuxDistribution.Debian, this.testParser.Parse().LinuxDistribution);
+            Assert.AreEqual("Debian GNU/Linux 10 (buster)", this.testParser.Parse().OperationSystemFullName);
+        }
+
+        [Test]
         public void HostnamectlParserRecognizeRedhat83()
         {
             string outputPath = Path.Combine(this.ExamplePath, "RHEL8Example.txt");

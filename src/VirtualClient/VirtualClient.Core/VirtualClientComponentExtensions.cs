@@ -149,32 +149,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Returns the current name/username for the logged in user.
-        /// </summary>
-        /// <param name="component">The component verifying the username.</param>
-        /// <param name="nonSudo">
-        /// True to return the sudo user (vs. root) on Unix/Linux systems. This can be used to run commands that do 
-        /// not allow the "root" user to be used.
-        /// </param>
-        public static string GetCurrentUserName(this VirtualClientComponent component, bool nonSudo = false)
-        {
-            string currentUser = component.GetEnvironmentVariable(EnvironmentVariable.USER);
-
-            if (nonSudo && string.Equals(currentUser, "root", StringComparison.OrdinalIgnoreCase))
-            {
-                currentUser = component.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-            }
-
-            // Use Environment.Username as last resort
-            if (string.IsNullOrEmpty(currentUser))
-            {
-                currentUser = Environment.UserName;
-            }
-
-            return currentUser;
-        }
-
-        /// <summary>
         /// Returns the value of the environment variable as defined for the current process.
         /// </summary>
         /// <param name="component">The component requesting the environment variable value.</param>

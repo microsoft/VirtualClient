@@ -65,6 +65,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.Common.UnitTests", "VirtualClient.Common.UnitTests\VirtualClient.Common.UnitTests.csproj", "{01576A5E-9BBB-41D5-ACE4-9F9721B721B7}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VirtualClient.IntegrationTests", "VirtualClient.IntegrationTests\VirtualClient.IntegrationTests.csproj", "{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -369,6 +371,18 @@ Global
 		{01576A5E-9BBB-41D5-ACE4-9F9721B721B7}.Release|ARM64.Build.0 = Release|ARM64
 		{01576A5E-9BBB-41D5-ACE4-9F9721B721B7}.Release|x64.ActiveCfg = Release|x64
 		{01576A5E-9BBB-41D5-ACE4-9F9721B721B7}.Release|x64.Build.0 = Release|x64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|ARM64.Build.0 = Debug|ARM64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|x64.ActiveCfg = Debug|x64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Debug|x64.Build.0 = Debug|x64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|ARM64.ActiveCfg = Release|ARM64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|ARM64.Build.0 = Release|ARM64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|x64.ActiveCfg = Release|x64
+		{D5D01870-8F42-4696-AE9B-46F6DAA1E57D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

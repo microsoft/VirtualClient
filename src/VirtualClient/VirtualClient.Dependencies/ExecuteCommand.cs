@@ -47,28 +47,6 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Parameter describes the platform/architectures on which the command will be 
-        /// executed. If not defined, the command will be executed on any platform architecture.
-        /// </summary>
-        public IEnumerable<string> Platforms
-        {
-            get
-            {
-                List<string> platformArchitectures = new List<string>();
-                IConvertible value = null;
-
-                this.Parameters.TryGetValue(nameof(this.Platforms), out value);
-
-                if (value != null)
-                {
-                    platformArchitectures.AddRange(value.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries).Select(v => v?.Trim()));
-                }
-
-                return platformArchitectures;
-            }
-        }
-
-        /// <summary>
         /// Parameter defines the working directory from which the command should be executed. When the
         /// 'PackageName' parameter is defined, this parameter will take precedence. Otherwise, the directory
         /// where the package is installed for the 'PackageName' parameter will be used as the working directory.
@@ -147,7 +125,7 @@ namespace VirtualClient.Dependencies
         {
             telemetryContext.AddContext("command", this.Command);
             telemetryContext.AddContext("workingDirectory", this.WorkingDirectory);
-            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.Platforms));
+            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -195,7 +173,7 @@ namespace VirtualClient.Dependencies
             {
                 // We execute only if the current platform/architecture matches those
                 // defined in the parameters.
-                if (!this.Platforms.Any() || this.Platforms.Contains(this.PlatformArchitectureName))
+                if (!this.SupportedPlatforms.Any() || this.SupportedPlatforms.Contains(this.PlatformArchitectureName))
                 {
                     isSupported = true;
                 }

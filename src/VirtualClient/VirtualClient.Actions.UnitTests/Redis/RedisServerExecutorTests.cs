@@ -42,6 +42,8 @@ namespace VirtualClient.Actions
 
             string agentId = $"{Environment.MachineName}-Server";
             this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("AnyName", "AnyDescription", 1, 4, 1, 0, true));
 
             this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(this.mockRedisPackage.Name, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockRedisPackage);

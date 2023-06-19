@@ -5,9 +5,11 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
+    using System.IO;
+    using System.Text.RegularExpressions;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -307,6 +309,60 @@ namespace VirtualClient.Dependencies
             {
                 IList<string> cleanedSettings = setup.RemovePreviouslyAppliedSettings(previousContent);
                 CollectionAssert.AreEqual(this.exampleLimitsConfigFile, cleanedSettings);
+            }
+        }
+
+        [Test]
+        public async Task NetworkConfigurationSetsTheExpectedSettingsInTheSystemConfigFile_UnixSystems()
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            string systemConf = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "example-system.conf"));
+
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            {
+                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("system.conf"))))
+                    .Returns(true);
+
+                this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(systemConf);
+
+                bool verified = false;
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("system.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
+                        verified = true;
+                    });
+
+                await setup.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(verified);
+            }
+        }
+
+        [Test]
+        public async Task NetworkConfigurationSetsTheExpectedSettingsInTheUserConfigFile_UnixSystems()
+        {
+            this.mockFixture.Setup(PlatformID.Unix);
+            string systemConf = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "example-system.conf"));
+
+            using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
+            {
+                this.mockFixture.File.Setup(file => file.Exists(It.Is<string>(path => path.EndsWith("user.conf"))))
+                    .Returns(true);
+
+                this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(systemConf);
+
+                bool verified = false;
+                this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.Is<string>(path => path.EndsWith("user.conf")), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    .Callback<string, string, CancellationToken>((path, content, token) =>
+                    {
+                        Assert.IsTrue(Regex.IsMatch(content, "(?<!#)DefaultLimitNOFILE=1048575"));
+                        verified = true;
+                    });
+
+                await setup.ExecuteAsync(CancellationToken.None);
+                Assert.IsTrue(verified);
             }
         }
 
