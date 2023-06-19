@@ -6,6 +6,7 @@ namespace VirtualClient.Api
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading;
@@ -25,7 +26,7 @@ namespace VirtualClient.Api
     {
         private MockFixture mockFixture;
         private IConfiguration mockConfiguration;
-        private MemoryStream mockFileStream;
+        private Mock<FileSystemStream> mockFileStream;
         private State mockState;
         private Item<JObject> mockStateInstance;
         private StateController controller;
@@ -35,7 +36,7 @@ namespace VirtualClient.Api
         {
             this.mockFixture = new MockFixture();
             this.mockConfiguration = new ConfigurationBuilder().Build();
-            this.mockFileStream = new MemoryStream();
+            this.mockFileStream = new Mock<FileSystemStream>();
             this.mockState = new State(new Dictionary<string, IConvertible>
             {
                 ["property1"] = 1234
@@ -49,8 +50,8 @@ namespace VirtualClient.Api
                 new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64),
                 this.mockFixture.Logger);
 
-            this.mockFixture.FileStream.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
-                .Returns(this.mockFileStream);
+            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+                .Returns(this.mockFileStream.Object);
 
             this.mockFixture.Directory.Setup(dir => dir.Exists(It.IsAny<string>())).Returns(true);
         }
@@ -67,7 +68,7 @@ namespace VirtualClient.Api
                 JObject.FromObject(this.mockState),
                 CancellationToken.None);
 
-            this.mockFixture.FileStream.Verify(f => f.Create(
+            this.mockFixture.FileStream.Verify(f => f.New(
                 It.Is<string>(filePath => Path.GetFileName(filePath) == $"{expectedStateId}.json"),
                 FileMode.CreateNew,
                 FileAccess.Write,
@@ -95,7 +96,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.FileStream.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("file already exists"));
 
             ConflictObjectResult result = await this.controller.CreateStateAsync(
@@ -112,7 +113,7 @@ namespace VirtualClient.Api
         {
             string expectedStateId = "teststate";
 
-            this.mockFixture.FileStream.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("used by another process"));
 
             ConflictObjectResult result = await this.controller.CreateStateAsync(
@@ -215,7 +216,7 @@ namespace VirtualClient.Api
         [Test]
         public async Task StateControllerReturnsTheExpectedResponseWhenTheStateObjectIsInUseByAnotherProcessDuringUpdate()
         {
-            this.mockFixture.FileStream.Setup(f => f.Create(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
+            this.mockFixture.FileStream.Setup(f => f.New(It.IsAny<string>(), It.IsAny<FileMode>(), It.IsAny<FileAccess>(), It.IsAny<FileShare>()))
                 .Throws(new IOException("used by another process"));
 
             ConflictObjectResult result = await this.controller.UpdateStateAsync(

@@ -11,6 +11,7 @@
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="AutoFixture" Version="$(AutoFixture_PackageVersion)" />
         <PackageReference Include="Moq" Version="$(Moq_PackageVersion)" />
+        <PackageReference Include="System.IO.Abstractions.TestingHelpers" Version="19.1.5" />
     </ItemGroup>
 
     <ItemGroup>

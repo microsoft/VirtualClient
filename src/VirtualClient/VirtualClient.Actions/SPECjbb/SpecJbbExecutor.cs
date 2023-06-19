@@ -261,7 +261,7 @@ namespace VirtualClient.Actions
                 // Example Blob Store Structure:
                 // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
                 FileBlobDescriptor resultsBlob = FileBlobDescriptor.ToBlobDescriptor(
-                    this.fileSystem.FileInfo.FromFileName(gcLogPath),
+                    this.fileSystem.FileInfo.New(gcLogPath),
                     HttpContentType.PlainText,
                     this.ExperimentId,
                     this.AgentId,

@@ -158,6 +158,11 @@ namespace VirtualClient
             return stream;
         }
 
+        public IFileSystemInfo CreateSymbolicLink(string path, string pathToTarget)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public StreamWriter CreateText(string path)
         {
@@ -324,6 +329,11 @@ namespace VirtualClient
             return new MemoryStream(file.FileBytes.ToArray());
         }
 
+        public FileSystemStream Open(string path, FileStreamOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public Stream OpenRead(string path)
         {
@@ -432,6 +442,11 @@ namespace VirtualClient
         /// Not implemented.
         /// </summary>
         public void Replace(string sourceFileName, string destinationFileName, string destinationBackupFileName, bool ignoreMetadataErrors)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IFileSystemInfo ResolveLinkTarget(string linkPath, bool returnFinalTarget)
         {
             throw new NotImplementedException();
         }
@@ -578,6 +593,46 @@ namespace VirtualClient
         {
             this.WriteAllText(path, contents, encoding);
             return Task.CompletedTask;
+        }
+
+        FileSystemStream IFile.Create(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.Create(string path, int bufferSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.Create(string path, int bufferSize, FileOptions options)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.Open(string path, FileMode mode)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.Open(string path, FileMode mode, FileAccess access)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.Open(string path, FileMode mode, FileAccess access, FileShare share)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.OpenRead(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        FileSystemStream IFile.OpenWrite(string path)
+        {
+            throw new NotImplementedException();
         }
     }
 }

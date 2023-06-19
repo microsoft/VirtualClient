@@ -55,6 +55,11 @@ namespace VirtualClient
             return this.CreateDirectory(path);
         }
 
+        public IFileSystemInfo CreateSymbolicLink(string path, string pathToTarget)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public void Delete(string path)
         {
@@ -304,6 +309,16 @@ namespace VirtualClient
             throw new NotImplementedException();
         }
 
+        public string[] GetFileSystemEntries(string path, string searchPattern, SearchOption searchOption)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetFileSystemEntries(string path, string searchPattern, EnumerationOptions enumerationOptions)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Not implemented.
         /// </summary>
@@ -354,6 +369,11 @@ namespace VirtualClient
         /// Not implemented.
         /// </summary>
         public void Move(string sourceDirName, string destDirName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IFileSystemInfo ResolveLinkTarget(string linkPath, bool returnFinalTarget)
         {
             throw new NotImplementedException();
         }
