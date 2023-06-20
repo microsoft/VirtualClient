@@ -5,8 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Runtime.InteropServices;
+    using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +22,9 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class CoreMarkProExecutor : VirtualClientComponent
     {
+        private ISystemManagement systemManagement;
+        private IPackageManager packageManager;
+
         /// <summary>
         /// Constructor for <see cref="CoreMarkProExecutor"/>
         /// </summary>
@@ -31,6 +33,28 @@ namespace VirtualClient.Actions
         public CoreMarkProExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
+            this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
+            this.packageManager = this.systemManagement.PackageManager;
+        }
+
+        /// <summary>
+        /// Allos overwrite to Coremark process thread count. 
+        /// </summary>
+        public int ThreadCount
+        {
+            get
+            {
+                // Default to system logical core count, but overwritable with parameters.
+                CpuInfo cpuInfo = this.systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                int threadCount = cpuInfo.LogicalCoreCount;
+
+                if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
+                {
+                    threadCount = value.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return threadCount;
+            }
         }
 
         private string CoreMarkProDirectory
@@ -46,39 +70,52 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-
             // guide: https://github.com/eembc/coremark-pro/blob/main/docs/EEMBC%20Symmetric%20Multicore%20Benchmark%20User%20Guide%202.1.4.pdf
             // make TARGET=linux64 XCMD='-c4' certify-all
             // Even when using cygwin, the TARGET is still linux64.
-            string argument = string.Empty;
+            string argument = @$"TARGET=linux64 XCMD='-c{this.ThreadCount}' certify-all";
+            this.StartTime = DateTime.UtcNow;
+            string output = string.Empty;
             switch (this.Platform)
             {
                 case PlatformID.Unix:
-                    argument = @$"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all";
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", argument, this.CoreMarkProDirectory, telemetryContext, cancellationToken))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                            output = process.StandardOutput.ToString();
+                        }
+                    }
+
                     break;
+
                 case PlatformID.Win32NT:
                     DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
                         .ConfigureAwait(false);
 
-                    break;
-            }
-
-            this.StartTime = DateTime.UtcNow;
-
-            string output = string.Empty;
-            using (IProcessProxy process = await this.ExecuteCommandAsync("make", commandLineArguments, this.CoreMarkProDirectory, telemetryContext, cancellationToken, runElevated: true))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    if (process.IsErrored())
+                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {argument}", this.CoreMarkProDirectory, cygwinPackage.Path, telemetryContext, cancellationToken))
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+                            }
+
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                            output = process.StandardOutput.ToString();
+                        }
                     }
 
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                    output = process.StandardOutput.ToString();
-                }
+                    break;
             }
 
             this.EndTime = DateTime.UtcNow;
