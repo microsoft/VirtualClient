@@ -334,7 +334,7 @@ namespace VirtualClient.Actions
 
                 if (outputFiles?.Any() == true)
                 {
-                    IEnumerable<IFileInfo> files = outputFiles.ToList().Select(path => this.fileSystem.FileInfo.FromFileName(path));
+                    IEnumerable<IFileInfo> files = outputFiles.ToList().Select(path => this.fileSystem.FileInfo.New(path));
 
                     IEnumerable<FileBlobDescriptor> blobDescriptors = FileBlobDescriptor.ToBlobDescriptors(
                         files,
