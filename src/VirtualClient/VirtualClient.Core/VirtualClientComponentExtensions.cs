@@ -10,6 +10,7 @@ namespace VirtualClient
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
@@ -74,6 +75,35 @@ namespace VirtualClient
             Action<IProcessProxy> beforeExecution = null)
         {
             return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
+        }
+
+        /// <summary>
+        /// Executes a command within an isolated process.
+        /// </summary>
+        /// <param name="component">The component that is executing the process/command.</param>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="cygwinPackageDirectory">Directory of cygwin package</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
+        /// <returns>The process that executed the command.</returns>
+        public static Task<IProcessProxy> ExecuteCygwinBashAsync(
+            this VirtualClientComponent component,
+            string command,
+            string workingDirectory,
+            string cygwinPackageDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            Action<IProcessProxy> beforeExecution = null)
+        {
+            string bashPath = component.PlatformSpecifics.Combine(cygwinPackageDirectory, "bin", "bash");
+            // Changing C:\packages\abc to /cygdrive/c/packages/abc . This is required for cygwin to work.
+            string packageDirectoryPath = Regex.Replace(workingDirectory, @"\\", "/");
+            packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
+            string cygwinCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; {command}'";
+
+            return component.ExecuteCommandAsync(bashPath, cygwinCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         /// <summary>
