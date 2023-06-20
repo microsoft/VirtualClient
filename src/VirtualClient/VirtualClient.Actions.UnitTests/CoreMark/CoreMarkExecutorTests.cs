@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
-                Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
+                Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
                 return this.mockFixture.Process;
             };
 
@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(@$"{this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
-                Assert.AreEqual($"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremark; make XCFLAGS=\"-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread'", args);
+                Assert.AreEqual($"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremark; make XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread'", args);
                 return this.mockFixture.Process;
             };
 
@@ -108,7 +108,7 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(() => results);
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 8, 9, 10, false));
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, false));
 
             DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
             this.mockFixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);

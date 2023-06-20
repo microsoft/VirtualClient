@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
-                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all");
+                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c9' certify-all");
                 this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
                 return this.mockFixture.Process;
             };
@@ -50,7 +50,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual(@$"{this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
-                Assert.AreEqual(args, $"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremarkpro; make TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all'");
+                Assert.AreEqual(args, $"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremarkpro; make TARGET=linux64 XCMD='-c9' certify-all'");
                 this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
                 return this.mockFixture.Process;
             };
@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
             this.coremarkProOutput.Append(results);
 
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 8, 9, 10, false));
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, false));
 
             DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
             this.mockFixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);
