@@ -334,10 +334,19 @@ namespace VirtualClient.Actions
                 if (outputFiles?.Any() == true)
                 {
                     IEnumerable<IFileInfo> files = outputFiles.ToList()
-                        .Select(path => this.fileSystem.FileInfo.FromFileName(path));
+                        .Select(path => this.fileSystem.FileInfo.New(path));
 
                     IEnumerable<FileUploadDescriptor> descriptors = files
-                        .Select(file => this.CreateFileUploadDescriptor(file, HttpContentType.PlainText, Encoding.UTF8.WebName, "speccpu", DateTime.UtcNow));
+                        .Select(file => this.CreateFileUploadDescriptor(new FileContext(
+                            file,
+                            HttpContentType.PlainText,
+                            Encoding.UTF8.WebName,
+                            this.ExperimentId,
+                            this.AgentId,
+                            "speccpu",
+                            this.Scenario,
+                            null,
+                            this.Roles?.FirstOrDefault())));
 
                     await this.UploadFilesAsync(blobManager, this.fileSystem, descriptors, cancellationToken);
                 }

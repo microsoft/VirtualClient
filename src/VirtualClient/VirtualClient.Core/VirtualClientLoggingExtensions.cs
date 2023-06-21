@@ -184,7 +184,15 @@ namespace VirtualClient
                         (!string.IsNullOrWhiteSpace(toolName) ? toolName : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
                         string.Empty);
 
-                    string effectiveCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
+                    // Ensure that we obscure/remove any secrets (e.g. passwords) that may have been passed into
+                    // the command on the command line as arguments.
+                    string effectiveCommandArguments = process.StartInfo?.Arguments;
+                    if (!string.IsNullOrWhiteSpace(effectiveCommandArguments))
+                    {
+                        effectiveCommandArguments = SensitiveData.ObscureSecrets(effectiveCommandArguments);
+                    }
+
+                    string effectiveCommand = $"{process.StartInfo?.FileName} {effectiveCommandArguments}".Trim();
                     string logPath = specifics.GetLogsPath(effectiveToolName.ToLowerInvariant().RemoveWhitespace());
 
                     if (!fileSystem.Directory.Exists(logPath))
@@ -203,7 +211,7 @@ namespace VirtualClient
                         $"{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
                         DateTime.UtcNow);
 
-                    string logFilePath = specifics.Combine(logPath, effectiveLogFileName);
+                    string logFilePath = specifics.Combine(logPath, effectiveLogFileName.ToLowerInvariant());
 
                     // Examples:
                     // --------------
@@ -228,7 +236,7 @@ namespace VirtualClient
                     // Any results from the output of the process
 
                     StringBuilder outputBuilder = new StringBuilder();
-                    outputBuilder.AppendLine($"Command           : {SensitiveData.ObscureSecrets(effectiveCommand)}");
+                    outputBuilder.AppendLine($"Command           : {effectiveCommand}");
                     outputBuilder.AppendLine($"Working Directory : {process.StartInfo?.WorkingDirectory}");
                     outputBuilder.AppendLine($"Exit Code         : {process.ExitCode}");
                     outputBuilder.AppendLine();
@@ -259,8 +267,18 @@ namespace VirtualClient
 
                     if (component.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
-                        IFileInfo file = fileSystem.FileInfo.FromFileName(logFilePath);
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(file, HttpContentType.PlainText, Encoding.UTF8.WebName, toolName);
+                        FileContext fileContext = new FileContext(
+                            fileSystem.FileInfo.New(logFilePath),
+                            HttpContentType.PlainText,
+                            Encoding.UTF8.WebName,
+                            component.ExperimentId,
+                            component.AgentId,
+                            effectiveToolName,
+                            component.Scenario,
+                            effectiveCommandArguments,
+                            component.Roles?.Any() == true ? string.Join(',', component.Roles) : null);
+
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, true);
 
                         await component.RequestFileUploadAsync(descriptor);
                     }

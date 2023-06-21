@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -260,11 +261,16 @@ namespace VirtualClient.Actions
             // Example Blob Store Structure:
             // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
             FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
-                this.fileSystem.FileInfo.FromFileName(gcLogPath),
-                HttpContentType.PlainText,
-                Encoding.UTF8.WebName,
-                "specjbb",
-                DateTime.UtcNow);
+                new FileContext(
+                    this.fileSystem.FileInfo.New(gcLogPath),
+                    HttpContentType.PlainText,
+                    Encoding.UTF8.WebName,
+                    this.ExperimentId,
+                    this.AgentId,
+                    "specjbb",
+                    this.Scenario,
+                    null,
+                    this.Roles?.FirstOrDefault()));
 
             return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
 

@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
@@ -155,11 +156,16 @@ namespace VirtualClient
             //            555553ed-3f63-43fe-ae7c-327bae09ee60/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/example_monitor/2021-11-19T13:46:30.6489302Z-monitor.log
             //            555553ed-3f63-43fe-ae7c-327bae09ee60/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/example_monitor/2021-11-19T13:47:32.7295123Z-monitor.log
             FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
-                this.fileSystem.FileInfo.FromFileName(resultsFilePath),
-                HttpContentType.PlainText,
-                Encoding.UTF8.WebName,
-                "examplemonitor",
-                DateTime.UtcNow);
+                new FileContext(
+                    this.fileSystem.FileInfo.New(resultsFilePath),
+                    HttpContentType.PlainText,
+                    Encoding.UTF8.WebName,
+                    this.ExperimentId,
+                    this.AgentId,
+                    "examplemonitor",
+                    this.Scenario,
+                    null,
+                    this.Roles?.FirstOrDefault()));
 
             return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
         }

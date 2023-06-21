@@ -44,7 +44,8 @@ namespace VirtualClient
                     try
                     {
                         ComponentTypeCache.Instance.Clear();
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(mockFile.Object, "text/plain", "utf-8");
+                        FileContext fileContext = new FileContext(mockFile.Object, "text/plain", "utf-8", component.ExperimentId);
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext);
 
                         Assert.IsNotNull(descriptor);
                         Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
@@ -80,7 +81,9 @@ namespace VirtualClient
                     {
                         ComponentTypeCache.Instance.Clear();
                         ComponentTypeCache.Instance.Add(new ComponentType(typeof(TestFileUploadDescriptorFactory_A)));
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(mockFile.Object, "text/plain", "utf-8");
+
+                        FileContext fileContext = new FileContext(mockFile.Object, "text/plain", "utf-8", component.ExperimentId);
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext);
 
                         Assert.IsNotNull(descriptor);
                         Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
@@ -237,14 +240,15 @@ namespace VirtualClient
         [ComponentDescription(Id = "Format1234")]
         private class TestFileUploadDescriptorFactory_A : IFileUploadDescriptorFactory
         {
-            public FileUploadDescriptor CreateDescriptor(VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
             {
                 return new FileUploadDescriptor(
-                    $"/any/path/to/blob/{file.Name}",
+                    fileContext.File.Name,
+                    $"/any/path/to/blob/{fileContext.File.Name}",
                     "anyContainer",
                     "utf-8",
                     "text/plain",
-                    file.FullName,
+                    fileContext.File.FullName,
                     manifest);
             }
         }

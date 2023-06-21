@@ -933,8 +933,8 @@ namespace VirtualClient.Contracts
         {
             parameters.ThrowIfNull(nameof(parameters));
 
-            IDictionary<string, TValue> obscuredParameters = new Dictionary<string, TValue>();
-            // StringComparison ignoreCase = StringComparison.OrdinalIgnoreCase;
+            IDictionary<string, TValue> obscuredParameters = new Dictionary<string, TValue>(parameters, StringComparer.OrdinalIgnoreCase);
+
             foreach (var entry in parameters)
             {
                 // We pass in secrets and keys as parameters (both on the command line and in profiles).

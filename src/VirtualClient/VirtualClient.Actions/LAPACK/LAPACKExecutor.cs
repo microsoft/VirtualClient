@@ -119,12 +119,7 @@ namespace VirtualClient.Actions
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
-                    string bashPath = this.PlatformSpecifics.Combine(this.cygwinPackageDirectory, "bin", "bash");
-                    string packageDirectoryPath = Regex.Replace(this.packageDirectory, @"\\", "/");
-                    packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
-
-                    string makeCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./cmakescript.sh'";
-                    await this.ExecuteCommandAsync(bashPath, makeCommand, this.packageDirectory, cancellationToken)
+                    await this.ExecuteCygwinBashAsync("./cmakescript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
                     // Delete results file that gets generated.
@@ -133,8 +128,7 @@ namespace VirtualClient.Actions
                         await this.fileSystem.File.DeleteAsync(this.ResultsFilePath);
                     }
 
-                    string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; ./LapackTestScript.sh'";
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(bashPath, executeScriptCommandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync("./LapackTestScript.sh", this.packageDirectory, this.cygwinPackageDirectory, telemetryContext, cancellationToken))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

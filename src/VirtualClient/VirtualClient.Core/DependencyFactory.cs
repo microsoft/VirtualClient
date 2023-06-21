@@ -21,6 +21,7 @@ namespace VirtualClient
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Logging;
     using VirtualClient.Contracts.Proxy;
     using VirtualClient.Proxy;
 
@@ -210,34 +211,22 @@ namespace VirtualClient
         /// <summary>
         /// Creates logger providers for writing telemetry to local CSV files.
         /// </summary>
-        /// <param name="logFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
+        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
         /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
-        /// <param name="includeFields">Properties to include in the csv Logs File.</param>
-        public static ILoggerProvider CreateCsvFileLoggerProvider(string logFilePath, TimeSpan flushInterval, IEnumerable<string> includeFields = null)
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath, TimeSpan flushInterval)
         {
-            logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
+            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
-            // FileName of the log file when RollingFile Configuration is used in Serilog
-            // string rollingLogFileName = logFileName.Replace(".csv", $"-" + DateTime.UtcNow.Date.ToString("yyyyMMdd") + $".csv");
-            // string rollingLogFilePath = Path.Combine(logFileDirectory, rollingLogFileName);
-
-            // 100MB
-            const long maxFileSizeBytes = 100000000;
+            // 50MB
+            // General Sizing:
+            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
+            const long maxFileSizeBytes = 50000000;
 
             ILoggerProvider loggerProvider = null;
 
-            if (!string.IsNullOrWhiteSpace(logFilePath))
+            if (!string.IsNullOrWhiteSpace(csvFilePath))
             {
-                LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.File(
-                    new CsvTextFormatter(includeFields),
-                    logFilePath,
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: flushInterval,
-                    hooks: new SerilogCsvFileLifecycleHooks(includeFields));
-
-                loggerProvider = new MetricsCsvFileLoggerProvider(logConfiguration, includeFields);
-
+                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes, flushInterval);
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
@@ -270,33 +259,6 @@ namespace VirtualClient
                 "operatingSystemPlatform"
             };
 
-            List<string> metricsIncludeInCsv = new List<string>
-            {
-                "timeStamp",
-                "experimentId",
-                "agentId",
-                "executionProfileName",
-                "executionProfilePath",
-                "toolName",
-                "scenarioName",
-                "scenarioStartTime",
-                "scenarioEndTime",
-                "scenarioArguments",
-                "parameters",
-                "metricCategorization",
-                "metricName",
-                "metricValue",
-                "metricUnit",
-                "metricDescription",
-                "metricRelativity",
-                "executionSystem",
-                "platformArchitecture",
-                "systemInfo",
-                "appVersion",
-                "tags",
-                "metadata"
-            };
-
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
@@ -314,7 +276,7 @@ namespace VirtualClient
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName), TimeSpan.FromSeconds(3), metricsIncludeInCsv)
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName), TimeSpan.FromSeconds(3))
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));

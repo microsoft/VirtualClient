@@ -6,7 +6,9 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Text.RegularExpressions;
     using Newtonsoft.Json;
@@ -30,36 +32,6 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new instance of the <see cref="FileUploadDescriptor"/> class.
         /// </summary>
-        /// <param name="blobName">The name (or name + virtual path) of the blob/file.</param>
-        /// <param name="containerName">The container in which the blob/file will be stored.</param>
-        /// <param name="contentEncoding">The encoding for the contents of the blob (e.g. utf-8).</param>
-        /// <param name="contentType">The web content type for the blob (e.g. text/plain, application/octet-stream).</param>
-        /// <param name="filePath">The path to the file containing the content to upload.</param>
-        /// <param name="manifest">Properties that define a manifest (e.g. metadata) for the file and its contents.</param>
-        public FileUploadDescriptor(string blobName, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null)  
-        {
-            blobName.ThrowIfNullOrWhiteSpace(nameof(blobName));
-            containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
-            contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
-            contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
-            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
-
-            this.BlobName = blobName.Trim('/').Trim('\\');
-            this.ContainerName = containerName;
-            this.ContentEncoding = contentEncoding;
-            this.ContentType = contentType;
-            this.FilePath = filePath;
-            this.Manifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-
-            if (manifest?.Any() == true)
-            {
-                this.Manifest.AddRange(manifest);
-            }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FileUploadDescriptor"/> class.
-        /// </summary>
         /// <param name="blobName">The name of the blob/file.</param>
         /// <param name="blobPath">The path/virtual path to the blob/file.</param>
         /// <param name="containerName">The container in which the blob/file will be stored.</param>
@@ -69,11 +41,25 @@ namespace VirtualClient.Contracts
         /// <param name="manifest">Properties that define a manifest (e.g. metadata) for the file and its contents.</param>
         [JsonConstructor]
         public FileUploadDescriptor(string blobName, string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null)
-            : this(blobName, containerName, contentEncoding, contentType, filePath, manifest)
         {
-            if (!string.IsNullOrWhiteSpace(blobPath))
+            blobName.ThrowIfNullOrWhiteSpace(nameof(blobName));
+            blobPath.ThrowIfNullOrWhiteSpace(nameof(blobPath));
+            containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
+            contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
+            contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
+            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
+
+            this.BlobName = blobName.Trim('/').Trim('\\');
+            this.BlobPath = $"/{blobPath.Trim('/').Replace('\\', '/')}";
+            this.ContainerName = containerName;
+            this.ContentEncoding = contentEncoding;
+            this.ContentType = contentType;
+            this.FilePath = filePath;
+            this.Manifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            if (manifest?.Any() == true)
             {
-                this.BlobPath = $"/{blobPath.Trim('/').Replace('\\', '/')}";
+                this.Manifest.AddRange(manifest);
             }
         }
 
@@ -121,6 +107,65 @@ namespace VirtualClient.Contracts
         public IDictionary<string, IConvertible> Manifest { get; }
 
         /// <summary>
+        /// Creates a manifest for a given file that can be published alongside the file in a blob store.
+        /// </summary>
+        /// <param name="fileContext">Provides context about a file to be uploaded.</param> 
+        /// <param name="blobContainer">The name of the blob container.</param>
+        /// <param name="blobPath">The path/virtual path to the blob itself (e.g. /agent01/fio/fio_randwrite_496gb_12k_d32_th16/2022-03-18T10-00-05-12765Z-fio_randwrite_496gb_12k_d32_th16.log).</param>
+        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        public static IDictionary<string, IConvertible> CreateManifest(FileContext fileContext, string blobContainer, string blobPath, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null)
+        {
+            fileContext.ThrowIfNull(nameof(fileContext));
+
+            // Create the default manifest information.
+            string platform = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
+
+            IDictionary<string, IConvertible> fileManifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "experimentId", fileContext.ExperimentId },
+                { "agentId", fileContext.AgentId },
+                { "role", fileContext.Role },
+                { "platform", platform },
+                { "toolName", fileContext.ToolName },
+                { "toolArguments", fileContext.CommandArguments },
+                { "scenario", fileContext.Scenario },
+                { "blobPath", blobPath },
+                { "blobContainer", blobContainer },
+                { "contentType", fileContext.ContentType },
+                { "contentEncoding", fileContext.ContentEncoding },
+                { "fileName", fileContext.File.Name },
+                { "fileSizeBytes", fileContext.File.Length },
+                { "fileCreationTime", fileContext.File.CreationTime.ToString("o") },
+                { "fileCreationTimeUtc", fileContext.File.CreationTimeUtc.ToString("o") }
+            };
+
+            // Add in any parameters defined on/supplied to the component.
+            if (parameters?.Any() == true)
+            {
+                foreach (var entry in parameters)
+                {
+                    if (!fileManifest.ContainsKey(entry.Key))
+                    {
+                        fileManifest.Add(entry.Key.CamelCased(), entry.Value);
+                    }
+                }
+            }
+
+            // Add in any additional/special metadata provided. Given that the user supplied these
+            // they take priority over existing metadata and will override it.
+            if (metadata?.Any() == true)
+            {
+                foreach (var entry in metadata)
+                {
+                    fileManifest[entry.Key.CamelCased()] = entry.Value;
+                }
+            }
+
+            return fileManifest.ObscureSecrets();
+        }
+
+        /// <summary>
         /// Returns a file name containing a timestamp as part of the name having removed any
         /// characters not allowed in file paths (e.g. 2023-02-01T12-23-30241Z-randomwrite_4k_blocksize.log).
         /// </summary>
@@ -129,7 +174,7 @@ namespace VirtualClient.Contracts
         public static string GetFileName(string fileName, DateTime timestamp)
         {
             return PathReservedCharacterExpression.Replace(
-                $"{timestamp.ToString(FileTimestampFormat)}-{fileName.ToLowerInvariant().RemoveWhitespace()}",
+                $"{timestamp.ToString(FileTimestampFormat)}-{fileName.RemoveWhitespace()}",
                 string.Empty);
         }
 
@@ -138,26 +183,13 @@ namespace VirtualClient.Contracts
         /// </summary>
         public BlobDescriptor ToBlobDescriptor()
         {
-            if (string.IsNullOrWhiteSpace(this.BlobPath))
+            return new BlobDescriptor
             {
-                return new BlobDescriptor
-                {
-                    Name = this.BlobName,
-                    ContainerName = this.ContainerName,
-                    ContentEncoding = Encoding.GetEncoding(this.ContentEncoding),
-                    ContentType = this.ContentType
-                };
-            }
-            else
-            { 
-                return new BlobDescriptor
-                {
-                    Name = $"{this.BlobPath}/{this.BlobName}",
-                    ContainerName = this.ContainerName,
-                    ContentEncoding = Encoding.GetEncoding(this.ContentEncoding),
-                    ContentType = this.ContentType
-                };
-            }
+                Name = this.BlobPath,
+                ContainerName = this.ContainerName,
+                ContentEncoding = Encoding.GetEncoding(this.ContentEncoding),
+                ContentType = this.ContentType
+            };
         }
 
         /// <summary>
@@ -168,26 +200,13 @@ namespace VirtualClient.Contracts
         {
             manifestStream = new MemoryStream(Encoding.UTF8.GetBytes(this.Manifest.ToJson()));
 
-            if (string.IsNullOrWhiteSpace(this.BlobPath))
+            return new BlobDescriptor
             {
-                return new BlobDescriptor
-                {
-                    Name = $"{Path.GetFileNameWithoutExtension(this.BlobName)}.manifest",
-                    ContainerName = this.ContainerName,
-                    ContentEncoding = Encoding.UTF8,
-                    ContentType = HttpContentType.Json
-                };
-            }
-            else
-            {
-                return new BlobDescriptor
-                {
-                    Name = $"{this.BlobPath}/{Path.GetFileNameWithoutExtension(this.BlobName)}.manifest",
-                    ContainerName = this.ContainerName,
-                    ContentEncoding = Encoding.UTF8,
-                    ContentType = HttpContentType.Json
-                };
-            }
+                Name = $"{this.BlobPath}/{Path.GetFileNameWithoutExtension(this.BlobName)}.manifest",
+                ContainerName = this.ContainerName,
+                ContentEncoding = Encoding.UTF8,
+                ContentType = HttpContentType.Json
+            };
         }
     }
 }

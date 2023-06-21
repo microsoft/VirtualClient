@@ -99,18 +99,17 @@ namespace VirtualClient.Contracts
         /// Creates a descriptor that can be used to publish a request
         /// </summary>
         /// <param name="component">The component requesting the file upload descriptor.</param>
-        /// <param name="file">The file to upload.</param>
-        /// <param name="contentType">The web content type of the file (e.g. text/plain, text/csv, application/octet-stream).</param>
-        /// <param name="contentEncoding">The content encoding for the file (e.g. utf-8).</param>
-        /// <param name="toolname">The name of the tool that produced the file or content within it.</param>
-        /// <param name="fileTimestamp">A timestamp to include in the name of the file when uploaded (e.g. 2023-05023T11-00-00-28463Z-file.log).</param>
-        /// <param name="manifest">A set of additional properties to include in the manifest for the file.</param>
-        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
+        /// <param name="fileContext">Provides context about a file to be uploaded.</param>
+        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="timestamped">
+        /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
+        /// file name is not desirable. Default = true (timestamped file names).
+        /// </param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
         {
             component.ThrowIfNull(nameof(component));
-            file.ThrowIfNull(nameof(file));
-            contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
-            contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
+            fileContext.ThrowIfNull(nameof(fileContext));
 
             string identifier = null;
             if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
@@ -119,7 +118,7 @@ namespace VirtualClient.Contracts
             }
 
             IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
-            FileUploadDescriptor descriptor = factory.CreateDescriptor(component, file, contentType, contentEncoding, toolname, fileTimestamp, manifest);
+            FileUploadDescriptor descriptor = factory.CreateDescriptor(fileContext, parameters, metadata, timestamped);
 
             // The content path format...
             descriptor.Manifest["pathFormat"] = identifier ?? FileUploadDescriptorFactory.Default;

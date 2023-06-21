@@ -6,28 +6,32 @@ namespace VirtualClient.Contracts.Logging
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Abstractions;
+    using System.Linq;
     using System.Text;
     using Serilog.Sinks.File;
-    using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Provides features for initializing CSV files on first write.
+    /// Provides features for initializing metrics CSV files on first write.
     /// </summary>
     public class MetricsCsvFileLifecycleHooks : FileLifecycleHooks
     {
         private static readonly HashSet<string> FileInitialization = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static readonly object LockObject = new object();
-
-        private IEnumerable<string> csvFileHeaders;
+        private IFileSystem fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLifecycleHooks"/> class.
         /// </summary>
-        /// <param name="csvHeaders">The fields/headers to add to the top of each CSV file.</param>
-        public MetricsCsvFileLifecycleHooks(IEnumerable<string> csvHeaders)
+        public MetricsCsvFileLifecycleHooks(IFileSystem fileSystem = null)
         {
-            csvHeaders.ThrowIfNullOrEmpty(nameof(csvHeaders));
-            this.csvFileHeaders = csvHeaders;
+            this.fileSystem = fileSystem ?? new FileSystem();
+        }
+
+        /// <inheritdoc />
+        public override Stream OnFileOpened(Stream underlyingStream, Encoding encoding)
+        {
+            return this.OnFileOpened(null, underlyingStream, encoding);
         }
 
         /// <inheritdoc />
@@ -40,30 +44,8 @@ namespace VirtualClient.Contracts.Logging
             {
                 lock (MetricsCsvFileLifecycleHooks.LockObject)
                 {
-                    string directory = Path.GetDirectoryName(path);
-                    if (!Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    using (StreamWriter writer = new StreamWriter(path))
-                    {
-                        int propertyIndex = 0;
-                        foreach (string header in this.csvFileHeaders)
-                        {
-                            if (propertyIndex > 0)
-                            {
-                                writer.Write(",");
-                            }
-
-                            writer.Write(header);
-                            propertyIndex++;
-                        }
-
-                        writer.Write(Environment.NewLine);
-                    }
-
-                    MetricsCsvFileLifecycleHooks.FileInitialization.Add(path);
+                    string columnHeaders = string.Join(",", MetricsCsvFileLogger.CsvFields.Select(field => $"\"{field.ColumnName}\""));
+                    underlyingStream.Write(encoding.GetBytes(columnHeaders));
                 }
             }
 

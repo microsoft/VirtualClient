@@ -157,6 +157,11 @@ namespace VirtualClient.Contracts
             {
                 return null;
             }
+
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [ComponentDescription(Id = nameof(TestFileUploadDescriptorFactory_2))]
@@ -165,6 +170,11 @@ namespace VirtualClient.Contracts
             public FileUploadDescriptor CreateDescriptor(VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
             {
                 return null;
+            }
+
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+            {
+                throw new NotImplementedException();
             }
         }
     }

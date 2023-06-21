@@ -96,8 +96,16 @@ namespace VirtualClient
 
                     string toolname = Path.GetFileNameWithoutExtension(randomFile).Replace("results-", string.Empty);
 
-                    IFileInfo file = this.fileSystem.FileInfo.FromFileName(randomFile);
-                    FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(file, contentType, Encoding.UTF8.WebName, toolname);
+                    FileContext fileContext = new FileContext(
+                        this.fileSystem.FileInfo.New(randomFile),
+                        contentType,
+                        Encoding.UTF8.WebName,
+                        component.ExperimentId,
+                        component.AgentId,
+                        toolname,
+                        component.Scenario);
+
+                    FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata);
 
                     await component.UploadFileAsync(contentStore, this.fileSystem, descriptor, CancellationToken.None, deleteFile: false);
                 }
@@ -271,8 +279,17 @@ namespace VirtualClient
             string scenario = $"{toolname}_Scenario_{randomFileNumber}".ToLowerInvariant();
 
             component.Parameters[nameof(VirtualClientComponent.Scenario)] = scenario;
-            IFileInfo file = this.fileSystem.FileInfo.FromFileName(randomFile);
-            FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(file, contentType, Encoding.UTF8.WebName, toolname, DateTime.UtcNow);
+
+            FileContext fileContext = new FileContext(
+                        this.fileSystem.FileInfo.New(randomFile),
+                        contentType,
+                        Encoding.UTF8.WebName,
+                        component.ExperimentId,
+                        component.AgentId,
+                        toolname,
+                        component.Scenario);
+
+            FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata);
 
             return descriptor;
         }
