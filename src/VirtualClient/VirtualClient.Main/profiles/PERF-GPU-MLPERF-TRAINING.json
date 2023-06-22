@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
+        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Rs"
     },
     "Parameters": {
         "Username": "azureuser",
@@ -17,7 +17,7 @@
         {
             "Type": "MLPerfTrainingExecutor",
             "Parameters": {
-                "Scenario": "inferencemodels-bert",
+                "Scenario": "training-mlperf-bert-batchsize-45",
                 "Model": "bert",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
