@@ -7,6 +7,8 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -254,23 +256,24 @@ namespace VirtualClient.Actions
             return jbbArgument;
         }
 
-        private async Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
+        private Task UploadGcLogAsync(IBlobManager blobManager, string gcLogPath, DateTime logTime, CancellationToken cancellationToken)
         {
-            using (FileStream uploadStream = new FileStream(gcLogPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                // Example Blob Store Structure:
-                // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
-                FileBlobDescriptor resultsBlob = FileBlobDescriptor.ToBlobDescriptor(
+            // Example Blob Store Structure:
+            // /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/specjbb/2022-04-30T20:13:23.3768938Z-gc.log
+            FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
+                new FileContext(
                     this.fileSystem.FileInfo.New(gcLogPath),
                     HttpContentType.PlainText,
+                    Encoding.UTF8.WebName,
                     this.ExperimentId,
                     this.AgentId,
-                    "specjbb");
+                    "specjbb",
+                    this.Scenario,
+                    null,
+                    this.Roles?.FirstOrDefault()));
 
-                await blobManager.UploadBlobAsync(resultsBlob, uploadStream, cancellationToken);
-            }
+            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: true);
 
-            await this.fileSystem.File.DeleteAsync(gcLogPath);
         }
 
         private async Task ValidateProcessExitedAsync(int processId, TimeSpan timeout, CancellationToken cancellationToken)

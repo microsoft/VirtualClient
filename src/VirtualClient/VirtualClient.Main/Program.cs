@@ -322,7 +322,7 @@ namespace VirtualClient
             runResetCommand.AddAlias("Reset");
             runResetCommand.AddAlias("Clean");
             runResetCommand.AddAlias("clean");
-            runResetCommand.Handler = CommandHandler.Create<RunResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+            runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
