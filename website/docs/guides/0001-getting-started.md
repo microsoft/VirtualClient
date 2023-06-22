@@ -103,7 +103,20 @@ The following section provides instructions for building on Windows systems.
   Note that when running on Linux systems, the 'VirtualClient' binary will need to be attributed as executable (e.g. ```chmod +x /home/user/virtualclient/linux-x64/publish/VirtualClient```)
 
 ### Building On a Linux System
-Not supported as of now. We are currently working on adding support for scripts that can execute cross-platform (e.g. Perl).
+The following section provides instructions for building on Linux systems.
+
+:::info
+You need to install .NET SDK for building VirtualClient locally. You could use command like `sudo snap install dotnet-sdk` or refer to [.NET documentation](https://learn.microsoft.com/en-us/dotnet/core/install/linux).
+:::
+
+- In the repo root directory, run the following commands:
+  ``` script
+  # Build the repo with current platform (one of linux-x64 or linux-arm64)
+  ~/build/VirtualClient$ ./build.sh
+
+  # Build the repo for all platforms (linux-x64,linux-arm64,win-x64,win-arm64)
+  ~/build/VirtualClient$ ./build.sh --build-all
+  ```
 
 ## Run a Simple Profile
 The following section illustrates how to run a simple profile on your system. This profile will run the OpenSSL workload on your system for a brief period of time. This workload

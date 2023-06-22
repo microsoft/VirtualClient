@@ -43,13 +43,13 @@
     <!-- 
     1) Load the build environment settings from the 'buildEnv' submodule if a Git submodule is being used.
     -->
-    <Import Project="$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props" Condition="Exists('$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props')" />
+    <Import Project="$(MSBuildThisFileDirectory).buildenv\BuildEnv.props" Condition="Exists('$(MSBuildThisFileDirectory).buildenv\BuildEnv.props')" />
 
     <!--
     OR
     
     2) Otherwise, load the build environment settings from the local repo root directory if a Git submodule IS NOT being used.
     -->
-    <Import Project="$(MSBuildThisFileDirectory)BuildEnv.props" Condition="!Exists('$(MSBuildThisFileDirectory).buildEnv\BuildEnv.props')" />
+    <Import Project="$(MSBuildThisFileDirectory)BuildEnv.props" Condition="!Exists('$(MSBuildThisFileDirectory).buildenv\BuildEnv.props')" />
 
 </Project>

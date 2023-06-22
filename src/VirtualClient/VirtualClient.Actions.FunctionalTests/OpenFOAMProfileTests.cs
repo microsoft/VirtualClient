@@ -54,7 +54,7 @@ namespace VirtualClient.Actions
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
                 if (arguments.EndsWith("Allrun\"", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("OpenFOAMResults.txt"));
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("OpenFoamResults.txt"));
                 }
 
                 return process;
@@ -147,7 +147,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.SetupWorkloadPackage("openfoam", expectedFiles: expectedFiles.ToArray());
 
-            string resultsFileContent = TestDependencies.GetResourceFileContents("OpenFOAMResults.txt");
+            string resultsFileContent = TestDependencies.GetResourceFileContents("OpenFoamResults.txt");
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/airFoil2D/log.simpleFoam", resultsFileContent);
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/elbow/log.icoFoam", resultsFileContent);
             this.mockFixture.SetupFile("openfoam", $"{platformArch}/lockExchange/log.twoLiquidMixingFoam", resultsFileContent);
