@@ -6,7 +6,6 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using VirtualClient.Common.Extensions;
 
@@ -20,68 +19,6 @@ namespace VirtualClient.Contracts
         /// Default. The name of the default descriptor factory.
         /// </summary>
         public const string Default = nameof(Default);
-
-        /////// <summary>
-        /////// Creates a descriptor that represents the path location and content information for a file 
-        /////// to upload to a blob store. The following examples illustrate the format and structure of the paths.
-        /////// <para>
-        /////// Format:
-        /////// <br/>{container = experiment_id}/{agent_id}/{vc_component_or_tool}/{scenario}/file.txt
-        /////// <br/>{container = experiment_id}/{agent_id}/{vc_component_or_tool}/{role}/{scenario}/file.txt
-        /////// <br/><br/>
-        /////// Examples:
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/fio/fio_randwrite_496gb_12k_d32_th16/2022-03-18T10-00-05-12765Z-fio_randwrite_496gb_12k_d32_th16.log
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/fio/fio_randwrite_496gb_12k_d32_th16/2022-03-18T10-00-05-12765Z-fio_randwrite_496gb_12k_d32_th16.manifest
-        /////// 
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/client/ntttcp_tcp_4k_buffer_t1/2022-03-18T10-00-05-12765Z-ntttcp_tcp_4k_buffer_t1.log
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/client/ntttcp_tcp_4k_buffer_t1/2022-03-18T10-00-05-12765Z-ntttcp_tcp_4k_buffer_t1.manifest
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/server/ntttcp_tcp_4k_buffer_t1/2022-03-18T10-00-05-13813Z-ntttcp_tcp_4k_buffer_t1.log
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/ntttcp/server/ntttcp_tcp_4k_buffer_t1/2022-03-18T10-00-05-13813Z-ntttcp_tcp_4k_buffer_t1.manifest
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/client/cps_t16/2022-03-18T10-00-05-13813Z-cps_t16.log
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/client/cps_t16/2022-03-18T10-00-05-13813Z-cps_t16.manifest
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/server/cps_t16/2022-03-18T10-00-06-13813Z-cps_t16.log
-        /////// <br/>b9d30758-20a7-4779-826e-137c31a867e1/agent01/cps/server/cps_t16/2022-03-18T10-00-06-13813Z-cps_t16.manifest
-        /////// </para>
-        /////// </summary>
-        /////// <param name="component">The component that produced the file.</param>
-        /////// <param name="file">The file to be uploaded.</param>
-        /////// <param name="contentType">The type of content (e.g. application/octet-stream).</param>
-        /////// <param name="contentEncoding">The web content encoding (e.g. utf-8).</param>
-        /////// <param name="toolname">The name of the toolset that produced the file (e.g. FIO, Geekbench5).</param>
-        /////// <param name="fileTimestamp">A timestamp to include in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log).</param>
-        /////// <param name="manifest">Information and metadata related to the blob/file. This information will be appended to the default manifest information.</param>
-        ////public FileUploadDescriptor CreateDescriptor(VirtualClientComponent component, IFileInfo file, string contentType, string contentEncoding, string toolname = null, DateTime? fileTimestamp = null, IDictionary<string, IConvertible> manifest = null)
-        ////{
-        ////    ////component.ThrowIfNull(nameof(component));
-        ////    ////file.ThrowIfNull(nameof(file));
-        ////    ////contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
-        ////    ////contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
-
-        ////    ////string blobName = Path.GetFileName(file.Name);
-        ////    ////if (fileTimestamp != null)
-        ////    ////{
-        ////    ////    blobName = FileUploadDescriptor.GetFileName(blobName, fileTimestamp.Value);
-        ////    ////}
-
-        ////    ////string blobPath = FileUploadDescriptorFactory.CreateBlobPath(component, toolname, fileTimestamp);
-        ////    ////string blobContainer = component.ExperimentId.ToLowerInvariant();
-
-        ////    ////// Create the default manifest information.
-        ////    ////IDictionary<string, IConvertible> fileManifest = FileUploadDescriptorFactory.CreateManifest(component, file, $"{blobPath}/{blobName}", blobContainer, toolname, manifest);
-
-        ////    ////FileUploadDescriptor descriptor = new FileUploadDescriptor(
-        ////    ////    blobName,
-        ////    ////    blobPath,
-        ////    ////    blobContainer,
-        ////    ////    contentEncoding,
-        ////    ////    contentType,
-        ////    ////    file.FullName,
-        ////    ////    fileManifest);
-
-        ////    ////return descriptor;
-
-        ////    return null;
-        ////}
 
         /// <summary>
         /// Creates a descriptor that represents the path location and content information for a file 

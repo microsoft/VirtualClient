@@ -455,7 +455,7 @@ namespace VirtualClient.Contracts
                         .ReturnsAsync(response1)
                         .ReturnsAsync(() => { expectedCallMade = true; return response2; });
 
-                    await this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.FromSeconds(20), CancellationToken.None);
+                    await this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.FromSeconds(60), CancellationToken.None, pollingInterval: TimeSpan.Zero);
 
                     Assert.IsTrue(expectedCallMade);
                 }

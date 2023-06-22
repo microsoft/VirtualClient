@@ -16,6 +16,7 @@ namespace VirtualClient
     using NUnit.Framework;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using VirtualClient.Monitors;
 
     [TestFixture]
     [Category("Integration")]

@@ -69,13 +69,13 @@ namespace VirtualClient.Contracts.Logging
         public MetricsCsvFileLogger(string csvFilePath, long maximumFileSizeBytes, TimeSpan flushInterval)
         {
             LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.File(
-                    csvFilePath,
-                    outputTemplate: "{Message}",
-                    fileSizeLimitBytes: maximumFileSizeBytes,
-                    rollOnFileSizeLimit: true,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: flushInterval,
-                    hooks: new MetricsCsvFileLifecycleHooks());
+                csvFilePath,
+                outputTemplate: "{Message}",
+                fileSizeLimitBytes: maximumFileSizeBytes,
+                rollOnFileSizeLimit: true,
+                retainedFileCountLimit: 10,
+                flushToDiskInterval: flushInterval,
+                hooks: new MetricsCsvFileLifecycleHooks());
 
             this.logger = logConfiguration.CreateLogger();
         }

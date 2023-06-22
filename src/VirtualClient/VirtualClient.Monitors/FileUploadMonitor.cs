@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient
+namespace VirtualClient.Monitors
 {
     using System;
     using System.Collections.Generic;
@@ -62,7 +62,6 @@ namespace VirtualClient
             {
                 // All background monitor ExecuteAsync methods should be either 'async' or should use a Task.Run() if running a 'while' loop or the
                 // logic will block without returning. Monitors are typically expected to be fire-and-forget.
-                // await this.UploadManifestFileAsync("crclabslogcontainer", cancellationToken);
 
                 if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                 {
@@ -170,43 +169,5 @@ namespace VirtualClient
 
             return filesFound;
         }
-
-        ////private async Task UploadManifestFileAsync(string containerName, CancellationToken cancellationToken, string userEmail = null, string source = null)
-        ////{
-        ////    // GET ALL DATA FROM METADATA AS A DICTIONARY
-        ////    if (string.IsNullOrEmpty(userEmail))
-        ////    {
-        ////        userEmail = "adityaa@microsoft.com";
-        ////    }
-
-        ////    if (string.IsNullOrEmpty(source))
-        ////    {
-        ////        source = "vc-workload";
-        ////    }
-
-        ////    string[] folderNames = { this.ExperimentId, this.AgentId, this.Scenario, "crc_logs_manifest.json" };
-        ////    string manifestBlobPath = string.Join("/", folderNames.Where(str => !string.IsNullOrWhiteSpace(str)));
-
-        ////    string manifestData = $"{{\r\n    " +
-        ////        $"\"user\": \"{userEmail}\",\r\n    " +
-        ////        $"\"source\": \"{source}\",\r\n    " +
-        ////        $"\"resultCollectionType\": \"private\",\r\n    " +
-        ////        $"\"localMachineName\": \"{this.AgentId}\",\r\n    " +
-        ////        $"\"experimentDefinitionId\": \"{this.ExperimentId}\",\r\n    " +
-        ////        $"\"experimentName\": \"\",\r\n    " +
-        ////        $"\"experimentInstanceId\": \"{this.ExperimentId}\",\r\n    " +
-        ////        $"\"experimentStepName\": \"{this.Scenario}\"\r\n}}";
-            
-        ////    string manifestFilePath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.LogsDirectory, "crc_logs_manifest.json");
-
-        ////    await this.fileSystem.File.WriteAllTextAsync(manifestFilePath, manifestData);
-
-        ////    if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-        ////    {
-        ////        using FileStream uploadStream = new (manifestFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        ////        await this.UploadFileStream(blobManager, containerName, manifestBlobPath, Encoding.UTF8, "text/plain", uploadStream, cancellationToken)
-        ////            .ConfigureAwait(false);
-        ////    }
-        ////}
     }
 }

@@ -3,10 +3,7 @@
 
 namespace VirtualClient.Contracts.Logging
 {
-    using System;
-    using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Text;
     using Serilog.Sinks.File;
@@ -16,16 +13,13 @@ namespace VirtualClient.Contracts.Logging
     /// </summary>
     public class MetricsCsvFileLifecycleHooks : FileLifecycleHooks
     {
-        private static readonly HashSet<string> FileInitialization = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private static readonly object LockObject = new object();
-        private IFileSystem fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLifecycleHooks"/> class.
         /// </summary>
-        public MetricsCsvFileLifecycleHooks(IFileSystem fileSystem = null)
+        public MetricsCsvFileLifecycleHooks()
         {
-            this.fileSystem = fileSystem ?? new FileSystem();
         }
 
         /// <inheritdoc />

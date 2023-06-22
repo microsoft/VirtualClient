@@ -58,7 +58,7 @@ namespace VirtualClient.Contracts.Logging
 
             using (MemoryStream stream = new MemoryStream())
             {
-                MetricsCsvFileLifecycleHooks lifecycleHooks = new MetricsCsvFileLifecycleHooks(this.mockFixture.FileSystem.Object);
+                MetricsCsvFileLifecycleHooks lifecycleHooks = new MetricsCsvFileLifecycleHooks();
                 lifecycleHooks.OnFileOpened(stream, Encoding.UTF8);
 
                 stream.Position = 0;
@@ -105,7 +105,7 @@ namespace VirtualClient.Contracts.Logging
 
             using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(expectedColumns)))
             {
-                MetricsCsvFileLifecycleHooks lifecycleHooks = new MetricsCsvFileLifecycleHooks(this.mockFixture.FileSystem.Object);
+                MetricsCsvFileLifecycleHooks lifecycleHooks = new MetricsCsvFileLifecycleHooks();
                 lifecycleHooks.OnFileOpened(stream, Encoding.UTF8);
 
                 // Should NOT add any additional headers here.

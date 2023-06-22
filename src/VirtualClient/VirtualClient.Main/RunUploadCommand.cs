@@ -13,6 +13,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Monitors;
 
     /// <summary>
     /// Command executes the operations to bootstrap/install dependencies on the system
