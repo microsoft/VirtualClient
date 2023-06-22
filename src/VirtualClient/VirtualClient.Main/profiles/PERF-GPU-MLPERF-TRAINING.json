@@ -22,7 +22,7 @@
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "BatchSize": "45",
-                "Implementation":  "pytorch-22.09"
+                "Implementation": "pytorch-22.09"
             }
         }
     ],
@@ -61,6 +61,12 @@
             "Type": "NvidiaContainerToolkitInstallation",
             "Parameters": {
                 "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        },
+        {
+            "Type": "DCGMIInstallation",
+            "Parameters": {
+                "Scenario": "InstallDCGMI"
             }
         },
         {
