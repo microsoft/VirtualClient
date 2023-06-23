@@ -269,6 +269,20 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="QueueDepths="4,16,256"
   ```
 
+-----------------------------------------------------------------------
+
+### PERF-IO-FIO-MULTITHROUGHPUT.json
+
+Runs an high stress IO-intensive workload using the Flexible IO Tester (FIO) toolset.Multi-throughput OLTP-C emulates a SQL Server OLTP disk workload by running four concurrent workload Components: random reads and writes, sequential reads and writes. If weight provided to any of the component is 0 then it is absent from system.
+In the given profile
+The following workload runs on raw disks directly for example "/dev/sda","/dev/sdc",etc on linux.
+
+Note that this profile uses a simple algorithm to determine the RandomIODisk(On which Random reads and writes components run Concurrently) & SequentialIODisk(On which Sequential reads and writes components run Concurrently), TotalIOPS, ComponentIOPS.
+
+1) Random IO Disks and Sequential IO Disks
+Sequential IO Disks = Sequential IO Disks Count.
+Random IO Disk = Random IO Disks Count.
+
 ## PERF-IO-FIO-MULTITHROUGHPUT.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
 workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
