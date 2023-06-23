@@ -178,7 +178,36 @@ namespace VirtualClient.Actions
         public async Task FioMultiThroughputExecutorCreatesExpectedJobFile()
         {
             bool createdExpectedJobFile = false;
-            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio.jobfile"));
+
+            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TargetPercents), "10");
+
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio1.jobfile"));
+
+            using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                    .Callback((string path, string contents) =>
+                    {
+                        createdExpectedJobFile = true;
+                    });
+
+                await fioMultiThroughputExecutor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(createdExpectedJobFile);
+        }
+
+        [Test]
+        public async Task FioMultiThroughputExecutorCreatesExpectedJobFile2()
+        {
+            bool createdExpectedJobFile = false;
+
+            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TargetPercents), "10");
+            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
+
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio2.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {

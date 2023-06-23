@@ -13,6 +13,8 @@
         "TargetPercents": "10,40,90,98,100,102,110",
         "DirectIO": true,
         "InitializeDisksInParallel": true
+        "TargetPercents": "10,40,90,98,100,102,110",
+        "SequentialDiskCount": "1"
     },
     "Actions": [
         {
@@ -28,7 +30,9 @@
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
-                "TemplateJobFile": "oltp-c.fio.jobfile"
+                "Tags": "IO,FIO,MultiThroughput,OLTP",
+                "TemplateJobFile": "oltp-c.fio.jobfile",
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount"
             }
         },
         {
@@ -62,6 +66,8 @@
                 "TargetPercents": "$.Parameters.TargetPercents",
                 "TemplateJobFile": "oltp-c.fio.jobfile",
                 "Tags": "IO,FIO,Multi-Throughput,OLTP"
+                "Tags": "IO,FIO,MultiThroughput,OLTP",
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount"
             }
         }
     ],
