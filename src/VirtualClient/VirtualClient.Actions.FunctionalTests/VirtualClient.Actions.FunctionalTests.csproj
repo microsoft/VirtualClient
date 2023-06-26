@@ -113,6 +113,9 @@
         <Content Include="..\TestResources\Results_SysbenchOLTP.txt" Link="Resources\Results_SysbenchOLTP.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\TestResources\Results_HadoopTerasort.txt" Link="Resources\Results_HadoopTerasort.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -247,6 +250,9 @@
         <Content Include="..\VirtualClient.Main\profiles\POWER-SPEC70.json" Link="Profiles\POWER-SPEC70.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-CPU-TERASORT.json" Link="Profiles\PERF-CPU-TERASORT.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
     </ItemGroup>
 
     <ItemGroup>

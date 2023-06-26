@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ComponentModel.Design.Serialization;
 using System.Diagnostics.CodeAnalysis;
 
 namespace VirtualClient.Contracts
@@ -92,6 +93,11 @@ namespace VirtualClient.Contracts
         /// Name = VC_PASSWORD
         /// </summary>
         public const string VC_PASSWORD = nameof(VC_PASSWORD);
+
+        /// <summary>
+        /// Name = HADOOP_HOME
+        /// </summary>
+        public const string HADOOP_MAPRED_HOME = nameof(HADOOP_MAPRED_HOME);
     }
 
     /// <summary>

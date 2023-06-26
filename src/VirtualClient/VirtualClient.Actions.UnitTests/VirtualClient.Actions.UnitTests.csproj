@@ -99,6 +99,7 @@
 
   <ItemGroup>
     <Folder Include="Examples\FIO\" />
+    <Folder Include="Examples\Hadoop\" />
   </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
