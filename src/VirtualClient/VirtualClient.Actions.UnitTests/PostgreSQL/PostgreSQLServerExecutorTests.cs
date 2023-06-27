@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -204,6 +205,127 @@ namespace VirtualClient.Actions
                     // Format:
                     // {command} {command_arguments} --> {working_dir}
                     //
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/configure.sh {executor.Port} --> {postgreSqlPackage}/linux-x64/ubuntu",
+
+                    // Drop the TPCC database if it already exists.
+                    $"sudo -u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\" --> {postgreSqlInstallationPath}",
+
+                    // Create the database and populate it with data.
+                    $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
+                };
+
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    expectedCommands.Remove($"{process.FullCommand()} --> {process.StartInfo.WorkingDirectory}");
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task PostgreSQLServerExecutorExecutesExpectedComandsForBalancedScenario()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["StressScenario"] = "Balanced";
+
+            IEnumerable<Disk> disks;
+            disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
+
+            disks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
+
+            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
+
+            this.mockFixture.DiskManager
+                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
+                {
+                    (volume.AccessPaths as List<string>).Add(mountPoint);
+                })
+                .Returns(Task.CompletedTask);
+
+            string mountPaths = $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdc1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1")}";
+
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // e.g.
+                // /etc/postgresql/14/main
+                string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-linux-x64"].ToString();
+
+                // e.g.
+                // C:\Users\Any\VirtualClient\packages\postgresql
+                string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
+
+                // e.g. 
+                // /home/user/VirtualClient/packages/hammerdb/linux-x64
+                string hammerDBPath = this.mockHammerDBPackage.Path;
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // Format:
+                    // {command} {command_arguments} --> {working_dir}
+                    //
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/configure.sh {executor.Port} --> {postgreSqlPackage}/linux-x64/ubuntu",
+
+                    // Drop the TPCC database if it already exists.
+                    $"sudo -u postgres psql -c \"DROP DATABASE IF EXISTS tpcc;\" --> {postgreSqlInstallationPath}",
+
+                    // Create the database and populate it with data.
+                    $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
+
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/balanced.sh {mountPaths} --> {postgreSqlPackage}/linux-x64/ubuntu",
+                };
+
+                this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
+                {
+                    expectedCommands.Remove($"{process.FullCommand()} --> {process.StartInfo.WorkingDirectory}");
+                };
+
+                await executor.ExecuteAsync(CancellationToken.None);
+                Assert.IsEmpty(expectedCommands);
+            }
+        }
+
+        [Test]
+        public async Task PostgreSQLServerExecutorExecutesExpectedComandsForInMemoryScenario()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.X64);
+            this.mockFixture.Parameters["StressScenario"] = "InMemory";
+
+            // Mocking 8GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 8));
+
+            using (var executor = new TestPostgreSQLServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                // e.g.
+                // /etc/postgresql/14/main
+                string postgreSqlInstallationPath = this.mockPostgreSqlPackage.Metadata[$"{PackageMetadata.InstallationPath}-linux-x64"].ToString();
+
+                // e.g.
+                // C:\Users\Any\VirtualClient\packages\postgresql
+                string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
+
+                // e.g. 
+                // /home/user/VirtualClient/packages/hammerdb/linux-x64
+                string hammerDBPath = this.mockHammerDBPackage.Path;
+
+                List<string> expectedCommands = new List<string>()
+                {
+                    // Format:
+                    // {command} {command_arguments} --> {working_dir}
+                    //
+                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/inmemory.sh 7168 --> {postgreSqlPackage}/linux-x64/ubuntu",
+
                     // Configure the PostgreSQL server for transactions (e.g. port, users).
                     $"sudo {postgreSqlPackage}/linux-x64/ubuntu/configure.sh {executor.Port} --> {postgreSqlPackage}/linux-x64/ubuntu",
 
