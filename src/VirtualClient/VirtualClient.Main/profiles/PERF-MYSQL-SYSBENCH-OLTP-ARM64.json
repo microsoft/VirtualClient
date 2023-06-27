@@ -26,7 +26,7 @@
         "Threads": "8",
         "NumTables": "8",
         "RecordCount": "500",
-        "DurationSecs": "100",
+        "DurationSecs": "1800",
         "Workload": "oltp_read_write",
         "PackageName": "sysbench"
       }
@@ -40,7 +40,7 @@
         "Threads": "16",
         "NumTables": "8",
         "RecordCount": "1000",
-        "DurationSecs": "100",
+        "DurationSecs": "1800",
         "Workload": "oltp_read_write",
         "PackageName": "sysbench"
       }
@@ -359,6 +359,18 @@
       "Type": "LinuxPackageInstallation",
       "Parameters": {
         "Scenario": "InstallLinuxPackages",
+        "Packages": "make, automake, libtool, pkg-config",
+        "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
+        "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
+        "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
+        "Packages-Zypper": "libaio-dev, libmysqlclient-devel, openssl-devel",
+        "Role": "Client"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
         "Packages": "mysql-server",
         "Role": "Server"
       }
@@ -406,6 +418,15 @@
         "Action": "CreateUser",
         "DatabaseName": "$.Parameters.DatabaseName",
         "Role": "Server"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneSysbenchRepo",
+        "RepoUri": "https://github.com/akopytov/sysbench.git",
+        "PackageName": "sysbench",
+        "Role": "Client"
       }
     },
     {

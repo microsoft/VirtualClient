@@ -20,11 +20,13 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchOLTPClientExecutor : SysbenchOLTPExecutor
     {
-        private const string SysbenchFileName = "sysbench";
+        private const string SysbenchFileName = "src/sysbench";
         private readonly IPackageManager packageManager;
         private readonly IStateManager stateManager;
         private string sysbenchPrepareArguments;
         private string sysbenchExecutionArguments;
+        private string sysbenchDirectory;
+        private string sysbenchPath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPClientExecutor"/> class.
@@ -183,8 +185,15 @@ namespace VirtualClient.Actions
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
 
+            // get sysbench workload path
+
+            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None)
+                .ConfigureAwait(false);
+
+            this.sysbenchDirectory = this.GetPackagePath(this.PackageName);
+
             // store state with initialization status & record/table counts, if does not exist already
-            
+
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
 
@@ -204,6 +213,7 @@ namespace VirtualClient.Actions
 
             this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
             this.sysbenchExecutionArguments = $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} ";
+            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -243,18 +253,12 @@ namespace VirtualClient.Actions
 
                     await this.PrepareMySQLDatabase(cancellationToken);
 
-                    this.Logger.LogMessage("prepared db", telemetryContext);
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(SysbenchFileName, this.sysbenchExecutionArguments + "run", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogMessage("starting process", telemetryContext);
-
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                             this.CaptureMetrics(process, telemetryContext, cancellationToken);
-
-                            this.Logger.LogMessage("captured metrics", telemetryContext);
                         }
                     }
                 }
@@ -263,28 +267,22 @@ namespace VirtualClient.Actions
 
         private async Task InstallSysbenchOLTPPackage(CancellationToken cancellationToken)
         {
-            string updateAptCommand;
-            const string installSysbenchCommand = "apt install sysbench";
+            const string autogenScriptCommand = "./autogen.sh";
+            const string configureScriptCommand = "./configure";
+            const string makeCommand = "make -j";
+            const string makeInstallCommand = "make install";
 
-            LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
-            
-            switch (distributionInfo.LinuxDistribution)
-            {
-                case LinuxDistribution.Ubuntu:
-                case LinuxDistribution.Debian:
-                    updateAptCommand = "su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"";
-                    break;
-                default:
-                    throw new DependencyException(
-                        $"You are on Linux distrubution {distributionInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
-                        ErrorReason.LinuxDistributionNotSupported);
-            }
-
-            // install sysbench binaries
-            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(updateAptCommand, null, Environment.CurrentDirectory, cancellationToken)
+            // build sysbench
+            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(autogenScriptCommand, null, this.sysbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
-            
-            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(installSysbenchCommand, null, Environment.CurrentDirectory, cancellationToken)
+
+            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(configureScriptCommand, null, this.sysbenchDirectory, cancellationToken)
+                .ConfigureAwait(false);
+
+            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(makeCommand, null, this.sysbenchDirectory, cancellationToken)
+                .ConfigureAwait(false);
+
+            await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(makeInstallCommand, null, this.sysbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -309,10 +307,10 @@ namespace VirtualClient.Actions
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
-                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(SysbenchFileName, this.sysbenchExecutionArguments + "cleanup", Environment.CurrentDirectory, cancellationToken)
+                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
                 
-                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(SysbenchFileName, this.sysbenchPrepareArguments, Environment.CurrentDirectory, cancellationToken)
+                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
                 // update the state object accordingly
