@@ -4,7 +4,7 @@
 # --------------- Global section defines defaults across all components
 [global]
 direct=1
-filename=/dev/sdd:/dev/sde
+filename=/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh
 ioengine=libaio
 group_reporting=1
 size=124G
@@ -18,7 +18,7 @@ time_based=1
 [randomreader]
 new_group
 bs=8K
-filename=/dev/sdd:/dev/sde
+filename=/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh
 iodepth=512
 numjobs=1
 rate_iops=270
@@ -29,7 +29,7 @@ rw=randread
 [randomwriter]
 new_group
 bs=8K
-filename=/dev/sdd:/dev/sde
+filename=/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh
 iodepth=512
 numjobs=1
 rate_iops=212
@@ -40,7 +40,7 @@ rw=randwrite
 [sequentialreader]
 new_group
 bs=56K
-filename=/dev/sdf
+filename=/dev/sdi
 iodepth=64
 numjobs=1
 rate_iops=0
@@ -52,7 +52,7 @@ size=20G
 [sequentialwriter]
 new_group
 bs=56K
-filename=/dev/sdf
+filename=/dev/sdi
 iodepth=64
 numjobs=1
 rate_iops=16
@@ -64,7 +64,7 @@ size=20G
 [initrandomio]
 new_group
 bs=256K
-filename=/dev/sdd:/dev/sde
+filename=/dev/sdd:/dev/sde:/dev/sdf:/dev/sdg:/dev/sdh
 iodepth=64
 numjobs=1
 rw=write
@@ -74,7 +74,7 @@ size=124G
 [initsequentialio]
 new_group
 bs=256K
-filename=/dev/sdf
+filename=/dev/sdi
 iodepth=64
 numjobs=1
 rw=write

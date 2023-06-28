@@ -16,6 +16,9 @@
 	  <Content Include="..\TestResources\expectedoltp-c.fio2.jobfile" Link="Examples\FIO\expectedoltp-c.fio2.jobfile">
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	  <Content Include="..\TestResources\expectedoltp-c.fio3.jobfile" Link="Examples\FIO\expectedoltp-c.fio3.jobfile">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	  <Content Include="..\TestResources\oltp-c.fio.jobfile" Link="Examples\FIO\oltp-c.fio.jobfile">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>
@@ -50,6 +53,7 @@
     </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VirtualClient.Actions.FunctionalTests\VirtualClient.Actions.FunctionalTests.csproj" />
     <ProjectReference Include="..\VirtualClient.Actions\VirtualClient.Actions.csproj" />
     <ProjectReference Include="..\VirtualClient.Contracts\VirtualClient.Contracts.csproj" />
     <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
