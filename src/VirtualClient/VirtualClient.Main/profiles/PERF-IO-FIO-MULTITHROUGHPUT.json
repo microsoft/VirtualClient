@@ -12,8 +12,7 @@
         "TargetIOPS": "5000",
         "TargetPercents": "10,40,90,98,100,102,110",
         "DirectIO": true,
-        "InitializeDisksInParallel": true
-        "TargetPercents": "10,40,90,98,100,102,110",
+        "InitializeDisksInParallel": true,
         "SequentialDiskCount": "1"
     },
     "Actions": [
@@ -65,8 +64,7 @@
                 "TargetIOPS": "$.Parameters.TargetIOPS",
                 "TargetPercents": "$.Parameters.TargetPercents",
                 "TemplateJobFile": "oltp-c.fio.jobfile",
-                "Tags": "IO,FIO,Multi-Throughput,OLTP"
-                "Tags": "IO,FIO,MultiThroughput,OLTP",
+                "Tags": "IO,FIO,Multi-Throughput,OLTP",
                 "SequentialDiskCount": "$.Parameters.SequentialDiskCount"
             }
         }
