@@ -130,13 +130,23 @@ sysctl -w net.core.busy_read=50
   | ConfigureNetwork          | Optional. True to configure the system network settings for peak performance (will reboot system). False to make no changes to the system network settings.               | True (will reboot system)  |
   | EnableBusyPoll            | Optional. True to configure busy poll in the system network settings for Linux systems. False to make no changes. This setting depends upon 'ConfigureNetwork' = true.    | True        |
   | DisableFirewall           | Optional. True to disable the firewall on Linux systems. False to make no changes. This setting depends upon 'ConfigureNetwork' = true.  | True        |
+  | CpsDuration               | Optional. The amount of time (in seconds) to run the CPS workload. | 300 secs |
   | CpsPort                   | Optional. The starting port on which connections will be established between client and server when running the CPS workload. The CPS workload will use connections on additional ports starting with this port for each of the number of connections (e.g. 16) defined in the component/action. | 7201 |
   | LattePort                 | Optional. The starting port on which connections will be established between client and server when running the Latte workload. The Latte workload will use connections on additional ports starting with this port. | 6100 |
+  | NTttcpDuration            | Optional. The amount of time (in seconds) to run the NTttcp workload. | 60 secs |
   | NTttcpPort                | Optional. The starting port on which connections will be established between client and server when running the NTttcp workload. The NTttcp workload will use connections on additional ports starting with this port. | 5500 |
+  | SockPerfDuration          | Optional. The amount of time (in seconds) to run the SockPerf workload. | 60 secs |
   | SockPerfPort              | Optional. The starting port on which connections will be established between client and server when running the SockPerf workload. The SockPerf workload will use connections on additional ports starting with this port. | 8201 |
   | ProfilingEnabled          | Optional. True if background profiling should be enabled while the workloads are running. False if not. When profiling is enabled, any number of profiles containing profiler monitors can be used to run the profiler toolsets within in the background. Set the documentation at the top for additional information on profiler monitors. | false |
   | ProfilingMode             | Optional. Defines the profiling mode (Interval or OnDemand). In 'Interval' mode, the profilers will run in the background constantly and independent of the workload(s). In 'OnDemand' mode, the profilers will be signaled by the workload(s) and will run ONLY while they are running. | None |
-  | TestDuration              | Optional. Defines the duration in seconds for the network suite workloads. | 60 |
+  
+
+* **Component Parameters**  
+  The following parameters describe the parameters within the profile components.
+
+  | Parameter                 | Purpose                                                           | Default Value |
+  |---------------------------|-------------------------------------------------------------------|---------------|
+  | TestDuration              | Optional. Defines the duration in seconds to run the workload.    |  |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

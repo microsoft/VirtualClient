@@ -41,23 +41,23 @@ namespace VirtualClient.Contracts
         [TestCase("  ")]
         public void FileUploadDescriptorConstructorsValidateRequiredParameters_2(string invalidParameter)
         {
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor(invalidParameter, "blobPath", "container", "utf-8", "text/plain", "C:\\any\\file.log"));
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blob", invalidParameter, "container", "utf-8", "text/plain", "C:\\any\\file.log"));
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blob", "blobPath", invalidParameter, "utf-8", "text/plain", "C:\\any\\file.log"));
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blob", "blobPath", "container", invalidParameter, "text/plain", "C:\\any\\file.log"));
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blob", "blobPath", "container", "utf-8", invalidParameter, "C:\\any\\file.log"));
-            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blob", "blobPath", "container", "utf-8", "text/plain", invalidParameter));
+            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor(invalidParameter, "container", "utf-8", "text/plain", "C:\\any\\file.log"));
+            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blobPath", invalidParameter, "utf-8", "text/plain", "C:\\any\\file.log"));
+            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blobPath", "container", invalidParameter, "text/plain", "C:\\any\\file.log"));
+            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blobPath", "container", "utf-8", invalidParameter, "C:\\any\\file.log"));
+            Assert.Throws<ArgumentException>(() => new FileUploadDescriptor("blobPath", "container", "utf-8", "text/plain", invalidParameter));
         }
 
         [Test]
-        public void FileUploadDescriptorConstructorsSetPropertiesToExpectedValues_2()
+        public void FileUploadDescriptorConstructorsSetPropertiesToExpectedValues()
         {
             string expectedBlobName = "file.log";
-            string expectedBlobPath = "/any/path/to/blob";
+            string expectedBlobPath = "/any/path/to/blob/file.log";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
             string expectedFilePath = "C:\\any\\file.log";
+
             IDictionary<string, IConvertible> expectedManifest = new Dictionary<string, IConvertible>
             {
                 { "experimentId", Guid.NewGuid().ToString() },
@@ -66,7 +66,7 @@ namespace VirtualClient.Contracts
                 { "component", "NTttcpExecutor" }
             };
 
-            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobName, expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath);
+            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
 
             Assert.AreEqual(expectedBlobName, instance.BlobName);
             Assert.AreEqual(expectedBlobPath, instance.BlobPath);
@@ -74,23 +74,29 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
             Assert.AreEqual(expectedContentType, instance.ContentType);
             Assert.AreEqual(expectedFilePath, instance.FilePath);
-            Assert.IsNotNull(instance.Manifest);
-            Assert.IsEmpty(instance.Manifest);
-
-            instance = new FileUploadDescriptor(expectedBlobName, expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
-
-            Assert.AreEqual(expectedBlobName, instance.BlobName);
-            Assert.AreEqual(expectedBlobPath, instance.BlobPath);
-            Assert.AreEqual(expectedContainer, instance.ContainerName);
-            Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
-            Assert.AreEqual(expectedContentType, instance.ContentType);
-            Assert.AreEqual(expectedFilePath, instance.FilePath);
+            Assert.IsFalse(instance.DeleteOnUpload);
             Assert.IsNotNull(instance.Manifest);
             Assert.IsNotEmpty(instance.Manifest);
             Assert.IsTrue(instance.Manifest.ContainsKey("experimentId"));
             Assert.IsTrue(instance.Manifest.TryGetValue("agentId", out IConvertible agent) && agent.ToString() == "Agent01");
             Assert.IsTrue(instance.Manifest.TryGetValue("toolName", out IConvertible tool) && tool.ToString() == "NTttcp");
             Assert.IsTrue(instance.Manifest.TryGetValue("component", out IConvertible component) && component.ToString() == "NTttcpExecutor");
+
+            instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest, deleteOnUpload: true);
+
+            Assert.AreEqual(expectedBlobName, instance.BlobName);
+            Assert.AreEqual(expectedBlobPath, instance.BlobPath);
+            Assert.AreEqual(expectedContainer, instance.ContainerName);
+            Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
+            Assert.AreEqual(expectedContentType, instance.ContentType);
+            Assert.AreEqual(expectedFilePath, instance.FilePath);
+            Assert.IsTrue(instance.DeleteOnUpload);
+            Assert.IsNotNull(instance.Manifest);
+            Assert.IsNotEmpty(instance.Manifest);
+            Assert.IsTrue(instance.Manifest.ContainsKey("experimentId"));
+            Assert.IsTrue(instance.Manifest.TryGetValue("agentId", out agent) && agent.ToString() == "Agent01");
+            Assert.IsTrue(instance.Manifest.TryGetValue("toolName", out tool) && tool.ToString() == "NTttcp");
+            Assert.IsTrue(instance.Manifest.TryGetValue("component", out component) && component.ToString() == "NTttcpExecutor");
         }
 
         [Test]
@@ -98,38 +104,34 @@ namespace VirtualClient.Contracts
         [TestCase("/blob01")]
         [TestCase("blob01/")]
         [TestCase("/blob01/")]
-        public void FileUploadDescriptorConstructorsHandleBlobNamesWithVariousPathSeparators(string blobName)
+        [TestCase("\\blob01")]
+        [TestCase("blob01\\")]
+        [TestCase("\\blob01\\")]
+        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators_1(string blobPath)
         {
-            FileUploadDescriptor descriptor = new FileUploadDescriptor(blobName, blobName, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
+            FileUploadDescriptor descriptor = new FileUploadDescriptor(blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
             Assert.AreEqual("blob01", descriptor.BlobName);
+            Assert.AreEqual("/blob01", descriptor.BlobPath);
         }
 
         [Test]
-        [TestCase("any/blob/path")]
-        [TestCase("/any/blob/path")]
-        [TestCase("any/blob/path/")]
-        [TestCase("/any/blob/path/")]
-        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators(string blobPath)
+        [TestCase("any/blob/path/file.txt")]
+        [TestCase("/any/blob/path/file.txt")]
+        [TestCase("any\\blob\\path\\file.txt")]
+        [TestCase("\\any\\blob\\path\\file.txt")]
+        [TestCase("any/blob/path\\file.txt")]
+        [TestCase("\\any/blob/path\\file.txt")]
+        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators_2(string blobPath)
         {
-            FileUploadDescriptor descriptor = new FileUploadDescriptor("name", blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
-            Assert.AreEqual("/any/blob/path", descriptor.BlobPath);
-        }
-
-        [Test]
-        [TestCase("blob01", "any/blob/path")]
-        [TestCase("/blob01", "/any/blob/path")]
-        [TestCase("blob01/", "any/blob/path/")]
-        [TestCase("/blob01/", "/any/blob/path/")]
-        public void FileUploadDescriptorBlobNameAndPathAreEasilyCombinable(string blobName, string blobPath)
-        {
-            FileUploadDescriptor descriptor = new FileUploadDescriptor(blobName, blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
-            Assert.AreEqual("/any/blob/path/blob01", $"{descriptor.BlobPath}/{descriptor.BlobName}");
+            FileUploadDescriptor descriptor = new FileUploadDescriptor(blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
+            Assert.AreEqual("file.txt", descriptor.BlobName);
+            Assert.AreEqual("/any/blob/path/file.txt", descriptor.BlobPath);
         }
 
         [Test]
         public void FileUploadDescriptorObjectsAreJsonSerializable()
         {
-            FileUploadDescriptor instance2 = new FileUploadDescriptor("Blob", "Path", "Container", "utf-8", "text/plain", "C:\\any\\file.log");
+            FileUploadDescriptor instance2 = new FileUploadDescriptor("Path", "Container", "utf-8", "text/plain", "C:\\any\\file.log");
             SerializationAssert.IsJsonSerializable<FileUploadDescriptor>(instance2);
         }
 
@@ -144,7 +146,7 @@ namespace VirtualClient.Contracts
                 { "component", "NTttcpExecutor" }
             };
 
-            FileUploadDescriptor instance = new FileUploadDescriptor("Blob", "Path", "Container", "utf-8", "text/plain", "C:\\any\\file.log", manifest);
+            FileUploadDescriptor instance = new FileUploadDescriptor("Path", "Container", "utf-8", "text/plain", "C:\\any\\file.log", manifest);
             SerializationAssert.IsJsonSerializable<FileUploadDescriptor>(instance);
         }
 
@@ -190,8 +192,9 @@ namespace VirtualClient.Contracts
 
             // The default metadata
             Assert.IsNotEmpty(manifest); 
-            Assert.IsTrue(manifest.Count == 21);
+            Assert.IsTrue(manifest.Count == 22);
             Assert.IsTrue(manifest.ContainsKey("agentId"));
+            Assert.IsTrue(manifest.ContainsKey("appHost"));
             Assert.IsTrue(manifest.ContainsKey("experimentId"));
             Assert.IsTrue(manifest.ContainsKey("role"));
             Assert.IsTrue(manifest.ContainsKey("platform"));
@@ -208,6 +211,7 @@ namespace VirtualClient.Contracts
             Assert.IsTrue(manifest.ContainsKey("fileCreationTimeUtc"));
 
             Assert.AreEqual(expectedAgentId, manifest["agentId"]);
+            Assert.AreEqual(Environment.MachineName, manifest["appHost"]);
             Assert.AreEqual(expectedExperimentId, manifest["experimentId"]);
             Assert.AreEqual(expectedRole, manifest["role"]);
             Assert.AreEqual(PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture), manifest["platform"]);
@@ -241,14 +245,62 @@ namespace VirtualClient.Contracts
         [Test]
         public void ToBlobDescriptorCreatesTheExpectedDescriptor_1()
         {
-            string expectedBlobName = "file.log";
             string expectedBlobPath = "/any/path/to/blob/file.log";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
             string expectedFilePath = "C:\\any\\file.log";
 
-            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobName, expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath);
+            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath);
+            BlobDescriptor descriptor = instance.ToBlobDescriptor();
+
+            Assert.AreEqual(expectedBlobPath, descriptor.Name);
+            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding.WebName);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+        }
+
+        [Test]
+        [TestCase("any/blob/path/file.txt")]
+        [TestCase("/any/blob/path/file.txt")]
+        [TestCase("any\\blob\\path\\file.txt")]
+        [TestCase("\\any\\blob\\path\\file.txt")]
+        [TestCase("any/blob/path\\file.txt")]
+        [TestCase("\\any/blob/path\\file.txt")]
+        public void ToBlobDescriptorCreatesTheExpectedDescriptor_2(string blobPath)
+        {
+            string expectedBlobPath = $"/any/blob/path/file.txt";
+            string expectedContainer = "AnyContainer";
+            string expectedContentEncoding = "utf-8";
+            string expectedContentType = "text/plain";
+            string expectedFilePath = "C:\\any\\file.txt";
+
+            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath);
+            BlobDescriptor descriptor = instance.ToBlobDescriptor();
+
+            Assert.AreEqual(expectedBlobPath, descriptor.Name);
+            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding.WebName);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+        }
+
+        [Test]
+        [TestCase("blob01")]
+        [TestCase("/blob01")]
+        [TestCase("blob01/")]
+        [TestCase("/blob01/")]
+        [TestCase("\\blob01")]
+        [TestCase("blob01\\")]
+        [TestCase("\\blob01\\")]
+        public void ToBlobManifestDescriptorCreatesTheExpectedDescriptor_Files_Without_Extensions(string blobPath)
+        {
+            string expectedBlobPath = $"/blob01";
+            string expectedContainer = "AnyContainer";
+            string expectedContentEncoding = "utf-8";
+            string expectedContentType = "text/plain";
+            string expectedFilePath = "C:\\any\\blob01";
+
+            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath);
             BlobDescriptor descriptor = instance.ToBlobDescriptor();
 
             Assert.AreEqual(expectedBlobPath, descriptor.Name);
@@ -260,12 +312,13 @@ namespace VirtualClient.Contracts
         [Test]
         public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_1()
         {
-            string expectedBlobName = "file.log";
-            string expectedBlobPath = "/any/path/to/blob";
+            string blobPath = "/any/path/to/blob/file.log";
+            string expectedBlobPath = "/any/path/to/blob/file.manifest";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
             string expectedFilePath = "C:\\any\\file.log";
+
             IDictionary<string, IConvertible> expectedManifest = new Dictionary<string, IConvertible>
             {
                 { "experimentId", Guid.NewGuid().ToString() },
@@ -274,12 +327,103 @@ namespace VirtualClient.Contracts
                 { "component", "NTttcpExecutor" }
             };
 
-            FileUploadDescriptor instance = new FileUploadDescriptor(expectedBlobName, expectedBlobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
+            FileUploadDescriptor instance = new FileUploadDescriptor(blobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
             BlobDescriptor descriptor = instance.ToBlobManifestDescriptor(out Stream manifestStream);
 
             using (manifestStream)
             {
-                Assert.AreEqual($"{expectedBlobPath}/file.manifest", descriptor.Name);
+                Assert.AreEqual(expectedBlobPath, descriptor.Name);
+                Assert.AreEqual(expectedContainer, instance.ContainerName);
+                Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
+                Assert.AreEqual(expectedContentType, instance.ContentType);
+                Assert.IsNotNull(manifestStream);
+                Assert.IsTrue(manifestStream.Length > 0);
+
+                using (StreamReader reader = new StreamReader(manifestStream))
+                {
+                    string descriptorManifest = instance.Manifest.ToJson().RemoveWhitespace();
+                    string streamManifest = reader.ReadToEnd().RemoveWhitespace();
+
+                    Assert.AreEqual(descriptorManifest, streamManifest);
+                }
+            }
+        }
+
+        [Test]
+        [TestCase("any/blob/path/file.txt")]
+        [TestCase("/any/blob/path/file.txt")]
+        [TestCase("any\\blob\\path\\file.txt")]
+        [TestCase("\\any\\blob\\path\\file.txt")]
+        [TestCase("any/blob/path\\file.txt")]
+        [TestCase("\\any/blob/path\\file.txt")]
+        public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_2(string blobPath)
+        {
+            string expectedBlobPath = $"/any/blob/path/file.manifest";
+            string expectedContainer = "AnyContainer";
+            string expectedContentEncoding = "utf-8";
+            string expectedContentType = "text/plain";
+            string expectedFilePath = "C:\\any\\file.txt";
+
+            IDictionary<string, IConvertible> expectedManifest = new Dictionary<string, IConvertible>
+            {
+                { "experimentId", Guid.NewGuid().ToString() },
+                { "agentId", "Agent01" },
+                { "toolName", "NTttcp" },
+                { "component", "NTttcpExecutor" }
+            };
+
+            FileUploadDescriptor instance = new FileUploadDescriptor(blobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
+            BlobDescriptor descriptor = instance.ToBlobManifestDescriptor(out Stream manifestStream);
+
+            using (manifestStream)
+            {
+                Assert.AreEqual(expectedBlobPath, descriptor.Name);
+                Assert.AreEqual(expectedContainer, instance.ContainerName);
+                Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
+                Assert.AreEqual(expectedContentType, instance.ContentType);
+                Assert.IsNotNull(manifestStream);
+                Assert.IsTrue(manifestStream.Length > 0);
+
+                using (StreamReader reader = new StreamReader(manifestStream))
+                {
+                    string descriptorManifest = instance.Manifest.ToJson().RemoveWhitespace();
+                    string streamManifest = reader.ReadToEnd().RemoveWhitespace();
+
+                    Assert.AreEqual(descriptorManifest, streamManifest);
+                }
+            }
+        }
+
+        [Test]
+        [TestCase("blob01")]
+        [TestCase("/blob01")]
+        [TestCase("blob01/")]
+        [TestCase("/blob01/")]
+        [TestCase("\\blob01")]
+        [TestCase("blob01\\")]
+        [TestCase("\\blob01\\")]
+        public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_Files_Without_Extensions(string blobPath)
+        {
+            string expectedBlobPath = $"/blob01.manifest";
+            string expectedContainer = "AnyContainer";
+            string expectedContentEncoding = "utf-8";
+            string expectedContentType = "text/plain";
+            string expectedFilePath = "C:\\any\\blob01";
+
+            IDictionary<string, IConvertible> expectedManifest = new Dictionary<string, IConvertible>
+            {
+                { "experimentId", Guid.NewGuid().ToString() },
+                { "agentId", "Agent01" },
+                { "toolName", "NTttcp" },
+                { "component", "NTttcpExecutor" }
+            };
+
+            FileUploadDescriptor instance = new FileUploadDescriptor(blobPath, expectedContainer, expectedContentEncoding, expectedContentType, expectedFilePath, expectedManifest);
+            BlobDescriptor descriptor = instance.ToBlobManifestDescriptor(out Stream manifestStream);
+
+            using (manifestStream)
+            {
+                Assert.AreEqual(expectedBlobPath, descriptor.Name);
                 Assert.AreEqual(expectedContainer, instance.ContainerName);
                 Assert.AreEqual(expectedContentEncoding, instance.ContentEncoding);
                 Assert.AreEqual(expectedContentType, instance.ContentType);

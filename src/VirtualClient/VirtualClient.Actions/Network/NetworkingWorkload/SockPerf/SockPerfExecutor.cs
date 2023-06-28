@@ -49,13 +49,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// Parameter defines the Duration (in seconds) for running the SockPerf workload.
         /// </summary>
         public int TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration));
+                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
             }
         }
 
