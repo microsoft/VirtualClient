@@ -31,6 +31,8 @@ steps:
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
 
+- script: chmod -R +x $(Build.SourcesDirectory)
+  displayName: 'Allow scripts to be executable on Linux'
 
   # Ensure the artifact output/bin/obj directories are clean.
 # - script: $(Build.SourcesDirectory)/clean.cmd
