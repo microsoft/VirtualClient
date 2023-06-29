@@ -33,15 +33,15 @@ steps:
 
 
   # Ensure the artifact output/bin/obj directories are clean.
-# - script: $(Build.SourcesDirectory)\clean.cmd
+# - script: $(Build.SourcesDirectory)/clean.cmd
   # displayName: 'Clean Output Directories'
   
   # Build the repo.
-- script: $(Build.SourcesDirectory)\build.sh $(VcVersion)
+- script: $(Build.SourcesDirectory)/build.sh $(VcVersion)
   displayName: 'Build Solutions'
 
   # Build NuGet packages for the services/agents in the repo.
-# - script: $(Build.SourcesDirectory)\build-packages.cmd $(VcVersion)$(VersionSuffix)
+# - script: $(Build.SourcesDirectory)/build-packages.cmd $(VcVersion)$(VersionSuffix)
   # displayName: 'Build NuGet Packages'
 
 - task: EsrpCodeSigning@1
@@ -64,5 +64,5 @@ steps:
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
 
-#- script: $(Build.SourcesDirectory)\upload-packages.cmd $(Build.SourcesDirectory)\out\packages $(NUGETORGAPIKEY)
+#- script: $(Build.SourcesDirectory)/upload-packages.cmd $(Build.SourcesDirectory)/out/packages $(NUGETORGAPIKEY)
 #  displayName: 'Publish NuGet Packages'
