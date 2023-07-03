@@ -5,12 +5,10 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.Metrics;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -137,6 +135,39 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Container image name
+        /// </summary>
+        public string ContainerName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ContainerName));
+            }
+        }
+
+        /// <summary>
+        /// Container image name
+        /// </summary>
+        public string DataPath
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DataPath));
+            }
+        }
+
+        /// <summary>
+        /// Number of GPUs to be utilized
+        /// </summary>
+        public string GPUNum
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.GPUNum));
+            }
+        }
+
+        /// <summary>
         /// The MLPerf Training Nvidia code directory.
         /// </summary>
         protected string NvidiaDirectoryPath
@@ -154,18 +185,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.PlatformSpecifics.Combine(this.NvidiaDirectoryPath, this.Model, "implementations", this.Implementation);
-            }
-        }
-
-        /// <summary>
-        /// The MLPerf Training Nvidia data directory.
-        /// </summary>
-        protected string DataDirectoryPath
-        {
-            get
-            {
-                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, this.Model);
+                return this.PlatformSpecifics.Combine(this.NvidiaDirectoryPath, "benchmarks", this.Model, "implementations", this.Implementation);
             }
         }
 
@@ -199,10 +219,6 @@ namespace VirtualClient.Actions
             {
                 // add user in docker group
                 await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionDirectoryPath, cancellationToken);
-                await this.ExecuteCommandAsync("newgrp", $"docker", this.ExecutionDirectoryPath, cancellationToken);
-
-                // If GPUConfig is not included in the MLPerf code but is supported
-                this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
 
                 // Setup Environment
                 await this.SetupEnvironmentAsync(cancellationToken);
@@ -219,10 +235,7 @@ namespace VirtualClient.Actions
         protected async Task SetupEnvironmentAsync(CancellationToken cancellationToken)
         {
             string dockerImageCommand = $"docker build --pull -t {this.GetContainerName()} .";
-            string configCommand = $"bash ./config_DGXA100_1x8x56x1.sh";
-            string exportCUDACommand = $"export CUDA_VISIBLE_DEVICES=\"0,1,2,3,4,5,6,7\"";
-            string exportBatchSizeCommand = $"export BATCHSIZE={this.BatchSize}";
-            string suCommand = $"su";
+            string dockerRunCommand = $"docker run --runtime=nvidia {this.GetContainerName()}";
 
             await this.ExecuteCommandAsync(
                 "sudo",
@@ -232,28 +245,9 @@ namespace VirtualClient.Actions
 
             await this.ExecuteCommandAsync(
                 "sudo",
-                configCommand,
+                dockerRunCommand,
                 this.ExecutionDirectoryPath,
                 cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                exportCUDACommand,
-                this.ExecutionDirectoryPath,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                exportBatchSizeCommand,
-                this.ExecutionDirectoryPath,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                suCommand,
-                this.ExecutionDirectoryPath,
-                cancellationToken);
-
         }
 
         /// <summary>
@@ -266,11 +260,11 @@ namespace VirtualClient.Actions
             // Update this function to accomodate other architectures
             if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64)
             {
-                return $"mlperf-training-{this.Username}-x86_64";
+                return $"mlperf-training-{this.Username}-x86_64:{this.ContainerName}";
             }
             else if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.Arm64)
             {
-                return $"mlperf-training-{this.Username}-arm64";
+                return $"mlperf-training-{this.Username}-arm64:{this.ContainerName}";
             }
             else
             {
@@ -287,15 +281,19 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.PrepareBenchmarkConfigsAndScenarios();
-            string shardsPath = this.PlatformSpecifics.Combine("/mlperfDataDrive", $"{this.Model}_data", "hdf5", "training-4320", "hdf5_4320_shards_varlength");
-            string evalPath = this.PlatformSpecifics.Combine("/mlperfDataDrive", this.Model + "_data", "hdf5", "eval_varlength");
-            string checkpointPath = this.PlatformSpecifics.Combine("/mlperfDataDrive", this.Model + "_data", "phase1");
+            string shardsPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "training-4320");
+            string evalPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "eval_varlength");
+            string checkpointPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "phase1");
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string execCommand = $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh";
+                string execCommand = $"su -c \"source config_DGXA100_1x8x56x1.sh; " + 
+                                     $"env BATCHSIZE={this.BatchSize} " + 
+                                     $"DGXNGPU={this.GPUNum} " + 
+                                     $"CUDA_VISIBLE_DEVICES=\"{this.GetGPULabels()}\" " + 
+                                     $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo bash", execCommand, this.ExecutionDirectoryPath, telemetryContext, cancellationToken)
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionDirectoryPath, telemetryContext, cancellationToken)
                    .ConfigureAwait())
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -312,38 +310,21 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Parse metrics and push to telemetry
+        /// </summary>
+        /// <param name="process">Execute process for StandardOutput containing the metrics</param>
+        /// <param name="telemetryContext"></param>
+        /// <param name="cancellationToken"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
         {
-            /*string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectoryPath, ".log", SearchOption.AllDirectories);
-
-            foreach (string file in resultsFiles)
-            {
-                string results = await this.LoadResultsAsync(file, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf Training", results: results.AsArray(), logToFile: true);
-
-                MLPerfTrainingMetricsParser parser = new MLPerfTrainingMetricsParser(results);
-                IList<Metric> metrics = parser.Parse();
-
-                this.Logger.LogMetrics(
-                    "MLPerf Training",
-                    this.Model,
-                    process.StartTime,
-                    process.ExitTime,
-                    metrics,
-                    "Executing",
-                    null,
-                    this.Tags,
-                    telemetryContext);
-
-                await this.fileSystem.File.DeleteAsync(file);
-            }*/
-
-            // Convert to string
+            // Convert StandardOutput to string
             ConcurrentBuffer buffer = process.StandardOutput;
 
             string logs = string.Concat(buffer.ToString(), Environment.NewLine);
 
-            // string results = await this.LoadResultsAsync(logs, cancellationToken);
             await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf Training", results: logs.AsArray(), logToFile: true);
 
             MLPerfTrainingMetricsParser parser = new MLPerfTrainingMetricsParser(logs);
@@ -351,7 +332,7 @@ namespace VirtualClient.Actions
 
             this.Logger.LogMetrics(
                 "MLPerf Training",
-                this.Model,
+                this.Scenario,
                 process.StartTime,
                 process.ExitTime,
                 metrics,
@@ -359,36 +340,12 @@ namespace VirtualClient.Actions
                 null,
                 this.Tags,
                 telemetryContext);
-
-            // await this.fileSystem.File.DeleteAsync(logs);
         }
 
-        private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
-        {
-            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles")))
-            {
-                this.fileSystem.File.Copy(
-                    file,
-                    this.Combine(this.NvidiaDirectoryPath, "code", "common", "systems", Path.GetFileName(file)),
-                    true);
-            }
-
-            foreach (string directory in this.fileSystem.Directory.GetDirectories(
-                this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
-            {
-                foreach (string subDirectory in this.fileSystem.Directory.GetDirectories(directory))
-                {
-                    if (this.fileSystem.File.Exists(this.Combine(subDirectory, "__init__.py")))
-                    {
-                        this.fileSystem.File.Copy(
-                        this.Combine(subDirectory, "__init__.py"),
-                        this.Combine(this.NvidiaDirectoryPath, "configs", Path.GetFileName(directory), Path.GetFileName(subDirectory), "__init__.py"),
-                        true);
-                    }
-                }
-            }
-        }
-
+        /// <summary>
+        /// Unsupported platform error handling
+        /// </summary>
+        /// <exception cref="WorkloadException"></exception>
         private void ThrowIfPlatformNotSupported()
         {
             switch (this.Platform)
@@ -406,6 +363,12 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Unsupported Linux error handling
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="WorkloadException"></exception>
         private async Task ThrowIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)
@@ -458,19 +421,19 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Make a list of all benchmarks and their configs to make scenarios
+        /// </summary>
         private void PrepareBenchmarkConfigsAndScenarios()
         {
             this.scenarios = new Dictionary<string, string>
             {
-                { "bert", "Offline,Server,SingleStream" },
+                { "bert", "PyTorch-22.09" },
             };
 
             List<string> bertConfigs = new List<string>()
             {
-                "default",
-                "high_accuracy",
-                "triton",
-                "high_accuracy_triton"
+                "default"
             };
 
             this.benchmarkConfigs = new Dictionary<string, List<string>>
@@ -479,12 +442,44 @@ namespace VirtualClient.Actions
             };
         }
 
+        /// <summary>
+        ///  Filter the disks using the disk filter and return them
+        /// </summary>
+        /// <param name="disks"></param>
+        /// <param name="diskFilter"></param>
+        /// <returns></returns>
         private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
         {
             diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
             List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, System.PlatformID.Unix).ToList();
 
             return filteredDisks;
+        }
+
+        /// <summary>
+        /// Get the GPU labels to be used for training (To be made a parameter later)
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="WorkloadException"></exception>
+        private string GetGPULabels()
+        {
+            if (int.TryParse(this.GPUNum, out int gpuCount))
+            {
+                if (gpuCount < 0)
+                {
+                    throw new WorkloadException(
+                    $"Invalid number of GPUs ({this.GPUNum}) provided",
+                    ErrorReason.EnvironmentIsInsufficent);
+                }
+
+                return string.Join(",", Enumerable.Range(0, gpuCount));
+            }
+            else
+            {
+                throw new WorkloadException(
+                    $"Invalid number of GPUs ({this.GPUNum}) provided",
+                    ErrorReason.EnvironmentIsInsufficent);
+            }
         }
 
         internal class MLPerfState : State

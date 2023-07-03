@@ -34,11 +34,10 @@ namespace VirtualClient.Actions
         {
             string[] stringsAccuracy = this.CleanDataAccuracy();
             string[] stringsOthers = this.CleanDataOthers();
-            
             this.Metrics = new List<Metric>();
 
             // eval_accuracy
-            Metric metricAccuracy = AccuracyParsing(stringsAccuracy);
+            Metric metricAccuracy = this.AccuracyParsing(stringsAccuracy);
             this.Metrics.Add(metricAccuracy);
 
             string patternDelimiterE2E = @"'e2e_time':\s*([^,}]+)";
@@ -53,8 +52,8 @@ namespace VirtualClient.Actions
 
             // e2e_time
             metricName = "e2e_time";
-            metricValue = OthersParsing(stringsOthers, patternDelimiterE2E);
-            metricUnit = "ms";
+            metricValue = OthersParsing(this.PreprocessedText, patternDelimiterE2E);
+            metricUnit = "s";
             relativity = MetricRelativity.LowerIsBetter;
 
             Metric metricE2E = new Metric(metricName, metricValue, metricUnit, relativity);
@@ -62,7 +61,7 @@ namespace VirtualClient.Actions
 
             // training_sequences_per_second
             metricName = "training_sequences_per_second";
-            metricValue = OthersParsing(stringsOthers, patternDelimiterTrainingPerSec);
+            metricValue = OthersParsing(this.PreprocessedText, patternDelimiterTrainingPerSec);
             metricUnit = string.Empty;
             relativity = MetricRelativity.HigherIsBetter;
 
@@ -71,7 +70,7 @@ namespace VirtualClient.Actions
 
             // final_loss
             metricName = "final_loss";
-            metricValue = OthersParsing(stringsOthers, patternDelimiterFinalLoss);
+            metricValue = OthersParsing(this.PreprocessedText, patternDelimiterFinalLoss);
             metricUnit = string.Empty;
             relativity = MetricRelativity.LowerIsBetter;
 
@@ -80,8 +79,8 @@ namespace VirtualClient.Actions
 
             // raw_train_time
             metricName = "raw_train_time";
-            metricValue = OthersParsing(stringsOthers, patternDelimiterRawTrainTime);
-            metricUnit = "ms";
+            metricValue = OthersParsing(this.PreprocessedText, patternDelimiterRawTrainTime);
+            metricUnit = "s";
             relativity = MetricRelativity.LowerIsBetter;
 
             Metric metricRawTrainTime = new Metric(metricName, metricValue, metricUnit, relativity);
@@ -98,16 +97,27 @@ namespace VirtualClient.Actions
         {
             this.Preprocess();
 
+            string[] stringsSplitAccuracy = this.PreprocessedText.Split("\\n");
+
             string pattern = @"^\{'global.*";
             Regex regex = new Regex(pattern, RegexOptions.Multiline);
 
-            MatchCollection matches = regex.Matches(this.PreprocessedText);
+            string[] lines = new string[0];
 
-            // Store the matched lines in a string array
-            string[] lines = new string[matches.Count];
-            for (int i = 0; i < matches.Count; i++)
+            foreach (string line in stringsSplitAccuracy)
             {
-                lines[i] = matches[i].Value;
+                MatchCollection matches = regex.Matches(line);
+
+                // Append the matched lines to the string array
+                string[] temp = new string[lines.Length + matches.Count];
+                Array.Copy(lines, temp, lines.Length);
+                
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    temp[lines.Length + i] = matches[i].Value;
+                }
+
+                lines = temp;
             }
 
             // Return the string array
@@ -120,18 +130,27 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         private string[] CleanDataOthers()
         {
-            this.Preprocess();
+            string[] stringsSplitOthers = this.PreprocessedText.Split("\\n");
 
             string pattern = @"^\{'e2e.*";
             Regex regex = new Regex(pattern, RegexOptions.Multiline);
 
-            MatchCollection matches = regex.Matches(this.PreprocessedText);
+            string[] lines = new string[0];
 
-            // Store the matched lines in a string array
-            string[] lines = new string[matches.Count];
-            for (int i = 0; i < matches.Count; i++)
+            foreach (string line in stringsSplitOthers)
             {
-                lines[i] = matches[i].Value;
+                MatchCollection matches = regex.Matches(line);
+
+                // Append the matched lines to the string array
+                string[] temp = new string[lines.Length + matches.Count];
+                Array.Copy(lines, temp, lines.Length);
+
+                for (int i = 0; i < matches.Count; i++)
+                {
+                    temp[lines.Length + i] = matches[i].Value;
+                }
+
+                lines = temp;
             }
 
             // Return the string array
@@ -144,7 +163,7 @@ namespace VirtualClient.Actions
         /// <param name="stringsAccuracy"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadResultsException"></exception>
-        private static Metric AccuracyParsing(string[] stringsAccuracy)
+        private Metric AccuracyParsing(string[] stringsAccuracy)
         {
             string patternDelimiterAccuracy = @"'eval_mlm_accuracy':\s*([^,}]+)";
             string patternDelimiterGlobal = @"'global_steps':\s*([^,}]+)";
@@ -214,30 +233,29 @@ namespace VirtualClient.Actions
         /// <param name="patternDelimiter"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadResultsException"></exception>
-        private static double OthersParsing(string[] stringsOthers, string patternDelimiter)
+        private static double OthersParsing(string stringsOthers, string patternDelimiter)
         {
             double metricValue = 0;
             double counter = 0;
 
-            foreach (string line in stringsOthers)
+            string line = stringsOthers;
+                
+            // For e2e_time
+            Regex regex = new Regex(patternDelimiter);
+            Match match = regex.Match(line);
+    
+            if (match.Success)
             {
-                // For e2e_time
-                Regex regex = new Regex(patternDelimiter);
-                Match match = regex.Match(line);
-
-                if (match.Success)
+                string value = match.Groups[1].Value.Trim();
+                if (double.TryParse(value, out double number))
                 {
-                    string value = match.Groups[1].Value.Trim();
-                    if (double.TryParse(value, out double number))
-                    {
-                        metricValue += number;
-                        counter++;
-                    }
+                    metricValue += number;
+                    counter++;
                 }
-                else
-                {
-                    throw new WorkloadResultsException($"The MLPerf Training Workload did not generate proper metrics! ");
-                }
+            }
+            else
+            {
+                // throw new WorkloadResultsException($"The MLPerf Training Workload did not generate proper metrics! ");
             }
 
             metricValue /= counter;

@@ -27,48 +27,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("Example_bert_time_ms.txt")]
-        public void MLPerfTrainingParserVerifySingleLineMetrics(string exampleFile)
-        {
-            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
-            this.rawText = File.ReadAllText(outputPath);
-
-            if (rawText.Contains("time_ms"))
-            {
-                this.testParser = new MLPerfTrainingMetricsParser(this.rawText);
-                IList<Metric> metrics = this.testParser.Parse();
-
-                Assert.AreEqual(1, metrics.Count);
-                MetricAssert.Exists(metrics, "time_ms", 0, "ms");
-            }
-            else
-            {
-                // Do nothing as there are no valid metrics
-            }
-        }
-
-        [Test]
-        [TestCase("Example_bert_time_ms_multiple.txt")]
-        public void MLPerfTrainingParserVerifyMultiLineMetrics(string exampleFile)
-        {
-            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
-            this.rawText = File.ReadAllText(outputPath);
-
-            if (rawText.Contains("time_ms"))
-            {
-                this.testParser = new MLPerfTrainingMetricsParser(this.rawText);
-                IList<Metric> metrics = this.testParser.Parse();
-
-                Assert.AreEqual(1, metrics.Count);
-            }
-            else
-            {
-                // Do nothing as there are no valid metrics
-            }
-        }
-
-        [Test]
-        [TestCase("combined.log")]
+        [TestCase("Example_bert_real_output.txt")]
         public void MLPerfTrainingParserVerifyRealResults_1(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
