@@ -4,7 +4,7 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
-        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Rs"
+        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size"
     },
     "Parameters": {
         "Username": "azureuser",
@@ -17,12 +17,211 @@
         {
             "Type": "MLPerfTrainingExecutor",
             "Parameters": {
-                "Scenario": "training-mlperf-bert-batchsize-45",
+                "Scenario": "training-mlperf-bert-batchsize-45-gpu-8",
                 "Model": "bert",
                 "Username": "$.Parameters.Username",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "BatchSize": "45",
-                "Implementation": "pytorch-22.09"
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "8"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-40-gpu-8",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "40",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "8"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-35-gpu-8",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "35",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "8"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-30-gpu-8",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "30",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "8"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-45-gpu-4",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "45",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "4"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-40-gpu-4",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "40",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "4"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-35-gpu-4",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "35",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "4"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-30-gpu-4",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "30",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "4"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-45-gpu-2",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "45",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "2"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-40-gpu-2",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "40",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "2"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-35-gpu-2",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "35",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "2"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-30-gpu-2",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "30",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "2"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-40-gpu-1",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "40",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "1"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-35-gpu-1",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "35",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "1"
+            }
+        },
+        {
+            "Type": "MLPerfTrainingExecutor",
+            "Parameters": {
+                "Scenario": "training-mlperf-bert-batchsize-30-gpu-1",
+                "Model": "bert",
+                "Username": "$.Parameters.Username",
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "BatchSize": "30",
+                "Implementation": "pytorch-22.09",
+                "ContainerName": "language_model",
+                "DataPath": "mlperf-training-data-bert.1.0.0",
+                "GPUNum": "1"
             }
         }
     ],
@@ -31,6 +230,14 @@
             "Type": "FormatDisks",
             "Parameters": {
                 "Scenario": "InitializeDisks"
+            }
+        },
+        {
+            "Type": "MountDisks",
+            "Parameters": {
+                "Scenario": "MountDataDisk",
+                "MountPointName": "/mlperftraining",
+                "DiskFilter":  "BiggestSize"
             }
         },
         {
@@ -74,7 +281,7 @@
             "Parameters": {
                 "Scenario": "InstallMLPerfTrainingDataPackage",
                 "BlobContainer": "packages",
-                "BlobName": "MLPerfTrainingData_bert.1.0.0.zip",
+                "BlobName": "mlperf-training-data-bert.1.0.0.zip",
                 "PackageName": "MLPerfTrainingData_bert",
                 "Extract": true
             }
