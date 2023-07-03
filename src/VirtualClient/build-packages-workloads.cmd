@@ -24,6 +24,11 @@ if /i "%PackageName%" NEQ "" (
 
 ) else (
     echo:
+    echo [Creating NuGet Package: CtsTraffic Workload]
+    echo --------------------------------------------------
+    call dotnet pack %PackagingProject% --force --no-restore --no-build -c Debug -p:NuspecFile=%PackagingDir%\nuspec\ctstraffic.nuspec && echo: || Goto :Error
+    
+    echo:
     echo [Creating NuGet Package: DiskSpd Workload]
     echo --------------------------------------------------
     call dotnet pack %PackagingProject% --force --no-restore --no-build -c Debug -p:NuspecFile=%PackagingDir%\nuspec\diskspd.nuspec && echo: || Goto :Error
