@@ -274,7 +274,13 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
 ## PERF-IO-FIO-MULTITHROUGHPUT.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
 workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
-weight/percentage defined. A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
+weight/percentage defined. 
+A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
+
+Random IO : It represents the Database of OLTP-C workload.
+Sequential IO : It represents the logs of OLTP-C workload.
+Therefore, they are performed on different disks
+
 The workload runs directly against the raw disks without having the file system involved (e.g. /dev/sda, /dev/sdc);
 
 This profile uses an algorithm to determine the amount of IOPS to run against the disks & Random IO ,Sequential IO Disks:
