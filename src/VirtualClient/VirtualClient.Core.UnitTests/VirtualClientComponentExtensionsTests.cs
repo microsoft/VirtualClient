@@ -243,7 +243,6 @@ namespace VirtualClient
             public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
             {
                 return new FileUploadDescriptor(
-                    fileContext.File.Name,
                     $"/any/path/to/blob/{fileContext.File.Name}",
                     "anyContainer",
                     "utf-8",

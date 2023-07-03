@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Contracts.Logging
+namespace VirtualClient.Logging
 {
     using System;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -16,22 +17,19 @@ namespace VirtualClient.Contracts.Logging
     {
         private string filePath;
         private long maxFileSize;
-        private TimeSpan bufferFlushInterval;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLoggerProvider"/> class.
         /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
         /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
-        /// <param name="flushInterval">The interval at which buffered content will be written to file.</param>
         /// </summary>
-        public MetricsCsvFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes, TimeSpan flushInterval)
+        public MetricsCsvFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes)
         {
             csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
             maximumFileSizeBytes.ThrowIfInvalid(nameof(maximumFileSizeBytes), (size) => size > 0);
 
             this.filePath = csvFilePath;
             this.maxFileSize = maximumFileSizeBytes;
-            this.bufferFlushInterval = flushInterval;
         }
 
         /// <summary>
@@ -45,7 +43,14 @@ namespace VirtualClient.Contracts.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            return new MetricsCsvFileLogger(this.filePath, this.maxFileSize, this.bufferFlushInterval);
+            MetricsCsvFileLogger logger = new MetricsCsvFileLogger(this.filePath, this.maxFileSize);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
+            {
+                logger.Flush();
+                logger.Dispose();
+            }));
+
+            return logger;
         }
 
         /// <summary>

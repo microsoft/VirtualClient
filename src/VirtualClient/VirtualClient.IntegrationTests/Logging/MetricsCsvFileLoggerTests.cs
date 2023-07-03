@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Logging
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -44,7 +45,7 @@ namespace VirtualClient.Logging
         public void WriteMetricsToCsvFile()
         {
             string csvFilePath = Path.Combine(MockFixture.TestAssemblyDirectory, "logs", "metrics.csv");
-            ILogger logger = DependencyFactory.CreateCsvFileLoggerProvider(csvFilePath, TimeSpan.Zero)
+            ILogger logger = DependencyFactory.CreateCsvFileLoggerProvider(csvFilePath)
                 .CreateLogger("Testing");
 
             List<Metric> metrics = new List<Metric>();
@@ -73,6 +74,8 @@ namespace VirtualClient.Logging
                 context,
                 null,
                 "1.2.3");
+
+            (logger as IFlushableChannel).Flush();
         }
 
         private EventContext GetEventContext()
