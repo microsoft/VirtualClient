@@ -7,14 +7,14 @@
         "DiskSelectionInformation": "Sequential disk count specifies the number of disks being used for Sequential I/O from selected disks. Out of which the smallest disks are selected."
     },
     "Parameters": {
+        "DirectIO": true,
         "DiskFilter": "BiggestSize",
+        "InitializeDisksInParallel": true,
         "RandomIOFileSize": "124G",
+        "SequentialDiskCount": "1",
         "SequentialIOFileSize": "20G",
         "TargetIOPS": "5000",
-        "TargetPercents": "10,40,90,98,100,102,110",
-        "DirectIO": true,
-        "InitializeDisksInParallel": true,
-        "SequentialDiskCount": "1"
+        "TargetPercents": "10,40,90,98,100,102,110"
     },
     "Actions": [
         {
@@ -30,9 +30,9 @@
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount",
                 "Tags": "IO,FIO,MultiThroughput,OLTP",
-                "TemplateJobFile": "oltp-c.fio.jobfile",
-                "SequentialDiskCount": "$.Parameters.SequentialDiskCount"
+                "TemplateJobFile": "oltp-c.fio.jobfile"
             }
         },
         {
@@ -53,6 +53,7 @@
                 "RandomWriteNumJobs": 1,
                 "RandomWriteQueueDepth": 512,
                 "RandomWriteWeight": 4255,
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
                 "SequentialReadBlockSize": "56K",
                 "SequentialReadNumJobs": 1,
@@ -65,8 +66,7 @@
                 "TargetIOPS": "$.Parameters.TargetIOPS",
                 "TargetPercents": "$.Parameters.TargetPercents",
                 "TemplateJobFile": "oltp-c.fio.jobfile",
-                "Tags": "IO,FIO,Multi-Throughput,OLTP",
-                "SequentialDiskCount": "$.Parameters.SequentialDiskCount"
+                "Tags": "IO,FIO,Multi-Throughput,OLTP"
             }
         }
     ],
