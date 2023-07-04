@@ -1,0 +1,34 @@
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <metadata>
+        <id>ctstraffic</id>
+        <version>1.0.0</version>
+        <title>sgemm</title>
+        <description>Cts Traffic Network Test.</description>
+        <authors>crcairteam@microsoft.com</authors>
+        <tags>Azure CHIE CRC CloudReadinessCriteria VirtualClient Workloads Network Performance</tags>
+    </metadata>
+
+    <files>
+        <!-- 
+        MSBuild Properties
+        The following properties are defined in the packaging project <NuSpecProperties> element
+        for reference in the various .nuspec files:
+
+        - BinDir
+          The path to the 'bin' directory in the repo 'out' folder (e.g. /repo/out/bin).
+         
+        - BinConfigDir
+          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Debug).
+          
+        - PackagingSourceDir
+          The directory to the/this project where the .nuspec files are contained.
+         
+        - ToolsOutDir
+          The directory in the build 'out' directory where the external/3rd party tools exist and from
+          which NuGet packages are created (e.g. /repo/out/tools).
+        -->
+        <file src="$ToolsOutDir$\ctstraffic.vcpkg" target="runtimes" />
+        <file src="$ToolsOutDir$\win-x64\ctstraffic\**" target="runtimes\win-x64" />
+        <file src="$ToolsOutDir$\win-arm64\ctstraffic\**" target="runtimes\win-arm64" />
+    </files>
+</package>

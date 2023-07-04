@@ -79,7 +79,4 @@
         <!-- Framework Package = System.IO.FileSystem.Primitives -->
         <NuspecProperties>$(NuspecProperties);System_IO_FileSystem_Primitives_Version=$(System_IO_FileSystem_Primitives_PackageVersion)</NuspecProperties>
     </PropertyGroup>
-    <ItemGroup>
-      <Folder Include="win-x64\ctstraffic\" />
-    </ItemGroup>
 </Project>

@@ -105,7 +105,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.Pattern), "0x400000000");
+                return this.Parameters.GetValue<string>(nameof(this.BytesToTransfer), "0x400000000");
             }
         }
 
@@ -219,6 +219,11 @@ namespace VirtualClient.Actions
                     $"Required executable -{this.ProcessInNumaNodeExe} missing.",
                     ErrorReason.DependencyNotFound);
             }
+
+            if (!this.FileSystem.Directory.Exists(this.ResultsFolder))
+            {
+                this.FileSystem.Directory.CreateDirectory(this.ResultsFolder);
+            }
         }
 
         /// <inheritdoc/>
@@ -311,21 +316,10 @@ namespace VirtualClient.Actions
             return new CtsTrafficClientExecutor(this.Dependencies, this.Parameters);
         }
 
-        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
-        {
-            return firewallManager.EnableInboundConnectionsAsync(
-                new List<FirewallEntry>
-                {
-                    new FirewallEntry(
-                        "CtsTraffic: Allow Multiple Machines communications",
-                        "Allows individual machine instances to communicate with other machine in client-server scenario",
-                        "tcp",
-                        new List<int> { port })
-                },
-                cancellationToken);
-        }
-
-        private void InitializeApiClients()
+        /// <summary>
+        /// Initializes API client.
+        /// </summary>
+        protected void InitializeApiClients()
         {
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
@@ -343,6 +337,20 @@ namespace VirtualClient.Actions
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
                 this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
+        }
+
+        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
+        {
+            return firewallManager.EnableInboundConnectionsAsync(
+                new List<FirewallEntry>
+                {
+                    new FirewallEntry(
+                        "CtsTraffic: Allow Multiple Machines communications",
+                        "Allows individual machine instances to communicate with other machine in client-server scenario",
+                        "tcp",
+                        new List<int> { port })
+                },
+                cancellationToken);
         }
 
         private void ValidatePlatformSupportedAsync(CancellationToken cancellationToken)

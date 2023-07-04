@@ -11,7 +11,7 @@
         "NumaNode": "0",
         "BufferInBytes": "65536",
         "Pattern":  "Duplex",
-        "BytesToTransfer":  "0x400000000"
+        "BytesToTransfer":  "0x400000000",
         "Connections": "1",
         "Iterations": "1",
         "ServerExitLimit": "1"

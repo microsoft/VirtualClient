@@ -103,15 +103,15 @@ namespace VirtualClient.Actions
                 this.PollingInterval);
 
             string targetIPAddress = this.GetServerIPAddress(cancellationToken);
-            string primaryCommand = $@"-Target:{targetIPAddress} -Consoleverbosity:1 -Statusfilename:{this.StatusFileName} " +
-            $@"-Connectionfilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
+            string primaryCommand = $@"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+            $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
             $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:32 " +
             $@"-TimeLimit:150000";
 
-            string secondaryCommand = $@"{this.NumaNode} '{this.CtsTrafficExe} -Target:{targetIPAddress} -Consoleverbosity:1 -Statusfilename:{this.StatusFileName} " +
-            $@"-Connectionfilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
+            string secondaryCommand = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+            $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
             $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:{this.BytesToTransfer} " +
-            $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000'";
+            $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
 
             this.ExecuteWorkload(this.CtsTrafficExe, primaryCommand, telemetryContext, cancellationToken);
 

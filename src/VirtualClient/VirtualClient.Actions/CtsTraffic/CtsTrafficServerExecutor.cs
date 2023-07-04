@@ -52,12 +52,14 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.SetServerOnline(false);
-            base.InitializeAsync(telemetryContext, cancellationToken);
 
-            return Task.CompletedTask;
+            await base.InitializeAsync(telemetryContext, cancellationToken);
+
+            DependencyPath ctsTrafficPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            this.CtsTrafficPackagePath = ctsTrafficPackage.Path;
         }
 
         /// <summary>
@@ -67,11 +69,6 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.serverState = await this.LocalApiClient.GetOrCreateStateAsync<CtsTrafficServerState>(
-                    nameof(CtsTrafficServerState),
-                    cancellationToken,
-                    logger: this.Logger);
-
             try
             {
                 // 1. Start 1st phase
@@ -83,21 +80,21 @@ namespace VirtualClient.Actions
                 // 7. wait for phase 2 to finish
                 // 8. Delet phase 2 state
 
-                string primaryCommand = $@"-Listen:* -Consoleverbosity:1 -Statusfilename:{this.StatusFileName} " +
-                $@"-Connectionfilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
+                string primaryCommand = $@"-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+                $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
                 $@"-Pattern:{this.Pattern} -Transfer:32 " +
                 $@"-TimeLimit:150000 -ServerExitLimit:1";
 
-                string secondaryCommand = $@"{this.NumaNode} '{this.CtsTrafficExe} -Listen:* -Consoleverbosity:1 -Statusfilename:{this.StatusFileName} " +
-                $@"-Connectionfilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
+                string secondaryCommand = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+                $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
                 $@"-Pattern:{this.Pattern} -Transfer:{this.BytesToTransfer} -ServerExitLimit:{this.ServerExitLimit} " +
-                $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000'";
+                $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
 
                 bool phase1State = true;
 
-                this.ExecuteWorkload(this.CtsTrafficExe, primaryCommand, phase1State, telemetryContext, cancellationToken);
+                await this.ExecuteAndWaitCommandAsync(this.CtsTrafficExe, primaryCommand, this.CtsTrafficPackagePath, phase1State, telemetryContext, cancellationToken);
 
-                this.ExecuteWorkload(this.ProcessInNumaNodeExe, secondaryCommand, !phase1State, telemetryContext, cancellationToken);
+                await this.ExecuteAndWaitCommandAsync(this.ProcessInNumaNodeExe, secondaryCommand, this.CtsTrafficPackagePath, !phase1State, telemetryContext, cancellationToken);
 
                 using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
                 {
@@ -118,7 +115,7 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task<IProcessProxy> ExecuteAndWaitCommandAsync(
+        private async Task ExecuteAndWaitCommandAsync(
             string command,
             string commandArguments,
             string workingDirectory,
@@ -127,68 +124,60 @@ namespace VirtualClient.Actions
             CancellationToken cancellationToken)
         {
             command.ThrowIfNullOrWhiteSpace(nameof(command));
+            commandArguments.ThrowIfNullOrWhiteSpace(nameof(commandArguments));
+            workingDirectory.ThrowIfNullOrWhiteSpace(nameof(workingDirectory));
+            phase1State.ThrowIfNull(nameof(phase1State));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
                 .AddContext(nameof(commandArguments), commandArguments)
-                .AddContext(nameof(workingDirectory), workingDirectory);
+                .AddContext(nameof(workingDirectory), workingDirectory)
+                .AddContext(nameof(phase1State), phase1State);
 
-            IProcessProxy process = null;
-            if (!cancellationToken.IsCancellationRequested)
+            await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
-                ProcessManager processManager = this.Dependencies.GetService<ProcessManager>();
-
-                process = processManager.CreateProcess(command, commandArguments, workingDirectory);
-
-                this.CleanupTasks.Add(() => process.SafeKill());
-                this.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
-
-                using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
+                IProcessProxy process = null;
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    response.ThrowOnError<WorkloadException>();
-                }
+                    ProcessManager processManager = this.Dependencies.GetService<ProcessManager>();
 
-                process.Start();
-                this.SetServerOnline(true);
-                this.SaveServerStateAsync(phase1State, !phase1State, cancellationToken);
+                    process = processManager.CreateProcess(command, commandArguments, workingDirectory);
 
-                await process.WaitForExitAsync(cancellationToken)
-                    .ConfigureAwait(false);
-            }
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.Logger.LogTraceMessage($"Executing: {command} {commandArguments}".Trim(), relatedContext);
 
-            return process;
-        }
-
-        private void ExecuteWorkload(string exe, string command, bool phase1State, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
-            {
-                DateTime startTime = DateTime.UtcNow;
-
-                using (IProcessProxy process = await this.ExecuteAndWaitCommandAsync(
-                    exe,
-                    command,
-                    this.CtsTrafficPackagePath,
-                    phase1State,
-                    telemetryContext,
-                    cancellationToken))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
+                    if (!process.Start())
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-
-                        await this.CaptureMetricsAsync(process, command, telemetryContext, cancellationToken);
+                        throw new WorkloadException($"The workload did not start as expected.", ErrorReason.WorkloadFailed);
                     }
+
+                    this.SetServerOnline(true);
+                    this.SaveServerStateAsync(phase1State, !phase1State, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await process.WaitForExitAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.LogProcessDetailsAsync(process, relatedContext, "CtsTraffic", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
+
+                    await this.CaptureMetricsAsync(process, commandArguments, relatedContext, cancellationToken);
                 }
             });
+
+            await this.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
         }
 
         private async Task SaveServerStateAsync(bool phase1State, bool phase2State, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.serverState = await this.LocalApiClient.GetOrCreateStateAsync<CtsTrafficServerState>(
+                    nameof(CtsTrafficServerState),
+                    cancellationToken,
+                    logger: this.Logger);
+
                 this.serverState.Definition.ServerSetupPhase1Completed = phase1State;
                 this.serverState.Definition.ServerSetupPhase2Completed = phase2State;
 

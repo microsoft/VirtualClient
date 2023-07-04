@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -26,6 +27,7 @@ namespace VirtualClient.Actions
     {
         private MockFixture mockFixture;
         private DependencyPath mockCtsTrafficPackage;
+        private string mockResults;
 
         public void SetupDefaults(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
         {
@@ -60,6 +62,12 @@ namespace VirtualClient.Actions
 
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            this.mockResults = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"CtsTraffic", "CtsTrafficResultsExample.csv"));
+
+            this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.mockResults);
+
         }
 
         [Test]
@@ -116,19 +124,24 @@ namespace VirtualClient.Actions
                     // Format:
                     // {command} {command_arguments} --> {working_dir}
                     $"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Listen:* -Consoleverbosity:1 " +
-                    $"-Statusfilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -Connectionfilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
+                    $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
                     $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.PrimaryPort} -Pattern:{executor.Pattern} " +
                     $"-Transfer:32 -TimeLimit:150000 -ServerExitLimit:1 --> {ctsTrafficPackage}\\win-{arch}",
 
                     $"{ctsTrafficPackage}\\win-{arch}\\StartProcessInNumaNode.exe {executor.NumaNode} " +
-                    $"'{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Listen:* -Consoleverbosity:1 " +
-                    $"-Statusfilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -Connectionfilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
+                    $"\"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Listen:* -Consoleverbosity:1 " +
+                    $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
                     $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.SecondaryPort} -Pattern:{executor.Pattern} " +
-                    $"-Transfer:{executor.BytesToTransfer} -ServerExitLimit:{executor.ServerExitLimit} -Buffer:{executor.BufferInBytes} -TimeLimit:150000' --> {ctsTrafficPackage}\\win-{arch}"
+                    $"-Transfer:{executor.BytesToTransfer} -ServerExitLimit:{executor.ServerExitLimit} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
                 {
+                    process.StandardOutput.Clear();
+                    if (process.FullCommand().Contains("ctsTraffic.exe"))
+                    {
+                        process.StandardOutput.Append(this.mockResults);
+                    }
                     expectedCommands.Remove($"{process.FullCommand()} --> {process.StartInfo.WorkingDirectory}");
                 };
 
