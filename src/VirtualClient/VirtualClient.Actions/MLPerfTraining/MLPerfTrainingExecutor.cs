@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The current running user
+        /// The framework used for the implementation. It will be a sub directory in the model/implementations directory
         /// </summary>
         public string Implementation
         {
@@ -146,7 +146,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Container image name
+        /// Name of zip file without .zip. It will be the name of the folder where the model package is extracted to
         /// </summary>
         public string DataPath
         {
@@ -159,11 +159,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of GPUs to be utilized
         /// </summary>
-        public string GPUNum
+        public string NumberOfGPUs
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.GPUNum));
+                return this.Parameters.GetValue<string>(nameof(this.NumberOfGPUs));
             }
         }
 
@@ -300,7 +300,7 @@ namespace VirtualClient.Actions
             {
                 string execCommand = $"su -c \"source {this.ConfigFile}; " + 
                                      $"env BATCHSIZE={this.BatchSize} " + 
-                                     $"DGXNGPU={this.GPUNum} " + 
+                                     $"DGXNGPU={this.NumberOfGPUs} " + 
                                      $"CUDA_VISIBLE_DEVICES=\"{this.GetGPULabels()}\" " + 
                                      $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
@@ -332,9 +332,7 @@ namespace VirtualClient.Actions
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
         {
             // Convert StandardOutput to string
-            ConcurrentBuffer buffer = process.StandardOutput;
-
-            string logs = string.Concat(buffer.ToString(), Environment.NewLine);
+            string logs = string.Concat(process.StandardOutput.ToString(), Environment.NewLine);
 
             await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf Training", results: logs.AsArray(), logToFile: true);
 
@@ -347,7 +345,7 @@ namespace VirtualClient.Actions
                 process.StartTime,
                 process.ExitTime,
                 metrics,
-                "Executing",
+                "GPU",
                 null,
                 this.Tags,
                 telemetryContext);
@@ -474,12 +472,12 @@ namespace VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         private string GetGPULabels()
         {
-            if (int.TryParse(this.GPUNum, out int gpuCount))
+            if (int.TryParse(this.NumberOfGPUs, out int gpuCount))
             {
                 if (gpuCount < 0)
                 {
                     throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.GPUNum}) provided",
+                    $"Invalid number of GPUs ({this.NumberOfGPUs}) provided",
                     ErrorReason.EnvironmentIsInsufficent);
                 }
 
@@ -488,7 +486,7 @@ namespace VirtualClient.Actions
             else
             {
                 throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.GPUNum}) provided",
+                    $"Invalid number of GPUs ({this.NumberOfGPUs}) provided",
                     ErrorReason.EnvironmentIsInsufficent);
             }
         }
