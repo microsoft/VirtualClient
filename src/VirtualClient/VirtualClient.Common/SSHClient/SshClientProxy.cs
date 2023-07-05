@@ -16,7 +16,7 @@ namespace VirtualClient.Common
         private bool disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SshCommandProxy"/> class.
+        /// Initializes a new instance of the <see cref="SshClientProxy"/> class.
         /// </summary>
         /// <param name="sshClient">The SSH command associated with the proxy.</param>
         public SshClientProxy(SshClient sshClient)

@@ -533,6 +533,7 @@ namespace VirtualClient
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
             IFileSystem fileSystem = new FileSystem();
             ProcessManager processManager = ProcessManager.Create(platform);
+            SshClientManager sshClientManager = new SshClientManager();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
             IStateManager packageStateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
@@ -546,6 +547,7 @@ namespace VirtualClient
                 PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
+                SshClientManager = sshClientManager,
                 StateManager = stateManager
             };
         }
