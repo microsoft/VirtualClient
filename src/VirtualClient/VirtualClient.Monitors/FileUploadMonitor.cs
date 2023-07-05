@@ -8,6 +8,7 @@ namespace VirtualClient.Monitors
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient.Common.Contracts;
@@ -18,6 +19,7 @@ namespace VirtualClient.Monitors
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using Polly;
 
     /// <summary>
     /// This monitor processes content/file uploads requested by Virtual Client
@@ -36,7 +38,7 @@ namespace VirtualClient.Monitors
             : base(dependencies, parameters)
         {
             this.fileSystem = this.Dependencies.GetService<IFileSystem>();
-            this.ProcessingIntervalWaitTime = TimeSpan.FromSeconds(10);
+            this.ProcessingIntervalWaitTime = TimeSpan.FromSeconds(3);
         }
 
         /// <summary>
@@ -65,60 +67,96 @@ namespace VirtualClient.Monitors
 
                 if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                 {
-                    // We do not immediately honor a cancellation. We attempt to handle any remaining
-                    // file uploads to "clear the docket" before we cancel and exit. VC will allow monitors
-                    // some amount of time to exit gracefully before allowing the application itself to fully
-                    // exit. This is designed to enable the highest reliability possible for getting buffered telemetry
-                    // off the system as well as any log files. The user can even define an explicit wait time on the command
-                    // line using the --exit-wait option to further control this.
-                    //
-                    // As such, we will continue to process the files below so long as any of the following is true:
-                    // 1) Cancellation has NOT been requested.
-                    // 2) Cancellation is requested but there remain files to process.
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            EventContext relatedContext = telemetryContext.Clone()
-                                .AddContext("contentUploadsDirectory", this.RequestsDirectory);
-
-                            await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessUploads", telemetryContext, async () =>
-                            {
-                                // We do not honor the cancellation token until ALL files have been processed.
-                                while (await this.ProcessUploadsAsync(blobManager, telemetryContext))
-                                {
-                                    try
-                                    {
-                                        await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
-                                    }
-                                    catch (OperationCanceledException)
-                                    {
-                                        // If the cancellation is requested, we want to short-circuit the Task.Delay
-                                        // so that we can quickly loop around to the processing. If there are no files
-                                        // to process, we will exit.
-                                    }
-                                }
-                            });
-
-                            await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // Expected whenever ctrl-C is used. Do a check once more, without cancellationToken and break;
-                        }
-                        catch (Exception exc)
-                        {
-                            // The logic within the processing method should be handling all exceptions. However,
-                            // this logic is here to ensure that the monitor NEVER crashes. It must attempt to
-                            // exit gracefully at often as possible.
-                            this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Error);
-                        }
-                    }
+                    await this.ProcessFileUploadsAsync(blobManager, telemetryContext, cancellationToken);
+                    await this.ProcessSummaryFileUploadsAsync(blobManager, telemetryContext);
                 }
             });
         }
 
-        private async Task<bool> ProcessUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
+        private async Task ProcessFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // We do not immediately honor a cancellation. We attempt to handle any remaining
+            // file uploads to "clear the docket" before we cancel and exit. VC will allow monitors
+            // some amount of time to exit gracefully before allowing the application itself to fully
+            // exit. This is designed to enable the highest reliability possible for getting buffered telemetry
+            // off the system as well as any log files. The user can even define an explicit wait time on the command
+            // line using the --exit-wait option to further control this.
+            //
+            // As such, we will continue to process the files below so long as any of the following is true:
+            // 1) Cancellation has NOT been requested.
+            // 2) Cancellation is requested but there remain files to process.
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                EventContext relatedContext = telemetryContext.Clone().AddContext("directoryPath", this.RequestsDirectory);
+
+                try
+                {
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessFileUploads", relatedContext, async () =>
+                    {
+                        // We do not honor the cancellation token until ALL files have been processed.
+                        while (await this.UploadFilesAsync(blobManager, telemetryContext))
+                        {
+                            try
+                            {
+                                await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
+                            }
+                            catch (OperationCanceledException)
+                            {
+                                // If the cancellation is requested, we want to short-circuit the Task.Delay
+                                // so that we can quickly loop around to the processing. If there are no files
+                                // to process, we will exit.
+                            }
+                        }
+                    });
+
+                    await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever ctrl-C is used. Do a check once more, without cancellationToken and break;
+                }
+                catch (Exception exc)
+                {
+                    // The logic within the processing method should be handling all exceptions. However,
+                    // this logic is here to ensure that the monitor NEVER crashes. It must attempt to
+                    // exit gracefully at often as possible.
+                    this.Logger.LogErrorMessage(exc, relatedContext, LogLevel.Error);
+                }
+            }
+        }
+
+        private async Task ProcessSummaryFileUploadsAsync(IBlobManager blobManager, EventContext telemetryContext)
+        {
+            EventContext relatedContext = telemetryContext.Clone().AddContext("directoryPath", this.PlatformSpecifics.LogsDirectory);
+
+            while (true)
+            {
+                try
+                {
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessSummaryFileUploads", relatedContext, async () =>
+                    {
+                        // Upload the workload summary logs (e.g. metrics.csv) before exiting. We do this at the very end. Same as before, we do not
+                        // honor the cancellation token until ALL files have been successfully processed.
+                        await this.UploadCsvSummaryFilesAsync(blobManager, relatedContext);
+                    });
+
+                    break;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected whenever ctrl-C is used.
+                }
+                catch (Exception exc)
+                {
+                    // The logic within the processing method should be handling all exceptions. However,
+                    // this logic is here to ensure that the monitor NEVER crashes. It must attempt to
+                    // exit gracefully at often as possible.
+                    this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Error);
+                }
+            }
+        }
+
+        private async Task<bool> UploadFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
         {
             bool filesFound = false;
 
@@ -135,13 +173,23 @@ namespace VirtualClient.Monitors
                         {
                             try
                             {
+                                bool deleteFile = false;
                                 string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
                                 FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
 
-                                using (FileStream uploadStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                try
                                 {
                                     await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                                    deleteFile = descriptor.DeleteOnUpload;
+
                                     await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                }
+                                finally
+                                {
+                                    if (deleteFile)
+                                    {
+                                        await this.fileSystem.File.DeleteAsync(descriptor.FilePath);
+                                    }
                                 }
                             }
                             catch (JsonSerializationException)
@@ -168,6 +216,48 @@ namespace VirtualClient.Monitors
             }
 
             return filesFound;
+        }
+
+        private async Task UploadCsvSummaryFilesAsync(IBlobManager blobManager, EventContext telemetryContext)
+        {
+            try
+            {
+                if (this.fileSystem.Directory.Exists(this.PlatformSpecifics.LogsDirectory))
+                {
+                    IEnumerable<string> csvFiles = this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.LogsDirectory, "*.csv", SearchOption.TopDirectoryOnly);
+                    if (csvFiles?.Any() == true)
+                    {
+                        foreach (var filePath in csvFiles)
+                        {
+                            try
+                            {
+                                FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
+                                    new FileContext(
+                                        this.fileSystem.FileInfo.New(filePath),
+                                        "text/csv",
+                                        Encoding.UTF8.WebName,
+                                        this.ExperimentId,
+                                        this.AgentId));
+
+                                await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                            }
+                            catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // It is common that there will be read/write access errors at certain times while
+                                // upload request files are being created at the same time as attempts to read. 
+                            }
+                            catch (Exception exc)
+                            {
+                                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Error);
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
@@ -487,52 +488,45 @@ namespace VirtualClient
 
                 await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
                 {
-                    try
+                    if (fileSystem.File.Exists(descriptor.FilePath))
                     {
-                        if (fileSystem.File.Exists(descriptor.FilePath))
+                        IFileInfo file = fileSystem.FileInfo.New(descriptor.FilePath);
+
+                        // Some processes creat the files up front before writing content to them. These files will
+                        // be 0 bytes in size.
+                        if (file.Length > 0)
                         {
-                            IFileInfo file = fileSystem.FileInfo.New(descriptor.FilePath);
-
-                            // Some processes creat the files up front before writing content to them. These files will
-                            // be 0 bytes in size.
-                            if (file.Length > 0)
+                            using (var uploadStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                             {
-                                using (FileStream uploadStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                                if (uploadStream.Length > 0)
                                 {
-                                    if (uploadStream.Length > 0)
+                                    EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
+                                        .AddContext("file", file.FullName)
+                                        .AddContext("blobContainer", descriptor.ContainerName)
+                                        .AddContext("blobName", descriptor.BlobName)
+                                        .AddContext("contentEncoding", descriptor.ContentEncoding)
+                                        .AddContext("contentType", descriptor.ContentType)
+                                        .AddContext("manifest", descriptor.Manifest);
+
+                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
-                                        EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
-                                            .AddContext("file", file.FullName)
-                                            .AddContext("blobContainer", descriptor.ContainerName)
-                                            .AddContext("blobName", descriptor.BlobName)
-                                            .AddContext("contentEncoding", descriptor.ContentEncoding)
-                                            .AddContext("contentType", descriptor.ContentType)
-                                            .AddContext("manifest", descriptor.Manifest);
+                                        BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
 
-                                        await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
+                                        if (uploadManifest && descriptor.Manifest?.Any() == true)
                                         {
-                                            BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                            await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
-
-                                            if (uploadManifest && descriptor.Manifest?.Any() == true)
+                                            BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
+                                            using (manifestStream)
                                             {
-                                                BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
-                                                using (manifestStream)
-                                                {
-                                                    await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
-                                                }
+                                                await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
                                             }
+                                        }
 
-                                            uploaded = true;
-                                        });
-                                    }
+                                        uploaded = true;
+                                    });
                                 }
                             }
                         }
-                    }
-                    catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // The blob upload could fail often. We skip it and we will pick it up on next iteration.
                     }
                 });
 
@@ -543,6 +537,10 @@ namespace VirtualClient
                 {
                     await fileSystem.File.DeleteAsync(descriptor.FilePath);
                 }
+            }
+            catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+            {
+                // The blob upload could fail often. We skip it and we will pick it up on next iteration.
             }
             catch (Exception exc)
             {

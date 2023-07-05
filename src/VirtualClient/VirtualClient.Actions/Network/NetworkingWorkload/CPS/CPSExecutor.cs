@@ -132,13 +132,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// gets the test duration value for the test in seconds.
+        /// Parameter defines the duration (in seconds) for running the CPS workload.
         /// </summary>
         public int TestDuration
         {
-            get 
+            get
             {
-                return this.Parameters.GetValue<int>(nameof(this.TestDuration));
+                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
             }
         }
 

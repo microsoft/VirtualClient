@@ -6,7 +6,6 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
@@ -28,32 +27,34 @@ namespace VirtualClient.Contracts
 
         private const string FileTimestampFormat = "yyyy-MM-ddTHH-mm-ss-fffffK";
         private static readonly Regex PathReservedCharacterExpression = new Regex(@"[""<>:|?*\\/]+", RegexOptions.Compiled);
+        private static readonly char[] PathDelimiters = new char[] { '/', '\\' };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileUploadDescriptor"/> class.
         /// </summary>
-        /// <param name="blobName">The name of the blob/file.</param>
         /// <param name="blobPath">The path/virtual path to the blob/file.</param>
         /// <param name="containerName">The container in which the blob/file will be stored.</param>
         /// <param name="contentEncoding">The encoding for the contents of the blob (e.g. utf-8).</param>
         /// <param name="contentType">The web content type for the blob (e.g. text/plain, application/octet-stream).</param>
         /// <param name="filePath">The path to the file containing the content to upload.</param>
         /// <param name="manifest">Properties that define a manifest (e.g. metadata) for the file and its contents.</param>
+        /// <param name="deleteOnUpload">True/false whether the file should be deleted upon being successfully uploaded.</param>
         [JsonConstructor]
-        public FileUploadDescriptor(string blobName, string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null)
+        public FileUploadDescriptor(string blobPath, string containerName, string contentEncoding, string contentType, string filePath, IDictionary<string, IConvertible> manifest = null, bool deleteOnUpload = false)
         {
-            blobName.ThrowIfNullOrWhiteSpace(nameof(blobName));
             blobPath.ThrowIfNullOrWhiteSpace(nameof(blobPath));
             containerName.ThrowIfNullOrWhiteSpace(nameof(containerName));
             contentEncoding.ThrowIfNullOrWhiteSpace(nameof(contentEncoding));
             contentType.ThrowIfNullOrWhiteSpace(nameof(contentType));
             filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
 
-            this.BlobName = blobName.Trim('/').Trim('\\');
-            this.BlobPath = $"/{blobPath.Trim('/').Replace('\\', '/')}";
+            string path = blobPath.Trim(FileUploadDescriptor.PathDelimiters);
+            this.BlobName = Path.GetFileName(path);
+            this.BlobPath = $"/{path.Replace('\\', '/')}";
             this.ContainerName = containerName;
             this.ContentEncoding = contentEncoding;
             this.ContentType = contentType;
+            this.DeleteOnUpload = deleteOnUpload;
             this.FilePath = filePath;
             this.Manifest = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
@@ -66,7 +67,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The name of the file/blob.
         /// </summary>
-        [JsonProperty(PropertyName = "blobName", Required = Required.Always)]
+        [JsonIgnore]
         public string BlobName { get; }
 
         /// <summary>
@@ -92,6 +93,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "contentType", Required = Required.Always)]
         public string ContentType { get; }
+
+        /// <summary>
+        /// True/false whether the file should be deleted upon being successfully uploaded.
+        /// </summary>
+        [JsonProperty(PropertyName = "deleteOnUpload", Required = Required.Always)]
+        public bool DeleteOnUpload { get; set;  }
 
         /// <summary>
         /// The full path to the file to upload.
@@ -125,6 +132,7 @@ namespace VirtualClient.Contracts
             {
                 { "experimentId", fileContext.ExperimentId },
                 { "agentId", fileContext.AgentId },
+                { "appHost", Environment.MachineName },
                 { "role", fileContext.Role },
                 { "platform", platform },
                 { "toolName", fileContext.ToolName },
@@ -200,13 +208,27 @@ namespace VirtualClient.Contracts
         {
             manifestStream = new MemoryStream(Encoding.UTF8.GetBytes(this.Manifest.ToJson()));
 
-            return new BlobDescriptor
+            string fileExtension = Path.GetExtension(this.BlobPath);
+            if (!string.IsNullOrWhiteSpace(fileExtension))
             {
-                Name = $"{this.BlobPath}/{Path.GetFileNameWithoutExtension(this.BlobName)}.manifest",
-                ContainerName = this.ContainerName,
-                ContentEncoding = Encoding.UTF8,
-                ContentType = HttpContentType.Json
-            };
+                return new BlobDescriptor
+                {
+                    Name = this.BlobPath.Replace(fileExtension, ".manifest"),
+                    ContainerName = this.ContainerName,
+                    ContentEncoding = Encoding.UTF8,
+                    ContentType = HttpContentType.Json
+                };
+            }
+            else
+            {
+                return new BlobDescriptor
+                {
+                    Name = $"{this.BlobPath}.manifest",
+                    ContainerName = this.ContainerName,
+                    ContentEncoding = Encoding.UTF8,
+                    ContentType = HttpContentType.Json
+                };
+            }
         }
     }
 }
