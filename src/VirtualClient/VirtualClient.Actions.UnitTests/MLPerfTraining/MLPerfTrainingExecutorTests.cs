@@ -92,7 +92,8 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfTrainingExecutor.Model), "bert" },
                 { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
                 { nameof(MLPerfTrainingExecutor.Implementation), "pytorch-22.09"},
-                { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"}
+                { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
+                { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"}
             };
             List<string> expectedCommands = new List<string>
             {
@@ -153,7 +154,8 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
                 { nameof(MLPerfTrainingExecutor.DataPath), "mlperf-training-data-bert.1.0.0"},
                 { nameof(MLPerfTrainingExecutor.GPUNum), "8"},
-                { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"}
+                { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"},
+                { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"}
             };
 
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();

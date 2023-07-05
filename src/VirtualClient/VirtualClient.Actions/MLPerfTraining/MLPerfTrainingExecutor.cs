@@ -113,7 +113,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The current running user
+        /// ML specific parameter used to control size of training samples
         /// </summary>
         public string BatchSize
         {
@@ -164,6 +164,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.GPUNum));
+            }
+        }
+
+        /// <summary>
+        /// Config file for GPUs
+        /// </summary>
+        public string ConfigFile
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ConfigFile));
             }
         }
 
@@ -287,7 +298,7 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string execCommand = $"su -c \"source config_DGXA100_1x8x56x1.sh; " + 
+                string execCommand = $"su -c \"source {this.ConfigFile}; " + 
                                      $"env BATCHSIZE={this.BatchSize} " + 
                                      $"DGXNGPU={this.GPUNum} " + 
                                      $"CUDA_VISIBLE_DEVICES=\"{this.GetGPULabels()}\" " + 
