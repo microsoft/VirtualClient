@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
+
 namespace VirtualClient.Common
 {
     /// <summary>
@@ -26,7 +28,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Generated Results of the command.
         /// </summary>
-        public string GeneratedResults { get; set; }
+        public List<string> GeneratedResults { get; set; }
 
         /// <summary>
         /// Standard output of the command.
@@ -39,9 +41,9 @@ namespace VirtualClient.Common
         public string StandardError { get; set; }
 
         /// <summary>
-        /// Tool set ran by command.
+        /// Tool Name ran by command.
         /// </summary>
-        public string ToolSet { get; set; }
+        public string ToolName { get; set; }
 
         /// <summary>
         /// Working Directory.

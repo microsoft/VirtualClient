@@ -244,12 +244,14 @@ namespace VirtualClient.Common
         public virtual void Kill()
         {
             this.UnderlyingProcess.Kill(true);
+            this.exitTime = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
         public virtual void Kill(bool entireProcessTree)
         {
             this.UnderlyingProcess.Kill(entireProcessTree);
+            this.exitTime = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
