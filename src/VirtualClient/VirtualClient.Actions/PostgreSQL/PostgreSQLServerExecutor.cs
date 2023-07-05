@@ -167,6 +167,7 @@ namespace VirtualClient.Actions
                         await Task.Delay(this.StabilizationWait, cancellationToken);
 
                         await this.CreateDatabaseAsync(telemetryContext, cancellationToken);
+                        await this.ConfigureDatabaseForScenariosAsync(telemetryContext, cancellationToken);
                         await this.SaveServerStateAsync(cancellationToken);
 
                         // Same reasoning as above.
@@ -196,14 +197,6 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                // If InMemory Scenario: before running configure script, modify postgres.conf
-                // to allow for higher in-memory buffer capacity.
-                if (this.StressScenario == PostgreSQLScenario.InMemory)
-                {
-                    await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-
                 if (this.Platform == PlatformID.Unix)
                 {
                     string workingDirectory = null;
@@ -371,15 +364,49 @@ namespace VirtualClient.Actions
                             }
                         }
                     }
+                });
+            }
+        }
 
+        private async Task ConfigureDatabaseForScenariosAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        { 
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                switch (this.StressScenario)
+                {
                     // If Balanced Scenario: after creating the database, run balanced script to distribute
                     // database and/or individual tables on available disks.
-                    if (this.StressScenario == PostgreSQLScenario.Balanced)
-                    {
-                        await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                });
+
+                    case PostgreSQLScenario.Balanced:
+
+                        if (!this.serverState.Definition.BalancedScenarioInitialized)
+                        {
+                            await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+
+                            this.serverState.Definition.BalancedScenarioInitialized = true;
+                        }
+
+                        break;
+
+                    // If InMemory Scenario: before running configure script, modify postgres.conf
+                    // to allow for higher in-memory buffer capacity.
+
+                    case PostgreSQLScenario.InMemory:
+
+                        if (!this.serverState.Definition.InMemoryScenarioInitialized)
+                        {
+                            await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+
+                            this.serverState.Definition.InMemoryScenarioInitialized = true;
+                        }
+
+                        break;
+
+                    case PostgreSQLScenario.Default:
+                        break;
+                }
             }
         }
 
@@ -404,7 +431,7 @@ namespace VirtualClient.Actions
 
                     MemoryInfo memoryInfo = await this.SystemManagement.GetMemoryInfoAsync(cancellationToken);
                     long totalMemoryKiloBytes = memoryInfo.TotalMemory;
-                    int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.875 / 1024);
+                    int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.75 / 1024);
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         this.Combine(workingDirectory, inMemoryScript),
@@ -429,6 +456,7 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string diskPathsArgument = string.Empty;
+                string diskFilter = "osdisk:false";
 
                 IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
                         .ConfigureAwait(false);
@@ -440,19 +468,33 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadUnexpectedAnomaly);
                 }
 
-                if (await this.CreateMountPointsAsync(disks, cancellationToken).ConfigureAwait(false))
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
                 {
                     // Refresh the disks to pickup the mount point changes.
                     await Task.Delay(1000).ConfigureAwait(false);
                     IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    disks = updatedDisks;
+                    disksToTest = DiskFilters.FilterDisks(updatedDisks, diskFilter, this.Platform).ToList();
                 }
 
-                foreach (Disk disk in disks)
+                foreach (Disk disk in disksToTest)
                 {
-                    diskPathsArgument += $"{disk.GetPreferredAccessPath(this.Platform)} ";
+                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
+                    {
+                        diskPathsArgument += $"{disk.GetPreferredAccessPath(this.Platform)} ";
+                    }
                 }
 
                 if (this.Platform == PlatformID.Unix)

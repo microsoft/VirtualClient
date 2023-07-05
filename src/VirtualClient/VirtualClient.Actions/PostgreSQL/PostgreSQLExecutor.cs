@@ -288,6 +288,16 @@ namespace VirtualClient.Actions
                     this.Platform,
                     cancellationToken);
 
+                await this.SystemManagement.MakeFileExecutableAsync(
+                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "inmemory.sh"),
+                    this.Platform,
+                    cancellationToken);
+
+                await this.SystemManagement.MakeFileExecutableAsync(
+                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "balanced.sh"),
+                    this.Platform,
+                    cancellationToken);
+
                 // The path to the PostgreSQL 'bin' folder is expected to exist in the PATH environment variable
                 // for the HammerDB toolset to work correctly.
                 this.SetEnvironmentVariable(EnvironmentVariable.PATH, this.Combine(this.PostgreSqlInstallationPath, "bin"), append: true);
@@ -386,6 +396,8 @@ namespace VirtualClient.Actions
                 this.DatabaseInitialized = false;
                 this.WarehouseCount = -1;
                 this.UserCount = -1;
+                this.BalancedScenarioInitialized = false;
+                this.InMemoryScenarioInitialized = false;
             }
 
             /// <summary>
@@ -475,6 +487,38 @@ namespace VirtualClient.Actions
                 set
                 {
                     this[nameof(this.WarehouseCount)] = value;
+                }
+            }
+
+            /// <summary>
+            /// True if the balanced scenario has been initialized.
+            /// </summary>
+            public bool BalancedScenarioInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(this.BalancedScenarioInitialized));
+                }
+
+                set
+                {
+                    this[nameof(this.BalancedScenarioInitialized)] = value;
+                }
+            }
+
+            /// <summary>
+            /// True if the in-memory scenario has been initialized.
+            /// </summary>
+            public bool InMemoryScenarioInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(this.InMemoryScenarioInitialized));
+                }
+
+                set
+                {
+                    this[nameof(this.InMemoryScenarioInitialized)] = value;
                 }
             }
         }

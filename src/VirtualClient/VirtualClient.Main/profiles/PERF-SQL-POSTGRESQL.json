@@ -15,6 +15,7 @@
             "Type": "PostgreSQLExecutor",
             "Parameters": {
                 "Scenario": "ExecuteTPCCBenchmark",
+                "StressScenario": "Default",
                 "PackageName": "postgresql",
                 "Benchmark": "tpcc",
                 "HammerDBPackageName": "hammerdb",
@@ -65,6 +66,9 @@
             "Parameters": {
                 "Scenario": "StartAPIServer"
             }
+        },
+        {
+            "Type": "FormatDisks"
         }
     ]
 }
