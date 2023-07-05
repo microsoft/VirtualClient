@@ -18,6 +18,21 @@
       <ProjectReference Include="..\VirtualClient.Common\VirtualClient.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Proxy\CoreMark\CoreMarkExampleMultiThread.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Proxy\CoreMark\CoreMarkExampleSingleThread.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Proxy\CoreMark\CoreMarkProExample1.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Proxy\CoreMark\CoreMarkProExample2.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

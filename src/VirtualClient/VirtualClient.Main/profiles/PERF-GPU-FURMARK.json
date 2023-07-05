@@ -1,0 +1,51 @@
+{
+  "Description": "Furmark GPU Performance Workload",
+  "MinimumExecutionInterval": "00:10:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "Time": "60000"
+  },
+  "Actions": [
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "ExecuteFurmarkBenchmark",
+        "PackageName": "Furmark",
+        "Time": "$.Parameters.Time"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadAMDDriverFromBlob",
+        "BlobContainer": "packages",
+        "BlobName": "AMDdependency.zip",
+        "PackageName": "FurmarkDriver",
+        "Extract": true
+      }
+    },
+      {
+        "Type": "AMDGPUDriverInstallation",
+        "Parameters": {
+          "Scenario": "InstallDriver",
+          "FileName": "AMD-Azure-NVv4-Driver-22Q2.exe"
+        }
+      },
+      {
+        "Type": "DependencyPackageInstallation",
+        "Parameters": {
+          "Scenario": "InstallFurmarkPackage",
+          "BlobContainer": "packages",
+          "BlobName": "Furmark1.34.0.0.zip",
+          "PackageName": "Furmark",
+          "Extract": true
+        }
+      }
+  ]
+}

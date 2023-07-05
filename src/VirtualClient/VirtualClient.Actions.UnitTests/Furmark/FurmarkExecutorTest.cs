@@ -19,12 +19,13 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using VirtualClient.Common.Telemetry;
+    using Microsoft.VisualStudio.TestPlatform.TestHost;
 
     [TestFixture]
     [Category("Unit")]
-    public class LAPACKExecutorTests
+    public class FurmarkExecutorTests
     {
-           private MockFixture fixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private DependencyPath currentDirectoryPath;
 
@@ -37,16 +38,12 @@ namespace VirtualClient.Actions
             this.fixture = new MockFixture();
             this.mockPath = this.fixture.Create<DependencyPath>();
         }
-
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64\\LapackTestScript.sh")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64\\LapackTestScript.sh")]
-        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        public async Task FurmarkExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
@@ -57,65 +54,39 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 string expectedScriptFilePath = this.fixture.PlatformSpecifics.Combine(
-                    this.mockPath.Path, binaryPath);
+                    this.mockPath.Path,"win-x64", "Geeks3D", "Benchmarks", "FurMark", "Furmark");
 
-                Assert.AreEqual(expectedScriptFilePath, executor.ScriptFilePath);
+                Assert.AreEqual(expectedScriptFilePath, executor.ExecutableLocation);
             }
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
-        public async Task LAPACKExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        public async Task FurmarkExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            this.fixture.Parameters["Time"] = "20";
+
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
-                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, binaryPath);
+                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path);
                 int executed = 0;
-
-                if(platform == PlatformID.Unix)
+                if (platform == PlatformID.Win32NT)
                 {
-                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                    {
-                        if (arguments == "make")
-                        {
-                            executed++;
-                        }
-                        else if (arguments == "bash " + expectedFilePath)
-                        {
-                            executed++;
-                            executor.ResultsFilePath = resultsPath;
-                        }
-                        return this.fixture.Process;
-                    };
-
-                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
-                        .ConfigureAwait(false);
-
-                }
-                else if(platform == PlatformID.Win32NT)
-                {
-                    string expectedCommand = this.fixture.PlatformSpecifics.Combine("C:", "cygwin64", "bin", "bash");
+                    string expectedCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path ,"win-x64","Geeks3D" ,"Benchmarks" ,"FurMark" ,"Furmark");
                     string packageDir = Regex.Replace(expectedFilePath, @"\\", "/");
                     packageDir = Regex.Replace(packageDir, @":", string.Empty);
 
-                    string expectedmakeCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./cmakescript.sh'";
-                    string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./LapackTestScript.sh'";
+                    // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
+                    string executeScriptCommandArguments = $"/width=640 /height=480 /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
-                        if (arguments == expectedmakeCommandArguments)
+                        if (arguments == executeScriptCommandArguments && command == expectedCommand)
                         {
                             executed++;
                         }
-                        else if (arguments == executeScriptCommandArguments)
-                        {
-                            executed++;
-                            executor.ResultsFilePath = resultsPath;
-                        }
+                        
                         return this.fixture.Process;
                     };
 
@@ -124,15 +95,15 @@ namespace VirtualClient.Actions
 
                 }
 
-                Assert.AreEqual(2, executed);
+                Assert.AreEqual(1, executed);
             }
         }
 
         [Test]
-        public void LAPACKExecutorThrowsWhenTheResultsFileIsNotGenerated()
+        public void FurmarkExecutorThrowsWhenTheResultsFileIsNotGenerated()
         {
             this.SetupDefaultMockBehavior();
-            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
                 this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
@@ -147,15 +118,15 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
+        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
         {
             this.fixture.Setup(platform, architecture);
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("LAPACK", currentDirectory);
+            this.currentDirectoryPath = new DependencyPath("Furmark", currentDirectory);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\LAPACK\LAPACKResultsExample.txt");
+            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\Furmark\FurmarkExample.txt");
             this.rawString = File.ReadAllText(resultsPath);
 
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -164,17 +135,17 @@ namespace VirtualClient.Actions
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
-            this.fixture.Parameters["PackageName"] = "lapack";
+            this.fixture.Parameters["PackageName"] = "Furmark";
         }
 
-        private class TestLAPACKExecutor : LAPACKExecutor
+        private class TestFurmarkxecutor : FurmarkExecutor
         {
-            public TestLAPACKExecutor(MockFixture fixture)
+            public TestFurmarkxecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
             {
             }
 
-            public TestLAPACKExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+            public TestFurmarkxecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
             }

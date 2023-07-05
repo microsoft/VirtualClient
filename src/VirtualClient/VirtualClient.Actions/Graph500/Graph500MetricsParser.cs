@@ -117,7 +117,6 @@ namespace VirtualClient.Actions
             metrics.Where(m => m.Name == "sssp thirdquartile_validate").FirstOrDefault().Relativity = MetricRelativity.LowerIsBetter;
             metrics.Where(m => m.Name == "stddev_nedge").FirstOrDefault().Relativity = MetricRelativity.LowerIsBetter;
             metrics.Where(m => m.Name == "thirdquartile_nedge").FirstOrDefault().Relativity = MetricRelativity.LowerIsBetter;
-
             return metrics;
         }
 
