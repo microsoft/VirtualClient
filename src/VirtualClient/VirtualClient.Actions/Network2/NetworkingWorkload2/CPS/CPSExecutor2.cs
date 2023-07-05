@@ -9,7 +9,6 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +16,6 @@ namespace VirtualClient.Actions
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using Polly;
-    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;

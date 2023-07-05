@@ -4,6 +4,7 @@
 namespace VirtualClient.Contracts
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -15,7 +16,19 @@ namespace VirtualClient.Contracts
     /// </summary>
     public class ComponentTypeCache : List<ComponentType>
     {
-        private static readonly Type ComponentBaseType1 = typeof(VirtualClientComponent);
+        /// <summary>
+        /// Lock object used to ensure single-threaded access to the cache when
+        /// loading types.
+        /// </summary>
+        public static readonly object LockObject = new object();
+
+        // The following list are different types of components that can be defined in contracts, core
+        // or even extensions libraries. They are dynamically loaded at runtime.
+        private static readonly List<Type> ComponentDependencyTypes = new List<Type>
+        {
+            typeof(VirtualClientComponent),
+            typeof(IFileUploadDescriptorFactory)
+        };
 
         private ComponentTypeCache()
         {
@@ -27,35 +40,32 @@ namespace VirtualClient.Contracts
         public static ComponentTypeCache Instance { get; } = new ComponentTypeCache();
 
         /// <summary>
-        /// We are mid-stream between 2 different models for how to provide dependencies to 
-        /// Virtual Client components. The new model towards which we are moving uses an IServiceCollection
-        /// to provide dependencies following .NET recommended dependency injection practices. This method returns
-        /// true if the type supports the new model.
+        /// Used to cache descriptor factory objects at-will.
         /// </summary>
-        public static bool IsComponentType2(Type type)
-        {
-            return type.IsSubclassOf(ComponentTypeCache.ComponentBaseType1);
-        }
+        internal IDictionary<string, IFileUploadDescriptorFactory> DescriptorFactoryCache { get; } = new ConcurrentDictionary<string, IFileUploadDescriptorFactory>();
 
         /// <summary>
         /// Loads provider types from assemblies in the path provided.
         /// </summary>
         public void LoadComponentTypes(string assemblyDirectory)
         {
-            foreach (string assemblyPath in ComponentTypeCache.GetAssemblies(assemblyDirectory))
+            lock (ComponentTypeCache.LockObject)
             {
-                try
+                foreach (string assemblyPath in ComponentTypeCache.GetAssemblies(assemblyDirectory))
                 {
-                    Assembly assembly = Assembly.LoadFrom(assemblyPath);
-                    if (ComponentTypeCache.IsComponentAssembly(assembly))
+                    try
                     {
-                        this.CacheProviderTypes(assembly);
+                        Assembly assembly = Assembly.LoadFrom(assemblyPath);
+                        if (ComponentTypeCache.IsComponentAssembly(assembly))
+                        {
+                            this.CacheProviderTypes(assembly);
+                        }
                     }
-                }
-                catch (BadImageFormatException)
-                {
-                    // For the case that our exclusions miss assemblies that are NOT intermediate/IL
-                    // assemblies, we need to handle this until we have a better model.
+                    catch (BadImageFormatException)
+                    {
+                        // For the case that our exclusions miss assemblies that are NOT intermediate/IL
+                        // assemblies, we need to handle this until we have a better model.
+                    }
                 }
             }
         }
@@ -106,16 +116,26 @@ namespace VirtualClient.Contracts
 
         private void CacheProviderTypes(Assembly componentAssembly)
         {
-            IEnumerable<Type> componentTypes = componentAssembly.GetTypes()
-                .Where(type => type.IsSubclassOf(ComponentTypeCache.ComponentBaseType1));
-
-            if (componentTypes?.Any() == true)
+            foreach (Type dependencyType in ComponentTypeCache.ComponentDependencyTypes)
             {
-                foreach (Type componentType in componentTypes)
+                IEnumerable<Type> componentTypes = null;
+                if (dependencyType.IsInterface)
                 {
-                    if (!this.Any(type => type.Type == componentType))
+                    componentTypes = componentAssembly.GetTypes()?.Where(type => type.IsAssignableFrom(dependencyType));
+                }
+                else
+                {
+                    componentTypes = componentAssembly.GetTypes()?.Where(type => type.IsSubclassOf(dependencyType));
+                }
+
+                if (componentTypes?.Any() == true)
+                {
+                    foreach (Type componentType in componentTypes)
                     {
-                        this.Add(new ComponentType(componentType));
+                        if (!this.Any(type => type.Type == componentType))
+                        {
+                            this.Add(new ComponentType(componentType));
+                        }
                     }
                 }
             }

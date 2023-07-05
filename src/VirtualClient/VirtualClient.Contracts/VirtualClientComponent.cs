@@ -100,6 +100,24 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
+        /// Parameter defines the content path format/structure to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentPathFormat
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
+                return format?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ContentPathFormat)] = value;
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }

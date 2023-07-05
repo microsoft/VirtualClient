@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient.Monitors
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
@@ -20,6 +20,7 @@ namespace VirtualClient.Monitors
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Monitors;
 
     [TestFixture]
     [Category("Integration")]

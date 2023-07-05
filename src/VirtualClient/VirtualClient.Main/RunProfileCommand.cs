@@ -33,6 +33,7 @@ namespace VirtualClient
         private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
         private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
         private const string NoMonitorsProfile = "MONITORS-NONE.json";
+        private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
@@ -368,6 +369,8 @@ namespace VirtualClient
                 }
             }
 
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
             // If we are not just installing dependencies, then we may include a default monitor
             // profile.
             if (!this.InstallDependencies)
@@ -377,7 +380,7 @@ namespace VirtualClient
                    && !profile.Monitors.Any())
                 {
                     // We always run the default monitoring profile if a specific monitor profile is not provided.
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    
                     string defaultMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.DefaultMonitorsProfile);
                     ExecutionProfile defaultMonitorProfile = await this.ReadExecutionProfileAsync(defaultMonitorProfilePath, dependencies, cancellationToken)
                         .ConfigureAwait(false);
@@ -385,6 +388,17 @@ namespace VirtualClient
                     this.InitializeProfile(defaultMonitorProfile);
                     profile = profile.MergeWith(defaultMonitorProfile);
                 }
+            }
+
+            // Adding file upload monitoring if the user has supplied a content store.
+            if (this.ContentStore != null)
+            {
+                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
+                ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
+                    .ConfigureAwait(false);
+
+                this.InitializeProfile(fileUploadMonitorProfile);
+                profile = profile.MergeWith(fileUploadMonitorProfile);
             }
 
             return profile;

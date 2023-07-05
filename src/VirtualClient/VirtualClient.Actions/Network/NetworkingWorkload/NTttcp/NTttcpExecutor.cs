@@ -44,7 +44,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
             this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 5001);
         }
 
         /// <summary>
@@ -83,7 +82,7 @@ namespace VirtualClient.Actions.NetworkPerformance
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
         /// </summary>
         public int TestDuration
         {

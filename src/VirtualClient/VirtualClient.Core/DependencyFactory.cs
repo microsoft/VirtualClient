@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ namespace VirtualClient
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
+    using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
     /// <summary>
@@ -210,35 +210,21 @@ namespace VirtualClient
         /// <summary>
         /// Creates logger providers for writing telemetry to local CSV files.
         /// </summary>
-        /// <param name="logFileDirectory">The full path for the log file directory (e.g. C:\users\any\VirtualClient\logs\).</param>
-        /// <param name="logFileName">The fileName for the log file (e.g. metrics.csv).</param>
-        /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
-        /// <param name="includeFields">Properties to include in the csv Logs File.</param>
-        public static ILoggerProvider CreateCsvFileLoggerProvider(string logFileDirectory, string logFileName, TimeSpan flushInterval, IEnumerable<string> includeFields = null)
+        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
         {
-            string logFilePath = Path.Combine(logFileDirectory, logFileName);
-            logFilePath.ThrowIfNullOrWhiteSpace(nameof(logFilePath));
+            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
-            // FileName of the log file when RollingFile Configuration is used in Serilog
-            string rollingLogFileName = logFileName.Replace(".csv", $"-" + DateTime.UtcNow.Date.ToString("yyyyMMdd") + $".csv");
-            string rollingLogFilePath = Path.Combine(logFileDirectory, rollingLogFileName);
-
-            // 100MB
-            const long maxFileSizeBytes = 100000000;
+            // 50MB
+            // General Sizing:
+            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
+            const long maxFileSizeBytes = 50000000;
 
             ILoggerProvider loggerProvider = null;
 
-            if (!string.IsNullOrWhiteSpace(logFilePath))
+            if (!string.IsNullOrWhiteSpace(csvFilePath))
             {
-                LoggerConfiguration logConfiguration = new LoggerConfiguration().WriteTo.RollingFile(
-                    new CsvTextFormatter(includeFields),
-                    logFilePath,
-                    fileSizeLimitBytes: maxFileSizeBytes,
-                    retainedFileCountLimit: 10,
-                    flushToDiskInterval: flushInterval);
-
-                loggerProvider = new SerilogCsvFileLoggerProvider(logConfiguration, includeFields, rollingLogFilePath);
-
+                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
@@ -271,33 +257,6 @@ namespace VirtualClient
                 "operatingSystemPlatform"
             };
 
-            List<string> metricsIncludeInCsv = new List<string>
-            {
-                "timeStamp",
-                "experimentId",
-                "agentId",
-                "executionProfileName",
-                "executionProfilePath",
-                "toolName",
-                "scenarioName",
-                "scenarioStartTime",
-                "scenarioEndTime",
-                "scenarioArguments",
-                "parameters",
-                "metricCategorization",
-                "metricName",
-                "metricValue",
-                "metricUnit",
-                "metricDescription",
-                "metricRelativity",
-                "executionSystem",
-                "platformArchitecture",
-                "systemInfo",
-                "appVersion",
-                "tags",
-                "metadata"
-            };
-
             if (!string.IsNullOrWhiteSpace(logFileDirectory) && settings != null)
             {
                 // Logs/Traces
@@ -308,14 +267,14 @@ namespace VirtualClient
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(5), metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), metricsExcludes)
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(logFileDirectory, settings.MetricsCsvFileName, TimeSpan.FromSeconds(5), metricsIncludeInCsv)
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName))
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
@@ -329,7 +288,7 @@ namespace VirtualClient
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));

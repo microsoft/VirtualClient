@@ -43,6 +43,11 @@
       </None>
     </ItemGroup>
 
+
+    <ItemGroup>
+      <Folder Include="Examples\Logging\" />
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

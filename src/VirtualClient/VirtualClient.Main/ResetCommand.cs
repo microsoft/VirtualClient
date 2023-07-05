@@ -19,7 +19,7 @@ namespace VirtualClient
     /// <summary>
     /// Command resets the Virtual Client environment for "first time" run scenarios.
     /// </summary>
-    public class RunResetCommand : CommandBase
+    public class ResetCommand : CommandBase
     {
         /// <summary>
         /// Executes the operations to reset the environment.
@@ -33,9 +33,9 @@ namespace VirtualClient
             IServiceCollection dependencies = this.InitializeDependencies(args);
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
 
-            await RunResetCommand.CleanLogsDirectoryAsync(systemManagement, cancellationToken);
-            await RunResetCommand.CleanStateDirectoryAsync(systemManagement, cancellationToken);
-            await RunResetCommand.CleanPackagesAsync(systemManagement, cancellationToken);
+            await ResetCommand.CleanLogsDirectoryAsync(systemManagement, cancellationToken);
+            await ResetCommand.CleanStateDirectoryAsync(systemManagement, cancellationToken);
+            await ResetCommand.CleanPackagesAsync(systemManagement, cancellationToken);
 
             return 0;
         }
@@ -77,10 +77,10 @@ namespace VirtualClient
             string logsDirectory = systemManagement.PlatformSpecifics.GetLogsPath();
 
             IEnumerable<string> logFiles = fileSystem.Directory.EnumerateFiles(logsDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await RunResetCommand.DeleteFiles(fileSystem, logFiles, cancellationToken);
+            await ResetCommand.DeleteFiles(fileSystem, logFiles, cancellationToken);
 
             IEnumerable<string> logDirectories = fileSystem.Directory.EnumerateDirectories(logsDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await RunResetCommand.DeleteDirectories(fileSystem, logDirectories, cancellationToken);
+            await ResetCommand.DeleteDirectories(fileSystem, logDirectories, cancellationToken);
         }
 
         private static async Task CleanPackagesAsync(ISystemManagement systemManagement, CancellationToken cancellationToken)
@@ -119,10 +119,10 @@ namespace VirtualClient
             string stateDirectory = systemManagement.PlatformSpecifics.GetStatePath();
 
             IEnumerable<string> stateFiles = fileSystem.Directory.EnumerateFiles(stateDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await RunResetCommand.DeleteFiles(fileSystem, stateFiles, cancellationToken);
+            await ResetCommand.DeleteFiles(fileSystem, stateFiles, cancellationToken);
 
             IEnumerable<string> stateDirectories = fileSystem.Directory.EnumerateDirectories(stateDirectory, "*.*", System.IO.SearchOption.AllDirectories);
-            await RunResetCommand.DeleteDirectories(fileSystem, stateDirectories, cancellationToken);
+            await ResetCommand.DeleteDirectories(fileSystem, stateDirectories, cancellationToken);
         }
 
         private static async Task DeleteDirectories(IFileSystem fileSystem, IEnumerable<string> directories, CancellationToken cancellationToken)
