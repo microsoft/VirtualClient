@@ -14,15 +14,14 @@ namespace VirtualClient
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
     using Serilog;
-    using Serilog.Sinks.File;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Logging;
     using VirtualClient.Contracts.Proxy;
+    using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
     /// <summary>
@@ -212,8 +211,7 @@ namespace VirtualClient
         /// Creates logger providers for writing telemetry to local CSV files.
         /// </summary>
         /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
-        /// <param name="flushInterval">The interval at which the information should be flushed to disk.</param>
-        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath, TimeSpan flushInterval)
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
         {
             csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
 
@@ -226,7 +224,7 @@ namespace VirtualClient
 
             if (!string.IsNullOrWhiteSpace(csvFilePath))
             {
-                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes, flushInterval);
+                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
@@ -276,7 +274,7 @@ namespace VirtualClient
                 loggerProviders.Add(metricsLoggerProvider);
 
                 // Metrics/Results in CSV Format
-                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName), TimeSpan.FromSeconds(3))
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName))
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));

@@ -71,7 +71,6 @@ namespace VirtualClient.Contracts
             IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, manifest);
 
             FileUploadDescriptor descriptor = new FileUploadDescriptor(
-                blobName,
                 blobPath,
                 blobContainer,
                 fileContext.ContentEncoding,

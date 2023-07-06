@@ -181,7 +181,7 @@ namespace VirtualClient
                     && component.Dependencies.TryGetService<PlatformSpecifics>(out PlatformSpecifics specifics))
                 {
                     string effectiveToolName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                        (!string.IsNullOrWhiteSpace(toolName) ? toolName : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
+                        (!string.IsNullOrWhiteSpace(toolName) ? toolName : component.TypeName).RemoveWhitespace(),
                         string.Empty);
 
                     // Ensure that we obscure/remove any secrets (e.g. passwords) that may have been passed into
@@ -208,10 +208,10 @@ namespace VirtualClient
                     // /logs/fio/2023-02-01T122330Z-randomwrite_4k_blocksize.log
                     // /logs/fio/2023-02-01T122745Z-randomwrite_8k_blocksize.log
                     string effectiveLogFileName = FileUploadDescriptor.GetFileName(
-                        $"{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
+                        $"{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName).ToLowerInvariant()}.log",
                         DateTime.UtcNow);
 
-                    string logFilePath = specifics.Combine(logPath, effectiveLogFileName.ToLowerInvariant());
+                    string logFilePath = specifics.Combine(logPath, effectiveLogFileName);
 
                     // Examples:
                     // --------------
@@ -278,7 +278,9 @@ namespace VirtualClient
                             effectiveCommandArguments,
                             component.Roles?.Any() == true ? string.Join(',', component.Roles) : null);
 
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, true);
+                        // The file is already timestamped at this point, so there is no need to add any additional
+                        // timestamping information.
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, timestamped: false);
 
                         await component.RequestFileUploadAsync(descriptor);
                     }
