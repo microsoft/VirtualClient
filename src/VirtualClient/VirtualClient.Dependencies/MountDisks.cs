@@ -16,7 +16,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// An abstract virtual client action that formats the disks before execution
+    /// A dependency to mount each volume of each disk at a user specified mount point
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
@@ -36,7 +36,7 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// Disk filter string to filter disks to format.
+        /// Disk filter string to filter disks to mount.
         /// </summary>
         public string DiskFilter
         {
@@ -118,6 +118,13 @@ namespace VirtualClient.Dependencies
             return filteredDisks;
         }
 
+        /// <summary>
+        /// Mount each volume of each disk at the user specified mount point
+        /// </summary>
+        /// <param name="disks"></param>
+        /// <param name="systemManager"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         private async Task<bool> GenerateMountPointsAsync(IEnumerable<Disk> disks, ISystemManagement systemManager, CancellationToken cancellationToken)
         {
             bool mountPointsCreated = false;

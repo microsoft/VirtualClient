@@ -27,16 +27,8 @@ namespace VirtualClient.Actions
         private const string AccuracySummary = nameof(MLPerfTrainingExecutor.AccuracySummary);
         private const string PerformanceSummary = nameof(MLPerfTrainingExecutor.PerformanceSummary);
 
-        private IFileSystem fileSystem;
-        private IPackageManager packageManager;
         private IStateManager stateManager;
         private ISystemManagement systemManager;
-
-        private IDiskManager diskManager;
-
-        private List<string> benchmarks;
-        private Dictionary<string, string> scenarios;
-        private Dictionary<string, List<string>> benchmarkConfigs;
 
         /// <summary>
         /// Constructor for <see cref="MLPerfTrainingExecutor"/>
@@ -47,20 +39,11 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.systemManager = this.Dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManager.PackageManager;
             this.stateManager = this.systemManager.StateManager;
-
-            this.fileSystem = this.systemManager.FileSystem;
-            this.diskManager = this.systemManager.DiskManager;
-
-            this.benchmarks = new List<string>
-            {
-                "bert"
-            };
 
             if (string.IsNullOrEmpty(this.DiskFilter))
             {
-                this.DiskFilter = "SizeGreaterThan:1000gb&OSDisk:false";
+                this.DiskFilter = "SizeGreaterThan:8000gb&OSDisk:false";
             }
         }
 
@@ -159,16 +142,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of GPUs to be utilized
         /// </summary>
-        public string NumberOfGPUs
+        public string GPUCount
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.NumberOfGPUs));
+                return this.Parameters.GetValue<string>(nameof(this.GPUCount));
             }
         }
 
         /// <summary>
-        /// Config file for GPUs
+        /// Config file for MLPerf Training
         /// </summary>
         public string ConfigFile
         {
@@ -179,9 +162,9 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The MLPerf Training Nvidia code directory.
+        /// The NVIDIA implementation for the MLPerf Training Workload, which is a sub-directory in the repository home
         /// </summary>
-        protected string NvidiaDirectoryPath
+        protected string NvidiaPath
         {
             get
             {
@@ -192,22 +175,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The MLPerf Training Pytorch code directory.
         /// </summary>
-        protected string ExecutionDirectoryPath
+        protected string ExecutionPath
         {
             get
             {
-                return this.PlatformSpecifics.Combine(this.NvidiaDirectoryPath, "benchmarks", this.Model, "implementations", this.Implementation);
-            }
-        }
-
-        /// <summary>
-        /// The output directory of MLPerf.
-        /// </summary>
-        protected string OutputDirectoryPath
-        {
-            get
-            {
-                return this.PlatformSpecifics.Combine(this.ExecutionDirectoryPath, "results");
+                return this.PlatformSpecifics.Combine(this.NvidiaPath, "benchmarks", this.Model, "implementations", this.Implementation);
             }
         }
 
@@ -223,18 +195,18 @@ namespace VirtualClient.Actions
             await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            MLPerfState state = await this.stateManager.GetStateAsync<MLPerfState>($"{nameof(MLPerfState)}", cancellationToken)
-                ?? new MLPerfState();
+            MLPerfTrainingState state = await this.stateManager.GetStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", cancellationToken)
+                ?? new MLPerfTrainingState();
 
             if (!state.Initialized)
             {
                 // add user in docker group
-                await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionDirectoryPath, cancellationToken);
+                await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionPath, cancellationToken);
 
                 // Setup Environment
-                await this.SetupEnvironmentAsync(cancellationToken);
+                await this.SetupDocker(cancellationToken);
                 state.Initialized = true;
-                await this.stateManager.SaveStateAsync<MLPerfState>($"{nameof(MLPerfState)}", state, cancellationToken);
+                await this.stateManager.SaveStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", state, cancellationToken);
             }
         }
 
@@ -243,7 +215,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected async Task SetupEnvironmentAsync(CancellationToken cancellationToken)
+        protected async Task SetupDocker(CancellationToken cancellationToken)
         {
             string dockerImageCommand = $"docker build --pull -t {this.GetContainerName()} .";
             string dockerRunCommand = $"docker run --runtime=nvidia {this.GetContainerName()}";
@@ -251,13 +223,13 @@ namespace VirtualClient.Actions
             await this.ExecuteCommandAsync(
                 "sudo",
                 dockerImageCommand,
-                this.ExecutionDirectoryPath,
+                this.ExecutionPath,
                 cancellationToken);
 
             await this.ExecuteCommandAsync(
                 "sudo",
                 dockerRunCommand,
-                this.ExecutionDirectoryPath,
+                this.ExecutionPath,
                 cancellationToken);
         }
 
@@ -291,7 +263,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.PrepareBenchmarkConfigsAndScenarios();
             string shardsPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "training-4320");
             string evalPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "eval_varlength");
             string checkpointPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "phase1");
@@ -300,11 +271,11 @@ namespace VirtualClient.Actions
             {
                 string execCommand = $"su -c \"source {this.ConfigFile}; " + 
                                      $"env BATCHSIZE={this.BatchSize} " + 
-                                     $"DGXNGPU={this.NumberOfGPUs} " + 
+                                     $"DGXNGPU={this.GPUCount} " + 
                                      $"CUDA_VISIBLE_DEVICES=\"{this.GetGPULabels()}\" " + 
                                      $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionDirectoryPath, telemetryContext, cancellationToken)
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionPath, telemetryContext, cancellationToken)
                    .ConfigureAwait())
                 {
                     if (!cancellationToken.IsCancellationRequested)
@@ -431,27 +402,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Make a list of all benchmarks and their configs to make scenarios
-        /// </summary>
-        private void PrepareBenchmarkConfigsAndScenarios()
-        {
-            this.scenarios = new Dictionary<string, string>
-            {
-                { "bert", "PyTorch-22.09" },
-            };
-
-            List<string> bertConfigs = new List<string>()
-            {
-                "default"
-            };
-
-            this.benchmarkConfigs = new Dictionary<string, List<string>>
-            {
-                { "bert", bertConfigs }
-            };
-        }
-
-        /// <summary>
         ///  Filter the disks using the disk filter and return them
         /// </summary>
         /// <param name="disks"></param>
@@ -472,12 +422,12 @@ namespace VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         private string GetGPULabels()
         {
-            if (int.TryParse(this.NumberOfGPUs, out int gpuCount))
+            if (int.TryParse(this.GPUCount, out int gpuCount))
             {
                 if (gpuCount < 0)
                 {
                     throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.NumberOfGPUs}) provided",
+                    $"Invalid number of GPUs ({this.GPUCount}) provided",
                     ErrorReason.EnvironmentIsInsufficent);
                 }
 
@@ -486,14 +436,14 @@ namespace VirtualClient.Actions
             else
             {
                 throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.NumberOfGPUs}) provided",
+                    $"Invalid number of GPUs ({this.GPUCount}) provided",
                     ErrorReason.EnvironmentIsInsufficent);
             }
         }
 
-        internal class MLPerfState : State
+        internal class MLPerfTrainingState : State
         {
-            public MLPerfState(IDictionary<string, IConvertible> properties = null)
+            public MLPerfTrainingState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
             {
             }
@@ -502,12 +452,12 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(MLPerfState.Initialized), false);
+                    return this.Properties.GetValue<bool>(nameof(MLPerfTrainingState.Initialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(MLPerfState.Initialized)] = value;
+                    this.Properties[nameof(MLPerfTrainingState.Initialized)] = value;
                 }
             }
         }
