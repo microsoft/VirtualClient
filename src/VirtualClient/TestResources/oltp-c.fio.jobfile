@@ -18,6 +18,7 @@ time_based=1
 [randomreader]
 new_group
 bs=${randomreadblocksize}
+filename=${randomiofilepath}
 iodepth=${randomreadiodepth}
 numjobs=${randomreadnumjobs}
 rate_iops=${randomreadiops}
@@ -28,6 +29,7 @@ rw=randread
 [randomwriter]
 new_group
 bs=${randomwriteblocksize}
+filename=${randomiofilepath}
 iodepth=${randomwriteiodepth}
 numjobs=${randomwritenumjobs}
 rate_iops=${randomwriteiops}
