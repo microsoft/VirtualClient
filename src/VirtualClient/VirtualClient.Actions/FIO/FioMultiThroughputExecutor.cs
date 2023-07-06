@@ -375,8 +375,17 @@ namespace VirtualClient.Actions
                 throw new WorkloadException(
                     "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
                     "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                    "of the existing disks.",
+                    "of the existing disks. Verify or specify the disk filter.",
                     ErrorReason.DependencyNotFound);
+            }
+
+            if (disksToTest?.Any(disk => disk.IsOperatingSystem()) == true)
+            {
+                throw new WorkloadException(
+                    "Expected disks to test contain the disk on which the operation system is installed. This scenario runs I/O operations against the raw disk without any file " +
+                    "system layers and can overwrite important information on the disk such as disk volume partitions. As such I/O operations against the operating system disk " +
+                    "are not supported.",
+                    ErrorReason.NotSupported);
             }
 
             disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
@@ -468,7 +477,7 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void Validate()
         {
-            // Not required as parameters themselves can throw error if they are null.
+            // Override default validation.
         }
 
         /// <summary>
@@ -497,8 +506,8 @@ namespace VirtualClient.Actions
         {
             this.GetMetricsParsingDirectives(out bool parseReadMetrics, out bool parseWriteMetrics, commandArguments);
             FioMetricsParser parser = new FioMetricsParser(workloadProcess.StandardOutput.ToString(), parseReadMetrics, parseWriteMetrics);
-
             IList<Metric> metrics = parser.Parse();
+
             if (this.MetricFilters?.Any() == true)
             {
                 metrics = metrics.FilterBy(this.MetricFilters).ToList();
@@ -798,7 +807,11 @@ namespace VirtualClient.Actions
                 this.sequentialIOFilePath = string.Join(':', disksToTest.TakeLast(sequentialDiskCount).Select(disk => disk.DevicePath).ToArray());
             }
 
-            this.Logger.LogTraceMessage($"File Path for {nameof(this.randomIOFilePath)} : {this.randomIOFilePath} and {nameof(this.sequentialIOFilePath)} : {this.sequentialIOFilePath}");
+            // e.g.
+            // /dev/sdc
+            // /dev/sdc, /dev/sdd, /dev/sde
+            this.Logger.LogTraceMessage($"Disk Targets (Random I/O): {this.randomIOFilePath.Replace(":", ", ")}");
+            this.Logger.LogTraceMessage($"Disk Targets (Sequential I/O): '{this.sequentialIOFilePath.Replace(":", ", ")}'");
         }
 
         private string GetSections()

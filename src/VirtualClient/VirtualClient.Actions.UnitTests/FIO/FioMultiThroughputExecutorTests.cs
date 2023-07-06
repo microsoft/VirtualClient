@@ -150,6 +150,36 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void FioMultiThroughputExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_1()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk only (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.disks.Where(d => d.IsOperatingSystem()));
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
+        }
+
+        [Test]
+        public void FioMultiThroughputExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_2()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk with others (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
+        }
+
+        [Test]
         public async Task FioMultiThroughputExecutorExecutesExpectedCommandLine()
         {
             int executions = 0;

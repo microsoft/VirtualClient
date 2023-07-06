@@ -835,15 +835,18 @@ namespace VirtualClient.Contracts
         /// <param name="logger">The logger instance.</param>
         /// <param name="message">The message/event name to log.</param>
         /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
-        public static void LogTraceMessage(this ILogger logger, string message = null, EventContext eventContext = null)
+        public static void LogTraceMessage(this ILogger logger, string message, EventContext eventContext = null)
         {
             logger.ThrowIfNull(nameof(logger));
-            VirtualClientLoggingExtensions.LogMessage(
-                logger,
-                !string.IsNullOrWhiteSpace(message) ? message : "~",
-                LogLevel.Trace,
-                LogType.Trace,
-                eventContext ?? EventContext.Persisted());
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                VirtualClientLoggingExtensions.LogMessage(
+                    logger,
+                    message,
+                    LogLevel.Trace,
+                    LogType.Trace,
+                    eventContext ?? EventContext.Persisted());
+            }
         }
 
         /// <summary>
