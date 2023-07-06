@@ -51,7 +51,6 @@ Runs the Postgresql workload against to HammerDB tool which generate various net
 
 * **Supported Platform/Architectures**
   * linux-x64
-  * win-x64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.

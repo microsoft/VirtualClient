@@ -155,8 +155,17 @@ namespace VirtualClient.Actions
                 throw new WorkloadException(
                     "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
                     "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                    "of the existing disks.",
+                    "of the existing disks. Verify or specify the disk filter.",
                     ErrorReason.DependencyNotFound);
+            }
+
+            if (disksToTest?.Any(disk => disk.IsOperatingSystem()) == true)
+            {
+                throw new WorkloadException(
+                    "Expected disks to test contain the disk on which the operation system is installed. This scenario runs I/O operations against the raw disk without any file " +
+                    "system layers and can overwrite important information on the disk such as disk volume partitions. As such I/O operations against the operating system disk " +
+                    "are not supported.",
+                    ErrorReason.NotSupported);
             }
 
             disksToTest.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));

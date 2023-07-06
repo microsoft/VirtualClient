@@ -235,6 +235,8 @@ namespace VirtualClient
         /// <inheritdoc />
         public string Name { get; }
 
+        public string LinkTarget { get; }
+
         /// <inheritdoc />
         public void Create()
         {
@@ -245,6 +247,11 @@ namespace VirtualClient
         public void Create(DirectorySecurity directorySecurity)
         {
             (this.FileSystem as InMemoryFileSystem).AddOrGetDirectory(this.FullName);
+        }
+
+        public void CreateAsSymbolicLink(string pathToTarget)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -490,6 +497,11 @@ namespace VirtualClient
         /// Not Implemented
         /// </summary>
         public void Refresh()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IFileSystemInfo ResolveLinkTarget(bool returnFinalTarget)
         {
             throw new NotImplementedException();
         }

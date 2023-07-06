@@ -25,12 +25,67 @@ namespace VirtualClient.Actions
     {
         private MockFixture mockFixture;
 
-        [SetUp]
-        public void SetupDefaultBehavior()
+        [Test]
+        public async Task CoreMarkExecutorExecutesTheExpectedCommandInLinux()
+        {
+            this.Setup(PlatformID.Unix);
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual("make", cmd);
+                Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
+                return this.mockFixture.Process;
+            };
+
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task CoreMarkExecutorExecutesTheExpectedCommandInWindows()
+        {
+            this.Setup(PlatformID.Win32NT);
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual(@$"{this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
+                Assert.AreEqual($"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremark; make XCFLAGS=\"-DMULTITHREAD=9 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread'", args);
+                return this.mockFixture.Process;
+            };
+
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task CoreMarkExecutorExcutesAllowsThreadOverWrite()
+        {
+            this.Setup(PlatformID.Unix);
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CoreMarkExecutor.ThreadCount), 789 }
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual("make", cmd);
+                Assert.AreEqual($"XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
+                return this.mockFixture.Process;
+            };
+
+            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        public void Setup(PlatformID platform)
         {
             this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters["PackageName"] = "CoreMark";
+            this.mockFixture.Setup(platform);
+            this.mockFixture.Parameters["PackageName"] = "coremark";
 
             string results = null;
 
@@ -51,56 +106,12 @@ namespace VirtualClient.Actions
                     }
                 })
                 .ReturnsAsync(() => results);
-        }
 
-        [Test]
-        public void CoreMarkExecutorThrowsOnNonSupportedPlatform()
-        {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.Parameters["PackageName"] = "CoreMark";
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, false));
 
-            using (var executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.PlatformNotSupported);
-            }
-        }
-
-        [Test]
-        public async Task CoreMarkExecutorExecutesTheExpectedCommand()
-        {
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
-            {
-                Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD={Environment.ProcessorCount} -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
-                return this.mockFixture.Process;
-            };
-
-            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        public async Task CoreMarkExecutorExcutesAllowsThreadOverWrite()
-        {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(CoreMarkExecutor.ThreadCount), 789 }
-            };
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
-            {
-                Assert.AreEqual("sudo", cmd);
-                Assert.AreEqual($"make XCFLAGS=\"-DMULTITHREAD=789 -DUSE_PTHREAD\" REBUILD=1 LFLAGS_END=-pthread", args);
-                return this.mockFixture.Process;
-            };
-
-            using (CoreMarkExecutor executor = new CoreMarkExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
+            DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
+            this.mockFixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);
         }
     }
 }

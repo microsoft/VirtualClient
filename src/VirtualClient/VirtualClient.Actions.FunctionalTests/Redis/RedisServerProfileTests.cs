@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
 
             int port = 6379;
             Enumerable.Range(0, 4).ToList().ForEach(core =>
-                expectedCommands.Add($"sudo bash -c \"numactl -C {core} /.+/redis-server --port {port + core} --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\""));
+                expectedCommands.Add($"sudo bash -c \"numactl -C {core} /.+/redis-server --port {port + core} --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &\""));
 
             // Setup the expectations for the workload
             // - Workload package is installed and exists.

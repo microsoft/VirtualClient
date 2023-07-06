@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient
+namespace VirtualClient.Contracts
 {
     using System;
     using System.Diagnostics;
     using System.Text;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Represents the address location of a blob for upload to a content store/storage account.
@@ -122,7 +121,7 @@ namespace VirtualClient
                 name = name.Replace(c.ToString(), "_");
             }
 
-            name = name.Replace('\\', '/').Replace(@"//", "/").ToLowerInvariant();
+            name = name.Replace('\\', '/').Replace(@"//", "/");
 
             return name;
         }

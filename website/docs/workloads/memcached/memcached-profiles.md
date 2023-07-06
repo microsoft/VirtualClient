@@ -74,10 +74,11 @@ Runs the Memtier workload against to generate various network traffic patterns a
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against the server concurrently. |  |
+  | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon).</mark><br/><br/>Defines a specific username under which to run the Memcached server.  | The user account for the process that launches Virtual Client.  |
+  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against the server concurrently. | 8 |
+  | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Memcached server for each scenario in the profile. | 2 mins |
   | ServerMaxConnections      | Optional. The Maxium number of connections the Memcached server will allow. This allows the user to adjust alongside the number of client instances for higher scale situations.  |  |
-  | ServerPort                | Optional. The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | 6379 |
-  | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
+  | ServerPort                | Optional. The initial port on which the Memcached server will listen for traffic. | 6379 |
 
 * **Component Parameters**  
   The following parameters describe the parameters within the profile components.
@@ -85,19 +86,21 @@ Runs the Memtier workload against to generate various network traffic patterns a
   | Server Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
-  | BenchmarkPackageName      | The name of the  | |
-  | BindToCores               | True to instruct the Memcached servers to bind to explicit cores on the system (e.g. 0, 1, 2,3 ) | |
-  | ClientInstances           | Defines the number of distinct client instances that to execute requests against the server concurrently. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  |  |
+  | BindToCores               | True to instruct the Memcached servers to bind to explicit cores on the system (e.g. 0, 1, 2, 3 ) | |
+  | CommandLine               | The command line to use for executing the Memcached server. | |
   | PackageName               | The name of the package that contains the Memcached server binaries/scripts.    |               |
   | Port                      | The initial port on which the Memcached servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
-  | ServerInstances           | Defines the number of distinct instances of the Memcached server to run. There will be 1 client for each 1 server instance running in parallel. | # of logical cores on system |
-  | Username                  | Optional. Both client and server systems must use the same username. This allows the user to specifcy a specific username under which to run each instance of client and Memcached server. The username must exist on both client and server systems.  | The logged in user's username.  |
+  | ServerThreadCount         | The number of threads to use by the Memcached server to handle operations. | 4 |
+  | ServerMaxConnections      | The maximum number of connections the Memcached server will allow in total. | 16384 |
+  | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon).</mark><br/><br/>Defines a specific username under which to run the Memcached server. | The user account for the process that launches Virtual Client.  |
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
-  | CommandLine               | The memtier_benchmark toolset command line to use against each instance of the Memcached server running. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
+  | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 8 |
+  | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
+  | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

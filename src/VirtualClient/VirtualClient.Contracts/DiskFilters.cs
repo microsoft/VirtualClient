@@ -6,6 +6,7 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using VirtualClient.Common.Extensions;
 
     /// <summary>
     /// Disk filters to filter Disk/DiskVolume
@@ -31,6 +32,8 @@ namespace VirtualClient.Contracts
             List<string> filters = filterString.Split("&", StringSplitOptions.RemoveEmptyEntries).ToList();
 
             disks = DiskFilters.FilterStoragePathByPrefix(disks, platform);
+            disks = DiskFilters.FilterOfflineDisksOnWindows(disks, platform);
+            disks = DiskFilters.FilterReadOnlyDisksOnWindows(disks, platform);
 
             foreach (string filter in filters)
             {
@@ -150,6 +153,29 @@ namespace VirtualClient.Contracts
 
                 // Match for either accessPath or devicePath.
                 disks = disks.Where(d => validPrefixes.Any(vp => d.DevicePath?.Trim().StartsWith(vp, StringComparison.OrdinalIgnoreCase) == true));
+            }
+
+            return disks;
+        }
+
+        private static IEnumerable<Disk> FilterOfflineDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
+        {
+            if (platform == PlatformID.Win32NT)
+            {
+                // Remove offline disks.
+                disks = disks.Where(d => d.Properties.ContainsKey("Status") ? !d.Properties.GetValue<string>("Status").Contains("offline", StringComparison.OrdinalIgnoreCase) : true);
+            }
+
+            return disks;
+        }
+
+        private static IEnumerable<Disk> FilterReadOnlyDisksOnWindows(IEnumerable<Disk> disks, PlatformID platform)
+        {
+            if (platform == PlatformID.Win32NT)
+            {
+                // Remove read only disks.
+                disks = disks.Where(d => d.Properties.ContainsKey("Read-only") ? !d.Properties.GetValue<string>("Read-only").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
+                disks = disks.Where(d => d.Properties.ContainsKey("Current Read-only State") ? !d.Properties.GetValue<string>("Current Read-only State").Contains("Yes", StringComparison.OrdinalIgnoreCase) : true);
             }
 
             return disks;

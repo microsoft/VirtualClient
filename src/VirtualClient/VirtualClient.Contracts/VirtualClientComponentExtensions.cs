@@ -5,6 +5,8 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
@@ -12,7 +14,8 @@ namespace VirtualClient.Contracts
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using VirtualClient.Common;
+    using Polly;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -25,6 +28,9 @@ namespace VirtualClient.Contracts
         // Example Format:
         // fio_{IOType}_{BlockSize}_{FileSize}_thmax{MaxThreads}
         private static readonly Regex ParameterReferenceExpression = new Regex(@"(\x7B[\x20-\x7A\x7C\x7D-\x7E]+\x7D)|(\x5B[\x20-\x5A\x5C\x5E-\x7E]+\x5D)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly IAsyncPolicy NotificationFileSystemAccessRetryPolicy = Policy.Handle<IOException>()
+            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
         /// Applies the parameter value to any parameter references/placeholders within the text.
@@ -87,6 +93,37 @@ namespace VirtualClient.Contracts
         {
             component.ThrowIfNull(nameof(component));
             return component.PlatformSpecifics.Combine(pathSegments);
+        }
+
+        /// <summary>
+        /// Creates a descriptor that can be used to publish a request
+        /// </summary>
+        /// <param name="component">The component requesting the file upload descriptor.</param>
+        /// <param name="fileContext">Provides context about a file to be uploaded.</param>
+        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="timestamped">
+        /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
+        /// file name is not desirable. Default = true (timestamped file names).
+        /// </param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        {
+            component.ThrowIfNull(nameof(component));
+            fileContext.ThrowIfNull(nameof(fileContext));
+
+            string identifier = null;
+            if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
+            {
+                identifier = component.ContentPathFormat;
+            }
+
+            IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
+            FileUploadDescriptor descriptor = factory.CreateDescriptor(fileContext, parameters, metadata, timestamped);
+
+            // The content path format...
+            descriptor.Manifest["pathFormat"] = identifier ?? FileUploadDescriptorFactory.Default;
+
+            return descriptor;
         }
 
         /// <summary>
@@ -184,6 +221,48 @@ namespace VirtualClient.Contracts
             }
 
             return isMultiRole;
+        }
+
+        /// <summary>
+        /// Creates a file upload request on the system.
+        /// </summary>
+        /// <param name="component">The component that produced the file.</param>
+        /// <param name="descriptor">Provides information required to upload the file to storage.</param>
+        /// <param name="requestsDirectory">The directory to which the file upload request/notification should be written.</param>
+        /// <param name="retryPolicy">A retry policy to apply for handling transient issues.</param>
+        public static async Task RequestFileUploadAsync(this VirtualClientComponent component, FileUploadDescriptor descriptor, string requestsDirectory = null, IAsyncPolicy retryPolicy = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            descriptor.ThrowIfNull(nameof(descriptor));
+
+            try
+            {
+                PlatformSpecifics platformSpecifics = component.PlatformSpecifics;
+                IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+
+                await (retryPolicy ?? VirtualClientComponentExtensions.NotificationFileSystemAccessRetryPolicy).ExecuteAsync(async () =>
+                {
+                    // e.g.
+                    // /home/user/VirtualClient/content/linux-x64/contentuploads/2022-05-21T09-23-32-23745Z-upload.json
+                    string targetDirectory = requestsDirectory ?? platformSpecifics.ContentUploadsDirectory;
+                    if (!fileSystem.Directory.Exists(targetDirectory))
+                    {
+                        fileSystem.Directory.CreateDirectory(targetDirectory);
+                    }
+
+                    string fileName = FileUploadDescriptor.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
+                    string filePath = component.Combine(targetDirectory, fileName.ToLowerInvariant());
+
+                    await fileSystem.File.WriteAllTextAsync(filePath, descriptor.ToJson());
+                });
+            }
+            catch (Exception exc)
+            {
+                throw new DependencyException(
+                    $"File upload notification creation failed for file at path '{descriptor.FilePath}' after having exhausted all retries.",
+                    exc,
+                    ErrorReason.FileUploadNotificationCreationFailed);
+            }
         }
 
         /// <summary>

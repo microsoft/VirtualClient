@@ -243,18 +243,12 @@ namespace VirtualClient.Actions
 
                     await this.PrepareMySQLDatabase(cancellationToken);
 
-                    this.Logger.LogMessage("prepared db", telemetryContext);
-
                     using (IProcessProxy process = await this.ExecuteCommandAsync(SysbenchFileName, this.sysbenchExecutionArguments + "run", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            this.Logger.LogMessage("starting process", telemetryContext);
-
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
                             this.CaptureMetrics(process, telemetryContext, cancellationToken);
-
-                            this.Logger.LogMessage("captured metrics", telemetryContext);
                         }
                     }
                 }
@@ -264,7 +258,7 @@ namespace VirtualClient.Actions
         private async Task InstallSysbenchOLTPPackage(CancellationToken cancellationToken)
         {
             string updateAptCommand;
-            const string installSysbenchCommand = "apt install sysbench";
+            const string installSysbenchCommand = "apt install sysbench --yes --quiet";
 
             LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
             
@@ -276,7 +270,7 @@ namespace VirtualClient.Actions
                     break;
                 default:
                     throw new DependencyException(
-                        $"You are on Linux distrubution {distributionInfo.LinuxDistribution.ToString()}, which has not been onboarded to VirtualClient.",
+                        $"You are on Linux distrubution {distributionInfo.LinuxDistribution}, which has not been onboarded to VirtualClient.",
                         ErrorReason.LinuxDistributionNotSupported);
             }
 

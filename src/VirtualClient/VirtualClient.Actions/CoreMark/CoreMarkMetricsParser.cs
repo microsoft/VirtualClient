@@ -44,7 +44,6 @@ namespace VirtualClient.Actions
             List<Metric> metrics = new List<Metric>();
 
             metrics.AddRange(this.CoreMarkResult.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "NA", namePrefix: string.Empty, ignoreFormatError: true));
-
             // CoreMark result doesn't define the unit so needs manually assign units.
             metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Unit = "bytes";
             metrics.Where(m => m.Name == "CoreMark Size").FirstOrDefault().Relativity = MetricRelativity.HigherIsBetter;
@@ -72,7 +71,9 @@ namespace VirtualClient.Actions
         {
             // Remove all the rows that don't have column sign.
             List<string> result = new List<string>();
-            List<string> rows = this.RawText.Split(Environment.NewLine, StringSplitOptions.None).ToList();
+            // Coremark always use \n as line delimiter. Even on Windows.
+            this.PreprocessedText = this.RawText.Replace("\n", Environment.NewLine);
+            List<string> rows = this.PreprocessedText.Split(Environment.NewLine, StringSplitOptions.None).ToList();
             foreach (string row in rows)
             {
                 // Remove all dashline and all star lines.
