@@ -8,7 +8,7 @@
     },
     "Parameters": {
         "Username": "",
-        "DiskFilter": "SizeGreaterThan:1000gb",
+        "DiskFilter": "SizeGreaterThan:8000gb",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
         "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
@@ -87,7 +87,7 @@
                 "Scenario": "InstallMLPerfTrainingDataPackage",
                 "BlobContainer": "packages",
                 "BlobName": "mlperf-training-data-bert.1.0.0.zip",
-                "PackageName": "MLPerfTrainingData_bert",
+                "PackageName": "mlperftrainingdata_bert",
                 "Extract": true
             }
         }

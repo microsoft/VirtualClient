@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void MLPerfStateIsSerializeable()
+        public void MLPerfTrainingStateIsSerializeable()
         {
             State state = new State(new Dictionary<string, IConvertible>
             {
@@ -78,7 +78,7 @@ namespace VirtualClient.Actions
             string serializedState = state.ToJson();
             JObject deserializedState = JObject.Parse(serializedState);
 
-            MLPerfTrainingExecutor.MLPerfState result = deserializedState?.ToObject<MLPerfTrainingExecutor.MLPerfState>();
+            MLPerfTrainingExecutor.MLPerfTrainingState result = deserializedState?.ToObject<MLPerfTrainingExecutor.MLPerfTrainingState>();
             Assert.AreEqual(true, result.Initialized);
         }
 
@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
             {
                 initializationVerified = true;
             })
-            .ReturnsAsync(JObject.FromObject(new MLPerfTrainingExecutor.MLPerfState()
+            .ReturnsAsync(JObject.FromObject(new MLPerfTrainingExecutor.MLPerfTrainingState()
             {
                 Initialized = true
             }));
@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfTrainingExecutor.Implementation), "pytorch-22.09"},
                 { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
                 { nameof(MLPerfTrainingExecutor.DataPath), "mlperf-training-data-bert.1.0.0"},
-                { nameof(MLPerfTrainingExecutor.GPUNum), "8"},
+                { nameof(MLPerfTrainingExecutor.GPUCount), "8"},
                 { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"},
                 { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"}
             };
@@ -236,9 +236,9 @@ namespace VirtualClient.Actions
                 return base.InitializeAsync(context, cancellationToken);
             }
 
-            public new Task SetupEnvironmentAsync(CancellationToken cancellationToken)
+            public new Task SetupDocker(CancellationToken cancellationToken)
             {
-                return base.SetupEnvironmentAsync(cancellationToken);
+                return base.SetupDocker(cancellationToken);
             }
 
             public new string GetContainerName()

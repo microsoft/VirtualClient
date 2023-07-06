@@ -39,6 +39,11 @@ namespace VirtualClient.Actions
                 IList<Metric> metrics = this.testParser.Parse();
 
                 Assert.AreEqual(5, metrics.Count);
+                MetricAssert.Exists(metrics, "Accuracy", 0.64935606718063354, "%");
+                MetricAssert.Exists(metrics, "e2e_time", 1064.7406570911407, "s");
+                MetricAssert.Exists(metrics, "training_sequences_per_second", 2301.4866790047258, "");
+                MetricAssert.Exists(metrics, "final_loss", 0, "");
+                MetricAssert.Exists(metrics, "raw_train_time", 1048.0182318687439, "s");
             }
             else
             {
