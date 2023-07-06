@@ -129,6 +129,11 @@ namespace VirtualClient.Contracts
         /// application/octet-stream
         /// </summary>
         public const string Binary = "application/octet-stream";
+
+        /// <summary>
+        /// application/json
+        /// </summary>
+        public const string Json = "application/json";
     }
 
     /// <summary>

@@ -47,7 +47,7 @@
                 "Counters02": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
                 "Counters03": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Long Spin Wait Hypercalls/sec)",
                 "Counters04": "Hyper-V Hypervisor Root Virtual Processor=\\(_Total\\)\\\\(Total Intercepts Cost|Total Intercepts/sec)",
-                "Counters05": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total) Run Time",
+                "Counters05": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\% (Guest|Hypervisor|Total|VTL2) Run Time",
                 "Counters06": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(CPU Wait Time Per Dispatch|Hardware Interrupts/sec|Hypercalls Cost|Hypercalls/sec|Logical Processor Migrations/sec|Long Spin Wait Hypercalls/sec)",
                 "Counters07": "Hyper-V Hypervisor Virtual Processor=\\(_Total\\)\\\\(Nested Page Fault Intercepts/sec|Posted Interrupt Notifications/sec|Posted Interrupt Scans/sec|Total Intercepts Cost|Total Intercepts/sec)",
                 "Counters08": "IPv4=.",

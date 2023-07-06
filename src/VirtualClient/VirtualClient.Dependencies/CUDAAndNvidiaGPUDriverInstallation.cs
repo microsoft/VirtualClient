@@ -119,10 +119,10 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.Username));
+                string username = this.Parameters.GetValue<string>(nameof(CudaAndNvidiaGPUDriverInstallation.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.GetCurrentUserName(true);
+                    username = Environment.UserName;
                 }
 
                 return username;

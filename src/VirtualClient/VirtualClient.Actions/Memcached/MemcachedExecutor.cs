@@ -58,18 +58,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(MemcachedExecutor.Username), string.Empty);
+                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.GetCurrentUserName(true);
+                    username = Environment.UserName;
                 }
 
                 return username;
-            }
-
-            private set
-            {
-                this.Parameters[nameof(this.Username)] = value;
             }
         }
 
@@ -174,6 +169,8 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.Logger.LogTraceMessage($"Username = '{this.Username}'");
+
             await this.ValidatePlatformSupportAsync(cancellationToken);
             await this.EvaluateParametersAsync(cancellationToken);
 
@@ -184,19 +181,6 @@ namespace VirtualClient.Actions
 
                 this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
                 this.ThrowIfRoleNotSupported(clientInstance.Role);
-            }
-
-            if (string.IsNullOrWhiteSpace(this.Username))
-            {
-                // Memcached will NOT allow the server to run as "root". If we are running
-                // with "sudo" here, we will get the sudo user instead. Otherwise, we get the
-                // logged in user by default.
-                this.Username = this.GetCurrentUserName();
-                if (string.Equals(this.Username, "root", StringComparison.Ordinal))
-                {
-                    this.Username = this.GetCurrentUserName(nonSudo: true);
-                    this.Logger.LogTraceMessage($"Workload cannot be ran with root privileges. Running workload as non-sudo user '{this.Username}'");
-                }
             }
         }
 

@@ -9,16 +9,15 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
     using global::VirtualClient.Common;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
-    using static VirtualClient.BlobDescriptor;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -334,16 +333,22 @@ namespace VirtualClient.Actions
 
                 if (outputFiles?.Any() == true)
                 {
-                    IEnumerable<IFileInfo> files = outputFiles.ToList().Select(path => this.fileSystem.FileInfo.New(path));
+                    IEnumerable<IFileInfo> files = outputFiles.ToList()
+                        .Select(path => this.fileSystem.FileInfo.New(path));
 
-                    IEnumerable<FileBlobDescriptor> blobDescriptors = FileBlobDescriptor.ToBlobDescriptors(
-                        files,
-                        HttpContentType.PlainText,
-                        this.ExperimentId,
-                        this.AgentId,
-                        "speccpu");
+                    IEnumerable<FileUploadDescriptor> descriptors = files
+                        .Select(file => this.CreateFileUploadDescriptor(new FileContext(
+                            file,
+                            HttpContentType.PlainText,
+                            Encoding.UTF8.WebName,
+                            this.ExperimentId,
+                            this.AgentId,
+                            "speccpu",
+                            this.Scenario,
+                            null,
+                            this.Roles?.FirstOrDefault())));
 
-                    await this.UploadFilesAsync(blobManager, this.fileSystem, blobDescriptors, cancellationToken);
+                    await this.UploadFilesAsync(blobManager, this.fileSystem, descriptors, cancellationToken);
                 }
             }
         }

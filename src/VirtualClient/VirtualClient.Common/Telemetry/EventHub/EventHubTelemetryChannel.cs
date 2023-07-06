@@ -376,10 +376,11 @@ namespace VirtualClient.Common.Telemetry
 
         private void TransmitEventsInTheBackground()
         {
+            TimeSpan waitInterval = TimeSpan.FromMilliseconds(100);
             while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 // Waiting for the flush delay to elapse
-                this.autoFlushWaitHandle.WaitOne(TimeSpan.FromMilliseconds(100));
+                this.autoFlushWaitHandle.WaitOne(waitInterval);
 
                 // Pulling all items from the buffer and sending as one transmission.
                 this.TransmitEvents();

@@ -6,8 +6,6 @@ namespace VirtualClient.Contracts
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
