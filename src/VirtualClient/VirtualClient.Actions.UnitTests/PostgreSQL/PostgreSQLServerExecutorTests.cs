@@ -280,7 +280,7 @@ namespace VirtualClient.Actions
                     // Create the database and populate it with data.
                     $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
 
-                    // Configure the PostgreSQL server for transactions (e.g. port, users).
+                    // Configure the balanced scenario.
                     $"sudo {postgreSqlPackage}/linux-x64/ubuntu/balanced.sh {mountPaths} --> {postgreSqlPackage}/linux-x64/ubuntu",
                 };
 
@@ -324,9 +324,6 @@ namespace VirtualClient.Actions
                     // {command} {command_arguments} --> {working_dir}
                     //
                     // Configure the PostgreSQL server for transactions (e.g. port, users).
-                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/inmemory.sh 7168 --> {postgreSqlPackage}/linux-x64/ubuntu",
-
-                    // Configure the PostgreSQL server for transactions (e.g. port, users).
                     $"sudo {postgreSqlPackage}/linux-x64/ubuntu/configure.sh {executor.Port} --> {postgreSqlPackage}/linux-x64/ubuntu",
 
                     // Drop the TPCC database if it already exists.
@@ -334,6 +331,9 @@ namespace VirtualClient.Actions
 
                     // Create the database and populate it with data.
                     $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
+
+                    // Configure the in memory scenario.
+                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/inmemory.sh 6144 --> {postgreSqlPackage}/linux-x64/ubuntu",
                 };
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
