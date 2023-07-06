@@ -93,6 +93,16 @@ Runs the Postgresql workload against to HammerDB tool which generate various net
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | StressScenario              | Optional. Opt for In-Memory/Balanced/Default stress scenario.  | "Default" |
+  | ReuseDatabase           | Optional. Determines if database will be re-created on each execution.  | true |
+  | DatabaseName     | Optional. Provide the name of the database under test. | "tpcc" |
+  | Port     | Optional. Provide the port number that PostgreSQL server will listen on. | 5432 |
+
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the

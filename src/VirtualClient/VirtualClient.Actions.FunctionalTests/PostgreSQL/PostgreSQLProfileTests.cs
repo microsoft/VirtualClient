@@ -258,7 +258,9 @@ namespace VirtualClient.Actions
             },
             expectedFiles: new string[]
             {
-                "/linux-x64/ubuntu/configure.sh"
+                "/linux-x64/ubuntu/configure.sh",
+                "/linux-x64/ubuntu/inmemory.sh",
+                "/linux-x64/ubuntu/balanced.sh"
             });
 
             this.mockFixture.SetupWorkloadPackage("hammerdb", expectedFiles: new string[]
@@ -279,8 +281,12 @@ namespace VirtualClient.Actions
                 // Attribute the files in the /bin directory as executable
                 $"sudo chmod -R 2777 \"{packagesDirectory}/hammerdb/linux-x64/bin\"",
 
-                // Attribute the configure.sh script as executable
+                // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
+
+                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/inmemory.sh\"",
+
+                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/balanced.sh\"",
 
                 // Run transactions against the database
                 $"bash -c \"{packagesDirectory}/hammerdb/linux-x64/hammerdbcli auto runTransactions.tcl\""
@@ -308,7 +314,13 @@ namespace VirtualClient.Actions
                     // the package store (i.e. in the *.vcpkg file).
                     [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
                 },
-                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+                expectedFiles: new string[] 
+                {   
+                    "/linux-x64/ubuntu/configure.sh", 
+                    "/linux-x64/ubuntu/install.sh", 
+                    "/linux-x64/ubuntu/inmemory.sh", 
+                    "/linux-x64/ubuntu/balanced.sh" 
+                });
 
             this.mockFixture.SetupFile("postgresql", "/linux-x64/superuser.txt", "superuser");
             this.mockFixture.SetupWorkloadPackage("hammerdb", expectedFiles: new string[]
@@ -329,8 +341,12 @@ namespace VirtualClient.Actions
                 // Attribute the files in the /bin directory as executable
                 $"sudo chmod -R 2777 \"{packagesDirectory}/hammerdb/linux-x64/bin\"",
 
-                // Attribute the configure.sh script as executable
+                // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
+
+                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/inmemory.sh\"",
+
+                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/balanced.sh\"",
 
                 // Configure the PostgreSQL server before creating the database.
                 $"sudo {packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh 5432",
