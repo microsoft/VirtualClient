@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters.Add(nameof(FioDiscoveryExecutor.DiskFill), "True");
             this.mockFixture.Parameters[nameof(DiskWorkloadExecutor.CommandLine)] = $"--runtime=300 --rw=write";
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
@@ -115,7 +115,7 @@ namespace VirtualClient.Actions
                     return this.defaultMemoryProcess;
                 };
 
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
             }
         }
@@ -126,7 +126,7 @@ namespace VirtualClient.Actions
             int executions = 0;
             this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.QueueDepths)] = "4,16,64"; // 3 executions
 
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
@@ -137,10 +137,40 @@ namespace VirtualClient.Actions
                     return this.defaultMemoryProcess;
                 };
 
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                     .ConfigureAwait(false);
             }
             Assert.IsTrue(executions == 3);
+        }
+
+        [Test]
+        public void FioDiscoveryExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_1()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk only (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.disks.Where(d => d.IsOperatingSystem()));
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
+        }
+
+        [Test]
+        public void FioDiscoveryExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_2()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk with others (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
         }
 
 
@@ -156,9 +186,9 @@ namespace VirtualClient.Actions
                 $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z] --filename=/dev/sd[a-z] --filename=/dev/sd[a-z]"
             };
 
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                      .ConfigureAwait(false);
 
                 Assert.AreEqual(4, this.mockFixture.ProcessManager.Commands.Count());
@@ -184,9 +214,9 @@ namespace VirtualClient.Actions
                 $"--name=fio_discovery_randwrite_134G_4K_d2_th8 --numjobs=8 --iodepth=2 --ioengine=libaio --size=134G --rw=randwrite --bs=4K --direct=1 --ramp_time=30 --runtime=300 --time_based --overwrite=1 --thread --group_reporting --output-format=json --filename=/dev/sd[a-z]"
             };
 
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                       .ConfigureAwait(false);
 
                 Assert.AreEqual(10, this.mockFixture.ProcessManager.Commands.Count());
@@ -199,9 +229,9 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = false;
 
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                      .ConfigureAwait(false);
 
                 Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=0"));
@@ -213,9 +243,9 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = true;
 
-            using (TestFioDiscoveryExecutor fioDiscoveryExecutor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await fioDiscoveryExecutor.ExecuteAsync(CancellationToken.None)
+                await executor.ExecuteAsync(CancellationToken.None)
                      .ConfigureAwait(false);
 
                 Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=1"));
