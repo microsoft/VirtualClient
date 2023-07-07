@@ -259,8 +259,6 @@ namespace VirtualClient.Actions
             expectedFiles: new string[]
             {
                 "/linux-x64/ubuntu/configure.sh",
-                "/linux-x64/ubuntu/inmemory.sh",
-                "/linux-x64/ubuntu/balanced.sh"
             });
 
             this.mockFixture.SetupWorkloadPackage("hammerdb", expectedFiles: new string[]
@@ -272,6 +270,13 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupDirectory("hammerdb", "/linux-x64/bin");
 
             string packagesDirectory = this.mockFixture.GetPackagePath();
+            string scriptsDirectory = this.mockFixture.PlatformSpecifics.GetScriptPath();
+
+            string balancedScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "balanced.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "inmemory.sh");
+
+            this.mockFixture.SetupFile(inMemoryScript);
+            this.mockFixture.SetupFile(balancedScript);
 
             List<string> commands = new List<string>
             {
@@ -283,10 +288,8 @@ namespace VirtualClient.Actions
 
                 // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
-
-                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/inmemory.sh\"",
-
-                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/balanced.sh\"",
+                $"sudo chmod +x \"{balancedScript}\"",
+                $"sudo chmod +x \"{inMemoryScript}\"",
 
                 // Run transactions against the database
                 $"bash -c \"{packagesDirectory}/hammerdb/linux-x64/hammerdbcli auto runTransactions.tcl\""
@@ -317,9 +320,7 @@ namespace VirtualClient.Actions
                 expectedFiles: new string[] 
                 {   
                     "/linux-x64/ubuntu/configure.sh", 
-                    "/linux-x64/ubuntu/install.sh", 
-                    "/linux-x64/ubuntu/inmemory.sh", 
-                    "/linux-x64/ubuntu/balanced.sh" 
+                    "/linux-x64/ubuntu/install.sh"
                 });
 
             this.mockFixture.SetupFile("postgresql", "/linux-x64/superuser.txt", "superuser");
@@ -332,6 +333,13 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupDirectory("hammerdb", "/linux-x64/bin");
 
             string packagesDirectory = this.mockFixture.GetPackagePath();
+            string scriptsDirectory = this.mockFixture.PlatformSpecifics.GetScriptPath();
+
+            string balancedScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "balanced.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "inmemory.sh");
+
+            this.mockFixture.SetupFile(inMemoryScript);
+            this.mockFixture.SetupFile(balancedScript);
 
             List<string> commands = new List<string>
             {
@@ -343,10 +351,8 @@ namespace VirtualClient.Actions
 
                 // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
-
-                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/inmemory.sh\"",
-
-                $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/balanced.sh\"",
+                $"sudo chmod +x \"{balancedScript}\"",
+                $"sudo chmod +x \"{inMemoryScript}\"",
 
                 // Configure the PostgreSQL server before creating the database.
                 $"sudo {packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh 5432",

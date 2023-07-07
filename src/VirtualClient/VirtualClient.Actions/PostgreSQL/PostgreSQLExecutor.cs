@@ -273,6 +273,8 @@ namespace VirtualClient.Actions
             {
                 // https://stackoverflow.com/questions/40779757/connect-postgresql-to-hammerdb
 
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
+
                 await this.SystemManagement.MakeFileExecutableAsync(
                     this.Combine(this.HammerDBPackagePath, "hammerdbcli"),
                     this.Platform,
@@ -289,12 +291,12 @@ namespace VirtualClient.Actions
                     cancellationToken);
 
                 await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "inmemory.sh"),
+                    this.Combine(scriptsDirectory, "inmemory.sh"),
                     this.Platform,
                     cancellationToken);
 
                 await this.SystemManagement.MakeFileExecutableAsync(
-                    this.Combine(this.PostgreSqlPackagePath, "ubuntu", "balanced.sh"),
+                    this.Combine(scriptsDirectory, "balanced.sh"),
                     this.Platform,
                     cancellationToken);
 

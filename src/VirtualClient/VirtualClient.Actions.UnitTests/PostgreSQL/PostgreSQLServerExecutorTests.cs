@@ -229,7 +229,7 @@ namespace VirtualClient.Actions
         public async Task PostgreSQLServerExecutorExecutesExpectedComandsForBalancedScenario()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
-            this.mockFixture.Parameters["StressScenario"] = "Balanced";
+            this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
 
             IEnumerable<Disk> disks;
             disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
@@ -263,6 +263,10 @@ namespace VirtualClient.Actions
                 string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
 
                 // e.g. 
+                // C:\Users\Any\VirtualClient\scripts\postgresql
+                string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath(this.mockPostgreSqlPackage.Name);
+
+                // e.g. 
                 // /home/user/VirtualClient/packages/hammerdb/linux-x64
                 string hammerDBPath = this.mockHammerDBPackage.Path;
 
@@ -281,7 +285,7 @@ namespace VirtualClient.Actions
                     $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
 
                     // Configure the balanced scenario.
-                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/balanced.sh {mountPaths} --> {postgreSqlPackage}/linux-x64/ubuntu",
+                    $"sudo {scriptPath}/balanced.sh {mountPaths} --> {postgreSqlPackage}/linux-x64/ubuntu",
                 };
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
@@ -298,7 +302,7 @@ namespace VirtualClient.Actions
         public async Task PostgreSQLServerExecutorExecutesExpectedComandsForInMemoryScenario()
         {
             this.SetupDefaults(PlatformID.Unix, Architecture.X64);
-            this.mockFixture.Parameters["StressScenario"] = "InMemory";
+            this.mockFixture.Parameters["DatabaseScenario"] = "InMemory";
 
             // Mocking 8GB of memory
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
@@ -313,6 +317,10 @@ namespace VirtualClient.Actions
                 // e.g.
                 // C:\Users\Any\VirtualClient\packages\postgresql
                 string postgreSqlPackage = this.mockPostgreSqlPackage.Path;
+
+                // e.g. 
+                // C:\Users\Any\VirtualClient\scripts\postgresql
+                string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath(this.mockPostgreSqlPackage.Name);
 
                 // e.g. 
                 // /home/user/VirtualClient/packages/hammerdb/linux-x64
@@ -333,7 +341,7 @@ namespace VirtualClient.Actions
                     $"bash -c \"{hammerDBPath}/linux-x64/hammerdbcli auto createDB.tcl\" --> {hammerDBPath}/linux-x64",
 
                     // Configure the in memory scenario.
-                    $"sudo {postgreSqlPackage}/linux-x64/ubuntu/inmemory.sh 6144 --> {postgreSqlPackage}/linux-x64/ubuntu",
+                    $"sudo {scriptPath}/inmemory.sh 6144 --> {postgreSqlPackage}/linux-x64/ubuntu",
                 };
 
                 this.mockFixture.ProcessManager.OnProcessCreated = (process) =>

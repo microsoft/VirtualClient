@@ -71,11 +71,11 @@ namespace VirtualClient.Actions
         /// Parameter defines the scenario to use for the PostgreSQL user accounts used
         /// to create the DB and run transactions against it.
         /// </summary>
-        public string StressScenario
+        public string DatabaseScenario
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.StressScenario), PostgreSQLScenario.Default);
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), PostgreSQLScenario.Default);
             }
         }
 
@@ -372,7 +372,7 @@ namespace VirtualClient.Actions
         { 
             if (!cancellationToken.IsCancellationRequested)
             {
-                switch (this.StressScenario)
+                switch (this.DatabaseScenario)
                 {
                     // If Balanced Scenario: after creating the database, run balanced script to distribute
                     // database and/or individual tables on available disks.
@@ -418,6 +418,7 @@ namespace VirtualClient.Actions
                 {
                     string inMemoryScript = "inmemory.sh";
                     string workingDirectory = null;
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
 
                     LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
 
@@ -434,7 +435,7 @@ namespace VirtualClient.Actions
                     int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.75 / 1024);
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        this.Combine(workingDirectory, inMemoryScript),
+                        this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
                         $"{bufferSizeInMegaBytes}",
                         workingDirectory,
                         telemetryContext,
@@ -501,6 +502,7 @@ namespace VirtualClient.Actions
                 {
                     string balancedScript = "balanced.sh";
                     string workingDirectory = null;
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
 
                     LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
 
@@ -513,7 +515,7 @@ namespace VirtualClient.Actions
                     }
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        this.Combine(workingDirectory, balancedScript),
+                        this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
                         diskPathsArgument,
                         workingDirectory,
                         telemetryContext,
