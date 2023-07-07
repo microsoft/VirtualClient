@@ -334,6 +334,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Number of sequential disks.
+        /// </summary>
+        public int SequentialDiskCount
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.SequentialDiskCount), 1);
+            }
+        }
+
+        /// <summary>
         /// Retry Wait Time for FIO executors.
         /// </summary>
         protected static TimeSpan RetryWaitTime { get; } = TimeSpan.FromSeconds(10);
@@ -763,16 +774,28 @@ namespace VirtualClient.Actions
         private void UpdateTestFilePaths(IEnumerable<Disk> disksToTest)
         {
             disksToTest.ThrowIfNullOrEmpty(nameof(disksToTest));
-            disksToTest.OrderByDescending(disk => disk.Volumes.FirstOrDefault());
-            this.randomIOFilePath = disksToTest.FirstOrDefault().DevicePath;
+            disksToTest.OrderByDescending(disk => disk.SizeInBytes(this.Platform));
 
             if (disksToTest.Count() == 1)
             {
+                this.randomIOFilePath = disksToTest.FirstOrDefault().DevicePath;
                 this.sequentialIOFilePath = disksToTest.FirstOrDefault().DevicePath;
             }
             else
             {
-                this.sequentialIOFilePath = disksToTest.ElementAtOrDefault(1).DevicePath;
+                int sequentialDiskCount = this.SequentialDiskCount;
+
+                if (sequentialDiskCount >= disksToTest.Count())
+                {
+                    sequentialDiskCount = disksToTest.Count() - 1;
+                    this.Logger.LogTraceMessage($"{nameof(sequentialDiskCount)} should be less than total disks to test. Setting it to {sequentialDiskCount}.");
+                }
+
+                int randomDiskCount = disksToTest.Count() - sequentialDiskCount;
+                this.Logger.LogTraceMessage($"{nameof(randomDiskCount)} : {randomDiskCount} and {nameof(sequentialDiskCount)}: {sequentialDiskCount}.");
+
+                this.randomIOFilePath = string.Join(':', disksToTest.Take(randomDiskCount).Select(disk => disk.DevicePath).ToArray());
+                this.sequentialIOFilePath = string.Join(':', disksToTest.TakeLast(sequentialDiskCount).Select(disk => disk.DevicePath).ToArray());
             }
 
             this.Logger.LogTraceMessage($"File Path for {nameof(this.randomIOFilePath)} : {this.randomIOFilePath} and {nameof(this.sequentialIOFilePath)} : {this.sequentialIOFilePath}");
