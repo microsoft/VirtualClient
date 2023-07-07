@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -40,11 +41,6 @@ namespace VirtualClient.Actions
         {
             this.systemManager = this.Dependencies.GetService<ISystemManagement>();
             this.stateManager = this.systemManager.StateManager;
-
-            if (string.IsNullOrEmpty(this.DiskFilter))
-            {
-                this.DiskFilter = "SizeGreaterThan:8000gb&OSDisk:false";
-            }
         }
 
         /// <summary>
@@ -74,7 +70,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.Model));
+                return this.Parameters.GetValue<string>(nameof(this.Model), "bert");
             }
         }
 
@@ -85,10 +81,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(MLPerfTrainingExecutor.Username));
+                string username = this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.GetCurrentUserName(true);
+                    username = Environment.UserName;
                 }
 
                 return username;
@@ -102,7 +98,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.BatchSize));
+                return this.Parameters.GetValue<string>(nameof(this.BatchSize), "40");
             }
         }
 
@@ -113,7 +109,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.Implementation));
+                return this.Parameters.GetValue<string>(nameof(this.Implementation), "pytorch-22.09");
             }
         }
 
@@ -124,7 +120,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ContainerName));
+                return this.Parameters.GetValue<string>(nameof(this.ContainerName), "language_model");
             }
         }
 
@@ -135,7 +131,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DataPath));
+                return this.Parameters.GetValue<string>(nameof(this.DataPath), "mlperf - training - data - bert.1.0.0");
             }
         }
 
@@ -146,7 +142,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.GPUCount));
+                return this.Parameters.GetValue<string>(nameof(this.GPUCount), "8");
             }
         }
 
@@ -157,7 +153,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ConfigFile));
+                return this.Parameters.GetValue<string>(nameof(this.ConfigFile), "config_DGXA100_1x8x56x1.sh");
             }
         }
 
