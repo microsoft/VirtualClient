@@ -362,7 +362,8 @@ namespace VirtualClient.Actions
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                    string parsedCommandArguments = this.ParseCommand(process.FullCommand());
+                                    this.CaptureMetrics(output, parsedCommandArguments, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
                         }
@@ -407,6 +408,39 @@ namespace VirtualClient.Actions
             }
 
             return state.Definition;
+        }
+
+        private string ParseCommand(string command)
+        {
+            List<string> excludingRegexList = new List<string>
+                {
+                    @".*\/memtier_benchmark",
+                    @"--port\s+\d+",
+                    @"--protocol\s+\w+",
+                    @"--key-prefix\s+\w+",
+                    @"--test-time\s+\d+",
+                    @"--key-minimum\s+\d+",
+                    @"--key-maximum\s+\d+",
+                    @"--key-prefix\s+\w+",
+                    @"--key-pattern\s+\w+:\w+",
+                    @"--run-count\s+\d+",
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
+                    @"--tls",
+                    @"--cert\s+.*\.crt",
+                    @"--key\s+.*\.key",
+                    @"--cacert\s+.*\.crt",
+                    @"--server\s+[\d.]+",
+                };
+            foreach (string regexPattern in excludingRegexList)
+            {
+                command = Regex.Replace(command, regexPattern, string.Empty);
+            }
+
+            command = Regex.Replace(command, @"\s+", " "); // Remove extra spaces
+
+            Console.WriteLine($"final command without performance affecting values {command.Trim()}");
+
+            return command.Trim();
         }
     }
 }
