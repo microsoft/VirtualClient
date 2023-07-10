@@ -10,7 +10,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-	  <Content Include="..\TestResources\expectedoltp-c.fio.jobfile" Link="Examples\FIO\expectedoltp-c.fio.jobfile">
+	  <Content Include="..\TestResources\expectedoltp-c.fio1.jobfile" Link="Examples\FIO\expectedoltp-c.fio1.jobfile">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="..\TestResources\expectedoltp-c.fio2.jobfile" Link="Examples\FIO\expectedoltp-c.fio2.jobfile">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	  <Content Include="..\TestResources\expectedoltp-c.fio3.jobfile" Link="Examples\FIO\expectedoltp-c.fio3.jobfile">
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="..\TestResources\oltp-c.fio.jobfile" Link="Examples\FIO\oltp-c.fio.jobfile">

@@ -29,18 +29,6 @@ The following sections provides examples for how to integrate the component into
       "Type": "LinuxPackageInstallation",
       "Parameters": {
           "Scenario": "InstallRequiredLinuxPackages",
-          "Packages": "make, automake, libtool, pkg-config",
-          "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
-          "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
-          "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
-          "Packages-Zypper": "libaio-dev, libmysqlclient-devel, openssl-devel",
-          "Role": "Client"
-      }
-  },
-  {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-          "Scenario": "InstallRequiredLinuxPackages",
           "Packages": "mysql-server",
           "Role": "Server"
       }
