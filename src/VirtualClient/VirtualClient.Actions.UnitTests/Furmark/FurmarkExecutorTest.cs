@@ -66,6 +66,8 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             this.fixture.Parameters["Time"] = "20";
+            this.fixture.Parameters["Width"] = "100";
+            this.fixture.Parameters["Height"] = "200";
 
             using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
@@ -78,7 +80,7 @@ namespace VirtualClient.Actions
                     packageDir = Regex.Replace(packageDir, @":", string.Empty);
 
                     // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
-                    string executeScriptCommandArguments = $"/width=640 /height=480 /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning";
+                    string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Height"]} /height={this.fixture.Parameters["Width"]} /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {

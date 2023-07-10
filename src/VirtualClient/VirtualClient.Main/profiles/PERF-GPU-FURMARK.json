@@ -7,7 +7,9 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "Time": "60000"
+    "Time": "60000",
+    "Height": "1280",
+    "Width": "720"
   },
   "Actions": [
     {
@@ -30,22 +32,24 @@
         "Extract": true
       }
     },
-      {
-        "Type": "AMDGPUDriverInstallation",
-        "Parameters": {
-          "Scenario": "InstallDriver",
-          "FileName": "AMD-Azure-NVv4-Driver-22Q2.exe"
-        }
-      },
-      {
-        "Type": "DependencyPackageInstallation",
-        "Parameters": {
-          "Scenario": "InstallFurmarkPackage",
-          "BlobContainer": "packages",
-          "BlobName": "Furmark1.34.0.0.zip",
-          "PackageName": "Furmark",
-          "Extract": true
-        }
+    {
+      "Type": "AMDGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallDriver",
+        "RebootRequired": false,
+        "PackageName": "FurmarkDriver"
       }
+    },
+
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallFurmarkPackage",
+        "BlobContainer": "packages",
+        "BlobName": "Furmark1.34.0.0.zip",
+        "PackageName": "Furmark",
+        "Extract": true
+      }
+    }
   ]
 }

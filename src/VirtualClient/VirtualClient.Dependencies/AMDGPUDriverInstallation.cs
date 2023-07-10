@@ -2,22 +2,31 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
+    using System.IO;
+    using System.IO.Abstractions;
+    using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// Installation component for AMD GPU Drivers
     /// </summary>
     public class AMDGPUDriverInstallation : VirtualClientComponent
     {
-        private ISystemManagement systemManagement;
+        private IPackageManager packageManager;
+        private IFileSystem fileSystem;
+        private ISystemManagement systemManager;
+        private IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AMDGPUDriverInstallation"/> class.
@@ -29,46 +38,112 @@
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
-            this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
+            this.systemManager = dependencies.GetService<ISystemManagement>();
+            this.stateManager = this.systemManager.StateManager;
+            this.fileSystem = this.systemManager.FileSystem;
+            this.packageManager = this.systemManager.PackageManager;
         }
 
         /// <summary>
         /// Retrieves the interface to interacting with the underlying system.
         /// </summary>
-        protected ISystemManagement SystemManager { get; }
-        
+      
         /// <summary>
-        /// Installs the AMD GPU Driver, overwriting any existing installation
+        /// Determines whether Reboot is required or not after Driver installation
         /// </summary>
+        public bool RebootRequired
+        {
+            get
+            {
+                switch (this.Platform)
+                {
+                    case PlatformID.Win32NT:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), false);
+
+                    default:
+                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// A policy that defines how the component will retry when
+        /// it experiences transient issues.
+        /// </summary>
+        public IAsyncPolicy RetryPolicy { get; set; }
+
+        /// <summary>
+        /// Executes  GPU driver installation steps.
+        /// </summary>
+        /// <returns></returns>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string executablePath = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "amddependency", "win-x64", "AMD-Azure-NVv4-Driver-22Q2.exe");
-            // string executablePath = @"\packages\FurmarkDriver\AMD-Azure-NVv4-Driver-22Q2.exe";
+            this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionStarted", telemetryContext);
 
-            using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(executablePath, $"/S /v/qn"))
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(CudaAndNvidiaGPUDriverInstallation), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (installationState == null)
             {
-                this.CleanupTasks.Add(() => process.SafeKill());
-
-                try
+                 if (this.Platform == PlatformID.Win32NT)
                 {
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                    await this.AMDDriverInstallationOnWindowsAsync(telemetryContext, cancellationToken)
+                               .ConfigureAwait(false);
+
+                    await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallationOnWindowsAsync), new State(), cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                 VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
+            }
+
+            this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
+        }
+
+        private async Task AMDDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string installerPath = string.Empty;
+
+            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+                this.PackageName, cancellationToken)
+                    .ConfigureAwait(false);
+
+            if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
+            {
+                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
+            }
+            else
+            {
+                throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
+            }
+
+            await this.ExecuteCommandAsync(installerPath, "/S /v/qn", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        private Task ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            return this.RetryPolicy.ExecuteAsync(async () =>
+            {
+                string output = string.Empty;
+                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
+                {
+                    this.CleanupTasks.Add(() => process.SafeKill());
+                    this.LogProcessTrace(process);
+
+                    await process.StartAndWaitAsync(cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
                             .ConfigureAwait(false);
 
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }
-                finally
-                {
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                    }
-                }
-            }
+            });
         }
     }
 }
