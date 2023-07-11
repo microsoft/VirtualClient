@@ -44,10 +44,6 @@
             this.fileSystem = this.systemManager.FileSystem;
             this.packageManager = this.systemManager.PackageManager;
         }
-
-        /// <summary>
-        /// Retrieves the interface to interacting with the underlying system.
-        /// </summary>
       
         /// <summary>
         /// Determines whether Reboot is required or not after Driver installation

@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
                     packageDir = Regex.Replace(packageDir, @":", string.Empty);
 
                     // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
-                    string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Height"]} /height={this.fixture.Parameters["Width"]} /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+                    string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
@@ -105,6 +105,7 @@ namespace VirtualClient.Actions
         public void FurmarkExecutorThrowsWhenTheResultsFileIsNotGenerated()
         {
             this.SetupDefaultMockBehavior();
+
             using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
                 this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
@@ -151,6 +152,7 @@ namespace VirtualClient.Actions
                 : base(dependencies, parameters)
             {
             }
+
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {

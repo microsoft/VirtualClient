@@ -47,7 +47,7 @@ namespace VirtualClient.Actions
         public string ExecutableLocation { get; set; }
 
         /// <summary>
-        /// path to exe.
+        /// path to scorefile.
         /// </summary>
         public string ResultsFilePath { get;  set; }
 
@@ -93,9 +93,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Path to the results file after executing FURMARK workload.
-        /// </summary>
-        /// <summary>
         /// Initializes the environment for execution of the FURMARK workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -114,17 +111,12 @@ namespace VirtualClient.Actions
             this.ExecutableLocation = this.PlatformSpecifics.Combine(this.packageDirectory, "Geeks3D", "Benchmarks", "FurMark", "Furmark");
             this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "FurMark-Scores.txt");
             this.XMLFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "Geeks3D", "Benchmarks", "FurMark", "furmark-gpu-monitoring.xml");
-            /* await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(this.packageDirectory, @"Geeks3D\Benchmarks\FurMark\Furmark"), this.Platform, cancellationToken)
-                 .ConfigureAwait(false);
 
-             this.ScriptFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "C:\\Program Files (x86)\\Geeks3D\\Benchmarks\\FurMark\\Furmark\\width=640 \\height=480 \\msaa=4 \\max_time=180000\\nogui \\nomenubar \\noscore \\run_mode=1 \\log_score \\disable_catalyst_warning");
-             this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "TESTING", "C:\\Program Files (x86)\\Geeks3D\\Benchmarks\\FurMark>FurMark-Scores.txt");*/
         }
 
         /// <summary>
         /// Executes the FURMARK workload.
         /// </summary>
-        // protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))

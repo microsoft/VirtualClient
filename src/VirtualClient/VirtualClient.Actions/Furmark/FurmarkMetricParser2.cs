@@ -14,12 +14,10 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    ///  Parser for Graph500 output document.
+    ///  Parser for FURMARK XML output document.
     /// </summary>
     public class FurmarkMetricsParser2 : MetricsParser
     {
-        // private static readonly string Pattern = @"<gpu_data gpu=""(?<gpu>\d+)"" name=""[^""]+"" core_temp=""(?<core_temp>[\d.]+)"" core_temp_fahrenheit=""[^""]+"" core_load=""[^""]+"" gpu_power=""(?<gpu_power>[\d.]+)""";
-
         /// <summary>
         /// size of dictionary 
         /// </summary>

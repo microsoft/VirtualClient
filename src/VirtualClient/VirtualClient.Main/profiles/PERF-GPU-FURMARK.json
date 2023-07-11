@@ -8,8 +8,8 @@
   },
   "Parameters": {
     "Time": "60000",
-    "Height": "1280",
-    "Width": "720"
+    "Height": "640",
+    "Width": "480"
   },
   "Actions": [
     {

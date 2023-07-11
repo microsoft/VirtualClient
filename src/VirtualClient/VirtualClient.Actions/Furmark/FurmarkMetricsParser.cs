@@ -13,7 +13,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    ///  Parser for Graph500 output document.
+    ///  Parser for Furmark_scores output document.
     /// </summary>
     public class FurmarkMetricsParser : MetricsParser
     {
@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
         private static readonly string DurationPattern = @"\[DurationInMs=(\d+)\]";
 
         /// <summary>
-        /// Constructor for <see cref="Graph500MetricsParser"/>
+        /// Constructor for <see cref="FurmarkMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
         public FurmarkMetricsParser(string rawText)
