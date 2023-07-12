@@ -356,6 +356,9 @@
   ],
   "Dependencies": [
     {
+      "Type": "FormatDisks"
+    },
+    {
       "Type": "LinuxPackageInstallation",
       "Parameters": {
         "Scenario": "InstallLinuxPackages",

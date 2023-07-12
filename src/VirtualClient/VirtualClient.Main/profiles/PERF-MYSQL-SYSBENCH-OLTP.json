@@ -381,6 +381,9 @@
     ],
     "Dependencies": [
         {
+            "Type": "FormatDisks"
+        },
+        {
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
@@ -470,9 +473,6 @@
                 "Scenario": "StartAPIServer",
                 "Role": "Server"
             }
-        },
-        {
-            "Type": "FormatDisks"
         }
     ]
 }
