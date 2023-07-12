@@ -27,6 +27,9 @@
     ],
     "Dependencies": [
         {
+            "Type": "FormatDisks"
+        },
+        {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallPostgreSQLPackage",
@@ -66,9 +69,6 @@
             "Parameters": {
                 "Scenario": "StartAPIServer"
             }
-        },
-        {
-            "Type": "FormatDisks"
         }
     ]
 }
