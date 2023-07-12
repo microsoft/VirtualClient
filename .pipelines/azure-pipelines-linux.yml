@@ -22,6 +22,10 @@ variables:
 
 steps:
 
+- task: PipAuthenticate@1
+  inputs:
+    artifactFeeds: 'CRC-Dev'
+- script: pip install pmc-cli
 - task: UseDotNet@2
   continueOnError: false
   inputs:

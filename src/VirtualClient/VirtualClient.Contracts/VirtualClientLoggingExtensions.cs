@@ -838,7 +838,7 @@ namespace VirtualClient.Contracts
         public static void LogTraceMessage(this ILogger logger, string message, EventContext eventContext = null)
         {
             logger.ThrowIfNull(nameof(logger));
-            if (!string.IsNullOrWhiteSpace(message))
+            if (message != null)
             {
                 VirtualClientLoggingExtensions.LogMessage(
                     logger,

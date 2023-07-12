@@ -313,7 +313,7 @@ namespace VirtualClient.Contracts
         public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_1()
         {
             string blobPath = "/any/path/to/blob/file.log";
-            string expectedBlobPath = "/any/path/to/blob/file.manifest";
+            string expectedBlobPath = "/any/path/to/blob/file.manifest.json";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
@@ -358,7 +358,7 @@ namespace VirtualClient.Contracts
         [TestCase("\\any/blob/path\\file.txt")]
         public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_2(string blobPath)
         {
-            string expectedBlobPath = $"/any/blob/path/file.manifest";
+            string expectedBlobPath = $"/any/blob/path/file.manifest.json";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
@@ -404,7 +404,7 @@ namespace VirtualClient.Contracts
         [TestCase("\\blob01\\")]
         public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_Files_Without_Extensions(string blobPath)
         {
-            string expectedBlobPath = $"/blob01.manifest";
+            string expectedBlobPath = $"/blob01.manifest.json";
             string expectedContainer = "AnyContainer";
             string expectedContentEncoding = "utf-8";
             string expectedContentType = "text/plain";
