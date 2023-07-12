@@ -5,9 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -43,6 +45,29 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
+
+            SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+                ?? new SysbenchOLTPState();
+
+            switch (this.DatabaseScenario)
+            {
+                case SysbenchOLTPScenario.InMemory:
+                    await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    state.DatabaseScenarioInitialized = true;
+                    break;
+                case SysbenchOLTPScenario.Balanced:
+                    string diskPaths = await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    state.DiskPathsArgument = diskPaths;
+                    break;
+                case SysbenchOLTPScenario.Default:
+                    break;
+            }
+
+            await this.StateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
         }
 
         /// <summary>
@@ -65,6 +90,145 @@ namespace VirtualClient.Actions
                     }
                 }
             });
+        }
+
+        private async Task PrepareInMemoryScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string inMemoryScript = "inmemory.sh";
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
+                long totalMemoryKiloBytes = memoryInfo.TotalMemory;
+                int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.75 / 1024);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
+                    $"{bufferSizeInMegaBytes}",
+                    scriptsDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }
+            }
+        }
+
+        private async Task<string> PrepareBalancedScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string diskPaths = string.Empty;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string diskFilter = "osdisk:false";
+
+                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                if (disks?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
+                {
+                    // Refresh the disks to pickup the mount point changes.
+                    await Task.Delay(1000).ConfigureAwait(false);
+                    IEnumerable<Disk> updatedDisks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    disksToTest = DiskFilters.FilterDisks(updatedDisks, diskFilter, this.Platform).ToList();
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
+                    {
+                        diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)} ";
+                    }
+                }
+
+                string balancedScript = "balancedServer.sh";
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
+                    diskPaths,
+                    scriptsDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }      
+            }
+
+            return diskPaths;
+        }
+
+        /// <summary>
+        /// Creates mount points for any disks that do not have them already.
+        /// </summary>
+        /// <param name="disks">This disks on which to create the mount points.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        private async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+        {
+            bool mountPointsCreated = false;
+
+            // Don't mount any partition in OS drive.
+            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
+            {
+                // mount every volume that doesn't have an accessPath.
+                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
+                {
+                    string newMountPoint = volume.GetDefaultMountPoint();
+                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
+
+                    EventContext relatedContext = EventContext.Persisted().Clone()
+                        .AddContext(nameof(volume), volume)
+                        .AddContext("mountPoint", newMountPoint);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
+                    {
+                        string newMountPoint = volume.GetDefaultMountPoint();
+                        if (!this.SystemManager.FileSystem.Directory.Exists(newMountPoint))
+                        {
+                            this.SystemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                        }
+
+                        await this.SystemManager.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        mountPointsCreated = true;
+
+                    }).ConfigureAwait(false);
+                }
+            }
+
+            return mountPointsCreated;
         }
     }
 }

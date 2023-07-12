@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -25,6 +26,7 @@ namespace VirtualClient.Actions
         private readonly IStateManager stateManager;
         private string sysbenchPrepareArguments;
         private string sysbenchExecutionArguments;
+        private string sysbenchLoggingArguments;
         private string sysbenchDirectory;
         private string sysbenchPath;
 
@@ -212,7 +214,8 @@ namespace VirtualClient.Actions
             // set arguments & path up based on prepare arguments in profile 
 
             this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchExecutionArguments = $"{this.Workload} --threads={this.Threads} --time={this.DurationSecs} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} ";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
@@ -232,7 +235,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         null,
-                        scenarioArguments: this.sysbenchExecutionArguments,
+                        scenarioArguments: this.sysbenchLoggingArguments,
                         this.Tags,
                         telemetryContext);
                 }
@@ -251,7 +254,7 @@ namespace VirtualClient.Actions
                 {
                     // first, prepare database if needed; then run the sysbench command
 
-                    await this.PrepareMySQLDatabase(cancellationToken);
+                    await this.PrepareMySQLDatabase(telemetryContext, cancellationToken);
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
@@ -286,7 +289,7 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
-        private async Task PrepareMySQLDatabase(CancellationToken cancellationToken)
+        private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
 
@@ -319,6 +322,39 @@ namespace VirtualClient.Actions
                 state.RecordCount = recordCount;
 
                 await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
+            }
+
+            if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
+            {
+                string diskPaths = state.DiskPathsArgument;
+
+                await this.PrepareBalancedScenarioAsync(diskPaths, telemetryContext, cancellationToken);
+
+                state.DatabaseScenarioInitialized = true;
+
+                await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
+            }
+        }
+
+        private async Task PrepareBalancedScenarioAsync(string diskPaths, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string balancedScript = "balancedClient.sh";
+            string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+            string balancedArguments = $"{this.ServerIpAddress} {this.NumTables} {this.DatabaseName} {diskPaths}";
+
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
+                balancedArguments,
+                scriptsDirectory,
+                telemetryContext,
+                cancellationToken,
+                runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
+                }
             }
         }
     }

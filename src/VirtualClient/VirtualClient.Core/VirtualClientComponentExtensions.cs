@@ -419,7 +419,7 @@ namespace VirtualClient
              * 
              * The following characters are not allowed: " \ / : | < > * ?
              * Directory and file names are case-preserving and case-insensitive.
-             * A path name may be no more than 2,048 characters in length. Individual components in the path can be a maximum of 255 characters in length.
+             * A path name may be no more than 2,048 characters in length. Individual components in the path can be a maximum of 255 --time=1800 characters in length.
              * The depth of subdirectories in the path cannot exceed 250.
              * The same name cannot be used for a file and a directory that share the same parent directory.
              */

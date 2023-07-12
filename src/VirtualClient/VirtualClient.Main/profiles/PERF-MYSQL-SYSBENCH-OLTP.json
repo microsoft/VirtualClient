@@ -14,6 +14,7 @@
             "Type": "SysbenchOLTPServerExecutor",
             "Parameters": {
                 "Scenario": "mysql_server",
+                "DatabaseScenario": "Default",
                 "Role": "Server"
             }
         },
@@ -22,6 +23,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T8_TB16_REC500",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "16",
@@ -36,6 +38,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T16_TB16_REC1000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -50,6 +53,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T16_TB16_REC5000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -64,6 +68,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T32_TB16_REC10000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "32",
                 "NumTables": "16",
@@ -78,6 +83,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T8_TB32_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "32",
@@ -92,6 +98,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T16_TB32_REC500000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "32",
@@ -106,6 +113,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T92_TB4_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "92",
                 "NumTables": "4",
@@ -120,6 +128,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_write_T152_TB4_REC100000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "152",
                 "NumTables": "4",
@@ -134,6 +143,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T8_TB16_REC500",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "16",
@@ -148,6 +158,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T16_TB16_REC1000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -162,6 +173,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T16_TB16_REC5000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -176,6 +188,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T32_TB16_REC10000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "32",
                 "NumTables": "16",
@@ -190,6 +203,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T8_TB32_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "32",
@@ -204,6 +218,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T16_TB32_REC500000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "32",
@@ -218,6 +233,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T92_TB4_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "92",
                 "NumTables": "4",
@@ -232,6 +248,7 @@
             "Parameters": {
                 "Scenario": "oltp_read_only_T152_TB4_REC100000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "152",
                 "NumTables": "4",
@@ -246,6 +263,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T8_TB16_REC500",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "16",
@@ -260,6 +278,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T16_TB16_REC1000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -274,6 +293,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T16_TB16_REC5000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "16",
@@ -288,6 +308,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T32_TB16_REC10000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "32",
                 "NumTables": "16",
@@ -302,6 +323,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T8_TB32_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "8",
                 "NumTables": "32",
@@ -316,6 +338,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T16_TB32_REC500000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "16",
                 "NumTables": "32",
@@ -330,6 +353,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T92_TB4_REC50000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "92",
                 "NumTables": "4",
@@ -344,6 +368,7 @@
             "Parameters": {
                 "Scenario": "oltp_write_only_T152_TB4_REC100000",
                 "DatabaseName": "sbtest",
+                "DatabaseScenario": "Default",
                 "Role": "Client",
                 "Threads": "152",
                 "NumTables": "4",
@@ -359,7 +384,7 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages": "make, automake, libtool, pkg-config",
+                "Packages": "make, automake, libtool, pkg-config, mysql-client",
                 "Packages-Apt": "libaio-dev, libmysqlclient-dev, libssl-dev",
                 "Packages-Dnf": "libaio-devel, mariadb-devel, openssl-devel",
                 "Packages-Yum": "libaio-devel, mariadb-devel, openssl-devel",
@@ -445,6 +470,9 @@
                 "Scenario": "StartAPIServer",
                 "Role": "Server"
             }
+        },
+        {
+            "Type": "FormatDisks"
         }
     ]
 }

@@ -21,14 +21,11 @@ namespace VirtualClient.Dependencies
     public class MySQLServerConfigurationTests
     {
         private MockFixture mockFixture;
-        private MySQLServerConfiguration.ConfigurationState mockState;
-        private IEnumerable<Disk> disks;
 
         [SetUp]
         public void SetUpDefaultBehavior()
         {
             this.mockFixture = new MockFixture();
-            this.mockState = new MySQLServerConfiguration.ConfigurationState("StartServer");
             this.mockFixture.Setup(PlatformID.Unix);
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
@@ -274,73 +271,10 @@ namespace VirtualClient.Dependencies
             {
                 $"sudo mysql --execute=\"DROP USER IF EXISTS '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\"",
                 $"sudo mysql --execute=\"CREATE USER '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\"",
-                $"sudo mysql --execute=\"GRANT ALL ON {this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\"",
+                $"sudo mysql --execute=\"GRANT ALL ON *.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'127.0.0.1'\"",
                 $"sudo mysql --execute=\"DROP USER IF EXISTS '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\"",
                 $"sudo mysql --execute=\"CREATE USER '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\"",
-                $"sudo mysql --execute=\"GRANT ALL ON {this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\""
-            };
-
-            int commandNumber = 0;
-            bool commandExecuted = false;
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
-            {
-                string expectedCommand = expectedCommands[commandNumber];
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
-
-                Assert.IsTrue(commandExecuted);
-                commandExecuted = false;
-                commandNumber++;
-
-                InMemoryProcess process = new InMemoryProcess
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = exe,
-                        Arguments = arguments
-                    },
-                    ExitCode = 0,
-                    OnStart = () => true,
-                    OnHasExited = () => true
-                };
-
-                return process;
-            };
-
-            this.mockFixture.StateManager.OnSaveState((stateId, state) =>
-            {
-                Assert.IsNotNull(state);
-            });
-
-            using (TestMySQLServerConfiguration component = new TestMySQLServerConfiguration(this.mockFixture))
-            {
-                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-        }
-
-        [Test]
-        public async Task MySQLConfigurationExecutesTheExpectedProcessForChangeDataDirectoryCommand()
-        {
-            this.SetUpDefaultBehavior();
-            this.mockFixture.Parameters["Action"] = "ChangeDataDirectory";
-
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
-
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
-
-            string[] expectedCommands =
-            {
-                $"sudo systemctl stop mysql.service",
-                $"sudo rsync -av /var/lib/mysql /dev/sdd1",
-                $"sudo mv /var/lib/mysql /var/lib/mysql.bak",
-                $"sudo sed -i \"s|.*# datadir.*|datadir = /dev/sdd1/mysql/|\" /etc/mysql/mysql.conf.d/mysqld.cnf",
-                $"sudo sed -i \"s|.*# alias.*|alias /var/lib/mysql -> /dev/sdd1/mysql/|\" /etc/mysql/mysql.conf.d/mysqld.cnf",
-                $"sudo systemctl restart apparmor",
-                $"sudo mkdir /var/lib/mysql/mysql -p",
-                $"sudo rm -Rf /var/lib/mysql.bak",
-                $"sudo systemctl start mysql.service",
+                $"sudo mysql --execute=\"GRANT ALL ON *.* TO '{this.mockFixture.Parameters[nameof(MySQLServerConfiguration.DatabaseName)]}'@'1.2.3.5'\""
             };
 
             int commandNumber = 0;
