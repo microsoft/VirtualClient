@@ -123,30 +123,6 @@ namespace VirtualClient.Contracts
                 appendedParameters.AddRange(parameters, true);
             }
 
-            // if (metadata is null)
-            // {
-            //     appendedMetaData = component.Metadata;
-            // }
-            // else
-            // {
-            //     appendedMetaData = component.Metadata
-            //         .Concat(metadata)
-            //         .GroupBy(x => x.Key)
-            //         .ToDictionary(g => g.Key, g => g.Last().Value);
-            // }
-            // 
-            // if (parameters is null)
-            // {
-            //     appendedParameters = component.Parameters;
-            // }
-            // else
-            // {
-            //     appendedParameters = component.Parameters
-            //         .Concat(parameters)
-            //         .GroupBy(x => x.Key)
-            //         .ToDictionary(g => g.Key, g => g.Last().Value);
-            // }
-
             string identifier = null;
             if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
             {

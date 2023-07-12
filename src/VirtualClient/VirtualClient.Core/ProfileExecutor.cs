@@ -411,6 +411,7 @@ namespace VirtualClient
                                             VirtualClientComponent action = this.ProfileActions.ElementAt(i);
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
+                                            
                                             this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
 
                                             try
