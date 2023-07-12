@@ -1,0 +1,85 @@
+Geekbench 5.1.0 Pro : https://www.geekbench.com/
+
+System Information
+  Operating System              Microsoft Windows Server 2016 Datacenter (64-bit)
+  Operating System              1607
+  Model                         Microsoft Corporation Virtual Machine
+  Motherboard                   Microsoft Corporation Virtual Machine
+  Northbridge                   Intel i440BX/ZX C1
+  Southbridge                   Intel 82371AB (PIIX4) 01
+  BIOS                          American Megatrends Inc. 090008
+
+Processor Information
+  Name                          Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+  Topology                      2 Processors, 32 Cores, 64 Threads
+  Identifier                    GenuineIntel Family 6 Model 85 Stepping 4
+  Base Frequency                2.10 GHz
+  Maximum Frequency             3.38 GHz
+  Processor Package             Socket 3647 LGA
+  Processor Codename            Skylake-SP
+  L1 Instruction Cache          32.0 KB x 16
+  L1 Data Cache                 32.0 KB x 16
+  L2 Cache                      1.00 MB x 16
+  L3 Cache                      35.8 MB
+
+Memory Information
+  Size                          256 GB
+  Type                          EDO RAM
+  Latency                       CL 3
+
+
+Single-Core
+  AES-XTS                        1091              1.86 GB/sec
+  Text Compression                833              4.21 MB/sec
+  Image Compression               912         43.1 Mpixels/sec
+  Navigation                      687             1.94 MTE/sec
+  HTML5                           778      913.3 KElements/sec
+  SQLite                          766          239.9 Krows/sec
+  PDF Rendering                   738         40.1 Mpixels/sec
+  Text Rendering                  741             236.2 KB/sec
+  Clang                           832          6.48 Klines/sec
+  Camera                          727          8.43 images/sec
+  N-Body Physics                  776         970.6 Kpairs/sec
+  Rigid Body Physics              867               5373.6 FPS
+  Gaussian Blur                   632         34.7 Mpixels/sec
+  Face Detection                  776          5.97 images/sec
+  Horizon Detection               731         18.0 Mpixels/sec
+  Image Inpainting               1441         70.7 Mpixels/sec
+  HDR                            1613         22.0 Mpixels/sec
+  Ray Tracing                    1093        877.6 Kpixels/sec
+  Structure from Motion           766         6.86 Kpixels/sec
+  Speech Recognition              789           25.2 Words/sec
+  Machine Learning                860          33.2 images/sec
+
+Multi-Core
+  AES-XTS                       16208              27.6 GB/sec
+  Text Compression              17339              87.7 MB/sec
+  Image Compression             26195         1.24 Gpixels/sec
+  Navigation                      925             2.61 MTE/sec
+  HTML5                         15856       18.6 MElements/sec
+  SQLite                        19683           6.17 Mrows/sec
+  PDF Rendering                  6862        372.4 Mpixels/sec
+  Text Rendering                11022              3.43 MB/sec
+  Clang                         22741         177.2 Klines/sec
+  Camera                         6985          81.0 images/sec
+  N-Body Physics                10610          13.3 Mpairs/sec
+  Rigid Body Physics            28127             174257.9 FPS
+  Gaussian Blur                 18741         1.03 Gpixels/sec
+  Face Detection                21121         162.6 images/sec
+  Horizon Detection              9293        229.1 Mpixels/sec
+  Image Inpainting              18517        908.4 Mpixels/sec
+  HDR                           19917        271.4 Mpixels/sec
+  Ray Tracing                   23841         19.1 Mpixels/sec
+  Structure from Motion          6111         54.7 Kpixels/sec
+  Speech Recognition            14186          453.5 Words/sec
+  Machine Learning               7360         284.4 images/sec
+
+Benchmark Summary
+  Single-Core Score              830
+    Crypto Score                  1091
+    Integer Score                  777
+    Floating Point Score           901
+  Multi-Core Score             12010
+    Crypto Score                 16208
+    Integer Score                10518
+    Floating Point Score         14544

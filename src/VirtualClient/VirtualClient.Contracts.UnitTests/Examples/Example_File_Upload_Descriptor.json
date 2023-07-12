@@ -1,0 +1,23 @@
+{
+	"blobName": "longrun/testexecutor/anyscenario/file.txt",
+	"containerName": "ea8f0476-e42f-4500-b75a-730374007b5f",
+	"contentEncoding": "utf-8",
+	"contentType": "text/plain",
+	"filePath": "/home/user/VirtualClient/logs/speccpu/file.txt",
+	"manifest": {
+		"agentId": "LONGRUN",
+		"experimentId": "ea8f0476-e42f-4500-b75a-730374007b5f",
+		"platform": "linux-x64",
+		"toolName": "TestExecutor",
+		"scenario": "AnyScenario",
+		"fileName": "file.txt",
+		"fileCreationTime": "2023-05-22T15:43:29.7990862-07:00",
+		"fileCreationTimeUtc": "2023-05-22T22:43:29.7990862Z",
+		"experimentName": "Any_Experiment_101",
+		"cluster": "Cluster01",
+		"nodeId": "Node02",
+		"parameter1": "Value1",
+		"parameter2": "00:10:00",
+		"parameter3": 12345
+	}
+}

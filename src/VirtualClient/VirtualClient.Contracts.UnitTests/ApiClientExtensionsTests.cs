@@ -455,7 +455,7 @@ namespace VirtualClient.Contracts
                         .ReturnsAsync(response1)
                         .ReturnsAsync(() => { expectedCallMade = true; return response2; });
 
-                    await this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.FromSeconds(20), CancellationToken.None);
+                    await this.fixture.ApiClient.Object.PollForStateDeletedAsync(expectedStateId, TimeSpan.FromSeconds(60), CancellationToken.None, pollingInterval: TimeSpan.Zero);
 
                     Assert.IsTrue(expectedCallMade);
                 }
@@ -565,7 +565,9 @@ namespace VirtualClient.Contracts
 
                 Assert.IsNotNull(stateItem);
                 Assert.IsNotNull(stateItem.Definition);
-                Assert.AreEqual(properties, stateItem.Definition.Properties);
+                CollectionAssert.AreEqual(
+                    properties.Select(p => $"{p.Key}={p.Value}".ToLowerInvariant()),
+                    stateItem.Definition.Properties.Select(p => $"{p.Key}={p.Value}".ToLowerInvariant()));
             }
         }
 
@@ -744,8 +746,8 @@ namespace VirtualClient.Contracts
             string expectedStateId = "State1234";
 
             IDictionary<string, IConvertible> expectedProperties = new Dictionary<string, IConvertible>();
-            expectedProperties.Add("Property1", "value1");
-            expectedProperties.Add("Property2", "value2");
+            expectedProperties.Add("property1", "value1");
+            expectedProperties.Add("property2", "value2");
 
             var expectedState = new ClientServerState(ClientServerStatus.Ready, expectedProperties);
 
@@ -782,8 +784,8 @@ namespace VirtualClient.Contracts
             string expectedStateId = "State1234";
 
             IDictionary<string, IConvertible> expectedProperties = new Dictionary<string, IConvertible>();
-            expectedProperties.Add("Property1", "value1");
-            expectedProperties.Add("Property2", "value2");
+            expectedProperties.Add("property1", "value1");
+            expectedProperties.Add("property2", "value2");
 
             var expectedState = new ClientServerState(ClientServerStatus.Ready, expectedProperties);
 

@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ namespace VirtualClient
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
+    using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
     /// <summary>
@@ -208,6 +208,30 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates logger providers for writing telemetry to local CSV files.
+        /// </summary>
+        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
+        {
+            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
+
+            // 50MB
+            // General Sizing:
+            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
+            const long maxFileSizeBytes = 50000000;
+
+            ILoggerProvider loggerProvider = null;
+
+            if (!string.IsNullOrWhiteSpace(csvFilePath))
+            {
+                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
+            }
+
+            return loggerProvider;
+        }
+
+        /// <summary>
         /// Creates logger providers for writing telemetry to local log files.
         /// </summary>
         /// <param name="logFileDirectory">The path to the directory where log files are written.</param>
@@ -243,11 +267,18 @@ namespace VirtualClient
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(5), metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), metricsExcludes)
                     .HandleMetricsEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
+
+                // Metrics/Results in CSV Format
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName))
+                    .HandleMetricsEvents();
+
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
+                loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
                 ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
@@ -257,7 +288,7 @@ namespace VirtualClient
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleSystemEvents();
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));

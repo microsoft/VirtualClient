@@ -8,6 +8,7 @@ namespace VirtualClient.Common.Contracts
     using System.Text;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
+    using Newtonsoft.Json.Serialization;
 
     /// <summary>
     /// Extension methods for handling serialization/deserialization operations in a consistent
@@ -40,7 +41,11 @@ namespace VirtualClient.Common.Contracts
             TypeNameHandling = TypeNameHandling.None,
 
             // By default, serialize enum values to their string representation.
-            Converters = new JsonConverter[] { new StringEnumConverter() }
+            Converters = new JsonConverter[] { new StringEnumConverter() },
+
+            // By default, ALL properties in the JSON structure will be camel-cased including
+            // dictionary keys.
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
         /// <summary>

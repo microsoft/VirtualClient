@@ -7,7 +7,7 @@ Performance counters are captured on Windows systems every 1 second and are aggr
 the Virtual Client to have a large number of samples over the interval of time when calculating averages. This in turn increases the accuracy and
 validity of the performance measurements.
 
-## Guest/VM Counters (Windows Systems)
+## Counters (Windows Systems)
 The following performance counters are captured during the duration of the Virtual Client execution on Azure VMs running a Windows operating system. 
 These counters are tracked the entire time the Virtual Client is running on the intervals noted above.
 
@@ -57,7 +57,25 @@ Counters are captured on Windows systems using the out-of-box support in the .NE
 | \System\System Calls/sec | 82747.8828125 | 1651668.5 | 366946.69737957938 |
 | \System\Threads | 5358.17138671875 | 6486.013671875 | 5983.371521823128 |
 
-## Guest/VM Counters (Linux Systems)
+## Additional Counters (Windows Systems)
+For Windows systems that are running Hyper-V (e.g. hosting VMs), Virtual Client captures counters from the following additional counter
+categories.
+
+* Hyper-V Hypervisor Logical Processor
+* Hyper-V Hypervisor Root Virtual Processor
+* Hyper-V Hypervisor Virtual Processor
+
+  **Examples**  
+
+  | Counter Name | Example Value (min) | Example Value (max) | Example Value (avg) |
+  |--------------|---------------------|---------------------|---------------------|
+  | \Hyper-V Hypervisor Logical Processor(_Total)\\% Hypervisor Run Time | 0 | 2.4485373497009277 | 0.38610789290128766 |
+  | \Hyper-V Hypervisor Logical Processor(_Total)\\% Total Run Time | 1.1285661458969117 | 64.74947357177735 | 11.292482366028356 |
+  | \Hyper-V Hypervisor Logical Processor(_Total)\\Hypervisor Microarchitectural Buffer Flushes/sec | 0 | 357720.78125 | 471.17181096330438 |
+  | \Hyper-V Hypervisor Root Virtual Processor(_Total)\\% Total Run Time | 0.8170837759971619 | 9.768498420715332 | 2.877983896330881 |
+  | \Hyper-V Hypervisor Virtual Processor(_Total)\\% Total Run Time | 0.11696118116378784 | 99.21871948242188 | 44.5632012688273 |
+
+## Counters (Linux Systems)
 The following performance counters are captured during the duration of the Virtual Client execution on Azure VMs running a Linux operating system. 
 These counters are tracked the entire time the Virtual Client is running on the intervals noted above.
 

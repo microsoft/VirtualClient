@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
@@ -149,6 +150,36 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void FioMultiThroughputExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_1()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk only (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.disks.Where(d => d.IsOperatingSystem()));
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
+        }
+
+        [Test]
+        public void FioMultiThroughputExecutorDoesNotSupportRunningAgainstTheOperatingSystemDisk_2()
+        {
+            // Scenario:
+            // The disks selected includes the OS disk with others (i.e. the disk filter specified pointed at the OS disk)
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DiskFilter)] = "OSDisk:true";
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.NotSupported, error.Reason);
+            }
+        }
+
+        [Test]
         public async Task FioMultiThroughputExecutorExecutesExpectedCommandLine()
         {
             int executions = 0;
@@ -175,10 +206,90 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task FioMultiThroughputExecutorCreatesExpectedJobFile()
+        public async Task FioMultiThroughputExecutorCreatesExpectedJobFileForMultipleDisks()
         {
             bool createdExpectedJobFile = false;
-            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio.jobfile"));
+
+            this.disks = new List<Disk>
+            {
+                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
+                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(2, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(3, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(4, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
+            };
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio1.jobfile"));
+
+            using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                    .Callback((string path, string contents) =>
+                    {
+                        createdExpectedJobFile = true;
+                    });
+
+                await fioMultiThroughputExecutor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(createdExpectedJobFile);
+        }
+
+        [Test]
+        public async Task FioMultiThroughputExecutorCreatesExpectedJobFileForMultipleDisksAnd2SequentialDisks()
+        {
+            bool createdExpectedJobFile = false;
+
+            this.disks = new List<Disk>
+            {
+                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
+                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(2, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(3, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(4, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
+                FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
+            };
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+
+            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
+
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio2.jobfile"));
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                    .Callback((string path, string contents) =>
+                    {
+                        createdExpectedJobFile = true;
+                    });
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+
+            Assert.IsTrue(createdExpectedJobFile);
+        }
+
+        [Test]
+        public async Task FioMultiThroughputExecutorCreatesExpectedJobFileForSingleDisk()
+        {
+            bool createdExpectedJobFile = false;
+
+            this.disks = new List<Disk>
+            {
+                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
+                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
+            };
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
+
+            string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio3.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {

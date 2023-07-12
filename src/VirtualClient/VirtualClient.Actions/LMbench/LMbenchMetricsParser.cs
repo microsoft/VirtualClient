@@ -112,22 +112,22 @@ namespace VirtualClient.Actions
 
             for (int index = 2; index < this.ProcessorTimes.Columns.Count; index++)
             {
-                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ProcessorTimes-"));
+                metrics.AddRange(this.ProcessorTimes.GetMetrics(valueIndex: index, name: this.ProcessorTimes.Columns[index].ColumnName, unit: "microseconds", namePrefix: "ProcessorTimes-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicInt.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicInt-"));
+                metrics.AddRange(this.BasicInt.GetMetrics(valueIndex: index, name: this.BasicInt.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicInt-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicFloat.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicFloat-"));
+                metrics.AddRange(this.BasicFloat.GetMetrics(valueIndex: index, name: this.BasicFloat.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicFloat-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.BasicDouble.Columns.Count; index++)
             {
-                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicDouble-"));
+                metrics.AddRange(this.BasicDouble.GetMetrics(valueIndex: index, name: this.BasicDouble.Columns[index].ColumnName, unit: "nanoseconds", namePrefix: "BasicDouble-", metricRelativity: MetricRelativity.LowerIsBetter));
             }
 
             for (int index = 2; index < this.ContextSwitching.Columns.Count; index++)

@@ -51,10 +51,10 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username));
+                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = this.GetCurrentUserName(true);
+                    username = Environment.UserName;
                 }
 
                 return username;
@@ -64,16 +64,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// True if Hyperthreading is on
         /// </summary>
-        public bool HyperThreadingON
+        public bool HyperThreadingOn
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingON), true);
+                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingOn), true);
             }
 
             set
             {
-                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingON)] = value;
+                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingOn)] = value;
             }
         }
 
@@ -197,7 +197,7 @@ namespace VirtualClient.Actions
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
                 IProcessProxy process;
-                if (this.HyperThreadingON)
+                if (this.HyperThreadingOn)
                 {
                     process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
                 }
@@ -253,7 +253,7 @@ namespace VirtualClient.Actions
 
         private void ValidateParameters()
         {
-            if (this.HyperThreadingON && this.NumberOfProcesses > this.coreCount)
+            if (this.HyperThreadingOn && this.NumberOfProcesses > this.coreCount)
             {
                 throw new Exception(
                     $"NumberOfProcesses parameter value should be less than or equal to number of logical cores");

@@ -25,40 +25,14 @@ namespace VirtualClient.Actions
         private MockFixture mockFixture;
         private ConcurrentBuffer coremarkProOutput = new ConcurrentBuffer();
 
-        [SetUp]
-        public void SetupDefaultBehavior()
-        {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
-            this.mockFixture.Parameters["PackageName"] = "CoreMarkPro";
-
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string resultsPath = Path.Combine(currentDirectory, "Examples", "CoreMark", "CoreMarkProExample1.txt");
-            string results = File.ReadAllText(resultsPath);
-            this.coremarkProOutput.Clear();
-            this.coremarkProOutput.Append(results);
-        }
-
         [Test]
-        public void CoreMarkProExecutorThrowsOnNonSupportedPlatform()
+        public async Task CoreMarkProExecutorExcutesAsExpectedInLinux()
         {
-            this.mockFixture.Setup(PlatformID.Win32NT);
-            this.mockFixture.Parameters["PackageName"] = "CoreMarkPro";
-
-            using (var executor = new CoreMarkProExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.PlatformNotSupported);
-            }
-        }
-
-        [Test]
-        public async Task CoreMarkProExecutorExcutesAsExpected()
-        {
+            this.SetupDefaults(PlatformID.Unix);
             this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
             {
                 Assert.AreEqual("make", cmd);
-                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c{Environment.ProcessorCount}' certify-all");
+                Assert.AreEqual(args, $"TARGET=linux64 XCMD='-c9' certify-all");
                 this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
                 return this.mockFixture.Process;
             };
@@ -67,6 +41,43 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
+        }
+
+        [Test]
+        public async Task CoreMarkProExecutorExcutesAsExpectedInWindows()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+            this.mockFixture.ProcessManager.OnCreateProcess = (cmd, args, wd) =>
+            {
+                Assert.AreEqual(@$"{this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin")}\bin\bash", cmd);
+                Assert.AreEqual(args, $"--login -c 'cd /cygdrive/C/users/any/tools/VirtualClient/packages/coremarkpro; make TARGET=linux64 XCMD='-c9' certify-all'");
+                this.mockFixture.Process.StandardOutput = this.coremarkProOutput;
+                return this.mockFixture.Process;
+            };
+
+            using (CoreMarkProExecutor executor = new CoreMarkProExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        public void SetupDefaults(PlatformID platform)
+        {
+            this.mockFixture = new MockFixture();
+            this.mockFixture.Setup(platform);
+            this.mockFixture.Parameters["PackageName"] = "coremarkpro";
+
+            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string resultsPath = Path.Combine(currentDirectory, "Examples", "CoreMark", "CoreMarkProExample1.txt");
+            string results = File.ReadAllText(resultsPath);
+            this.coremarkProOutput.Clear();
+            this.coremarkProOutput.Append(results);
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, false));
+
+            DependencyPath mockPackage = new DependencyPath("cygwin", this.mockFixture.PlatformSpecifics.GetPackagePath("cygwin"));
+            this.mockFixture.PackageManager.OnGetPackage("cygwin").ReturnsAsync(mockPackage);
         }
     }
 }

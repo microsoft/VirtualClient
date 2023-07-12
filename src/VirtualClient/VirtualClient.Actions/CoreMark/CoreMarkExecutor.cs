@@ -12,6 +12,8 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -23,13 +25,14 @@ namespace VirtualClient.Actions
     /// The CoreMark workload executor.
     /// </summary>
     [UnixCompatible]
+    [WindowsCompatible]
     public class CoreMarkExecutor : VirtualClientComponent
     {
-        private const string CoreMarkRunCommand = "make";
         private const string CoreMarkOutputFile1 = "run1.log";
         private const string CoreMarkOutputFile2 = "run2.log";
 
         private ISystemManagement systemManagement;
+        private IPackageManager packageManager;
 
         /// <summary>
         /// Constructor for <see cref="CoreMarkExecutor"/>
@@ -40,6 +43,7 @@ namespace VirtualClient.Actions
              : base(dependencies, parameters)
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.packageManager = this.systemManagement.PackageManager;
         }
 
         /// <summary>
@@ -50,7 +54,8 @@ namespace VirtualClient.Actions
             get
             {
                 // Default to system logical core count, but overwritable with parameters.
-                int threadCount = Environment.ProcessorCount;
+                CpuInfo cpuInfo = this.systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                int threadCount = cpuInfo.LogicalCoreCount;
 
                 if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
                 {
@@ -83,8 +88,29 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                string commandLineArguments = this.GetCommandLineArguments();
-                await this.ExecuteWorkloadAsync(CoreMarkExecutor.CoreMarkRunCommand, commandLineArguments, telemetryContext, cancellationToken);
+                string argument = this.GetCommandLineArguments();
+                string output = string.Empty;
+                switch (this.Platform)
+                {
+                    case PlatformID.Unix:
+                        using (IProcessProxy process = await this.ExecuteCommandAsync("make", argument, this.PackagePath, telemetryContext, cancellationToken))
+                        {
+                            await this.CaptureMetricsAsync(process, argument, telemetryContext, cancellationToken);
+                        }
+
+                        break;
+
+                    case PlatformID.Win32NT:
+                        DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
+                            .ConfigureAwait(false);
+
+                        using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {argument}", this.PackagePath, cygwinPackage.Path, telemetryContext, cancellationToken))
+                        {
+                            await this.CaptureMetricsAsync(process, argument, telemetryContext, cancellationToken);
+                        }
+
+                        break;
+                }
             }
         }
 
@@ -93,8 +119,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
-
             this.PackagePath = this.GetPackagePath(this.PackageName);
             this.OutputFile1Path = this.Combine(this.PackagePath, CoreMarkExecutor.CoreMarkOutputFile1);
             this.OutputFile2Path = this.Combine(this.PackagePath, CoreMarkExecutor.CoreMarkOutputFile2);
@@ -102,46 +126,34 @@ namespace VirtualClient.Actions
             return Task.CompletedTask;
         }
 
-        private async Task ExecuteWorkloadAsync(string pathToExe, string commandLineArguments, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            using (IProcessProxy process = await this.ExecuteCommandAsync(pathToExe, commandLineArguments, this.PackagePath, telemetryContext, cancellationToken, runElevated: true))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    if (process.IsErrored())
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
-                    }
-
-                    IEnumerable<string> results = await this.LoadResultsAsync(
-                        new string[] { this.OutputFile1Path, this.OutputFile2Path },
-                        cancellationToken);
-
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results, logToFile: true);
-                    await this.CaptureMetricsAsync(process, results, commandLineArguments, telemetryContext, cancellationToken);
-                }
-            }
-        }
-
         private string GetCommandLineArguments()
         {
             return @$"XCFLAGS=""-DMULTITHREAD={this.ThreadCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, IEnumerable<string> workloadResults, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    foreach (string results in workloadResults)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: results.AsArray(), logToFile: true);
+                    IEnumerable<string> results = await this.LoadResultsAsync(
+                        new string[] { this.OutputFile1Path, this.OutputFile2Path },
+                        cancellationToken);
 
-                        if (!string.IsNullOrWhiteSpace(results))
+                    foreach (string result in results)
+                    {
+                        if (process.IsErrored())
                         {
-                            CoreMarkMetricsParser parser = new CoreMarkMetricsParser(results);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+                        }
+
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: result.AsArray(), logToFile: true);
+
+                        if (!string.IsNullOrWhiteSpace(result))
+                        {
+                            CoreMarkMetricsParser parser = new CoreMarkMetricsParser(result);
                             IList<Metric> metrics = parser.Parse();
 
                             this.Logger.LogMetrics(
@@ -161,23 +173,6 @@ namespace VirtualClient.Actions
             catch (Exception exc)
             {
                 this.Logger.LogErrorMessage(exc, EventContext.Persisted());
-            }
-        }
-
-        private void CheckPlatformSupport()
-        {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The CoreMark workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
             }
         }
     }

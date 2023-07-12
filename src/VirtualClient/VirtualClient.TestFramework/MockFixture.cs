@@ -48,6 +48,8 @@ namespace VirtualClient
         /// </summary>
         public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
 
+        private string experimentId;
+
         static MockFixture()
         {
             VirtualClientComponent.LogToFile = true;
@@ -58,6 +60,7 @@ namespace VirtualClient
         /// </summary>
         public MockFixture()
         {
+            this.experimentId = Guid.NewGuid().ToString();
             this.Setup(Environment.OSVersion.Platform, Architecture.X64);
         }
 
@@ -360,6 +363,7 @@ namespace VirtualClient
 
             this.SystemManagement = new Mock<ISystemManagement>();
             this.SystemManagement.SetupGet(sm => sm.AgentId).Returns(effectiveAgentId);
+            this.SystemManagement.SetupGet(sm => sm.ExperimentId).Returns(this.experimentId);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.CpuArchitecture).Returns(architecture);
