@@ -257,10 +257,6 @@ namespace VirtualClient.Actions
                     await this.PrepareMySQLDatabase(telemetryContext, cancellationToken);
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(SysbenchFileName, this.sysbenchExecutionArguments + "run", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(SysbenchFileName, this.sysbenchExecutionArguments + "run", Environment.CurrentDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -270,10 +266,10 @@ namespace VirtualClient.Actions
                     }
                 }
             });
-            const string autogenScriptCommand = "./autogen.sh";
-            const string configureScriptCommand = "./configure";
-            const string makeCommand = "make -j";
-            const string makeInstallCommand = "make install";
+        }
+
+        private async Task InstallSysbenchOLTPPackage(CancellationToken cancellationToken) 
+        {
             const string autogenScriptCommand = "./autogen.sh";
             const string configureScriptCommand = "./configure";
             const string makeCommand = "make -j";
