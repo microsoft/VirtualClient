@@ -411,7 +411,6 @@ namespace VirtualClient
                                             VirtualClientComponent action = this.ProfileActions.ElementAt(i);
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
-
                                             this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
 
                                             try
@@ -706,6 +705,11 @@ namespace VirtualClient
                         if (this.Metadata?.Any() == true)
                         {
                             runtimeComponent.Metadata.AddRange(this.Metadata, true);
+                        }
+
+                        if (this.Profile.Parameters?.Any() == true)
+                        {
+                            runtimeComponent.Parameters.AddRange(this.Profile.Parameters, true);
                         }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))

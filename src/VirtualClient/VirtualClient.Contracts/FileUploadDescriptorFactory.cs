@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
-{
+{    
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -46,27 +47,31 @@ namespace VirtualClient.Contracts
         /// </para>
         /// </summary>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
+        /// <param name="contentPathTemplate">Content path template to use when uploading content to target storage resources.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
         /// <param name="manifest">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+        public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
-
             string blobName = Path.GetFileName(fileContext.File.Name);
+
             if (timestamped)
             {
                 blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
-            // The blob container and blob names will be fully lower-cased for consistency
-            // in the storage account.
-            string blobContainer = fileContext.ExperimentId.ToLowerInvariant();
-            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, blobName);
+            string blobContainer = GetContentArgumentValue(fileContext, contentPathTemplate.Split('/')[0], parameters);
+            if (string.IsNullOrWhiteSpace(blobContainer))
+            {
+                throw new ArgumentException("The containerName in blob cannot be empty string.", contentPathTemplate);
+            }
 
+            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, contentPathTemplate, parameters, blobName);
+            
             // Create the default manifest information.
             IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, manifest);
 
@@ -81,29 +86,28 @@ namespace VirtualClient.Contracts
             return descriptor;
         }
 
-        private static string CreateBlobPath(FileContext fileContext, string blobName)
+        private static string CreateBlobPath(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters, string blobName)
         {
             string blobPath = null;
             List<string> pathSegments = new List<string>();
 
-            if (!string.IsNullOrWhiteSpace(fileContext.AgentId))
+            int i = 0;
+            foreach (string element in contentPathTemplate.Split('/'))
             {
-                pathSegments.Add(fileContext.AgentId);
-            }
+                if (i == 0)
+                {
+                    i++;
+                    continue;
+                }
 
-            if (!string.IsNullOrWhiteSpace(fileContext.ToolName))
-            {
-                pathSegments.Add(fileContext.ToolName);
-            }
+                string segment = GetContentArgumentValue(fileContext, element, parameters);
 
-            if (!string.IsNullOrWhiteSpace(fileContext.Role))
-            {
-                pathSegments.Add(fileContext.Role);
-            }
+                if (!string.IsNullOrWhiteSpace(segment))
+                {
+                    pathSegments.Add(segment);
+                }
 
-            if (!string.IsNullOrWhiteSpace(fileContext.Scenario))
-            {
-                pathSegments.Add(fileContext.Scenario);
+                i++;
             }
 
             if (pathSegments.Any())
@@ -116,6 +120,69 @@ namespace VirtualClient.Contracts
             }
 
             return blobPath;
+        }
+
+        private static string GetContentArgumentValue(FileContext fileContext, string contentArgumentName, IDictionary<string, IConvertible> parameters)
+        {
+            string blobPathComponent = string.Empty;
+
+            Match match = Regex.Match(contentArgumentName, @"\{([^}]+)\}");
+
+            if (match.Success)
+            {
+                string elementName = match.Groups[1].Value;
+                // Each Argument is checked for in FileContext (for some standard fields) and then in Parameters.
+                if (!string.IsNullOrWhiteSpace(GetContentNameFromFileContext(fileContext, elementName)))
+                {
+                    blobPathComponent = GetContentNameFromFileContext(fileContext, elementName);
+                }
+                else
+                {
+                    blobPathComponent = GetContentNameFromParameters(parameters, elementName);
+                }
+            }
+            else
+            {
+                blobPathComponent = contentArgumentName;
+            }
+
+            return blobPathComponent;
+        }
+
+        private static string GetContentNameFromFileContext(FileContext filecontext, string fieldName)
+        {
+            if (fieldName.Equals("agentId", StringComparison.OrdinalIgnoreCase))
+            {
+                return filecontext.AgentId;
+            }
+            else if (fieldName.Equals("experimentId", StringComparison.OrdinalIgnoreCase))
+            {
+                return filecontext.ExperimentId;
+            }
+            else if (fieldName.Equals("toolName", StringComparison.OrdinalIgnoreCase))
+            {
+                return filecontext.ToolName;
+            }
+            else if (fieldName.Equals("scenario", StringComparison.OrdinalIgnoreCase))
+            {
+                return filecontext.Scenario;
+            }
+            else if (fieldName.Equals("role", StringComparison.OrdinalIgnoreCase))
+            {
+                return filecontext.Role;
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetContentNameFromParameters(IDictionary<string, IConvertible> parameters, string fieldName)
+        {
+            if (parameters == null)
+            {
+                return string.Empty;
+            }
+
+            return parameters.GetValue<string>(fieldName, string.Empty);
         }
     }
 }

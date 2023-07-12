@@ -111,14 +111,50 @@ namespace VirtualClient.Contracts
             component.ThrowIfNull(nameof(component));
             fileContext.ThrowIfNull(nameof(fileContext));
 
+            IDictionary<string, IConvertible> appendedMetaData = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
+            if (!(metadata is null))
+            {
+                appendedMetaData.AddRange(metadata, true);
+            }
+
+            IDictionary<string, IConvertible> appendedParameters = new Dictionary<string, IConvertible>(component.Parameters, StringComparer.OrdinalIgnoreCase);
+            if (!(parameters is null))
+            {
+                appendedParameters.AddRange(parameters, true);
+            }
+
+            // if (metadata is null)
+            // {
+            //     appendedMetaData = component.Metadata;
+            // }
+            // else
+            // {
+            //     appendedMetaData = component.Metadata
+            //         .Concat(metadata)
+            //         .GroupBy(x => x.Key)
+            //         .ToDictionary(g => g.Key, g => g.Last().Value);
+            // }
+            // 
+            // if (parameters is null)
+            // {
+            //     appendedParameters = component.Parameters;
+            // }
+            // else
+            // {
+            //     appendedParameters = component.Parameters
+            //         .Concat(parameters)
+            //         .GroupBy(x => x.Key)
+            //         .ToDictionary(g => g.Key, g => g.Last().Value);
+            // }
+
             string identifier = null;
             if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
             {
                 identifier = component.ContentPathFormat;
             }
-
+            
             IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
-            FileUploadDescriptor descriptor = factory.CreateDescriptor(fileContext, parameters, metadata, timestamped);
+            FileUploadDescriptor descriptor = factory.CreateDescriptor(fileContext, component.ContentPathTemplate, appendedParameters, appendedMetaData, timestamped);
 
             // The content path format...
             descriptor.Manifest["pathFormat"] = identifier ?? FileUploadDescriptorFactory.Default;
