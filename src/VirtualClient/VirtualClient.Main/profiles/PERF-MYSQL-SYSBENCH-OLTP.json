@@ -381,7 +381,11 @@
     ],
     "Dependencies": [
         {
-            "Type": "FormatDisks"
+            "Type": "FormatDisks",
+            "Parameters": {
+                "Scenario": "FormatDatabaseDisks",
+                "Role": "Server"
+            }
         },
         {
             "Type": "LinuxPackageInstallation",
@@ -445,16 +449,6 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "CreateUser",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "Role": "Server"
-            }
-        },
-        {
-            "Type": "MySQLServerConfiguration",
-            "Parameters": {
-                "Scenario": "ChangeDataDirectory",
-                "Action": "ChangeDataDirectory",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "DiskFilter": "BiggestSize",
                 "Role": "Server"
             }
         },

@@ -22,6 +22,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T8_TB8_REC500",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "8",
@@ -36,6 +37,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T16_TB8_REC1000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -50,6 +52,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T16_TB8_REC5000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -64,6 +67,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T32_TB8_REC10000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "32",
         "NumTables": "8",
@@ -78,6 +82,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T8_TB11_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "11",
@@ -92,6 +97,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T16_TB11_REC500000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "11",
@@ -106,6 +112,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T92_TB4_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "92",
         "NumTables": "4",
@@ -120,6 +127,7 @@
       "Parameters": {
         "Scenario": "oltp_read_write_T152_TB4_REC100000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "152",
         "NumTables": "4",
@@ -134,6 +142,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T8_TB8_REC500",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "8",
@@ -148,6 +157,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T16_TB8_REC1000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -162,6 +172,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T16_TB8_REC5000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -176,6 +187,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T32_TB8_REC10000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "32",
         "NumTables": "8",
@@ -190,6 +202,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T8_TB11_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "11",
@@ -204,6 +217,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T16_TB11_REC500000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "11",
@@ -218,6 +232,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T92_TB4_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "92",
         "NumTables": "4",
@@ -232,6 +247,7 @@
       "Parameters": {
         "Scenario": "oltp_read_only_T152_TB4_REC100000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "152",
         "NumTables": "4",
@@ -246,6 +262,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T8_TB8_REC500",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "8",
@@ -260,6 +277,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T16_TB8_REC1000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -274,6 +292,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T16_TB8_REC5000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "8",
@@ -288,6 +307,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T32_TB8_REC10000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "32",
         "NumTables": "8",
@@ -302,6 +322,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T8_TB11_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "8",
         "NumTables": "11",
@@ -316,6 +337,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T16_TB11_REC500000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "16",
         "NumTables": "11",
@@ -330,6 +352,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T92_TB4_REC50000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "92",
         "NumTables": "4",
@@ -344,6 +367,7 @@
       "Parameters": {
         "Scenario": "oltp_write_only_T152_TB4_REC100000",
         "DatabaseName": "sbtest",
+        "DatabaseScenario": "Default",
         "Role": "Client",
         "Threads": "152",
         "NumTables": "4",
@@ -356,7 +380,11 @@
   ],
   "Dependencies": [
     {
-      "Type": "FormatDisks"
+      "Type": "FormatDisks",
+      "Parameters": {
+        "Scenario": "FormatDatabaseDisks",
+        "Role": "Server"
+      }
     },
     {
       "Type": "LinuxPackageInstallation",

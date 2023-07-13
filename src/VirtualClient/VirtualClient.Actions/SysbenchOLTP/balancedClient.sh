@@ -40,8 +40,6 @@ elif [ $# -eq 6 ]; then
         elif [ $i -gt $firstThird ]; then
             directory=$5
         fi
-        echo $i
-        echo $directory
         tableName=$dbName$i
         tempName=t$i
         sudo mysql -u $dbName -h $hostName $dbName -e "CREATE TABLE $tempName DATA DIRECTORY = '$directory' AS (SELECT * FROM $tableName);"

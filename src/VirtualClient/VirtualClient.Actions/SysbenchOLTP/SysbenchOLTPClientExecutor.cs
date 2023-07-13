@@ -6,13 +6,17 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -326,18 +330,29 @@ namespace VirtualClient.Actions
 
             if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
             {
-                string diskPaths = state.DiskPathsArgument;
+                // grab state stored by the server -- this has the list of disk paths
+
+                HttpResponseMessage response = await this.ServerApiClient.GetStateAsync(nameof(SysbenchOLTPState), cancellationToken)
+                    .ConfigureAwait(false);
+
+                string responseContent = await response.Content.ReadAsStringAsync()
+                    .ConfigureAwait(false);
+
+                this.Logger.LogMessage(responseContent, telemetryContext);
+
+                SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
+
+                string diskPaths = serverState.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)].ToString();
 
                 await this.PrepareBalancedScenarioAsync(diskPaths, telemetryContext, cancellationToken);
-
-                state.DatabaseScenarioInitialized = true;
-
-                await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
             }
         }
 
         private async Task PrepareBalancedScenarioAsync(string diskPaths, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // client work in the balanced scenario includes copying all tables from OS disk to data disk,
+            // dropping old tables & renaming them
+
             string balancedScript = "balancedClient.sh";
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
             string balancedArguments = $"{this.ServerIpAddress} {this.NumTables} {this.DatabaseName} {diskPaths}";

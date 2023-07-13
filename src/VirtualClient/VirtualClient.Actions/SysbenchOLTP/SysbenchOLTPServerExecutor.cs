@@ -6,9 +6,12 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -31,6 +34,12 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Client used to communicate with the locally self-hosted instance of the
+        /// Virtual Client API.
+        /// </summary>
+        public IApiClient LocalApiClient { get; private set; }
+
+        /// <summary>
         /// Provides access to the local state management facilities.
         /// </summary>
         protected IStateManager StateManager { get; }
@@ -46,28 +55,43 @@ namespace VirtualClient.Actions
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
 
+            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
+            this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+
             SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
 
-            switch (this.DatabaseScenario)
+            if (!state.DatabaseScenarioInitialized)
             {
-                case SysbenchOLTPScenario.InMemory:
-                    await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                // only prepare if the scenario has not been initialized
 
-                    state.DatabaseScenarioInitialized = true;
-                    break;
-                case SysbenchOLTPScenario.Balanced:
-                    string diskPaths = await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                switch (this.DatabaseScenario)
+                {
+                    case SysbenchOLTPScenario.InMemory:
+                        await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
 
-                    state.DiskPathsArgument = diskPaths;
-                    break;
-                case SysbenchOLTPScenario.Default:
-                    break;
+                        state.DatabaseScenarioInitialized = true;
+                        break;
+                    case SysbenchOLTPScenario.Balanced:
+                        string diskPaths = await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        state.DatabaseScenarioInitialized = true;
+                        state.DiskPathsArgument = diskPaths;
+                        break;
+                    case SysbenchOLTPScenario.Default:
+                        break;
+                }
+
+                HttpResponseMessage response = await this.LocalApiClient.GetOrCreateStateAsync(nameof(SysbenchOLTPState), JObject.FromObject(state), cancellationToken)
+                    .ConfigureAwait(false);
+
+                response.ThrowOnError<WorkloadException>();
+
+                await this.StateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken)
+                .ConfigureAwait(false);
             }
-
-            await this.StateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
         }
 
         /// <summary>
@@ -96,6 +120,8 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                // server's job is to configure buffer size, in memory script updates the mysql config file
+
                 string inMemoryScript = "inmemory.sh";
                 string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
@@ -122,6 +148,14 @@ namespace VirtualClient.Actions
 
         private async Task<string> PrepareBalancedScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // from the server side, to prep for the balanced scenario, the script runs commands to configure
+            // permisions for the server vm to use the disk space as mysql database storage
+            // this is because sysbench workload prepares the tables from the client side.
+            // once the tables have been prepared, the client will re-copy the tables from OS disk to data disk
+
+            // in the meantime, the server needs to pass on information about what disks are going to be used
+            // to distribute the database on; this method prepares that information
+
             string diskPaths = string.Empty;
 
             if (!cancellationToken.IsCancellationRequested)

@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.SysbenchOLTPExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -147,11 +148,19 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
+            State expectedState = new State(new Dictionary<string, IConvertible>
+            {
+                [nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = true,
+                [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
+            });
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<JObject>(nameof(SysbenchOLTPState), JObject.FromObject(expectedState))));
+
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = false,
                 DatabaseScenarioInitialized = false,
-                DiskPathsArgument = "/testdrive1 /testdrive2",
                 RecordCount = 0,
                 TableCount = 0,
             }));

@@ -151,6 +151,50 @@ namespace VirtualClient.Actions
             Assert.AreEqual(4, commandsExecuted);
         }
 
+        [Test]
+        public async Task SysbenchOLTPServerExecutorDoesNotExecuteBalancedScenarioOnInitializedState()
+        {
+            SetupDefaultBehavior();
+            int commandsExecuted = 0;
+            this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
+
+            using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                DatabaseScenarioInitialized = true,
+                DiskPathsArgument = "/testdrive1 /testdrive2"
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
+                $"sudo {scriptPath}/balancedServer.sh"
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+            {
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    commandsExecuted++;
+                }
+
+                return this.mockFixture.Process;
+            };
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(1500);
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+            await executor.ExecuteAsync(cancellationToken);
+
+            Assert.AreEqual(3, commandsExecuted);
+        }
+
         private class TestSysbenchOLTPServerExecutor : SysbenchOLTPServerExecutor
         {
             public TestSysbenchOLTPServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
