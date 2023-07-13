@@ -42,7 +42,14 @@ namespace VirtualClient.Common.Extensions
                 }
                 else
                 {
-                    dictionary.Add(entry.Key, entry.Value);
+                    try
+                    {
+                        dictionary.Add(entry.Key, entry.Value);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // DO NOTHING IF Key is already present.
+                    }
                 }
             }
         }
