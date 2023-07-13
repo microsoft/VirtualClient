@@ -338,8 +338,6 @@ namespace VirtualClient.Actions
                 string responseContent = await response.Content.ReadAsStringAsync()
                     .ConfigureAwait(false);
 
-                this.Logger.LogMessage(responseContent, telemetryContext);
-
                 SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
 
                 string diskPaths = serverState.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)].ToString();

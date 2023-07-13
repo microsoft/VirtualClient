@@ -148,19 +148,18 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            State expectedState = new State(new Dictionary<string, IConvertible>
+            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
             {
                 [nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = true,
                 [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
             });
 
             this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, new Item<JObject>(nameof(SysbenchOLTPState), JObject.FromObject(expectedState))));
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = false,
-                DatabaseScenarioInitialized = false,
                 RecordCount = 0,
                 TableCount = 0,
             }));
