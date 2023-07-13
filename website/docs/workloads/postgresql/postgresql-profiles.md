@@ -44,6 +44,34 @@ idea. The name of the client must match the name of the system or the value of t
 }
 ```
 
+## Balanced/In Memory Scenario Support
+In addition to the standard configuration, Virtual Client offers two tuned scenarios to run the Postgresql workload under: Balanced and In-Memory.
+
+* **Balanced**: The database size is about twice as big as the memory/RAM on the system. Half of the database will fit in memory, and half will fit on disk.
+  Target CPU usage is about 40-60% with somewhat heavy disk I/O usage. The configuration supports 1-4 additional data disks, and the database will be
+  distributed among the disks as proportionately as possible.
+* **In-Memory**: The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk
+  I/O usage.
+
+A tuned scenario may be selected by denoting it in the PostgreSQLExecutor.
+
+``` bash
+{
+  "Type": "PostgreSQLExecutor",
+  "Parameters": 
+  {
+    "Scenario": "ExecuteTPCCBenchmark",
+    "StressScenario": "Balanced",
+    "PackageName": "postgresql",
+    "Benchmark": "tpcc",
+    "HammerDBPackageName": "hammerdb",
+    "DatabaseName": "$.Parameters.DatabaseName",
+    "ReuseDatabase": "$.Parameters.ReuseDatabase",
+    "Port": "$.Parameters.Port" 
+  }
+}
+```
+
 ## PERF-SQL-POSTGRESQL.json
 Runs the Postgresql workload against to HammerDB tool which generate various network traffic patterns against a Postgresql server. Although this is the default client workload.
 
@@ -64,6 +92,16 @@ Runs the Postgresql workload against to HammerDB tool which generate various net
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | StressScenario              | Optional. Opt for In-Memory/Balanced/Default stress scenario.  | "Default" |
+  | ReuseDatabase           | Optional. Determines if database will be re-created on each execution.  | true |
+  | DatabaseName     | Optional. Provide the name of the database under test. | "tpcc" |
+  | Port     | Optional. Provide the port number that PostgreSQL server will listen on. | 5432 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
