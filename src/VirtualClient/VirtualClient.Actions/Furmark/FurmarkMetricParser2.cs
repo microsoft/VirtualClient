@@ -14,7 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    ///  Parser for FURMARK XML output document.
+    ///  FurmarkMonitorMetricsParser.
     /// </summary>
     public class FurmarkMetricsParser2 : MetricsParser
     {
@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
         // private static readonly Regex GpuDataRegex = new Regex(GpuDataPattern);
 
         /// <summary>
-        /// Constructor for <see cref="Graph500MetricsParser"/>
+        /// Constructor for <see cref="FurmarkMetricsParser2"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
         public FurmarkMetricsParser2(string rawText)

@@ -9,7 +9,8 @@
   "Parameters": {
     "Time": "60000",
     "Height": "640",
-    "Width": "480"
+    "Width": "480",
+    "Msaa": "4"
   },
   "Actions": [
     {
@@ -17,11 +18,25 @@
       "Parameters": {
         "Scenario": "ExecuteFurmarkBenchmark",
         "PackageName": "Furmark",
-        "Time": "$.Parameters.Time"
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "$.Parameters.Height",
+        "Width": "$.Parameters.Width",
+        "Msaa": "$.Parameters.Msaa"
       }
     }
   ],
   "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPsToolsPackage",
+        "BlobContainer": "packages",
+        "BlobName": "pstools.2.51.zip",
+        "PackageName": "pstools",
+        "Extract": true
+      }
+    },
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {

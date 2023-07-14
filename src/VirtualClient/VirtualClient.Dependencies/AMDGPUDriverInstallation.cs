@@ -37,14 +37,17 @@
             : base(dependencies, parameters)
         {
             dependencies.ThrowIfNull(nameof(dependencies));
-
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = dependencies.GetService<ISystemManagement>();
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
             this.packageManager = this.systemManager.PackageManager;
         }
-      
+
+        /// <summary>
+        /// Retrieves the interface to interacting with the underlying system.
+        /// </summary>
+
         /// <summary>
         /// Determines whether Reboot is required or not after Driver installation
         /// </summary>
@@ -55,10 +58,9 @@
                 switch (this.Platform)
                 {
                     case PlatformID.Win32NT:
-                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), false);
-
+                        return this.Parameters.GetValue<bool>(nameof(AMDGPUDriverInstallation.RebootRequired), false);
                     default:
-                        return this.Parameters.GetValue<bool>(nameof(CudaAndNvidiaGPUDriverInstallation.RebootRequired), true);
+                        return this.Parameters.GetValue<bool>(nameof(AMDGPUDriverInstallation.RebootRequired), true);
                 }
             }
         }
@@ -76,22 +78,19 @@
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionStarted", telemetryContext);
-
-            State installationState = await this.stateManager.GetStateAsync<State>(nameof(CudaAndNvidiaGPUDriverInstallation), cancellationToken)
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(AMDGPUDriverInstallation), cancellationToken)
                 .ConfigureAwait(false);
-
             if (installationState == null)
             {
-                 if (this.Platform == PlatformID.Win32NT)
+                if (this.Platform == PlatformID.Win32NT)
                 {
                     await this.AMDDriverInstallationOnWindowsAsync(telemetryContext, cancellationToken)
                                .ConfigureAwait(false);
-
                     await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallationOnWindowsAsync), new State(), cancellationToken)
                         .ConfigureAwait(false);
                 }
 
-                 VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
+                VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
             }
 
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
@@ -100,18 +99,16 @@
         private async Task AMDDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installerPath = string.Empty;
-
-            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
+            DependencyPath amdDriverInstallerPackage = await this.packageManager.GetPackageAsync(
                 this.PackageName, cancellationToken)
                     .ConfigureAwait(false);
-
-            if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
+            if (this.fileSystem.Directory.GetFiles(amdDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
             {
-                installerPath = this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
+                installerPath = this.fileSystem.Directory.GetFiles(amdDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
             }
             else
             {
-                throw new DependencyException($"The installer file was not found in the directory {nvidiaDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
+                throw new DependencyException($"The installer file was not found in the directory {amdDriverInstallerPackage.Path}", ErrorReason.DependencyNotFound);
             }
 
             await this.ExecuteCommandAsync(installerPath, "/S /v/qn", Environment.CurrentDirectory, telemetryContext, cancellationToken)
@@ -127,15 +124,12 @@
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
                     this.LogProcessTrace(process);
-
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
-
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
                             .ConfigureAwait(false);
-
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }

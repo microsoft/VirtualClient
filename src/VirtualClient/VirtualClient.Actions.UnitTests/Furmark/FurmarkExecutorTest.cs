@@ -65,9 +65,10 @@ namespace VirtualClient.Actions
         public async Task FurmarkExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            this.fixture.Parameters["Time"] = "20";
+            this.fixture.Parameters["Time"] = "10";
             this.fixture.Parameters["Width"] = "100";
             this.fixture.Parameters["Height"] = "200";
+            this.fixture.Parameters["Msaa"] = "4";
 
             using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
@@ -75,16 +76,20 @@ namespace VirtualClient.Actions
                 int executed = 0;
                 if (platform == PlatformID.Win32NT)
                 {
-                    string expectedCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path ,"win-x64","Geeks3D" ,"Benchmarks" ,"FurMark" ,"Furmark");
-                    string packageDir = Regex.Replace(expectedFilePath, @"\\", "/");
-                    packageDir = Regex.Replace(packageDir, @":", string.Empty);
+                    string ExpectedPsexecCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "win-x64", "psexec.exe");
+                    string furmarkCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path ,"win-x64","Geeks3D" ,"Benchmarks" ,"FurMark" ,"Furmark");
+                    string packageDir = this.fixture.PlatformSpecifics.Combine(expectedFilePath, "win-x64");
+                    // packageDir = Regex.Replace(packageDir, @":", string.Empty);
+
 
                     // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
-                    string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /msaa=4 /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+                    string executeScriptCommandArguments = $"-accepteula -s -i 1 -w {packageDir} {furmarkCommand} /width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /msaa={this.fixture.Parameters["Msaa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+
+                    // string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Msaa={this.fixture.Parameters["Mssa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
-                        if (arguments == executeScriptCommandArguments && command == expectedCommand)
+                        if (arguments == executeScriptCommandArguments && command == ExpectedPsexecCommand)
                         {
                             executed++;
                         }
@@ -111,6 +116,7 @@ namespace VirtualClient.Actions
                 this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
                     this.fixture.FileSystem.Setup(fe => fe.File.Exists(executor.ResultsFilePath)).Returns(false);
+                    this.fixture.Process.StandardError.Append("123");
                     return this.fixture.Process;
                 };
 
@@ -139,6 +145,7 @@ namespace VirtualClient.Actions
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
             this.fixture.Parameters["PackageName"] = "Furmark";
+            this.fixture.Parameters["PsExecPackageName"] = "pstools";
         }
 
         private class TestFurmarkxecutor : FurmarkExecutor

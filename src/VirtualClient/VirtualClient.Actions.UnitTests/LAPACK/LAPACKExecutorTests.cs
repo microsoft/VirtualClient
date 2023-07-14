@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class LAPACKExecutorTests
     {
-           private MockFixture fixture;
+        private MockFixture fixture;
         private DependencyPath mockPath;
         private DependencyPath currentDirectoryPath;
 

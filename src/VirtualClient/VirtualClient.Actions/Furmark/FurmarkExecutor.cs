@@ -42,7 +42,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// path to exe.
+        /// path to Furmark exe.
         /// </summary>
         public string ExecutableLocation { get; set; }
 
@@ -52,12 +52,17 @@ namespace VirtualClient.Actions
         public string ResultsFilePath { get;  set; }
 
         /// <summary>
-        /// path to XML .
+        /// path to FurmarkMonitor.xml.
         /// </summary>
         public string XMLFilePath { get; set; }
 
         /// <summary>
-        /// time parameter
+        /// path to PSexec.exe .
+        /// </summary>
+        public string PSexecExecutablePath { get; set; }
+
+        /// <summary>
+        /// TestRunTime
         /// </summary>
         public string Time
         {
@@ -75,8 +80,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Height), out IConvertible time);
-                return time?.ToString();
+                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Height), out IConvertible height);
+                return height?.ToString();
             }
         }
 
@@ -87,8 +92,42 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Width), out IConvertible time);
-                return time?.ToString();
+                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Width), out IConvertible width);
+                return width?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Msaa parameter
+        /// </summary>
+        public string Msaa
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Msaa), out IConvertible msaa);
+                return msaa?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Defines the name of the package associated with the component.
+        /// </summary>
+        public string PsExecPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(FurmarkExecutor.PsExecPackageName));
+            }
+        }
+
+        /// <summary>
+        /// Defines the session id of the psexec process.
+        /// </summary>
+        public int SessionId
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(this.SessionId), 1);
             }
         }
 
@@ -108,10 +147,13 @@ namespace VirtualClient.Actions
 
             this.packageDirectory = workloadPackage.Path;
 
+            DependencyPath psExecPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PsExecPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                .ConfigureAwait(false);
+
             this.ExecutableLocation = this.PlatformSpecifics.Combine(this.packageDirectory, "Geeks3D", "Benchmarks", "FurMark", "Furmark");
             this.ResultsFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "FurMark-Scores.txt");
             this.XMLFilePath = this.PlatformSpecifics.Combine(this.packageDirectory, "Geeks3D", "Benchmarks", "FurMark", "furmark-gpu-monitoring.xml");
-
+            this.PSexecExecutablePath = this.PlatformSpecifics.Combine(psExecPackage.Path, "psexec.exe");
         }
 
         /// <summary>
@@ -138,28 +180,35 @@ namespace VirtualClient.Actions
                 File.Delete(this.XMLFilePath);
             }
 
-            string commandArguments = $"/width={this.Width} /height={this.Height} /msaa=4 /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+            string commandArguments = $"-accepteula -s -i {this.SessionId} -w {this.packageDirectory} {this.ExecutableLocation} /width={this.Width} /height={this.Height} /msaa={this.Msaa} /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+  
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.PSexecExecutablePath, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    if (process.StandardError.Length > 0) 
+                    {
+                        Console.WriteLine($"The resultfilepath is = '{this.ResultsFilePath}' ");
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableLocation, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                        {
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                if (process.StandardError.Length == 0) 
-                                {
-                                    Console.WriteLine($"The resultfilepath is = '{this.ResultsFilePath}' ");
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
-                                    await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
-                                    await this.CaptureMetricsAsync(process, this.XMLFilePath, telemetryContext, cancellationToken);
+                       // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
+                       // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
+
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
+                        await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
+                        await this.CaptureMetricsAsync(process, this.XMLFilePath, telemetryContext, cancellationToken);
 
                     }
-                                else
-                                {    
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
-                                    process.ThrowIfWorkloadFailed();
-                                }
+                    else
+                    {
+                       // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
+                       // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
 
-                            }
-                      }
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
+
+                }
+            }
  
         }
 
@@ -167,7 +216,6 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                Console.WriteLine($"yss");
                 if (!this.fileSystem.File.Exists(resultsFilePath))
                 {
                     throw new WorkloadException(
@@ -182,13 +230,11 @@ namespace VirtualClient.Actions
                 IList<Metric> metrics;
                 if (resultsFilePath == this.XMLFilePath)
                 {
-                    Console.WriteLine($"came for xml");
                     FurmarkMetricsParser2 furmarkParser = new FurmarkMetricsParser2(results);
                     metrics = furmarkParser.Parse();
                 }
                 else
                 {
-                    Console.WriteLine($"came for resultpath");
                     FurmarkMetricsParser furmarkParser = new FurmarkMetricsParser(results);
                     metrics = furmarkParser.Parse();
                 }
