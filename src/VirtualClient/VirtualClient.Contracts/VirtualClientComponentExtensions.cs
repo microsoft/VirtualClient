@@ -117,7 +117,7 @@ namespace VirtualClient.Contracts
                 appendedMetaData.AddRange(metadata, true);
             }
 
-            IDictionary<string, IConvertible> appendedParameters = new Dictionary<string, IConvertible>(component.Parameters, StringComparer.OrdinalIgnoreCase);
+            IDictionary<string, IConvertible> appendedParameters = new Dictionary<string, IConvertible>(component.GlobalParameters, StringComparer.OrdinalIgnoreCase);
             if (!(parameters is null))
             {
                 appendedParameters.AddRange(parameters, true);

@@ -64,7 +64,7 @@ namespace VirtualClient.Contracts
                 blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
-            string blobContainer = GetContentArgumentValue(fileContext, contentPathTemplate.Split('/')[0], parameters);
+            string blobContainer = GetInlinedContentArgumentValue(fileContext, contentPathTemplate.Split('/')[0], parameters);
             if (string.IsNullOrWhiteSpace(blobContainer))
             {
                 throw new ArgumentException("The containerName in blob cannot be empty string.", contentPathTemplate);
@@ -100,7 +100,7 @@ namespace VirtualClient.Contracts
                     continue;
                 }
 
-                string segment = GetContentArgumentValue(fileContext, element, parameters);
+                string segment = GetInlinedContentArgumentValue(fileContext, element, parameters);
 
                 if (!string.IsNullOrWhiteSpace(segment))
                 {
@@ -122,67 +122,37 @@ namespace VirtualClient.Contracts
             return blobPath;
         }
 
-        private static string GetContentArgumentValue(FileContext fileContext, string contentArgumentName, IDictionary<string, IConvertible> parameters)
+        private static string GetInlinedContentArgumentValue(FileContext fileContext, string contentArgumentName, IDictionary<string, IConvertible> parameters)
         {
-            string blobPathComponent = string.Empty;
-
-            Match match = Regex.Match(contentArgumentName, @"\{([^}]+)\}");
-
-            if (match.Success)
+            IDictionary<string, IConvertible> fileContextDictionary = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
             {
-                string elementName = match.Groups[1].Value;
-                // Each Argument is checked for in FileContext (for some standard fields) and then in Parameters.
-                if (!string.IsNullOrWhiteSpace(GetContentNameFromFileContext(fileContext, elementName)))
+                { "experimentId", fileContext.ExperimentId },
+                { "agentId", fileContext.AgentId },
+                { "toolName", fileContext.ToolName },
+                { "role", fileContext.Role },
+                { "scenario", fileContext.Scenario }
+            };
+
+            string inlinedArgument = Regex.Replace(contentArgumentName, @"\{(.*?)\}", match =>
+            {
+                string paramName = match.Groups[1].Value;
+                if (fileContextDictionary.ContainsKey(paramName))
                 {
-                    blobPathComponent = GetContentNameFromFileContext(fileContext, elementName);
+                    return fileContextDictionary.GetValue<string>(paramName, string.Empty);
                 }
-                else
+                else if (parameters == null)
                 {
-                    blobPathComponent = GetContentNameFromParameters(parameters, elementName);
+                    return string.Empty;
                 }
-            }
-            else
-            {
-                blobPathComponent = contentArgumentName;
-            }
+                else if (parameters.ContainsKey(paramName))
+                {
+                    return parameters.GetValue<string>(paramName, string.Empty);
+                }
 
-            return blobPathComponent;
-        }
-
-        private static string GetContentNameFromFileContext(FileContext filecontext, string fieldName)
-        {
-            if (fieldName.Equals("agentId", StringComparison.OrdinalIgnoreCase))
-            {
-                return filecontext.AgentId;
-            }
-            else if (fieldName.Equals("experimentId", StringComparison.OrdinalIgnoreCase))
-            {
-                return filecontext.ExperimentId;
-            }
-            else if (fieldName.Equals("toolName", StringComparison.OrdinalIgnoreCase))
-            {
-                return filecontext.ToolName;
-            }
-            else if (fieldName.Equals("scenario", StringComparison.OrdinalIgnoreCase))
-            {
-                return filecontext.Scenario;
-            }
-            else if (fieldName.Equals("role", StringComparison.OrdinalIgnoreCase))
-            {
-                return filecontext.Role;
-            }
-
-            return string.Empty;
-        }
-
-        private static string GetContentNameFromParameters(IDictionary<string, IConvertible> parameters, string fieldName)
-        {
-            if (parameters == null)
-            {
                 return string.Empty;
-            }
+            });
 
-            return parameters.GetValue<string>(fieldName, string.Empty);
+            return inlinedArgument;
         }
     }
 }

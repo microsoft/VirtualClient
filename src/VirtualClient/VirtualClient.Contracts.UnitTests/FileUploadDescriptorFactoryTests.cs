@@ -131,6 +131,7 @@ namespace VirtualClient.Contracts
         [TestCase("customContainer/{parameter1}/{experimentId}/{agentId}/{parameter2}/fixedFolder/{toolName}/{role}/{scenario}", null, "value2")]
         [TestCase("customContainer/{parameter1}/{experimentId}/{agentId}/{parameter2}/fixedFolder/{toolName}/{role}/{scenario}", "value1", null)]
         [TestCase("customContainer/{parameter1}/{experimentId}/{agentId}/{parameter2}/fixedFolder/{toolName}/{role}/{scenario}", "valueA", "valueB")]
+        [TestCase("customContainer/{parameter1},stringValue1/{experimentId}/{agentId}/{parameter2}/fixedFolder,stringValue2/{toolName}/{role}/{scenario}", "valueA", "valueB")]
         public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomTemplate(string contentPathTemplate, string parameter1, string parameter2)
         {
             this.SetupDefaults();
@@ -147,9 +148,24 @@ namespace VirtualClient.Contracts
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
             string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-            string expectedBlobPath = string.Join('/', (new string[] { parameter1, expectedExperimentId, "AgentIdA", parameter2, "fixedFolder", "ToolA", "RoleA", "ScenarioA" })
-                .Where(i => i != null))
-                .ToLowerInvariant();
+
+            string expectedBlobPath;
+            if (contentPathTemplate.Contains(","))
+            {
+                expectedBlobPath = string.Join('/', (new string[] { $"{parameter1},stringValue1", expectedExperimentId, "AgentIdA", parameter2, "fixedFolder,stringValue2", "ToolA", "RoleA", "ScenarioA" })
+                    .Where(i => i != null))
+                    .ToLowerInvariant();
+            }
+            else
+            {
+                expectedBlobPath = string.Join('/', (new string[] { parameter1, expectedExperimentId, "AgentIdA", parameter2, "fixedFolder", "ToolA", "RoleA", "ScenarioA" })
+                    .Where(i => i != null))
+                    .ToLowerInvariant();
+            }
+            
+            // string expectedBlobPath = string.Join('/', (new string[] { parameter1, expectedExperimentId, "AgentIdA", parameter2, "fixedFolder", "ToolA", "RoleA", "ScenarioA" })
+            //     .Where(i => i != null))
+            //     .ToLowerInvariant();
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
             expectedBlobPath = !string.IsNullOrWhiteSpace(expectedBlobPath)
