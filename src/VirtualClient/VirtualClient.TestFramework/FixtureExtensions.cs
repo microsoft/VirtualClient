@@ -80,7 +80,7 @@ namespace VirtualClient
                     FileName = command,
                     Arguments = arguments,
                     WorkingDirectory = workingDir
-                },
+                }
             };
 
             process.OnHasExited = () => true;
