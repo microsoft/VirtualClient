@@ -45,10 +45,6 @@
         }
 
         /// <summary>
-        /// Retrieves the interface to interacting with the underlying system.
-        /// </summary>
-
-        /// <summary>
         /// Determines whether Reboot is required or not after Driver installation
         /// </summary>
         public bool RebootRequired
@@ -78,16 +74,20 @@
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionStarted", telemetryContext);
+
             State installationState = await this.stateManager.GetStateAsync<State>(nameof(AMDGPUDriverInstallation), cancellationToken)
                 .ConfigureAwait(false);
+
             if (installationState == null)
             {
                 if (this.Platform == PlatformID.Win32NT)
                 {
-                    await this.AMDDriverInstallationOnWindowsAsync(telemetryContext, cancellationToken)
+                    await this.AMDDriverInstallation(telemetryContext, cancellationToken)
                                .ConfigureAwait(false);
-                    await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallationOnWindowsAsync), new State(), cancellationToken)
+
+                    await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallation), new State(), cancellationToken)
                         .ConfigureAwait(false);
+
                 }
 
                 VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
@@ -96,12 +96,14 @@
             this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
         }
 
-        private async Task AMDDriverInstallationOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task AMDDriverInstallation(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string installerPath = string.Empty;
+
             DependencyPath amdDriverInstallerPackage = await this.packageManager.GetPackageAsync(
                 this.PackageName, cancellationToken)
                     .ConfigureAwait(false);
+
             if (this.fileSystem.Directory.GetFiles(amdDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
             {
                 installerPath = this.fileSystem.Directory.GetFiles(amdDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories)[0];
@@ -123,13 +125,17 @@
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
+
                     this.LogProcessTrace(process);
+
                     await process.StartAndWaitAsync(cancellationToken)
                         .ConfigureAwait(false);
+
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
                             .ConfigureAwait(false);
+
                         process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                     }
                 }

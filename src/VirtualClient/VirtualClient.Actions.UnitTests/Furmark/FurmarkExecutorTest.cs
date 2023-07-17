@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters["Time"] = "10";
             this.fixture.Parameters["Width"] = "100";
             this.fixture.Parameters["Height"] = "200";
-            this.fixture.Parameters["Msaa"] = "4";
+            this.fixture.Parameters["Antialiasing"] = "4";
 
             using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
             {
@@ -83,9 +83,9 @@ namespace VirtualClient.Actions
 
 
                     // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
-                    string executeScriptCommandArguments = $"-accepteula -s -i 1 -w {packageDir} {furmarkCommand} /width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /msaa={this.fixture.Parameters["Msaa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+                    string executeScriptCommandArguments = $"-accepteula -s -i 1 -w {packageDir} {furmarkCommand} /width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Antialiasing={this.fixture.Parameters["Antialiasing"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
-                    // string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Msaa={this.fixture.Parameters["Mssa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+                    // string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Antialiasing={this.fixture.Parameters["Mssa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
@@ -119,9 +119,8 @@ namespace VirtualClient.Actions
                     this.fixture.Process.StandardError.Append("123");
                     return this.fixture.Process;
                 };
-
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
+                WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
+                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
                 Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
             }

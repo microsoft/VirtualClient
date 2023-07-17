@@ -16,7 +16,7 @@ namespace VirtualClient.Actions
     /// <summary>
     ///  FurmarkMonitorMetricsParser.
     /// </summary>
-    public class FurmarkMetricsParser2 : MetricsParser
+    public class FurmarkXmlMetricsParser : MetricsParser
     {
         /// <summary>
         /// size of dictionary 
@@ -32,10 +32,10 @@ namespace VirtualClient.Actions
         // private static readonly Regex GpuDataRegex = new Regex(GpuDataPattern);
 
         /// <summary>
-        /// Constructor for <see cref="FurmarkMetricsParser2"/>
+        /// Constructor for <see cref="FurmarkXmlMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public FurmarkMetricsParser2(string rawText)
+        public FurmarkXmlMetricsParser(string rawText)
             : base(rawText)
         {
         }
@@ -52,8 +52,6 @@ namespace VirtualClient.Actions
             MatchCollection fpsMatches = Regex.Matches(input, FpsPattern);
             MatchCollection vddcMatches = Regex.Matches(input, VddcPattern);
             MatchCollection coreLoadMatches = Regex.Matches(input, CoreLoadPattern);
-
-            // MatchCollection gpuDataMatches = GpuDataRegex.Matches(input);
 
             Dictionary<string, List<double>> gpuCoreTemps = new Dictionary<string, List<double>>();
             Dictionary<string, List<double>> gpuPowers = new Dictionary<string, List<double>>();
@@ -160,7 +158,7 @@ namespace VirtualClient.Actions
         {
             if (this.RawText == string.Empty || this.RawText == null)
             {
-                throw new SchemaException("furmark workload didn't generate results because of insufficient memory for running the workload");
+                throw new SchemaException("furmark workload didn't generate results files.");
             }
         }
     }

@@ -21,7 +21,7 @@ namespace VirtualClient.Actions
     public class FurmarkMeticsParser2Tests
     {
         private string rawText;
-        private FurmarkMetricsParser2 testParser;
+        private FurmarkXmlMetricsParser testParser;
 
         [SetUp]
         public void Setup()
@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExample2.txt");
             this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new FurmarkMetricsParser2(this.rawText);
+            this.testParser = new FurmarkXmlMetricsParser (this.rawText);
         }
 
         [Test]
@@ -62,9 +62,9 @@ namespace VirtualClient.Actions
              string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string IncorrectFurmarkoutputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkIncorrectResultsExample.txt");
             this.rawText = File.ReadAllText(IncorrectFurmarkoutputPath);
-            this.testParser = new FurmarkMetricsParser2(this.rawText);
+            this.testParser = new FurmarkXmlMetricsParser (this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains("furmark workload didn't generate results because of insufficient memory for running the workload", exception.Message);
+            StringAssert.Contains("furmark workload didn't generate results files.", exception.Message);
 
         }
     }

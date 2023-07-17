@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
         {
             if (this.RawText == string.Empty || this.RawText == null)
             {
-                throw new SchemaException("furmark workload didn't generate results because of insufficient memory for running the workload");
+                throw new SchemaException("furmark workload didn't generate results files.");
             }
         }
     }

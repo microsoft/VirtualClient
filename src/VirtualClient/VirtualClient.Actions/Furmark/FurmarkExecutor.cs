@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.VisualBasic;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -98,14 +99,14 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Msaa parameter
+        /// Antialiasingparameter
         /// </summary>
-        public string Msaa
+        public string Antialiasing 
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Msaa), out IConvertible msaa);
-                return msaa?.ToString();
+                this.Parameters.TryGetValue(nameof(FurmarkExecutor.Antialiasing), out IConvertible antialiasing);
+                return antialiasing?.ToString();
             }
         }
 
@@ -181,28 +182,32 @@ namespace VirtualClient.Actions
                 File.Delete(this.XMLFilePath);
             }
 
-            string commandArguments = $"-accepteula -s -i {this.SessionId} -w {this.packageDirectory} {this.ExecutableLocation} /width={this.Width} /height={this.Height} /msaa={this.Msaa} /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+            string commandArguments = $"-accepteula -s -i {this.SessionId} -w {this.packageDirectory} {this.ExecutableLocation} /width={this.Width} /height={this.Height} /Antialiasing={this.Antialiasing} /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
   
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.PSexecExecutablePath, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: false))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.PSexecExecutablePath, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     if (process.StandardError.Length > 0) 
                     {
-                        Console.WriteLine($"The resultfilepath is = '{this.ResultsFilePath}' ");
-
                         string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
-                        IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
-                        await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
-                        await this.CaptureMetricsAsync(process, this.XMLFilePath, telemetryContext, cancellationToken);
+                        if (this.fileSystem.File.Exists(this.ResultsFilePath) && this.fileSystem.File.Exists(this.XMLFilePath))
+                        {
+                            IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, cancellationToken).ConfigureAwait(false);
+
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
+
+                        }
+
+                        await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.CaptureMetricsAsync(process, this.XMLFilePath, telemetryContext, cancellationToken).ConfigureAwait(false);
 
                     }
                     else
                     {
-                        string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
-                        IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
+                        // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
+                        // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
 
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
                         process.ThrowIfWorkloadFailed();
@@ -219,9 +224,7 @@ namespace VirtualClient.Actions
             {
                 if (!this.fileSystem.File.Exists(resultsFilePath))
                 {
-                    throw new WorkloadResultsException(
-                        $"The Furmark results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
+                    throw new WorkloadResultsException($"The Furmark results file was not found at path '{resultsFilePath}'.", ErrorReason.WorkloadFailed);
                 }
 
                 string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
@@ -231,7 +234,7 @@ namespace VirtualClient.Actions
                 IList<Metric> metrics;
                 if (resultsFilePath == this.XMLFilePath)
                 {
-                    FurmarkMetricsParser2 furmarkParser = new FurmarkMetricsParser2(results);
+                    FurmarkXmlMetricsParser furmarkParser = new FurmarkXmlMetricsParser(results);
                     metrics = furmarkParser.Parse();
                 }
                 else
