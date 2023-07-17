@@ -30,20 +30,20 @@ namespace VirtualClient.Common
         {
             sshCommand.ThrowIfNull(nameof(sshCommand));
             this.processDetails = new ProcessDetails();
-            this.UnderlyingSSHCommand = sshCommand;
+            this.UnderlyingSshCommand = sshCommand;
         }
 
         /// <inheritdoc />
-        public virtual string Error => this.UnderlyingSSHCommand.Error;
+        public virtual string Error => this.UnderlyingSshCommand.Error;
 
         /// <inheritdoc />
-        public virtual int ExitStatus => this.UnderlyingSSHCommand.ExitStatus;
+        public virtual int ExitStatus => this.UnderlyingSshCommand.ExitStatus;
 
         /// <inheritdoc />
-        public virtual string Result => this.UnderlyingSSHCommand.Result;
+        public virtual string Result => this.UnderlyingSshCommand.Result;
 
         /// <inheritdoc />
-        public virtual string CommandText => this.UnderlyingSSHCommand.CommandText;
+        public virtual string CommandText => this.UnderlyingSshCommand.CommandText;
 
         /// <inheritdoc />
         public ProcessDetails ProcessDetails
@@ -62,12 +62,12 @@ namespace VirtualClient.Common
         /// <summary>
         /// Gets the underlying ssh command itself.
         /// </summary>
-        protected SshCommand UnderlyingSSHCommand { get; }
+        protected SshCommand UnderlyingSshCommand { get; }
 
         /// <inheritdoc />
         public virtual string Execute()
         {
-            return this.UnderlyingSSHCommand.Execute();
+            return this.UnderlyingSshCommand.Execute();
         }
 
         /// <inheritdoc />
@@ -87,7 +87,7 @@ namespace VirtualClient.Common
             {
                 if (disposing)
                 {
-                    this.UnderlyingSSHCommand.Dispose();
+                    this.UnderlyingSshCommand.Dispose();
                 }
 
                 this.disposed = true;

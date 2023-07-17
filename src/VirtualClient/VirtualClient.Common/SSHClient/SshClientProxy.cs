@@ -22,27 +22,27 @@ namespace VirtualClient.Common
         public SshClientProxy(SshClient sshClient)
         {
             sshClient.ThrowIfNull(nameof(sshClient));
-            this.UnderlyingSSHClient = sshClient;
+            this.UnderlyingSshClient = sshClient;
         }
 
         /// <inheritdoc />
-        public virtual ConnectionInfo ConnectionInfo => this.UnderlyingSSHClient.ConnectionInfo;
+        public virtual ConnectionInfo ConnectionInfo => this.UnderlyingSshClient.ConnectionInfo;
 
         /// <summary>
         /// Gets the underlying ssh client itself.
         /// </summary>
-        protected SshClient UnderlyingSSHClient { get; }
+        protected SshClient UnderlyingSshClient { get; }
 
         /// <inheritdoc />
         public void Connect()
         {
-            this.UnderlyingSSHClient.Connect();
+            this.UnderlyingSshClient.Connect();
         }
 
         /// <inheritdoc />
         public ISshCommandProxy CreateCommand(string commandText)
         {
-            SshCommand sshCommand = this.UnderlyingSSHClient.CreateCommand(commandText);
+            SshCommand sshCommand = this.UnderlyingSshClient.CreateCommand(commandText);
             SshCommandProxy sshCommandProxy = new SshCommandProxy(sshCommand);
             return sshCommandProxy;
         }
@@ -50,7 +50,7 @@ namespace VirtualClient.Common
         /// <inheritdoc />
         public void Disconnect()
         {
-            this.UnderlyingSSHClient.Disconnect();
+            this.UnderlyingSshClient.Disconnect();
         }
 
         /// <inheritdoc />
@@ -70,7 +70,7 @@ namespace VirtualClient.Common
             {
                 if (disposing)
                 {
-                    this.UnderlyingSSHClient.Dispose();
+                    this.UnderlyingSshClient.Dispose();
                 }
 
                 this.disposed = true;
