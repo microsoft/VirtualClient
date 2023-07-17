@@ -4,7 +4,8 @@
   "Metadata": {
     "RecommendedMinimumExecutionTime": "00:05:00",
     "SupportedPlatforms": "win-x64",
-    "SupportedOperatingSystems": "Windows"
+    "SupportedOperatingSystems": "Windows",
+    "SpecialRequirements": "This workload expects gpu drivers to be preinstalled on the stystem "
   },
   "Parameters": {
     "Time": "60000",
@@ -24,7 +25,119 @@
         "Width": "$.Parameters.Width",
         "Msaa": "$.Parameters.Msaa"
       }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_640X360_8",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "360",
+        "Width": "640",
+        "Msaa": "8"
+      }
+    },
+
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_11520X216_2",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "11520",
+        "Width": "2160",
+        "Msaa": "2"
+      }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_11520X216_8",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "11520",
+        "Width": "2160",
+        "Msaa": "8"
+      }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_2560X1440_2",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "2560",
+        "Width": "1440",
+        "Msaa": "2"
+      }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_2560X1440_4",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "2560",
+        "Width": "1440",
+        "Msaa": "4"
+      }
+    },
+
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_1280X720_4",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "1280",
+        "Width": "720",
+        "Msaa": "4"
+      }
+    },
+
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_1280X720_2",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "1280",
+        "Width": "720",
+        "Msaa": "2"
+      }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_5120X2880_4",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "2880",
+        "Width": "5120",
+        "Msaa": "4"
+      }
+    },
+    {
+      "Type": "FurmarkExecutor",
+      "Parameters": {
+        "Scenario": "Furmmark_5120X2880_2",
+        "PackageName": "Furmark",
+        "PsExecPackageName": "pstools",
+        "Time": "$.Parameters.Time",
+        "Height": "2880",
+        "Width": "5120",
+        "Msaa": "2"
+      }
     }
+
   ],
   "Dependencies": [
     {
@@ -37,25 +150,6 @@
         "Extract": true
       }
     },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "DownloadAMDDriverFromBlob",
-        "BlobContainer": "packages",
-        "BlobName": "AMDdependency.zip",
-        "PackageName": "FurmarkDriver",
-        "Extract": true
-      }
-    },
-    {
-      "Type": "AMDGPUDriverInstallation",
-      "Parameters": {
-        "Scenario": "InstallDriver",
-        "RebootRequired": false,
-        "PackageName": "FurmarkDriver"
-      }
-    },
-
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {

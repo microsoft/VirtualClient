@@ -141,13 +141,14 @@ namespace VirtualClient.Actions
                 throw new NotSupportedException($"'{this.Platform}' is not currently supported");
             }
 
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+            IPackageManager packageManagerWin = this.Dependencies.GetService<IPackageManager>();
+           
+            DependencyPath workloadPackage = await packageManagerWin.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
 
             this.packageDirectory = workloadPackage.Path;
 
-            DependencyPath psExecPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PsExecPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+            DependencyPath psExecPackage = await packageManagerWin.GetPlatformSpecificPackageAsync(this.PsExecPackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
 
             this.ExecutableLocation = this.PlatformSpecifics.Combine(this.packageDirectory, "Geeks3D", "Benchmarks", "FurMark", "Furmark");
@@ -182,7 +183,7 @@ namespace VirtualClient.Actions
 
             string commandArguments = $"-accepteula -s -i {this.SessionId} -w {this.packageDirectory} {this.ExecutableLocation} /width={this.Width} /height={this.Height} /msaa={this.Msaa} /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
   
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.PSexecExecutablePath, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: true))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.PSexecExecutablePath, commandArguments, this.packageDirectory, telemetryContext, cancellationToken, runElevated: false))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -190,8 +191,8 @@ namespace VirtualClient.Actions
                     {
                         Console.WriteLine($"The resultfilepath is = '{this.ResultsFilePath}' ");
 
-                       // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
-                       // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
+                        string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
+                        IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
 
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
                         await this.CaptureMetricsAsync(process, this.ResultsFilePath, telemetryContext, cancellationToken);
@@ -200,8 +201,8 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                       // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
-                       // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
+                        string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
+                        IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
 
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
                         process.ThrowIfWorkloadFailed();
@@ -218,7 +219,7 @@ namespace VirtualClient.Actions
             {
                 if (!this.fileSystem.File.Exists(resultsFilePath))
                 {
-                    throw new WorkloadException(
+                    throw new WorkloadResultsException(
                         $"The Furmark results file was not found at path '{resultsFilePath}'.",
                         ErrorReason.WorkloadFailed);
                 }
@@ -241,12 +242,12 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogMetrics(
                     "Furmark",
-                    "Furmark",
+                    "StressGpu",
                     process.StartTime,
                     process.ExitTime,
                     metrics,
                     null,
-                    null,
+                    process.FullCommand(),
                     this.Tags,
                     telemetryContext);
             }
