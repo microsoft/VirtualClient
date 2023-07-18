@@ -114,6 +114,7 @@ namespace VirtualClient.Monitors
                 catch (OperationCanceledException)
                 {
                     // Expected whenever ctrl-C is used. Do a check once more, without cancellationToken and break;
+                    await this.UploadFilesAsync(blobManager, telemetryContext);
                 }
                 catch (Exception exc)
                 {

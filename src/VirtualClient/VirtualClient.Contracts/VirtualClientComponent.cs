@@ -60,6 +60,7 @@ namespace VirtualClient.Contracts
             }
 
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            this.GlobalParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Dependencies = dependencies;
             this.Logger = NullLogger.Instance;
 
@@ -118,6 +119,18 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Parameter defines the content path format/structure using a template to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentPathTemplate
+        {
+            get
+            {
+                return this.GlobalParameters.GetValue<string>(nameof(this.ContentPathTemplate), "{experimentId}/{agentId}/{toolName}/{role}/{scenario}");
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -142,6 +155,11 @@ namespace VirtualClient.Contracts
         /// is participating.
         /// </summary>
         public string ExperimentId { get; }
+
+        /// <summary>
+        /// Global Parameters provided to the application on the command line or through Parameters in respective profiles.
+        /// </summary>
+        public IDictionary<string, IConvertible> GlobalParameters { get; }
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
