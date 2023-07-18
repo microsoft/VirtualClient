@@ -63,6 +63,7 @@
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
+		<WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
