@@ -21,6 +21,17 @@ Windows
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Furmark needs AMD GPU drivers that needs to be installed on the system prior to running this profile. 
   On Virtual machines you can install AMD GPU drivers from [here](https://go.microsoft.com/fwlink/?linkid=2234555)
+  
+  **Command to install AMD GPU Driver:**
+  ```
+  {DriverExecutable}.exe /S /v/qn
+
+  Parameters description
+  /S - This switch stands for "silent" mode.
+  /qn - This switch stands for "quiet" or "no interface" 
+  /v - Verbose or display the status.
+  ```
+
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
