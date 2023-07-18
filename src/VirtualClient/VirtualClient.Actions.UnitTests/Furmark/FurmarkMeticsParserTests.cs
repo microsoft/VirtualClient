@@ -1,4 +1,3 @@
-
 using VirtualClient.Common.Contracts;
 using NUnit.Framework;
 using System;

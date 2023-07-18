@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExample2.txt");
+            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExampleMonitor.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new FurmarkXmlMetricsParser (this.rawText);
         }

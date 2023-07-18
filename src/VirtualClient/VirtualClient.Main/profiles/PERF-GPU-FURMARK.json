@@ -3,7 +3,7 @@
   "Metadata": {
     "SupportedPlatforms": "win-x64",
     "SupportedOperatingSystem": "Windows",
-    "SpecialRequirements": "This workload expects gpu drivers to be preinstalled on the stystem "
+    "SpecialRequirements": "This workload expects AMD GPU drivers to be preinstalled on the stystem "
   },
   "Parameters": {
     "Time": "60000",
@@ -154,7 +154,7 @@
         "Scenario": "InstallFurmarkPackage",
         "BlobContainer": "packages",
         "BlobName": "Furmark1.34.0.0.zip",
-        "PackageName": "Furmark",
+        "PackageName": "furmark",
         "Extract": true
       }
     }
