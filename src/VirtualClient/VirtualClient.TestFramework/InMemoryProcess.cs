@@ -44,6 +44,7 @@ namespace VirtualClient
                 Arguments = "--argument1=123 --argument2=value"
             };
             this.processDetails = new ProcessDetails();
+            this.processDetails.GeneratedResults = new List<string>();
         }
 
         /// <summary>

@@ -28,7 +28,7 @@ namespace VirtualClient.Common
         /// <summary>
         /// Generated Results of the command.
         /// </summary>
-        public IEnumerable<string> GeneratedResults { get; set; }
+        public List<string> GeneratedResults { get; set; }
 
         /// <summary>
         /// Standard output of the command.

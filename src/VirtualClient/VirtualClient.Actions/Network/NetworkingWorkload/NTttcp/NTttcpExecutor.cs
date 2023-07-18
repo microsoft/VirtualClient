@@ -324,7 +324,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     await this.WaitForResultsAsync(TimeSpan.FromMinutes(2), relatedContext, cancellationToken);
 
                                     string results = await this.LoadResultsAsync(this.ResultsPath, cancellationToken);
-                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", results: results.AsArray(), logToFile: true);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "NTttcp", results: new List<string> { results }, logToFile: true);
                                 }
                             }
                             catch (TimeoutException exc)

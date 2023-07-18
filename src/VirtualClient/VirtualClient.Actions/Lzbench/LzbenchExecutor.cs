@@ -175,10 +175,10 @@ namespace VirtualClient.Actions
 
                 foreach (string file in resultsFiles)
                 {
-                    string contents = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents.AsArray(), logToFile: true);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", new List<string> { results }, logToFile: true);
 
-                    LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
+                    LzbenchMetricsParser parser = new LzbenchMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(

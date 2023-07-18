@@ -47,7 +47,7 @@ namespace VirtualClient
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
@@ -75,7 +75,7 @@ namespace VirtualClient
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             sshCommandProxy.ThrowIfNull(nameof(sshCommandProxy));
@@ -328,7 +328,7 @@ namespace VirtualClient
                         outputBuilder.AppendLine(processDetails.StandardError);
                     }
 
-                    if (processDetails != null && processDetails.GeneratedResults.Any())
+                    if (processDetails != null && processDetails.GeneratedResults != null && processDetails.GeneratedResults.Any())
                     {
                         outputBuilder.AppendLine();
                         outputBuilder.AppendLine("##GeneratedResults##");

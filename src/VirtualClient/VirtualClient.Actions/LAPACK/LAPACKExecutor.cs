@@ -186,7 +186,7 @@ namespace VirtualClient.Actions
                 }
 
                 string results = await this.LoadResultsAsync(resultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", results.AsArray(), logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "LAPACK", new List<string> { results }, logToFile: true);
 
                 LAPACKMetricsParser lapackParser = new LAPACKMetricsParser(results);
                 IList<Metric> metrics = lapackParser.Parse();

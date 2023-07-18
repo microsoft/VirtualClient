@@ -30,6 +30,7 @@ namespace VirtualClient.Common
         {
             sshCommand.ThrowIfNull(nameof(sshCommand));
             this.processDetails = new ProcessDetails();
+            this.processDetails.GeneratedResults = new List<string>();
             this.UnderlyingSshCommand = sshCommand;
         }
 

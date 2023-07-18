@@ -402,7 +402,7 @@ namespace VirtualClient.Actions
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results.AsArray(), logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: new List<string> { results }, logToFile: true);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {

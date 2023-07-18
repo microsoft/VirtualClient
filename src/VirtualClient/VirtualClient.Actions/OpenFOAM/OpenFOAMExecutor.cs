@@ -326,7 +326,7 @@ namespace VirtualClient.Actions
                 }
 
                 string results = await this.LoadResultsAsync(this.ResultsFilePath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results: results.AsArray(), logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "OpenFOAM", results: new List<string> { results }, logToFile: true);
 
                 OpenFOAMMetricsParser openFOAMResultsParser = new OpenFOAMMetricsParser(results);
                 IList<Metric> metrics = openFOAMResultsParser.Parse();

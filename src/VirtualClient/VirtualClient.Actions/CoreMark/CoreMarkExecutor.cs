@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
                             process.ThrowIfWorkloadFailed();
                         }
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: result.AsArray(), logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark", results: new List<string>(results), logToFile: true);
 
                         if (!string.IsNullOrWhiteSpace(result))
                         {

@@ -19,6 +19,7 @@
         public InMemorySshCommand()
         {
             this.processDetails = new ProcessDetails();
+            this.processDetails.GeneratedResults = new List<string>();
         }
 
         public int ExitStatus { get; set; }

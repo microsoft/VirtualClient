@@ -9,6 +9,7 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -53,116 +54,14 @@ namespace VirtualClient.Contracts
             process.ThrowIfNull(nameof(process));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
-            maxChars.ThrowIfInvalid(
-                nameof(maxChars),
-                (count) => count >= 0,
-                $"Invalid max character count. The value provided must be greater than or equal to zero.");
-
-            try
+            if (string.IsNullOrWhiteSpace(results))
             {
-                int? finalExitCode = null;
-                string finalStandardOutput = null;
-                string finalStandardError = null;
-                int totalOutputChars = 0;
-
-                try
-                {
-                    finalExitCode = process.ExitCode;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalStandardOutput = process.StandardOutput?.ToString();
-                    totalOutputChars += finalStandardOutput?.Length ?? 0;
-                }
-                catch
-                {
-                }
-
-                try
-                {
-                    finalStandardError = process.StandardError?.ToString();
-                    totalOutputChars += finalStandardError?.Length ?? 0;
-                }
-                catch
-                {
-                }
-
-                string fullCommand = $"{process.StartInfo?.FileName} {process.StartInfo?.Arguments}".Trim();
-                if (!string.IsNullOrWhiteSpace(fullCommand))
-                {
-                    fullCommand = SensitiveData.ObscureSecrets(fullCommand);
-                }
-
-                if (string.IsNullOrWhiteSpace(results))
-                {
-                    // Note that 'totalOutputChars' represents the total # of characters in both the
-                    // standard output and error.
-                    if (finalStandardOutput != null && totalOutputChars > maxChars)
-                    {
-                        // e.g.
-                        // Given Max Chars = 125,000, length of standard output = 130,000 and length of standard error = 500
-                        // Standard Output Substring Length = 130,000 - (130,500 - 125,000) = 130,000 - 5,500 = 124,500
-                        // 
-                        // And thus, the standard output will be 124,500 chars in length. The standard error will be 500 chars in length.
-                        // The total will be 125,000 chars, right at the max.
-                        int substringLength = finalStandardOutput.Length - (totalOutputChars - maxChars);
-                        if (substringLength > 0)
-                        {
-                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                            finalStandardOutput = finalStandardOutput.Substring(0, finalStandardOutput.Length - (totalOutputChars - maxChars));
-                        }
-                        else
-                        {
-                            finalStandardOutput = string.Empty;
-                        }
-
-                        // Refresh the total character count
-                        totalOutputChars = (finalStandardOutput?.Length ?? 0) + (finalStandardError?.Length ?? 0);
-                    }
-
-                    if (finalStandardError != null && totalOutputChars > maxChars)
-                    {
-                        int substringLength = finalStandardError.Length - (totalOutputChars - maxChars);
-                        if (substringLength > 0)
-                        {
-                            // Careful that we do not attempt to get an invalid substring (e.g. 0 to -5).
-                            finalStandardError = finalStandardError.Substring(0, finalStandardError.Length - (totalOutputChars - maxChars));
-                        }
-                        else
-                        {
-                            finalStandardError = string.Empty;
-                        }
-                    }
-
-                    telemetryContext.Properties[name ?? "process"] = new
-                    {
-                        id = process.Id,
-                        command = fullCommand ?? string.Empty,
-                        workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
-                        exitCode = finalExitCode,
-                        standardOutput = finalStandardOutput ?? string.Empty,
-                        standardError = finalStandardError ?? string.Empty
-                    };
-                }
-                else
-                {
-                    telemetryContext.Properties[name ?? "process"] = new
-                    {
-                        id = process.Id,
-                        command = fullCommand ?? string.Empty,
-                        workingDir = process.StartInfo?.WorkingDirectory ?? string.Empty,
-                        exitCode = finalExitCode,
-                        results = results ?? string.Empty,
-                    };
-                }
+                AddProcessContext(telemetryContext, process.ProcessDetails, name, maxChars);
             }
-            catch
+            else
             {
-                // Best effort.
+                process.ProcessDetails.GeneratedResults.Add(results);
+                AddProcessResults(telemetryContext, process.ProcessDetails, name, maxChars);
             }
 
             return telemetryContext;
