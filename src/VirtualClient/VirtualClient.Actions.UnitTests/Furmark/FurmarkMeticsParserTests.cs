@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExample.txt");
+            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExampleResults.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new FurmarkMetricsParser(this.rawText);
         }
@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
 
             Assert.AreEqual(2, metrics.Count);
             MetricAssert.Exists(metrics, "Score", 4700);
-            MetricAssert.Exists(metrics, "DurationInMs", 60000);
+            MetricAssert.Exists(metrics, "DurationInMs", 60000, "ms");
 
         }
 

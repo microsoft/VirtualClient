@@ -172,14 +172,14 @@ namespace VirtualClient.Actions
 
         private async Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (File.Exists(this.ResultsFilePath))
+            if (this.fileSystem.File.Exists(this.ResultsFilePath))
             {
-                File.Delete(this.ResultsFilePath);
+                this.fileSystem.File.Delete(this.ResultsFilePath);
             }
 
-            if (File.Exists(this.XMLFilePath))
+            if (this.fileSystem.File.Exists(this.XMLFilePath))
             {
-                File.Delete(this.XMLFilePath);
+                this.fileSystem.File.Delete(this.XMLFilePath);
             }
 
             string commandArguments = $"-accepteula -s -i {this.SessionId} -w {this.packageDirectory} {this.ExecutableLocation} /width={this.Width} /height={this.Height} /Antialiasing={this.Antialiasing} /max_time={this.Time} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
@@ -206,9 +206,6 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        // string[] outputFilePaths = new string[] { $"{this.ResultsFilePath}", $"{this.XMLFilePath}" };
-                        // IEnumerable<string> results = await this.LoadResultsAsync(outputFilePaths, CancellationToken.None);
-
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Furmark", logToFile: true);
                         process.ThrowIfWorkloadFailed();
                     }
@@ -245,7 +242,7 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogMetrics(
                     "Furmark",
-                    "StressGpu",
+                    this.Scenario,
                     process.StartTime,
                     process.ExitTime,
                     metrics,

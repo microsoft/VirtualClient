@@ -71,29 +71,28 @@
         /// Executes  GPU driver installation steps.
         /// </summary>
         /// <returns></returns>
-        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionStarted", telemetryContext);
-
-            State installationState = await this.stateManager.GetStateAsync<State>(nameof(AMDGPUDriverInstallation), cancellationToken)
-                .ConfigureAwait(false);
-
-            if (installationState == null)
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteAMDDriverInstallation", telemetryContext, async () =>
             {
-                if (this.Platform == PlatformID.Win32NT)
+                State installationState = await this.stateManager.GetStateAsync<State>(nameof(AMDGPUDriverInstallation), cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (installationState == null)
                 {
-                    await this.AMDDriverInstallation(telemetryContext, cancellationToken)
-                               .ConfigureAwait(false);
+                    if (this.Platform == PlatformID.Win32NT)
+                    {
+                        await this.AMDDriverInstallation(telemetryContext, cancellationToken)
+                                   .ConfigureAwait(false);
 
-                    await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallation), new State(), cancellationToken)
-                        .ConfigureAwait(false);
+                        await this.stateManager.SaveStateAsync(nameof(this.AMDDriverInstallation), new State(), cancellationToken)
+                            .ConfigureAwait(false);
 
+                    }
+
+                    VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
                 }
-
-                VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
-            }
-
-            this.Logger.LogTraceMessage($"{this.TypeName}.ExecutionCompleted", telemetryContext);
+            });
         }
 
         private async Task AMDDriverInstallation(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -115,31 +114,6 @@
 
             await this.ExecuteCommandAsync(installerPath, "/S /v/qn", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        private Task ExecuteCommandAsync(string commandLine, string commandLineArgs, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                string output = string.Empty;
-                using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, commandLine, commandLineArgs, workingDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-
-                    this.LogProcessTrace(process);
-
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "GpuDriverInstallation")
-                            .ConfigureAwait(false);
-
-                        process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
-                    }
-                }
-            });
         }
     }
 }

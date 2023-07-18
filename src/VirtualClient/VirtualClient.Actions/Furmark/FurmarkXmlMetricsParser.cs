@@ -116,8 +116,8 @@ namespace VirtualClient.Actions
                 List<double> coreTemps = kvp.Value;
                 double x = coreTemps.Average();
                 double max = coreTemps.Max();
-                metrics.Add(new Metric("GPU" + string.Join(" ", gpuId) + "_AvgTemperatur ", coreTemps.Average()));
-                metrics.Add(new Metric("GPU" + string.Join(" ", gpuId) + "_MaxTemperatur ", coreTemps.Max()));
+                metrics.Add(new Metric("GPU" + string.Join(" ", gpuId) + "_AvgTemperatur ", coreTemps.Average(), "celsius"));
+                metrics.Add(new Metric("GPU" + string.Join(" ", gpuId) + "_MaxTemperatur ", coreTemps.Max(), "celsius"));
 
                 if (gpuFps.ContainsKey(gpuId))
                 {

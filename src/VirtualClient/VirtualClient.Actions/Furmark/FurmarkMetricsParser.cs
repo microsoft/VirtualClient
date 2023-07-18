@@ -40,7 +40,7 @@ namespace VirtualClient.Actions
             int score = int.Parse(Regex.Match(input, ScorePattern).Groups[1].Value);
             int durationInMs = int.Parse(Regex.Match(input, DurationPattern).Groups[1].Value);
             metrics.Add(new Metric("Score", score));
-            metrics.Add(new Metric("DurationInMs", durationInMs));
+            metrics.Add(new Metric("DurationInMs", durationInMs, "ms"));
             return metrics;
         }
 

@@ -40,7 +40,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_11520X216_2",
+        "Scenario": "Furmmark_2160X11520_2",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",
@@ -52,7 +52,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_11520X216_8",
+        "Scenario": "Furmmark_2160X11520_8",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",
@@ -64,7 +64,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_2560X1440_2",
+        "Scenario": "Furmmark_1440X2560_2",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",
@@ -76,7 +76,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_2560X1440_4",
+        "Scenario": "Furmmark_1440X2560_4",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",
@@ -89,7 +89,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_1280X720_4",
+        "Scenario": "Furmmark_720X1280_4",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",
@@ -102,7 +102,7 @@
     {
       "Type": "FurmarkExecutor",
       "Parameters": {
-        "Scenario": "Furmmark_1280X720_2",
+        "Scenario": "Furmmark_720X1280_2",
         "PackageName": "Furmark",
         "PsExecPackageName": "pstools",
         "Time": "$.Parameters.Time",

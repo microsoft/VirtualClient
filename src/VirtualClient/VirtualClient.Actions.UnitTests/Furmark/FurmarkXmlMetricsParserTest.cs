@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkExampleMonitor.txt");
+            string outputPath = Path.Combine(workingDirectory, @"Examples\Furmark\FurmarkXMLExampleResults.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new FurmarkXmlMetricsParser (this.rawText);
         }
@@ -38,14 +38,14 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(15, metrics.Count);
-            MetricAssert.Exists(metrics, "GPU1_AvgTemperatur ", 54.8125);   
-            MetricAssert.Exists(metrics, "GPU2_AvgTemperatur ", 50.78125);  
+            MetricAssert.Exists(metrics, "GPU1_AvgTemperatur ", 54.8125, "celsius");   
+            MetricAssert.Exists(metrics, "GPU2_AvgTemperatur ", 50.78125, "celsius");  
             MetricAssert.Exists(metrics, "GPU1_AvgFPS ", 71.15625);         
             MetricAssert.Exists(metrics, "GPU2_AvgFPS ", 71.15625);         
             MetricAssert.Exists(metrics, "GPU1_MaxFPS ", 75);               
             MetricAssert.Exists(metrics, "GPU2_MaxFPS ", 75);               
-            MetricAssert.Exists(metrics, "GPU1_MaxTemperatur ", 60);        
-            MetricAssert.Exists(metrics, "GPU2_MaxTemperatur ", 56);        
+            MetricAssert.Exists(metrics, "GPU1_MaxTemperatur ", 60, "celsius");        
+            MetricAssert.Exists(metrics, "GPU2_MaxTemperatur ", 56, "celsius");        
             MetricAssert.Exists(metrics, "GPU1_Vddc ", 0);        
             MetricAssert.Exists(metrics, "GPU2_Vddc ", 0.95281250000000028); 
             MetricAssert.Exists(metrics, "GPU1_AvgCoreLoad ", 94.34375);
