@@ -92,17 +92,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Defines the session id of the psexec process.
-        /// </summary>
-        public int SessionId
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.SessionId), 1);
-            }
-        }
-
-        /// <summary>
         /// Defines the path to the 3DMark package that contains the workload
         /// executable.
         /// </summary>
@@ -171,7 +160,7 @@ namespace VirtualClient.Actions
                 .AddContext("executable", this.ExecutablePath);
 
             string psexec = this.PlatformSpecifics.Combine(this.psexecDir, "PsExec.exe");
-            string baseArg = @$"-s -i {this.SessionId} -accepteula -nobanner";
+            string baseArg = @$"-s -i 1 -w {this.psexecDir} -accepteula -nobanner";
 
             return this.Logger.LogMessageAsync($"{nameof(ThreeDMarkExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
