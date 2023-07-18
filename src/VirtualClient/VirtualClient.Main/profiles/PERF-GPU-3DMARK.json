@@ -7,6 +7,7 @@
         "Scenario": "TimeSpy",
         "LisenceKey": "",
         "PackageName": "3dmark",
+        "PsExecPackageName": "pstools",
         "Tags": "GPU,3DMark,Gaming"
       }
     }
@@ -22,6 +23,16 @@
     }
   ],
   "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPsToolsPackage",
+        "BlobContainer": "packages",
+        "BlobName": "pstools.2.51.zip",
+        "PackageName": "pstools",
+        "Extract": true
+      }
+    },
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
