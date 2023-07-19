@@ -710,7 +710,7 @@ namespace VirtualClient
 
                         if (this.Profile.Parameters?.Any() == true)
                         {
-                            runtimeComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
+                            VirtualClientComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
                         }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
