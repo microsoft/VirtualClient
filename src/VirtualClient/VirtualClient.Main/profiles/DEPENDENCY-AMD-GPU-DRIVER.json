@@ -1,7 +1,7 @@
 {
     "Description": "AMD GPU Driver Installation Dependency",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "10:00:00",
+        "RecommendedMinimumExecutionTime": "00:10:00",
         "SupportedPlatforms": "win-x64",
         "SupportedOperatingSystems": "Windows",
         "SupportedVmSeries":  "nvv4,v620",
