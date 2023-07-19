@@ -128,7 +128,7 @@
         <!-- Serilog.Sinks.RollingFile -->
         <Serilog_Sinks_RollingFile_PackageVersion>3.3.0</Serilog_Sinks_RollingFile_PackageVersion>
 
-        <!-- SSH.Net --
+        <!-- SSH.Net -->
         <SSH_Net_PackageVersion>2020.0.2</SSH_Net_PackageVersion>
 
         <!-- Swashbuckle.AspNetCore -->
