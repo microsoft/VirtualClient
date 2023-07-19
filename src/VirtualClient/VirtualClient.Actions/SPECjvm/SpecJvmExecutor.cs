@@ -161,7 +161,7 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results: new List<string> { results }, logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjvm", results: results.AsArray(), logToFile: true);
 
                     SpecJvmMetricsParser parser = new SpecJvmMetricsParser(results);
 

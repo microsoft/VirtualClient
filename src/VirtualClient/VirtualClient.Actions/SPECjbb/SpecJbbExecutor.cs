@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
                 foreach (string file in outputFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", results: new List<string> { results }, logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "SPECjbb", results: results.AsArray(), logToFile: true);
 
                     try
                     {

@@ -199,7 +199,7 @@ namespace VirtualClient.Actions
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 
-                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", new List<string> { results }, logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest", results.AsArray(), logToFile: true);
 
                 if (string.IsNullOrWhiteSpace(results))
                 {

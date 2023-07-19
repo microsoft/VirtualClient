@@ -138,7 +138,7 @@ namespace VirtualClient.Actions
                     {
                         string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: new List<string> { results }, logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
 
                         HpcgMetricsParser parser = new HpcgMetricsParser(results);
                         IList<Metric> metrics = parser.Parse();

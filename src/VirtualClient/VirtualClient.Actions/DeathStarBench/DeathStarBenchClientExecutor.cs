@@ -158,7 +158,7 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
-                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: new List<string> { results }, logToFile: true);
+                await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: results.AsArray(), logToFile: true);
 
                 DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
                 IList<Metric> metrics = deathStarBenchMetricsParser.Parse();

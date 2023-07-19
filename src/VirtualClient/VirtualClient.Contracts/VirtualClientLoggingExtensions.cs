@@ -60,7 +60,7 @@ namespace VirtualClient.Contracts
             }
             else
             {
-                process.ProcessDetails.GeneratedResults.Add(results);
+                process.ProcessDetails.GeneratedResults = process.ProcessDetails.GeneratedResults.Concat(new[] { results });
                 AddProcessResults(telemetryContext, process.ProcessDetails, name, maxChars);
             }
 

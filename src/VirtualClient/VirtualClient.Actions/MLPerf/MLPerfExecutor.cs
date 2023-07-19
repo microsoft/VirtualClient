@@ -386,7 +386,7 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: new List<string> { results }, logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: true);
                     IList<Metric> metrics = parser.Parse();
@@ -412,7 +412,7 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: new List<string> { results }, logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf", results: results.AsArray(), logToFile: true);
 
                     MLPerfMetricsParser parser = new MLPerfMetricsParser(results, accuracyMode: false);
                     IList<Metric> metrics = parser.Parse();
