@@ -37,7 +37,8 @@ namespace VirtualClient.Actions
                 ["BindToCores"] = true,
                 ["Port"] = 6379,
                 ["ServerInstances"] = 1,
-                ["ServerThreadCount"] = 4
+                ["ServerThreadCount"] = 4,
+                ["IsTLSEnabled"] = false
             };
 
             string agentId = $"{Environment.MachineName}-Server";

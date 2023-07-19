@@ -41,6 +41,12 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {ScriptPath:redis}
+        private static readonly Regex ScriptPathExpression = new Regex(
+            @"\{ScriptPath\:([a-z0-9-_\. ]+)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {PackagePath/Platform:fio}
         private static readonly Regex PackagePathForPlatformExpression = new Regex(
             @"\{PackagePath/Platform\:([a-z0-9-_\. ]+)\}",
@@ -64,6 +70,41 @@ namespace VirtualClient
         /// </summary>
         private static readonly IList<Func<IServiceCollection, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, string, Task<EvaluationResult>>>
         {
+            // Expression: {ScriptPath:xyz}
+            // this.PlatformSpecifics.GetScriptPath("a","b");
+            // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
+            new Func<IServiceCollection, string, Task<EvaluationResult>>((dependencies, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.ScriptPathExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    foreach (Match match in matches)
+                    {
+                        string scriptFolderPath = systemManagement.PlatformSpecifics.GetScriptPath(match.Groups[1].Value);
+
+                        if (scriptFolderPath == null)
+                        {
+                            throw new DependencyException(
+                                $"Cannot evaluate expression {{ScriptPath:{match.Value}}}. A scipt with the name '{match.Value}' does not " +
+                                $"exist on system or is not registered with Virtual Client.",
+                                ErrorReason.DependencyNotFound);
+                        }
+
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
             // Expression: {PackagePath:xyz}
             // Resolves to the path to the package folder location (e.g. /home/users/virtualclient/packages/redis).
             new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
