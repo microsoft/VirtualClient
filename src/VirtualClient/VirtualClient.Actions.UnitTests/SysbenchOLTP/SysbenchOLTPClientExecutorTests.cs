@@ -47,12 +47,10 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SysbenchOLTPClientExecutor.DatabaseName), "sbtest" },
-                { nameof(SysbenchOLTPClientExecutor.Threads), "1" },
-                { nameof(SysbenchOLTPClientExecutor.RecordCount), "10000" },
+                { nameof(SysbenchOLTPClientExecutor.RecordCount), "1000" },
                 { nameof(SysbenchOLTPClientExecutor.DurationSecs), "10" },
                 { nameof(SysbenchOLTPClientExecutor.Workload), "oltp_read_write" },
                 { nameof(SysbenchOLTPClientExecutor.PackageName), "sysbench" },
-                { nameof(SysbenchOLTPClientExecutor.NumTables), "1" },
             };
 
             string agentId = $"{Environment.MachineName}";
@@ -87,8 +85,7 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = false,
-                RecordCount = 0,
-                TableCount = 0,
+                DatabaseInitialized = false,
             }));
 
             string[] expectedCommands =
@@ -100,9 +97,9 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -150,7 +147,6 @@ namespace VirtualClient.Actions
 
             SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
             {
-                [nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = true,
                 [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
             });
 
@@ -160,8 +156,7 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = false,
-                RecordCount = 0,
-                TableCount = 0,
+                DatabaseInitialized = false,
             }));
 
             this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
@@ -175,10 +170,10 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo {this.scriptPath}/balancedClient.sh 1.2.3.5 1 sbtest /testdrive1 /testdrive2",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo {this.scriptPath}/balancedClient.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -229,9 +224,9 @@ namespace VirtualClient.Actions
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -269,8 +264,7 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                RecordCount = 0,
-                TableCount = 0,
+                DatabaseInitialized = false,
             }));
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -288,8 +282,7 @@ namespace VirtualClient.Actions
             {
                 SysbenchInitialized = true,
                 DatabaseScenarioInitialized = true,
-                RecordCount = 10000,
-                TableCount = 1,
+                DatabaseInitialized = true,
             }));
 
             string[] expectedCommands =
@@ -297,7 +290,7 @@ namespace VirtualClient.Actions
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
             };
 
             int commandNumber = 0;

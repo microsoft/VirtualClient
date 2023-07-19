@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
                 $"sudo chmod +x \"{scriptPath}/inmemory.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
-                $"sudo {scriptPath}/inmemory.sh 6144"
+                $"sudo {scriptPath}/inmemory.sh 8192"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

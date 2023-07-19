@@ -33,6 +33,7 @@ namespace VirtualClient.Actions
         private string sysbenchLoggingArguments;
         private string sysbenchDirectory;
         private string sysbenchPath;
+        private string threadCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPClientExecutor"/> class.
@@ -71,39 +72,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The number of tables option passed to Sysbench.
-        /// </summary>
-        public string NumTables
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.NumTables));
-            }
-        }
-
-        /// <summary>
-        /// The table size option passed to Sysbench.
-        /// </summary>
-        public string RecordCount
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.RecordCount));
-            }
-        }
-
-        /// <summary>
-        /// The number of threads option passed to Sysbench.
-        /// </summary>
-        public string Threads
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Threads));
-            }
-        }
-
-        /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
         public string Workload
@@ -111,6 +79,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Workload));
+            }
+        }
+
+        /// <summary>
+        /// Number of records per table.
+        /// </summary>
+        public string RecordCount
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.RecordCount));
             }
         }
 
@@ -198,6 +177,8 @@ namespace VirtualClient.Actions
 
             this.sysbenchDirectory = this.GetPackagePath(this.PackageName);
 
+            this.SetupDatabaseParameters();
+
             // store state with initialization status & record/table counts, if does not exist already
 
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
@@ -208,17 +189,14 @@ namespace VirtualClient.Actions
                 // install sysbench using repo scripts
                 await this.InstallSysbenchOLTPPackage(cancellationToken).ConfigureAwait(false);
                 state.SysbenchInitialized = true;
+
+                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
 
-            state.TableCount = state.TableCount < 0 ? 0 : state.TableCount;
-            state.RecordCount = state.RecordCount < 0 ? 0 : state.RecordCount;
+            // set arguments & path up based on prepare arguments in profile
 
-            await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
-
-            // set arguments & path up based on prepare arguments in profile 
-
-            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.threadCount} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
@@ -293,24 +271,25 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
+        private void SetupDatabaseParameters()
+        {
+            int numThreads = Environment.ProcessorCount * 8;
+
+            numThreads = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 1 : numThreads;
+
+            /* formula for changing record count
+                recordCountExponent = (int)Math.Log2(coreCount) + 2;
+                int numRecords = (int)Math.Pow(10, recordCountExponent);
+                this.RecordCount = numRecords.ToString();*/
+  
+            this.threadCount = numThreads.ToString();
+        }
+
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
 
-            int tableCount = int.Parse(this.NumTables);
-            int recordCount = int.Parse(this.RecordCount);
-
-            // sysbench has a bug in preparing the 12th table on arm64 architecture
-
-            if (this.CpuArchitecture == Architecture.Arm64 && tableCount > 11)
-            {
-                throw new WorkloadException(
-                        $"The Sysbench OLTP workload does not support a configuration of 12 or more tables on Arm64 architecture." +
-                        $"Please reconfigure your parameters and try again.",
-                        ErrorReason.PlatformNotSupported);
-            }
-
-            if (tableCount != state.TableCount || recordCount != state.RecordCount)
+            if (!state.DatabaseInitialized)
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
@@ -322,8 +301,7 @@ namespace VirtualClient.Actions
 
                 // update the state object accordingly
 
-                state.TableCount = tableCount;
-                state.RecordCount = recordCount;
+                state.DatabaseInitialized = true;
 
                 await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
             }
@@ -353,7 +331,7 @@ namespace VirtualClient.Actions
 
             string balancedScript = "balancedClient.sh";
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
-            string balancedArguments = $"{this.ServerIpAddress} {this.NumTables} {this.DatabaseName} {diskPaths}";
+            string balancedArguments = $"{this.ServerIpAddress} 10 {this.DatabaseName} {diskPaths}";
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(
                 this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),

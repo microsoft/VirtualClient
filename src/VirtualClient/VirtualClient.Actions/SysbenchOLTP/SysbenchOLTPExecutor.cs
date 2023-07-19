@@ -293,35 +293,16 @@ namespace VirtualClient.Actions
                 }
             }
 
-            /// <summary>
-            /// Workload/action scenario/tableCount
-            /// </summary>
-            public int TableCount
+            public bool DatabaseInitialized
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.TableCount), -1);
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseInitialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(SysbenchOLTPState.TableCount)] = value;
-                }
-            }
-
-            /// <summary>
-            /// Workload/action scenario/recordCount
-            /// </summary>
-            public int RecordCount
-            {
-                get
-                {
-                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.RecordCount), -1);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.RecordCount)] = value;
+                    this.Properties[nameof(SysbenchOLTPState.DatabaseInitialized)] = value;
                 }
             }
         }

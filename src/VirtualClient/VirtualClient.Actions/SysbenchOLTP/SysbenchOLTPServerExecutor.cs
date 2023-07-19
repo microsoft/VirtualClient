@@ -127,7 +127,7 @@ namespace VirtualClient.Actions
 
                 MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
                 long totalMemoryKiloBytes = memoryInfo.TotalMemory;
-                int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.75 / 1024);
+                int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
                     this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
