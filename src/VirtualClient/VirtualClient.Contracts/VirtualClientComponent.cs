@@ -60,7 +60,6 @@ namespace VirtualClient.Contracts
             }
 
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            this.GlobalParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.Dependencies = dependencies;
             this.Logger = NullLogger.Instance;
 
@@ -126,7 +125,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                return this.GlobalParameters.GetValue<string>(nameof(this.ContentPathTemplate), "{experimentId}/{agentId}/{toolName}/{role}/{scenario}");
+                return VirtualClientComponent.GlobalParameters.GetValue<string>(nameof(this.ContentPathTemplate), "{experimentId}/{agentId}/{toolName}/{role}/{scenario}");
             }
         }
 
@@ -159,7 +158,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Global Parameters provided to the application on the command line or through Parameters in respective profiles.
         /// </summary>
-        public IDictionary<string, IConvertible> GlobalParameters { get; }
+        public static IDictionary<string, IConvertible> GlobalParameters { get; } = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
