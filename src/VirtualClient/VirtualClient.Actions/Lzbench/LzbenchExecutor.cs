@@ -176,7 +176,7 @@ namespace VirtualClient.Actions
                 foreach (string file in resultsFiles)
                 {
                     string results = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", new List<string> { results }, logToFile: true);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", results.AsArray(), logToFile: true);
 
                     LzbenchMetricsParser parser = new LzbenchMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
