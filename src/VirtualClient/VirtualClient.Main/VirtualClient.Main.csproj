@@ -59,7 +59,8 @@
         -->
         <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
-        <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
+		<WindowsProfiles Include="profiles\DEPENDENCY-AMD-GPU-DRIVER.json" />		
+		<WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />

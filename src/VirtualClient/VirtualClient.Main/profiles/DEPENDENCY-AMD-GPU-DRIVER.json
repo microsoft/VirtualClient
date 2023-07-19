@@ -1,0 +1,33 @@
+{
+    "Description": "AMD GPU Driver Installation Dependency",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "10:00:00",
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystems": "Windows",
+        "SupportedVmSeries":  "nvv4,v620",
+        "SpecialRequirements": "This is AMD GPU Driver dependency. It can only be installed on the system having an AMD GPU card/chip."
+    },
+    "Parameters": {        
+        "VmSeries": "nvv4"
+    },
+    "Dependencies": [        
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallAMDGPUDriverPackage",
+                "BlobContainer": "packages",
+              "BlobName": "amdgpudriver.zip",
+              "PackageName": "amdgpudriver",
+              "Extract": true
+            }
+        },  
+        {
+            "Type": "AMDGPUDriverInstallation",
+            "Parameters": {
+              "Scenario": "InstallAMDGPUDriver",
+              "VmSeries": "$.Parameters.VmSeries",
+              "PackageName": "amdgpudriver"
+            }
+        }
+    ]
+}
