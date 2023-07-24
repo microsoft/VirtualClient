@@ -33,7 +33,6 @@ namespace VirtualClient.Actions
         private string sysbenchLoggingArguments;
         private string sysbenchDirectory;
         private string sysbenchPath;
-        private string threadCount;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPClientExecutor"/> class.
@@ -67,7 +66,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.DatabaseName));
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.DatabaseName), "sbtest");
             }
         }
 
@@ -89,7 +88,30 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.RecordCount));
+                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount);
+                return recordCount?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.RecordCount)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Number of threads.
+        /// </summary>
+        public string Threads
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads);
+                return threads?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.Threads)] = value;
             }
         }
 
@@ -196,7 +218,7 @@ namespace VirtualClient.Actions
             // set arguments & path up based on prepare arguments in profile
 
             this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.threadCount} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
@@ -205,25 +227,30 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                try
-                {
-                    SysbenchOLTPMetricsParser parser = new SysbenchOLTPMetricsParser(process.StandardOutput.ToString());
-                    IList<Metric> metrics = parser.Parse();
+                string text = process.StandardOutput.ToString();
 
-                    this.Logger.LogMetrics(
-                        toolName: "Sysbench",
-                        scenarioName: "OLTP",
-                        process.StartTime,
-                        process.ExitTime,
-                        metrics,
-                        null,
-                        scenarioArguments: this.sysbenchLoggingArguments,
-                        this.Tags,
-                        telemetryContext);
-                }
-                catch (Exception exc)
+                if (!string.IsNullOrEmpty(text)) 
                 {
-                    throw new WorkloadException($"Failed to parse sysbench output.", exc, ErrorReason.InvalidResults);
+                    try
+                    {
+                        SysbenchOLTPMetricsParser parser = new SysbenchOLTPMetricsParser(text);
+                        IList<Metric> metrics = parser.Parse();
+
+                        this.Logger.LogMetrics(
+                            toolName: "Sysbench",
+                            scenarioName: "OLTP",
+                            process.StartTime,
+                            process.ExitTime,
+                            metrics,
+                            null,
+                            scenarioArguments: this.sysbenchLoggingArguments,
+                            this.Tags,
+                            telemetryContext);
+                    }
+                    catch (Exception exc)
+                    {
+                        throw new WorkloadException($"Failed to parse sysbench output.", exc, ErrorReason.InvalidResults);
+                    }
                 }
             }
         }
@@ -273,16 +300,33 @@ namespace VirtualClient.Actions
 
         private void SetupDatabaseParameters()
         {
-            int numThreads = Environment.ProcessorCount * 8;
+            // default formulaic setup of the database
+            // records & threads depend on the core count
 
-            numThreads = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 1 : numThreads;
+            int coreCount = Environment.ProcessorCount;
+            int numThreads = coreCount * 8;
+            int recordCountExponent = (int)Math.Log2(coreCount) + 2;
 
-            /* formula for changing record count
-                recordCountExponent = (int)Math.Log2(coreCount) + 2;
-                int numRecords = (int)Math.Pow(10, recordCountExponent);
-                this.RecordCount = numRecords.ToString();*/
-  
-            this.threadCount = numThreads.ToString();
+            // balanced scenario requires less records & threads since
+            // focus is just on disk i/o
+
+            if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
+            {
+                recordCountExponent -= 2;
+                numThreads = 1;
+            }
+
+            int numRecords = (int)Math.Pow(10, recordCountExponent);
+
+            string threadCount = numThreads.ToString();
+            string recordCount = numRecords.ToString();
+
+            // update the threads & record count only if they are not defined
+            // recommended for balanced & in memory scenarios to utilize
+            // programmatic setup
+
+            this.Threads = string.IsNullOrEmpty(this.Threads) ? threadCount : this.Threads;
+            this.RecordCount = string.IsNullOrEmpty(this.RecordCount) ? recordCount : this.RecordCount;
         }
 
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)

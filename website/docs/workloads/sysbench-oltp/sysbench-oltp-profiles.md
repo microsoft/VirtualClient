@@ -55,9 +55,9 @@ In addition to the standard configuration, Virtual Client offers two tuned scena
 * **In-Memory**: The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk
   I/O usage.
 
-A database scenario can be selected by denoting it in the profile. Note that the DatabaseScenario option is required in both the SysbenchOLTPServerExecutor and 
-the SysbenchOLTPClientExecutor for the Balanced Scenario -- there is preparation needed on both the client and the server to configure the balanced scenario. For the
-In Memory scenario, it simply needs to be denoted on the SysbenchOLTPServerExecutor.
+A database scenario can be selected by denoting it in the profile. Note that the DatabaseScenario option is required in both the SysbenchOLTPServerExecutor and the SysbenchOLTPClientExecutor for the Balanced Scenario -- there is preparation needed on both the client and the server to configure the balanced scenario. For the In Memory scenario, it simply needs to be denoted on the SysbenchOLTPServerExecutor.
+
+It is highly recommended to use the default thread and record count values when utilizing one of these scenarios. For the Balanced Scenario, the default is 1 thread and 10^vCPU number of records. For the In Memory Scenario, the presets are listed below, under 'Profile Parameters'.
 
 ``` bash
 {
@@ -113,11 +113,10 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
   | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
   | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Default          |
-  | Threads              | Required. Number of threads to use during workload execution.                |N/A          |
-  | NumTables              | Required. Number of tables to set up in the database.                                                                |N/A          |
-  | RecordCount              | Required. Number of records per table in the database.                                                                |N/A          |
-  | DurationSecs              | Required. Duration, in seconds, to run the workload.                                                               |N/A          |
-  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          |N/A          |
+  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8         |
+  | RecordCount              | Not Required. Number of records per table in the database.                                                      | 10^(vCPU + 2)         |
+  | DurationSecs              | Required. Duration, in seconds, to run the workload.                                                               | N/A          |
+  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
