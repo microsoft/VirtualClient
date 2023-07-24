@@ -184,6 +184,11 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
+        /// Test/fake Ssh Client manager.
+        /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
+
+        /// <summary>
         /// Test/fake state manager.
         /// </summary>
         public InMemoryStateManager StateManager { get; set; }
@@ -253,6 +258,7 @@ namespace VirtualClient
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.ProcessManager = new InMemoryProcessManager(platform);
+            this.SshClientManager = new InMemorySshClientManager();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
 
@@ -263,6 +269,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(this.FileSystem);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
@@ -345,6 +352,7 @@ namespace VirtualClient
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
                 .AddSingleton<IPackageManager>(this.PackageManager)
+                .AddSingleton<SshClientManager>(this.SshClientManager)
                 .AddSingleton<IStateManager>(this.StateManager)
                 .AddSingleton<ProfileTiming>(this.Timing);
 

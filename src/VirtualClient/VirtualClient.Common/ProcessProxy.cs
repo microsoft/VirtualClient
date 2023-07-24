@@ -27,6 +27,8 @@ namespace VirtualClient.Common
         private DateTime exitTime;
         private bool disposed;
 
+        private ProcessDetails processDetails;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ProcessProxy"/> class.
         /// </summary>
@@ -37,6 +39,8 @@ namespace VirtualClient.Common
             this.UnderlyingProcess = process;
             this.StandardError = new ConcurrentBuffer();
             this.StandardOutput = new ConcurrentBuffer();
+            this.processDetails = new ProcessDetails();
+            this.processDetails.GeneratedResults = new List<string>();
         }
 
         /// <inheritdoc />
@@ -124,6 +128,22 @@ namespace VirtualClient.Common
             set
             {
                 this.StartInfo.RedirectStandardOutput = value;
+            }
+        }
+
+        /// <inheritdoc />
+        public ProcessDetails ProcessDetails
+        {
+            get
+            {
+                this.processDetails.Id = this.Id;
+                this.processDetails.CommandLine = SensitiveData.ObscureSecrets($"{this.StartInfo?.FileName} {this.StartInfo?.Arguments}".Trim());
+                this.processDetails.ExitCode = this.ExitCode;
+                this.processDetails.StandardError = this.StandardError?.Length > 0 ? this.StandardError.ToString() : string.Empty;
+                this.processDetails.StandardOutput = this.StandardOutput?.Length > 0 ? this.StandardOutput.ToString() : string.Empty;
+                this.processDetails.WorkingDirectory = this.StartInfo?.WorkingDirectory;
+
+                return this.processDetails;
             }
         }
 
