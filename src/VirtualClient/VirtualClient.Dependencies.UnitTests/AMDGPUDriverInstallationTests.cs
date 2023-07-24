@@ -56,10 +56,10 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcesseOnExecuteForNvv4()
+        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcesseOnExecuteForMi25()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT, "nvv4");
-            string installScriptPath = this.fixture.Combine(this.mockPackage.Path, "nvv4", "AMD-Azure-NVv4-Driver-22Q2.exe");
+            this.SetupDefaultMockBehavior(PlatformID.Win32NT, "mi25");
+            string installScriptPath = this.fixture.Combine(this.mockPackage.Path, "mi25", "AMD-mi25.exe");
 
             await this.component.ExecuteAsync(CancellationToken.None);
             Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted($"{installScriptPath} /S /v/qn"));

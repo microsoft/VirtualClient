@@ -23,7 +23,7 @@
     /// </summary>
     public class AMDGPUDriverInstallation : VirtualClientComponent
     {
-        private const string Nvv4ExeName = "AMD-Azure-NVv4-Driver-22Q2.exe";
+        private const string Mi25ExeName = "AMD-mi25.exe";
         private const string V620ExeName = "Setup.exe";
         private IPackageManager packageManager;
         private IFileSystem fileSystem;
@@ -64,13 +64,13 @@
         }
 
         /// <summary>
-        /// Vm series on which driver is installed. (e.g. nvv4, v620)
+        /// Vm series on which driver is installed. (e.g. mi25, v620)
         /// </summary>
         public string VmSeries
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(AMDGPUDriverInstallation.VmSeries), "nvv4");
+                return this.Parameters.GetValue<string>(nameof(AMDGPUDriverInstallation.VmSeries), "mi25");
             }
         }
 
@@ -131,9 +131,9 @@
 
             switch (this.VmSeries)
             {
-                case "nvv4":
+                case "mi25":
                     {
-                        await this.InstallAMDGPUDriverOnNvv4(amdDriverInstallerPackage.Path, telemetryContext, cancellationToken)
+                        await this.InstallAMDGPUDriverOnMi25(amdDriverInstallerPackage.Path, telemetryContext, cancellationToken)
                             .ConfigureAwait(false);
                         break;
                     }
@@ -152,9 +152,9 @@
             }            
         }
 
-        private async Task InstallAMDGPUDriverOnNvv4(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task InstallAMDGPUDriverOnMi25(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installationFile = this.Combine(driverPackagePath, this.VmSeries, AMDGPUDriverInstallation.Nvv4ExeName);
+            string installationFile = this.Combine(driverPackagePath, this.VmSeries, AMDGPUDriverInstallation.Mi25ExeName);
 
             if (!this.fileSystem.File.Exists(installationFile))
             { 
