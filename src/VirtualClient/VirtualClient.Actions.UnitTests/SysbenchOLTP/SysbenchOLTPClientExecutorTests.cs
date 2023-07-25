@@ -91,7 +91,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -230,7 +230,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -288,7 +288,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -354,7 +354,7 @@ namespace VirtualClient.Actions
             {
                 $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
             };
 

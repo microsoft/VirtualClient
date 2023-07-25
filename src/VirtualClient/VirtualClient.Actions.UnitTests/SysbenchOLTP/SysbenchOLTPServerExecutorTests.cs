@@ -67,10 +67,10 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
-                $"sudo {scriptPath}/inmemory.sh 8192"
+                $"sudo {scriptPath}/inMemory.sh 8192"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -126,7 +126,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
                 $"sudo {scriptPath}/balancedServer.sh {mountPaths}"
@@ -170,7 +170,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inmemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
                 $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
                 $"sudo {scriptPath}/balancedServer.sh"

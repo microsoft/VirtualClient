@@ -61,7 +61,7 @@ namespace VirtualClient.Actions
 
             string balancedClientScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balancedClient.sh");
             string balancedServerScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balancedServer.sh");
-            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "inmemory.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "inMemory.sh");
 
             this.mockFixture.SetupFile(balancedServerScript);
             this.mockFixture.SetupFile(balancedClientScript);
@@ -93,7 +93,7 @@ namespace VirtualClient.Actions
 
                 $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balancedServer.sh\"",
                 $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balancedClient.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/inmemory.sh\"",
+                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/inMemory.sh\"",
 
                 "sudo ./autogen.sh",
                 "sudo ./configure",

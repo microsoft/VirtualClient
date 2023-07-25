@@ -34,6 +34,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Disk filter specified
+        /// </summary>
+        public string DiskFilter
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPServerExecutor.DiskFilter), string.Empty);
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the locally self-hosted instance of the
         /// Virtual Client API.
         /// </summary>
@@ -122,7 +133,7 @@ namespace VirtualClient.Actions
             {
                 // server's job is to configure buffer size, in memory script updates the mysql config file
 
-                string inMemoryScript = "inmemory.sh";
+                string inMemoryScript = "inMemory.sh";
                 string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
                 MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
@@ -161,6 +172,11 @@ namespace VirtualClient.Actions
             if (!cancellationToken.IsCancellationRequested)
             {
                 string diskFilter = "osdisk:false";
+
+                if (!string.IsNullOrEmpty(this.DiskFilter))
+                {
+                    diskFilter += string.Concat("&", this.DiskFilter);
+                }
 
                 IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
                         .ConfigureAwait(false);

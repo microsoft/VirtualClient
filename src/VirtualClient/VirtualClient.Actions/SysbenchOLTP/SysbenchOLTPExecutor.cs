@@ -156,7 +156,7 @@ namespace VirtualClient.Actions
                     cancellationToken);
 
                 await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "inmemory.sh"),
+                    this.Combine(scriptsDirectory, "inMemory.sh"),
                     this.Platform,
                     cancellationToken);
             }

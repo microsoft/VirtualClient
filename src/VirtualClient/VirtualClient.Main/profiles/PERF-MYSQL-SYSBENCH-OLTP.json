@@ -7,14 +7,15 @@
         "SupportedOperatingSystems": "Debian,Ubuntu"
     },
     "Parameters": {
-        "DatabaseName": "sbtest"
+        "DatabaseName": "sbtest",
+        "DatabaseScenario":  "Default"
     },
     "Actions": [
         {
             "Type": "SysbenchOLTPServerExecutor",
             "Parameters": {
                 "Scenario": "mysql_server",
-                "DatabaseScenario": "Default",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Role": "Server"
             }
         },
@@ -22,8 +23,8 @@
             "Type": "SysbenchOLTPClientExecutor",
             "Parameters": {
                 "Scenario": "oltp_read_write",
-                "DatabaseName": "sbtest",
-                "DatabaseScenario": "Default",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Role": "Client",
                 "DurationSecs": "1800",
                 "RecordCount": "10000",
