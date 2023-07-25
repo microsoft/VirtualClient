@@ -75,6 +75,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True if TLS is enabled.
+        /// </summary>
+        public bool IsTLSEnabled
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled));
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the number of server instances/copies to run.
         /// </summary>
         public int ServerInstances
@@ -332,16 +343,23 @@ namespace VirtualClient.Actions
 
                         if (this.BindToCores)
                         {
-                            // e.g.
-                            // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/redis/src/redis-server --port 6389 --protected-mode no
-                            //       --ignore-warnings ARM64-COW-BUG --save --io-threads 4 --maxmemory-policy noeviction
-
-                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
+                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath}";
                         }
                         else
                         {
-                            commandArguments = $"-c \"{this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
+                            commandArguments = $"-c \"{this.RedisExecutablePath}";
                         }
+
+                        if (this.IsTLSEnabled)
+                        {
+                            commandArguments += $" --tls-port {port} --port 0";
+                        }
+                        else
+                        {
+                            commandArguments += $" --port {port}";
+                        }
+
+                        commandArguments += $" {this.CommandLine}\"";
 
                         // We cannot use a Task.Run here. The Task is queued on the threadpool but does not get running
                         // until our counter 'i' is at the end. This will cause all server instances to use the same port

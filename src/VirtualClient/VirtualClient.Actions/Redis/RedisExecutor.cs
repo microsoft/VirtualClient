@@ -221,7 +221,7 @@ namespace VirtualClient.Actions
             }
 
             /// <summary>
-            /// The set of ports on which the Memcached servers are running.
+            /// The set of ports on which the Redis servers are running.
             /// </summary>
             public IEnumerable<int> Ports
             {

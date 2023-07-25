@@ -50,11 +50,14 @@ idea. The name of the client must match the name of the system or the value of t
 ## PERF-REDIS.json
 Runs the Memtier workload against to generate various network traffic patterns against a Redis server. Although this is the default client workload
 the Redis benchmark itself can also be run to evaluate the performance of the Redis server.
+We have two profiles for Redis.One supports redis with TLS and one without TLS.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
+* [Workload Profile without TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
+* [Workload Profile with TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS-TLS.json) 
+
 
 * **Supported Platform/Architectures**
-  * linux-x64
+  * linux-x64 
   * linux-arm64
 
 * **Supports Disconnected Scenarios**  
