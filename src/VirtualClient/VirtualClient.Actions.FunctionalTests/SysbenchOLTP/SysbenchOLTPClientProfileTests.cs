@@ -87,6 +87,9 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform, Architecture architecture)
         {
+            int threads = Environment.ProcessorCount * 8;
+            string threadCount = threads.ToString();
+
             return new List<string>()
             {
                 "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
@@ -100,9 +103,9 @@ namespace VirtualClient.Actions
                 "sudo make -j",
                 "sudo make install",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threadCount} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threadCount} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
             };
         }
 

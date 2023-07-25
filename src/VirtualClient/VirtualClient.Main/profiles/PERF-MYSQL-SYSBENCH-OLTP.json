@@ -28,7 +28,6 @@
                 "Role": "Client",
                 "DurationSecs": "1800",
                 "RecordCount": "10000",
-                "Threads": "64",
                 "Workload": "oltp_read_write",
                 "PackageName": "sysbench"
             }
