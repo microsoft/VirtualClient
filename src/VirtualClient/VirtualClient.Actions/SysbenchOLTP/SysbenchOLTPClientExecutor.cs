@@ -217,7 +217,7 @@ namespace VirtualClient.Actions
 
             // set arguments & path up based on prepare arguments in profile
 
-            this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
             this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);

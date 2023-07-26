@@ -103,7 +103,7 @@ namespace VirtualClient.Actions
                 "sudo make install",
 
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threads} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threads} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
             };
         }
