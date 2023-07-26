@@ -208,6 +208,11 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
+        /// Mock ssh client manager.
+        /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
+
+        /// <summary>
         /// The mock process that will be created by the process manager.
         /// </summary>
         public InMemoryProcess Process { get; set; }

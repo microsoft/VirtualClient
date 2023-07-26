@@ -46,6 +46,7 @@ namespace VirtualClient.TestExtensions
             mockProcess.SetupGet(p => p.StandardError).Returns(new ConcurrentBuffer());
             mockProcess.SetupGet(p => p.StandardOutput).Returns(new ConcurrentBuffer());
             mockProcess.SetupGet(p => p.StandardInput).Returns(new StreamWriter(new MemoryStream()));
+            mockProcess.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails());
             mockProcess.Setup(p => p.Start()).Returns(true);
 
             return mockProcess;

@@ -97,7 +97,7 @@ namespace VirtualClient.Contracts
 
             EventContext telemetryContext = new EventContext(Guid.NewGuid()).AddProcessContext(process, results: expectedResults);
 
-            Assert.IsTrue(telemetryContext.Properties.TryGetValue("process", out object processContext));
+            Assert.IsTrue(telemetryContext.Properties.TryGetValue("processResults", out object processContext));
 
             string expectedProcessInfo = new
             {
@@ -990,10 +990,10 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
-                Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
-
+                
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessDetails")
                 {
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1011,6 +1011,7 @@ namespace VirtualClient.Contracts
                 }
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
                 {
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processResultsContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1020,7 +1021,7 @@ namespace VirtualClient.Contracts
                         results = expectedResults
                     }.ToJson();
 
-                    string actualProcessInfo = processContext.ToJson();
+                    string actualProcessInfo = processResultsContext.ToJson();
 
                     SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
                     expectedProcessResultsCaptured = true;
@@ -1028,7 +1029,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: expectedResults.AsArray(), logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: true)
                 .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1068,10 +1069,11 @@ namespace VirtualClient.Contracts
             {
                 Assert.AreEqual(LogLevel.Information, level, $"Log level not matched");
                 Assert.IsInstanceOf<EventContext>(state);
-                Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+                
 
                 if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessDetails")
                 {
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1089,6 +1091,7 @@ namespace VirtualClient.Contracts
                 }
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.{expectedToolset}.ProcessResults")
                 {
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processResultsContext));
                     string expectedProcessInfo = new
                     {
                         id = process.Id,
@@ -1098,7 +1101,7 @@ namespace VirtualClient.Contracts
                         results = expectedResults
                     }.ToJson();
 
-                    string actualProcessInfo = processContext.ToJson();
+                    string actualProcessInfo = processResultsContext.ToJson();
 
                     SerializationAssert.JsonEquals(expectedProcessInfo, actualProcessInfo);
                     expectedProcessResultsCaptured = true;
@@ -1106,7 +1109,7 @@ namespace VirtualClient.Contracts
             };
 
             TestExecutor component = new TestExecutor(this.mockFixture);
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: expectedResults.AsArray(), logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: expectedToolset, results: new List<string> { expectedResults }, logToTelemetry: true)
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedProcessDetailsCaptured);
@@ -1143,7 +1146,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: "Any results".AsArray(), logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolName: toolsetName, results: new List<string> { "Any results" }, logToTelemetry: true)
                .ConfigureAwait(false);
 
             Assert.IsTrue(processDetailsHandled);
@@ -1183,7 +1186,7 @@ namespace VirtualClient.Contracts
                 else if (eventInfo.Name == $"{nameof(TestExecutor)}.ProcessResults")
                 {
                     Assert.IsInstanceOf<EventContext>(state);
-                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("process", out object processContext));
+                    Assert.IsTrue((state as EventContext).Properties.TryGetValue("processResults", out object processContext));
 
                     string actualProcessInfo = processContext.ToJson();
                     Assert.IsFalse(actualProcessInfo.Contains(sensitiveData, StringComparison.OrdinalIgnoreCase));
@@ -1191,7 +1194,7 @@ namespace VirtualClient.Contracts
                 }
             };
 
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: "Any results".AsArray(), logToTelemetry: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { "Any results" }, logToTelemetry: true)
                .ConfigureAwait(false);
 
             Assert.IsTrue(confirmed);
@@ -1347,8 +1350,8 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
-                    Assert.IsFalse(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter unexpected");
+                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
@@ -1406,8 +1409,8 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
-                    Assert.IsFalse(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter unexpected");
+                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsFalse(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter unexpected");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
@@ -1467,8 +1470,8 @@ namespace VirtualClient.Contracts
                     Assert.IsTrue(content.Contains($"Command           : {expectedCommand} {expectedArguments}".TrimEnd(), StringComparison.Ordinal), "Command missing");
                     Assert.IsTrue(content.Contains($"Working Directory : {expectedWorkingDir}", StringComparison.Ordinal), "Working directory missing");
                     Assert.IsTrue(content.Contains($"Exit Code         : {expectedExitCode}", StringComparison.Ordinal), "Exit code missing");
-                    Assert.IsTrue(content.Contains($"##Output##", StringComparison.Ordinal), "Output delimiter missing");
-                    Assert.IsTrue(content.Contains($"##Results##", StringComparison.Ordinal), "Results delimiter missing");
+                    Assert.IsTrue(content.Contains($"##StandardOutput##", StringComparison.Ordinal), "Output delimiter missing");
+                    Assert.IsTrue(content.Contains($"##GeneratedResults##", StringComparison.Ordinal), "Results delimiter missing");
 
                     if (!string.IsNullOrWhiteSpace(expectedStandardOutput))
                     {
@@ -1487,7 +1490,7 @@ namespace VirtualClient.Contracts
 
             TestExecutor component = new TestExecutor(this.mockFixture);
             component.Parameters.Clear();
-            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: expectedResults.AsArray(), logToTelemetry: false, logToFile: true)
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), results: new List<string> { expectedResults }, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
             Assert.IsTrue(expectedLogFileWritten);
