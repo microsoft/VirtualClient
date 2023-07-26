@@ -352,7 +352,7 @@ namespace VirtualClient
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
                 .AddSingleton<IPackageManager>(this.PackageManager)
-                .AddSingleton<SshClientManager>(this.SshClientManager)
+                .AddSingleton<ISshClientManager>(this.SshClientManager)
                 .AddSingleton<IStateManager>(this.StateManager)
                 .AddSingleton<ProfileTiming>(this.Timing);
 

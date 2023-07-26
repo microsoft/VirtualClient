@@ -401,7 +401,7 @@ namespace VirtualClient
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
-            this.Dependencies.AddSingleton<SshClientManager>((p) => this.SshClientManager);
+            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);
