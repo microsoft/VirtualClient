@@ -4,11 +4,11 @@
     "RecommendedMinimumExecutionTime": "00:10:00",
     "SupportedPlatforms": "win-x64",
     "SupportedOperatingSystems": "Windows",
-    "SupportedVmSeries": "mi25,v620",
+    "SupportedGpuModel": "mi25,v620",
     "SpecialRequirements": "This is AMD GPU Driver dependency. It can only be installed on the system having an AMD GPU card/chip."
   },
   "Parameters": {
-    "GpuType": "mi25"
+    "GpuModel": "mi25"
   },
   "Dependencies": [
     {
@@ -25,7 +25,7 @@
       "Type": "AMDGPUDriverInstallation",
       "Parameters": {
         "Scenario": "InstallAMDGPUDriver",
-        "VmSeries": "$.Parameters.GpuType",
+        "GpuModel": "$.Parameters.GpuModel",
         "PackageName": "amdgpudriver"
       }
     }

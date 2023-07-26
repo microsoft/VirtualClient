@@ -86,7 +86,7 @@ namespace VirtualClient.Dependencies
             Assert.IsFalse(this.fixture.ProcessManager.CommandsExecuted($"{installScriptPath} -INSTALL -OUTPUT screen"));
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID, string vmseries = "v620")
+        private void SetupDefaultMockBehavior(PlatformID platformID, string gpuModel = "v620")
         {
             this.fixture.Setup(platformID);
             this.mockPackage = new DependencyPath("amddriverpackage", this.fixture.GetPackagePath("amddriverpackage"));
@@ -96,7 +96,7 @@ namespace VirtualClient.Dependencies
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { "PackageName", "amddriverpackage" },
-                { "VmSeries", vmseries },
+                { "GpuModel", gpuModel },
                 { "RebootRequired", false }
             };
 

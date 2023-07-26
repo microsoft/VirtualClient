@@ -64,13 +64,13 @@
         }
 
         /// <summary>
-        /// Vm series on which driver is installed. (e.g. mi25, v620)
+        /// Gpu Type on which driver is installed. (e.g. mi25, v620)
         /// </summary>
-        public string VmSeries
+        public string GpuModel
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(AMDGPUDriverInstallation.VmSeries), "mi25");
+                return this.Parameters.GetValue<string>(nameof(AMDGPUDriverInstallation.GpuModel), "mi25");
             }
         }
 
@@ -129,7 +129,7 @@
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            switch (this.VmSeries)
+            switch (this.GpuModel)
             {
                 case "mi25":
                     {
@@ -147,14 +147,14 @@
 
                 default:
                     {
-                        throw new NotSupportedException($"VM Series '{this.VmSeries}' is not supported.");
+                        throw new NotSupportedException($"GpuModel '{this.GpuModel}' is not supported.");
                     }
             }            
         }
 
         private async Task InstallAMDGPUDriverOnMi25(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installationFile = this.Combine(driverPackagePath, this.VmSeries, AMDGPUDriverInstallation.Mi25ExeName);
+            string installationFile = this.Combine(driverPackagePath, this.GpuModel, AMDGPUDriverInstallation.Mi25ExeName);
 
             if (!this.fileSystem.File.Exists(installationFile))
             { 
@@ -173,7 +173,7 @@
 
         private async Task InstallAMDGPUDriverOnV620(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string installationFile = this.Combine(driverPackagePath, this.VmSeries, AMDGPUDriverInstallation.V620ExeName);
+            string installationFile = this.Combine(driverPackagePath, this.GpuModel, AMDGPUDriverInstallation.V620ExeName);
 
             if (!this.fileSystem.File.Exists(installationFile))
             {
