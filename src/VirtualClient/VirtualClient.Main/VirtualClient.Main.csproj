@@ -126,7 +126,6 @@
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
-        <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP-ARM64.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS-TLS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />

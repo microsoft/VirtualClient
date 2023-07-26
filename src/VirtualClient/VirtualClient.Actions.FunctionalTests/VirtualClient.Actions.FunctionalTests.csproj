@@ -205,9 +205,6 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-OLTP.json" Link="Profiles\PERF-MYSQL-SYSBENCH-OLTP.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
-		<Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-OLTP-ARM64.json" Link="Profiles\PERF-MYSQL-SYSBENCH-OLTP-ARM64.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
