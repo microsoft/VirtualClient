@@ -12,6 +12,7 @@ namespace VirtualClient.Contracts
     internal class LscpuParser : TextParser<CpuInfo>
     {
         private static readonly Regex CoresPerSocketExpression = new Regex(@"Core\(s\)\s+per\s+socket\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CpusExpression = new Regex(@"CPU\(s\)\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ModelNameExpression = new Regex(@"Model\s+name\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NumaNodeExpression = new Regex(@"NUMA\s+node\(s\)\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SocketExpression = new Regex(@"Socket\(s\)\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -30,6 +31,8 @@ namespace VirtualClient.Contracts
         public override CpuInfo Parse()
         {
             // Example format:
+            // CPU(s):                          16
+            // On-line CPU(s) list:             0 - 15
             // Thread(s) per core:              2
             // Core(s) per socket:              2
             // Socket(s):                       1
@@ -41,21 +44,23 @@ namespace VirtualClient.Contracts
 
             Match modelName = LscpuParser.ModelNameExpression.Match(this.RawText);
             Match coresPerSocket = LscpuParser.CoresPerSocketExpression.Match(this.RawText);
+            Match cpus = LscpuParser.CpusExpression.Match(this.RawText);
             Match sockets = LscpuParser.SocketExpression.Match(this.RawText);
             Match threadsPerCore = LscpuParser.ThreadsPerCoreExpression.Match(this.RawText);
             Match numaNodes = LscpuParser.NumaNodeExpression.Match(this.RawText);
 
-            if (!modelName.Success || !coresPerSocket.Success || !sockets.Success || !threadsPerCore.Success)
+            if (!modelName.Success || !coresPerSocket.Success || !cpus.Success || !sockets.Success || !threadsPerCore.Success)
             {
                 throw new WorkloadException(
                     $"The system CPU information could not be parsed from the 'lscpu' toolset output.",
                     ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
+            int logicalProcessorCount = int.Parse(cpus.Groups[1].Value.Trim());
             int socketCount = int.Parse(sockets.Groups[1].Value.Trim());
             int socketCores = int.Parse(coresPerSocket.Groups[1].Value.Trim());
-            int numaNodeCount = 0;
             bool hyperthreadingEnabled = int.Parse(threadsPerCore.Groups[1].Value.Trim()) > 1;
+            int numaNodeCount = 0;
 
             if (numaNodes.Success)
             {
@@ -66,7 +71,7 @@ namespace VirtualClient.Contracts
                 modelName.Groups[1].Value.Trim(),
                 null,
                 socketCount * socketCores,
-                Environment.ProcessorCount,
+                logicalProcessorCount,
                 socketCount,
                 numaNodeCount,
                 hyperthreadingEnabled);

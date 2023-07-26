@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -184,6 +185,32 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void RedisBenchmarkMetricsParserParsesTheExpectedMetricsFromResultsCorrectly_2()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults_2.txt"));
+            var parser = new RedisBenchmarkMetricsParser(results);
+
+            IList<Metric> metrics = parser.Parse();
+            Assert.AreEqual(14, metrics.Count);
+
+            MetricAssert.Exists(metrics, "SET_Throughput", 46446.82, MetricUnit.RequestsPerSec);
+            MetricAssert.Exists(metrics, "SET_Latency-Avg", 34.325, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-Min", 0.504, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P50", 31.903, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P95", 58.527, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P99", 67.903, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-Max", 98.687, MetricUnit.Milliseconds);
+
+            MetricAssert.Exists(metrics, "GET_Throughput", 46939.54, MetricUnit.RequestsPerSec);
+            MetricAssert.Exists(metrics, "GET_Latency-Avg", 33.969, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-Min", 7.792, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P50", 31.903, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P95", 55.967, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P99", 67.199, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-Max", 82.431, MetricUnit.Milliseconds);
+        }
+
+        [Test]
         public void RedisBenchmarkMetricsParserAssociatesTheCorrectRelativityToTheMetrics()
         {
             string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt"));
@@ -201,13 +228,25 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void RedisBenchmarkMetricsParserThrowIfInvalidOutputFormat()
+        public void RedisBenchmarkMetricsParserThrowIfInvalidOutputFormat_1()
         {
             string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt")).Substring(0, 100); // invalid results
             var parser = new RedisBenchmarkMetricsParser(results);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => parser.Parse());
             Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);
+        }
+
+        [Test]
+        public void RedisBenchmarkMetricsParserThrowIfInvalidOutputFormat_2()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt"));
+            var parser = new RedisBenchmarkMetricsParser(string.Join(Environment.NewLine, results.Split(Environment.NewLine).Take(1))); // headers exist but no measurements within.
+
+            WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => parser.Parse());
+            Assert.AreEqual(ErrorReason.InvalidResults, exception.Reason);
+            Assert.IsNotNull(exception.InnerException);
+            Assert.IsInstanceOf<SchemaException>(exception.InnerException);
         }
     }
 }

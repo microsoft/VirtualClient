@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -135,11 +136,11 @@ namespace VirtualClient.Actions
                 {
                     foreach (string file in outputFiles)
                     {
-                        string contents = await this.LoadResultsAsync(file, cancellationToken);
+                        string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: contents.AsArray(), logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
 
-                        HpcgMetricsParser parser = new HpcgMetricsParser(contents);
+                        HpcgMetricsParser parser = new HpcgMetricsParser(results);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
@@ -232,7 +233,8 @@ namespace VirtualClient.Actions
                 string loadCommand = $"spack load hpcg@{this.HpcgVersion} %gcc ^openmpi@{this.OpenMpiVersion}";
 
                 // mpirun --np 4 --use-hwthread-cpus xhpcg
-                int coreCount = Environment.ProcessorCount;
+                CpuInfo cpuInfo = await this.systemManagement.GetCpuInfoAsync(CancellationToken.None);
+                int coreCount = cpuInfo.PhysicalCoreCount;
                 string mpirunCommand = $"mpirun --np {coreCount} --use-hwthread-cpus --allow-run-as-root xhpcg";
 
                 this.runShellText = string.Join(Environment.NewLine, spackSetupCommand, installCommand, loadCommand, mpirunCommand);

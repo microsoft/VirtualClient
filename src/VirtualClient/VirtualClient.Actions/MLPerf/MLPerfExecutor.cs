@@ -99,9 +99,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The user who has the ssh identity registered for.
+        /// The current running user
         /// </summary>
-        public string Username => this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username));
+        public string Username
+        {
+            get
+            {
+                string username = this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username), string.Empty);
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = Environment.UserName;
+                }
+
+                return username;
+            }
+        }
 
         /// <summary>
         /// The MLPerf Nvidia code directory.

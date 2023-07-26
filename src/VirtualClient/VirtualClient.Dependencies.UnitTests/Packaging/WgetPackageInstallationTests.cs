@@ -5,6 +5,7 @@ namespace VirtualClient.Dependencies.Packaging
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -106,7 +107,7 @@ namespace VirtualClient.Dependencies.Packaging
                 await installation.ExecuteAsync(CancellationToken.None);
 
                 // On Windows, we use the 'wget2' toolset that we compiled from the source code.
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget2 {installation.PackageUri}"), "Wget download command incorrect.");
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget {installation.PackageUri}"), "Wget download command incorrect.");
                 Assert.IsTrue(downloadPathConfirmed, "Archive file path incorrect.");
                 Assert.IsTrue(installationPathConfirmed, "Package installation path incorrect.");
                 Assert.IsTrue(packageRegistrationConfirmed, "Package registration incorrect.");
@@ -152,6 +153,59 @@ namespace VirtualClient.Dependencies.Packaging
 
                 // On Windows, we use the 'wget' toolset.
                 Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"wget.exe {installation.PackageUri}"), "Wget download command incorrect.");
+                Assert.IsTrue(downloadPathConfirmed, "Archive file path incorrect.");
+                Assert.IsTrue(installationPathConfirmed, "Package installation path incorrect.");
+                Assert.IsTrue(packageRegistrationConfirmed, "Package registration incorrect.");
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, "wget")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "wget")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "wget.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "wget.exe")]
+        public async Task WgetPackageInstallationExecutesTheExpectedOperationsForNonArchiveFileType(PlatformID platform, Architecture architecture, string wgetBinary)
+        {
+            this.SetupDefaults(platform, architecture);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+                {
+                    { nameof(WgetPackageInstallation.PackageName), "any-package" },
+                    { nameof(WgetPackageInstallation.PackageUri), "https://any.company.com/files/any-file.1.0.0.exe" }
+                };
+
+            using (WgetPackageInstallation installation = new WgetPackageInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                installation.RetryPolicy = Policy.NoOpAsync();
+
+                string expectedDownloadPath = this.mockFixture.GetPackagePath("any-file.1.0.0.exe");
+                string expectedPackageRegistrationPath = this.mockFixture.GetPackagePath("any-package");
+                string expectedDownloadedFileCopyPath = this.mockFixture.GetPackagePath("any-package", "any-file.1.0.0.exe");
+
+                bool downloadPathConfirmed = false;
+                bool installationPathConfirmed = false;
+                bool packageRegistrationConfirmed = false;
+
+                // The package will be copied to expectedDownloadedFileCopyPath on the system once it is downloaded.
+                // e.g.
+                // /packages/any-file.1.0.0.exe -> /packages/any-package/any-file.1.0.0.exe
+                this.mockFixture.FileSystem.Setup(fe => fe.File.Copy(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
+                    .Callback<string, string, bool>((downloadFilePath, destinationPath, overWrite) =>
+                    {
+                        downloadPathConfirmed = downloadFilePath.Equals(expectedDownloadPath);
+                        installationPathConfirmed = destinationPath.Equals(expectedDownloadedFileCopyPath);
+                    });
+
+                // Once the package is downloaded and copied, it is registered on the system with Virtual Client.
+                this.mockFixture.PackageManager.Setup(mgr => mgr.RegisterPackageAsync(It.IsAny<DependencyPath>(), It.IsAny<CancellationToken>()))
+                    .Callback<DependencyPath, CancellationToken>((package, token) =>
+                    {
+                        packageRegistrationConfirmed = package.Name == installation.PackageName && package.Path == expectedPackageRegistrationPath;
+                    });
+
+                await installation.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"{wgetBinary} {installation.PackageUri}"), "Wget download command incorrect.");
                 Assert.IsTrue(downloadPathConfirmed, "Archive file path incorrect.");
                 Assert.IsTrue(installationPathConfirmed, "Package installation path incorrect.");
                 Assert.IsTrue(packageRegistrationConfirmed, "Package registration incorrect.");

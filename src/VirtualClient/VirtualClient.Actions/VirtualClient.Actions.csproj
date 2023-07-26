@@ -28,8 +28,10 @@
         <ScriptFiles Include="FIO\*.jobfile" />
         <ScriptFiles Include="SPECcpu\*.cfg;SPECcpu\*.sh;SPECcpu\*.bat" />
         <ScriptFiles Include="Lzbench\*.sh" />
+        <ScriptFiles Include="PostgreSQL\*.sh" />
         <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
         <ScriptFiles Include="MLPerf\**\*.py" />
+	<ScriptFiles Include="SysbenchOLTP\*.sh" />
     </ItemGroup>
 
     <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">
@@ -37,11 +39,11 @@
 
         <ItemGroup>
             <Scripts Include="@(ScriptFiles)">
-                <ScriptDirLc>$([System.String]::new('%(ScriptFiles.RelativeDir)').ToLower())</ScriptDirLc>
+                <ScriptDirLc>$([System.String]::new('%(ScriptFiles.RelativeDir)').ToLower().Split('\\')[0])</ScriptDirLc>
             </Scripts>
         </ItemGroup>
 
-        <Copy SourceFiles="@(Scripts)" DestinationFiles="@(Scripts->'$(RepoPath)\out\scripts\%(ScriptDirLc)%(Filename)%(Extension)')" />
+        <Copy SourceFiles="@(Scripts)" DestinationFiles="@(Scripts->'$(RepoPath)\out\scripts\%(ScriptDirLc)\%(RecursiveDir)%(Filename)%(Extension)')" />
     </Target>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

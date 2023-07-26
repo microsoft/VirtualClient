@@ -5,9 +5,11 @@ namespace VirtualClient.Common.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -16,6 +18,8 @@ namespace VirtualClient.Common.Contracts
     /// </summary>
     public class ParameterDictionaryJsonConverter : JsonConverter
     {
+        private static readonly Type ParameterDictionaryType = typeof(IDictionary<string, IConvertible>);
+
         /// <summary>
         /// Returns true/false whether the object type is supported for JSON serialization/deserialization.
         /// </summary>
@@ -25,7 +29,7 @@ namespace VirtualClient.Common.Contracts
         /// </returns>
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(IDictionary<string, IConvertible>);
+            return objectType == ParameterDictionaryType;
         }
 
         /// <summary>
@@ -110,9 +114,14 @@ namespace VirtualClient.Common.Contracts
             writer.WriteStartObject();
             if (dictionary.Count > 0)
             {
+                // There is a flaw/bug in some of the contract resolvers or naming strategies (e.g. CamelCaseNamingStrategy)
+                // that causes the logic to not apply the casing preferences. We are forcing the resolution of the appropriate
+                // JsonContract here to account for the discrepancy.
+                JsonDictionaryContract dictionaryContract = serializer.ContractResolver.ResolveContract(ParameterDictionaryType) as JsonDictionaryContract;
+
                 foreach (KeyValuePair<string, IConvertible> entry in dictionary)
                 {
-                    writer.WritePropertyName(entry.Key);
+                    writer.WritePropertyName(dictionaryContract != null ? dictionaryContract.DictionaryKeyResolver.Invoke(entry.Key) : entry.Key);
                     serializer.Serialize(writer, entry.Value);
                 }
             }

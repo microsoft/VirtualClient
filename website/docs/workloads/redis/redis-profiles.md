@@ -50,11 +50,14 @@ idea. The name of the client must match the name of the system or the value of t
 ## PERF-REDIS.json
 Runs the Memtier workload against to generate various network traffic patterns against a Redis server. Although this is the default client workload
 the Redis benchmark itself can also be run to evaluate the performance of the Redis server.
+We have two profiles for Redis.One supports redis with TLS and one without TLS.
 
-* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
+* [Workload Profile without TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
+* [Workload Profile with TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS-TLS.json) 
+
 
 * **Supported Platform/Architectures**
-  * linux-x64
+  * linux-x64 
   * linux-arm64
 
 * **Supports Disconnected Scenarios**  
@@ -69,6 +72,39 @@ the Redis benchmark itself can also be run to evaluate the performance of the Re
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Redis servers for each scenario in the profile. | 2 mins |
+  | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against each Redis server concurrently. | 1 |
+  | ServerInstances           | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.   | # logical processors |
+  | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
+  | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
+
+* **Component Parameters**  
+  The following parameters describe the parameters within the profile components.
+
+  | Server Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | BindToCores               | True to instruct the Redis servers to bind to explicit cores on the system (e.g. 0, 1, 2, 3 ) | |
+  | CommandLine               | The command line to use for executing the Redis server. | |
+  | PackageName               | The name of the package that contains the Redis server binaries/scripts.    |               |
+  | Port                      | The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequental manner (e.g. 6379, 6380, 6381) | |
+  | ServerInstances           | The number of distinct Redis server instances to run concurrently. | # logical processors |
+  | ServerThreadCount         | The number of threads to use by the Redis server to handle operations. | 4 |
+  | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon)</mark><br/><br/>Defines a specific username under which to run the Redis server. | The user account for the process that launches Virtual Client.  |
+
+  | Client Role Parameter     | Purpose                                                                         | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
+  | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 8 |
+  | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
+  | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
+  | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

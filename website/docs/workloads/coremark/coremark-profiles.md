@@ -16,6 +16,8 @@ compared against a baseline. CoreMark is an industry standard benchmarking tools
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -65,6 +67,8 @@ Runs a CPU-intensive workload using the CoreMark toolset to test the performance
 * **Supported Platform/Architectures**
   * linux-x64
   * linux-arm64
+  * win-x64
+  * win-arm64
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -88,6 +92,7 @@ Runs a CPU-intensive workload using the CoreMark toolset to test the performance
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName              | Optional. The name of the compiler to use for compiling CoreMark on the system. | gcc
   | CompilerVersion           | Optional. The version of the compiler to use.                                   | 10 
+  | ThreadCount               | Optional. Overwrites the default -XCMD='-c                                      | System Core Count  
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

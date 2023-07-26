@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.SysbenchOLTPExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -31,6 +32,10 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
         private string apiClientId;
         private ClientInstance clientInstance;
+        private string scriptPath;
+        private string mockPackagePath;
+        private int threadCount;
+        private int recordCount;
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -44,23 +49,19 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SysbenchOLTPClientExecutor.DatabaseName), "sbtest" },
-                { nameof(SysbenchOLTPClientExecutor.Threads), "1" },
-                { nameof(SysbenchOLTPClientExecutor.RecordCount), "10000" },
                 { nameof(SysbenchOLTPClientExecutor.DurationSecs), "10" },
                 { nameof(SysbenchOLTPClientExecutor.Workload), "oltp_read_write" },
                 { nameof(SysbenchOLTPClientExecutor.PackageName), "sysbench" },
-                { nameof(SysbenchOLTPClientExecutor.NumTables), "1" }
             };
 
             string agentId = $"{Environment.MachineName}";
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
-        }
 
-        [Test]
-        public async Task SysbenchOLTPClientExecutorRunsTheExpectedWorkloadCommand()
-        {
-            string mockPackagePath = this.mockPackage.Path;
-            SetupDefaultBehavior();
+            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+
+            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
                 .Returns<string, ClientInstance>((id, instance) =>
@@ -70,21 +71,183 @@ namespace VirtualClient.Actions
                     return this.mockFixture.ApiClient.Object;
                 });
 
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.mockPackagePath = this.mockPackage.Path;
+            this.scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
-            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            this.threadCount = Environment.ProcessorCount * 8;
+            int recordsExponent = (int)Math.Log2(Environment.ProcessorCount) + 2;
+            this.recordCount = (int)Math.Pow(10, recordsExponent);
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorRunsTheExpectedWorkloadCommand()
+        {
+            SetupDefaultBehavior();
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = false,
+                DatabaseInitialized = false,
+            }));
 
             string[] expectedCommands =
             {
-                $"sudo ./autogen.sh",
-                $"sudo ./configure",
-                $"sudo make -j",
-                $"sudo make install",
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup"
+                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                "sudo ./autogen.sh",
+                "sudo ./configure",
+                "sudo make -j",
+                "sudo make install",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+
+                return process;
+            };
+
+            using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorUsesDefinedParameters()
+        {
+            SetupDefaultBehavior();
+
+            this.mockFixture.Parameters[nameof(SysbenchOLTPClientExecutor.Threads)] = "8";
+            this.mockFixture.Parameters[nameof(SysbenchOLTPClientExecutor.RecordCount)] = "1000";
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = false,
+                DatabaseInitialized = false,
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                "sudo ./autogen.sh",
+                "sudo ./configure",
+                "sudo make -j",
+                "sudo make install",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+
+                return process;
+            };
+
+            using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorRunsTheExpectedWorkloadCommandBalancedScenario()
+        {
+            SetupDefaultBehavior();
+
+            int recordsExponent = (int)Math.Log2(Environment.ProcessorCount);
+            int records = (int)Math.Pow(10, recordsExponent);
+
+            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
+            {
+                [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
+            });
+
+            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = false,
+                DatabaseInitialized = false,
+            }));
+
+            this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                "sudo ./autogen.sh",
+                "sudo ./configure",
+                "sudo make -j",
+                "sudo make install",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo {this.scriptPath}/balancedClient.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -128,28 +291,16 @@ namespace VirtualClient.Actions
         [Test]
         public async Task SysbenchOLTPClientExecutorSkipsInitializationOfTheWorkloadForExecutionAfterTheFirstRun()
         {
-            string mockPackagePath = this.mockPackage.Path;
             SetupDefaultBehavior();
-
-            this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
-                .Returns<string, ClientInstance>((id, instance) =>
-                {
-                    this.apiClientId = id;
-                    this.clientInstance = instance;
-                    return this.mockFixture.ApiClient.Object;
-                });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
-
-            this.mockFixture.ApiClient.Setup(client => client.GetServerOnlineStatusAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
             string[] expectedCommands =
             {
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_common --tables=1 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-                $"sudo {this.mockFixture.PlatformSpecifics.Combine(mockPackagePath, "src/sysbench")} oltp_read_write --threads=1 --time=10 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup"
+                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -184,10 +335,69 @@ namespace VirtualClient.Actions
                 return process;
             };
 
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPClientExecutor.SysbenchOLTPState()
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = true
+                SysbenchInitialized = true,
+                DatabaseInitialized = false,
             }));
+
+            using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorSkipsPrepareAndCleanupSteps()
+        {
+            SetupDefaultBehavior();
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = true,
+                DatabaseScenarioInitialized = true,
+                DatabaseInitialized = true,
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+
+                return process;
+            };
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {

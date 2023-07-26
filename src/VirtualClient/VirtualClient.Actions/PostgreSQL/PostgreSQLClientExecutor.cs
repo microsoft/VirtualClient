@@ -32,8 +32,15 @@ namespace VirtualClient.Actions
         public PostgreSQLClientExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            this.PollingInterval = TimeSpan.FromSeconds(20);
             this.PollingTimeout = TimeSpan.FromHours(1);
         }
+
+        /// <summary>
+        /// The interval at which polling requests should be made against the target server-side
+        /// API for state changes.
+        /// </summary>
+        protected TimeSpan PollingInterval { get; set; }
 
         /// <summary>
         /// A time range at which the client will poll for expected state before timing out.
@@ -53,19 +60,22 @@ namespace VirtualClient.Actions
             // The VC server-side instance/API must be confirmed online.
             await this.ServerApiClient.PollForHeartbeatAsync(
                 this.PollingTimeout,
-                cancellationToken);
+                cancellationToken,
+                this.PollingInterval);
 
             // The VC server-side instance/role must be confirmed ready for the client to operate (e.g. the database is initialized).
             await this.ServerApiClient.PollForServerOnlineAsync(
                 this.PollingTimeout,
-                cancellationToken);
+                cancellationToken,
+                this.PollingInterval);
 
             // The PostgreSQL database must be confirmed to be initialized and ready.
             await this.ServerApiClient.PollForExpectedStateAsync<PostgreSQLServerState>(
                 nameof(PostgreSQLServerState),
                 (state => state.DatabaseInitialized == true),
                 this.PollingTimeout,
-                cancellationToken);
+                cancellationToken,
+                this.PollingInterval);
 
             // Configure the HammerDB transactions execution workload.
             await this.ConfigureWorkloadAsync(cancellationToken);

@@ -39,7 +39,7 @@
             }
         },
         {
-            "Type": "CloneRepo",
+            "Type": "GitRepoClone",
             "Parameters": {
                 "Scenario": "CloneAspNetBenchmarksRepo",
                 "RepoUri": "https://github.com/aspnet/Benchmarks.git",

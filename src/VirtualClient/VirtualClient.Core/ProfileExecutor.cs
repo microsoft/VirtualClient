@@ -12,8 +12,6 @@ namespace VirtualClient
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using Polly.Caching;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
@@ -23,8 +21,9 @@ namespace VirtualClient
     /// </summary>
     public class ProfileExecutor : IDisposable
     {
+        private static int currentIteration;
         private bool disposed;
-
+        
         /// <summary>
         /// Constructs an instance of a profile executor, the main class that will execute a profile
         /// </summary>
@@ -44,6 +43,7 @@ namespace VirtualClient
             this.ExecuteActions = true;
             this.ExecuteMonitors = true;
             this.ExecuteDependencies = true;
+            this.ExitWait = TimeSpan.FromSeconds(10);
             this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
 
@@ -65,6 +65,11 @@ namespace VirtualClient
         public event EventHandler<ComponentEventArgs> ActionEnd;
 
         /// <summary>
+        /// Event handler is invoked just before the profile executor begins exiting.
+        /// </summary>
+        public event EventHandler BeforeExiting;
+
+        /// <summary>
         /// Event handler is invoked after a component (action, monitor or dependency handler) is
         /// created.
         /// </summary>
@@ -80,6 +85,17 @@ namespace VirtualClient
         /// executed.
         /// </summary>
         public event EventHandler IterationEnd;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static int CurrentIteration
+        {
+            get
+            {
+                return currentIteration;
+            }
+        }
 
         /// <summary>
         /// Shared platform dependencies to pass along to individual components in the profile.
@@ -108,6 +124,12 @@ namespace VirtualClient
         /// True if the monitors defined in the profile should be executed. Default = true.
         /// </summary>
         public bool ExecuteMonitors { get; set; }
+
+        /// <summary>
+        /// Defines an explicit time for which the application will wait before exiting. This is correlated with
+        /// the exit/flush wait supplied by the user on the command line.
+        /// </summary>
+        public TimeSpan ExitWait { get; set; }
 
         /// <summary>
         /// Logs things to various sources
@@ -181,11 +203,10 @@ namespace VirtualClient
 
                     if (this.ExecuteDependencies)
                     {
-                        await this.InstallDependenciesAsync(parentContext, profileCancellationToken)
-                            .ConfigureAwait(false);
+                        await this.InstallDependenciesAsync(parentContext, profileCancellationToken);
                     }
 
-                    if (SystemManagement.IsRebootRequested)
+                    if (VirtualClientRuntime.IsRebootRequested)
                     {
                         return;
                     }
@@ -213,9 +234,9 @@ namespace VirtualClient
                         // ensuring that all telemetry is captured/emitted beforehand.
                         Task rebootRequestedTask = Task.Run(async () =>
                         {
-                            while (!cancellationToken.IsCancellationRequested && !SystemManagement.IsRebootRequested)
+                            while (!cancellationToken.IsCancellationRequested && !VirtualClientRuntime.IsRebootRequested)
                             {
-                                await Task.Delay(1000).ConfigureAwait(false);
+                                await Task.Delay(2000);
                             }
                         });
 
@@ -224,16 +245,14 @@ namespace VirtualClient
                             // Wait for any workload execution actions to complete. Exit if the timeout supplied on
                             // the command line passes or a reboot is requested. If there are no actions defined, this
                             // task will complete immediately.
-                            await Task.WhenAny(profileActionsTask, timeoutTask, rebootRequestedTask)
-                                .ConfigureAwait(false);
+                            await Task.WhenAny(profileActionsTask, timeoutTask, rebootRequestedTask);
 
                             if (!profileActionsTask.IsFaulted)
                             {
                                 // Wait for any background monitors to complete. Exit if the timeout supplied on
                                 // the command line passes or a reboot is requested. If there are no monitors defined
                                 // this task will complete immediately.
-                                await Task.WhenAny(profileMonitorsTask, timeoutTask, rebootRequestedTask)
-                                    .ConfigureAwait(false);
+                                await Task.WhenAny(profileMonitorsTask, timeoutTask, rebootRequestedTask);
                             }
                         }
                         else if (this.ProfileMonitors?.Any() == true)
@@ -241,18 +260,24 @@ namespace VirtualClient
                             // Wait for any background monitors to complete. Exit if the timeout supplied on
                             // the command line passes or a reboot is requested. If there are no monitors defined
                             // this task will complete immediately.
-                            await Task.WhenAny(profileMonitorsTask, timeoutTask, rebootRequestedTask)
-                                .ConfigureAwait(false);
+                            await Task.WhenAny(profileMonitorsTask, timeoutTask, rebootRequestedTask);
                         }
 
                         // If we timeout or a reboot is requested, we will request all background processes to cancel/exit.
                         tokenSource.Cancel();
 
-                        // Attempt to allow a graceful exit for any background tasks, actions or monitors
-                        // that are running. There is grace period of 10 seconds before we will exit anyway.
-                        await Task.WhenAny(Task.WhenAll(profileActionsTask, profileMonitorsTask), Task.Delay(10000))
-                            .ConfigureAwait(false);
+                        // We allow the user to supply an instruction on the command line to force the application
+                        // to wait for an explicit/longer period of time before exiting. This allows for actions, monitors
+                        // and telemetry flushes more time to complete.
+                        this.BeforeExiting?.Invoke(this, new EventArgs());
 
+                        ConsoleLogger.Default.LogInformation("Profile: Wait for Exit...");
+
+                        // Attempt to allow a graceful exit for any background tasks, actions or monitors
+                        // that are running. There is an exit wait grace period before we will definitively exit.
+                        await Task.WhenAny(Task.WhenAll(profileActionsTask, profileMonitorsTask), Task.Delay(this.ExitWait));
+
+                        ConsoleLogger.Default.LogInformation("Profile: Exited");
                         profileActionsTask.ThrowIfErrored();
                         profileMonitorsTask.ThrowIfErrored();
                     }
@@ -306,7 +331,6 @@ namespace VirtualClient
                             parameters = d.Parameters?.ObscureSecrets()
                         })));
 
-                    int rounds = 0;
                     DateTime? nextRoundOfExecution = null;
 
                     while (!cancellationToken.IsCancellationRequested && !timing.IsTimedOut)
@@ -316,13 +340,12 @@ namespace VirtualClient
                             // Note:
                             // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
                             // application itself exits to ensure all telemetry is captured before reboot.
-                            if (SystemManagement.IsRebootRequested)
+                            if (VirtualClientRuntime.IsRebootRequested)
                             {
                                 break;
                             }
 
-                            rounds++;
-                            await this.UpdateGlobalStateAsync(rounds == 1, rounds, parentContext, cancellationToken);
+                            Interlocked.Increment(ref currentIteration);
 
                             DateTime startTime = DateTime.UtcNow;
                             this.IterationBegin?.Invoke(this, new EventArgs());
@@ -344,7 +367,7 @@ namespace VirtualClient
 
                             EventContext actionExecutionContext = EventContext.Persist(Guid.NewGuid(), parentContext.ActivityId)
                                 .AddContext("timing", timing)
-                                .AddContext("iteration", rounds)
+                                .AddContext("iteration", currentIteration)
                                 .AddContext("components", this.ProfileActions.Select(d => new
                                 {
                                     type = d.TypeName,
@@ -370,7 +393,7 @@ namespace VirtualClient
                                             // Note:
                                             // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
                                             // application itself exits to ensure all telemetry is captured before reboot.
-                                            if (SystemManagement.IsRebootRequested)
+                                            if (VirtualClientRuntime.IsRebootRequested)
                                             {
                                                 break;
                                             }
@@ -386,9 +409,9 @@ namespace VirtualClient
                                             EventContext.Persist(Guid.NewGuid(), actionExecutionContext.ActivityId);
 
                                             VirtualClientComponent action = this.ProfileActions.ElementAt(i);
-                                            action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = rounds;
+                                            action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
-
+                                            
                                             this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
 
                                             try
@@ -477,7 +500,7 @@ namespace VirtualClient
                     // Note:
                     // Any component can request a system reboot. The system reboot itself is handled just before the Virtual Client
                     // application itself exits to ensure all telemetry is captured before reboot.
-                    if (SystemManagement.IsRebootRequested)
+                    if (VirtualClientRuntime.IsRebootRequested)
                     {
                         break;
                     }
@@ -573,7 +596,7 @@ namespace VirtualClient
 
                 foreach (VirtualClientComponent dependency in this.ProfileDependencies)
                 {
-                    if (!cancellationToken.IsCancellationRequested && !SystemManagement.IsRebootRequested)
+                    if (!cancellationToken.IsCancellationRequested && !VirtualClientRuntime.IsRebootRequested)
                     {
                         try
                         {
@@ -685,6 +708,11 @@ namespace VirtualClient
                             runtimeComponent.Metadata.AddRange(this.Metadata, true);
                         }
 
+                        if (this.Profile.Parameters?.Any() == true)
+                        {
+                            VirtualClientComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
+                        }
+
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
                         {
                             executeComponent = false;
@@ -708,30 +736,6 @@ namespace VirtualClient
             }
 
             return components;
-        }
-
-        private async Task UpdateGlobalStateAsync(bool isFirstRun, int profileIterations, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    IStateManager stateManager = this.Dependencies.GetService<IStateManager>();
-                    
-                    await stateManager.SaveStateAsync(
-                        nameof(GlobalState),
-                        new Item<GlobalState>(nameof(GlobalState), new GlobalState
-                        {
-                            IsFirstRun = isFirstRun,
-                            ProfileIteration = profileIterations
-                        }),
-                        cancellationToken);
-                }
-                catch (Exception exc)
-                {
-                    this.Logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
-                }
-            }
         }
     }
 }

@@ -33,17 +33,12 @@ namespace VirtualClient
         private static readonly Uri DefaultBlobStoreUri = new Uri("https://virtualclient.blob.core.windows.net/");
         private const string DefaultMonitorsProfile = "MONITORS-DEFAULT.json";
         private const string NoMonitorsProfile = "MONITORS-NONE.json";
+        private const string FileUploadMonitorProfile = "MONITORS-FILE-UPLOAD.json";
 
         /// <summary>
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
         public string ExperimentId { get; set; }
-
-        /// <summary>
-        /// Defines the time at which the application will wait for telemetry to be flushed before
-        /// exiting regardless.
-        /// </summary>
-        public TimeSpan FlushWait { get; set; }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -153,40 +148,60 @@ namespace VirtualClient
             }
             catch (NotSupportedException exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)ErrorReason.NotSupported;
             }
             catch (VirtualClientException exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = (int)exc.Reason;
             }
             catch (Exception exc)
             {
-                Program.LogErrorMessage(logger, exc, Program.ApplicationContext);
+                Program.LogErrorMessage(logger, exc, EventContext.Persisted());
                 exitCode = 1;
             }
             finally
             {
-                if (SystemManagement.IsRebootRequested)
+                // In order to include all of the experiment + agent etc... context, we need to
+                // get the current/persisted context.
+                EventContext exitingContext = EventContext.Persisted();
+
+                // Allow components to handle any final exit operations.
+                VirtualClientRuntime.OnExiting();
+
+                if (VirtualClientRuntime.IsRebootRequested)
                 {
-                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", Program.ApplicationContext);
+                    Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.RebootingSystem", exitingContext);
                 }
 
-                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", Program.ApplicationContext);
-                Program.LogMessage(logger, $"Exit Code: {exitCode}", Program.ApplicationContext);
+                Program.LogMessage(logger, $"{nameof(RunProfileCommand)}.End", exitingContext);
+                Program.LogMessage(logger, $"Exit Code: {exitCode}", exitingContext);
 
-                Program.LogMessage(logger, $"Flush Telemetry", Program.ApplicationContext);
-                DependencyFactory.FlushTelemetry(this.FlushWait);
-                Program.LogMessage(logger, $"Flushed", Program.ApplicationContext);
+                TimeSpan remainingWait = TimeSpan.FromMinutes(2);
+                if (this.ExitWaitTimeout != DateTime.MinValue)
+                {
+                    remainingWait = this.ExitWaitTimeout.SafeSubtract(DateTime.UtcNow);
+                }
+
+                if (remainingWait <= TimeSpan.Zero && this.ExitWait > TimeSpan.Zero)
+                {
+                    remainingWait = TimeSpan.FromMinutes(2);
+                }
+
+                Program.LogMessage(logger, $"Flush Telemetry", exitingContext);
+                DependencyFactory.FlushTelemetry(remainingWait);
+
+                Program.LogMessage(logger, $"Flushed", exitingContext);
                 DependencyFactory.FlushTelemetry(TimeSpan.FromMinutes(1));
 
-                SystemManagement.Cleanup();
+                // Allow components to handle any final cleanup operations.
+                VirtualClientRuntime.OnCleanup();
 
                 // Reboots must happen after telemetry is flushed and just before the application is exiting. This ensures
                 // we capture all important telemetry and allow the profile execution operations to exit gracefully before
                 // we suddenly reboot the system.
-                if (SystemManagement.IsRebootRequested)
+                if (VirtualClientRuntime.IsRebootRequested)
                 {
                     await CommandBase.RebootSystemAsync(dependencies)
                         .ConfigureAwait(false);
@@ -354,6 +369,8 @@ namespace VirtualClient
                 }
             }
 
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+
             // If we are not just installing dependencies, then we may include a default monitor
             // profile.
             if (!this.InstallDependencies)
@@ -363,7 +380,7 @@ namespace VirtualClient
                    && !profile.Monitors.Any())
                 {
                     // We always run the default monitoring profile if a specific monitor profile is not provided.
-                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    
                     string defaultMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.DefaultMonitorsProfile);
                     ExecutionProfile defaultMonitorProfile = await this.ReadExecutionProfileAsync(defaultMonitorProfilePath, dependencies, cancellationToken)
                         .ConfigureAwait(false);
@@ -371,6 +388,17 @@ namespace VirtualClient
                     this.InitializeProfile(defaultMonitorProfile);
                     profile = profile.MergeWith(defaultMonitorProfile);
                 }
+            }
+
+            // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
+            if (this.ContentStore != null || this.ProxyApiUri != null)
+            {
+                string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
+                ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
+                    .ConfigureAwait(false);
+
+                this.InitializeProfile(fileUploadMonitorProfile);
+                profile = profile.MergeWith(fileUploadMonitorProfile);
             }
 
             return profile;
@@ -623,6 +651,7 @@ namespace VirtualClient
             logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
             logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
             logger.LogTraceMessage($"Agent ID: {this.AgentId}");
+            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
@@ -650,6 +679,12 @@ namespace VirtualClient
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
+                profileExecutor.ExitWait = this.ExitWait;
+
+                profileExecutor.BeforeExiting += (source, args) =>
+                {
+                    this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
+                };
 
                 await profileExecutor.ExecuteAsync(ProfileTiming.OneIteration(), cancellationToken)
                     .ConfigureAwait(false);
@@ -672,6 +707,7 @@ namespace VirtualClient
             logger.LogMessage($"{nameof(RunProfileCommand)}.Begin", EventContext.Persisted());
             logger.LogTraceMessage($"Experiment ID: {this.ExperimentId}");
             logger.LogTraceMessage($"Agent ID: {this.AgentId}");
+            logger.LogTraceMessage($"Log To File: {VirtualClientComponent.LogToFile}");
 
             // The user can supply more than 1 profile on the command line. The individual profiles will be merged
             // into a single profile for execution.
@@ -712,6 +748,12 @@ namespace VirtualClient
             using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
+                profileExecutor.ExitWait = this.ExitWait;
+
+                profileExecutor.BeforeExiting += (source, args) =>
+                {
+                    this.ExitWaitTimeout = DateTime.UtcNow.SafeAdd(this.ExitWait);
+                };
 
                 // Profile timeout and iterations options are mutually-exclusive on the command line. They cannot be used
                 // at the same time.

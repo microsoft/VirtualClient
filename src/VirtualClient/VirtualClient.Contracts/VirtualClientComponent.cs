@@ -100,6 +100,36 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
+        /// Parameter defines the content path format/structure to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentPathFormat
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
+                return format?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.ContentPathFormat)] = value;
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the content path format/structure using a template to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentPathTemplate
+        {
+            get
+            {
+                return VirtualClientComponent.GlobalParameters.GetValue<string>(nameof(this.ContentPathTemplate), "{experimentId}/{agentId}/{toolName}/{role}/{scenario}");
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -124,6 +154,11 @@ namespace VirtualClient.Contracts
         /// is participating.
         /// </summary>
         public string ExperimentId { get; }
+
+        /// <summary>
+        /// Global Parameters provided to the application on the command line or through Parameters in respective profiles.
+        /// </summary>
+        public static IDictionary<string, IConvertible> GlobalParameters { get; } = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
@@ -371,6 +406,23 @@ namespace VirtualClient.Contracts
         public DateTime StartTime { get; set; }
 
         /// <summary>
+        /// Parameter describes the platform/architectures for which the component is supported.
+        /// </summary>
+        public IEnumerable<string> SupportedPlatforms
+        {
+            get
+            {
+                if (!this.Parameters.TryGetCollection<string>(nameof(this.SupportedPlatforms), out IEnumerable<string> platforms))
+                {
+                    // Backwards compatibility.
+                    this.Parameters.TryGetCollection<string>("Platforms", out platforms);
+                }
+
+                return platforms ?? Array.Empty<string>();
+            }
+        }
+
+        /// <summary>
         /// The roles that are supported for the executor (e.g. Client, Server). Not all executors support
         /// multi-role scenarios.
         /// </summary>
@@ -576,28 +628,35 @@ namespace VirtualClient.Contracts
         /// <returns>True if component should be executed, false if not.</returns>
         protected virtual bool IsSupported()
         {
-            bool shouldExecute = true;
+            bool isSupported = true;
 
-            // Execution Criteria
-            // 1) If there are no roles defined for the component, then it executes.
-            // 2) If there is just 1 instance in layout, then it executes
-            // 3) If there are roles defined, the environment layout defines a role for each of the
-            //    instances and the roles match the client instance role, then it executes.
-            // 4) If not #1 or #2 or #3 fails, the component does not execute.
-            //
-            // If there are roles defined and this is a multi-role environment layout
-            // scenario, we check to see if this instance of the Virtual Client is targeted
-            // for at least 1 of the roles.
-            if (this.Layout?.Clients?.Count() >= 2 && this.Roles?.Any() == true)
+            // We execute only if the current platform/architecture matches those
+            // defined in the parameters.
+            if (this.SupportedPlatforms?.Any() == true && !this.SupportedPlatforms.Contains(this.PlatformArchitectureName))
             {
+                isSupported = false;
+            }
+            else if (this.Layout?.Clients?.Count() >= 2 && this.Roles?.Any() == true)
+            {
+                // Execution Criteria
+                // 1) If there are no roles defined for the component, then it executes.
+                // 2) If there is just 1 instance in layout, then it executes
+                // 3) If there are roles defined, the environment layout defines a role for each of the
+                //    instances and the roles match the client instance role, then it executes.
+                // 4) If not #1 or #2 or #3 fails, the component does not execute.
+                //
+                // If there are roles defined and this is a multi-role environment layout
+                // scenario, we check to see if this instance of the Virtual Client is targeted
+                // for at least 1 of the roles.
+
                 ClientInstance clientInstance = this.GetLayoutClientInstance(this.AgentId, throwIfNotExists: false);
                 if (clientInstance != null && !string.IsNullOrWhiteSpace(clientInstance.Role))
                 {
-                    shouldExecute = this.Roles.Contains(clientInstance.Role, StringComparer.OrdinalIgnoreCase);
+                    isSupported = this.Roles.Contains(clientInstance.Role, StringComparer.OrdinalIgnoreCase);
                 }
             }
 
-            return shouldExecute;
+            return isSupported;
         }
 
         /// <summary>

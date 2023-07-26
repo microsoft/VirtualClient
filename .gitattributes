@@ -63,7 +63,7 @@
 #*.RTF   diff=astextplain
 
 # .sh will have LF as end of line as they are supported by Linux
-/src/VirtualClient/VirtualClient.ExternalTools/Linux/AzQualify/LinuxMySQLTPCC/runtimes/linux/*.sh eol=lf
+**/*.sh eol=lf
 /src/VirtualClient/VirtualClient.Packaging/linux-x64/**/* eol=lf
 /src/VirtualClient/VirtualClient.Packaging/linux-arm64/**/* eol=lf
 /src/VirtualClient/VirtualClient.Packaging/win-x64/SQLTPCC/HammerDB/**/* eol=lf

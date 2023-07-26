@@ -13,6 +13,8 @@ namespace VirtualClient.Common.Extensions
     /// </summary>
     public static class CollectionExtensions
     {
+        private static readonly char[] CommonDelimiters = new char[] { ',', ';' };
+
         /// <summary>
         /// Extension merges a set of new entries with the existing set of dictionary entries based upon
         /// the individual entry keys.
@@ -155,6 +157,50 @@ namespace VirtualClient.Common.Extensions
         }
 
         /// <summary>
+        /// Parses the delimited dictionary entry into a collection of values. The entries can be delimited
+        /// by a comma (,) or a semi-colon (;).
+        /// </summary>
+        /// <param name="dictionary">Dictionary containing the key with a value to parse.</param>
+        /// <param name="key">The key in the dictionary.</param>
+        /// <param name="value">The collection of values found.</param>
+        public static bool TryGetCollection<T>(this IDictionary<string, IConvertible> dictionary, string key, out IEnumerable<T> value)
+            where T : IConvertible
+        {
+            dictionary.ThrowIfNull(nameof(dictionary));
+            key.ThrowIfNullOrWhiteSpace(nameof(key));
+            value = null;
+
+            if (dictionary.TryGetValue(key, out IConvertible delimitedValue))
+            {
+                string[] delimitedValues = delimitedValue.ToString().Split(
+                    CollectionExtensions.CommonDelimiters,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+                if (delimitedValues?.Any() == true)
+                {
+                    List<T> items = new List<T>();
+                    foreach (string singleValue in delimitedValues)
+                    {
+                        try
+                        {
+                            items.Add((T)Convert.ChangeType(singleValue, typeof(T)));
+                        }
+                        catch (FormatException exc)
+                        {
+                            throw new FormatException(
+                                $"Invalid data type conversion. One or more of the delimited values of the dictionary entry with key '{key}' cannot be parsed as a '{typeof(T).Name}' data type.",
+                                exc);
+                        }
+                    }
+
+                    value = items;
+                }
+            }
+
+            return value != null;
+        }
+
+        /// <summary>
         /// Parses the dictionary entry value into the enumeration/enum type supplied.
         /// </summary>
         /// <typeparam name="T">The type of the enum to be parsed.</typeparam>
@@ -189,7 +235,8 @@ namespace VirtualClient.Common.Extensions
         }
 
         /// <summary>
-        /// Parses the dictionary entry value into a <see cref="TimeSpan"/> value.
+        /// Parses the dictionary entry value into a <see cref="TimeSpan"/> value. Integer values are supported and will be converted
+        /// into seconds (e.g. 60 = a timespan of 60 seconds).
         /// </summary>
         /// <param name="dictionary">Dictionary containing the key with a value to parse.</param>
         /// <param name="key">The key in the dictionary.</param>
@@ -213,7 +260,12 @@ namespace VirtualClient.Common.Extensions
             }
             else
             {
-                if (!TimeSpan.TryParse(dictionary[key]?.ToString(), out value))
+                string keyValue = dictionary[key]?.ToString();
+                if (int.TryParse(keyValue, out int seconds))
+                {
+                    value = TimeSpan.FromSeconds(seconds);
+                }
+                else if (!TimeSpan.TryParse(keyValue, out value))
                 {
                     throw new FormatException(
                         $"Invalid timespan type conversion.  The value of key '{key}': value '{dictionary[key]?.ToString()}' is expected to be formatted as a '{typeof(TimeSpan).Name}' data type.");

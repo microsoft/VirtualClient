@@ -1,0 +1,2191 @@
+\hyper-v hypervisor logical processor(_total)\% c1 time
+\hyper-v hypervisor logical processor(_total)\% c2 time
+\hyper-v hypervisor logical processor(_total)\% c3 time
+\hyper-v hypervisor logical processor(_total)\% guest run time
+\hyper-v hypervisor logical processor(_total)\% hypervisor run time
+\hyper-v hypervisor logical processor(_total)\% idle time
+\hyper-v hypervisor logical processor(_total)\% of max frequency
+\hyper-v hypervisor logical processor(_total)\% total run time
+\hyper-v hypervisor logical processor(_total)\c1 transitions/sec
+\hyper-v hypervisor logical processor(_total)\c2 transitions/sec
+\hyper-v hypervisor logical processor(_total)\c3 transitions/sec
+\hyper-v hypervisor logical processor(_total)\context switches/sec
+\hyper-v hypervisor logical processor(_total)\frequency
+\hyper-v hypervisor logical processor(_total)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(_total)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(_total)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(_total)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(_total)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(_total)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(_total)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(_total)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(_total)\monitor transition cost
+\hyper-v hypervisor logical processor(_total)\parking status
+\hyper-v hypervisor logical processor(_total)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(_total)\processor state flags
+\hyper-v hypervisor logical processor(_total)\root vp index
+\hyper-v hypervisor logical processor(_total)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(_total)\timer interrupts/sec
+\hyper-v hypervisor logical processor(_total)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 0)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 0)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 0)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 0)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 0)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 0)\% idle time
+\hyper-v hypervisor logical processor(hv lp 0)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 0)\% total run time
+\hyper-v hypervisor logical processor(hv lp 0)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 0)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 0)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 0)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 0)\frequency
+\hyper-v hypervisor logical processor(hv lp 0)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 0)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 0)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 0)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 0)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 0)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 0)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 0)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 0)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 0)\parking status
+\hyper-v hypervisor logical processor(hv lp 0)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 0)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 0)\root vp index
+\hyper-v hypervisor logical processor(hv lp 0)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 0)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 0)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 1)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 1)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 1)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 1)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 1)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 1)\% idle time
+\hyper-v hypervisor logical processor(hv lp 1)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 1)\% total run time
+\hyper-v hypervisor logical processor(hv lp 1)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 1)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 1)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 1)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 1)\frequency
+\hyper-v hypervisor logical processor(hv lp 1)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 1)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 1)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 1)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 1)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 1)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 1)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 1)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 1)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 1)\parking status
+\hyper-v hypervisor logical processor(hv lp 1)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 1)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 1)\root vp index
+\hyper-v hypervisor logical processor(hv lp 1)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 1)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 1)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 2)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 2)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 2)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 2)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 2)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 2)\% idle time
+\hyper-v hypervisor logical processor(hv lp 2)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 2)\% total run time
+\hyper-v hypervisor logical processor(hv lp 2)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 2)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 2)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 2)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 2)\frequency
+\hyper-v hypervisor logical processor(hv lp 2)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 2)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 2)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 2)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 2)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 2)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 2)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 2)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 2)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 2)\parking status
+\hyper-v hypervisor logical processor(hv lp 2)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 2)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 2)\root vp index
+\hyper-v hypervisor logical processor(hv lp 2)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 2)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 2)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 3)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 3)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 3)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 3)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 3)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 3)\% idle time
+\hyper-v hypervisor logical processor(hv lp 3)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 3)\% total run time
+\hyper-v hypervisor logical processor(hv lp 3)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 3)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 3)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 3)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 3)\frequency
+\hyper-v hypervisor logical processor(hv lp 3)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 3)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 3)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 3)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 3)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 3)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 3)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 3)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 3)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 3)\parking status
+\hyper-v hypervisor logical processor(hv lp 3)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 3)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 3)\root vp index
+\hyper-v hypervisor logical processor(hv lp 3)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 3)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 3)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 4)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 4)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 4)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 4)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 4)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 4)\% idle time
+\hyper-v hypervisor logical processor(hv lp 4)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 4)\% total run time
+\hyper-v hypervisor logical processor(hv lp 4)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 4)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 4)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 4)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 4)\frequency
+\hyper-v hypervisor logical processor(hv lp 4)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 4)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 4)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 4)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 4)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 4)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 4)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 4)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 4)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 4)\parking status
+\hyper-v hypervisor logical processor(hv lp 4)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 4)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 4)\root vp index
+\hyper-v hypervisor logical processor(hv lp 4)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 4)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 4)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 5)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 5)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 5)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 5)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 5)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 5)\% idle time
+\hyper-v hypervisor logical processor(hv lp 5)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 5)\% total run time
+\hyper-v hypervisor logical processor(hv lp 5)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 5)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 5)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 5)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 5)\frequency
+\hyper-v hypervisor logical processor(hv lp 5)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 5)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 5)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 5)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 5)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 5)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 5)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 5)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 5)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 5)\parking status
+\hyper-v hypervisor logical processor(hv lp 5)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 5)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 5)\root vp index
+\hyper-v hypervisor logical processor(hv lp 5)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 5)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 5)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 6)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 6)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 6)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 6)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 6)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 6)\% idle time
+\hyper-v hypervisor logical processor(hv lp 6)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 6)\% total run time
+\hyper-v hypervisor logical processor(hv lp 6)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 6)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 6)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 6)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 6)\frequency
+\hyper-v hypervisor logical processor(hv lp 6)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 6)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 6)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 6)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 6)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 6)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 6)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 6)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 6)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 6)\parking status
+\hyper-v hypervisor logical processor(hv lp 6)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 6)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 6)\root vp index
+\hyper-v hypervisor logical processor(hv lp 6)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 6)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 6)\total interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 7)\% c1 time
+\hyper-v hypervisor logical processor(hv lp 7)\% c2 time
+\hyper-v hypervisor logical processor(hv lp 7)\% c3 time
+\hyper-v hypervisor logical processor(hv lp 7)\% guest run time
+\hyper-v hypervisor logical processor(hv lp 7)\% hypervisor run time
+\hyper-v hypervisor logical processor(hv lp 7)\% idle time
+\hyper-v hypervisor logical processor(hv lp 7)\% of max frequency
+\hyper-v hypervisor logical processor(hv lp 7)\% total run time
+\hyper-v hypervisor logical processor(hv lp 7)\c1 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 7)\c2 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 7)\c3 transitions/sec
+\hyper-v hypervisor logical processor(hv lp 7)\context switches/sec
+\hyper-v hypervisor logical processor(hv lp 7)\frequency
+\hyper-v hypervisor logical processor(hv lp 7)\hardware interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 7)\hwp request msr context switches/sec
+\hyper-v hypervisor logical processor(hv lp 7)\hypervisor branch predictor flushes/sec
+\hyper-v hypervisor logical processor(hv lp 7)\hypervisor immediate l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 7)\hypervisor l1 data cache flushes/sec
+\hyper-v hypervisor logical processor(hv lp 7)\hypervisor microarchitectural buffer flushes/sec
+\hyper-v hypervisor logical processor(hv lp 7)\inter-processor interrupts sent/sec
+\hyper-v hypervisor logical processor(hv lp 7)\inter-processor interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 7)\monitor transition cost
+\hyper-v hypervisor logical processor(hv lp 7)\parking status
+\hyper-v hypervisor logical processor(hv lp 7)\posted interrupt notifications/sec
+\hyper-v hypervisor logical processor(hv lp 7)\processor state flags
+\hyper-v hypervisor logical processor(hv lp 7)\root vp index
+\hyper-v hypervisor logical processor(hv lp 7)\scheduler interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 7)\timer interrupts/sec
+\hyper-v hypervisor logical processor(hv lp 7)\total interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\% guest idle time
+\hyper-v hypervisor root virtual processor(_total)\% guest run time
+\hyper-v hypervisor root virtual processor(_total)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(_total)\% remote run time
+\hyper-v hypervisor root virtual processor(_total)\% total core run time
+\hyper-v hypervisor root virtual processor(_total)\% total run time
+\hyper-v hypervisor root virtual processor(_total)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(_total)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(_total)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(_total)\address space switches/sec
+\hyper-v hypervisor root virtual processor(_total)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(_total)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(_total)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\control register accesses cost
+\hyper-v hypervisor root virtual processor(_total)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(_total)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(_total)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(_total)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(_total)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(_total)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(_total)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(_total)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\external interrupts cost
+\hyper-v hypervisor root virtual processor(_total)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(_total)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(_total)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(_total)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(_total)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(_total)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(_total)\hypercalls cost
+\hyper-v hypervisor root virtual processor(_total)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\io instructions cost
+\hyper-v hypervisor root virtual processor(_total)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\io instructions/sec
+\hyper-v hypervisor root virtual processor(_total)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(_total)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(_total)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(_total)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(_total)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(_total)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(_total)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(_total)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(_total)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(_total)\msr accesses cost
+\hyper-v hypervisor root virtual processor(_total)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(_total)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(_total)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(_total)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(_total)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(_total)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(_total)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(_total)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(_total)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(_total)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(_total)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(_total)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(_total)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(_total)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\other intercepts cost
+\hyper-v hypervisor root virtual processor(_total)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\other messages/sec
+\hyper-v hypervisor root virtual processor(_total)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(_total)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(_total)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\page invalidations cost
+\hyper-v hypervisor root virtual processor(_total)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(_total)\page scans/sec
+\hyper-v hypervisor root virtual processor(_total)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(_total)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(_total)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(_total)\page table resets/sec
+\hyper-v hypervisor root virtual processor(_total)\page table validations/sec
+\hyper-v hypervisor root virtual processor(_total)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(_total)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(_total)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(_total)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(_total)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(_total)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(_total)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(_total)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\total intercepts cost
+\hyper-v hypervisor root virtual processor(_total)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\total messages/sec
+\hyper-v hypervisor root virtual processor(_total)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(_total)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(_total)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(_total)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(_total)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(_total)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(_total)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 0)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 0)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 0)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 0)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 0)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 0)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 0)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 0)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 0)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 0)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 0)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 0)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 0)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 0)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 0)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 0)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 0)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 0)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 0)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 0)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 0)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 0)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 0)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 0)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 0)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 0)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 1)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 1)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 1)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 1)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 1)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 1)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 1)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 1)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 1)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 1)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 1)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 1)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 1)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 1)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 1)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 1)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 1)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 1)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 1)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 1)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 1)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 1)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 1)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 1)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 1)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 1)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 2)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 2)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 2)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 2)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 2)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 2)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 2)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 2)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 2)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 2)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 2)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 2)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 2)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 2)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 2)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 2)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 2)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 2)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 2)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 2)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 2)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 2)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 2)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 2)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 2)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 2)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 3)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 3)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 3)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 3)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 3)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 3)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 3)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 3)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 3)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 3)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 3)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 3)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 3)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 3)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 3)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 3)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 3)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 3)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 3)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 3)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 3)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 3)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 3)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 3)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 3)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 3)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 4)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 4)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 4)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 4)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 4)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 4)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 4)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 4)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 4)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 4)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 4)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 4)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 4)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 4)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 4)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 4)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 4)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 4)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 4)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 4)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 4)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 4)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 4)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 4)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 4)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 4)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 5)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 5)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 5)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 5)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 5)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 5)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 5)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 5)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 5)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 5)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 5)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 5)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 5)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 5)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 5)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 5)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 5)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 5)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 5)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 5)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 5)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 5)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 5)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 5)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 5)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 5)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 6)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 6)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 6)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 6)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 6)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 6)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 6)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 6)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 6)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 6)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 6)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 6)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 6)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 6)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 6)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 6)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 6)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 6)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 6)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 6)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 6)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 6)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 6)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 6)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 6)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 6)\vmxon instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\% guest idle time
+\hyper-v hypervisor root virtual processor(root vp 7)\% guest run time
+\hyper-v hypervisor root virtual processor(root vp 7)\% hypervisor run time
+\hyper-v hypervisor root virtual processor(root vp 7)\% remote run time
+\hyper-v hypervisor root virtual processor(root vp 7)\% total core run time
+\hyper-v hypervisor root virtual processor(root vp 7)\% total run time
+\hyper-v hypervisor root virtual processor(root vp 7)\address domain flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\address space evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\address space flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\address space switches/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\apic eoi accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\apic ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\apic mmio accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\apic self ipis sent/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\apic tpr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\control register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 7)\control register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\control register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\control register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\cpu wait time per dispatch
+\hyper-v hypervisor root virtual processor(root vp 7)\cpuid instructions cost
+\hyper-v hypervisor root virtual processor(root vp 7)\cpuid instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\cpuid instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\cpuid instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\debug register accesses cost
+\hyper-v hypervisor root virtual processor(root vp 7)\debug register accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\debug register accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\debug register accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\emulated instructions cost
+\hyper-v hypervisor root virtual processor(root vp 7)\emulated instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\emulated instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\emulated instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\extended hypercall intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\extended hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\external interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\external interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\external interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\flush physical address list hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\flush physical address space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\global gva range flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\global i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 7)\global i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\gpa space hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\guest page table maps/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\hardware interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\hlt instructions cost
+\hyper-v hypervisor root virtual processor(root vp 7)\hlt instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\hlt instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\hlt instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\hypercalls cost
+\hyper-v hypervisor root virtual processor(root vp 7)\hypercalls forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\hypercalls forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invept all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invept all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\invept single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invept single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid all context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid single address instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\invvpid single context instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\io instructions cost
+\hyper-v hypervisor root virtual processor(root vp 7)\io instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\io instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\io instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\io intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\large page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\local flushed gva ranges/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\local i/o tlb flush cost
+\hyper-v hypervisor root virtual processor(root vp 7)\local i/o tlb flushes/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\logical processor dispatches/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\logical processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\logical processor migrations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\long spin wait hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\mbec nested page table switches/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\memory intercept messages/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\msr accesses cost
+\hyper-v hypervisor root virtual processor(root vp 7)\msr accesses forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\msr accesses forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\msr accesses/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\mwait instructions cost
+\hyper-v hypervisor root virtual processor(root vp 7)\mwait instructions forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\mwait instructions forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\mwait instructions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\nested page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested slat hard page faults cost
+\hyper-v hypervisor root virtual processor(root vp 7)\nested slat hard page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested slat soft page faults cost
+\hyper-v hypervisor root virtual processor(root vp 7)\nested slat soft page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested tlb page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested tlb page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nested vm entries cost
+\hyper-v hypervisor root virtual processor(root vp 7)\nested vm entries/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\nmi interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\nmi interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\other hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\other intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\other intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\other intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\other intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\other messages/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\other reflected guest exceptions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page fault intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\page fault intercepts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page fault intercepts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\page fault intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page invalidations cost
+\hyper-v hypervisor root virtual processor(root vp 7)\page invalidations forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page invalidations forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\page invalidations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page scans/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table allocations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table evictions/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table reclamations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table resets/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table validations/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\page table write intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\pending interrupts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\pending interrupts forwarded/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\pending interrupts forwarding cost
+\hyper-v hypervisor root virtual processor(root vp 7)\pending interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\posted interrupt notifications/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\posted interrupt scans/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\reflected guest page faults/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\small page tlb fills/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\synthetic interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\total intercepts cost
+\hyper-v hypervisor root virtual processor(root vp 7)\total intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\total messages/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\total virtualization instructions emulated/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\total virtualization instructions emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\virtual interrupts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\virtual mmu hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\virtual processor hypercalls/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmclear emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmclear instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmptrld instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmptrst instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmread emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmread instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmwrite instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmxoff instruction emulation cost
+\hyper-v hypervisor root virtual processor(root vp 7)\vmxon emulation intercepts/sec
+\hyper-v hypervisor root virtual processor(root vp 7)\vmxon instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\hypercalls cost
+\hyper-v hypervisor virtual processor(_total)\page invalidations/sec
+\hyper-v hypervisor virtual processor(_total)\page invalidations cost
+\hyper-v hypervisor virtual processor(_total)\control register accesses/sec
+\hyper-v hypervisor virtual processor(_total)\control register accesses cost
+\hyper-v hypervisor virtual processor(_total)\io instructions/sec
+\hyper-v hypervisor virtual processor(_total)\io instructions cost
+\hyper-v hypervisor virtual processor(_total)\hlt instructions/sec
+\hyper-v hypervisor virtual processor(_total)\hlt instructions cost
+\hyper-v hypervisor virtual processor(_total)\mwait instructions/sec
+\hyper-v hypervisor virtual processor(_total)\mwait instructions cost
+\hyper-v hypervisor virtual processor(_total)\cpuid instructions/sec
+\hyper-v hypervisor virtual processor(_total)\cpuid instructions cost
+\hyper-v hypervisor virtual processor(_total)\msr accesses/sec
+\hyper-v hypervisor virtual processor(_total)\msr accesses cost
+\hyper-v hypervisor virtual processor(_total)\other intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\other intercepts cost
+\hyper-v hypervisor virtual processor(_total)\external interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\external interrupts cost
+\hyper-v hypervisor virtual processor(_total)\pending interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\pending interrupts cost
+\hyper-v hypervisor virtual processor(_total)\emulated instructions/sec
+\hyper-v hypervisor virtual processor(_total)\emulated instructions cost
+\hyper-v hypervisor virtual processor(_total)\debug register accesses/sec
+\hyper-v hypervisor virtual processor(_total)\debug register accesses cost
+\hyper-v hypervisor virtual processor(_total)\page fault intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\page fault intercepts cost
+\hyper-v hypervisor virtual processor(_total)\nmi interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\nmi interrupts cost
+\hyper-v hypervisor virtual processor(_total)\guest page table maps/sec
+\hyper-v hypervisor virtual processor(_total)\large page tlb fills/sec
+\hyper-v hypervisor virtual processor(_total)\small page tlb fills/sec
+\hyper-v hypervisor virtual processor(_total)\reflected guest page faults/sec
+\hyper-v hypervisor virtual processor(_total)\apic mmio accesses/sec
+\hyper-v hypervisor virtual processor(_total)\io intercept messages/sec
+\hyper-v hypervisor virtual processor(_total)\memory intercept messages/sec
+\hyper-v hypervisor virtual processor(_total)\apic eoi accesses/sec
+\hyper-v hypervisor virtual processor(_total)\other messages/sec
+\hyper-v hypervisor virtual processor(_total)\page table allocations/sec
+\hyper-v hypervisor virtual processor(_total)\logical processor migrations/sec
+\hyper-v hypervisor virtual processor(_total)\address space evictions/sec
+\hyper-v hypervisor virtual processor(_total)\address space switches/sec
+\hyper-v hypervisor virtual processor(_total)\address domain flushes/sec
+\hyper-v hypervisor virtual processor(_total)\address space flushes/sec
+\hyper-v hypervisor virtual processor(_total)\global gva range flushes/sec
+\hyper-v hypervisor virtual processor(_total)\local flushed gva ranges/sec
+\hyper-v hypervisor virtual processor(_total)\page table evictions/sec
+\hyper-v hypervisor virtual processor(_total)\page table reclamations/sec
+\hyper-v hypervisor virtual processor(_total)\page table resets/sec
+\hyper-v hypervisor virtual processor(_total)\page table validations/sec
+\hyper-v hypervisor virtual processor(_total)\apic tpr accesses/sec
+\hyper-v hypervisor virtual processor(_total)\page table write intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\synthetic interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\virtual interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\apic ipis sent/sec
+\hyper-v hypervisor virtual processor(_total)\apic self ipis sent/sec
+\hyper-v hypervisor virtual processor(_total)\gpa space hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\logical processor hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\long spin wait hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\other hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\virtual mmu hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\virtual processor hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\hardware interrupts/sec
+\hyper-v hypervisor virtual processor(_total)\nested page fault intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\nested page fault intercepts cost
+\hyper-v hypervisor virtual processor(_total)\page scans/sec
+\hyper-v hypervisor virtual processor(_total)\logical processor dispatches/sec
+\hyper-v hypervisor virtual processor(_total)\cpu wait time per dispatch
+\hyper-v hypervisor virtual processor(_total)\extended hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\extended hypercall intercept messages/sec
+\hyper-v hypervisor virtual processor(_total)\mbec nested page table switches/sec
+\hyper-v hypervisor virtual processor(_total)\other reflected guest exceptions/sec
+\hyper-v hypervisor virtual processor(_total)\global i/o tlb flushes/sec
+\hyper-v hypervisor virtual processor(_total)\global i/o tlb flush cost
+\hyper-v hypervisor virtual processor(_total)\local i/o tlb flushes/sec
+\hyper-v hypervisor virtual processor(_total)\local i/o tlb flush cost
+\hyper-v hypervisor virtual processor(_total)\hypercalls forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\hypercalls forwarding cost
+\hyper-v hypervisor virtual processor(_total)\page invalidations forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\page invalidations forwarding cost
+\hyper-v hypervisor virtual processor(_total)\control register accesses forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\control register accesses forwarding cost
+\hyper-v hypervisor virtual processor(_total)\io instructions forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\io instructions forwarding cost
+\hyper-v hypervisor virtual processor(_total)\hlt instructions forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\hlt instructions forwarding cost
+\hyper-v hypervisor virtual processor(_total)\mwait instructions forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\mwait instructions forwarding cost
+\hyper-v hypervisor virtual processor(_total)\cpuid instructions forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\cpuid instructions forwarding cost
+\hyper-v hypervisor virtual processor(_total)\msr accesses forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\msr accesses forwarding cost
+\hyper-v hypervisor virtual processor(_total)\other intercepts forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\other intercepts forwarding cost
+\hyper-v hypervisor virtual processor(_total)\external interrupts forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\pending interrupts forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\pending interrupts forwarding cost
+\hyper-v hypervisor virtual processor(_total)\emulated instructions forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\emulated instructions forwarding cost
+\hyper-v hypervisor virtual processor(_total)\debug register accesses forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\debug register accesses forwarding cost
+\hyper-v hypervisor virtual processor(_total)\page fault intercepts forwarded/sec
+\hyper-v hypervisor virtual processor(_total)\page fault intercepts forwarding cost
+\hyper-v hypervisor virtual processor(_total)\vmclear emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmclear instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmptrld instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmptrst instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmread emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmread instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmwrite instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmxoff instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\vmxon emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\vmxon instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\nested vm entries/sec
+\hyper-v hypervisor virtual processor(_total)\nested vm entries cost
+\hyper-v hypervisor virtual processor(_total)\nested slat soft page faults/sec
+\hyper-v hypervisor virtual processor(_total)\nested slat soft page faults cost
+\hyper-v hypervisor virtual processor(_total)\nested slat hard page faults/sec
+\hyper-v hypervisor virtual processor(_total)\nested slat hard page faults cost
+\hyper-v hypervisor virtual processor(_total)\invept all context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\invept all context instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\invept single context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\invept single context instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\invvpid all context instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\invvpid single context instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\invvpid single address instruction emulation cost
+\hyper-v hypervisor virtual processor(_total)\nested tlb page table reclamations/sec
+\hyper-v hypervisor virtual processor(_total)\nested tlb page table evictions/sec
+\hyper-v hypervisor virtual processor(_total)\flush physical address space hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\flush physical address list hypercalls/sec
+\hyper-v hypervisor virtual processor(_total)\posted interrupt notifications/sec
+\hyper-v hypervisor virtual processor(_total)\posted interrupt scans/sec
+\hyper-v hypervisor virtual processor(_total)\% total run time
+\hyper-v hypervisor virtual processor(_total)\% hypervisor run time
+\hyper-v hypervisor virtual processor(_total)\% guest run time
+\hyper-v hypervisor virtual processor(_total)\% guest idle time
+\hyper-v hypervisor virtual processor(_total)\% total core run time
+\hyper-v hypervisor virtual processor(_total)\total messages/sec
+\hyper-v hypervisor virtual processor(_total)\total intercepts/sec
+\hyper-v hypervisor virtual processor(_total)\total intercepts cost
+\hyper-v hypervisor virtual processor(_total)\% remote run time
+\hyper-v hypervisor virtual processor(_total)\total virtualization instructions emulated/sec
+\hyper-v hypervisor virtual processor(_total)\total virtualization instructions emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hypercalls cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page invalidations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page invalidations cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\control register accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\control register accesses cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\io instructions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\io instructions cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hlt instructions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hlt instructions cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\mwait instructions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\mwait instructions cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\cpuid instructions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\cpuid instructions cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\msr accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\msr accesses cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other intercepts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\external interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\external interrupts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\pending interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\pending interrupts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\emulated instructions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\emulated instructions cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\debug register accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\debug register accesses cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page fault intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page fault intercepts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nmi interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nmi interrupts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\guest page table maps/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\large page tlb fills/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\small page tlb fills/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\reflected guest page faults/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\apic mmio accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\io intercept messages/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\memory intercept messages/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\apic eoi accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other messages/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table allocations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\logical processor migrations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\address space evictions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\address space switches/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\address domain flushes/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\address space flushes/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\global gva range flushes/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\local flushed gva ranges/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table evictions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table reclamations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table resets/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table validations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\apic tpr accesses/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page table write intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\synthetic interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\virtual interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\apic ipis sent/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\apic self ipis sent/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\gpa space hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\logical processor hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\long spin wait hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\synthetic interrupt hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\virtual interrupt hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\virtual mmu hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\virtual processor hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hardware interrupts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested page fault intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested page fault intercepts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page scans/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\logical processor dispatches/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\cpu wait time per dispatch
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\extended hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\extended hypercall intercept messages/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\mbec nested page table switches/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other reflected guest exceptions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\global i/o tlb flushes/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\global i/o tlb flush cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\local i/o tlb flushes/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\local i/o tlb flush cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hypercalls forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hypercalls forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page invalidations forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page invalidations forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\control register accesses forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\control register accesses forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\io instructions forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\io instructions forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hlt instructions forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\hlt instructions forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\mwait instructions forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\mwait instructions forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\cpuid instructions forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\cpuid instructions forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\msr accesses forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\msr accesses forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other intercepts forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\other intercepts forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\external interrupts forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\pending interrupts forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\pending interrupts forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\emulated instructions forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\emulated instructions forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\debug register accesses forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\debug register accesses forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page fault intercepts forwarded/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\page fault intercepts forwarding cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmclear emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmclear instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmptrld emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmptrld instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmptrst emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmptrst instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmread emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmread instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmwrite emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmwrite instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmxoff emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmxoff instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmxon emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\vmxon instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested vm entries/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested vm entries cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested slat soft page faults/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested slat soft page faults cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested slat hard page faults/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested slat hard page faults cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invept all context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invept all context instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invept single context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invept single context instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid all context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid all context instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid single context emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid single context instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid single address emulation intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\invvpid single address instruction emulation cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested tlb page table reclamations/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\nested tlb page table evictions/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\flush physical address space hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\flush physical address list hypercalls/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\posted interrupt notifications/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\posted interrupt scans/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% total run time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% hypervisor run time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% guest run time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% guest idle time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% total core run time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\total messages/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\total intercepts/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\total intercepts cost
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\% remote run time
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\total virtualization instructions emulated/sec
+\hyper-v hypervisor virtual processor(ubuntu20.04:hv vp 0)\total virtualization instructions emulation cost
+\ipv4\datagrams forwarded/sec
+\ipv4\datagrams outbound discarded
+\ipv4\datagrams outbound no route
+\ipv4\datagrams received address errors
+\ipv4\datagrams received delivered/sec
+\ipv4\datagrams received discarded
+\ipv4\datagrams received header errors
+\ipv4\datagrams received unknown protocol
+\ipv4\datagrams received/sec
+\ipv4\datagrams sent/sec
+\ipv4\datagrams/sec
+\ipv4\fragment re-assembly failures
+\ipv4\fragmentation failures
+\ipv4\fragmented datagrams/sec
+\ipv4\fragments created/sec
+\ipv4\fragments re-assembled/sec
+\ipv4\fragments received/sec
+\memory\% committed bytes in use
+\memory\available bytes
+\memory\available kbytes
+\memory\available mbytes
+\memory\cache bytes
+\memory\cache bytes peak
+\memory\cache faults/sec
+\memory\commit limit
+\memory\committed bytes
+\memory\demand zero faults/sec
+\memory\free & zero page list bytes
+\memory\free system page table entries
+\memory\long-term average standby cache lifetime (s)
+\memory\modified page list bytes
+\memory\page faults/sec
+\memory\page reads/sec
+\memory\page writes/sec
+\memory\pages input/sec
+\memory\pages output/sec
+\memory\pages/sec
+\memory\pool nonpaged allocs
+\memory\pool nonpaged bytes
+\memory\pool paged allocs
+\memory\pool paged bytes
+\memory\pool paged resident bytes
+\memory\standby cache core bytes
+\memory\standby cache normal priority bytes
+\memory\standby cache reserve bytes
+\memory\system cache resident bytes
+\memory\system code resident bytes
+\memory\system code total bytes
+\memory\system driver resident bytes
+\memory\system driver total bytes
+\memory\transition faults/sec
+\memory\transition pages repurposed/sec
+\memory\write copies/sec
+\physicaldisk(_total)\% disk read time
+\physicaldisk(_total)\% disk time
+\physicaldisk(_total)\% disk write time
+\physicaldisk(_total)\% idle time
+\physicaldisk(_total)\avg. disk bytes/read
+\physicaldisk(_total)\avg. disk bytes/transfer
+\physicaldisk(_total)\avg. disk bytes/write
+\physicaldisk(_total)\avg. disk queue length
+\physicaldisk(_total)\avg. disk read queue length
+\physicaldisk(_total)\avg. disk sec/read
+\physicaldisk(_total)\avg. disk sec/transfer
+\physicaldisk(_total)\avg. disk sec/write
+\physicaldisk(_total)\avg. disk write queue length
+\physicaldisk(_total)\current disk queue length
+\physicaldisk(_total)\disk bytes/sec
+\physicaldisk(_total)\disk read bytes/sec
+\physicaldisk(_total)\disk reads/sec
+\physicaldisk(_total)\disk transfers/sec
+\physicaldisk(_total)\disk write bytes/sec
+\physicaldisk(_total)\disk writes/sec
+\physicaldisk(_total)\split io/sec
+\physicaldisk(0 c: s:)\% disk read time
+\physicaldisk(0 c: s:)\% disk time
+\physicaldisk(0 c: s:)\% disk write time
+\physicaldisk(0 c: s:)\% idle time
+\physicaldisk(0 c: s:)\avg. disk bytes/read
+\physicaldisk(0 c: s:)\avg. disk bytes/transfer
+\physicaldisk(0 c: s:)\avg. disk bytes/write
+\physicaldisk(0 c: s:)\avg. disk queue length
+\physicaldisk(0 c: s:)\avg. disk read queue length
+\physicaldisk(0 c: s:)\avg. disk sec/read
+\physicaldisk(0 c: s:)\avg. disk sec/transfer
+\physicaldisk(0 c: s:)\avg. disk sec/write
+\physicaldisk(0 c: s:)\avg. disk write queue length
+\physicaldisk(0 c: s:)\current disk queue length
+\physicaldisk(0 c: s:)\disk bytes/sec
+\physicaldisk(0 c: s:)\disk read bytes/sec
+\physicaldisk(0 c: s:)\disk reads/sec
+\physicaldisk(0 c: s:)\disk transfers/sec
+\physicaldisk(0 c: s:)\disk write bytes/sec
+\physicaldisk(0 c: s:)\disk writes/sec
+\physicaldisk(0 c: s:)\split io/sec
+\processor(_total)\% c1 time
+\processor(_total)\% c2 time
+\processor(_total)\% c3 time
+\processor(_total)\% dpc time
+\processor(_total)\% idle time
+\processor(_total)\% interrupt time
+\processor(_total)\% privileged time
+\processor(_total)\% processor time
+\processor(_total)\% user time
+\processor(_total)\c1 transitions/sec
+\processor(_total)\c2 transitions/sec
+\processor(_total)\c3 transitions/sec
+\processor(_total)\dpc rate
+\processor(_total)\dpcs queued/sec
+\processor(_total)\interrupts/sec
+\processor(0)\% c1 time
+\processor(0)\% c2 time
+\processor(0)\% c3 time
+\processor(0)\% dpc time
+\processor(0)\% idle time
+\processor(0)\% interrupt time
+\processor(0)\% privileged time
+\processor(0)\% processor time
+\processor(0)\% user time
+\processor(0)\c1 transitions/sec
+\processor(0)\c2 transitions/sec
+\processor(0)\c3 transitions/sec
+\processor(0)\dpc rate
+\processor(0)\dpcs queued/sec
+\processor(0)\interrupts/sec
+\processor(1)\% c1 time
+\processor(1)\% c2 time
+\processor(1)\% c3 time
+\processor(1)\% dpc time
+\processor(1)\% idle time
+\processor(1)\% interrupt time
+\processor(1)\% privileged time
+\processor(1)\% processor time
+\processor(1)\% user time
+\processor(1)\c1 transitions/sec
+\processor(1)\c2 transitions/sec
+\processor(1)\c3 transitions/sec
+\processor(1)\dpc rate
+\processor(1)\dpcs queued/sec
+\processor(1)\interrupts/sec
+\processor(2)\% c1 time
+\processor(2)\% c2 time
+\processor(2)\% c3 time
+\processor(2)\% dpc time
+\processor(2)\% idle time
+\processor(2)\% interrupt time
+\processor(2)\% privileged time
+\processor(2)\% processor time
+\processor(2)\% user time
+\processor(2)\c1 transitions/sec
+\processor(2)\c2 transitions/sec
+\processor(2)\c3 transitions/sec
+\processor(2)\dpc rate
+\processor(2)\dpcs queued/sec
+\processor(2)\interrupts/sec
+\processor(3)\% c1 time
+\processor(3)\% c2 time
+\processor(3)\% c3 time
+\processor(3)\% dpc time
+\processor(3)\% idle time
+\processor(3)\% interrupt time
+\processor(3)\% privileged time
+\processor(3)\% processor time
+\processor(3)\% user time
+\processor(3)\c1 transitions/sec
+\processor(3)\c2 transitions/sec
+\processor(3)\c3 transitions/sec
+\processor(3)\dpc rate
+\processor(3)\dpcs queued/sec
+\processor(3)\interrupts/sec
+\processor(4)\% c1 time
+\processor(4)\% c2 time
+\processor(4)\% c3 time
+\processor(4)\% dpc time
+\processor(4)\% idle time
+\processor(4)\% interrupt time
+\processor(4)\% privileged time
+\processor(4)\% processor time
+\processor(4)\% user time
+\processor(4)\c1 transitions/sec
+\processor(4)\c2 transitions/sec
+\processor(4)\c3 transitions/sec
+\processor(4)\dpc rate
+\processor(4)\dpcs queued/sec
+\processor(4)\interrupts/sec
+\processor(5)\% c1 time
+\processor(5)\% c2 time
+\processor(5)\% c3 time
+\processor(5)\% dpc time
+\processor(5)\% idle time
+\processor(5)\% interrupt time
+\processor(5)\% privileged time
+\processor(5)\% processor time
+\processor(5)\% user time
+\processor(5)\c1 transitions/sec
+\processor(5)\c2 transitions/sec
+\processor(5)\c3 transitions/sec
+\processor(5)\dpc rate
+\processor(5)\dpcs queued/sec
+\processor(5)\interrupts/sec
+\processor(6)\% c1 time
+\processor(6)\% c2 time
+\processor(6)\% c3 time
+\processor(6)\% dpc time
+\processor(6)\% idle time
+\processor(6)\% interrupt time
+\processor(6)\% privileged time
+\processor(6)\% processor time
+\processor(6)\% user time
+\processor(6)\c1 transitions/sec
+\processor(6)\c2 transitions/sec
+\processor(6)\c3 transitions/sec
+\processor(6)\dpc rate
+\processor(6)\dpcs queued/sec
+\processor(6)\interrupts/sec
+\processor(7)\% c1 time
+\processor(7)\% c2 time
+\processor(7)\% c3 time
+\processor(7)\% dpc time
+\processor(7)\% idle time
+\processor(7)\% interrupt time
+\processor(7)\% privileged time
+\processor(7)\% processor time
+\processor(7)\% user time
+\processor(7)\c1 transitions/sec
+\processor(7)\c2 transitions/sec
+\processor(7)\c3 transitions/sec
+\processor(7)\dpc rate
+\processor(7)\dpcs queued/sec
+\processor(7)\interrupts/sec
+\system\% registry quota in use
+\system\alignment fixups/sec
+\system\context switches/sec
+\system\exception dispatches/sec
+\system\file control bytes/sec
+\system\file control operations/sec
+\system\file data operations/sec
+\system\file read bytes/sec
+\system\file read operations/sec
+\system\file write bytes/sec
+\system\file write operations/sec
+\system\floating emulations/sec
+\system\processes
+\system\processor queue length
+\system\system calls/sec
+\system\system up time
+\system\threads

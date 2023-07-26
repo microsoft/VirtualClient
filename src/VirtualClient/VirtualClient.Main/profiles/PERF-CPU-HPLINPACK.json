@@ -6,7 +6,7 @@
     "SupportedOperatingSystems": "Ubuntu"
   },
   "Parameters": {
-    "Username": "null",
+    "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
     "ProblemSizeN": null,
@@ -20,7 +20,7 @@
       "Parameters": {
         "Scenario": "ProcessorSpeed",
         "Username": "$.Parameters.Username",
-        "HyperThreadingON": true,
+        "HyperThreadingOn": true,
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",

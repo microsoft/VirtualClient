@@ -21,22 +21,38 @@
             }
         }
     ],
-    "Dependencies": [
-        {
-            "Type": "CompilerInstallation",
-            "Parameters": {
-                "Scenario": "InstallCompiler",
-                "CompilerName": "$.Parameters.CompilerName",
-                "CompilerVersion": "$.Parameters.CompilerVersion"
-            }
-        },
-        {
-            "Type": "CloneRepo",
-            "Parameters": {
-                "Scenario": "CloneRepo",
-                "RepoUri": "https://github.com/eembc/coremark.git",
-                "PackageName": "coremark"
-            }
-        }
-    ]
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "chocolatey"
+      }
+    },
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallCygwin",
+        "PackageName": "chocolatey",
+        "Packages": "cygwin,git"
+      }
+    },
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "Scenario": "InstallCompiler",
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion",
+        "CygwinPackages": "gcc-g++,gcc,perl"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneRepo",
+        "RepoUri": "https://github.com/eembc/coremark.git",
+        "PackageName": "coremark"
+      }
+    }
+  ]
 }

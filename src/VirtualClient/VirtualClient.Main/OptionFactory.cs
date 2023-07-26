@@ -197,6 +197,29 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the duration/timeout to wait for telemetry to be flushed.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateExitWaitOption(bool required = true, object defaultValue = null)
+        {
+            Option<TimeSpan> option = new Option<TimeSpan>(
+                new string[] { "--exit-wait", "--flush-wait", "--wt" },
+                new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
+            {
+                Name = "ExitWait",
+                Description = "An explicit timeout to apply before exiting to allow all actions and monitors to complete and for telemetry to be flushed (i.e. to prevent loss). " +
+                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). ",
+                ArgumentHelpName = "timespan",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines the ID of the experiment.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
@@ -208,29 +231,6 @@ namespace VirtualClient
                 Name = "ExperimentId",
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
                 ArgumentHelpName = "id",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the duration/timeout to wait for telemetry to be flushed.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateFlushWaitOption(bool required = true, object defaultValue = null)
-        {
-            Option<TimeSpan> option = new Option<TimeSpan>(
-                new string[] { "--flush-wait", "--fw" },
-                new ParseArgument<TimeSpan>(arg => OptionFactory.ParseTimeSpan(arg)))
-            {
-                Name = "FlushWait",
-                Description = "An explicit timeout to apply before exiting to allow all telemetry to be flushed (i.e. to prevent loss). " +
-                    "This can be a valid timespan (e.g. 01.00:00:00) or a simple numeric value representing total minutes (e.g. 1440). ",
-                ArgumentHelpName = "timespan",
                 AllowMultipleArgumentsPerToken = false
             };
 

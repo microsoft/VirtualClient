@@ -77,7 +77,13 @@ namespace VirtualClient
         /// The targeted CPU architecture for the fixture and test scenarios
         /// (e.g. x64, arm64).
         /// </summary>
-        public Architecture CpuArchitecture { get; private set; }
+        public Architecture CpuArchitecture
+        {
+            get
+            {
+                return this.PlatformSpecifics.CpuArchitecture;
+            }
+        }
 
         /// <summary>
         /// Collection of services used for dependency injection with workload
@@ -148,7 +154,24 @@ namespace VirtualClient
         /// The targeted OS platform for the fixture and test scenarios
         /// (e.g. Windows, Unix).
         /// </summary>
-        public PlatformID Platform { get; private set; }
+        public PlatformID Platform
+        {
+            get
+            {
+                return this.PlatformSpecifics.Platform;
+            }
+        }
+
+        /// <summary>
+        /// The name of the platform/architecture (win-x64, win-arm64, linux-x64).
+        /// </summary>
+        public string PlatformArchitectureName
+        {
+            get
+            {
+                return this.PlatformSpecifics.PlatformArchitectureName;
+            }
+        }
 
         /// <summary>
         /// Test/fake platform-specifics information provider.
@@ -159,6 +182,11 @@ namespace VirtualClient
         /// Test/fake process manager.
         /// </summary>
         public InMemoryProcessManager ProcessManager { get; set; }
+
+        /// <summary>
+        /// Test/fake Ssh Client manager.
+        /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
 
         /// <summary>
         /// Test/fake state manager.
@@ -221,9 +249,7 @@ namespace VirtualClient
             this.ApiClient = new InMemoryApiClient(ipAddress);
             this.ApiClientManager = new InMemoryApiClientManager();
             this.ApiManager = new InMemoryApiManager();
-            this.Platform = platform;
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
-            this.CpuArchitecture = architecture;
             this.Configuration = new ConfigurationBuilder().Build();
             this.DiskManager = new InMemoryDiskManager();
             this.FileSystem = new InMemoryFileSystem(this.PlatformSpecifics);
@@ -232,6 +258,7 @@ namespace VirtualClient
             this.PackageManager = new InMemoryPackageManager(this.PlatformSpecifics);
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.ProcessManager = new InMemoryProcessManager(platform);
+            this.SshClientManager = new InMemorySshClientManager();
             this.StateManager = new InMemoryStateManager();
             this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
 
@@ -242,6 +269,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(this.FileSystem);
             this.SystemManagement.SetupGet(sm => sm.FirewallManager).Returns(this.FirewallManager);
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
@@ -324,6 +352,7 @@ namespace VirtualClient
                 .AddSingleton<IFileSystem>(this.FileSystem)
                 .AddSingleton<IFirewallManager>(this.FirewallManager)
                 .AddSingleton<IPackageManager>(this.PackageManager)
+                .AddSingleton<SshClientManager>(this.SshClientManager)
                 .AddSingleton<IStateManager>(this.StateManager)
                 .AddSingleton<ProfileTiming>(this.Timing);
 

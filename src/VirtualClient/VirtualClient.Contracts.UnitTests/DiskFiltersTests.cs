@@ -66,6 +66,36 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void DiskFiltersAlwaysFiltersOutOfflineDisksOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(0).Properties["Status"] = "Online";
+            this.disks.ElementAt(1).Properties["Status"] = "Online";
+            this.disks.ElementAt(2).Properties["Status"] = "Offline (Policy)";
+
+            string filterString = "none";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(3, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(1)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(3), result.ElementAt(2)));
+        }
+
+        [Test]
+        public void DiskFiltersAlwaysFiltersOutReadOnlyDisksOnWindows()
+        {
+            this.disks = this.mockFixture.CreateDisks(PlatformID.Win32NT, true);
+            this.disks.ElementAt(2).Properties["Read-only"] = "Yes";
+            this.disks.ElementAt(3).Properties["Current Read-only State"] = "Yes";
+
+            string filterString = "none";
+            IEnumerable<Disk> result = DiskFilters.FilterDisks(this.disks, filterString, PlatformID.Win32NT);
+            Assert.AreEqual(2, result.Count());
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(0), result.ElementAt(0)));
+            Assert.IsTrue(object.ReferenceEquals(this.disks.ElementAt(1), result.ElementAt(1)));
+        }
+
+        [Test]
         public void DiskFiltersCanFilterOnBiggestDisksOnLinux()
         {
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);

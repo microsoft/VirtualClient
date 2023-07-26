@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.IO.Abstractions;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
@@ -76,6 +77,18 @@ namespace VirtualClient
         /// The execution system/environment platform (e.g. Azure).
         /// </summary>
         public string ExecutionSystem { get; set; }
+
+        /// <summary>
+        /// Defines the time at which the application will wait for the application to wait for processes
+        /// to exit or for telemetry to be flushed before exiting regardless.
+        /// </summary>
+        public TimeSpan ExitWait { get; set; }
+
+        /// <summary>
+        /// Defines an explicit time for which the application will wait before exiting. This is correlated with
+        /// the exit/flush wait supplied by the user on the command line.
+        /// </summary>
+        public DateTime ExitWaitTimeout { get; set; }
 
         /// <summary>
         /// True if the output of processes executed should be logged to files in

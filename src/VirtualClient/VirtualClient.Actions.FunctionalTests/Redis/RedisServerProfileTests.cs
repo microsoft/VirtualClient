@@ -42,6 +42,8 @@ namespace VirtualClient.Actions
 
             this.mockFixture.SetupWorkloadPackage("wget", expectedFiles: "linux-x64/wget2");
             this.mockFixture.SetupFile("redis", "redis-6.2.1/src/redis-server", new byte[0]);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("AnyName", "AnyDescription", 1, 4, 1, 0, true));
         }
 
         [Test]
@@ -62,14 +64,11 @@ namespace VirtualClient.Actions
         [TestCase("PERF-REDIS.json")]
         public async Task RedisMemtierWorkloadProfileExecutesTheWorkloadAsExpectedOfServerOnUnixPlatformMultiVM(string profile)
         {
-            List<string> expectedCommands = new List<string>
-            {
-                 $"sudo pkill -f redis-server",
-            };
+            List<string> expectedCommands = new List<string>();
 
             int port = 6379;
-            Enumerable.Range(0, Environment.ProcessorCount).ToList().ForEach(core =>
-                expectedCommands.Add($"sudo bash -c \"numactl -C {core} /.+/redis-server --port {port + core} --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save\""));
+            Enumerable.Range(0, 4).ToList().ForEach(core =>
+                expectedCommands.Add($"sudo bash -c \"numactl -C {core} /.+/redis-server --port {port + core} --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &\""));
 
             // Setup the expectations for the workload
             // - Workload package is installed and exists.

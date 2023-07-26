@@ -44,7 +44,6 @@ namespace VirtualClient.Actions.NetworkPerformance
 
             this.Parameters.SetIfNotDefined(nameof(this.ThreadCount), 1);
             this.Parameters.SetIfNotDefined(nameof(this.TestDuration), 60);
-            this.Parameters.SetIfNotDefined(nameof(this.Port), 5001);
         }
 
         /// <summary>
@@ -78,19 +77,12 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             get
             {
-                if (this.Parameters.TryGetValue("ConcurrentThreads", out IConvertible threadCount))
-                {
-                    // This if clause is only for backwards compatibility. Please update the profile with ThreadCount.
-                    this.Logger.LogTraceMessage("Parameter name 'ConcurrentThreads' is being deprecated, please replace with 'ThreadCount'");
-                    return (int)threadCount;
-                }
-
                 return this.Parameters.GetValue<int>(nameof(this.ThreadCount), 1);
             }
         }
 
         /// <summary>
-        /// get test run duration value in seconds.
+        /// Parameter defines the duration (in seconds) for running the NTttcp workload.
         /// </summary>
         public int TestDuration
         {

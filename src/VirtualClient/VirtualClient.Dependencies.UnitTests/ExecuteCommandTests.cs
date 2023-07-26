@@ -194,7 +194,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
@@ -218,7 +218,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] =
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}";
 
@@ -242,7 +242,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture);
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
@@ -266,7 +266,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] =
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64)}";
 
@@ -292,7 +292,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, architecture);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, architecture);
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
@@ -316,7 +316,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] =
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Win32NT, Architecture.Arm64)}";
 
@@ -342,7 +342,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, architecture);
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] = PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, architecture);
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnProcessCreated = (process) => commandExecuted = true;
@@ -366,7 +366,7 @@ namespace VirtualClient.Dependencies
 
             // e.g.
             // linux-x64, win-arm64
-            this.mockFixture.Parameters[nameof(ExecuteCommand.Platforms)] =
+            this.mockFixture.Parameters[nameof(ExecuteCommand.SupportedPlatforms)] =
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}," +
                 $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}";
 

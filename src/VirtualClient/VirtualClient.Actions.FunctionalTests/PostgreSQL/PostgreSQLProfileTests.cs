@@ -60,11 +60,19 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Unix)]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Win32NT)]
-        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ClientRole(string profile, PlatformID platform)
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependenciesOnUnix_ClientRole_Windows(string profile)
         {
-            this.SetupClientRole(platform);
+            this.SetupClientRole(PlatformID.Win32NT);
+
+            this.mockFixture.SetupWorkloadPackage("postgresql", metadata: new Dictionary<string, IConvertible>
+            {
+                // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                // the package store (i.e. in the *.vcpkg file).
+                [$"{PackageMetadata.InstallationPath}-win-x64"] = "C:\\Program Files\\PostgreSQL\\14",
+            });
+
+            this.mockFixture.SetupFile("postgresql", "win-x64\\superuser.txt", "superuser");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
@@ -78,11 +86,77 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Unix)]
-        [TestCase("PERF-SQL-POSTGRESQL.json", PlatformID.Win32NT)]
-        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole(string profile, PlatformID platform)
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ClientRole_Unix(string profile)
         {
-            this.SetupClientRole(platform);
+            this.SetupClientRole(PlatformID.Unix);
+
+            this.mockFixture.SetupWorkloadPackage(
+                "postgresql",
+                metadata: new Dictionary<string, IConvertible>
+                {
+                    // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                    // the package store (i.e. in the *.vcpkg file).
+                    [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
+                },
+                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+
+            this.mockFixture.SetupFile("postgresql", $"linux-x64/superuser.txt", "superuser");
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
+
+                // Workload dependency package expectations
+                // The workload dependency package should have been installed at this point.
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "postgresql");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "hammerdb");
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole_Windows(string profile)
+        {
+            this.SetupClientRole(PlatformID.Win32NT);
+
+            this.mockFixture.SetupWorkloadPackage("postgresql", metadata: new Dictionary<string, IConvertible>
+            {
+                // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                // the package store (i.e. in the *.vcpkg file).
+                [$"{PackageMetadata.InstallationPath}-win-x64"] = "C:\\Program Files\\PostgreSQL\\14",
+            });
+
+            this.mockFixture.SetupFile("postgresql", "win-x64\\superuser.txt", "superuser");
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None);
+
+                // Workload dependency package expectations
+                // The workload dependency package should have been installed at this point.
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "postgresql");
+                WorkloadAssert.WorkloadPackageInstalled(this.mockFixture, "hammerdb");
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-SQL-POSTGRESQL.json")]
+        public async Task PostgreSQLWorkloadProfileInstallsTheExpectedDependencies_ServerRole_Unix(string profile)
+        {
+            this.SetupClientRole(PlatformID.Unix);
+
+            this.mockFixture.SetupWorkloadPackage(
+                "postgresql",
+                metadata: new Dictionary<string, IConvertible>
+                {
+                    // Currently, we put the installation path locations in the PostgreSQL package that we download from
+                    // the package store (i.e. in the *.vcpkg file).
+                    [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
+                },
+                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+
+            this.mockFixture.SetupFile("postgresql", $"linux-x64/superuser.txt", "superuser");
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
             {
@@ -184,7 +258,7 @@ namespace VirtualClient.Actions
             },
             expectedFiles: new string[]
             {
-                "/linux-x64/ubuntu/configure.sh"
+                "/linux-x64/ubuntu/configure.sh",
             });
 
             this.mockFixture.SetupWorkloadPackage("hammerdb", expectedFiles: new string[]
@@ -196,6 +270,13 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupDirectory("hammerdb", "/linux-x64/bin");
 
             string packagesDirectory = this.mockFixture.GetPackagePath();
+            string scriptsDirectory = this.mockFixture.PlatformSpecifics.GetScriptPath();
+
+            string balancedScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "balanced.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "inmemory.sh");
+
+            this.mockFixture.SetupFile(inMemoryScript);
+            this.mockFixture.SetupFile(balancedScript);
 
             List<string> commands = new List<string>
             {
@@ -205,8 +286,10 @@ namespace VirtualClient.Actions
                 // Attribute the files in the /bin directory as executable
                 $"sudo chmod -R 2777 \"{packagesDirectory}/hammerdb/linux-x64/bin\"",
 
-                // Attribute the configure.sh script as executable
+                // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
+                $"sudo chmod +x \"{balancedScript}\"",
+                $"sudo chmod +x \"{inMemoryScript}\"",
 
                 // Run transactions against the database
                 $"bash -c \"{packagesDirectory}/hammerdb/linux-x64/hammerdbcli auto runTransactions.tcl\""
@@ -234,7 +317,11 @@ namespace VirtualClient.Actions
                     // the package store (i.e. in the *.vcpkg file).
                     [$"{PackageMetadata.InstallationPath}-linux-x64"] = "/etc/postgresql/14/main",
                 },
-                expectedFiles: new string[] { "/linux-x64/ubuntu/configure.sh", "/linux-x64/ubuntu/install.sh" });
+                expectedFiles: new string[] 
+                {   
+                    "/linux-x64/ubuntu/configure.sh", 
+                    "/linux-x64/ubuntu/install.sh"
+                });
 
             this.mockFixture.SetupFile("postgresql", "/linux-x64/superuser.txt", "superuser");
             this.mockFixture.SetupWorkloadPackage("hammerdb", expectedFiles: new string[]
@@ -246,6 +333,13 @@ namespace VirtualClient.Actions
             this.mockFixture.SetupDirectory("hammerdb", "/linux-x64/bin");
 
             string packagesDirectory = this.mockFixture.GetPackagePath();
+            string scriptsDirectory = this.mockFixture.PlatformSpecifics.GetScriptPath();
+
+            string balancedScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "balanced.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptsDirectory, "postgresql", "inmemory.sh");
+
+            this.mockFixture.SetupFile(inMemoryScript);
+            this.mockFixture.SetupFile(balancedScript);
 
             List<string> commands = new List<string>
             {
@@ -255,8 +349,10 @@ namespace VirtualClient.Actions
                 // Attribute the files in the /bin directory as executable
                 $"sudo chmod -R 2777 \"{packagesDirectory}/hammerdb/linux-x64/bin\"",
 
-                // Attribute the configure.sh script as executable
+                // Attribute the following scripts as executables
                 $"sudo chmod +x \"{packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh\"",
+                $"sudo chmod +x \"{balancedScript}\"",
+                $"sudo chmod +x \"{inMemoryScript}\"",
 
                 // Configure the PostgreSQL server before creating the database.
                 $"sudo {packagesDirectory}/postgresql/linux-x64/ubuntu/configure.sh 5432",

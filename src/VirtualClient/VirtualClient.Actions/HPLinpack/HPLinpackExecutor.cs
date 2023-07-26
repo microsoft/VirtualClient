@@ -51,24 +51,29 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Username), out IConvertible username);
-                return username?.ToString();
+                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username), string.Empty);
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    username = Environment.UserName;
+                }
+
+                return username;
             }
         }
 
         /// <summary>
         /// True if Hyperthreading is on
         /// </summary>
-        public bool HyperThreadingON
+        public bool HyperThreadingOn
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingON), true);
+                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingOn), true);
             }
 
             set
             {
-                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingON)] = value;
+                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingOn)] = value;
             }
         }
 
@@ -185,11 +190,14 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
+                await this.ExecuteCommandAsync("useradd", $" -m {this.Username}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true)
+                    .ConfigureAwait(false);
+
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
                 IProcessProxy process;
-                if (this.HyperThreadingON)
+                if (this.HyperThreadingOn)
                 {
                     process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
                 }
@@ -245,7 +253,7 @@ namespace VirtualClient.Actions
 
         private void ValidateParameters()
         {
-            if (this.HyperThreadingON && this.NumberOfProcesses > this.coreCount)
+            if (this.HyperThreadingOn && this.NumberOfProcesses > this.coreCount)
             {
                 throw new Exception(
                     $"NumberOfProcesses parameter value should be less than or equal to number of logical cores");
@@ -368,7 +376,8 @@ namespace VirtualClient.Actions
                     $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     this.Tags,
                     telemetryContext,
-                    result.Relativity);
+                    result.Relativity,
+                    metricMetadata: result.Metadata);
             }
         }
 

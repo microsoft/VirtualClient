@@ -4,7 +4,9 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Generic;
     using System.Net;
+    using System.Threading.Tasks;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
 
@@ -21,7 +23,7 @@ namespace VirtualClient
         void DeleteApiClient(string id);
 
         /// <summary>
-        /// Gets an existing/cached API client or creates a new one adding it to the cache.
+        /// Gets an existing/cached API client.
         /// </summary>
         /// <param name="id">The ID of the API client to use for lookups.</param>
         /// <returns>

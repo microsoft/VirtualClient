@@ -89,9 +89,24 @@ are granted to the Virtual Client application for uploading and downloading blob
 
 
 ### Blob Store Folder/File Naming Conventions
-In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, a naming convention is used.
+In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, Virtual Client supports a flexible blob path template.
 At a high level, all files associated with a given experiment are contained together in the blob store. The following pieces of information are included
 in the virtual path and file name that is used to ensure that files associated with that experiment are organized in the blob store:
+
+The virtual path of uploaded logs in blob storage is controlled by a VirtualClient Component parameter "ContentPathTemplate".
+
+Example: ContentPathTemplate="stringValue1/{parameter1}abc{parameter2}/{standardProperty1}/stringValue2/{parameter3}/{standardProperty2}".
+
+In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in 
+ContentPathTemplate. The inlined values that are enclosed within brackets "{}", like "parameter1" and "standaradProperty1", 
+needs to be either a standard property of Virtual Client (ExperimentId, AgentId, ToolName, Role, Scenario) or needs to be provided 
+as a parameter to Virtual Client commandline or in Profiles.
+
+The first component of ContentPathTemplate (stringValue1 in above example) will be taken up as the name of Blob storage Container where all files will be uploaded.
+The next component ({parameter1} in above example) will be the root folder within the container and so on for the complete virtual folder structure within the blob storage.
+
+The default value of "ContentPathTemplate" is "{experimentId}/{agentId}/{toolName}/{role}/{scenario}". In the default template, each element 
+is a standard used in Virtual Client.
 
 * **Experiment ID**  
   The ID of the experiment is used to ensure all files associated with any executors or monitors are in the same virtual folder within the blob store.
@@ -102,8 +117,17 @@ in the virtual path and file name that is used to ensure that files associated w
   The ID of the Virtual Client instance running (i.e. the agent) is also included. This ensures that files captured from a specific VM or node etc... are easy
   to distinguish from each other.
 
-* **Component Name**  
+* **Tool Name**  
   This is the name of the executor or monitor that created the files (directly or indirectly).
+
+* **Role**  
+  This is relevant for workloads that use multiple systems, and each system has an assigned role like Client or Server.
+
+* **ScenarioName**  
+  It is an indicator of the scenario being tested by the workload. It is defined for each action/monitor in an execution profile.
+
+All files will be uploaded in a virtual folder structure as defined by the ContentPathTemplate. For each file uploaded, a timestamp will be 
+prefixed to it so as to provide unique names.
 
 * **File Name**  
   This is the name of the file as it should be reflected in the blob store. A timestamp (round-trip date/time format) will be added to the beginning of the file name
@@ -118,32 +142,35 @@ Given the pieces of information noted above, the format for virtual paths and fi
 
 
 ``` csharp
-// Path Format:
+// ContentPathTemplate and Parameters as defined in Virtual Client CommandLine:
 // -----------------------------------------------
-{ExperimentID}/{AgentID}/{ComponentName}/{RoundTripFormattedTimestamp}-{FileName}
+VirtualClient.exe --profile=........ --parameters="ContentPathTemplate={Parameter1}/stringvalue1/{ExperimentID}_expt/stringvalue2/{AgentID}/{Parameter2},results_{Parameter3}/{ToolName},,,Parameter1=value1,,,Parameter2=value2,,,Parameter3=value3"
 
 // Examples:
 // -----------------------------------------------
 // Given the Following Information:
 // - Experiment ID = 24149a49-66c9-4bd1-9332-18370c7c70e1
 // - Agent ID = cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01
-// - A Background Monitor = ExampleMonitor
+// - ToolName - a Background Monitor = ExampleMonitor
 // - Files Produced = monitor.log
 //
 // The blob virtual folder paths/names would like the following:
-24149a49-66c9-4bd1-9332-18370c7c70e1/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/2022-03-07T01:32:27.1237655Z-monitor.log
-24149a49-66c9-4bd1-9332-18370c7c70e1/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/2022-03-07T01:34:32.6483092Z-monitor.log
-24149a49-66c9-4bd1-9332-18370c7c70e1/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/examplemonitor/2022-03-07T01:36:30.2645013Z-monitor.log
+value1/stringvalue1/24149a49-66c9-4bd1-9332-18370c7c70e1_expt/stringvalue2/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/value2,results_value3/examplemonitor/2022-03-07T01:32:27.1237655Z-monitor.log
+value1/stringvalue1/24149a49-66c9-4bd1-9332-18370c7c70e1_expt/stringvalue2/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/value2,results_value3/examplemonitor/2022-03-07T01:34:32.6483092Z-monitor.log
+value1/stringvalue1/24149a49-66c9-4bd1-9332-18370c7c70e1_expt/stringvalue2/cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01/value2,results_value3/examplemonitor/2022-03-07T01:36:30.2645013Z-monitor.log
 
 // Structure Within the Blob Store:
 // -----------------------------------------------
-// (container) monitors
-//   -> (virtual folder) /24149a49-66c9-4bd1-9332-18370c7c70e1 
-//      -> (virtual folder) /cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01
-//          -> (virtual folder) /examplemonitor
-//             -> (blob) 2022-03-07T01:32:27.1237655Z-monitor.log
-//             -> (blob) 2022-03-07T01:34:32.6483092Z-monitor.log
-//             -> (blob) 2022-03-07T01:36:30.2645013Z-monitor.log
+// (container) value1
+//  -> (virtual folder) /stringvalue1   
+//     -> (virtual folder) /24149a49-66c9-4bd1-9332-18370c7c70e1_expt
+//        -> (virtual folder) /stringvalue2
+//          -> (virtual folder) /cluster01,cc296787-aee6-4ce4-b814-180627508d12,anyvm-01
+//            -> (virtual folder) /value2,results_value3
+//                -> (virtual folder) /examplemonitor
+//                   -> (blob) 2022-03-07T01:32:27.1237655Z-monitor.log
+//                   -> (blob) 2022-03-07T01:34:32.6483092Z-monitor.log
+//                   -> (blob) 2022-03-07T01:36:30.2645013Z-monitor.log
 ```
 
 ---------

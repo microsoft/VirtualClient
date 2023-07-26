@@ -31,7 +31,7 @@ namespace VirtualClient.Monitors
         {
             if (this.ProfilingMode == ProfilingMode.OnDemand)
             {
-                VirtualClientEventing.SendReceiveInstructions += this.OnProfileSystemOnDemand;
+                VirtualClientRuntime.SendReceiveInstructions += this.OnProfileSystemOnDemand;
             }
         }
 
@@ -48,7 +48,7 @@ namespace VirtualClient.Monitors
                 {
                     if (this.ProfilingMode == ProfilingMode.OnDemand)
                     {
-                        VirtualClientEventing.SendReceiveInstructions -= this.OnProfileSystemOnDemand;
+                        VirtualClientRuntime.SendReceiveInstructions -= this.OnProfileSystemOnDemand;
                     }
 
                     this.disposed = true;

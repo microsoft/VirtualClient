@@ -9,10 +9,10 @@
     },
     "Parameters": {
         "ConfigurationFile": "default.yaml",
-        "Username": "testuser",
-        "CudaVersion": "12.0",
-        "DriverVersion": "525",
-        "LocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+        "Username": "",
+        "LinuxCudaVersion": "12.0",
+        "LinuxDriverVersion": "525",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
     },
     "Actions": [
         {
@@ -20,9 +20,9 @@
             "Parameters": {
                 "Scenario": "Models",
                 "Username": "$.Parameters.Username",
-                "Version": "0.7.0",
+                "Version": "0.8.0",
                 "ConfigurationFile": "$.Parameters.ConfigurationFile",
-                "ContainerVersion": "superbench/superbench:v0.7.0-cuda11.1.1"
+                "ContainerVersion": "superbench/superbench:v0.8.0-cuda11.1.1"
             }
         }
     ],
@@ -31,10 +31,10 @@
             "Type": "NvidiaCudaInstallation",
             "Parameters": {
                 "Scenario": "InstallNvidiaCuda",
-                "CudaVersion": "$.Parameters.CudaVersion",
-                "DriverVersion": "$.Parameters.DriverVersion",
+                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
                 "Username": "$.Parameters.Username",
-                "LocalRunFile": "$.Parameters.LocalRunFile"
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
             }
         },
         {

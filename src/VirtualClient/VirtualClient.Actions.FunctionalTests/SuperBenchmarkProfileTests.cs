@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
                 WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
 
-            SystemManagement.IsRebootRequested = false;
+            VirtualClientRuntime.IsRebootRequested = false;
         }
 
         [Test]
@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
         {
             string setupCommand = "distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && " +
                 "curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | " +
-                "sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg && " +
+                "sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg --yes --no-tty && " +
                 "curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | " +
                 "sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' |  " +
                 "sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list";
@@ -126,10 +126,10 @@ namespace VirtualClient.Actions
                 $"sudo apt-get install -y nvidia-docker2",
                 $"sudo systemctl restart docker",
                 $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient\"",
-                $"sudo git clone -b v0.7.0 https://github.com/microsoft/superbenchmark",
+                $"sudo git clone -b v0.8.0 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh",
-                $"sudo sb deploy --host-list localhost -i superbench/superbench:v0.7.0-cuda11.1.1",
-                $"sudo sb run --host-list localhost -c default.yaml"
+                $"sb deploy --host-list localhost -i superbench/superbench:v0.8.0-cuda11.1.1",
+                $"sb run --host-list localhost -c default.yaml"
             };
         }
     }

@@ -39,7 +39,8 @@ namespace VirtualClient.Actions
                 ["PackageName"] = this.mockPackage.Name,
                 ["CommandLine"] = "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R",
                 ["ClientInstances"] = 1,
-                ["Duration"] = "00:03:00"
+                ["Duration"] = "00:03:00",
+                ["Username"] = "testuser"
             };
 
             this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -77,6 +78,22 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void MemtierBenchmarkClientExecutorHandlesDurationsAsBothIntegerAndTimeSpanFormats()
+        {
+            this.fixture.Parameters["Duration"] = 30;
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(30, component.Duration);
+            }
+
+            this.fixture.Parameters["Duration"] = TimeSpan.FromMinutes(1).ToString();
+            using (var component = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
+            {
+                Assert.AreEqual(60, component.Duration);
+            }
+        }
+
+        [Test]
         public async Task MemtierBenchmarkClientExecutorExecutesExpectedCommands()
         {
             using (var executor = new TestMemtierBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
@@ -87,7 +104,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Run the Memtier benchmark. Values based on the default parameter values set at the top
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -116,7 +133,7 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Run the Memtier benchmark. Values based on the default parameter values set at the top
-                    $"sudo -u testuser {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -146,10 +163,10 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}",
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
 
                      // Client instance #2
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -179,16 +196,16 @@ namespace VirtualClient.Actions
                     $"sudo chmod +x \"{this.mockPackage.Path}/memtier_benchmark\"",
 
                     // Client instance #1
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}",
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
 
                      // Client instance #2
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}",
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
 
                     // Client instance #3
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}",
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}",
 
                      // Client instance #4
-                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine} --test-time {executor.Duration.TotalSeconds}"
+                    $"sudo {this.mockPackage.Path}/memtier_benchmark --server 1.2.3.5 --port 6379 {executor.CommandLine}"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

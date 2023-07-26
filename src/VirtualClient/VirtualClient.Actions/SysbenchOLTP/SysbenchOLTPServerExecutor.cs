@@ -5,11 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
+    using System.Net;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -32,6 +34,23 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Disk filter specified
+        /// </summary>
+        public string DiskFilter
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPServerExecutor.DiskFilter), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Client used to communicate with the locally self-hosted instance of the
+        /// Virtual Client API.
+        /// </summary>
+        public IApiClient LocalApiClient { get; private set; }
+
+        /// <summary>
         /// Provides access to the local state management facilities.
         /// </summary>
         protected IStateManager StateManager { get; }
@@ -46,7 +65,44 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.InitializeApiClients();
-            await this.ConfigureMySQLPrivilegesAsync(cancellationToken);
+
+            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
+            this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+
+            SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+                ?? new SysbenchOLTPState();
+
+            if (!state.DatabaseScenarioInitialized)
+            {
+                // only prepare if the scenario has not been initialized
+
+                switch (this.DatabaseScenario)
+                {
+                    case SysbenchOLTPScenario.InMemory:
+                        await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        state.DatabaseScenarioInitialized = true;
+                        break;
+                    case SysbenchOLTPScenario.Balanced:
+                        string diskPaths = await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        state.DatabaseScenarioInitialized = true;
+                        state.DiskPathsArgument = diskPaths;
+                        break;
+                    case SysbenchOLTPScenario.Default:
+                        break;
+                }
+
+                HttpResponseMessage response = await this.LocalApiClient.GetOrCreateStateAsync(nameof(SysbenchOLTPState), JObject.FromObject(state), cancellationToken)
+                    .ConfigureAwait(false);
+
+                response.ThrowOnError<WorkloadException>();
+
+                await this.StateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken)
+                .ConfigureAwait(false);
+            }
         }
 
         /// <summary>
@@ -60,101 +116,169 @@ namespace VirtualClient.Actions
             {
                 using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
-                    if (!this.IsMultiRoleLayout())
+                    this.SetServerOnline(true);
+
+                    if (this.IsMultiRoleLayout())
                     {
                         await this.WaitAsync(cancellationToken)
                             .ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        try
-                        {
-                            IEnumerable<IProcessProxy> processProxyList = this.ProcessesRunning("mysqld");
-
-                            this.Logger.LogTraceMessage($"API server workload online awaiting client requests...");
-
-                            this.SetServerOnline(true);
-
-                            if (processProxyList != null)
-                            {
-                                foreach (IProcessProxy process in processProxyList)
-                                {
-                                    this.CleanupTasks.Add(() => process.SafeKill());
-                                    await process.WaitForExitAsync(cancellationToken)
-                                        .ConfigureAwait(false);
-                                }
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                        }
-                        finally
-                        {
-                            // Always signal to clients that the server is offline before exiting. This helps to ensure that the client
-                            // and server have consistency in handshakes even if one side goes down and returns at some other point.
-                            this.SetServerOnline(false);
-                        }
                     }
                 }
             });
         }
 
-        private async Task ConfigureMySQLPrivilegesAsync(CancellationToken cancellationToken)
+        private async Task PrepareInMemoryScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string workingDirectory = this.GetPackagePath(this.PackageName);
-            this.SystemManager.FileSystem.Directory.CreateDirectory(workingDirectory);
-
-            string dropUserCommand = $"mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'{this.ClientIpAddress}'\"";
-            string configureNetworkCommand = $"sed -i \"s/.*bind-address.*/bind-address = {this.ServerIpAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf";
-            string restartmySQLCommand = "systemctl restart mysql.service";
-            string createUserCommand = $"mysql --execute=\"CREATE USER 'sbtest'@'{this.ClientIpAddress}'\"";
-            string grantPrivilegesCommand = $"mysql --execute=\"GRANT ALL ON sbtest.* TO 'sbtest'@'{this.ClientIpAddress}'\"";
-
-            await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(dropUserCommand, null, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-            await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(configureNetworkCommand, null, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-            await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(restartmySQLCommand, null, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-            await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(createUserCommand, null, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-            await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(grantPrivilegesCommand, null, workingDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Returns list of processes running.
-        /// </summary>
-        /// <param name="processName">Name of the process.</param>
-        /// <returns>List of processes running.</returns>
-        private IEnumerable<IProcessProxy> ProcessesRunning(string processName)
-        {
-            IEnumerable<IProcessProxy> processProxyList = null;
-            List<Process> processlist = new List<Process>(Process.GetProcesses());
-            foreach (Process process in processlist)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                if (process.ProcessName.Contains(processName))
+                // server's job is to configure buffer size, in memory script updates the mysql config file
+
+                string inMemoryScript = "inMemory.sh";
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
+                long totalMemoryKiloBytes = memoryInfo.TotalMemory;
+                int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
+                    $"{bufferSizeInMegaBytes}",
+                    scriptsDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
                 {
-                    Process[] processesByName = Process.GetProcessesByName(process.ProcessName);
-                    if (processesByName?.Any() ?? false)
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        if (processProxyList == null)
-                        {
-                            processProxyList = processesByName.Select((Process process) => new ProcessProxy(process));
-                        }
-                        else
-                        {
-                            foreach (Process proxy in processesByName)
-                            {
-                                processProxyList.Append(new ProcessProxy(proxy));
-                            }
-                        }
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        process.ThrowIfWorkloadFailed();
                     }
                 }
             }
+        }
 
-            return processProxyList;
+        private async Task<string> PrepareBalancedScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // from the server side, to prep for the balanced scenario, the script runs commands to configure
+            // permisions for the server vm to use the disk space as mysql database storage
+            // this is because sysbench workload prepares the tables from the client side.
+            // once the tables have been prepared, the client will re-copy the tables from OS disk to data disk
+
+            // in the meantime, the server needs to pass on information about what disks are going to be used
+            // to distribute the database on; this method prepares that information
+
+            string diskPaths = string.Empty;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string diskFilter = "osdisk:false";
+
+                if (!string.IsNullOrEmpty(this.DiskFilter))
+                {
+                    diskFilter += string.Concat("&", this.DiskFilter);
+                }
+
+                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                if (disks?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
+                {
+                    // Refresh the disks to pickup the mount point changes.
+                    await Task.Delay(1000).ConfigureAwait(false);
+                    IEnumerable<Disk> updatedDisks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    disksToTest = DiskFilters.FilterDisks(updatedDisks, diskFilter, this.Platform).ToList();
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
+                    {
+                        diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)} ";
+                    }
+                }
+
+                string balancedScript = "balancedServer.sh";
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
+                    diskPaths,
+                    scriptsDirectory,
+                    telemetryContext,
+                    cancellationToken,
+                    runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+                    }
+                }      
+            }
+
+            return diskPaths;
+        }
+
+        /// <summary>
+        /// Creates mount points for any disks that do not have them already.
+        /// </summary>
+        /// <param name="disks">This disks on which to create the mount points.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        private async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+        {
+            bool mountPointsCreated = false;
+
+            // Don't mount any partition in OS drive.
+            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
+            {
+                // mount every volume that doesn't have an accessPath.
+                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
+                {
+                    string newMountPoint = volume.GetDefaultMountPoint();
+                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
+
+                    EventContext relatedContext = EventContext.Persisted().Clone()
+                        .AddContext(nameof(volume), volume)
+                        .AddContext("mountPoint", newMountPoint);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
+                    {
+                        string newMountPoint = volume.GetDefaultMountPoint();
+                        if (!this.SystemManager.FileSystem.Directory.Exists(newMountPoint))
+                        {
+                            this.SystemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                        }
+
+                        await this.SystemManager.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        mountPointsCreated = true;
+
+                    }).ConfigureAwait(false);
+                }
+            }
+
+            return mountPointsCreated;
         }
     }
 }

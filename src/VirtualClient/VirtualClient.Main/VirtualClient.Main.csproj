@@ -17,8 +17,6 @@
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="$(Swashbuckle_AspNetCore_PackageVersion)" />
         <PackageReference Include="System.CommandLine" Version="$(System_CommandLine_PackageVersion)" />
-        <PackageReference Include="System.Reflection.Metadata" Version="$(System_Reflection_Metadata_PackageVersion)" />
-        <PackageReference Include="System.Net.Http" Version="$(System_Net_Http_PackageVersion)" />
     </ItemGroup>
 
     <ItemGroup>
@@ -60,15 +58,20 @@
         NuGet package in the /content/win-x64|win-arm64/profiles folder
         -->
         <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
+	<WindowsProfiles Include="profiles\DEPENDENCY-AMD-GPU-DRIVER.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
+        <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
+	<WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <WindowsProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
+        <WindowsProfiles Include="profiles\PERF-IO-DISKSPD-2.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
         <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
@@ -124,6 +127,7 @@
         <LinuxProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
+        <LinuxProfiles Include="profiles\PERF-REDIS-TLS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK-PING.json" />
         <LinuxProfiles Include="profiles\PERF-NETWORK.json" />
@@ -141,6 +145,7 @@
 
     <ItemGroup>
         <MonitorProfiles Include="profiles\MONITORS-DEFAULT.json" />
+        <MonitorProfiles Include="profiles\MONITORS-FILE-UPLOAD.json" />
         <MonitorProfiles Include="profiles\MONITORS-GPU-NVIDIA.json" />
         <MonitorProfiles Include="profiles\MONITORS-NONE.json" />
     </ItemGroup>

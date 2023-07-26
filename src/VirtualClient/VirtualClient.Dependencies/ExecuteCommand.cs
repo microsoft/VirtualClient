@@ -24,7 +24,7 @@ namespace VirtualClient.Dependencies
     public class ExecuteCommand : VirtualClientComponent
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="WgetPackageInstallation"/> class.
+        /// Initializes a new instance of the <see cref="ExecuteCommand"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component</param>
         /// <param name="parameters">A series of key value pairs that dictate runtime execution.</param>
@@ -43,28 +43,6 @@ namespace VirtualClient.Dependencies
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.Command));
-            }
-        }
-
-        /// <summary>
-        /// Parameter describes the platform/architectures on which the command will be 
-        /// executed. If not defined, the command will be executed on any platform architecture.
-        /// </summary>
-        public IEnumerable<string> Platforms
-        {
-            get
-            {
-                List<string> platformArchitectures = new List<string>();
-                IConvertible value = null;
-
-                this.Parameters.TryGetValue(nameof(this.Platforms), out value);
-
-                if (value != null)
-                {
-                    platformArchitectures.AddRange(value.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.RemoveEmptyEntries).Select(v => v?.Trim()));
-                }
-
-                return platformArchitectures;
             }
         }
 
@@ -147,7 +125,7 @@ namespace VirtualClient.Dependencies
         {
             telemetryContext.AddContext("command", this.Command);
             telemetryContext.AddContext("workingDirectory", this.WorkingDirectory);
-            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.Platforms));
+            telemetryContext.AddContext("platforms", string.Join(VirtualClientComponent.CommonDelimiters.First(), this.SupportedPlatforms));
 
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -195,7 +173,7 @@ namespace VirtualClient.Dependencies
             {
                 // We execute only if the current platform/architecture matches those
                 // defined in the parameters.
-                if (!this.Platforms.Any() || this.Platforms.Contains(this.PlatformArchitectureName))
+                if (!this.SupportedPlatforms.Any() || this.SupportedPlatforms.Contains(this.PlatformArchitectureName))
                 {
                     isSupported = true;
                 }

@@ -67,7 +67,7 @@ namespace VirtualClient.Actions
         public void HPLinpackExecutorThrowsOnValidateParametersFailing(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            this.fixture.Parameters["NumberOfProcesses"] = 10;
+            this.fixture.Parameters["NumberOfProcesses"] = 100;
             using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
             {
                 Exception exception = Assert.ThrowsAsync<Exception>(
@@ -92,6 +92,7 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
+                    $"sudo useradd -m {this.fixture.Parameters["Username"]}",
                     $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
                 };
 
@@ -147,6 +148,7 @@ namespace VirtualClient.Actions
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+            this.fixture.Process.StandardOutput.Append(this.rawString);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {

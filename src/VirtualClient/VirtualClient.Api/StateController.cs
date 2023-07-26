@@ -150,7 +150,7 @@ namespace VirtualClient.Api
 
                     // The file cannot be access by anything else during the time it is being written to. This is purposeful
                     // to ensure consistency with read/write operations.
-                    using (Stream stream = this.FileSystem.FileStream.Create(stateFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    using (Stream stream = this.FileSystem.FileStream.New(stateFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
                     {
                         byte[] fileContent = Encoding.UTF8.GetBytes(stateInstance.ToJson(StateController.StateSerializationSettings));
                         await stream.WriteAsync(fileContent, 0, fileContent.Length);
@@ -366,7 +366,7 @@ namespace VirtualClient.Api
 
                         // The file cannot be access by anything else during the time it is being written to. This is purposeful
                         // to ensure consistency with read/write operations.
-                        using (Stream stream = this.FileSystem.FileStream.Create(stateFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
+                        using (Stream stream = this.FileSystem.FileStream.New(stateFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None))
                         {
                             byte[] fileContent = Encoding.UTF8.GetBytes(state.ToJson(StateController.StateSerializationSettings));
                             stream.SetLength(0);
