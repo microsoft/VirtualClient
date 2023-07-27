@@ -46,6 +46,9 @@ steps:
 - script: $(Build.SourcesDirectory)/build.sh $(VcVersion)
   displayName: 'Build Solutions'
 
+- script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
+  displayName: 'Build deb package for linux x64'
+
   # Build NuGet packages for the services/agents in the repo.
 # - script: $(Build.SourcesDirectory)/build-packages.cmd $(VcVersion)$(VersionSuffix)
   # displayName: 'Build NuGet Packages'
@@ -53,8 +56,8 @@ steps:
 - task: EsrpCodeSigning@1
   inputs:
     ConnectedServiceName: 'virtualclient-esrp'
-    FolderPath: '$(System.DefaultWorkingDirectory)'
-    Pattern: '*.*'
+    FolderPath: '$(Build.SourcesDirectory)/out/packages'
+    Pattern: '*.deb'
     signConfigType: 'inlineSignParams'
     inlineOperation: |
       [
