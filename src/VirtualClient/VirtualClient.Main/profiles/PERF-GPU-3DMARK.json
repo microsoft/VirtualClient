@@ -1,0 +1,47 @@
+{
+  "Description": "3DMark TimeSpy GPU Performance Workload",
+  "Actions": [
+    {
+      "Type": "ThreeDMarkExecutor",
+      "Parameters": {
+        "Scenario": "TimeSpy",
+        "LisenceKey": "",
+        "PackageName": "3dmark",
+        "PsExecPackageName": "pstools",
+        "Tags": "GPU,3DMark,Gaming"
+      }
+    }
+  ],
+  "Monitors": [
+    {
+      "Type": "PerfCounterMonitor",
+      "Parameters": {
+        "Scenario": "CaptureCounters",
+        "MonitorFrequency": "$.Parameters.MonitorFrequency",
+        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPsToolsPackage",
+        "BlobContainer": "packages",
+        "BlobName": "pstools.2.51.zip",
+        "PackageName": "pstools",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "Install3DMarkWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "",
+        "PackageName": "3DMark",
+        "Extract": true
+      }
+    }
+  ]
+}
