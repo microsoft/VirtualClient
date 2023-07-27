@@ -153,7 +153,7 @@ namespace VirtualClient.Actions
                     string cmdargs = $"--num_loops 1 --num_loops_in_shader {this.ShaderIterations} --thread_num_per_block {this.ThreadsPerBlock} --num_data_elements {this.NumDataElements} {(this.Precision == "f16" ? "--f16 1" : "--f32 1")}";
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, cmdargs))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
                         process.RedirectStandardOutput = true;
                         try
                         {

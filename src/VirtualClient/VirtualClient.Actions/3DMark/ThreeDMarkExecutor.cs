@@ -167,7 +167,7 @@ namespace VirtualClient.Actions
                 // Point 3DMark to DLC Path
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --path={this.DLCPath}", this.psexecDir))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill());
 
                     try
                     {
@@ -193,7 +193,7 @@ namespace VirtualClient.Actions
                 // Lisence Registry
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
                 {
-                    SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                    this.CleanupTasks.Add(() => process.SafeKill());
 
                     try
                     {
@@ -227,7 +227,7 @@ namespace VirtualClient.Actions
 
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} {commandArguments}", this.psexecDir))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
                         try
                         {
@@ -252,7 +252,7 @@ namespace VirtualClient.Actions
                     // Result Preparation
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml", this.psexecDir))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
 
                         try
                         {
