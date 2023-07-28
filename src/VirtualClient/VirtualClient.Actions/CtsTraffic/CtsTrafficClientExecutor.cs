@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections), 1);
+                return this.Parameters.GetValue<int>(nameof(this.Connections), 20);
             }
         }
 
@@ -97,57 +97,33 @@ namespace VirtualClient.Actions
             // The CtsTraffic phase 1 must be confirmed to be initialized and ready.
             await this.ServerApiClient.PollForExpectedStateAsync<CtsTrafficServerState>(
                 nameof(CtsTrafficServerState),
-                (state => state.ServerSetupPhase1Completed == true),
+                (state => state.ServerSetupCompleted == true),
                 this.PollingTimeout,
                 cancellationToken,
                 this.PollingInterval);
 
             string targetIPAddress = this.GetServerIPAddress(cancellationToken);
-            string primaryCommand = $@"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
-            $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
-            $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:32 " +
-            $@"-TimeLimit:150000";
 
-            string secondaryCommand = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
-            $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
+            string command = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+            $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
             $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:{this.BytesToTransfer} " +
             $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
 
-            this.ExecuteWorkload(this.CtsTrafficExe, primaryCommand, telemetryContext, cancellationToken);
-
-            // The CtsTraffic phase 2 must be confirmed to be initialized and ready.
-            await this.ServerApiClient.PollForExpectedStateAsync<CtsTrafficServerState>(
-                nameof(CtsTrafficServerState),
-                (state => state.ServerSetupPhase2Completed == true),
-                this.PollingTimeout,
-                cancellationToken,
-                this.PollingInterval);
-
-            this.ExecuteWorkload(this.ProcessInNumaNodeExe, secondaryCommand, telemetryContext, cancellationToken);
-        }
-
-        private void ExecuteWorkload(string exe, string command, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
-            {
-                DateTime startTime = DateTime.UtcNow;
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    exe,
+            using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.ProcessInNumaNodeExe,
                     command,
                     this.CtsTrafficPackagePath,
                     telemetryContext,
                     cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
-                        process.ThrowIfWorkloadFailed();
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
 
-                        await this.CaptureMetricsAsync(process, command, telemetryContext, cancellationToken);
-                    }
+                    await this.CaptureMetricsAsync(process, command, telemetryContext, cancellationToken);
                 }
-            });
+            }
         }
 
         private string GetServerIPAddress(CancellationToken cancellationToken)

@@ -6,8 +6,7 @@
         "SupportedOperatingSystems": "Windows"
     },
     "Parameters": {
-        "PrimaryPort": "4445",
-        "SecondaryPort": "4444",
+        "Port": "4444",
         "NumaNode": "0",
         "BufferInBytes": "65536",
         "Pattern":  "Duplex",
@@ -21,8 +20,7 @@
             "Type": "CtsTrafficExecutor",
           "Parameters": {
             "Scenario": "ExecuteCtsTrafficBenchmark",
-            "PrimaryPort": "$.Parameters.PrimaryPort",
-            "SecondaryPort": "$.Parameters.SecondaryPort",
+            "Port": "$.Parameters.Port",
             "NumaNode": "$.Parameters.NumaNode",
             "BufferInBytes": "$.Parameters.BufferInBytes",
             "Pattern": "$.Parameters.Pattern",

@@ -68,8 +68,7 @@ namespace VirtualClient.Actions
             // Setup: Server state
             var expectedState = new Item<State>(nameof(CtsTrafficServerState), new CtsTrafficServerState
             {
-                ServerSetupPhase1Completed = true,
-                ServerSetupPhase2Completed = true
+                ServerSetupCompleted = true
             });
 
             this.mockFixture.ApiClient.OnGetState(nameof(CtsTrafficServerState))
@@ -83,38 +82,13 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void CtsTrafficClientExecutorThrowsIfTheServerDoesNotHavePhase1SetupCompletedeBeforePollingTimeout()
+        public void CtsTrafficClientExecutorThrowsIfTheServerDoesNotHaveSetupCompletedeBeforePollingTimeout()
         {
             this.SetupDefaults();
 
             this.mockFixture.ApiClient
                 .OnGetState(nameof(CtsTrafficServerState))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
-
-            using (var executor = new TestCtsTrafficClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                // Cause a polling timeout
-                executor.PollingTimeout = TimeSpan.Zero;
-
-                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.ApiStatePollingTimeout, error.Reason);
-            }
-        }
-
-        [Test]
-        public void CtsTrafficClientExecutorThrowsIfTheServerDoesNotHavePhase2CompletedBeforeTimeout()
-        {
-            this.SetupDefaults();
-
-            var expectedState = new Item<State>(nameof(CtsTrafficServerState), new CtsTrafficServerState
-            {
-                ServerSetupPhase1Completed = true,
-                ServerSetupPhase2Completed = false
-            });
-
-            this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(CtsTrafficServerState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedState))
-                .ReturnsAsync(() => this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound));
 
             using (var executor = new TestCtsTrafficClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
@@ -143,15 +117,11 @@ namespace VirtualClient.Actions
                 {
                     // Format:
                     // {command} {command_arguments} --> {working_dir}
-                    $"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Target:1.2.3.5 -Consoleverbosity:1 " +
-                    $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.PrimaryPort} -Connections:{executor.Connections} -Pattern:{executor.Pattern} " +
-                    $"-Iterations:{executor.Iterations} -Transfer:32 -TimeLimit:150000 --> {ctsTrafficPackage}\\win-{arch}",
 
                     $"{ctsTrafficPackage}\\win-{arch}\\StartProcessInNumaNode.exe {executor.NumaNode} " +
                     $"\"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Target:1.2.3.5 -Consoleverbosity:1 " +
                     $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.SecondaryPort} -Connections:{executor.Connections} -Pattern:{executor.Pattern} " +
+                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Connections:{executor.Connections} -Pattern:{executor.Pattern} " +
                     $"-Iterations:{executor.Iterations} -Transfer:{executor.BytesToTransfer} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
                 };
 

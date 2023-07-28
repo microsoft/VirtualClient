@@ -80,21 +80,12 @@ namespace VirtualClient.Actions
                 // 7. wait for phase 2 to finish
                 // 8. Delet phase 2 state
 
-                string primaryCommand = $@"-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
-                $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.PrimaryPort} " +
-                $@"-Pattern:{this.Pattern} -Transfer:32 " +
-                $@"-TimeLimit:150000 -ServerExitLimit:1";
-
-                string secondaryCommand = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
-                $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.SecondaryPort} " +
+                string command = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+                $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
                 $@"-Pattern:{this.Pattern} -Transfer:{this.BytesToTransfer} -ServerExitLimit:{this.ServerExitLimit} " +
                 $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
 
-                bool phase1State = true;
-
-                await this.ExecuteAndWaitCommandAsync(this.CtsTrafficExe, primaryCommand, this.CtsTrafficPackagePath, phase1State, telemetryContext, cancellationToken);
-
-                await this.ExecuteAndWaitCommandAsync(this.ProcessInNumaNodeExe, secondaryCommand, this.CtsTrafficPackagePath, !phase1State, telemetryContext, cancellationToken);
+                await this.ExecuteAndWaitCommandAsync(this.ProcessInNumaNodeExe, command, this.CtsTrafficPackagePath, telemetryContext, cancellationToken);
 
                 using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
                 {
@@ -119,21 +110,18 @@ namespace VirtualClient.Actions
             string command,
             string commandArguments,
             string workingDirectory,
-            bool phase1State,
             EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
             command.ThrowIfNullOrWhiteSpace(nameof(command));
             commandArguments.ThrowIfNullOrWhiteSpace(nameof(commandArguments));
             workingDirectory.ThrowIfNullOrWhiteSpace(nameof(workingDirectory));
-            phase1State.ThrowIfNull(nameof(phase1State));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext(nameof(command), command)
                 .AddContext(nameof(commandArguments), commandArguments)
-                .AddContext(nameof(workingDirectory), workingDirectory)
-                .AddContext(nameof(phase1State), phase1State);
+                .AddContext(nameof(workingDirectory), workingDirectory);
 
             await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
@@ -153,7 +141,7 @@ namespace VirtualClient.Actions
                     }
 
                     this.SetServerOnline(true);
-                    this.SaveServerStateAsync(phase1State, !phase1State, cancellationToken)
+                    this.SaveServerStateAsync(cancellationToken)
                         .ConfigureAwait(false);
 
                     await process.WaitForExitAsync(cancellationToken)
@@ -163,13 +151,16 @@ namespace VirtualClient.Actions
                     process.ThrowIfWorkloadFailed();
 
                     await this.CaptureMetricsAsync(process, commandArguments, relatedContext, cancellationToken);
+
+                    await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken)
+                        .ConfigureAwait(false);
                 }
             });
 
             await this.WaitAsync(TimeSpan.FromSeconds(2), cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task SaveServerStateAsync(bool phase1State, bool phase2State, CancellationToken cancellationToken)
+        private async Task SaveServerStateAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -178,8 +169,7 @@ namespace VirtualClient.Actions
                     cancellationToken,
                     logger: this.Logger);
 
-                this.serverState.Definition.ServerSetupPhase1Completed = phase1State;
-                this.serverState.Definition.ServerSetupPhase2Completed = phase2State;
+                this.serverState.Definition.ServerSetupCompleted = true;
 
                 using (HttpResponseMessage response = await this.LocalApiClient.UpdateStateAsync<CtsTrafficServerState>(nameof(CtsTrafficServerState), this.serverState, cancellationToken))
                 {

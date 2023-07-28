@@ -44,24 +44,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the primary port number on which the CtsTraffic server will run on (this will be used for test run).
+        /// Parameter defines the port number on which the CtsTraffic server will run on.
         /// </summary>
-        public int PrimaryPort
+        public int Port
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.PrimaryPort), 4445);
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines the secondary port number on which the CtsTraffic server will run on.
-        /// </summary>
-        public int SecondaryPort
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.SecondaryPort), 4444);
+                return this.Parameters.GetValue<int>(nameof(this.Port), 4444);
             }
         }
 
@@ -181,8 +170,7 @@ namespace VirtualClient.Actions
         {
             this.ValidatePlatformSupportedAsync(cancellationToken);
 
-            await CtsTrafficExecutor.OpenFirewallPortsAsync(this.PrimaryPort, this.SystemManagement.FirewallManager, cancellationToken);
-            await CtsTrafficExecutor.OpenFirewallPortsAsync(this.SecondaryPort, this.SystemManagement.FirewallManager, cancellationToken);
+            await CtsTrafficExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
 
             this.InitializeApiClients();
 
@@ -372,8 +360,7 @@ namespace VirtualClient.Actions
             public CtsTrafficServerState()
                 : base()
             {
-                this.ServerSetupPhase1Completed = false;
-                this.ServerSetupPhase2Completed = false;
+                this.ServerSetupCompleted = false;
             }
 
             /// <summary>
@@ -388,32 +375,16 @@ namespace VirtualClient.Actions
             /// <summary>
             /// True if Phase 1 Server Set Up completed for CtsTraffic Execution.
             /// </summary>
-            public bool ServerSetupPhase1Completed
+            public bool ServerSetupCompleted
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(this.ServerSetupPhase1Completed));
+                    return this.Properties.GetValue<bool>(nameof(this.ServerSetupCompleted));
                 }
 
                 set
                 {
-                    this[nameof(this.ServerSetupPhase1Completed)] = value;
-                }
-            }
-
-            /// <summary>
-            /// True if Phase 2 Server Set Up completed for CtsTraffic Execution.
-            /// </summary>
-            public bool ServerSetupPhase2Completed
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(this.ServerSetupPhase2Completed));
-                }
-
-                set
-                {
-                    this[nameof(this.ServerSetupPhase2Completed)] = value;
+                    this[nameof(this.ServerSetupCompleted)] = value;
                 }
             }
         }

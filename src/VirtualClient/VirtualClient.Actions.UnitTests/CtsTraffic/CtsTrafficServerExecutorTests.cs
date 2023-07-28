@@ -77,8 +77,7 @@ namespace VirtualClient.Actions
 
             using (var executor = new TestCtsTrafficServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                bool confirmed_phase1 = false;
-                bool confirmed_phase2 = false;
+                bool confirmed_setup = true;
                 this.mockFixture.ApiClient.OnUpdateState<CtsTrafficServerState>(nameof(CtsTrafficServerState))
                     .Callback<string, object, CancellationToken, IAsyncPolicy<HttpResponseMessage>>((stateId, state, token, retryPolicy) =>
                     {
@@ -86,23 +85,15 @@ namespace VirtualClient.Actions
 
                         // Based on setup at the top. On first call, the database has not been created yet.
                         Assert.IsNotNull(actualState);
-                        if (actualState.Definition.ServerSetupPhase1Completed)
+                        if (actualState.Definition.ServerSetupCompleted)
                         {
-                            confirmed_phase1 = true;
+                            confirmed_setup = true;
                         }
-
-                        if (actualState.Definition.ServerSetupPhase2Completed)
-                        {
-                            confirmed_phase2 = true;
-                        }
-
-                        Assert.AreEqual(actualState.Definition.ServerSetupPhase1Completed, actualState.Definition.ServerSetupPhase1Completed);
                     })
                     .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
 
                 await executor.ExecuteAsync(CancellationToken.None);
-                Assert.IsTrue(confirmed_phase1);
-                Assert.IsTrue(confirmed_phase2);
+                Assert.IsTrue(confirmed_setup);
             }
         }
 
@@ -123,15 +114,10 @@ namespace VirtualClient.Actions
                 {
                     // Format:
                     // {command} {command_arguments} --> {working_dir}
-                    $"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Listen:* -Consoleverbosity:1 " +
-                    $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.PrimaryPort} -Pattern:{executor.Pattern} " +
-                    $"-Transfer:32 -TimeLimit:150000 -ServerExitLimit:1 --> {ctsTrafficPackage}\\win-{arch}",
-
                     $"{ctsTrafficPackage}\\win-{arch}\\StartProcessInNumaNode.exe {executor.NumaNode} " +
                     $"\"{ctsTrafficPackage}\\win-{arch}\\ctsTraffic.exe -Listen:* -Consoleverbosity:1 " +
                     $"-StatusFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Status.csv -ConnectionFilename:{ctsTrafficPackage}\\win-{arch}\\Results\\Connections.csv " +
-                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.SecondaryPort} -Pattern:{executor.Pattern} " +
+                    $"-ErrorFileName:{ctsTrafficPackage}\\win-{arch}\\Results\\Errors.txt -Port:{executor.Port} -Pattern:{executor.Pattern} " +
                     $"-Transfer:{executor.BytesToTransfer} -ServerExitLimit:{executor.ServerExitLimit} -Buffer:{executor.BufferInBytes} -TimeLimit:150000\" --> {ctsTrafficPackage}\\win-{arch}"
                 };
 
