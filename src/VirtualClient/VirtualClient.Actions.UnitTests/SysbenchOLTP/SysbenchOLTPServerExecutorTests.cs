@@ -43,29 +43,41 @@ namespace VirtualClient.Actions
 
             string agentId = $"{Environment.MachineName}-Server";
             this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+
+            this.mockFixture.Parameters["PackageName"] = "sysbench";
         }
 
         [Test]
-        public async Task SysbenchOLTPServerExecutorExcutesExpectedProcesses()
+        public async Task SysbenchOLTPServerExecutorExcutesExpectedProcessInMemoryScenario()
         {
             SetupDefaultBehavior();
-            int commandExecuted = 0;
+            int commandsExecuted = 0;
+            this.mockFixture.Parameters["DatabaseScenario"] = "InMemory";
+
             using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
-            string[] notExpectedCommands =
-{
-                $"sudo mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'1.2.3.5'\"",
-                $"sudo sed -i \"s/.*bind-address.*/bind-address = 1.2.3.4/\" /etc/mysql/mysql.conf.d/mysqld.cnf",
-                $"sudo systemctl restart mysql.service",
-                $"sudo mysql --execute=\"CREATE USER 'sbtest'@'1.2.3.5'\"",
-                $"sudo mysql --execute=\"GRANT ALL ON sbtest.* TO 'sbtest'@'1.2.3.5'\""
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+            
+            // Mocking 8GB of memory
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1024 * 1024 * 8));
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
+                $"sudo {scriptPath}/inMemory.sh 8192"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
             {
-                if (notExpectedCommands.Any(c => c == $"{exe} {arguments}"))
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
                 {
-                    commandExecuted++;
+                    commandsExecuted++;
                 }
 
                 return this.mockFixture.Process;
@@ -77,7 +89,110 @@ namespace VirtualClient.Actions
 
             await executor.ExecuteAsync(cancellationToken);
 
-            Assert.AreEqual(0, commandExecuted);
+            Assert.AreEqual(4, commandsExecuted);
+        }
+
+        [Test]
+        public async Task SysbenchOLTPServerExecutorExcutesExpectedProcessBalancedScenario()
+        {
+            SetupDefaultBehavior();
+            int commandsExecuted = 0;
+            this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
+
+            using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+            IEnumerable<Disk> disks;
+            disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => disks);
+
+            disks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(vol => (vol.AccessPaths as List<string>).Clear()));
+
+            List<Tuple<DiskVolume, string>> mountPointsCreated = new List<Tuple<DiskVolume, string>>();
+
+            this.mockFixture.DiskManager
+                .Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<DiskVolume, string, CancellationToken>((volume, mountPoint, token) =>
+                {
+                    (volume.AccessPaths as List<string>).Add(mountPoint);
+                })
+                .Returns(Task.CompletedTask);
+
+            string mountPaths = $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdc1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1")} " +
+                $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1")}";
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
+                $"sudo {scriptPath}/balancedServer.sh {mountPaths}"
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+            {
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    commandsExecuted++;
+                }
+
+                return this.mockFixture.Process;
+            };
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(1500);
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+            await executor.ExecuteAsync(cancellationToken);
+
+            Assert.AreEqual(4, commandsExecuted);
+        }
+
+        [Test]
+        public async Task SysbenchOLTPServerExecutorDoesNotExecuteBalancedScenarioOnInitializedState()
+        {
+            SetupDefaultBehavior();
+            int commandsExecuted = 0;
+            this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
+
+            using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                DatabaseScenarioInitialized = true,
+                DiskPathsArgument = "/testdrive1 /testdrive2"
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
+                $"sudo {scriptPath}/balancedServer.sh"
+            };
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+            {
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    commandsExecuted++;
+                }
+
+                return this.mockFixture.Process;
+            };
+
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(1500);
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
+            await executor.ExecuteAsync(cancellationToken);
+
+            Assert.AreEqual(3, commandsExecuted);
         }
 
         private class TestSysbenchOLTPServerExecutor : SysbenchOLTPServerExecutor

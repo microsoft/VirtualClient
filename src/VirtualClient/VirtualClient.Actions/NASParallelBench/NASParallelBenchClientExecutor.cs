@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Class encapsulating logic to execute and collect metrics for
@@ -134,6 +135,13 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(IProcessProxy process, string commandArguments, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                "NASParallelBench",
+                process.FullCommand(),
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             NASParallelBenchMetricsParser parser = new NASParallelBenchMetricsParser(process.StandardOutput.ToString());
             IList<Metric> metrics = parser.Parse().ToList();
 
@@ -141,7 +149,7 @@ namespace VirtualClient.Actions
 
             this.Logger.LogMetrics(
                 "NASParallelBench",
-                computingMethod + " " + this.Benchmark,
+                $"{computingMethod}_{this.Benchmark}",
                 process.StartTime,
                 process.ExitTime,
                 metrics,

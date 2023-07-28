@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -136,21 +137,23 @@ namespace VirtualClient.Actions
                 {
                     foreach (string file in outputFiles)
                     {
-                        string contents = await this.LoadResultsAsync(file, cancellationToken);
+                        string results = await this.LoadResultsAsync(file, cancellationToken);
 
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: contents.AsArray(), logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
 
-                        telemetryContext.AddScenarioMetadata(
-                            "Hpcg",
+                        this.MetadataContract.AddForScenario(
+                            "HPCG",
                             $"{this.runShellText}|{this.hpcgDatText}",
                             toolVersion: null,
                             this.PackageName);
 
-                        HpcgMetricsParser parser = new HpcgMetricsParser(contents);
+                        this.MetadataContract.Apply(telemetryContext);
+
+                        HpcgMetricsParser parser = new HpcgMetricsParser(results);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "Hpcg",
+                            toolName: "HPCG",
                             scenarioName: "Hpcg",
                             process.StartTime,
                             process.ExitTime,

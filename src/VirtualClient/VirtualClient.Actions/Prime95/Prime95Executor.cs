@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Prime95 workload executor.
@@ -398,6 +399,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Prime95",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 DateTime endtime = DateTime.UtcNow;
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
@@ -416,7 +424,7 @@ namespace VirtualClient.Actions
                 workloadMetrics.Add(new Metric("testTime", runTimeInSeconds, "seconds", MetricRelativity.HigherIsBetter));
 
                 this.Logger.LogMetrics(
-                    $"Prime95",
+                    "Prime95",
                     this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
                     process.StartTime,
                     endtime,

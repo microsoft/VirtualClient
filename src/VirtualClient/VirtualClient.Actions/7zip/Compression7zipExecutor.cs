@@ -142,10 +142,12 @@ namespace VirtualClient.Actions
         {
             process.ThrowIfNull(nameof(process));
 
-            telemetryContext.AddScenarioMetadata(
+            this.MetadataContract.AddForScenario(
                 "7Zip",
                 commandArguments,
                 toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             Compression7zipMetricsParser parser = new Compression7zipMetricsParser(process.StandardOutput.ToString());
             IList<Metric> metrics = parser.Parse();

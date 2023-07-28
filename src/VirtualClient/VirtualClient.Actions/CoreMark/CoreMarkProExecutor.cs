@@ -103,7 +103,7 @@ namespace VirtualClient.Actions
             // make TARGET=linux64 XCMD='-c4' certify-all
             // Even when using cygwin, the TARGET is still linux64.
             string commandArguments = @$"TARGET=linux64 XCMD='-c{this.ThreadCount}' certify-all";
-            this.StartTime = DateTime.UtcNow;
+            DateTime startTime = DateTime.UtcNow;
             string output = string.Empty;
 
             switch (this.Platform)
@@ -148,13 +148,12 @@ namespace VirtualClient.Actions
                     break;
             }
 
-            this.EndTime = DateTime.UtcNow;
-
-            telemetryContext.AddScenarioMetadata(
+            this.MetadataContract.AddForScenario(
                 "CoreMarkPro",
                 commandArguments,
-                toolVersion: null,
-                this.PackageName);
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             CoreMarkProMetricsParser parser = new CoreMarkProMetricsParser(output);
             IList<Metric> metrics = parser.Parse();
@@ -162,8 +161,8 @@ namespace VirtualClient.Actions
             this.Logger.LogMetrics(
                 toolName: "CoreMarkPro",
                 scenarioName: this.Scenario,
-                this.StartTime,
-                this.EndTime,
+                startTime,
+                DateTime.UtcNow,
                 metrics,
                 metricCategorization: this.Scenario,
                 scenarioArguments: commandArguments,

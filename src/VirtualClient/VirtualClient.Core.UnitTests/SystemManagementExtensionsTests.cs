@@ -4,10 +4,8 @@
 namespace VirtualClient
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using Moq;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
 
     [TestFixture]

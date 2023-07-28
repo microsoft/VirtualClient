@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                await this.EvaluateParametersAsync(CancellationToken.None);
+                await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
                 relatedContext.AddContext("testName", this.TestName);
@@ -516,11 +516,12 @@ namespace VirtualClient.Actions
                 }
             }
 
-            telemetryContext.AddScenarioMetadata(
+            this.MetadataContract.AddForScenario(
                 "FIO",
                 commandArguments,
-                toolVersion: null,
-                this.PackageName);
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             this.Logger.LogMetrics(
                "FIO",

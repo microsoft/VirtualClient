@@ -155,11 +155,12 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    telemetryContext.AddScenarioMetadata(
+                    this.MetadataContract.AddForScenario(
                         "Graph500",
                         process?.StartInfo?.Arguments,
-                        toolVersion: null,
-                        this.PackageName);
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
 
                     Graph500MetricsParser graph500Parser = new Graph500MetricsParser(process.StandardOutput.ToString());
                     IList<Metric> metrics = graph500Parser.Parse();

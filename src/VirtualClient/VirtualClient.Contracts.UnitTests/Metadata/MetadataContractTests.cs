@@ -1,0 +1,421 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Metadata
+{
+    using System;
+    using System.Collections.Generic;
+    using NUnit.Framework;
+    using VirtualClient.Common.Contracts;
+    using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
+
+    [TestFixture]
+    [Category("Unit")]
+    internal class MetadataContractTests
+    {
+        [SetUp]
+        public void SetupTest()
+        {
+            // Reset the metadata contract before each test iteration.
+            MetadataContract.ResetPersisted();
+        }
+
+        // *************************************** IMPORTANT ********************************************
+        // These tests are evaluating static class behaviors. As such they MUST run ordered, 1 at a time.
+        // **********************************************************************************************
+        [Test]
+        [Order(1)]
+        public void MetadataContractReturnsTheExpectedCategoryMetadata_Persisted_Properties()
+        {
+            IDictionary<string, object> expectedMetadata = new Dictionary<string, object>
+            {
+                { "AnyProperty", "AnyValue" }
+            };
+
+            MetadataContract.Persist(expectedMetadata, "metadata_ext");
+            IDictionary<string, object> actualMetadata = MetadataContract.GetPersisted("metadata_ext");
+
+            Assert.IsNotNull(actualMetadata);
+            Assert.IsTrue(actualMetadata.TryGetValue("AnyProperty", out object value) && value.ToString() == "AnyValue");
+        }
+
+        [Test]
+        [Order(2)]
+        public void MetadataContractReturnsTheExpectedCategoryMetadata_Instance_Properties()
+        {
+            MetadataContract contract = new MetadataContract();
+            IDictionary<string, object> expectedMetadata = new Dictionary<string, object>
+            {
+                { "AnyProperty", "AnyValue" }
+            };
+
+            contract.Add(expectedMetadata, "metadata_ext");
+            IDictionary<string, object> actualMetadata = contract.Get("metadata_ext");
+
+            Assert.IsNotNull(actualMetadata);
+            Assert.IsTrue(actualMetadata.TryGetValue("AnyProperty", out object value) && value.ToString() == "AnyValue");
+        }
+
+        [Test]
+        [Order(3)]
+        public void MetadataContractCategoriesMustFollowThePrescribedNamingConvention()
+        {
+            Assert.DoesNotThrow(() => MetadataContract.Persist("AnyProperty1", "AnyValue1", "metadata_ext"));
+            Assert.Throws<SchemaException>(() => MetadataContract.Persist("AnyProperty2", "AnyValue2", "notavalidprefix_ext"));
+
+            MetadataContract contract = new MetadataContract();
+            Assert.DoesNotThrow(() => contract.Add("AnyProperty1", "AnyValue1", "metadata_ext"));
+            Assert.Throws<SchemaException>(() => contract.Add("AnyProperty2", "AnyValue2", "notavalidprefix_ext"));
+        }
+
+        [Test]
+        [Order(4)]
+        public void MetadataContractCategoriesAreNotCaseSensitive()
+        {
+            string category = "metadata_ext";
+            MetadataContract.Persist("AnyProperty", "AnyValue", category);
+            IDictionary<string, object> metadata = MetadataContract.GetPersisted(category.ToUpperInvariant());
+            Assert.IsNotNull(metadata);
+
+            MetadataContract contract = new MetadataContract();
+            contract.Add("AnyProperty", "AnyValue", category);
+            metadata = contract.Get(category.ToUpperInvariant());
+            Assert.IsNotNull(metadata);
+        }
+
+        [Test]
+        [Order(5)]
+        [TestCase(MetadataContractCategory.Default, MetadataContract.CategoryDefault)]
+        [TestCase(MetadataContractCategory.Dependencies, MetadataContract.CategoryDependencies)]
+        [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
+        [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
+        [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
+        public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
+        {
+            MetadataContract.Persist("AnyProperty", "AnyValue", category);
+            IDictionary<string, object> metadata = MetadataContract.GetPersisted(expectedCategoryName);
+
+            Assert.IsNotNull(metadata);
+            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
+            Assert.AreEqual("AnyValue", value);
+        }
+
+        [Test]
+        [Order(6)]
+        [TestCase(MetadataContractCategory.Default)]
+        [TestCase(MetadataContractCategory.Dependencies)]
+        [TestCase(MetadataContractCategory.Host)]
+        [TestCase(MetadataContractCategory.Runtime)]
+        [TestCase(MetadataContractCategory.Scenario)]
+        public void MetadataContractPersistsMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
+        {
+            MetadataContract.Persist("AnyProperty", "AnyValue", category);
+            IDictionary<string, object> metadata = MetadataContract.GetPersisted(category);
+
+            Assert.IsNotNull(metadata);
+            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
+            Assert.AreEqual("AnyValue", value);
+        }
+
+        [Test]
+        [Order(7)]
+        [TestCase(MetadataContractCategory.Default, MetadataContract.CategoryDefault)]
+        [TestCase(MetadataContractCategory.Dependencies, MetadataContract.CategoryDependencies)]
+        [TestCase(MetadataContractCategory.Host, MetadataContract.CategoryHost)]
+        [TestCase(MetadataContractCategory.Runtime, MetadataContract.CategoryRuntime)]
+        [TestCase(MetadataContractCategory.Scenario, MetadataContract.CategoryScenario)]
+        public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_1(MetadataContractCategory category, string expectedCategoryName)
+        {
+            MetadataContract contract = new MetadataContract();
+            contract.Add("AnyProperty", "AnyValue", category);
+            IDictionary<string, object> metadata = contract.Get(expectedCategoryName);
+
+            Assert.IsNotNull(metadata);
+            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
+            Assert.AreEqual("AnyValue", value);
+        }
+
+        [Test]
+        [Order(8)]
+        [TestCase(MetadataContractCategory.Default)]
+        [TestCase(MetadataContractCategory.Dependencies)]
+        [TestCase(MetadataContractCategory.Host)]
+        [TestCase(MetadataContractCategory.Runtime)]
+        [TestCase(MetadataContractCategory.Scenario)]
+        public void MetadataContractInstanceMetadataToTheExpectedStandardCategories_2(MetadataContractCategory category)
+        {
+            MetadataContract contract = new MetadataContract();
+            contract.Add("AnyProperty", "AnyValue", category);
+            IDictionary<string, object> metadata = contract.Get(category);
+
+            Assert.IsNotNull(metadata);
+            Assert.IsTrue(metadata.TryGetValue("AnyProperty", out object value));
+            Assert.AreEqual("AnyValue", value);
+        }
+
+        [Test]
+        [Order(9)]
+        public void PersistedMetadataIsAppliedToEventContextObjectsAsExpected()
+        {
+            MetadataContract contract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
+            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+            contract.Apply(telemetryContext);
+
+            // Example Format
+            // {
+            //     "activityId": "d58e13f2-4e84-4cf2-b81f-b270dddcd21f",
+            //     "parentActivityId": "00000000-0000-0000-0000-000000000000",
+            //     "durationMs": 0,
+            //     "transactionId": "eb03c8e0-7c40-4641-84cd-4954a31018b3",
+            //     "properties": {
+            //         "metadata": {
+            //             "default": "Prop01"
+            //         },
+            //         "metadata_dependencies": {
+            //             "dependency": "Dependency01"
+            //         },
+            //         "metadata_host": {
+            //             "host": "Host01"
+            //         },
+            //         "metadata_scenario": {
+            //             "scenario": "Scenario01"
+            //         },
+            //         "metadata_runtime": {
+            //             "runtime": "Version1"
+            //         }
+            //     },
+            // }
+            string json = telemetryContext.ToJson().RemoveWhitespace();
+
+            // Note that the property names should be camel-cased all the way down
+            // the nested JSON hierarchy.
+            Assert.IsTrue(json.Contains("\"metadata\":{\"default\":\"Prop01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version1\"}"));
+        }
+
+        [Test]
+        [Order(9)]
+        public void MetadataIsAppliedToEventContextObjectsAsExpected()
+        {
+            MetadataContract contract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+            contract.Add("Default", "Prop01", MetadataContractCategory.Default);
+            contract.Add("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
+            contract.Add("Host", "Host01", MetadataContractCategory.Host);
+            contract.Add("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            contract.Add("Runtime", "Version1", MetadataContractCategory.Runtime);
+            contract.Apply(telemetryContext);
+
+            // Example Format
+            // {
+            //     "activityId": "d58e13f2-4e84-4cf2-b81f-b270dddcd21f",
+            //     "parentActivityId": "00000000-0000-0000-0000-000000000000",
+            //     "durationMs": 0,
+            //     "transactionId": "eb03c8e0-7c40-4641-84cd-4954a31018b3",
+            //     "properties": {
+            //         "metadata": {
+            //             "default": "Prop01"
+            //         },
+            //         "metadata_dependencies": {
+            //             "dependency": "Dependency01"
+            //         },
+            //         "metadata_host": {
+            //             "host": "Host01"
+            //         },
+            //         "metadata_scenario": {
+            //             "scenario": "Scenario01"
+            //         },
+            //         "metadata_runtime": {
+            //             "runtime": "Version1"
+            //         }
+            //     },
+            // }
+            string json = telemetryContext.ToJson().RemoveWhitespace();
+
+            // Note that the property names should be camel-cased all the way down
+            // the nested JSON hierarchy.
+            Assert.IsTrue(json.Contains("\"metadata\":{\"default\":\"Prop01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version1\"}"));
+        }
+
+        [Test]
+        [Order(10)]
+        public void PersistedAndInstanceLevelMetadataIsAppliedToEventContextObjectsAsExpected()
+        {
+            MetadataContract contract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+
+            MetadataContract.Persist("Default1", "Prop01", MetadataContractCategory.Default);
+            MetadataContract.Persist("Dependency1", "Dependency01", MetadataContractCategory.Dependencies);
+            MetadataContract.Persist("Host1", "Host01", MetadataContractCategory.Host);
+            MetadataContract.Persist("Scenario1", "Scenario01", MetadataContractCategory.Scenario);
+            MetadataContract.Persist("Runtime1", "Version1", MetadataContractCategory.Runtime);
+
+            contract.Add("Default2", "Prop02", MetadataContractCategory.Default);
+            contract.Add("Dependency2", "Dependency02", MetadataContractCategory.Dependencies);
+            contract.Add("Host2", "Host02", MetadataContractCategory.Host);
+            contract.Add("Scenario2", "Scenario02", MetadataContractCategory.Scenario);
+            contract.Add("Runtime2", "Version2", MetadataContractCategory.Runtime);
+            contract.Apply(telemetryContext);
+
+            // Example Format
+            // {
+            //     "activityId": "d58e13f2-4e84-4cf2-b81f-b270dddcd21f",
+            //     "parentActivityId": "00000000-0000-0000-0000-000000000000",
+            //     "durationMs": 0,
+            //     "transactionId": "eb03c8e0-7c40-4641-84cd-4954a31018b3",
+            //     "properties": {
+            //         "metadata": {
+            //             "default1": "Prop01",
+            //             "default2": "Prop02"
+            //         },
+            //         "metadata_dependencies": {
+            //             "dependency1": "Dependency01",
+            //             "dependency2": "Dependency02"
+            //         },
+            //         "metadata_host": {
+            //             "host1": "Host01",
+            //             "host2": "Host02"
+            //         },
+            //         "metadata_scenario": {
+            //             "scenario1": "Scenario01",
+            //             "scenario2": "Scenario02"
+            //         },
+            //         "metadata_runtime": {
+            //             "runtime1": "Version1",
+            //             "runtime2": "Version2"
+            //         }
+            //     },
+            // }
+            string json = telemetryContext.ToJson().RemoveWhitespace();
+
+            // Note that the property names should be camel-cased all the way down
+            // the nested JSON hierarchy.
+            Assert.IsTrue(json.Contains("\"metadata\":{\"default1\":\"Prop01\",\"default2\":\"Prop02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency1\":\"Dependency01\",\"dependency2\":\"Dependency02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_host\":{\"host1\":\"Host01\",\"host2\":\"Host02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario1\":\"Scenario01\",\"scenario2\":\"Scenario02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime1\":\"Version1\",\"runtime2\":\"Version2\"}"));
+        }
+
+        [Test]
+        [Order(11)]
+        public void InstanceLevelMetadataPropertiesOverwritePersistedPropertiesWhenApplied_1()
+        {
+            MetadataContract contract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+
+            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
+            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+
+            contract.Add("Default", "Prop02", MetadataContractCategory.Default);
+            contract.Add("Dependency", "Dependency02", MetadataContractCategory.Dependencies);
+            contract.Apply(telemetryContext);
+
+            // Example Format
+            // {
+            //     "activityId": "d58e13f2-4e84-4cf2-b81f-b270dddcd21f",
+            //     "parentActivityId": "00000000-0000-0000-0000-000000000000",
+            //     "durationMs": 0,
+            //     "transactionId": "eb03c8e0-7c40-4641-84cd-4954a31018b3",
+            //     "properties": {
+            //         "metadata": {
+            //             "default": "Prop02"
+            //         },
+            //         "metadata_dependencies": {
+            //             "dependency": "Dependency02"
+            //         },
+            //         "metadata_host": {
+            //             "host": "Host01"
+            //         },
+            //         "metadata_scenario": {
+            //             "scenario": "Scenario01"
+            //         },
+            //         "metadata_runtime": {
+            //             "runtime": "Version1"
+            //         }
+            //     },
+            // }
+            string json = telemetryContext.ToJson().RemoveWhitespace();
+
+            // Note that the property names should be camel-cased all the way down
+            // the nested JSON hierarchy.
+            Assert.IsTrue(json.Contains("\"metadata\":{\"default\":\"Prop02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario01\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version1\"}"));
+        }
+
+        [Test]
+        [Order(12)]
+        public void InstanceLevelMetadataPropertiesOverwritePersistedPropertiesWhenApplied_2()
+        {
+            MetadataContract contract = new MetadataContract();
+            EventContext telemetryContext = new EventContext(Guid.NewGuid());
+
+            MetadataContract.Persist("Default", "Prop01", MetadataContractCategory.Default);
+            MetadataContract.Persist("Dependency", "Dependency01", MetadataContractCategory.Dependencies);
+            MetadataContract.Persist("Host", "Host01", MetadataContractCategory.Host);
+            MetadataContract.Persist("Scenario", "Scenario01", MetadataContractCategory.Scenario);
+            MetadataContract.Persist("Runtime", "Version1", MetadataContractCategory.Runtime);
+
+            contract.Add("Default", "Prop02", MetadataContractCategory.Default);
+            contract.Add("Dependency", "Dependency02", MetadataContractCategory.Dependencies);
+            contract.Add("Host", "Host02", MetadataContractCategory.Host);
+            contract.Add("Scenario", "Scenario02", MetadataContractCategory.Scenario);
+            contract.Add("Runtime", "Version2", MetadataContractCategory.Runtime);
+            contract.Apply(telemetryContext);
+
+            // Example Format
+            // {
+            //     "activityId": "d58e13f2-4e84-4cf2-b81f-b270dddcd21f",
+            //     "parentActivityId": "00000000-0000-0000-0000-000000000000",
+            //     "durationMs": 0,
+            //     "transactionId": "eb03c8e0-7c40-4641-84cd-4954a31018b3",
+            //     "properties": {
+            //         "metadata": {
+            //             "default": "Prop02"
+            //         },
+            //         "metadata_dependencies": {
+            //             "dependency": "Dependency02"
+            //         },
+            //         "metadata_host": {
+            //             "host": "Host02"
+            //         },
+            //         "metadata_scenario": {
+            //             "scenario": "Scenario02"
+            //         },
+            //         "metadata_runtime": {
+            //             "runtime": "Version2"
+            //         }
+            //     },
+            // }
+            string json = telemetryContext.ToJson().RemoveWhitespace();
+
+            // Note that the property names should be camel-cased all the way down
+            // the nested JSON hierarchy.
+            Assert.IsTrue(json.Contains("\"metadata\":{\"default\":\"Prop02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_dependencies\":{\"dependency\":\"Dependency02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_host\":{\"host\":\"Host02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_scenario\":{\"scenario\":\"Scenario02\"}"));
+            Assert.IsTrue(json.Contains("\"metadata_runtime\":{\"runtime\":\"Version2\"}"));
+        }
+    }
+}

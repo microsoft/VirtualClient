@@ -25,6 +25,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes the client side of Latte
@@ -383,6 +384,13 @@ namespace VirtualClient.Actions
 
         private async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+               "Latte",
+               commandArguments,
+               toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             IFile fileAccess = this.SystemManager.FileSystem.File;
 
             if (fileAccess.Exists(this.ResultsPath))

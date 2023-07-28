@@ -10,7 +10,7 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Provides information on the system memory.
     /// </summary>
-    public class MemoryInfo : List<HardwareInfo>
+    public class MemoryInfo
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MemoryInfo"/> class.

@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Lzbench workload executor.
@@ -171,14 +172,21 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Lzbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.LzbenchDirectory, "results-summary.csv", SearchOption.AllDirectories);
 
                 foreach (string file in resultsFiles)
                 {
-                    string contents = await this.LoadResultsAsync(file, cancellationToken);
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", contents.AsArray(), logToFile: true);
+                    string results = await this.LoadResultsAsync(file, cancellationToken);
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "LZbench", results.AsArray(), logToFile: true);
 
-                    LzbenchMetricsParser parser = new LzbenchMetricsParser(contents);
+                    LzbenchMetricsParser parser = new LzbenchMetricsParser(results);
                     IList<Metric> metrics = parser.Parse();
 
                     this.Logger.LogMetrics(

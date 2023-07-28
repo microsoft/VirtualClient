@@ -161,11 +161,12 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    telemetryContext.AddScenarioMetadata(
+                    this.MetadataContract.AddForScenario(
                        "CoreMark",
                        commandArguments,
-                       toolVersion: null,
-                       this.PackageName);
+                       toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
 
                     IEnumerable<string> results = await this.LoadResultsAsync(
                         new string[] { this.OutputFile1Path, this.OutputFile2Path },

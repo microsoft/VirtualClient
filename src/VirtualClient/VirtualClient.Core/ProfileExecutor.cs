@@ -15,6 +15,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// This is the main class that will take an execution profile and execute it
@@ -22,6 +23,7 @@ namespace VirtualClient
     public class ProfileExecutor : IDisposable
     {
         private static int currentIteration;
+        private MetadataContract metadataContact;
         private bool disposed;
         
         /// <summary>
@@ -47,6 +49,7 @@ namespace VirtualClient
             this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
 
+            this.metadataContact = new MetadataContract();
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             if (metadata?.Any() == true)
             {
@@ -199,6 +202,8 @@ namespace VirtualClient
                     // activity ID of the parent to enable correlation of events all the way down the
                     // callstack.
                     EventContext parentContext = EventContext.Persist(Guid.NewGuid());
+                    this.metadataContact.Apply(parentContext);
+
                     this.Initialize();
 
                     if (this.ExecuteDependencies)
@@ -411,7 +416,7 @@ namespace VirtualClient
                                             VirtualClientComponent action = this.ProfileActions.ElementAt(i);
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIteration)] = currentIteration;
                                             action.Parameters[nameof(VirtualClientComponent.ProfileIterationStartTime)] = startTime;
-
+                                            
                                             this.ActionBegin?.Invoke(this, new ComponentEventArgs(action));
 
                                             try
@@ -703,9 +708,22 @@ namespace VirtualClient
                     {
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
+
+                        // Metadata: Profile-level (global)
                         if (this.Metadata?.Any() == true)
                         {
                             runtimeComponent.Metadata.AddRange(this.Metadata, true);
+                        }
+
+                        // Metadata: Profile Component-level (overrides global)
+                        if (component.Metadata?.Any() == true)
+                        {
+                            runtimeComponent.Metadata.AddRange(component.Metadata, true);
+                        }
+
+                        if (this.Profile.Parameters?.Any() == true)
+                        {
+                            VirtualClientComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
                         }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))

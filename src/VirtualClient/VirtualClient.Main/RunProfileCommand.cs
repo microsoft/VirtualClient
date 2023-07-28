@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -392,8 +393,8 @@ namespace VirtualClient
                 }
             }
 
-            // Adding file upload monitoring if the user has supplied a content store.
-            if (this.ContentStore != null)
+            // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
+            if (this.ContentStore != null || this.ProxyApiUri != null)
             {
                 string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
                 ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)
@@ -547,25 +548,6 @@ namespace VirtualClient
                 ["experimentId"] = this.ExperimentId.ToLowerInvariant(),
                 ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
             });
-
-            IDictionary<string, object> metadata = new Dictionary<string, object>();
-
-            if (this.Metadata?.Any() == true)
-            {
-                this.Metadata.ToList().ForEach(entry =>
-                {
-                    metadata[entry.Key] = entry.Value;
-                });
-            }
-
-            // For backwards compatibility, ensure that the experiment ID and agent ID
-            // values are a part of the metadata. This is required for the original VC table
-            // JSON mappings that expect these properties to exist in the metadata supplied to
-            // VC on the command line.
-            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
-            metadata["agentId"] = this.AgentId;
-
-            EventContext.PersistentProperties["metadata"] = metadata.ObscureSecrets();
         }
 
         /// <summary>
@@ -609,34 +591,53 @@ namespace VirtualClient
                 ["executionProfilePath"] = profileFullPath
             });
 
-            IDictionary<string, object> hwMetadata = systemManagement.GetCpuMetadataAsync(logger)
-                .GetAwaiter().GetResult();
+
+            IDictionary<string, object> metadata = new Dictionary<string, object>();
+
+            if (this.Metadata?.Any() == true)
+            {
+                this.Metadata.ToList().ForEach(entry =>
+                {
+                    metadata[entry.Key] = entry.Value;
+                });
+            }
+
+            // For backwards compatibility, ensure that the experiment ID and agent ID
+            // values are a part of the metadata. This is required for the original VC table
+            // JSON mappings that expect these properties to exist in the metadata supplied to
+            // VC on the command line.
+            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
+            metadata["agentId"] = this.AgentId;
+
+            MetadataContract.Persist(metadata, MetadataContractCategory.Default);
 
             IDictionary<string, object> hostMetadata = systemManagement.GetHostMetadataAsync(logger)
                 .GetAwaiter().GetResult();
 
-            IDictionary<string, object> memoryMetadata = systemManagement.GetMemoryMetadataAsync(logger)
-                .GetAwaiter().GetResult();
+            // Hardware Parts metadata contains information on the physical hardware
+            // parts on the system (e.g. CPU, memory chips, network cards).
+            hostMetadata.AddRange(systemManagement.GetHardwarePartsMetadataAsync(logger)
+                .GetAwaiter().GetResult());
 
-            IDictionary<string, object> networkInterfaceMetadata = systemManagement.GetNetworkInterfaceMetadataAsync(logger)
-                .GetAwaiter().GetResult();
+            List<IDictionary<string, object>> partsMetadata = new List<IDictionary<string, object>>();
 
-            hwMetadata.AddRange(memoryMetadata);
-            hwMetadata.AddRange(networkInterfaceMetadata);
+            MetadataContract.Persist(
+                hostMetadata,
+                MetadataContractCategory.Host);
 
-            EventContext.PersistentProperties[MetadataContractExtensions.CategoryHardware] = hwMetadata;
-            EventContext.PersistentProperties[MetadataContractExtensions.CategoryHost] = hostMetadata;
-            EventContext.PersistentProperties[MetadataContractExtensions.CategoryRuntime] = new Dictionary<string, object>
-            {
-                { "exitWait", this.ExitWait },
-                { "layout", this.LayoutPath },
-                { "logToFile", this.LogToFile },
-                { "iterations", this.Iterations?.ProfileIterations },
-                { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
-                { "timeout", this.Timeout?.Duration },
-                { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
-                { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
-            };
+            MetadataContract.Persist(
+                new Dictionary<string, object>
+                {
+                    { "exitWait", this.ExitWait },
+                    { "layout", this.LayoutPath },
+                    { "logToFile", this.LogToFile },
+                    { "iterations", this.Iterations?.ProfileIterations },
+                    { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
+                    { "timeout", this.Timeout?.Duration },
+                    { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
+                    { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
+                },
+                MetadataContractCategory.Runtime);
         }
 
         private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)

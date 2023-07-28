@@ -160,11 +160,12 @@ namespace VirtualClient.Actions
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
                 await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: results.AsArray(), logToFile: true);
 
-                telemetryContext.AddScenarioMetadata(
+                this.MetadataContract.AddForScenario(
                     "DeathStarBench",
                     commandArguments,
-                    toolVersion: null,
-                    this.PackageName);
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
 
                 DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
                 IList<Metric> metrics = deathStarBenchMetricsParser.Parse();

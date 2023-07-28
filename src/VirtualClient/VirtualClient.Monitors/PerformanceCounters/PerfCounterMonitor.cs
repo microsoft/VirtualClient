@@ -163,7 +163,7 @@ namespace VirtualClient.Monitors
         {
             this.performanceTracker = new PerformanceTracker(this.Logger);
             this.performanceTracker.AddRange(PerfCounterMonitor.GetWindowsDefaultCounters());
-            this.StartTime = DateTime.UtcNow;
+            DateTime startTime = DateTime.UtcNow;
 
             this.performanceTracker.Snapshot += (sender, metrics) =>
             {
@@ -171,9 +171,9 @@ namespace VirtualClient.Monitors
                 {
                     if (metrics?.Any() == true)
                     {
-                        this.EndTime = DateTime.UtcNow;
-                        this.Logger.LogPerformanceCounters(".NET SDK", metrics, this.StartTime, this.EndTime, telemetryContext);
-                        this.StartTime = DateTime.UtcNow;
+                        DateTime endTime = DateTime.UtcNow;
+                        this.Logger.LogPerformanceCounters(".NET SDK", metrics, startTime, endTime, telemetryContext);
+                        startTime = DateTime.UtcNow;
                     }
                 }
                 catch (Exception exc)

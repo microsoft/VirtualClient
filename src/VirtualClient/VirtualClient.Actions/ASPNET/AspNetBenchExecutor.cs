@@ -165,10 +165,12 @@ namespace VirtualClient.Actions
         {
             try
             {
-                telemetryContext.AddScenarioMetadata(
+                this.MetadataContract.AddForScenario(
                     "AspNetBench",
                     $"{this.clientArgument},{this.serverArgument}",
                     toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
 
                 BombardierMetricsParser parser = new BombardierMetricsParser(process.StandardOutput.ToString());
 

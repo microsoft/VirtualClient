@@ -45,7 +45,7 @@ namespace VirtualClient.Common.Contracts
 
             // By default, ALL properties in the JSON structure will be camel-cased including
             // dictionary keys.
-            // ContractResolver = new CamelCasePropertyNamesContractResolver()
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
         /// <summary>

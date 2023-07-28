@@ -124,6 +124,8 @@ namespace VirtualClient.Dependencies
             process.SetupGet(p => p.ExitCode).Returns(exitCode);
             process.SetupGet(p => p.HasExited).Returns(true);
             process.SetupGet(p => p.StartInfo).Returns(new ProcessStartInfo());
+            process.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails());  
+
             return process.Object;
         }
 

@@ -8,6 +8,7 @@ namespace VirtualClient
     using System.Linq;
     using System.Net.NetworkInformation;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Win32;
@@ -24,32 +25,6 @@ namespace VirtualClient
     public static class SystemManagementExtensions
     {
         /// <summary>
-        /// Returns a set of properties that provide metadata about the OS/system on which the application
-        /// is running (e.g. core count, versions of things).
-        /// </summary>
-        /// <param name="systemManagement">The system management instance.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>Metadata about the OS/system.</returns>
-        public static async Task<IDictionary<string, IConvertible>> GetSystemMetadataAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
-        {
-            IDictionary<string, IConvertible> systemMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                ["hostName"] = Environment.MachineName,
-                ["platform"] = PlatformSpecifics.GetPlatformArchitectureName(systemManagement.Platform, systemManagement.CpuArchitecture),
-                ["osPlatform"] = Environment.OSVersion.Platform.ToString(),
-                ["osVersion"] = Environment.OSVersion.VersionString,
-                ["osDescription"] = RuntimeInformation.OSDescription,
-                ["cpuArchitecture"] = RuntimeInformation.ProcessArchitecture.ToString(),
-                ["cpuLogicalProcessors"] = Environment.ProcessorCount
-            };
-
-            await SystemManagementExtensions.AddNetworkAccelerationMetadataAsync(systemManagement, systemMetadata, cancellationToken)
-                .ConfigureAwait(false);
-
-            return systemMetadata;
-        }
-
-        /// <summary>
         /// Returns a set of device drivers on the system.
         /// </summary>
         /// <param name="systemManagement">The system management instance.</param>
@@ -57,6 +32,8 @@ namespace VirtualClient
         /// <returns>Device driver information.</returns>
         public static async Task<IEnumerable<IDictionary<string, IConvertible>>> GetSystemDetailedInfoAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
         {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+
             List<IDictionary<string, IConvertible>> info = new List<IDictionary<string, IConvertible>>();
 
             if (systemManagement.Platform == PlatformID.Win32NT)

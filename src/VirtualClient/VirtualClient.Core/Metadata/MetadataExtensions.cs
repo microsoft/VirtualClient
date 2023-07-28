@@ -9,9 +9,8 @@ namespace VirtualClient.Metadata
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Win32;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -23,16 +22,16 @@ namespace VirtualClient.Metadata
     public static class MetadataExtensions
     {
         /// <summary>
-        /// Returns metadata contract information for the CPU/processor components on the system.
+        /// Returns metadata contract information for CPU hardware parts on the system.
         /// </summary>
         /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
         /// <param name="logger">A logger that can be used to capture error information.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task<IDictionary<string, object>> GetCpuMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        public static async Task<IEnumerable<IDictionary<string, object>>> GetCpuPartsMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
+            List<IDictionary<string, object>> parts = new List<IDictionary<string, object>>();
 
-            IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             try
             {
                 if (!cancellationToken.IsCancellationRequested)
@@ -42,44 +41,156 @@ namespace VirtualClient.Metadata
                     Match cpuFamily = Regex.Match(cpuInfo.Description, @"Family\s+([a-z0-9]+)", RegexOptions.IgnoreCase);
                     Match cpuStepping = Regex.Match(cpuInfo.Description, @"Stepping\s+([a-z0-9]+)", RegexOptions.IgnoreCase);
 
-                    metadata.Add("cpuArchitecture", systemManagement.CpuArchitecture.ToString().ToUpperInvariant()); // X64, X84, ARM, ARM64
-                    metadata.Add("cpuSockets", cpuInfo.SocketCount);
-                    metadata.Add("cpuPhysicalCores", cpuInfo.PhysicalCoreCount);
-                    metadata.Add("cpuPhysicalCoresPerSocket", cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount);
-                    metadata.Add("cpuLogicalProcessors", cpuInfo.LogicalCoreCount);
-                    metadata.Add("cpuLogicalProcessorsPerCore", cpuInfo.LogicalCoreCount / cpuInfo.SocketCount);
-                    metadata.Add("cpuVendor", cpuVendor.Success ? cpuVendor.Groups[1].Value?.Trim() : null);
-                    metadata.Add("cpuFamily", cpuFamily.Success ? cpuFamily.Groups[1].Value?.Trim() : null);
-                    metadata.Add("cpuStepping", cpuStepping.Success ? cpuStepping.Groups[1].Value?.Trim() : null);
-                    metadata.Add("cpuModel", cpuInfo.Name);
-                    metadata.Add("cpuModelDescription", cpuInfo.Description);
-                    metadata.Add("numaNodes", cpuInfo.NumaNodeCount);
-
-                    IEnumerable<CpuCacheInfo> cpuCaches = cpuInfo.Caches;
-                    if (cpuCaches?.Any() == true)
+                    parts.Add(new Dictionary<string, object>
                     {
-                        foreach (var cache in cpuCaches.OrderBy(cache => cache.SizeInBytes))
-                        {
-                            // e.g.
-                            // cpuCacheBytes_L1
-                            // cpuCacheBytes_L1d
-                            // cpuCacheBytes_L1i
-                            // cpuCacheBytes_L2
-                            // cpuCacheBytes_L3
-                            metadata.Add($"cpuCacheBytes_{cache.Name}", cache.SizeInBytes);
-                        }
+                        { "type", "CPU" },
+                        { "vendor",  cpuVendor.Success ? cpuVendor.Groups[1].Value?.Trim() : null },
+                        { "description", cpuInfo.Description },
+                        { "family", cpuFamily.Success ? cpuFamily.Groups[1].Value?.Trim() : null },
+                        { "stepping", cpuStepping.Success ? cpuStepping.Groups[1].Value?.Trim() : null },
+                        { "model", cpuInfo.Name },
+                    });
+                }
+            }
+            catch (Exception exc)
+            {
+                // Best effort. VC should not crash.
+                logger?.LogMessage("SystemManagement.GetCpuPartsMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+            }
 
-                        metadata.Add("cpuLastCacheBytes", cpuCaches.OrderByDescending(cache => cache.Name).First().SizeInBytes);
+            return parts;
+        }
+
+        /// <summary>
+        /// Returns metadata contract information for hardware parts on the system.
+        /// </summary>
+        /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
+        /// <param name="logger">A logger that can be used to capture error information.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static async Task<IDictionary<string, object>> GetHardwarePartsMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            List<IDictionary<string, object>> parts = new List<IDictionary<string, object>>();
+
+            try
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    IEnumerable<IDictionary<string, object>> cpuParts = await systemManagement.GetCpuPartsMetadataAsync(logger, cancellationToken);
+                    if (cpuParts?.Any() == true)
+                    {
+                        parts.AddRange(cpuParts);
+                    }
+
+                    IEnumerable<IDictionary<string, object>> memoryParts = await systemManagement.GetMemoryPartsMetadataAsync(logger, cancellationToken);
+                    if (memoryParts?.Any() == true)
+                    {
+                        parts.AddRange(memoryParts);
+                    }
+
+                    IEnumerable<IDictionary<string, object>> networkParts = await systemManagement.GetNetworkPartsMetadataAsync(logger, cancellationToken);
+                    if (networkParts?.Any() == true)
+                    {
+                        parts.AddRange(networkParts);
+                    }
+
+                    if (parts.Any())
+                    {
+                        metadata["parts"] = parts;
                     }
                 }
             }
             catch (Exception exc)
             {
                 // Best effort. VC should not crash.
-                logger?.LogMessage("SystemManagement.GetCpuMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+                logger?.LogMessage("SystemManagement.GetHardwarePartsMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
             }
 
             return metadata;
+        }
+
+        /// <summary>
+        /// Returns metadata contract information for memory/chip hardware parts on the system.
+        /// </summary>
+        /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
+        /// <param name="logger">A logger that can be used to capture error information.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static async Task<IEnumerable<IDictionary<string, object>>> GetMemoryPartsMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            List<IDictionary<string, object>> parts = new List<IDictionary<string, object>>();
+
+            try
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    MemoryInfo memoryInfo = await systemManagement.GetMemoryInfoAsync(CancellationToken.None);
+
+                    if (memoryInfo.Chips?.Any() == true)
+                    {
+                        foreach (MemoryChipInfo chipInfo in memoryInfo.Chips)
+                        {
+                            parts.Add(new Dictionary<string, object>
+                            {
+                                { "type", "Memory" },
+                                { "vendor", chipInfo.Manufacturer },
+                                { "description", $"{chipInfo.Manufacturer} {chipInfo.PartNumber}" },
+                                { "bytes", chipInfo.Capacity },
+                                { "speed", chipInfo.Speed },
+                                { "partNumber", chipInfo.PartNumber }
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                // Best effort. VC should not crash.
+                logger?.LogMessage("SystemManagement.GetMemoryPartsMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+            }
+
+            return parts;
+        }
+
+        /// <summary>
+        /// Returns metadata contract information for network/adapter hardware parts on the system.
+        /// </summary>
+        /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
+        /// <param name="logger">A logger that can be used to capture error information.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static async Task<IEnumerable<IDictionary<string, object>>> GetNetworkPartsMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        {
+            systemManagement.ThrowIfNull(nameof(systemManagement));
+            List<IDictionary<string, object>> parts = new List<IDictionary<string, object>>();
+
+            try
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    NetworkInfo networkInfo = await systemManagement.GetNetworkInfoAsync(cancellationToken);
+
+                    if (networkInfo?.Interfaces?.Any() == true)
+                    {
+                        foreach (NetworkInterfaceInfo networkInterface in networkInfo.Interfaces)
+                        {
+                            parts.Add(new Dictionary<string, object>
+                            {
+                                { "type", "Network" },
+                                { "vendor", Regex.Match(networkInterface.Description, "([a-z0-9]+)", RegexOptions.IgnoreCase)?.Groups[1].Value.Trim() },
+                                { "description", networkInterface.Description }
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                // Best effort. VC should not crash.
+                logger?.LogMessage("SystemManagement.GetNetworkPartsMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+            }
+
+            return parts;
         }
 
         /// <summary>
@@ -120,12 +231,52 @@ namespace VirtualClient.Metadata
                         osName = distro.LinuxDistribution.ToString();
                     }
 
+                    // Operating System Metadata
+                    // -------------------------------------------------
                     metadata.Add("computerName", Environment.MachineName);
                     metadata.Add("osFamily", osFamily);
                     metadata.Add("osName", osName);
                     metadata.Add("osDescription", Environment.OSVersion.VersionString);
                     metadata.Add("osVersion", Environment.OSVersion.Version.ToString());
                     metadata.Add("osPlatformArchitecture", systemManagement.PlatformArchitectureName);
+
+                    // CPU/Processor System Metadata
+                    // -------------------------------------------------
+                    CpuInfo cpuInfo = await systemManagement.GetCpuInfoAsync(CancellationToken.None);
+                    Match cpuVendor = Regex.Match(cpuInfo.Description, "(Intel|AMD|ARM)", RegexOptions.IgnoreCase);
+                    Match cpuFamily = Regex.Match(cpuInfo.Description, @"Family\s+([a-z0-9]+)", RegexOptions.IgnoreCase);
+                    Match cpuStepping = Regex.Match(cpuInfo.Description, @"Stepping\s+([a-z0-9]+)", RegexOptions.IgnoreCase);
+
+                    metadata.Add("cpuArchitecture", systemManagement.CpuArchitecture.ToString().ToUpperInvariant()); // X64, X84, ARM, ARM64
+                    metadata.Add("cpuSockets", cpuInfo.SocketCount);
+                    metadata.Add("cpuPhysicalCores", cpuInfo.PhysicalCoreCount);
+                    metadata.Add("cpuPhysicalCoresPerSocket", cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount);
+                    metadata.Add("cpuLogicalProcessors", cpuInfo.LogicalCoreCount);
+                    metadata.Add("cpuLogicalProcessorsPerCore", cpuInfo.LogicalCoreCount / cpuInfo.SocketCount);
+
+                    IEnumerable<CpuCacheInfo> cpuCaches = cpuInfo.Caches;
+                    if (cpuCaches?.Any() == true)
+                    {
+                        foreach (var cache in cpuCaches.OrderBy(cache => cache.SizeInBytes))
+                        {
+                            // e.g.
+                            // cpuCacheBytes_L1
+                            // cpuCacheBytes_L1d
+                            // cpuCacheBytes_L1i
+                            // cpuCacheBytes_L2
+                            // cpuCacheBytes_L3
+                            metadata.Add($"cpuCacheBytes_{cache.Name}", cache.SizeInBytes);
+                        }
+
+                        metadata.Add("cpuLastCacheBytes", cpuCaches.OrderByDescending(cache => cache.Name).First().SizeInBytes);
+                    }
+
+                    metadata.Add("numaNodes", cpuInfo.NumaNodeCount);
+
+                    // System Memory Metadata
+                    // -------------------------------------------------
+                    MemoryInfo memoryInfo = await systemManagement.GetMemoryInfoAsync(CancellationToken.None);
+                    metadata.Add("memoryBytes", memoryInfo.TotalMemory * 1024);
                 }
             }
             catch (Exception exc)
@@ -138,155 +289,59 @@ namespace VirtualClient.Metadata
         }
 
         /// <summary>
-        /// Returns metadata contract information for the memory components on the system.
+        /// Returns metadata contract information for installed code compilers (e.g. gcc, cc, gfortran) on the system.
         /// </summary>
         /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
         /// <param name="logger">A logger that can be used to capture error information.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task<IDictionary<string, object>> GetMemoryMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        public static async Task<IDictionary<string, object>> GetInstalledCompilerMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
             IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
             try
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    MemoryInfo memoryInfo = await systemManagement.GetMemoryInfoAsync(CancellationToken.None);
-                    metadata.Add("memoryBytes", memoryInfo.TotalMemory);
+                string ccCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("cc", cancellationToken);
+                string gccCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("gcc", cancellationToken);
+                string gfortranCompilerVersion = await systemManagement.GetInstalledCompilerVersionAsync("gfortran", cancellationToken);
 
-                    if (memoryInfo.Chips?.Any() == true)
-                    {
-                        // memoryManufacturerChip1
-                        // memoryBytesChip1
-                        // memorySpeedChip1
-                        // memoryPartNumberChip1
-                        // memoryManufacturerChip2
-                        // memoryBytesChip2
-                        // memorySpeedChip2
-                        // memoryPartNumberChip2
-                        int memoryIndex = 0;
-                        foreach (MemoryChipInfo chipInfo in memoryInfo.Chips)
-                        {
-                            memoryIndex++;
-                            metadata.Add($"memoryManufacturerChip{memoryIndex}", chipInfo.Manufacturer);
-                            metadata.Add($"memoryBytesChip{memoryIndex}", chipInfo.Capacity);
-                            metadata.Add($"memorySpeedChip{memoryIndex}", chipInfo.Speed);
-                            metadata.Add($"memoryPartNumberChip{memoryIndex}", chipInfo.PartNumber);
-                        }
-                    }
-                }
+                metadata.Add("compilerVersion_cc", ccCompilerVersion);
+                metadata.Add("compilerVersion_gcc", gccCompilerVersion);
+                metadata.Add("compilerVersion_gfortran", gfortranCompilerVersion);
             }
             catch (Exception exc)
             {
                 // Best effort. VC should not crash.
-                logger?.LogMessage("SystemManagement.GetMemoryMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
+                logger?.LogMessage("SystemManagement.GetInstalledCompilerMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
             }
 
             return metadata;
         }
 
-        /// <summary>
-        /// Returns metadata contract information for the local network interfaces/cards on the system.
-        /// </summary>
-        /// <param name="systemManagement">Provides features for interaction with the system on which the application is running.</param>
-        /// <param name="logger">A logger that can be used to capture error information.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task<IDictionary<string, object>> GetNetworkInterfaceMetadataAsync(this ISystemManagement systemManagement, ILogger logger = null, CancellationToken cancellationToken = default)
+        private static async Task<string> GetInstalledCompilerVersionAsync(this ISystemManagement systemManagement, string compilerName, CancellationToken cancellationToken)
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
-            IDictionary<string, object> metadata = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
 
-            try
+            string installedVersion = null;
+            string compiler = compilerName.ToLowerInvariant();
+
+            using (IProcessProxy process = systemManagement.ProcessManager.CreateProcess(compiler, "--version"))
             {
-                if (!cancellationToken.IsCancellationRequested)
+                await process.StartAndWaitAsync(cancellationToken);
+
+                // The compiler toolset may NOT be installed on the system. Unless we get a success response, we do
+                // not attempt to parse the compiler version.
+                if (!cancellationToken.IsCancellationRequested && !process.IsErrored())
                 {
-                    if (systemManagement.Platform == PlatformID.Win32NT)
+                    Match versionMatch = Regex.Match(process.StandardOutput.ToString(), @"[a-z0-9\s]+\([\x20-\x7F]+\)\s*([0-9a-z\.-]+)", RegexOptions.IgnoreCase);
+                    if (versionMatch.Success)
                     {
-                        var networkCardsKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkCards", false);
-                        if (networkCardsKey != null)
-                        {
-                            string[] keyNames = networkCardsKey.GetSubKeyNames();
-                            if (keyNames?.Any() == true)
-                            {
-                                int cardIndex = 0;
-                                foreach (string key in keyNames)
-                                {
-                                    var specificNetworkCardKey = networkCardsKey.OpenSubKey(key);
-                                    if (specificNetworkCardKey != null)
-                                    {
-                                        cardIndex++;
-                                        object cardDescription = specificNetworkCardKey.GetValue("Description");
-
-                                        if (cardDescription != null)
-                                        {
-                                            metadata[$"networkInterface{cardIndex}"] = cardDescription.ToString();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (systemManagement.Platform == PlatformID.Unix)
-                    {
-                        IAsyncPolicy<int> retryPolicy = Policy.HandleResult<int>(exitCode => exitCode != 0).WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries));
-
-                        using (IProcessProxy lspci = systemManagement.ProcessManager.CreateProcess("lspci"))
-                        {
-                            // We will retry a few times if the process returns an exit code that is a non-success/non-zero value.
-                            await retryPolicy.ExecuteAsync(async () =>
-                            {
-                                await lspci.StartAndWaitAsync(cancellationToken);
-                                return lspci.ExitCode;
-                            });
-
-                            string pciDevices = lspci.StandardOutput?.ToString();
-                            if (!string.IsNullOrWhiteSpace(pciDevices))
-                            {
-                                Regex networkControllerExpression = new Regex(@"Network\s+controller\:\s*([\x20-\x7E]+)", RegexOptions.IgnoreCase);
-                                MatchCollection matches1 = networkControllerExpression.Matches(pciDevices);
-
-                                int interfaceIndex = 0;
-                                if (matches1?.Any() == true)
-                                {
-                                    foreach (Match match in matches1)
-                                    {
-                                        interfaceIndex++;
-                                        metadata.Add($"networkInterface{interfaceIndex}", match.Groups[1].Value?.ToString().Trim());
-                                    }
-                                }
-
-                                // On VM systems, there will not necessarily be a Network Controller
-                                // presented, but an ethernet controller may be.
-                                Regex ethernetControllerExpression = new Regex(@"Ethernet\s+controller\:\s*([\x20-\x7E]+)", RegexOptions.IgnoreCase);
-                                MatchCollection matches2 = ethernetControllerExpression.Matches(pciDevices);
-
-                                if (matches2?.Any() == true)
-                                {
-                                    foreach (Match match in matches2)
-                                    {
-                                        interfaceIndex++;
-                                        metadata.Add($"networkInterface{interfaceIndex}", match.Groups[1].Value?.ToString().Trim());
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    metadata["networkAccelerationEnabled"] = false;
-                    if (metadata.Values.Any(desc => desc?.ToString().Contains("Mellanox", StringComparison.OrdinalIgnoreCase) == true))
-                    {
-                        metadata["networkAccelerationEnabled"] = true;
+                        installedVersion = versionMatch.Groups[1].Value.Trim();
                     }
                 }
             }
-            catch (Exception exc)
-            {
-                // Best effort. VC should not crash.
-                logger?.LogMessage("SystemManagement.GetNetworkInterfaceMetadataError", LogLevel.Warning, EventContext.Persisted().AddError(exc));
-            }
 
-            return metadata;
+            return installedVersion;
         }
     }
 }

@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -97,12 +98,12 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    telemetryContext.AddScenarioMetadata(
-                        "OpenSSL",
-                        commandArguments,
-                        toolVersion: null,
-                        this.Package.Name,
-                        this.Package.Version);
+                    this.MetadataContract.AddForScenario(
+                       "OpenSSL Speed",
+                       workloadProcess.FullCommand(),
+                       toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
 
                     OpenSslMetricsParser resultsParser = new OpenSslMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
                     IList<Metric> metrics = resultsParser.Parse();

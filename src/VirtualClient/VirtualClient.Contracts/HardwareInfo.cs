@@ -25,6 +25,11 @@ namespace VirtualClient.Contracts
         public const string ComponentTypeMemoryChip = "MemoryChip";
 
         /// <summary>
+        /// Hardware Component Type = NetworkInterface
+        /// </summary>
+        public const string ComponentNetworkInterface = "NetworkInterface";
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HardwareInfo"/> class.
         /// </summary>
         protected HardwareInfo(string componentType, string name, string description, IDictionary<string, IConvertible> properties = null)

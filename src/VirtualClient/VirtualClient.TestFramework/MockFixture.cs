@@ -214,6 +214,11 @@ namespace VirtualClient
         public InMemoryProcessManager ProcessManager { get; set; }
 
         /// <summary>
+        /// Mock ssh client manager.
+        /// </summary>
+        public InMemorySshClientManager SshClientManager { get; set; }
+
+        /// <summary>
         /// The mock process that will be created by the process manager.
         /// </summary>
         public InMemoryProcess Process { get; set; }
@@ -393,9 +398,44 @@ namespace VirtualClient
 
             this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
+            this.SystemManagement.Setup(sm => sm.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo(
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 2, GenuineIntel",
+                    4,
+                    8,
+                    1,
+                    1,
+                    true,
+                    new List<CpuCacheInfo>
+                    {
+                        new CpuCacheInfo("L1", null, 100000),
+                        new CpuCacheInfo("L1d", null, 60000),
+                        new CpuCacheInfo("L1i", null, 40000),
+                        new CpuCacheInfo("L2", null, 10000000),
+                        new CpuCacheInfo("L3", null, 80000000)
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(
+                    346801345,
+                    new List<MemoryChipInfo>
+                    {
+                        new MemoryChipInfo("Memory_1", "Memory", 123456789, 2166, "HK Hynix", "HM123456"),
+                        new MemoryChipInfo("Memory_2", "Memory", 223344556, 2432, "Micron", "M987654")
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new NetworkInfo(
+                    new List<NetworkInterfaceInfo>
+                    {
+                        new NetworkInterfaceInfo("Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)", "Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)"),
+                    }));
+
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+            this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<ISystemInfo>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);

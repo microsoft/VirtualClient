@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -17,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Redis/Memcached Memtier Client Executor.
@@ -259,6 +261,13 @@ namespace VirtualClient.Actions
 
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "Memtier",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     // The Memtier workloads run multi-threaded. The lock is meant to ensure we do not have
                     // race conditions that affect the parsing of the results.
                     lock (this.lockObject)
@@ -362,7 +371,8 @@ namespace VirtualClient.Actions
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                    string parsedCommandArguments = this.ParseCommand(process.FullCommand());
+                                    this.CaptureMetrics(output, parsedCommandArguments, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
                         }
@@ -407,6 +417,39 @@ namespace VirtualClient.Actions
             }
 
             return state.Definition;
+        }
+
+        private string ParseCommand(string command)
+        {
+            List<string> excludingRegexList = new List<string>
+                {
+                    @".*\/memtier_benchmark",
+                    @"--port\s+\d+",
+                    @"--protocol\s+\w+",
+                    @"--key-prefix\s+\w+",
+                    @"--test-time\s+\d+",
+                    @"--key-minimum\s+\d+",
+                    @"--key-maximum\s+\d+",
+                    @"--key-prefix\s+\w+",
+                    @"--key-pattern\s+\w+:\w+",
+                    @"--run-count\s+\d+",
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
+                    @"--tls",
+                    @"--cert\s+.*\.crt",
+                    @"--key\s+.*\.key",
+                    @"--cacert\s+.*\.crt",
+                    @"--server\s+[\d.]+",
+                };
+            foreach (string regexPattern in excludingRegexList)
+            {
+                command = Regex.Replace(command, regexPattern, string.Empty);
+            }
+
+            command = Regex.Replace(command, @"\s+", " "); // Remove extra spaces
+
+            Console.WriteLine($"final command without performance affecting values {command.Trim()}");
+
+            return command.Trim();
         }
     }
 }

@@ -108,7 +108,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                await this.EvaluateParametersAsync(CancellationToken.None);
+                await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
                 relatedContext.AddContext("testName", this.TestName);
@@ -379,11 +379,12 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(DiskWorkloadProcess workload, EventContext telemetryContext)
         {
-            telemetryContext.AddScenarioMetadata(
+            this.MetadataContract.AddForScenario(
                 "DiskSpd",
                 workload.CommandArguments,
-                toolVersion: null,
-                this.PackageName);
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             string result = workload.StandardOutput.ToString();
             IList<Metric> metrics = new List<Metric>()

@@ -43,7 +43,7 @@ namespace VirtualClient
                 IServiceCollection dependencies = this.InitializeDependencies(args);
                 logger = dependencies.GetService<ILogger>();
 
-                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+                IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>(this.Parameters, StringComparer.OrdinalIgnoreCase)
                 {
                     { nameof(FileUploadMonitor.Scenario), "UploadContent" },
                 };
