@@ -269,28 +269,37 @@ This profile uses an algorithm to determine the total number of jobs/threads as 
   ./VirtualClient --profile=PERF-IO-FIO-DISCOVERY.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"  --parameters="QueueDepths="4,16,256"
   ```
 
+-----------------------------------------------------------------------
+
 ## PERF-IO-FIO-MULTITHROUGHPUT.json
 Runs an IO-intensive workload using the Flexible IO Tester (FIO) toolset. Multi-throughput OLTP-C workload to emulate a SQL Server OLTP disk 
 workload by running four workload compononents in-parallel: random reads, random writes, sequential reads and sequential writes each with an overall 
-weight/percentage defined. A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
-The workload runs directly against the raw disks without having the file system involved (e.g. /dev/sda, /dev/sdc); however, ONLY 2 disks will
-be used regardless of how many are on the system.
+weight/percentage defined. 
+A weight of 0 for and of the workload components will cause that component to be excluded from the overall operations. 
 
-This profile uses an algorithm to determine the amount of IOPS to run against the disks.
+Random IO : It represents the Database of OLTP-C workload.
+Sequential IO : It represents the logs of OLTP-C workload.
+Therefore, they are performed on different disks
 
-* Disk Used to Perform Random I/O = The biggest disk amongst the set matching the 'DisksFilter'.
-* Disk Used to Perform Sequential I/O = The next biggest disk amongst the set matching the 'DisksFilter'.
+The workload runs directly against the raw disks without having the file system involved (e.g. /dev/sda, /dev/sdc);
+
+This profile uses an algorithm to determine the amount of IOPS to run against the disks & Random IO ,Sequential IO Disks:
+
+* Number of disks used to Perform Sequential I/O = Sequential Disks Count (Smallest Disks)
+* Number of disks used to Perform Random I/O = Total Filtered Disks - Sequential Disks Count  
 
   ``` script
   Example 1:
-  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 1TB), (/dev/sdc1 = 64GB)]  
-  - Disk Used to Perform Random I/O = (/dev/sdc1 = 1TB)  
-  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 1TB)  
+  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 64GB), (/dev/sdc1 = 1TB)]
+  Sequential Disks Count = 1
+  - Disk Used to Perform Random I/O = (/dev/sdc1 = 1TB, /dev/sda1 = 1TB)  
+  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 64GB)  
   
   Example 2:
-  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 2TB), (/dev/sdc1 = 4TB)]  
-  - Disk Used to Perform Random I/O = (/dev/sdc1 = 4TB)  
-  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 2TB)  
+  Given Disks Matching 'DiskFilter' = [(/dev/sda1 = 1TB), (/dev/sdb1 = 2TB), (/dev/sdc1 = 4TB)] 
+  Sequential Disks Count = 2
+  - Disk Used to Perform Random I/O = (/dev/sdc1 = 4TB )  
+  - Disk Used to Perform Sequential I/O = (/dev/sdb1 = 2TB, /dev/sda1 = 1TB)  
   ```
 
 * Total IOPS = (TargetIOPS * ScenarioTargetPercentage)/100 (parameters described below).
@@ -353,6 +362,7 @@ This profile uses an algorithm to determine the amount of IOPS to run against th
   | TargetPercents            | Optional. Allows the user to override the target percent list which is use to determine Total IOPS. | "10,40,90,98,100,102,110" |
   | DirectIO                  | Optional. Set to true to avoid using I/O buffering and to operate directly against the disk. Set to false to use I/O buffering. | true |
   | InitializeDisksInParallel | Optional. Specifies whether uninitialized/unformatted disks on the system should be initialized + formatted in parallel. | true (initialized in-parallel) |
+  | SequentialDiskCount | Optional. Specifies the number of disk that will have Sequential I/O from Selected Disks. | 1 |
   
   
 * **Profile Component Parameters** 

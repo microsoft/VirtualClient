@@ -11,6 +11,7 @@ namespace VirtualClient
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
@@ -45,11 +46,65 @@ namespace VirtualClient
         /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
-        public static async Task LogProcessDetailsAsync(
+        public static Task LogProcessDetailsAsync(
             this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+            process.ProcessDetails.ToolName = toolName;
+            process.ProcessDetails.GeneratedResults = results;
+            return LogProcessDetailsAsync(component, process.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
+        }
+
+        /// <summary>
+        /// Captures the details of the process including standard output, standard error and exit codes to 
+        /// telemetry and log files on the system.
+        /// </summary>
+        /// <param name="component">The component requesting the logging.</param>
+        /// <param name="sshCommandProxy">The process whose details will be captured.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="toolName">The name of the toolset running in the process.</param>
+        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
+        /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
+        /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
+        /// <param name="logToTelemetryMaxChars">
+        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static Task LogProcessDetailsAsync(
+            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+        {
+            component.ThrowIfNull(nameof(component));
+            sshCommandProxy.ThrowIfNull(nameof(sshCommandProxy));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+            sshCommandProxy.ProcessDetails.ToolName = toolName;
+            sshCommandProxy.ProcessDetails.GeneratedResults = results;
+            return LogProcessDetailsAsync(component, sshCommandProxy.ProcessDetails, telemetryContext, logToTelemetry, logToFile, logToTelemetryMaxChars);
+        }
+
+        /// <summary>
+        /// Captures the details of the process including standard output, standard error and exit codes to 
+        /// telemetry and log files on the system.
+        /// </summary>
+        /// <param name="component">The component requesting the logging.</param>
+        /// <param name="processDetails">The process details that will be captured.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
+        /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
+        /// <param name="logToTelemetryMaxChars">
+        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        public static async Task LogProcessDetailsAsync(
+            this VirtualClientComponent component, ProcessDetails processDetails, EventContext telemetryContext, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+        {
+            component.ThrowIfNull(nameof(component));
+            processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
             ILogger logger = null;
@@ -60,17 +115,7 @@ namespace VirtualClient
                 {
                     if (component.Dependencies.TryGetService<ILogger>(out logger))
                     {
-                        if (results?.Any() == true)
-                        {
-                            foreach (string result in results)
-                            {
-                                logger.LogProcessDetails(process, component.TypeName, telemetryContext, toolName, result, logToTelemetryMaxChars);
-                            }
-                        }
-                        else
-                        {
-                            logger.LogProcessDetails(process, component.TypeName, telemetryContext, toolName, null, logToTelemetryMaxChars);
-                        }
+                        logger.LogProcessDetails(processDetails, component.TypeName, telemetryContext, logToTelemetryMaxChars);
                     }
                 }
                 catch (Exception exc)
@@ -85,17 +130,7 @@ namespace VirtualClient
             {
                 try
                 {
-                    if (results?.Any() == true)
-                    {
-                        foreach (string result in results)
-                        {
-                            await component.LogProcessDetailsToFileAsync(process, telemetryContext, toolName, result);
-                        }
-                    }
-                    else
-                    {
-                        await component.LogProcessDetailsToFileAsync(process, telemetryContext, toolName, null);
-                    }
+                    await component.LogProcessDetailsToFileAsync(processDetails, telemetryContext);
                 }
                 catch (Exception exc)
                 {
@@ -103,6 +138,59 @@ namespace VirtualClient
                     // is more important to the operations of VC. We do want to log the failure.
                     logger?.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Captures the details of the process including standard output, standard error
+        /// and exit code.
+        /// </summary>
+        /// <param name="logger">The telemetry logger.</param>
+        /// <param name="componentType">The type of component (e.g. GeekbenchExecutor).</param>
+        /// <param name="processDetails">The process whose details will be captured.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="logToTelemetryMaxChars">
+        /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
+        /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
+        /// without risking data loss during upload because the message exceeds thresholds. Default = 125,000 chars. In relativity
+        /// there are about 3000 characters in an average single-spaced page of text.
+        /// </param>
+        internal static void LogProcessDetails(this ILogger logger, ProcessDetails processDetails, string componentType, EventContext telemetryContext, int logToTelemetryMaxChars = 125000)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
+            processDetails.ThrowIfNull(nameof(processDetails));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            try
+            {
+                // Examples:
+                // --------------
+                // GeekbenchExecutor.ProcessDetails
+                // GeekbenchExecutor.Geekbench.ProcessDetails
+                // GeekbenchExecutor.ProcessResults
+                // GeekbenchExecutor.Geekbench.ProcessResults
+                string eventNamePrefix = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
+                    !string.IsNullOrWhiteSpace(processDetails.ToolName) ? $"{componentType}.{processDetails.ToolName}" : componentType,
+                    string.Empty);
+
+                logger.LogMessage(
+                    $"{eventNamePrefix}.ProcessDetails",
+                    LogLevel.Information,
+                    telemetryContext.Clone().AddProcessContext(processDetails, maxChars: logToTelemetryMaxChars));
+
+                if (processDetails.GeneratedResults != null && processDetails.GeneratedResults.Any())
+                {
+                    logger.LogMessage(
+                        $"{eventNamePrefix}.ProcessResults",
+                        LogLevel.Information,
+                        telemetryContext.Clone().
+                        AddProcessResults(processDetails, maxChars: logToTelemetryMaxChars));
+                }
+            }
+            catch
+            {
+                // Best effort.
             }
         }
 
@@ -165,14 +253,12 @@ namespace VirtualClient
         /// on the system.
         /// </summary>
         /// <param name="component">The component that ran the process.</param>
-        /// <param name="process">The process whose details will be captured.</param>
+        /// <param name="processDetails">The process whose details will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="toolName">The name of the toolset running in the process.</param>
-        /// <param name="results">Results from the process execution (i.e. outside of standard output).</param>
-        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName, string results)
+        internal static async Task LogProcessDetailsToFileAsync(this VirtualClientComponent component, ProcessDetails processDetails, EventContext telemetryContext)
         {
             component.ThrowIfNull(nameof(component));
-            process.ThrowIfNull(nameof(process));
+            processDetails.ThrowIfNull(nameof(processDetails));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
 
             try
@@ -181,18 +267,10 @@ namespace VirtualClient
                     && component.Dependencies.TryGetService<PlatformSpecifics>(out PlatformSpecifics specifics))
                 {
                     string effectiveToolName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
-                        (!string.IsNullOrWhiteSpace(toolName) ? toolName : component.TypeName).RemoveWhitespace(),
+                        (!string.IsNullOrWhiteSpace(processDetails.ToolName) ? processDetails.ToolName : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
                         string.Empty);
 
-                    // Ensure that we obscure/remove any secrets (e.g. passwords) that may have been passed into
-                    // the command on the command line as arguments.
-                    string effectiveCommandArguments = process.StartInfo?.Arguments;
-                    if (!string.IsNullOrWhiteSpace(effectiveCommandArguments))
-                    {
-                        effectiveCommandArguments = SensitiveData.ObscureSecrets(effectiveCommandArguments);
-                    }
-
-                    string effectiveCommand = $"{process.StartInfo?.FileName} {effectiveCommandArguments}".Trim();
+                    string effectiveCommand = $"{processDetails.CommandLine}".Trim();
                     string logPath = specifics.GetLogsPath(effectiveToolName.ToLowerInvariant().RemoveWhitespace());
 
                     if (!fileSystem.Directory.Exists(logPath))
@@ -207,9 +285,9 @@ namespace VirtualClient
                     //
                     // /logs/fio/2023-02-01T122330Z-randomwrite_4k_blocksize.log
                     // /logs/fio/2023-02-01T122745Z-randomwrite_8k_blocksize.log
-                    string effectiveLogFileName = FileUploadDescriptor.GetFileName(
-                        $"{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName).ToLowerInvariant()}.log",
-                        DateTime.UtcNow);
+                    string effectiveLogFileName = VirtualClientLoggingExtensions.PathReservedCharacterExpression.Replace(
+                        $"{DateTime.UtcNow.ToString("yyyy-MM-ddTHHmmssffffZ")}-{(!string.IsNullOrWhiteSpace(component.Scenario) ? component.Scenario : effectiveToolName)}.log",
+                        string.Empty).ToLowerInvariant().RemoveWhitespace();
 
                     string logFilePath = specifics.Combine(logPath, effectiveLogFileName);
 
@@ -219,7 +297,7 @@ namespace VirtualClient
                     // Working Directory : /home/user/nuget/virtualclient/packages/fio/linux-x64
                     // Exit Code         : 0
                     //
-                    // ##Output##
+                    // ##StandardOutput##
                     // {
                     //    "fio version" : "fio-3.26-19-ge7e53",
                     //      "timestamp" : 1646873555,
@@ -232,58 +310,35 @@ namespace VirtualClient
                     //      ]
                     // }
                     // 
-                    // ##Results##
+                    // ##GeneratedResults##
                     // Any results from the output of the process
 
                     StringBuilder outputBuilder = new StringBuilder();
-                    outputBuilder.AppendLine($"Command           : {effectiveCommand}");
-                    outputBuilder.AppendLine($"Working Directory : {process.StartInfo?.WorkingDirectory}");
-                    outputBuilder.AppendLine($"Exit Code         : {process.ExitCode}");
+                    outputBuilder.AppendLine($"Command           : {SensitiveData.ObscureSecrets(processDetails?.CommandLine)}");
+                    outputBuilder.AppendLine($"Working Directory : {processDetails?.WorkingDirectory}");
+                    outputBuilder.AppendLine($"Exit Code         : {processDetails?.ExitCode}");
                     outputBuilder.AppendLine();
-                    outputBuilder.AppendLine("##Output##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
+                    outputBuilder.AppendLine("##StandardOutput##"); // This is a simple delimiter that will NOT conflict with regular expressions possibly used in custom parsing.
+                    outputBuilder.AppendLine(processDetails.StandardOutput);
 
-                    if (process.StandardOutput?.Length > 0 == true)
-                    {
-                        outputBuilder.AppendLine(process.StandardOutput.ToString());
-                    }
-
-                    if (process.StandardError?.Length > 0 == true)
+                    if (!string.IsNullOrEmpty(processDetails.StandardError))
                     {
                         outputBuilder.AppendLine();
-                        outputBuilder.AppendLine(process.StandardError.ToString());
+                        outputBuilder.AppendLine("##StandardError##");
+                        outputBuilder.AppendLine(processDetails.StandardError);
                     }
 
-                    if (results != null)
+                    if (processDetails != null && processDetails.GeneratedResults != null && processDetails.GeneratedResults.Any())
                     {
                         outputBuilder.AppendLine();
-                        outputBuilder.AppendLine("##Results##");
-                        outputBuilder.AppendLine(results);
+                        outputBuilder.AppendLine("##GeneratedResults##");
+                        outputBuilder.AppendLine(string.Join('\n', processDetails.GeneratedResults));
                     }
 
                     await VirtualClientLoggingExtensions.FileSystemAccessRetryPolicy.ExecuteAsync(async () =>
                     {
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
                     });
-
-                    if (component.TryGetContentStoreManager(out IBlobManager blobManager))
-                    {
-                        FileContext fileContext = new FileContext(
-                            fileSystem.FileInfo.New(logFilePath),
-                            HttpContentType.PlainText,
-                            Encoding.UTF8.WebName,
-                            component.ExperimentId,
-                            component.AgentId,
-                            effectiveToolName,
-                            component.Scenario,
-                            effectiveCommandArguments,
-                            component.Roles?.Any() == true ? string.Join(',', component.Roles) : null);
-
-                        // The file is already timestamped at this point, so there is no need to add any additional
-                        // timestamping information.
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, timestamped: false);
-
-                        await component.RequestFileUploadAsync(descriptor);
-                    }
                 }
             }
             catch (Exception exc)

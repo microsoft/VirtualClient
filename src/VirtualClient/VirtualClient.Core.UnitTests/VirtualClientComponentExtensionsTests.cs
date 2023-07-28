@@ -240,7 +240,7 @@ namespace VirtualClient
         [ComponentDescription(Id = "Format1234")]
         private class TestFileUploadDescriptorFactory_A : IFileUploadDescriptorFactory
         {
-            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
             {
                 return new FileUploadDescriptor(
                     $"/any/path/to/blob/{fileContext.File.Name}",

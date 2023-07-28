@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -63,6 +64,18 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(this.Password), out IConvertible password);
                 return password?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the scenario to use for the PostgreSQL user accounts used
+        /// to create the DB and run transactions against it.
+        /// </summary>
+        public string DatabaseScenario
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), PostgreSQLScenario.Default);
             }
         }
 
@@ -154,6 +167,7 @@ namespace VirtualClient.Actions
                         await Task.Delay(this.StabilizationWait, cancellationToken);
 
                         await this.CreateDatabaseAsync(telemetryContext, cancellationToken);
+                        await this.ConfigureDatabaseForScenariosAsync(telemetryContext, cancellationToken);
                         await this.SaveServerStateAsync(cancellationToken);
 
                         // Same reasoning as above.
@@ -354,6 +368,212 @@ namespace VirtualClient.Actions
             }
         }
 
+        private async Task ConfigureDatabaseForScenariosAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        { 
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                switch (this.DatabaseScenario)
+                {
+                    // If Balanced Scenario: after creating the database, run balanced script to distribute
+                    // database and/or individual tables on available disks.
+
+                    case PostgreSQLScenario.Balanced:
+
+                        if (!this.serverState.Definition.BalancedScenarioInitialized)
+                        {
+                            await this.PrepareBalancedScenarioAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+
+                            this.serverState.Definition.BalancedScenarioInitialized = true;
+                        }
+
+                        break;
+
+                    // If InMemory Scenario: before running configure script, modify postgres.conf
+                    // to allow for higher in-memory buffer capacity.
+
+                    case PostgreSQLScenario.InMemory:
+
+                        if (!this.serverState.Definition.InMemoryScenarioInitialized)
+                        {
+                            await this.PrepareInMemoryScenarioAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
+
+                            this.serverState.Definition.InMemoryScenarioInitialized = true;
+                        }
+
+                        break;
+
+                    case PostgreSQLScenario.Default:
+                        break;
+                }
+            }
+        }
+
+        private async Task PrepareInMemoryScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (this.Platform == PlatformID.Unix)
+                {
+                    string inMemoryScript = "inmemory.sh";
+                    string workingDirectory = null;
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
+
+                    LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                    switch (distroInfo.LinuxDistribution)
+                    {
+                        case LinuxDistribution.Ubuntu:
+                        case LinuxDistribution.Debian:
+                            workingDirectory = this.Combine(this.PostgreSqlPackagePath, "ubuntu");
+                            break;
+                    }
+
+                    MemoryInfo memoryInfo = await this.SystemManagement.GetMemoryInfoAsync(cancellationToken);
+                    long totalMemoryKiloBytes = memoryInfo.TotalMemory;
+                    int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes * 0.75 / 1024);
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
+                        $"{bufferSizeInMegaBytes}",
+                        workingDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task PrepareBalancedScenarioAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                string diskPathsArgument = string.Empty;
+                string diskFilter = "osdisk:false";
+
+                IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                if (disks?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
+                        ErrorReason.WorkloadUnexpectedAnomaly);
+                }
+
+                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
+
+                if (disksToTest?.Any() != true)
+                {
+                    throw new WorkloadException(
+                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
+                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
+                        "of the existing disks.",
+                        ErrorReason.DependencyNotFound);
+                }
+
+                if (await this.CreateMountPointsAsync(disksToTest, cancellationToken).ConfigureAwait(false))
+                {
+                    // Refresh the disks to pickup the mount point changes.
+                    await Task.Delay(1000).ConfigureAwait(false);
+                    IEnumerable<Disk> updatedDisks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    disksToTest = DiskFilters.FilterDisks(updatedDisks, diskFilter, this.Platform).ToList();
+                }
+
+                foreach (Disk disk in disksToTest)
+                {
+                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
+                    {
+                        diskPathsArgument += $"{disk.GetPreferredAccessPath(this.Platform)} ";
+                    }
+                }
+
+                if (this.Platform == PlatformID.Unix)
+                {
+                    string balancedScript = "balanced.sh";
+                    string workingDirectory = null;
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
+
+                    LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                    switch (distroInfo.LinuxDistribution)
+                    {
+                        case LinuxDistribution.Ubuntu:
+                        case LinuxDistribution.Debian:
+                            workingDirectory = this.Combine(this.PostgreSqlPackagePath, "ubuntu");
+                            break;
+                    }
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
+                        diskPathsArgument,
+                        workingDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates mount points for any disks that do not have them already.
+        /// </summary>
+        /// <param name="disks">This disks on which to create the mount points.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        private async Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
+        {
+            bool mountPointsCreated = false;
+
+            // Don't mount any partition in OS drive.
+            foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
+            {
+                // mount every volume that doesn't have an accessPath.
+                foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
+                {
+                    string newMountPoint = volume.GetDefaultMountPoint();
+                    this.Logger.LogTraceMessage($"Create Mount Point: {newMountPoint}");
+
+                    EventContext relatedContext = EventContext.Persisted().Clone()
+                        .AddContext(nameof(volume), volume)
+                        .AddContext("mountPoint", newMountPoint);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.CreateMountPoint", relatedContext, async () =>
+                    {
+                        string newMountPoint = volume.GetDefaultMountPoint();
+                        if (!this.SystemManagement.FileSystem.Directory.Exists(newMountPoint))
+                        {
+                            this.SystemManagement.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                        }
+
+                        await this.SystemManagement.DiskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        mountPointsCreated = true;
+
+                    }).ConfigureAwait(false);
+                }
+            }
+
+            return mountPointsCreated;
+        }
+
         private async Task<string> GetServerCredentialAsync(CancellationToken cancellationToken)
         {
             string fileName = "superuser.txt";
@@ -429,6 +649,18 @@ namespace VirtualClient.Actions
                 "<DATABASENAME>",
                 this.DatabaseName,
                 cancellationToken);
+        }
+
+        /// <summary>
+        /// Defines the Postgresql benchmark scenario.
+        /// </summary>
+        internal class PostgreSQLScenario
+        {
+            public const string Balanced = nameof(Balanced);
+
+            public const string InMemory = nameof(InMemory);
+
+            public const string Default = nameof(Default);
         }
     }
 }

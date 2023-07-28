@@ -213,7 +213,7 @@ namespace VirtualClient.Contracts
             {
                 return new BlobDescriptor
                 {
-                    Name = this.BlobPath.Replace(fileExtension, ".manifest"),
+                    Name = this.BlobPath.Replace(fileExtension, ".manifest.json"),
                     ContainerName = this.ContainerName,
                     ContentEncoding = Encoding.UTF8,
                     ContentType = HttpContentType.Json
@@ -223,7 +223,7 @@ namespace VirtualClient.Contracts
             {
                 return new BlobDescriptor
                 {
-                    Name = $"{this.BlobPath}.manifest",
+                    Name = $"{this.BlobPath}.manifest.json",
                     ContainerName = this.ContainerName,
                     ContentEncoding = Encoding.UTF8,
                     ContentType = HttpContentType.Json

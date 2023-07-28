@@ -390,8 +390,8 @@ namespace VirtualClient
                 }
             }
 
-            // Adding file upload monitoring if the user has supplied a content store.
-            if (this.ContentStore != null)
+            // Adding file upload monitoring if the user has supplied a content store or Proxy Api Uri.
+            if (this.ContentStore != null || this.ProxyApiUri != null)
             {
                 string fileUploadMonitorProfilePath = systemManagement.PlatformSpecifics.GetProfilePath(RunProfileCommand.FileUploadMonitorProfile);
                 ExecutionProfile fileUploadMonitorProfile = await this.ReadExecutionProfileAsync(fileUploadMonitorProfilePath, dependencies, cancellationToken)

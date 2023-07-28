@@ -1,0 +1,81 @@
+# fio template for OLTP-C runs
+# defines three components: readers, writes, and loggers
+
+# --------------- Global section defines defaults across all components
+[global]
+direct=1
+filename=/dev/sdd
+ioengine=libaio
+group_reporting=1
+size=124G
+time_based=1
+
+# by setting the submit mode to offload, we can guarantee a fixed rate of
+# submission regardless of what the device completion rate is.
+#io_submit_mode=offload
+
+# Represents reading of data from sql/OLTP database.
+[randomreader]
+new_group
+bs=8K
+filename=/dev/sdd
+iodepth=512
+numjobs=1
+rate_iops=270
+runtime=1
+rw=randread
+
+# Represents writing of data in sql/OLTP database.
+[randomwriter]
+new_group
+bs=8K
+filename=/dev/sdd
+iodepth=512
+numjobs=1
+rate_iops=212
+runtime=1
+rw=randwrite
+
+# Represents log readers of sql/OLTP database.
+[sequentialreader]
+new_group
+bs=56K
+filename=/dev/sdd
+iodepth=64
+numjobs=1
+rate_iops=0
+runtime=1
+rw=read
+size=20G
+
+# Represents log writers of sql/OLTP database.
+[sequentialwriter]
+new_group
+bs=56K
+filename=/dev/sdd
+iodepth=64
+numjobs=1
+rate_iops=16
+runtime=1
+rw=write
+size=20G
+
+# Initialize database data.
+[initrandomio]
+new_group
+bs=256K
+filename=/dev/sdd
+iodepth=64
+numjobs=1
+rw=write
+size=124G
+
+# Initialize logs database.
+[initsequentialio]
+new_group
+bs=256K
+filename=/dev/sdd
+iodepth=64
+numjobs=1
+rw=write
+size=20G
