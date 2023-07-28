@@ -6,6 +6,8 @@ namespace VirtualClient.Common.Telemetry
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Newtonsoft.Json;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -131,26 +133,6 @@ namespace VirtualClient.Common.Telemetry
 
             context.Properties[key] = value;
             return context;
-        }
-
-        /// <summary>
-        /// Creates a <see cref="TelemetryEventData"/> object from the identifiers and context properties
-        /// defined in the <see cref="EventContext"/> object.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="TelemetryEventData"/> that can be used when writing ETW/EventSource events.
-        /// </returns>
-        public static TelemetryEventData ToEventData(this EventContext context)
-        {
-            context.ThrowIfNull(nameof(context));
-            TelemetryEventData eventData = new TelemetryEventData(JsonContextSerialization.Serialize(context.Properties.OrderBy(p => p.Key).ToDictionary(i => i.Key, i => i.Value)))
-            {
-                DurationMs = context.DurationMs,
-                TransactionId = context.TransactionId,
-                User = context.UserIdentity
-            };
-
-            return eventData;
         }
     }
 }

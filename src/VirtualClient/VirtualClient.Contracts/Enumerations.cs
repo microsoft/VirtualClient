@@ -573,6 +573,43 @@ namespace VirtualClient
     }
 
     /// <summary>
+    /// Defines a category of the Virtual Client metadata data contract
+    /// (e.g. CPU, Memory, System).
+    /// </summary>
+    public enum MetadataContractCategory
+    {
+        /// <summary>
+        /// The default metadata category. In telemetry output, the metadata section 
+        /// name will be: 'metadata'.
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// Metadata related to the physical or virtual hardware on
+        /// the system (e.g. CPU, memory). In telemetry output, the metadata section 
+        /// name will be: 'metadata_hw'.
+        /// </summary>
+        Hardware,
+
+        /// <summary>
+        /// Metadata related to the
+        /// </summary>
+        Host,
+
+        /// <summary>
+        /// Metadata related to the Virtual Client platform runtime
+        /// (e.g. profile, timeout, iterations).
+        /// </summary>
+        Runtime,
+
+        /// <summary>
+        /// Metadata related to the Virtual Client runtime scenario 
+        /// (e.g. workload, monitor, dependency scenario).
+        /// </summary>
+        Scenario
+    }
+
+    /// <summary>
     /// Defines the relationship of the metric value and it's relative meaning.
     /// </summary>
     public enum MetricRelativity

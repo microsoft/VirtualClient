@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes DeathStarBench Client and generates HTTP load.
@@ -149,7 +150,6 @@ namespace VirtualClient.Actions
                         await this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken);
                     }
                 }
-
             });
         }
 
@@ -159,6 +159,12 @@ namespace VirtualClient.Actions
             {
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
                 await this.LogProcessDetailsAsync(process, telemetryContext, "DeathStarBench", results: results.AsArray(), logToFile: true);
+
+                telemetryContext.AddScenarioMetadata(
+                    "DeathStarBench",
+                    commandArguments,
+                    toolVersion: null,
+                    this.PackageName);
 
                 DeathStarBenchMetricsParser deathStarBenchMetricsParser = new DeathStarBenchMetricsParser(results);
                 IList<Metric> metrics = deathStarBenchMetricsParser.Parse();

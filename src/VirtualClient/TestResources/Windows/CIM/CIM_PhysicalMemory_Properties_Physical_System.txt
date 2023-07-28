@@ -1,0 +1,73 @@
+Caption: Physical Memory
+Description: Physical Memory
+InstallDate: 
+Name: Physical Memory
+Status: 
+CreationClassName: Win32_PhysicalMemory
+Manufacturer: SK Hynix
+Model: 
+OtherIdentifyingInfo: 
+PartNumber: HMA81GS6JJR8N-VK    
+PoweredOn: 
+SerialNumber: 5334C0A1
+SKU: 
+Tag: Physical Memory 0
+Version: 
+HotSwappable: 
+Removable: 
+Replaceable: 
+FormFactor: 12
+BankLabel: BANK 0
+Capacity: 8589934592
+DataWidth: 64
+InterleavePosition: 1
+MemoryType: 0
+PositionInRow: 1
+Speed: 2400
+TotalWidth: 64
+Attributes: 1
+ConfiguredClockSpeed: 2400
+ConfiguredVoltage: 1200
+DeviceLocator: Bottom-slot 1(left)
+InterleaveDataDepth: 1
+MaxVoltage: 1500
+MinVoltage: 1250
+SMBIOSMemoryType: 26
+TypeDetail: 128
+
+Caption: Physical Memory
+Description: Physical Memory
+InstallDate: 
+Name: Physical Memory
+Status: 
+CreationClassName: Win32_PhysicalMemory
+Manufacturer: SK Hynix
+Model: 
+OtherIdentifyingInfo: 
+PartNumber: HMA81GS6JJR8N-VK    
+PoweredOn: 
+SerialNumber: 5334C1C0
+SKU: 
+Tag: Physical Memory 1
+Version: 
+HotSwappable: 
+Removable: 
+Replaceable: 
+FormFactor: 12
+BankLabel: BANK 2
+Capacity: 8589934592
+DataWidth: 64
+InterleavePosition: 2
+MemoryType: 0
+PositionInRow: 1
+Speed: 2400
+TotalWidth: 64
+Attributes: 1
+ConfiguredClockSpeed: 2400
+ConfiguredVoltage: 1200
+DeviceLocator: Bottom-slot 2(right)
+InterleaveDataDepth: 1
+MaxVoltage: 1500
+MinVoltage: 1250
+SMBIOSMemoryType: 26
+TypeDetail: 128

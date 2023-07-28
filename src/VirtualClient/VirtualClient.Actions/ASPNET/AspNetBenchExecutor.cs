@@ -10,11 +10,11 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
-    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The AspNetBench workload executor.
@@ -165,6 +165,11 @@ namespace VirtualClient.Actions
         {
             try
             {
+                telemetryContext.AddScenarioMetadata(
+                    "AspNetBench",
+                    $"{this.clientArgument},{this.serverArgument}",
+                    toolVersion: null);
+
                 BombardierMetricsParser parser = new BombardierMetricsParser(process.StandardOutput.ToString());
 
                 this.Logger.LogMetrics(

@@ -13,8 +13,10 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The base class for all Virtual Client profile actions and monitors.
@@ -480,7 +482,17 @@ namespace VirtualClient.Contracts
 
             if (this.IsSupported())
             {
-                EventContext telemetryContext = EventContext.Persisted().AddParameters(this.Parameters);
+                if (!this.ParametersEvaluated)
+                {
+                    await this.EvaluateParametersAsync(cancellationToken);
+                }
+
+                EventContext telemetryContext = EventContext.Persisted();
+
+                telemetryContext.AddMetadata(
+                    this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
+                    MetadataContractCategory.Scenario,
+                    replace: true);
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
                 {

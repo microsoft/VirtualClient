@@ -48,6 +48,12 @@ namespace VirtualClient
         /// </summary>
         public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
 
+        /// <summary>
+        /// The path to the directory where test test resource/example files can be found. Note that this requires the
+        /// test project to copy the files to a directory called 'TestResources'.
+        /// </summary>
+        public static readonly string TestResourcesDirectory = Path.Combine(TestAssemblyDirectory, "TestResources");
+
         private string experimentId;
 
         static MockFixture()
@@ -308,7 +314,7 @@ namespace VirtualClient
             this.ContentBlobManager = new Mock<IBlobManager>();
             this.PackagesBlobManager = new Mock<IBlobManager>();
             this.StateManager = new Mock<IStateManager>();
-            this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
+            this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
             this.Parameters = new Dictionary<string, IConvertible>();
             this.Parameters[nameof(VirtualClientComponent.Scenario)] = "AnyScenario";
 
@@ -366,6 +372,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.ExperimentId).Returns(this.experimentId);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
+            this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);
             this.SystemManagement.SetupGet(sm => sm.CpuArchitecture).Returns(architecture);
             this.SystemManagement.SetupGet(sm => sm.DiskManager).Returns(() => this.DiskManager.Object);
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(() => this.FileSystem.Object);

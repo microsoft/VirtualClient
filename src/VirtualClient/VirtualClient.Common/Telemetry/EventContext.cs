@@ -8,6 +8,7 @@ namespace VirtualClient.Common.Telemetry
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using Newtonsoft.Json;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -139,6 +140,7 @@ namespace VirtualClient.Common.Telemetry
         /// Gets any context properties associated with the event to include
         /// with the event data.
         /// </summary>
+        [JsonConverter(typeof(ContextPropertiesJsonConverter))]
         public IDictionary<string, object> Properties { get; }
 
         /// <summary>

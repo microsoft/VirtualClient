@@ -390,6 +390,7 @@ namespace VirtualClient
                                 if (specificNetworkCardKey != null)
                                 {
                                     object cardDescription = specificNetworkCardKey.GetValue("Description");
+
                                     if (cardDescription != null && cardDescription.ToString().Contains("Mellanox", StringComparison.OrdinalIgnoreCase))
                                     {
                                         networkAccelerationEnabled = true;

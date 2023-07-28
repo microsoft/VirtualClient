@@ -5,18 +5,15 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
-    using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The DCGMI Executor for GPU
@@ -133,8 +130,7 @@ namespace VirtualClient.Actions
         {
             if (this.Platform == PlatformID.Unix)
             {
-                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
-                                                .ConfigureAwait(false);
+                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
 
                 telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
 
@@ -298,7 +294,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIDiscoverySubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -311,7 +307,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIFieldGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -323,7 +319,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -335,7 +331,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIHealthSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -347,7 +343,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIModulesSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -359,7 +355,7 @@ namespace VirtualClient.Actions
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIProfTesterSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -368,37 +364,47 @@ namespace VirtualClient.Actions
             string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
             string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
             this.StartTime = DateTime.Now;
+
             tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false)));
+
             tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false)));
+
             string[] outputresults = await Task.WhenAll<string>(tasksList);
 
             string dcgmiproftesterresults = outputresults[0];
             string dcgmidmonresults = outputresults[1];
 
-            this.CaptureDmonResultsAsync(dcgmidmonresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
-            this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureDmonResultsAsync(dcgmidmonresults, dmoncommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, dcgmproftestercommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
         }
 
-        private void CaptureDmonResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureDmonResultsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    telemetryContext.AddScenarioMetadata(
+                        "DCGMI",
+                        commandArguments,
+                        toolVersion: null,
+                        this.PackageName);
+
                     DCGMIResultsParser dcgmiResultsParser = new DCGMIResultsParser(results, $"{this.Subsystem}Dmon");
                     IList<Metric> metrics = dcgmiResultsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "DCGMI",
-                                scenarioName: $"{this.Subsystem}Dmon",
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "DCGMI",
+                        scenarioName: $"{this.Subsystem}Dmon",
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {
@@ -407,24 +413,31 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureWorkloadResultsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    telemetryContext.AddScenarioMetadata(
+                        "DCGMI",
+                        commandArguments,
+                        toolVersion: null,
+                        this.PackageName);
+
                     DCGMIResultsParser dcgmiResultsParser = new DCGMIResultsParser(results, this.Subsystem);
                     IList<Metric> metrics = dcgmiResultsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "DCGMI",
-                                scenarioName: this.Subsystem,
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "DCGMI",
+                        scenarioName: this.Subsystem,
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {

@@ -18,10 +18,10 @@ BogoMIPS:                        5586.87
 Virtualization:                  VT-x
 Hypervisor vendor:               Microsoft
 Virtualization type:             full
-L1d cache:                       96 KiB
-L1i cache:                       64 KiB
-L2 cache:                        2.5 MiB
-L3 cache:                        48 MiB
+L1d cache:                       128 KiB
+L1i cache:                       96 KiB
+L2 cache:                        8.25 MiB
+L3 cache:                        64 MiB
 NUMA node0 CPU(s):               0-3
 Vulnerability Itlb multihit:     KVM: Mitigation: VMX disabled
 Vulnerability L1tf:              Mitigation; PTE Inversion; VMX conditional cache flushes, SMT vulnerable

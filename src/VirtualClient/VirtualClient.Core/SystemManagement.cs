@@ -13,6 +13,8 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Management.Infrastructure;
+    using Microsoft.Management.Infrastructure.Options;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
 
@@ -165,9 +167,23 @@ namespace VirtualClient
         /// <summary>
         /// Returns information about memory on the system.
         /// </summary>
-        public Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
+        public async Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(new MemoryInfo(this.GetTotalSystemMemoryKiloBytes()));
+            MemoryInfo memoryInfo = null;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    memoryInfo = this.GetMemoryInformationOnWindows();
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    memoryInfo = await this.GetMemoryInformationOnUnixAsync();
+                }
+            }
+
+            return memoryInfo;
         }
 
         /// <summary>
@@ -294,6 +310,61 @@ namespace VirtualClient
             }
 
             return systemMemoryInKb;
+        }
+
+        private async Task<MemoryInfo> GetMemoryInformationOnUnixAsync()
+        {
+            using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "dmidecode", "--type memory"))
+            {
+                IEnumerable<MemoryChipInfo> chips = null;
+                await process.StartAndWaitAsync(CancellationToken.None);
+
+                if (!process.IsErrored())
+                {
+                    DmiDecodeParser parser = new DmiDecodeParser();
+                    parser.TryParse(process.StandardOutput.ToString(), out chips);
+                }
+
+                return new MemoryInfo(this.GetTotalSystemMemoryKiloBytes(), chips);
+            }
+        }
+
+        private MemoryInfo GetMemoryInformationOnWindows()
+        {
+            List<MemoryChipInfo> chips = null;
+            CimSession session = CimSession.Create("localhost", new DComSessionOptions());
+            IEnumerable<CimInstance> hardwareDefinitions = session.QueryInstances(@"Root\CIMV2", "WQL", "SELECT * FROM CIM_PhysicalMemory");
+
+            if (hardwareDefinitions?.Any() == true)
+            {
+                chips = new List<MemoryChipInfo>();
+                int chipIndex = 0;
+                foreach (CimInstance instance in hardwareDefinitions)
+                {
+                    object capacity = instance.CimInstanceProperties["Capacity"]?.Value;
+                    object speed = instance.CimInstanceProperties["Speed"]?.Value;
+
+                    // Physical blades will produce full specs for the hardware memory modules. This means
+                    // that we will have the speed as well as valid manufacturer information. VMs will not have
+                    // this information and there is not much useful there to capture.
+                    chipIndex++;
+                    if (long.TryParse(capacity?.ToString(), out long memoryCapacity) && long.TryParse(speed?.ToString(), out long memorySpeed))
+                    {
+                        object manufacturer = instance.CimInstanceProperties["Manufacturer"]?.Value;
+                        object partNumber = instance.CimInstanceProperties["PartNumber"]?.Value;
+
+                        chips.Add(new MemoryChipInfo(
+                            $"Memory_{chipIndex}",
+                            $"{manufacturer} Memory Chip",
+                            memoryCapacity,
+                            memorySpeed,
+                            manufacturer?.ToString().Trim(),
+                            partNumber?.ToString().Trim()));
+                    }
+                }
+            }
+
+            return new MemoryInfo(this.GetTotalSystemMemoryKiloBytes(), chips);
         }
 
         [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1310:Field names should not contain underscore", Justification = "Interop code.")]

@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Manages the execution runtime of the FIO workload.
@@ -514,6 +515,12 @@ namespace VirtualClient.Actions
                     }
                 }
             }
+
+            telemetryContext.AddScenarioMetadata(
+                "FIO",
+                commandArguments,
+                toolVersion: null,
+                this.PackageName);
 
             this.Logger.LogMetrics(
                "FIO",

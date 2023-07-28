@@ -254,7 +254,7 @@ namespace VirtualClient
             this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.StateManager = new InMemoryStateManager();
-            this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
+            this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
 
             this.SystemManagement = new Mock<ISystemManagement>();
             this.SystemManagement.SetupGet(sm => sm.AgentId).Returns(vcAgentId);
@@ -265,6 +265,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(this.PackageManager);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
+            this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(this.StateManager);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);

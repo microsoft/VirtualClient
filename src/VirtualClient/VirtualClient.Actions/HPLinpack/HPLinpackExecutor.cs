@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The HPL(High Performance Linpack) workload executor.
@@ -359,6 +360,12 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            telemetryContext.AddScenarioMetadata(
+                "HPLinpack",
+                $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
+                toolVersion: null,
+                this.PackageName);
+
             HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
             IList<Metric> metrics = parser.Parse();
 

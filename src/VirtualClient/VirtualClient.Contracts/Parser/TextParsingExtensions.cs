@@ -121,7 +121,7 @@ namespace VirtualClient.Contracts
         public static string TranslateByteUnit(string text)
         {
             // Unit thousand: K, k, kb, KB
-            Regex thousandRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(k|kb)$", RegexOptions.IgnoreCase);
+            Regex thousandRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(k|kb|kib)$", RegexOptions.IgnoreCase);
             Match thousandMatch = Regex.Match(text, thousandRegex.ToString(), thousandRegex.Options);
             if (thousandMatch.Success)
             {
@@ -129,7 +129,7 @@ namespace VirtualClient.Contracts
             }
 
             // Unit million: M,m, MB, mb
-            Regex millionRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(m|mb)$", RegexOptions.IgnoreCase);
+            Regex millionRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(m|mb|mib)$", RegexOptions.IgnoreCase);
             Match millionMatch = Regex.Match(text, millionRegex.ToString(), millionRegex.Options);
             if (millionMatch.Success)
             {
@@ -137,7 +137,7 @@ namespace VirtualClient.Contracts
             }
 
             // Unit giga: G,g, GB, gb
-            Regex gigaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(g|gb)", RegexOptions.IgnoreCase);
+            Regex gigaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(g|gb|gib)", RegexOptions.IgnoreCase);
             Match gigaMatch = Regex.Match(text, gigaRegex.ToString(), gigaRegex.Options);
             if (gigaMatch.Success)
             {
@@ -145,7 +145,7 @@ namespace VirtualClient.Contracts
             }
 
             // Unit tera: T,t, TB, tb
-            Regex teraRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(t|tb)", RegexOptions.IgnoreCase);
+            Regex teraRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(t|tb|tib)", RegexOptions.IgnoreCase);
             Match teraMatch = Regex.Match(text, teraRegex.ToString(), teraRegex.Options);
             if (teraMatch.Success)
             {
@@ -153,7 +153,7 @@ namespace VirtualClient.Contracts
             }
 
             // Unit peta: P, p, PB, pb
-            Regex petaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(p|pb)", RegexOptions.IgnoreCase);
+            Regex petaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(p|pb|pib)", RegexOptions.IgnoreCase);
             Match petaMatch = Regex.Match(text, petaRegex.ToString(), petaRegex.Options);
             if (petaMatch.Success)
             {

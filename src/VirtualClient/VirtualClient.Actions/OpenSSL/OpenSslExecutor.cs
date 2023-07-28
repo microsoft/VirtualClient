@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes the OpenSSL workload.
@@ -96,6 +97,13 @@ namespace VirtualClient.Actions
             {
                 try
                 {
+                    telemetryContext.AddScenarioMetadata(
+                        "OpenSSL",
+                        commandArguments,
+                        toolVersion: null,
+                        this.Package.Name,
+                        this.Package.Version);
+
                     OpenSslMetricsParser resultsParser = new OpenSslMetricsParser(workloadProcess.StandardOutput.ToString(), commandArguments);
                     IList<Metric> metrics = resultsParser.Parse();
 

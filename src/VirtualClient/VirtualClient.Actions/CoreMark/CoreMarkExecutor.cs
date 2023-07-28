@@ -6,13 +6,8 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO.Abstractions;
-    using System.Linq;
-    using System.Reflection.Metadata;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
@@ -20,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The CoreMark workload executor.
@@ -44,6 +40,34 @@ namespace VirtualClient.Actions
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
+
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                this.Parameters[nameof(this.CompilerName)] = "cygwin";
+                this.Parameters[nameof(this.CompilerVersion)] = null;
+            }
+        }
+
+        /// <summary>
+        /// The name of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerName), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// The version of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerVersion
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerVersion), string.Empty);
+            }
         }
 
         /// <summary>
@@ -137,6 +161,12 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    telemetryContext.AddScenarioMetadata(
+                       "CoreMark",
+                       commandArguments,
+                       toolVersion: null,
+                       this.PackageName);
+
                     IEnumerable<string> results = await this.LoadResultsAsync(
                         new string[] { this.OutputFile1Path, this.OutputFile2Path },
                         cancellationToken);

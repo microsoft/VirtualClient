@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
@@ -34,18 +34,16 @@
         <None Update="Examples\**\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-    </ItemGroup>
-
-
-    <ItemGroup>
-      <None Update="Examples\CoreInfo\CoreInfo_Results_Ampere_2.txt">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
-
-    <ItemGroup>
-      <Folder Include="Examples\Logging\" />
+        
+        <!-- 
+        Test Resources/Examples:
+        Include ALL of the examples/files in the solution 'TestResources' folder in the unit test
+        output.
+        -->
+        <Content Include="..\TestResources\**\*.*">
+            <Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

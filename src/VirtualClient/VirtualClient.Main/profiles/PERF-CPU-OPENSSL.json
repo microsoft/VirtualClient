@@ -5,13 +5,13 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
-    "Parameters": {},
+    "Parameters": { },
     "Actions": [
         {
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "MD5",
-                "CommandArguments": "speed -elapsed -seconds 100 md5",
+                "CommandArguments": "speed -elapsed -seconds 5 md5",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -20,7 +20,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA1",
-                "CommandArguments": "speed -elapsed -seconds 100 sha1",
+                "CommandArguments": "speed -elapsed -seconds 5 sha1",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -29,7 +29,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA256",
-                "CommandArguments": "speed -elapsed -seconds 100 sha256",
+                "CommandArguments": "speed -elapsed -seconds 5 sha256",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -38,7 +38,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA512",
-                "CommandArguments": "speed -elapsed -seconds 100 sha512",
+                "CommandArguments": "speed -elapsed -seconds 5 sha512",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -47,7 +47,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "DES-EDE3",
-                "CommandArguments": "speed -elapsed -seconds 100 des-ede3",
+                "CommandArguments": "speed -elapsed -seconds 5 des-ede3",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -56,7 +56,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-128-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 aes-128-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -65,7 +65,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-192-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 aes-192-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -74,7 +74,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-256-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 aes-256-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -83,7 +83,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-128-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 camellia-128-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -92,7 +92,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-192-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 camellia-192-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -101,7 +101,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-256-cbc",
+                "CommandArguments": "speed -elapsed -seconds 5 camellia-256-cbc",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -110,7 +110,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "RSA2048",
-                "CommandArguments": "speed -elapsed -seconds 100 rsa2048",
+                "CommandArguments": "speed -elapsed -seconds 5 rsa2048",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -119,7 +119,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "RSA4096",
-                "CommandArguments": "speed -elapsed -seconds 100 rsa4096",
+                "CommandArguments": "speed -elapsed -seconds 5 rsa4096",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }

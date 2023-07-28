@@ -22,7 +22,9 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -546,17 +548,14 @@ namespace VirtualClient
                 ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
             });
 
-            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+            IDictionary<string, object> metadata = new Dictionary<string, object>();
 
             if (this.Metadata?.Any() == true)
             {
                 this.Metadata.ToList().ForEach(entry =>
                 {
-                    string key = entry.Key.CamelCased();
-                    this.Metadata[key] = entry.Value;
+                    metadata[entry.Key] = entry.Value;
                 });
-
-                metadata.AddRange(this.Metadata.ObscureSecrets());
             }
 
             // For backwards compatibility, ensure that the experiment ID and agent ID
@@ -566,7 +565,7 @@ namespace VirtualClient
             metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
             metadata["agentId"] = this.AgentId;
 
-            EventContext.PersistentProperties["metadata"] = metadata;
+            EventContext.PersistentProperties["metadata"] = metadata.ObscureSecrets();
         }
 
         /// <summary>
@@ -591,6 +590,7 @@ namespace VirtualClient
         protected void SetGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
         {
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            ILogger logger = dependencies.GetService<ILogger>();
 
             string profile = profiles.First();
             string profileName = Path.GetFileName(profile);
@@ -609,10 +609,34 @@ namespace VirtualClient
                 ["executionProfilePath"] = profileFullPath
             });
 
-            IDictionary<string, IConvertible> systemInfo = systemManagement.GetSystemMetadataAsync(CancellationToken.None)
+            IDictionary<string, object> hwMetadata = systemManagement.GetCpuMetadataAsync(logger)
                 .GetAwaiter().GetResult();
 
-            EventContext.PersistentProperties["systemInfo"] = systemInfo;
+            IDictionary<string, object> hostMetadata = systemManagement.GetHostMetadataAsync(logger)
+                .GetAwaiter().GetResult();
+
+            IDictionary<string, object> memoryMetadata = systemManagement.GetMemoryMetadataAsync(logger)
+                .GetAwaiter().GetResult();
+
+            IDictionary<string, object> networkInterfaceMetadata = systemManagement.GetNetworkInterfaceMetadataAsync(logger)
+                .GetAwaiter().GetResult();
+
+            hwMetadata.AddRange(memoryMetadata);
+            hwMetadata.AddRange(networkInterfaceMetadata);
+
+            EventContext.PersistentProperties[MetadataContractExtensions.CategoryHardware] = hwMetadata;
+            EventContext.PersistentProperties[MetadataContractExtensions.CategoryHost] = hostMetadata;
+            EventContext.PersistentProperties[MetadataContractExtensions.CategoryRuntime] = new Dictionary<string, object>
+            {
+                { "exitWait", this.ExitWait },
+                { "layout", this.LayoutPath },
+                { "logToFile", this.LogToFile },
+                { "iterations", this.Iterations?.ProfileIterations },
+                { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
+                { "timeout", this.Timeout?.Duration },
+                { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
+                { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
+            };
         }
 
         private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)

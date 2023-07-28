@@ -6,8 +6,6 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net.NetworkInformation;
-    using System.Runtime.CompilerServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -19,7 +17,7 @@ namespace VirtualClient
     /// Provides methods for editing expressions associated with profile 
     /// components and parameters
     /// </summary>
-    public static class ProfileExpressionEvaluator
+    public class ProfileExpressionEvaluator : IExpressionEvaluator
     {
         // e.g.
         // {fn(512 / 16)]}
@@ -221,12 +219,21 @@ namespace VirtualClient
             })
         };
 
+        private ProfileExpressionEvaluator()
+        {
+        }
+
+        /// <summary>
+        /// The singleton instance of the <see cref="ProfileExpressionEvaluator"/> class.
+        /// </summary>
+        public static ProfileExpressionEvaluator Instance { get; } = new ProfileExpressionEvaluator();
+
         /// <summary>
         /// Returns true/false whether the text contains an expression reference (e.g. --port={Port} --threads={LogicalCoreCount}).
         /// </summary>
         /// <param name="text">The text to check for expressions.</param>
         /// <returns>True if the text contains expressions to evaluate.</returns>
-        public static bool ContainsReference(string text)
+        public bool ContainsReference(string text)
         {
             return ProfileExpressionEvaluator.GeneralExpression.IsMatch(text);
         }
@@ -236,7 +243,7 @@ namespace VirtualClient
         /// </summary>
         /// <param name="parameters">A set of parameters to check for expression references.</param>
         /// <returns>True if the parameters contain at least 1 expression to evaluate.</returns>
-        public static bool ContainsReferences(IDictionary<string, IConvertible> parameters)
+        public bool ContainsReferences(IDictionary<string, IConvertible> parameters)
         {
             bool containsReferences = false;
             if (parameters?.Any() == true)
@@ -262,32 +269,9 @@ namespace VirtualClient
         /// </summary>
         /// <param name="dependencies">Provides dependencies required for evaluating expressions.</param>
         /// <param name="text">The text having expressions to evaluate.</param>
-        /// <returns>Text having any expressions evaluated and replaced with values.</returns>
-        public static string Evaluate(IServiceCollection dependencies, string text)
-        {
-            return ProfileExpressionEvaluator.EvaluateAsync(dependencies, text, CancellationToken.None)
-                .GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Evaluates any expressions within the set of parameters provided.
-        /// </summary>
-        /// <param name="dependencies">Provides dependencies required for evaluating expressions.</param>
-        /// <param name="parameters">A set of parameters that may have expressions to evaluate.</param>
-        public static void Evaluate(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
-        {
-            ProfileExpressionEvaluator.EvaluateAsync(dependencies, parameters, CancellationToken.None)
-                .GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Evaluates the expression and returns the results.
-        /// </summary>
-        /// <param name="dependencies">Provides dependencies required for evaluating expressions.</param>
-        /// <param name="text">The text having expressions to evaluate.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
         /// <returns>Text having any expressions evaluated and replaced with values.</returns>
-        public static async Task<string> EvaluateAsync(IServiceCollection dependencies, string text, CancellationToken cancellationToken)
+        public async Task<string> EvaluateAsync(IServiceCollection dependencies, string text, CancellationToken cancellationToken = default(CancellationToken))
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
@@ -301,7 +285,7 @@ namespace VirtualClient
         /// <param name="dependencies">Provides dependencies required for evaluating expressions.</param>
         /// <param name="parameters">A set of parameters that may have expressions to evaluate.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        public static async Task EvaluateAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, CancellationToken cancellationToken)
+        public async Task EvaluateAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Priority of Parameter evaluation
             // 1) Parameter replacements that are defined within the parameter set itself.
@@ -323,7 +307,7 @@ namespace VirtualClient
 
             int maxIterations = 5;
             int iterations = 0;
-            while (ProfileExpressionEvaluator.ContainsReferences(parameters) && iterations < maxIterations)
+            while (this.ContainsReferences(parameters) && iterations < maxIterations)
             {
                 iterations++;
 
