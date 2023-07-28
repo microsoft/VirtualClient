@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO.Packaging;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -81,7 +82,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled));
+                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled), false);
             }
         }
 
@@ -93,6 +94,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of server instances/copies to run.
+        /// </summary>
+        public string RedisResourcesPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.RedisResourcesPackageName));
             }
         }
 
@@ -112,6 +124,11 @@ namespace VirtualClient.Actions
         /// Path to Redis server executable.
         /// </summary>
         protected string RedisExecutablePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis resources.
+        /// </summary>
+        protected string RedisResourcesPath { get; set; }
 
         /// <summary>
         /// Path to Redis server package.
@@ -214,6 +231,12 @@ namespace VirtualClient.Actions
             this.RedisExecutablePath = this.Combine(this.RedisPackagePath, "src", "redis-server");
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
+
+            if (this.IsTLSEnabled)
+            {
+                DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
+                this.RedisResourcesPath = redisResourcesPath.Path;
+            }
 
             this.InitializeApiClients();
         }
@@ -352,7 +375,7 @@ namespace VirtualClient.Actions
 
                         if (this.IsTLSEnabled)
                         {
-                            commandArguments += $" --tls-port {port} --port 0";
+                            commandArguments += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
                         }
                         else
                         {

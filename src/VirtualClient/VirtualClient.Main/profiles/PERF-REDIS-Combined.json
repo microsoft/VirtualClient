@@ -1,5 +1,5 @@
 {
-    "Description": "Redis Benchmark with TLS",
+    "Description": "Redis Benchmark with TLS and without TLS",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
@@ -11,7 +11,8 @@
     "ServerThreadCount": 4,
     "ServerInstances": "{LogicalCoreCount}",
     "ClientInstances": 1,
-    "IsTLSEnabled": true,
+    "IsTLSEnabled": true, // remove and get this value from BUILD_TLS in code
+    "BUILD_TLS": "yes",
     "Duration": "00:02:00"
   },
     "Actions": [
@@ -20,12 +21,13 @@
           "Parameters": {
             "Scenario": "redis_server_tls",
             "PackageName": "redis",
-            "CommandLine": "--tls-cert-file {PackagePath:redisresources}/redis.crt   --tls-key-file {PackagePath:redisresources}/redis.key --tls-ca-cert-file {PackagePath:redisresources}/ca.crt --protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+            "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "ServerInstances": "$.Parameters.ServerInstances",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
+            "RedisResourcesPackageName": "redisresources",
             "Role": "Server"
           }
         },
@@ -34,7 +36,7 @@
           "Parameters": {
             "Scenario": "warmup_32b_pool",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
             "ClientInstances": 1,
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
@@ -46,7 +48,7 @@
           "Parameters": {
             "Scenario": "warmup_1kb_pool",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
             "ClientInstances": 1,
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
@@ -58,7 +60,7 @@
           "Parameters": {
             "Scenario": "warmup_10kb_pool",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
+            "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
             "ClientInstances": 1,
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
@@ -70,9 +72,10 @@
           "Parameters": {
             "Scenario": "memtier_8t_16c_32b_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 8 --clients 16  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 8 --clients 16  --ratio 1:1 --data-size 32 --pipeline 100  --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -81,9 +84,10 @@
           "Parameters": {
             "Scenario": "memtier_8t_16c_1kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -92,7 +96,7 @@
           "Parameters": {
             "Scenario": "memtier_8t_16c_10kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "  --protocol redis --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
             "Role": "Client"
@@ -103,9 +107,10 @@
           "Parameters": {
             "Scenario": "memtier_16t_16c_32b_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -114,9 +119,10 @@
           "Parameters": {
             "Scenario": "memtier_16t_16c_1kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -125,9 +131,10 @@
           "Parameters": {
             "Scenario": "memtier_16t_16c_10kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -136,9 +143,10 @@
           "Parameters": {
             "Scenario": "memtier_32t_16c_32b_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -147,9 +155,10 @@
           "Parameters": {
             "Scenario": "memtier_32t_16c_1kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         },
@@ -158,9 +167,10 @@
           "Parameters": {
             "Scenario": "memtier_32t_16c_10kb_r1:1",
             "PackageName": "memtier",
-            "CommandLine": "--tls --cert {PackagePath:redisresources}/redis.crt --key {PackagePath:redisresources}/redis.key --cacert {PackagePath:redisresources}/ca.crt --protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "CommandLine": "--protocol redis --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
             "ClientInstances": "$.Parameters.ClientInstances",
             "Duration": "$.Parameters.Duration",
+            "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "Role": "Client"
           }
         }
@@ -209,7 +219,8 @@
       "Parameters": {
         "Scenario": "CompileRedis",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "Command": "make BUILD_TLS=yes",
+        "BUILD_TLS": "$.Parameters.BUILD_TLS",
+        "Command": "make BUILD_TLS={BUILD_TLS}",
         "WorkingDirectory": "{PackagePath:redis}"
       }
     },
