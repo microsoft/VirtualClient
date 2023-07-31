@@ -238,7 +238,7 @@ namespace VirtualClient.Actions
 
                         this.Logger.LogMetrics(
                             toolName: "Sysbench",
-                            scenarioName: "OLTP",
+                            scenarioName: "OLTP " + this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
@@ -339,7 +339,7 @@ namespace VirtualClient.Actions
 
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
-                
+
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
@@ -373,7 +373,7 @@ namespace VirtualClient.Actions
             // client work in the balanced scenario includes copying all tables from OS disk to data disk,
             // dropping old tables & renaming them
 
-            string balancedScript = "balancedClient.sh";
+            string balancedScript = "balanced-Client.sh";
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
             string balancedArguments = $"{this.ServerIpAddress} 10 {this.DatabaseName} {diskPaths}";
 

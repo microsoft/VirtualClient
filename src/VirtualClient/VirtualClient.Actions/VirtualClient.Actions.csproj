@@ -34,6 +34,12 @@
 	<ScriptFiles Include="SysbenchOLTP\*.sh" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ScriptFiles Remove="SysbenchOLTP\balanced-Client.sh" />
+      <ScriptFiles Remove="SysbenchOLTP\balanced-Server.sh" />
+      <ScriptFiles Remove="SysbenchOLTP\in-Memory.sh" />
+    </ItemGroup>
+
     <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">
         <Message Importance="high" Text="Publish workload scripts/content..." />
 

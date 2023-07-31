@@ -95,9 +95,9 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Server.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Client.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/in-Memory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -161,9 +161,9 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Server.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Client.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/in-Memory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -237,16 +237,16 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Server.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Client.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/in-Memory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo {this.scriptPath}/balancedClient.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
+                $"sudo {this.scriptPath}/balanced-Client.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
@@ -295,9 +295,9 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Server.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Client.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/in-Memory.sh\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -361,9 +361,9 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balancedClient.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/inMemory.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Server.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/balanced-Client.sh\"",
+                $"sudo chmod +x \"{this.scriptPath}/in-Memory.sh\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
             };
 
