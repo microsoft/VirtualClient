@@ -78,11 +78,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// True if TLS is enabled.
         /// </summary>
-        public bool IsTLSEnabled
+        public string IsTLSEnabled
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled), false);
+                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
             }
         }
 
@@ -213,6 +213,10 @@ namespace VirtualClient.Actions
                     this.SetServerOnline(false);
                     throw;
                 }
+                finally
+                {
+                    await this.KillServerInstancesAsync(cancellationToken);
+                }
             });
         }
 
@@ -232,7 +236,7 @@ namespace VirtualClient.Actions
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
 
-            if (this.IsTLSEnabled)
+            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
@@ -373,7 +377,7 @@ namespace VirtualClient.Actions
                             commandArguments = $"-c \"{this.RedisExecutablePath}";
                         }
 
-                        if (this.IsTLSEnabled)
+                        if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
                         {
                             commandArguments += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
                         }

@@ -22,7 +22,7 @@
             "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save &",
             "BindToCores": true,
             "Port": "$.Parameters.ServerPort",
-            "IsTLSEnabled": false,
+            "IsTLSEnabled": "no",
             "ServerInstances": "$.Parameters.ServerInstances",
             "ServerThreadCount": "$.Parameters.ServerThreadCount",
             "Role": "Server"

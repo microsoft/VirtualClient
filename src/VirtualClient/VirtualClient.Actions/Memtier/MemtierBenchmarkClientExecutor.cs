@@ -103,13 +103,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// True if TLS is enabled.
+        /// yes if TLS is enabled.
         /// </summary>
-        public bool IsTLSEnabled
+        public string IsTLSEnabled
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled), false);
+                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
             }
         }
 
@@ -258,7 +258,7 @@ namespace VirtualClient.Actions
                 this.Benchmark = "Redis";
             }
 
-            if (this.IsTLSEnabled)
+            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
@@ -346,7 +346,7 @@ namespace VirtualClient.Actions
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            if (this.IsTLSEnabled)
+                            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
                             {
                                 commandArguments = $"--server {serverIPAddress} --port {serverPort} --tls --cert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}  --key {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --cacert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")} {this.CommandLine}";
                             }

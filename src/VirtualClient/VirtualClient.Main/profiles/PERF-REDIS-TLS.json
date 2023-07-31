@@ -11,7 +11,7 @@
     "ServerThreadCount": 4,
     "ServerInstances": "{LogicalCoreCount}",
     "ClientInstances": 1,
-    "IsTLSEnabled": true,
+    "IsTLSEnabled": "yes",
     "Duration": "00:02:00"
   },
     "Actions": [
