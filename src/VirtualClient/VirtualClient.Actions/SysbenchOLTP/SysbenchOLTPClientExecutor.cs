@@ -82,6 +82,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The workload option passed to Sysbench.
+        /// </summary>
+        public string NumTables
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.NumTables), 10);
+            }
+        }
+
+        /// <summary>
         /// Number of records per table.
         /// </summary>
         public string RecordCount
@@ -217,8 +228,8 @@ namespace VirtualClient.Actions
 
             // set arguments & path up based on prepare arguments in profile
 
-            this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
