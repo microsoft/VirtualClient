@@ -49,7 +49,7 @@ namespace VirtualClient.Contracts
             Match threadsPerCore = LscpuParser.ThreadsPerCoreExpression.Match(this.RawText);
             Match numaNodes = LscpuParser.NumaNodeExpression.Match(this.RawText);
 
-            if (!modelName.Success || !coresPerSocket.Success || !cpus.Success || !sockets.Success || !threadsPerCore.Success)
+            if (!coresPerSocket.Success || !cpus.Success || !sockets.Success || !threadsPerCore.Success)
             {
                 throw new WorkloadException(
                     $"The system CPU information could not be parsed from the 'lscpu' toolset output.",
@@ -61,14 +61,20 @@ namespace VirtualClient.Contracts
             int socketCores = int.Parse(coresPerSocket.Groups[1].Value.Trim());
             bool hyperthreadingEnabled = int.Parse(threadsPerCore.Groups[1].Value.Trim()) > 1;
             int numaNodeCount = 0;
+            string modelname = string.Empty;
 
             if (numaNodes.Success)
             {
                 numaNodeCount = int.Parse(numaNodes.Groups[1].Value.Trim());
             }
 
+            if (modelName.Success)
+            {
+                modelname = modelName.Groups[1].Value.Trim();
+            }
+
             return new CpuInfo(
-                modelName.Groups[1].Value.Trim(),
+                modelname,
                 null,
                 socketCount * socketCores,
                 logicalProcessorCount,

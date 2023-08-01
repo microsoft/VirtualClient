@@ -44,5 +44,21 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
         }
+
+        [Test]
+        public void LscpuParserParsesTheExpectedResultsFromAWSSystems_Scenario3()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results3.txt"));
+            LscpuParser parser = new LscpuParser(results);
+            CpuInfo info = parser.Parse();
+
+            Assert.IsNotNull(info);
+            Assert.IsNull(info.Description);
+            Assert.AreEqual(2, info.LogicalCoreCount);
+            Assert.AreEqual(2, info.PhysicalCoreCount);
+            Assert.AreEqual(1, info.SocketCount);
+            Assert.AreEqual(1, info.NumaNodeCount);
+            Assert.IsFalse(info.IsHyperthreadingEnabled);
+        }
     }
 }
