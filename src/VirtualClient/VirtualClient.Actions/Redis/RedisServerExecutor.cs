@@ -213,10 +213,6 @@ namespace VirtualClient.Actions
                     this.SetServerOnline(false);
                     throw;
                 }
-                finally
-                {
-                    await this.KillServerInstancesAsync(cancellationToken);
-                }
             });
         }
 

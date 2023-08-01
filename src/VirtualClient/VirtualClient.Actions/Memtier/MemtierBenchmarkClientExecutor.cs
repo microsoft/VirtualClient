@@ -458,16 +458,9 @@ namespace VirtualClient.Actions
                 {
                     @".*\/memtier_benchmark",
                     @"--port\s+\d+",
-                    @"--protocol\s+\w+",
                     @"--key-prefix\s+\w+",
-                    @"--test-time\s+\d+",
-                    @"--key-minimum\s+\d+",
-                    @"--key-maximum\s+\d+",
-                    @"--key-prefix\s+\w+",
-                    @"--key-pattern\s+\w+:\w+",
-                    @"--run-count\s+\d+",
-                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
-                    @"--tls",
+                    @"--key-prefix\s+\w+", 
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+", 
                     @"--cert\s+.*\.crt",
                     @"--key\s+.*\.key",
                     @"--cacert\s+.*\.crt",
@@ -478,9 +471,7 @@ namespace VirtualClient.Actions
                 command = Regex.Replace(command, regexPattern, string.Empty);
             }
 
-            command = Regex.Replace(command, @"\s+", " "); // Remove extra spaces
-
-            Console.WriteLine($"final command without performance affecting values {command.Trim()}");
+            command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
             return command.Trim();
         }

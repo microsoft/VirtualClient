@@ -93,7 +93,6 @@ namespace VirtualClient.Dependencies
                 switch (distroInfo.LinuxDistribution)
                 {
                     case LinuxDistribution.Ubuntu:
-                        // case LinuxDistribution.Debian:
                         break;
 
                     default:
@@ -129,7 +128,6 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallOnUbuntuAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // change this in such a way if version is mentioned then installed specified version. and if some issue occurs then give exception message that particular version is not available in current sources.
             if (this.Version != string.Empty)
             {
                 this.installRedisCommand = $"install redis={this.Version} -y";
@@ -151,7 +149,6 @@ namespace VirtualClient.Dependencies
             await this.ExecuteCommandAsync("cp", $"/usr/bin/redis-server {this.PlatformSpecifics.Combine(this.PackagePath, "src")}", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
-            // create a dependency path
             DependencyPath redisPackage = new DependencyPath(this.PackageName, this.PackagePath);
             await this.systemManager.PackageManager.RegisterPackageAsync(redisPackage, cancellationToken)
                             .ConfigureAwait(false);
