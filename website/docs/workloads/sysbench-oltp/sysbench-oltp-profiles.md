@@ -46,6 +46,47 @@ idea. The name of the client must match the name of the system or the value of t
 }
 ```
 
+## Balanced/In Memory Scenario Support
+In addition to the standard configuration, Virtual Client offers two tuned scenarios to run the SysbenchOLTP workload under: Balanced and In-Memory.
+
+* **Balanced**: The database size is about twice as big as the memory/RAM on the system. Half of the database will fit in memory, and half will fit on disk.
+  Target CPU usage is about 40-60% with somewhat heavy disk I/O usage. The configuration supports 1-4 additional data disks, and the database will be
+  distributed among the disks as proportionately as possible.
+* **In-Memory**: The database size is just about the size of the memory/RAM on the system. Target CPU usage is about 80-90%, with a significant amount of disk
+  I/O usage.
+
+A database scenario can be selected by denoting it in the profile. Note that the DatabaseScenario option is required in both the SysbenchOLTPServerExecutor and the SysbenchOLTPClientExecutor for the Balanced Scenario -- there is preparation needed on both the client and the server to configure the balanced scenario. For the In Memory scenario, it simply needs to be denoted on the SysbenchOLTPServerExecutor.
+
+It is highly recommended to use the default thread and record count values when utilizing one of these scenarios. For the Balanced Scenario, the default is 1 thread and 10^vCPU number of records. For the In Memory Scenario, the presets are listed below, under 'Profile Parameters'.
+
+``` bash
+{
+  "Type": "SysbenchOLTPServerExecutor",
+  "Parameters": 
+  {
+      "Scenario": "mysql_server",
+      "DatabaseScenario": "Balanced",
+      "Role": "Server"
+  }
+},
+{
+  "Type": "SysbenchOLTPClientExecutor",
+  "Parameters": 
+  {
+    "Scenario": "oltp_read_write_T8_TB16_REC500",
+    "DatabaseName": "sbtest",
+    "DatabaseScenario": "Balanced",
+    "Role": "Client",
+    "Threads": "8",
+    "NumTables": "16",
+    "RecordCount": "500",
+    "DurationSecs": "1800",
+    "Workload": "oltp_read_write",
+    "PackageName": "sysbench"
+  }
+},
+```
+
 ## PERF-MYSQL-SYSBENCH-OLTP.json
 Runs a system-intensive workload using the Sysbench Benchmark to test the bandwidth of CPU, Memory, and Disk I/O.
 
@@ -71,6 +112,11 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | Parameter                 | Purpose                                                                                                                 |Default      |
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
   | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
+  | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Default          |
+  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8         |
+  | RecordCount              | Not Required. Number of records per table in the database.                                                      | 10^(vCPU + 2)         |
+  | DurationSecs              | Required. Duration, in seconds, to run the workload.                                                               | N/A          |
+  | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

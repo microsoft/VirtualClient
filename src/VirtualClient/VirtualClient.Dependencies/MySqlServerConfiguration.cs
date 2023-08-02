@@ -223,7 +223,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
@@ -237,7 +237,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }

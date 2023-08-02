@@ -1,0 +1,2 @@
+﻿GPUCoreFLOPs
+14.501 TFLOPs

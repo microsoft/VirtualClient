@@ -58,12 +58,13 @@
         NuGet package in the /content/win-x64|win-arm64/profiles folder
         -->
         <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
+	<WindowsProfiles Include="profiles\DEPENDENCY-AMD-GPU-DRIVER.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
-		<WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
+	<WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
@@ -125,7 +126,6 @@
         <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
         <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
-        <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP-ARM64.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS.json" />
         <LinuxProfiles Include="profiles\PERF-REDIS-TLS.json" />
         <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
