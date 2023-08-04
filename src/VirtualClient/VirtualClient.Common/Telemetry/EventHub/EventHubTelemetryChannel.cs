@@ -12,7 +12,6 @@ namespace VirtualClient.Common.Telemetry
     using System.Threading.Tasks;
     using global::Azure.Messaging.EventHubs;
     using global::Azure.Messaging.EventHubs.Producer;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -24,11 +23,6 @@ namespace VirtualClient.Common.Telemetry
     /// </remarks>
     public class EventHubTelemetryChannel : IEnumerable<EventData>, IFlushableChannel, IDisposable
     {
-        /// <summary>
-        /// The default interval at which buffered events will be transmitted.
-        /// </summary>
-        public static readonly TimeSpan DefaultAutoFlushSendInterval = TimeSpan.FromSeconds(30);
-
         // Each EventDataBatch has a limit of one megabyte, regardless of the number of
         // EventData objects within. An offset of 16 bytes seems to allow for the size of
         // an EventData object with its contents being the remainder of the megabyte.
@@ -59,7 +53,6 @@ namespace VirtualClient.Common.Telemetry
             client.ThrowIfNull(nameof(client));
 
             this.Client = client;
-            this.AutoFlushSendInterval = EventHubTelemetryChannel.DefaultAutoFlushSendInterval;
             this.Buffer = new Queue<EventData>();
 
             this.minCapacity = EventHubTelemetryChannel.DefaultMinCapacity;
@@ -93,11 +86,6 @@ namespace VirtualClient.Common.Telemetry
         /// subsequent retries.
         /// </summary>
         public event EventHandler<EventHubChannelEventArgs> EventTransmissionError;
-
-        /// <summary>
-        /// The interval between sending telemetry.
-        /// </summary>
-        public TimeSpan AutoFlushSendInterval { get; set; }
 
         /// <summary>
         /// Gets the count of the events in the telemetry channel buffer.
@@ -279,12 +267,7 @@ namespace VirtualClient.Common.Telemetry
                 {
                     this.cancellationTokenSource.Cancel();
                     this.autoFlushWaitHandle.Set();
-
-                    if (this.transmissionAutoSendTask != null)
-                    {
-                        Task.WhenAny(this.transmissionAutoSendTask, Task.Delay(this.AutoFlushSendInterval))
-                            .GetAwaiter().GetResult();
-                    }
+                    this.transmissionAutoSendTask?.GetAwaiter().GetResult();
 
                     this.cancellationTokenSource.Dispose();
                     this.autoFlushWaitHandle.Dispose();
@@ -304,7 +287,11 @@ namespace VirtualClient.Common.Telemetry
         /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         protected virtual Task TransmitBatchAsync(IEnumerable<EventData> eventDataBatch)
         {
-            return this.Client.SendAsync(eventDataBatch, this.sendEventOptions, this.cancellationTokenSource.Token);
+            // Context on CancellationToken.None Here:
+            // We purposefully DO NOT honor the channel CancellationToken here. We do not want the
+            // transmission logic to exit on cancellation but to keep trying to get the telemetry through.
+            // We prefer a delayed exit of the application to losing telemetry.
+            return this.Client.SendAsync(eventDataBatch, this.sendEventOptions, CancellationToken.None);
         }
 
         /// <summary>
@@ -376,8 +363,6 @@ namespace VirtualClient.Common.Telemetry
             }
         }
 
-        [SuppressMessage("Naming", "AZCA1002:AsyncMethodNaming Rule", Justification = "Naming convention matches desired intent.")]
-        [SuppressMessage("Reliability", "CA2008:Do not create tasks without passing a TaskScheduler", Justification = "A scheduler is defined.")]
         private Task StartEventTransmissionBackgroundTask()
         {
             return Task.Factory.StartNew(this.TransmitEventsInTheBackground, this.cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
@@ -391,10 +376,11 @@ namespace VirtualClient.Common.Telemetry
 
         private void TransmitEventsInTheBackground()
         {
+            TimeSpan waitInterval = TimeSpan.FromMilliseconds(100);
             while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 // Waiting for the flush delay to elapse
-                this.autoFlushWaitHandle.WaitOne(this.AutoFlushSendInterval);
+                this.autoFlushWaitHandle.WaitOne(waitInterval);
 
                 // Pulling all items from the buffer and sending as one transmission.
                 this.TransmitEvents();

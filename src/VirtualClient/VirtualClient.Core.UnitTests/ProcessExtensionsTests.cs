@@ -4,6 +4,7 @@
 namespace VirtualClient
 {
     using System;
+    using System.Text.RegularExpressions;
     using NUnit.Framework;
     using VirtualClient.Common;
 
@@ -81,6 +82,170 @@ namespace VirtualClient
 
             Assert.Throws<NotSupportedException>(
                 () => this.mockFixture.ProcessManager.CreateElevatedProcess(PlatformID.Win32NT, "anycommand", "anyarguments", "anydir", "anyusername"));
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedException_1()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("An error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>());
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
+
+            Assert.AreEqual(
+                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedException_2()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("An error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
+
+            Assert.AreEqual(
+                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedException_3()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("An error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed.", ErrorReason.WorkloadFailed));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
+
+            Assert.AreEqual(
+                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedException_4()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardOutput.Append("Unable to complete operation.");
+            this.mockFixture.Process.StandardError.Append("An error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>());
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
+
+            Assert.AreEqual(
+                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardOutput: {this.mockFixture.Process.StandardOutput}" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedException_5()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardOutput.Append("Unable to complete operation.");
+            this.mockFixture.Process.StandardError.Append("An error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>("Command execution failed."));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
+
+            Assert.AreEqual(
+                $"Command execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardOutput: {this.mockFixture.Process.StandardOutput}" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedExceptionWhenMatchesAreFound_1()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("specific error")));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.Undefined, exception.Reason);
+
+            Assert.AreEqual(
+                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionThrowsTheExpectedExceptionWhenMatchesAreFound_2()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+
+            WorkloadException exception = Assert.Throws<WorkloadException>(
+                () => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(errorReason: ErrorReason.WorkloadFailed, expressions: new Regex("specific error")));
+
+            Assert.IsNotNull(exception);
+            Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
+
+            Assert.AreEqual(
+                $"Process execution failed (error/exit code=1, command={this.mockFixture.Process.StartInfo.FileName} {this.mockFixture.Process.StartInfo.Arguments})." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"StandardError: {this.mockFixture.Process.StandardError}",
+                exception.Message);
+        }
+
+        [Test]
+        public void ThrowOnStandardErrorExtensionDoesNotThrowAnExceptionWhenMatchesAreNotFound()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            this.mockFixture.Process.ExitCode = 1;
+            this.mockFixture.Process.StandardError.Append("A specific error occurred.");
+
+            Assert.DoesNotThrow(() => this.mockFixture.Process.ThrowOnStandardError<WorkloadException>(expressions: new Regex("some other error")));
         }
     }
 }

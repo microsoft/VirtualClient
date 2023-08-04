@@ -6,6 +6,7 @@ namespace VirtualClient.Dependencies
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -43,6 +44,7 @@ namespace VirtualClient.Dependencies
         private TestComponent component;
         private Mock<ProcessManager> mockProcessManager;
         private State mockState;
+        private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupTests()
@@ -54,15 +56,6 @@ namespace VirtualClient.Dependencies
         public void TearDown()
         {
             this.component.Dispose();
-        }
-
-        [Test]
-        public void CUDAAndNvidiaGPUDriverInstallationDependencyThrowsForPlatformsOtherThanUnix()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT, "11.6");
-
-            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
         }
 
         [Test]
@@ -82,10 +75,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecute(string version)
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyStartsCorrectProcessesOnExecute()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
@@ -103,10 +95,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyDoesNotInstallCUDAAndNvidiaGPUDriverIfAlreadyInstalled(string version)
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyDoesNotInstallCUDAAndNvidiaGPUDriverIfAlreadyInstalled()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.fixture.StateManager.OnGetState(nameof(CudaAndNvidiaGPUDriverInstallation)).ReturnsAsync(JObject.FromObject(this.mockState));
 
@@ -117,10 +108,9 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase("11.6")]
-        public void CUDAAndNvidiaGPUDriverInstallationDependencySurfacesExceptionWhenProcessDoesNotExitSuccessfullyOnExecute(string version)
+        public void CUDAAndNvidiaGPUDriverInstallationDependencySurfacesExceptionWhenProcessDoesNotExitSuccessfullyOnExecute()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, version);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
 
             this.SetupProcessManager("sudo", UpdateCommand, Environment.CurrentDirectory);
             this.SetupProcessManager("sudo", BuildEssentialInstallationCommand, Environment.CurrentDirectory);
@@ -138,17 +128,45 @@ namespace VirtualClient.Dependencies
             Assert.AreEqual(ErrorReason.DependencyInstallationFailed, exc.Reason);
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID, string version = "")
+        [Test]
+        public async Task CUDAAndNvidiaGPUDriverInstallationDependencyExecutesCorrectInsatllerCommandOnWindows()
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
+            this.fixture.Parameters["packageName"] = "NvidiaDrivers";
+            this.fixture.Directory.Setup(di => di.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.fixture.FileSystem.Setup(fe => fe.FileStream.New(It.IsAny<string>(), FileMode.Create, FileAccess.Write, FileShare.None))
+                .Returns(new Mock<InMemoryFileSystemStream>().Object);
+
+            this.fixture.FileSystem.Setup(fe => fe.Directory.GetFiles(It.IsAny<string>(), It.IsAny<string>(), SearchOption.AllDirectories))
+                .Returns(new string[] { this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe") });
+
+            this.fixture.FileSystem.Setup(fe => fe.Directory.GetCurrentDirectory())
+                .Returns(this.mockPackage.Path);
+
+            this.SetupProcessManager(this.fixture.Combine(this.mockPackage.Path, "nvidiaDriversInstaller.exe"), "-y -s", Environment.CurrentDirectory);
+
+            this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
+
+            await this.component.ExecuteAsync(CancellationToken.None);
+            this.mockProcessManager.Verify();                            
+        }
+
+        private void SetupDefaultMockBehavior(PlatformID platformID)
         {
             this.fixture.Setup(platformID);
-
+            this.mockPackage = new DependencyPath("NvidiaDrivers", this.fixture.GetPackagePath("NvidiaDrivers"));
+            this.fixture.PackageManager.OnGetPackage("NvidiaDrivers").ReturnsAsync(this.mockPackage);
             this.mockProcessManager = new Mock<ProcessManager>();
+
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { "CudaVersion", "11.6" },
-                { "DriverVersion", "510" },
+                { "LinuxCudaVersion", "11.6" },
+                { "LinuxDriverVersion", "510" },
                 { "Username", "anyuser" },
-                { "LocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" }
+                { "LinuxLocalRunFile", "https://developer.download.nvidia.com/compute/cuda/11.6.0/local_installers/cuda_11.6.0_510.39.01_linux.run" },
+                { "RebootRequired", false }
             };
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
@@ -190,6 +208,7 @@ namespace VirtualClient.Dependencies
             process.SetupGet(p => p.ExitCode).Returns(exitCode);
             process.SetupGet(p => p.HasExited).Returns(true);
             process.SetupGet(p => p.StartInfo).Returns(new ProcessStartInfo());
+            process.SetupGet(p => p.ProcessDetails).Returns(new ProcessDetails());
             return process.Object;
         }
 

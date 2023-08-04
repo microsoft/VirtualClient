@@ -19,7 +19,9 @@
         <PackageReference Include="Serilog.Extensions.Logging" Version="$(Serilog_Extensions_Logging_PackageVersion)" />
         <PackageReference Include="Serilog.Sinks.File" Version="$(Serilog_Sinks_File_PackageVersion)" />
         <PackageReference Include="Serilog.Sinks.RollingFile" Version="$(Serilog_Sinks_RollingFile_PackageVersion)" />
+		<PackageReference Include="SSH.NET" Version="$(SSH_Net_PackageVersion)" />
         <PackageReference Include="System.Net.NameResolution" Version="$(System_Net_NameResolution_PackageVersion)" />
+
     </ItemGroup>
 
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />

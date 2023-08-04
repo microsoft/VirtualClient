@@ -10,7 +10,6 @@ namespace VirtualClient
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ namespace VirtualClient
     using VirtualClient.Configuration;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Proxy;
+    using VirtualClient.Logging;
     using VirtualClient.Proxy;
 
     /// <summary>
@@ -111,7 +111,7 @@ namespace VirtualClient
             EventHubTelemetryChannel channel = new EventHubTelemetryChannel(client, enableDiagnostics: true);
 
             DependencyFactory.telemetryChannels.Add(channel);
-            SystemManagement.CleanupTasks.Add(() => channel.Dispose());
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => channel.Dispose()));
             return channel;
         }
 
@@ -201,7 +201,31 @@ namespace VirtualClient
 
                 loggerProvider = new SerilogFileLoggerProvider(logConfiguration);
 
-                SystemManagement.CleanupTasks.Add(() => loggerProvider.Dispose());
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
+            }
+
+            return loggerProvider;
+        }
+
+        /// <summary>
+        /// Creates logger providers for writing telemetry to local CSV files.
+        /// </summary>
+        /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
+        public static ILoggerProvider CreateCsvFileLoggerProvider(string csvFilePath)
+        {
+            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
+
+            // 50MB
+            // General Sizing:
+            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
+            const long maxFileSizeBytes = 50000000;
+
+            ILoggerProvider loggerProvider = null;
+
+            if (!string.IsNullOrWhiteSpace(csvFilePath))
+            {
+                loggerProvider = new MetricsCsvFileLoggerProvider(csvFilePath, maxFileSizeBytes);
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             }
 
             return loggerProvider;
@@ -239,28 +263,35 @@ namespace VirtualClient
                 ILoggerProvider tracesLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.TracesFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleTraceEvents();
 
-                SystemManagement.CleanupTasks.Add(() => tracesLoggerProvider.Dispose());
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => tracesLoggerProvider.Dispose()));
                 loggerProviders.Add(tracesLoggerProvider);
 
                 // Metrics/Results
-                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(5), metricsExcludes)
+                ILoggerProvider metricsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsFileName), TimeSpan.FromSeconds(3), metricsExcludes)
                     .HandleMetricsEvents();
 
-                SystemManagement.CleanupTasks.Add(() => metricsLoggerProvider.Dispose());
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsLoggerProvider);
+
+                // Metrics/Results in CSV Format
+                ILoggerProvider metricsCsvLoggerProvider = DependencyFactory.CreateCsvFileLoggerProvider(Path.Combine(logFileDirectory, settings.MetricsCsvFileName))
+                    .HandleMetricsEvents();
+
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
+                loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Performance Counters
                 ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
                     .HandlePerformanceCounterEvents();
 
-                SystemManagement.CleanupTasks.Add(() => countersLoggerProvider.Dispose());
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => countersLoggerProvider.Dispose()));
                 loggerProviders.Add(countersLoggerProvider);
 
                 // System Events
-                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), excludes)
+                ILoggerProvider eventsLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.EventsFileName), TimeSpan.FromSeconds(5), excludes)
                     .HandleSystemEvents();
 
-                SystemManagement.CleanupTasks.Add(() => eventsLoggerProvider.Dispose());
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => eventsLoggerProvider.Dispose()));
                 loggerProviders.Add(eventsLoggerProvider);
             }
 
@@ -502,6 +533,7 @@ namespace VirtualClient
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(platform, architecture);
             IFileSystem fileSystem = new FileSystem();
             ProcessManager processManager = ProcessManager.Create(platform);
+            SshClientManager sshClientManager = new SshClientManager();
             IStateManager stateManager = new StateManager(fileSystem, platformSpecifics);
             IStateManager packageStateManager = new PackageStateManager(fileSystem, platformSpecifics);
 
@@ -515,6 +547,7 @@ namespace VirtualClient
                 PackageManager = new PackageManager(packageStateManager, fileSystem, platformSpecifics, logger),
                 PlatformSpecifics = platformSpecifics,
                 ProcessManager = processManager,
+                SshClientManager = sshClientManager,
                 StateManager = stateManager
             };
         }

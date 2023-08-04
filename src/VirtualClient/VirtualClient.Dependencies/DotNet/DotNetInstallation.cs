@@ -109,7 +109,7 @@ namespace VirtualClient.Dependencies
             EventContext relatedContext = telemetryContext.Clone();
             using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
             {
-                SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                this.CleanupTasks.Add(() => process.SafeKill());
                 this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.", EventContext.Persisted());
 
                 await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);

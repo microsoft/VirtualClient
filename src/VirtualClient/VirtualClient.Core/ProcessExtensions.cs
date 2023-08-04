@@ -7,6 +7,7 @@ namespace VirtualClient
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -223,44 +224,7 @@ namespace VirtualClient
 
             if (process.HasExited && !successCodes.Contains(process.ExitCode))
             {
-                string error = null;
-                string command = string.Empty;
-                if (process.StartInfo != null)
-                {
-                    command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
-                    ? $"{process.StartInfo.FileName} {process.StartInfo.Arguments}"
-                    : $"{process.StartInfo.FileName}";
-                }
-
-                if (errorMessage != null)
-                {
-                    error = $"{errorMessage.Trim().TrimEnd('.')} (error/exit code={process.ExitCode}, command={command}).";
-                }
-                else
-                {
-                    error = $"Process execution failed (error/exit code={process.ExitCode}, command={command}).";
-                }
-
-                if (process.StandardOutput?.Length > 0)
-                {
-                    error = $"{error}{Environment.NewLine}{Environment.NewLine}{"StandardOutput : "}{process.StandardOutput}";
-                }
-
-                if (process.StandardError?.Length > 0)
-                {
-                    error = $"{error}{Environment.NewLine}{Environment.NewLine}{"StandardError : "}{process.StandardError}";
-                }
-
-                try
-                {
-                    TError exception = (TError)Activator.CreateInstance(typeof(TError), error, errorReason);
-                    throw exception;
-                }
-                catch (MissingMethodException)
-                {
-                    throw new MissingMethodException(
-                        $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in the parameters supplied.");
-                }
+                process.ThrowErrored<TError>(errorMessage, errorReason);        
             }
         }
 
@@ -318,6 +282,113 @@ namespace VirtualClient
             successCodes.ThrowIfNullOrEmpty(nameof(successCodes));
             process.ThrowIfNull(nameof(process));
             process.ThrowIfErrored<WorkloadException>(successCodes, errorMessage ?? "Workload process execution failed.", errorReason);
+        }
+
+        /// <summary>
+        /// Throws an exception if the process has received any error information in standard error.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">Represents a process running on the system.</param>
+        /// <param name="errorReason">Represents a process running on the system.</param>
+        public static void ThrowOnStandardError<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
+            where TError : VirtualClientException
+        {
+            process.ThrowIfNull(nameof(process));
+            string standardError = process.StandardError?.ToString().Trim();
+
+            if (!string.IsNullOrWhiteSpace(standardError))
+            {
+                try
+                {
+                    process.ThrowErrored<TError>(errorMessage, errorReason);
+                }
+                catch (MissingMethodException)
+                {
+                    throw new MissingMethodException(
+                        $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in a single 'message' parameter.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Throws an exception if the process has received any error information in standard error.
+        /// </summary>
+        /// <param name="process">Represents a process running on the system.</param>
+        /// <param name="errorMessage">Represents a process running on the system.</param>
+        /// <param name="errorReason">Represents a process running on the system.</param>
+        /// <param name="expressions">A set of expressions to use for matching the contents of standard errors that represents failure cases.</param>
+        public static void ThrowOnStandardError<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined, params Regex[] expressions)
+            where TError : VirtualClientException
+        {
+            process.ThrowIfNull(nameof(process));
+            if (expressions?.Any() == true)
+            {
+                string standardError = process.StandardError?.ToString().Trim();
+
+                if (!string.IsNullOrWhiteSpace(standardError))
+                {
+                    try
+                    {
+                        foreach (Regex expression in expressions)
+                        {
+                            if (expression.IsMatch(standardError))
+                            {
+                                process.ThrowErrored<TError>(errorMessage, errorReason);
+                            }
+                        }
+                    }
+                    catch (MissingMethodException)
+                    {
+                        throw new MissingMethodException(
+                            $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in a single 'message' parameter.");
+                    }
+                }
+            }
+        }
+
+        private static void ThrowErrored<TError>(this IProcessProxy process, string errorMessage, ErrorReason errorReason)
+            where TError : VirtualClientException
+        {
+            process.ThrowIfNull(nameof(process));
+
+            string error = null;
+            string command = string.Empty;
+            if (process.StartInfo != null)
+            {
+                command = !string.IsNullOrWhiteSpace(process.StartInfo.Arguments)
+                ? $"{process.StartInfo.FileName} {process.StartInfo.Arguments}"
+                : $"{process.StartInfo.FileName}";
+            }
+
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                error = $"{errorMessage.Trim().TrimEnd('.')} (error/exit code={process.ExitCode}, command={command}).";
+            }
+            else
+            {
+                error = $"Process execution failed (error/exit code={process.ExitCode}, command={command}).";
+            }
+
+            if (process.StandardOutput?.Length > 0)
+            {
+                error = $"{error}{Environment.NewLine}{Environment.NewLine}{"StandardOutput: "}{process.StandardOutput}";
+            }
+
+            if (process.StandardError?.Length > 0)
+            {
+                error = $"{error}{Environment.NewLine}{Environment.NewLine}{"StandardError: "}{process.StandardError}";
+            }
+
+            try
+            {
+                TError exception = (TError)Activator.CreateInstance(typeof(TError), error, errorReason);
+                throw exception;
+            }
+            catch (MissingMethodException)
+            {
+                throw new MissingMethodException(
+                    $"The exception type provided '{typeof(TError).FullName}' does not have a constructor that takes in the parameters supplied.");
+            }
         }
     }
 }

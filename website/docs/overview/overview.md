@@ -19,14 +19,12 @@ Azure environments including guest/VM systems, host/blade systems and data cente
 * [virtualclient@microsoft.com](mailto:virtualclient@microsoft.com)
 
 ## Downloads
-The following release versions of the Virtual Client are available and confirmed stable.
+Release versions of the Virtual Client are available on public NuGet.org. Note that versions that are not tagged as 'Release'
+are considered beta quality. Production quality releases will be tagged appropriately.
 
-#### Version 0.0.5
-* Release Date = 11/15/2022
-
-* NuGet Release
-    * https://www.nuget.org/packages/VirtualClient/0.0.5
-    * Please note we will be renaming package to Microsoft.VirtualClient, pending MSFT internal processes.
+* NuGet Releases
+    * https://www.nuget.org/packages/VirtualClient
+    * Please note we will be renaming package to Microsoft.VirtualClient in the future pending MSFT internal processes.
 
 ## Platform/Architectures
 In the workload and profile sections below, the following designations are used to indicate the OS platform and CPU architecture on which the workloads are supported:
@@ -53,14 +51,14 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [AspNetBench](../workloads/aspnetbench/aspnetbench.md) | ASP.NET server | linux-x64, linux-arm64, win-x64, win-arm64 | [**ASP.NET**:MIT](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[**Bombardier**:MIT](https://github.com/codesenberg/bombardier/blob/master/LICENSE)  |
 | [CoreMark](../workloads/coremark/coremark.md) | Generic CPU | linux-x64,linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CPS](../workloads/network-suite/network-suite.md) | Network RoundTripTime | linux-x64, linux-arm64, win-x64, win-arm64 | MSFT developed  |
-| [DCGMI](../workloads/dcgmi/DCGMI.md)| GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE)
+| [DCGMI](../workloads/dcgmi/dcgmi.md)| GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE)
 | [DeathStarBench](../workloads/deathstarbench/deathstarbench.md) | Swarm container microservices | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache-2.0](https://github.com/delimitrou/DeathStarBench/blob/master/LICENSE)  |
 | [DiskSpd](../workloads/diskspd/diskspd.md) | Disk Stress | win-x64, win-arm64 | [MIT](https://github.com/microsoft/diskspd/blob/master/LICENSE)  |
 | [Flexible IO Tester (FIO)](../workloads/fio/fio.md) | Disk IO Performance | linux-x64, linux-arm64, win-x64 | [GPL-2.0](https://github.com/axboe/fio/blob/master/COPYING)  |
 | [Graph500](../workloads/graph500/graph500.md) | 3D Simulation | linux-x64, linux-arm64 | [Custom](https://github.com/graph500/graph500/blob/newreference/license.txt)  |
 | [gzip](../workloads/compression/gzip.md) | pbzip2 compression | linux-x64, linux-arm64 | [GPL](https://www.gnu.org/software/gzip/)  |
 | [HPCG](../workloads/hpcg/hpcg.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [Custom](https://github.com/hpcg-benchmark/hpcg/blob/master/COPYING)  |
-| [HPLinpack](../workloads/HPLinpack/HPLinpack.md) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
+| [HPLinpack](../workloads/hplinpack/hplinpack.md) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
 | [LAPACK](../workloads/lapack/lapack.md) | Linear Equations | linux-x64, linux-arm64, win-x64, win-arm64 | [Custom](https://github.com/Reference-LAPACK/lapack/blob/master/LICENSE)  |
 | [Latte](../workloads/network-suite/network-suite.md) | Network latency | win-x64, win-arm64 | [MIT](https://github.com/microsoft/latte/blob/main/LICENSE)  |
 | [LMbench](../workloads/lmbench/lmbench.md) | Generic Memory | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |

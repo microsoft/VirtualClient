@@ -146,7 +146,8 @@ namespace VirtualClient.Actions
             {
                 bool compression = this.Scenario.Contains("Decompression") ? false : true;
 
-                Pbzip2MetricsParser parser = new Pbzip2MetricsParser(process.StandardOutput.ToString(), compression);
+                // Pbzip2 workload produces metrics in standard error
+                Pbzip2MetricsParser parser = new Pbzip2MetricsParser(process.StandardError.ToString(), compression);
                 IList<Metric> metrics = parser.Parse();
 
                 this.Logger.LogMetrics(

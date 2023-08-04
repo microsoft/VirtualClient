@@ -40,21 +40,5 @@ namespace VirtualClient.Actions
                 WorkloadAssert.ParameterReferencesInlined(executor.Profile);
             }
         }
-
-        [Test]
-        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json")]
-        public void SysbenchOLTPProfileActionsWillNotBeExecutedIfTheDependencyPackagesDoesNotExist(string profile)
-        {
-            // We ensure the workload package does not exist.
-            this.mockFixture.PackageManager.Clear();
-
-            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
-            {
-                executor.ExecuteDependencies = false;
-                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, error.Reason);
-                Assert.IsFalse(this.mockFixture.ProcessManager.Commands.Any());
-            }
-        }
     }
 }

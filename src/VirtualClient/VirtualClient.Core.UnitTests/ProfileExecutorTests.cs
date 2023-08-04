@@ -10,6 +10,7 @@ namespace VirtualClient
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Polly;
@@ -686,32 +687,6 @@ namespace VirtualClient
 
                 // None of the monitors should have the same activity ID
                 Assert.IsTrue(monitors.Select(a => a.ActivityId).Distinct().Count() == monitors.Count());
-            }
-        }
-
-        [Test]
-        public async Task ProfileExecutorUpdatesGlobalStateOnEachIterationOfActions()
-        {
-            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
-            {
-                bool stateUpdated = false;
-                int iterations = 0;
-
-                this.mockFixture.StateManager.OnSaveState(nameof(GlobalState))
-                    .Callback<string, JObject, CancellationToken, IAsyncPolicy>((stateId, state, token, retryPolicy) =>
-                    {
-                        iterations++;
-
-                        Item<GlobalState> updatedState = state.ToObject<Item<GlobalState>>();
-                        Assert.IsNotNull(updatedState);
-                        Assert.AreEqual(updatedState.Definition.IsFirstRun, updatedState.Definition.ProfileIteration == 1);
-                        Assert.AreEqual(iterations, updatedState.Definition.ProfileIteration);
-
-                        stateUpdated = true;
-                    });
-
-                await executor.ExecuteAsync(ProfileTiming.Iterations(2), CancellationToken.None);
-                Assert.IsTrue(stateUpdated);
             }
         }
 

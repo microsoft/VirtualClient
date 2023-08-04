@@ -94,6 +94,16 @@ namespace VirtualClient
         Task<HttpResponseMessage> GetStateAsync(string stateId, CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
 
         /// <summary>
+        /// Makes an API request to instruct the target Virtual Client application to exit.
+        /// </summary>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <param name="retryPolicy">A retry policy to apply when the client receives transient error responses from the API.</param>
+        /// <returns>
+        /// An <see cref="HttpResponseMessage"/> containing the status code of the operation.
+        /// </returns>
+        Task<HttpResponseMessage> SendApplicationExitInstructionAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null);
+
+        /// <summary>
         /// Sends instructions to the target Virtual Client instance.
         /// </summary>
         /// <param name="instructions">Instructions to send to the target instance.</param>

@@ -106,7 +106,7 @@ namespace VirtualClient
         }
 
         [Test]
-        public void VirtualClientApiClientMakdesTheExpectedCallToGetHeartbeats()
+        public void VirtualClientApiClientMakesTheExpectedCallToGetHeartbeats()
         {
             bool expectedCallMade = false;
             using (HttpResponseMessage response = VirtualClientApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
@@ -435,6 +435,52 @@ namespace VirtualClient
                     .ConfigureAwait(false);
 
                 Assert.IsTrue(attempts == 1);
+            }
+        }
+
+        [Test]
+        public void VirtualClientApiClientMakesTheExpectedCallToSendApplicationExitRequests()
+        {
+            bool expectedCallMade = false;
+
+            using (HttpResponseMessage response = VirtualClientApiClientTests.CreateResponseMessage(HttpStatusCode.OK))
+            {
+                this.mockRestClient.Setup(client => client.PostAsync(
+                        It.IsAny<Uri>(),
+                        It.IsAny<CancellationToken>()))
+                    .Callback<Uri, CancellationToken>((uri, token) =>
+                    {
+                        Assert.IsTrue(uri.AbsolutePath.Equals($"/api/application/exit"));
+                        expectedCallMade = true;
+                    })
+                    .Returns(Task.FromResult(response));
+
+                this.apiClient.SendApplicationExitInstructionAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+                Assert.IsTrue(expectedCallMade);
+            }
+        }
+
+        [Test]
+        public void VirtualClientApiClientAppliesTheExpectedDefaultRetryPolicyDefinedOnFailuresToSendApplicationExitRequests()
+        {
+            int attempts = 0;
+            int expectedRetries = 10;
+
+            using (HttpResponseMessage response = VirtualClientApiClientTests.CreateResponseMessage(HttpStatusCode.InternalServerError))
+            {
+                this.mockRestClient.Setup(client => client.PostAsync(
+                        It.IsAny<Uri>(),
+                        It.IsAny<CancellationToken>()))
+                    .Callback<Uri, CancellationToken>((uri, token) => attempts++)
+                    .Returns(Task.FromResult(response));
+
+                // Apply the same default policy used by the client (differing only in the retry wait time).
+                IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = VirtualClientApiClient.GetDefaultHttpPostRetryPolicy(retries => TimeSpan.Zero);
+
+                this.apiClient.SendApplicationExitInstructionAsync(CancellationToken.None, defaultRetryPolicy).GetAwaiter().GetResult();
+
+                Assert.IsTrue(attempts == expectedRetries + 1);
             }
         }
 

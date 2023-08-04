@@ -67,11 +67,11 @@ namespace VirtualClient.Actions
                 }
                 else if (arguments.Contains("gzip", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("GzipResults.txt"));
+                    process.StandardError.Append(TestDependencies.GetResourceFileContents("GzipResults.txt"));
                 }
                 else if (arguments.Contains("pbzip2", StringComparison.OrdinalIgnoreCase))
                 {
-                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Pbzip2Results.txt"));
+                    process.StandardError.Append(TestDependencies.GetResourceFileContents("Pbzip2Results.txt"));
                 }
 
                 return process;

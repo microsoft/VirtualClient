@@ -8,9 +8,13 @@ namespace VirtualClient
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
@@ -72,6 +76,35 @@ namespace VirtualClient
             Action<IProcessProxy> beforeExecution = null)
         {
             return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
+        }
+
+        /// <summary>
+        /// Executes a command within an isolated process.
+        /// </summary>
+        /// <param name="component">The component that is executing the process/command.</param>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="cygwinPackageDirectory">Directory of cygwin package</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
+        /// <returns>The process that executed the command.</returns>
+        public static Task<IProcessProxy> ExecuteCygwinBashAsync(
+            this VirtualClientComponent component,
+            string command,
+            string workingDirectory,
+            string cygwinPackageDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            Action<IProcessProxy> beforeExecution = null)
+        {
+            string bashPath = component.PlatformSpecifics.Combine(cygwinPackageDirectory, "bin", "bash");
+            // Changing C:\packages\abc to /cygdrive/c/packages/abc . This is required for cygwin to work.
+            string packageDirectoryPath = Regex.Replace(workingDirectory, @"\\", "/");
+            packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
+            string cygwinCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; {command}'";
+
+            return component.ExecuteCommandAsync(bashPath, cygwinCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -144,37 +177,6 @@ namespace VirtualClient
             }
 
             return process;
-        }
-
-        /// <summary>
-        /// Returns the current name/username for the logged in user.
-        /// </summary>
-        /// <param name="component">The component verifying the username.</param>
-        /// <param name="nonSudo">
-        /// True to return the sudo user (vs. root) on Unix/Linux systems. This can be used to run commands that do 
-        /// not allow the "root" user to be used.
-        /// </param>
-        public static string GetCurrentUserName(this VirtualClientComponent component, bool nonSudo = false)
-        {
-            string currentUser = component.GetEnvironmentVariable(EnvironmentVariable.USER);
-            if (string.IsNullOrEmpty(currentUser))
-            {
-                currentUser = Environment.UserName;
-            }
-
-            if (nonSudo && string.Equals(currentUser, "root", StringComparison.OrdinalIgnoreCase))
-            {
-                currentUser = component.GetEnvironmentVariable(EnvironmentVariable.SUDO_USER);
-
-                if (string.IsNullOrWhiteSpace(currentUser))
-                {
-                    throw new DependencyException(
-                        $"The non-sudo username could not be determined. The expected environment variable was not set.",
-                        ErrorReason.DependencyNotFound);
-                }
-            }
-
-            return currentUser;
         }
 
         /// <summary>
@@ -313,6 +315,74 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Adds a cleanup task to the application that sends an exit notification to the target
+        /// Virtual Client instances via the API clients supplied. Note that the addition of this
+        /// application level exit task is idempotent and will be added to the set of tasks only once.
+        /// </summary>
+        /// <param name="component">The component registering the exit notification sends.</param>
+        /// <param name="apiClients">The API clients to which to send notifications.</param>
+        /// <param name="taskId">An identifier that can be used to distinguish the registered notification task from others.</param>
+        public static void RegisterToSendExitNotifications(this VirtualClientComponent component, string taskId, params IApiClient[] apiClients)
+        {
+            component.ThrowIfNull(nameof(component));
+            apiClients.ThrowIfNullOrEmpty(nameof(apiClients));
+            taskId.ThrowIfNullOrWhiteSpace(nameof(taskId));
+
+            if (!VirtualClientRuntime.ExitTasks.Any(task => task.Id == taskId))
+            {
+                // This logic executes just before the application exits fully allowing
+                // client role instances to request server role instances to exit.
+                VirtualClientRuntime.ExitTasks.Add(new Action_(taskId, () =>
+                {
+                    if (component.Dependencies.TryGetService<IApiClientManager>(out IApiClientManager clientManager))
+                    {
+                        ILogger logger = component.Logger;
+                        EventContext telemetryContext = EventContext.Persisted();
+
+                        Parallel.ForEach(apiClients, (client) =>
+                        {
+                            EventContext relatedContext = telemetryContext.Clone()
+                                .AddContext("clientUri", client.BaseUri.ToString());
+
+                            try
+                            {
+                                logger.LogMessage($"{component.TypeName}.SendExitNotification", relatedContext);
+
+                                using (HttpResponseMessage response = client.SendApplicationExitInstructionAsync(CancellationToken.None)
+                                    .GetAwaiter().GetResult())
+                                {
+                                    if (!response.IsSuccessStatusCode)
+                                    {
+                                        component.Logger.LogMessage(
+                                            $"{component.TypeName}.SendExitNotificationError",
+                                            LogLevel.Error,
+                                            relatedContext.Clone().AddResponseContext(response));
+                                    }
+                                }
+                            }
+                            catch (Exception exc)
+                            {
+                                logger.LogMessage(
+                                    $"{component.TypeName}.SendExitNotificationError",
+                                    LogLevel.Error,
+                                    relatedContext.Clone().AddError(exc));
+                            }
+                        });
+                    }
+                }));
+            }
+        }
+
+        /// <summary>
+        /// Requests a system reboot.
+        /// </summary>
+        public static void RequestReboot(this VirtualClientComponent component)
+        {
+            component.ThrowIfNull(nameof(component));
+            VirtualClientRuntime.IsRebootRequested = true;
+        }
+
+        /// <summary>
         /// Sets the value of the environment variable or appends a value to the end of it.
         /// </summary>
         /// <param name="component">The component setting the environment variable.</param>
@@ -327,6 +397,56 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Returns true/false whether the content blob store is defined and exists in the dependencies.
+        /// </summary>
+        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="store">The content blob store information if it exists.</param>
+        /// <returns>True if the content blob store is defined. False if not.</returns>
+        public static bool TryGetContentStoreManager(this IServiceCollection dependencies, out IBlobManager store)
+        {
+            dependencies.ThrowIfNull(nameof(dependencies));
+            return VirtualClientComponentExtensions.TryGetBlobStore(dependencies, DependencyStore.Content, out store);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the content blob store is defined and exists in the dependencies
+        /// for the component.
+        /// </summary>
+        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="store">The packages blob store information if it exists.</param>
+        /// <returns>True if the content blob store is defined. False if not.</returns>
+        public static bool TryGetContentStoreManager(this VirtualClientComponent component, out IBlobManager store)
+        {
+            component.ThrowIfNull(nameof(component));
+            return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Content, out store);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the packages blob store is defined and exists in the dependencies.
+        /// </summary>
+        /// <param name="dependencies">The dependencies to verify.</param>
+        /// <param name="store">The packages blob store information if it exists.</param>
+        /// <returns>True if the packages blob store is defined. False if not.</returns>
+        public static bool TryGetPackageStoreManager(this IServiceCollection dependencies, out IBlobManager store)
+        {
+            dependencies.ThrowIfNull(nameof(dependencies));
+            return VirtualClientComponentExtensions.TryGetBlobStore(dependencies, DependencyStore.Packages, out store);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the packages blob store is defined and exists in the dependencies
+        /// for the component.
+        /// </summary>
+        /// <param name="component">The component with dependencies to verify.</param>
+        /// <param name="store">The packages blob store information if it exists.</param>
+        /// <returns>True if the packages blob store is defined. False if not.</returns>
+        public static bool TryGetPackageStoreManager(this VirtualClientComponent component, out IBlobManager store)
+        {
+            component.ThrowIfNull(nameof(component));
+            return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Packages, out store);
+        }
+
+        /// <summary>
         /// Upload a single file with defined BlobDescriptor.
         /// </summary>
         /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
@@ -334,17 +454,21 @@ namespace VirtualClient
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptor">The defined blob descriptor</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="deleteFile">Whether to delete file after upload.</param>
-        /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
+        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFileAsync(
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            FileBlobDescriptor descriptor,
+            FileUploadDescriptor descriptor,
             CancellationToken cancellationToken,
-            bool deleteFile = true,
-            IAsyncPolicy retryPolicy = null)
+            bool uploadManifest = true,
+            bool deleteFile = false,
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
             /*
              * Azure Storage blob naming limit
@@ -357,55 +481,52 @@ namespace VirtualClient
              * The same name cannot be used for a file and a directory that share the same parent directory.
              */
 
-            /* VC upload naming convention
-             * 
-             * SingleClient: /experimentid/agentid/toolname/uploadTimestamp/{fileDirectories}/fileName
-             * 
-             * Blob Name/Path Examples:
-             * --------------------------------------------------------
-             * [Non-Client/Server Workloads]
-             * /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid/azureprofiler/2022-04-30T20:13:23.3768938Z-2c5cfa4031e34c8a8002745f3a9daee4.bin
-             *
-             * [Client/Server Workloads]
-             * /7dfae74c-06c0-49fc-ade6-987534bb5169/anyagentid-client/azureprofiler/2022-04-30T20:13:23.3768938Z-client-2c5cfa4031e34c8a8002745f3a9daee4.bin
-             * /7dfae74c-06c0-49fc-ade6-987534bb5169/anyotheragentid-server/azureprofiler/2022-04-30T20:13:18.4857827Z-server-3b6beb4142d23d7b7103634e2b8cbff3.bin
-             */
-
             try
             {
-                IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
-
                 bool uploaded = false;
+                IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
 
                 await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
                 {
-                    try
+                    if (fileSystem.File.Exists(descriptor.FilePath))
                     {
+                        IFileInfo file = fileSystem.FileInfo.New(descriptor.FilePath);
+
                         // Some processes creat the files up front before writing content to them. These files will
                         // be 0 bytes in size.
-                        if (descriptor.File.Length > 0)
+                        if (file.Length > 0)
                         {
-                            using (FileStream uploadStream = new FileStream(descriptor.File.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                            using (var uploadStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                             {
                                 if (uploadStream.Length > 0)
                                 {
-                                    EventContext telemetryContext = EventContext.Persisted()
-                                        .AddContext("file", descriptor.File.FullName)
+                                    EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
+                                        .AddContext("file", file.FullName)
                                         .AddContext("blobContainer", descriptor.ContainerName)
-                                        .AddContext("blobName", descriptor.Name);
+                                        .AddContext("blobName", descriptor.BlobName)
+                                        .AddContext("contentEncoding", descriptor.ContentEncoding)
+                                        .AddContext("contentType", descriptor.ContentType)
+                                        .AddContext("manifest", descriptor.Manifest);
 
-                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", telemetryContext, async () =>
+                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
                                     {
-                                        await blobManager.UploadBlobAsync(descriptor, uploadStream, cancellationToken);
+                                        BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
+                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
+
+                                        if (uploadManifest && descriptor.Manifest?.Any() == true)
+                                        {
+                                            BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
+                                            using (manifestStream)
+                                            {
+                                                await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
+                                            }
+                                        }
+
                                         uploaded = true;
                                     });
                                 }
                             }
                         }
-                    }
-                    catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // The blob upload could fail often. We skip it and we will pick it up on next iteration.
                     }
                 });
 
@@ -414,8 +535,12 @@ namespace VirtualClient
                 // down to have the best chance of getting them off the system.
                 if (deleteFile && uploaded)
                 {
-                    await fileSystem.File.DeleteAsync(descriptor.File.FullName);
+                    await fileSystem.File.DeleteAsync(descriptor.FilePath);
                 }
+            }
+            catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+            {
+                // The blob upload could fail often. We skip it and we will pick it up on next iteration.
             }
             catch (Exception exc)
             {
@@ -434,22 +559,37 @@ namespace VirtualClient
         /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
         /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
         /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="deleteFile">Whether to delete file after upload.</param>
-        /// <param name="retryPolicy">Retry policy</param>
+        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
+        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
+        /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
+        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
         /// <returns></returns>
         public static async Task UploadFilesAsync(
             this VirtualClientComponent component,
             IBlobManager blobManager,
             IFileSystem fileSystem,
-            IEnumerable<FileBlobDescriptor> descriptors,
+            IEnumerable<FileUploadDescriptor> descriptors,
             CancellationToken cancellationToken,
+            bool uploadManifest = true,
             bool deleteFile = false,
-            IAsyncPolicy retryPolicy = null)
+            IAsyncPolicy retryPolicy = null,
+            EventContext telemetryContext = null)
         {
-            foreach (FileBlobDescriptor descriptor in descriptors)
+            foreach (FileUploadDescriptor descriptor in descriptors)
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, deleteFile, retryPolicy);
+                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, uploadManifest, deleteFile, retryPolicy, telemetryContext);
             }
+        }
+
+        private static bool TryGetBlobStore(IServiceCollection dependencies, string storeName, out IBlobManager store)
+        {
+            store = null;
+            if (dependencies.TryGetService<IEnumerable<IBlobManager>>(out IEnumerable<IBlobManager> stores))
+            {
+                store = stores.FirstOrDefault(s => string.Equals(s.StoreDescription.StoreName, storeName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return store != null;
         }
     }
 }

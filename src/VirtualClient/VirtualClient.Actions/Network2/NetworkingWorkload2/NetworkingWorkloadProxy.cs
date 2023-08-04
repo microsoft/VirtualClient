@@ -57,7 +57,7 @@ namespace VirtualClient.Actions
                     {
                         // Subscribe to notifications from the Events API. The client passes instructions
                         // to the server via this API.
-                        VirtualClientEventing.ReceiveInstructions += this.OnInstructionsReceived;
+                        VirtualClientRuntime.ReceiveInstructions += this.OnInstructionsReceived;
                         this.SetServerOnline(true);
 
                         await this.WaitAsync(this.ServerCancellationSource.Token)
@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
                     finally
                     {
                         // Cleanup the event subscription to avoid any issues with memory leaks.
-                        VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
+                        VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
                         this.SetServerOnline(false);
                     }
                 }
@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
             {
                 if (!this.disposed)
                 {
-                    VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
+                    VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
                     this.ServerCancellationSource?.Dispose();
                 }
 
@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
                     EventContext telemetryContext = EventContext.Persisted()
                         .AddContext("instructions", instructions.ToString());
 
-                    if (VirtualClientEventing.IsApiOnline)
+                    if (VirtualClientRuntime.IsApiOnline)
                     {
                         this.Logger.LogMessageAsync($"{nameof(NetworkingWorkloadProxy)}.InstructionsReceived", telemetryContext, async () =>
                         {

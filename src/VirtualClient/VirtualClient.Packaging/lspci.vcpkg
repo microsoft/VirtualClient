@@ -3,6 +3,7 @@
     "description": "Windows build of lspci.",
     "version": "3.5.5",
     "metadata": {
+        "built-in": true,
         "url": "https://eternallybored.org/misc/pciutils/"
     }
 }

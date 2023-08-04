@@ -5,14 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
-    using System.Net;
-    using System.Net.Http;
-    using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -23,7 +16,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.LatteExecutor2;
 
     /// <summary>
     /// Executes client side of CPS.
@@ -65,18 +57,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines the test duration value for the test in seconds.
+        /// Parameter defines the duration for running the CPS workload.
         /// </summary>
         public int TestDuration
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(CPSClientExecutor2.TestDuration), 60);
-            }
-
-            set
-            {
-                this.Parameters[nameof(CPSClientExecutor2.TestDuration)] = value;
+                return this.Parameters.GetValue<int>(nameof(this.TestDuration), 60);
             }
         }
 
@@ -346,7 +333,7 @@ namespace VirtualClient.Actions
                 this.Logger.LogTraceMessage("Synchronization: Wait for start of server workload...");
 
                 await this.ServerApiClient.PollForExpectedStateAsync<CPSWorkloadState>(
-                    nameof(CPSWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, this.Logger)
+                    nameof(CPSWorkloadState), (state) => state.Status == ClientServerStatus.ExecutionStarted, this.StateConfirmationPollingTimeout, cancellationToken, logger: this.Logger)
                     .ConfigureAwait(false);
 
                 this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");

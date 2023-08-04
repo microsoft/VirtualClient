@@ -39,6 +39,19 @@ namespace VirtualClient.Actions
         public DiskSpdExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
+            // Ensure that the Duration parameter is in "seconds" format.
+            this.Parameters[nameof(this.Duration)] = this.Duration.TotalSeconds;
+        }
+
+        /// <summary>
+        /// Parameter defines the Duration (in seconds) for running the DiskSpd workload.
+        /// </summary>
+        public TimeSpan Duration
+        {
+            get
+            {
+                return this.Parameters.GetTimeSpanValue(nameof(DiskSpdExecutor.Duration), TimeSpan.FromSeconds(60));
+            }
         }
 
         /// <summary>
@@ -50,109 +63,55 @@ namespace VirtualClient.Actions
         /// Applies the configuration specificed to the parameters of the profile
         /// workload action.
         /// </summary>
-        /// <param name="configuration">The name of the configuration (e.g. Stress).</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        protected void ApplyConfiguration(string configuration, EventContext telemetryContext)
-        {
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("configuration", configuration);
-
-            this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.ApplyConfiguration", relatedContext, () =>
-            {
-                string fileSize = this.FileSize;
-                if (!string.IsNullOrWhiteSpace(fileSize))
-                {
-                    fileSize = this.SanitizeFileSize(fileSize);
-                }
-
-                string diskFillSize = this.DiskFillSize;
-                if (!string.IsNullOrWhiteSpace(diskFillSize))
-                {
-                    diskFillSize = this.SanitizeFileSize(diskFillSize);
-                }
-
-                switch (configuration)
-                {
-                    case "Stress":
-                        int logicalCores = Environment.ProcessorCount;
-                        int threads = logicalCores / 2;
-                        int queueDepth = 512 / threads;
-
-                        this.CommandLine = this.ApplyParameters(
-                            this.CommandLine,
-                            fileSize,
-                            diskFillSize,
-                            queueDepth,
-                            threads);
-
-                        this.TestName = this.ApplyParameters(
-                            this.TestName,
-                            fileSize,
-                            diskFillSize,
-                            queueDepth,
-                            threads);
-
-                        relatedContext.AddContext("commandLine", this.CommandLine);
-                        relatedContext.AddContext("testName", this.TestName);
-                        relatedContext.AddContext(nameof(logicalCores), logicalCores);
-                        relatedContext.AddContext(nameof(threads), threads);
-                        relatedContext.AddContext(nameof(queueDepth), queueDepth);
-
-                        break;
-
-                    default:
-                        throw new WorkloadException(
-                            $"Invalid configuration. The configuration '{configuration}' defined in the profile arguments is not a supported configuration.",
-                            ErrorReason.InvalidProfileDefinition);
-                }
-            });
-        }
-
-        /// <summary>
-        /// Applies any placeholder replacements to the parameters of the profile
-        /// workload action.
-        /// </summary>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        protected void ApplyParameters(EventContext telemetryContext)
+        protected Task EvaluateParametersAsync(EventContext telemetryContext)
         {
             EventContext relatedContext = telemetryContext.Clone();
-            this.Logger.LogMessage($"{nameof(DiskSpdExecutor)}.ApplyParameters", relatedContext, () =>
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.EvaluateParameters", relatedContext, async () =>
             {
                 string fileSize = this.FileSize;
                 if (!string.IsNullOrWhiteSpace(fileSize))
                 {
-                    fileSize = this.SanitizeFileSize(fileSize);
+                    this.FileSize = this.SanitizeFileSize(fileSize);
                 }
 
                 string diskFillSize = this.DiskFillSize;
                 if (!string.IsNullOrWhiteSpace(diskFillSize))
                 {
-                    diskFillSize = this.SanitizeFileSize(diskFillSize);
+                    this.DiskFillSize = this.SanitizeFileSize(diskFillSize);
                 }
 
-                if (!string.IsNullOrWhiteSpace(this.CommandLine))
+                if (this.Configuration != null)
                 {
-                    this.CommandLine = this.ApplyParameters(
-                        this.CommandLine,
-                        fileSize,
-                        diskFillSize,
-                        this.QueueDepth,
-                        this.Threads);
+                    switch (this.Configuration)
+                    {
+                        case "Stress":
+                            int logicalCores = Environment.ProcessorCount;
+                            int threads = logicalCores / 2;
+                            int queueDepth = 512 / threads;
 
-                    relatedContext.AddContext("commandLine", this.CommandLine);
+                            this.Parameters["ThreadCount"] = threads;
+                            this.Parameters["QueueDepth"] = queueDepth;
+
+                            relatedContext.AddContext("configuration", this.Configuration);
+                            relatedContext.AddContext(nameof(logicalCores), logicalCores);
+                            relatedContext.AddContext(nameof(threads), threads);
+                            relatedContext.AddContext(nameof(queueDepth), queueDepth);
+
+                            break;
+
+                        default:
+                            throw new WorkloadException(
+                                $"Invalid configuration. The configuration '{this.Configuration}' defined in the profile arguments is not a supported configuration.",
+                                ErrorReason.InvalidProfileDefinition);
+                    }
                 }
 
-                if (!string.IsNullOrWhiteSpace(this.TestName))
-                {
-                    this.TestName = this.ApplyParameters(
-                        this.TestName,
-                        fileSize,
-                        diskFillSize,
-                        this.QueueDepth,
-                        this.Threads);
+                await this.EvaluateParametersAsync(CancellationToken.None);
 
-                    relatedContext.AddContext("testName", this.TestName);
-                }
+                relatedContext.AddContext("commandLine", this.CommandLine);
+                relatedContext.AddContext("testName", this.TestName);
             });
         }
 
@@ -200,12 +159,8 @@ namespace VirtualClient.Actions
                         return;
                     }
 
-                    if (this.Configuration != null)
-                    {
-                        this.ApplyConfiguration(this.Configuration, telemetryContext);
-                    }
-
-                    this.ApplyParameters(telemetryContext);
+                    // Apply parameters to the DiskSpd command line options.
+                    await this.EvaluateParametersAsync(telemetryContext);
 
                     IEnumerable<Disk> disks = await this.SystemManagement.DiskManager.GetDisksAsync(cancellationToken)
                        .ConfigureAwait(false);

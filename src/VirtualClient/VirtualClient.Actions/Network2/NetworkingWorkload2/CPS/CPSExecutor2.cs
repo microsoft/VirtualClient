@@ -9,7 +9,6 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
-    using System.Text.Json.Serialization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +16,6 @@ namespace VirtualClient.Actions
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using Polly;
-    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -407,6 +405,7 @@ namespace VirtualClient.Actions
                 // new connection from the connection pool typically for each instance created. Especially for the case with
                 // this workload that is testing network resources, we need to be very cognizant of our usage of TCP connections.
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverInstance.IPAddress, serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 

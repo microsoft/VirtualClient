@@ -3,14 +3,14 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "01:00:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "Ubuntu"
+        "SupportedOperatingSystems": "Ubuntu",
+        "Notes_ConnectionLimits": "Each Memtier benchmark action will establish (--threads x --clients) connections against the Memcached server for each client instance/process. Ensure that the server-side OS does not place a limit on connections that might exceed this (e.g. ulimit -Sn on Linux)."
     },
     "Parameters": {
         "ServerPort": 6379,
-        "ServerMemoryCacheSizeInMB": 4096,
-        "ServerThreadCount": 4,
+        "ServerMaxConnections": 16384,
         "ClientInstances": 8,
-        "Duration": "00:01:00",
+        "Duration": "00:02:00",
         "Username": null
     },
     "Actions": [
@@ -19,12 +19,12 @@
             "Parameters": {
                 "Scenario": "Server",
                 "PackageName": "memcached",
-                "CommandLine": "-p {Port} -t {ServerThreadCount} -c 1000000 -m {ServerMemoryCacheSizeInMB}",
+                "CommandLine": "-p {Port} -t 4 -m 30720 -c {ServerMaxConnections}",
                 "BindToCores": true,
                 "Port": "$.Parameters.ServerPort",
                 "Username": "$.Parameters.Username",
-                "ServerThreadCount": "$.Parameters.ServerThreadCount",
-                "ServerMemoryCacheSizeInMB": "$.Parameters.ServerMemoryCacheSizeInMB",
+                "ServerThreadCount": 4,
+                "ServerMaxConnections": "$.Parameters.ServerMaxConnections",
                 "Role": "Server"
             }
         },
@@ -33,7 +33,7 @@
             "Parameters": {
                 "Scenario": "warmup_32b_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -44,7 +44,7 @@
             "Parameters": {
                 "Scenario": "warmup_1kb_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -55,7 +55,7 @@
             "Parameters": {
                 "Scenario": "warmup_10kb_pool",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 64 --clients 64 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern S:S --run-count 1",
+                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
                 "ClientInstances": 1,
                 "WarmUp": true,
                 "Role": "Client"
@@ -64,9 +64,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_8t_32c_32b_r1:1",
+                "Scenario": "memtier_8t_16c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -75,9 +75,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_8t_32c_1kb_r1:1",
+                "Scenario": "memtier_8t_16c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -86,9 +86,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_8t_32c_10kb_r1:1",
+                "Scenario": "memtier_8t_16c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -97,9 +97,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_16t_32c_32b_r1:1",
+                "Scenario": "memtier_16t_16c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -108,9 +108,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_16t_32c_1kb_r1:1",
+                "Scenario": "memtier_16t_16c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -119,9 +119,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_16t_32c_10kb_r1:1",
+                "Scenario": "memtier_16t_16c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -130,9 +130,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_32t_32c_32b_r1:1",
+                "Scenario": "memtier_32t_16c_32b_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -141,9 +141,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_32t_32c_1kb_r1:1",
+                "Scenario": "memtier_32t_16c_1kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -152,20 +152,9 @@
         {
             "Type": "MemtierBenchmarkClientExecutor",
             "Parameters": {
-                "Scenario": "memtier_32t_32c_1kb_r1:10",
+                "Scenario": "memtier_32t_16c_10kb_r1:1",
                 "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 32 --ratio 1:10 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
-        },
-        {
-            "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_32c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 32 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 10000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data",
+                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
                 "ClientInstances": "$.Parameters.ClientInstances",
                 "Duration": "$.Parameters.Duration",
                 "Role": "Client"
@@ -186,9 +175,9 @@
             "Type": "LinuxPackageInstallation",
             "Parameters": {
                 "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "tcl-dev,numactl",
-                "Packages-Yum": "tcl-devel,numactl",
-                "Packages-Dnf": "tcl-devel,numactl"
+                "Packages-Apt": "wget,tcl-dev,numactl",
+                "Packages-Yum": "wget,tcl-devel,numactl",
+                "Packages-Dnf": "wget,tcl-devel,numactl"
             }
         },
         {
@@ -206,7 +195,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemcached",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memcached}",
                 "Role": "Server"
@@ -224,7 +213,7 @@
             "Type": "ExecuteCommand",
             "Parameters": {
                 "Scenario": "CompileMemtier",
-                "Platforms": "linux-x64,linux-arm64",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
                 "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
                 "WorkingDirectory": "{PackagePath:memtier}"
             }

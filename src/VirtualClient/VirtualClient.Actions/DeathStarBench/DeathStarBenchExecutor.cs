@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -189,8 +190,8 @@ namespace VirtualClient.Actions
                                 // Subscribe to notifications from the Events API. The client passes instructions
                                 // to the server via this API.
                                 this.Logger.LogTraceMessage("subscribing to the listeners");
-                                VirtualClientEventing.ReceiveInstructions += this.OnInstructionsReceived;
-                                VirtualClientEventing.SetEventingApiOnline(true);
+                                VirtualClientRuntime.ReceiveInstructions += this.OnInstructionsReceived;
+                                VirtualClientRuntime.SetEventingApiOnline(true);
 
                                 await this.WaitAsync(this.ServerCancellationSource.Token);
                             }
@@ -202,8 +203,8 @@ namespace VirtualClient.Actions
                             {
                                 // Cleanup the event subscription to avoid any issues with memory leaks.
                                 this.Logger.LogTraceMessage("unsubscribing to the listeners");
-                                VirtualClientEventing.ReceiveInstructions -= this.OnInstructionsReceived;
-                                VirtualClientEventing.SetEventingApiOnline(false);
+                                VirtualClientRuntime.ReceiveInstructions -= this.OnInstructionsReceived;
+                                VirtualClientRuntime.SetEventingApiOnline(false);
                             }
                         }
                         else
@@ -249,7 +250,7 @@ namespace VirtualClient.Actions
                     EventContext telemetryContext = EventContext.Persisted()
                         .AddContext("instructions", instructions);
 
-                    if (VirtualClientEventing.IsApiOnline)
+                    if (VirtualClientRuntime.IsApiOnline)
                     {
                         this.Logger.LogMessageAsync($"{nameof(DeathStarBenchExecutor)}.InstructionsReceived", telemetryContext, async () =>
                         {
@@ -534,6 +535,7 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
         }
 
@@ -553,8 +555,16 @@ namespace VirtualClient.Actions
             await this.SystemManager.MakeFileExecutableAsync(dockerComposeFilePath, this.Platform, cancellationToken)
                 .ConfigureAwait();
 
+            string pipUpgradeCommand = "python3 -m pip install -U pip";
+            await this.ExecuteCommandAsync(pipUpgradeCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
+            string setupToolsUpgradeCommand = "python3 -m pip install -U setuptools";
+            await this.ExecuteCommandAsync(setupToolsUpgradeCommand, this.PackageDirectory, cancellationToken)
+                .ConfigureAwait();
+
             // python3-pip installs pip3 and not pip, better to leave it on python which version of pip to use
-            string pipInstallPackagesCommand = "python3 -m pip install aiohttp asyncio";
+            string pipInstallPackagesCommand = "-H python3 -m pip install aiohttp asyncio";
             await this.ExecuteCommandAsync(pipInstallPackagesCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 

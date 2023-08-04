@@ -39,6 +39,8 @@ namespace VirtualClient.Actions
                 .Returns(true);
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
+            this.mockFixture.Directory.Setup(f => f.Exists(It.IsRegex("superbenchmark")))
+                .Returns(false);
 
             this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
 
@@ -147,7 +149,7 @@ namespace VirtualClient.Actions
         public async Task SuperBenchmarkExecutorDeploySuperBenchContainer()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = $"sudo sb deploy --host-list localhost -i testContainer";
+            string expectedCommand = $"sb deploy --host-list localhost -i testContainer";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -182,7 +184,7 @@ namespace VirtualClient.Actions
         public async Task SuperBenchmarkExecutorRunsTheExpectedWorkloadCommand()
         {
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
-            string expectedCommand = $"sudo sb run --host-list localhost -c Test.yaml";
+            string expectedCommand = $"sb run --host-list localhost -c Test.yaml";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -222,8 +224,8 @@ namespace VirtualClient.Actions
                 $"sudo chmod -R 2777 \"{this.mockFixture.PlatformSpecifics.CurrentDirectory}\"",
                 $"sudo git clone -b v0.0.1 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh testuser",
-                $"sudo sb deploy --host-list localhost -i testContainer",
-                $"sudo sb run --host-list localhost -c Test.yaml"
+                $"sb deploy --host-list localhost -i testContainer",
+                $"sb run --host-list localhost -c Test.yaml"
             };
 
             int processCount = 0;
@@ -264,7 +266,7 @@ namespace VirtualClient.Actions
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>
             {
-                $"sudo sb run --host-list localhost -c Test.yaml"
+                $"sb run --host-list localhost -c Test.yaml"
             };
 
             int processCount = 0;

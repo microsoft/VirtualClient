@@ -82,9 +82,7 @@ namespace VirtualClient.Dependencies
             systemDisks = DiskFilters.FilterDisks(systemDisks, this.DiskFilter, this.Platform).ToList();
 
             systemDisks.OrderBy(d => d.Index).ToList().ForEach(disk => this.Logger.LogTraceMessage(
-                $"Disk: Index={disk.Index}{Environment.NewLine}" +
-                $"- IsFormatted={disk.Volumes.Any()}{Environment.NewLine}" +
-                $"- IsOperatingSystemDisk={disk.IsOperatingSystem()}{Environment.NewLine}"));
+                $"Disk: Index={disk.Index}, Device={disk.DevicePath}, IsFormatted={disk.Volumes.Any()}, IsOperatingSystemDisk={disk.IsOperatingSystem()}"));
 
             this.Logger.LogMessage($"{nameof(FormatDisks)}.Disks", LogLevel.Information, telemetryContext.Clone().AddContext("disks", systemDisks));
 

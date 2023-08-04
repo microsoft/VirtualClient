@@ -5,6 +5,8 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -90,6 +92,16 @@ namespace VirtualClient.Dependencies
                         await this.RaiseMySQLMaximumStatementLimit(telemetryContext, cancellationToken)
                             .ConfigureAwait(false);
                         break;
+
+                    case ConfigurationAction.ConfigureNetwork:
+                        await this.ConfigureMySQLNetwork(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                        break;
+
+                    case ConfigurationAction.CreateUser:
+                        await this.CreateMySQLUser(telemetryContext, cancellationToken)
+                            .ConfigureAwait(false);
+                        break;
                 }
 
                 await this.stateManager.SaveStateAsync(stateId, new ConfigurationState(this.Action), cancellationToken);
@@ -149,6 +161,88 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        private async Task ConfigureMySQLNetwork(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (this.IsMultiRoleLayout())
+            {
+                ProcessManager manager = this.SystemManager.ProcessManager;
+
+                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    // need to know how to set up password and start server, get path
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"net stop mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"net start mysql", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    await this.ExecuteCommandAsync(manager, $"sed -i \"s/.*bind-address.*/bind-address = {serverIPAddress}/\" /etc/mysql/mysql.conf.d/mysqld.cnf", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"systemctl restart mysql.service", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task CreateMySQLUser(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            ProcessManager manager = this.SystemManager.ProcessManager;
+
+            List<string> clientIpAddresses = new List<string>
+            {
+                IPAddress.Loopback.ToString()
+            };
+
+            if (this.IsMultiRoleLayout())
+            {
+                IEnumerable<ClientInstance> clientInstances = this.GetLayoutClientInstances(ClientRole.Client);
+
+                foreach (ClientInstance instance in clientInstances)
+                {
+                    IPAddress.TryParse(instance.IPAddress, out IPAddress clientIPAddress);
+                    clientIpAddresses.Add(clientIPAddress.ToString());
+                }
+            }
+            
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                foreach (string clientIp in clientIpAddresses)
+                {
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+            else if (this.Platform == PlatformID.Unix)
+            {
+                foreach (string clientIp in clientIpAddresses)
+                {
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"DROP USER IF EXISTS '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+
         private async Task ExecuteCommandAsync(ProcessManager manager, string command, string arguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, command, arguments))
@@ -187,6 +281,16 @@ namespace VirtualClient.Dependencies
             /// Increases max_prepared_stmt_count for maximum VM stress.
             /// </summary>
             public const string RaisedStatementCount = nameof(ConfigurationAction.RaisedStatementCount);
+
+            /// <summary>
+            /// Allow network connections to the server.
+            /// </summary>
+            public const string ConfigureNetwork = nameof(ConfigurationAction.ConfigureNetwork);
+
+            /// <summary>
+            /// Creates a user on the server.
+            /// </summary>
+            public const string CreateUser = nameof(ConfigurationAction.CreateUser);
         }
 
         internal class ConfigurationState

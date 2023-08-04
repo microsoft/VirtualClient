@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO.Packaging;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
@@ -75,6 +76,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True if TLS is enabled.
+        /// </summary>
+        public string IsTLSEnabled
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
+            }
+        }
+
+        /// <summary>
         /// Parameter defines the number of server instances/copies to run.
         /// </summary>
         public int ServerInstances
@@ -82,6 +94,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<int>(nameof(this.ServerInstances));
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of server instances/copies to run.
+        /// </summary>
+        public string RedisResourcesPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.RedisResourcesPackageName));
             }
         }
 
@@ -101,6 +124,11 @@ namespace VirtualClient.Actions
         /// Path to Redis server executable.
         /// </summary>
         protected string RedisExecutablePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis resources.
+        /// </summary>
+        protected string RedisResourcesPath { get; set; }
 
         /// <summary>
         /// Path to Redis server package.
@@ -125,6 +153,7 @@ namespace VirtualClient.Actions
                 {
                     try
                     {
+                        Console.WriteLine("Disposed");
                         // We MUST stop the server instances from running before VC exits or they will
                         // continue running until explicitly stopped. This is a problem for running Redis
                         // workloads back to back because the requisite ports will be in use already on next
@@ -203,6 +232,12 @@ namespace VirtualClient.Actions
 
             await this.SystemManagement.MakeFileExecutableAsync(this.RedisExecutablePath, this.Platform, cancellationToken);
 
+            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+            {
+                DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
+                this.RedisResourcesPath = redisResourcesPath.Path;
+            }
+
             this.InitializeApiClients();
         }
 
@@ -212,8 +247,9 @@ namespace VirtualClient.Actions
         protected override void Validate()
         {
             base.Validate();
+            CpuInfo cpuInfo = this.SystemManagement.GetCpuInfoAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            if (this.BindToCores && this.ServerInstances > Environment.ProcessorCount)
+            if (this.BindToCores && this.ServerInstances > cpuInfo.LogicalCoreCount)
             {
                 throw new WorkloadException(
                     $"Invalid '{nameof(this.ServerInstances)}' parameter value. The number of server instances cannot exceed the number of logical cores/vCPUs on the system.",
@@ -237,11 +273,20 @@ namespace VirtualClient.Actions
             });
         }
 
-        private async Task KillServerInstancesAsync(CancellationToken cancellationToken)
+        private Task KillServerInstancesAsync(CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
-            await this.ExecuteCommandAsync("pkill -f redis-server", this.RedisPackagePath, cancellationToken);
-            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+            IEnumerable<IProcessProxy> processes = this.SystemManagement.ProcessManager.GetProcesses("redis-server");
+
+            if (processes?.Any() == true)
+            {
+                foreach (IProcessProxy process in processes)
+                {
+                    process.SafeKill();
+                }
+            }
+
+            return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
         private bool ResetServer(EventContext telemetryContext)
@@ -321,16 +366,23 @@ namespace VirtualClient.Actions
 
                         if (this.BindToCores)
                         {
-                            // e.g.
-                            // bash -c "numactl -C 1 /home/user/VirtualClient/linux-x64/packages/redis/src/redis-server --port 6389 --protected-mode no
-                            //       --ignore-warnings ARM64-COW-BUG --save --io-threads 4 --maxmemory-policy noeviction
-
-                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
+                            commandArguments = $"-c \"numactl -C {i} {this.RedisExecutablePath}";
                         }
                         else
                         {
-                            commandArguments = $"-c \"{this.RedisExecutablePath} --port {port} {this.CommandLine}\"";
+                            commandArguments = $"-c \"{this.RedisExecutablePath}";
                         }
+
+                        if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+                        {
+                            commandArguments += $" --tls-port {port} --port 0 --tls-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}   --tls-key-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --tls-ca-cert-file {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")}";
+                        }
+                        else
+                        {
+                            commandArguments += $" --port {port}";
+                        }
+
+                        commandArguments += $" {this.CommandLine}\"";
 
                         // We cannot use a Task.Run here. The Task is queued on the threadpool but does not get running
                         // until our counter 'i' is at the end. This will cause all server instances to use the same port
@@ -357,7 +409,13 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             ConsoleLogger.Default.LogMessage($"Redis server process exited (port = {port})...", telemetryContext);
-                            process.ThrowIfWorkloadFailed();
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Redis");
+
+                            // Redis will give 137 if it thinks memory is constraint but will still accept connection, example:
+                            // WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1'
+                            // for this to take effect.
+                            // Ready to accept connections
+                            process.ThrowIfWorkloadFailed(successCodes: new int[] { 0, 137 });
                         }
                     }
                 }

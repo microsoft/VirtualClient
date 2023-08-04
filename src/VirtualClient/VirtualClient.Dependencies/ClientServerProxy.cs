@@ -73,8 +73,8 @@ namespace VirtualClient.Dependencies
                     {
                         // Subscribe to notifications from the Events API. The client passes instructions
                         // to the server via this API.
-                        VirtualClientEventing.SendReceiveInstructions += this.OnInstructionsReceived;
-                        VirtualClientEventing.SetEventingApiOnline(true);
+                        VirtualClientRuntime.SendReceiveInstructions += this.OnInstructionsReceived;
+                        VirtualClientRuntime.SetEventingApiOnline(true);
 
                         await this.WaitAsync(this.CancellationSource.Token)
                             .ConfigureAwait(false);
@@ -86,8 +86,8 @@ namespace VirtualClient.Dependencies
                     finally
                     {
                         // Cleanup the event subscription to avoid any issues with memory leaks.
-                        VirtualClientEventing.SendReceiveInstructions -= this.OnInstructionsReceived;
-                        VirtualClientEventing.SetEventingApiOnline(false);
+                        VirtualClientRuntime.SendReceiveInstructions -= this.OnInstructionsReceived;
+                        VirtualClientRuntime.SetEventingApiOnline(false);
 
                         await this.StopBackgroundTasksAsync(CancellationToken.None)
                             .ConfigureAwait(false);
@@ -114,7 +114,7 @@ namespace VirtualClient.Dependencies
             {
                 if (!this.disposed)
                 {
-                    VirtualClientEventing.SendReceiveInstructions -= this.OnInstructionsReceived;
+                    VirtualClientRuntime.SendReceiveInstructions -= this.OnInstructionsReceived;
                     this.CancellationSource?.Dispose();
                     this.semaphore.Dispose();
                 }

@@ -20,7 +20,9 @@ namespace VirtualClient.Actions
     /// The Sysbench workload executor.
     /// </summary>
     public class SysbenchOLTPExecutor : VirtualClientComponent
-    { 
+    {
+        private readonly IStateManager stateManager;
+
         /// <summary>
         /// Constructor for <see cref="SysbenchOLTPExecutor"/>
         /// </summary>
@@ -29,8 +31,7 @@ namespace VirtualClient.Actions
         public SysbenchOLTPExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
-            this.ApiClientManager = dependencies.GetService<IApiClientManager>();
-
+            this.stateManager = this.SystemManager.StateManager;
             // Supported roles for this client/server workload.
             this.SupportedRoles = new List<string>
             {
@@ -40,21 +41,22 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter defines the scenario to use for the MySQL user accounts used
+        /// to create the DB and run transactions against it.
+        /// </summary>
+        public string DatabaseScenario
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchOLTPScenario.Default);
+            }
+        }
+
+        /// <summary>
         /// Client used to communicate with the hosted instance of the
         /// Virtual Client API at server side.
         /// </summary>
         public IApiClient ServerApiClient { get; set; }
-
-        /// <summary>
-        /// State representing server Instances.
-        /// </summary>
-        public State ServerCopiesCount { get; set; }
-
-        /// <summary>
-        /// Provides the ability to create API clients for interacting with local as well as remote instances
-        /// of the Virtual Client API service.
-        /// </summary>
-        protected IApiClientManager ApiClientManager { get; }
 
         /// <summary>
         /// Cancellation Token Source for Server.
@@ -93,6 +95,8 @@ namespace VirtualClient.Actions
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
+            await this.InitializeExecutablesAsync(cancellationToken);
+
             if (this.IsMultiRoleLayout())
             {
                 ClientInstance clientInstance = this.GetLayoutClientInstance();
@@ -113,20 +117,48 @@ namespace VirtualClient.Actions
 
             if (isSingleVM)
             {
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+                this.ServerIpAddress = IPAddress.Loopback.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
             }
             else
             {
                 ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
                 IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.ServerIpAddress = serverIPAddress.ToString();
+                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
+                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
 
                 ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
 
                 this.ClientIpAddress = clientIPAddress.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Initializes the workload executables on the system (e.g. attributes them as executable).
+        /// </summary>
+        protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
+        {
+            if (this.Platform == PlatformID.Unix)
+            {
+                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(scriptsDirectory, "balancedServer.sh"),
+                    this.Platform,
+                    cancellationToken);
+
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(scriptsDirectory, "balancedClient.sh"),
+                    this.Platform,
+                    cancellationToken);
+
+                await this.SystemManager.MakeFileExecutableAsync(
+                    this.Combine(scriptsDirectory, "inMemory.sh"),
+                    this.Platform,
+                    cancellationToken);
             }
         }
 
@@ -154,7 +186,7 @@ namespace VirtualClient.Actions
                 {
                     using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, command, workingDirectory))
                     {
-                        SystemManagement.CleanupTasks.Add(() => process.SafeKill());
+                        this.CleanupTasks.Add(() => process.SafeKill());
                         process.RedirectStandardOutput = true;
                         await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
@@ -181,7 +213,7 @@ namespace VirtualClient.Actions
                     break;
                 default:
                     throw new WorkloadException(
-                        $"The Memcached Memtier benchmark workload is currently not supported on the current platform/architecture " +
+                        $"The Sysbench OLTP workload is currently not supported on the current platform/architecture " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
                         $" Supported platform/architectures include: " +
                         $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
@@ -203,16 +235,12 @@ namespace VirtualClient.Actions
                     {
                         case LinuxDistribution.Ubuntu:
                         case LinuxDistribution.Debian:
-                        case LinuxDistribution.CentOS8:
-                        case LinuxDistribution.RHEL8:
-                        case LinuxDistribution.Mariner:
                             break;
                         default:
                             throw new WorkloadException(
                                 $"The Sysbench OLTP workload is not supported on the current Linux distro - " +
                                 $"{linuxDistributionInfo.LinuxDistribution}.  Supported distros include:" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
-                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Mariner)}",
+                                $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}",
                                 ErrorReason.LinuxDistributionNotSupported);
                     }
                 }
@@ -238,6 +266,57 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
                 }
             }
+
+            public bool DatabaseScenarioInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseScenarioInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = value;
+                }
+            }
+
+            public string DiskPathsArgument
+            {
+                get
+                {
+                    return this.Properties.GetValue<string>(nameof(SysbenchOLTPState.DiskPathsArgument), string.Empty);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)] = value;
+                }
+            }
+
+            public bool DatabaseInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DatabaseInitialized)] = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Defines the Sysbench OLTP benchmark scenario.
+        /// </summary>
+        internal class SysbenchOLTPScenario
+        {
+            public const string Balanced = nameof(Balanced);
+
+            public const string InMemory = nameof(InMemory);
+
+            public const string Default = nameof(Default);
         }
     }
 }

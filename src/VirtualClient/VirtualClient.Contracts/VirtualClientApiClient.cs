@@ -47,6 +47,7 @@ namespace VirtualClient
             TypeNameHandling = TypeNameHandling.None
         };
 
+        private const string ApplicationApiRoute = "/api/application";
         private const string EventsApiRoute = "/api/events";
         private const string HeartbeatApiRoute = "/api/heartbeat";
         private const string StateApiRoute = "/api/state";
@@ -86,7 +87,7 @@ namespace VirtualClient
         /// The default amount of time to wait in-between polling operations before making subsequent
         /// calls.
         /// </summary>
-        public static TimeSpan DefaultPollingWaitTime { get; set; } = TimeSpan.FromSeconds(5);
+        public static TimeSpan DefaultPollingWaitTime { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Gets the base URI to the server hosting the API.
@@ -183,6 +184,19 @@ namespace VirtualClient
             {
                 return await this.RestClient.GetAsync(requestUri, cancellationToken)
                     .ConfigureAwait(false);
+            });
+        }
+
+        /// <inheritdoc />
+        public Task<HttpResponseMessage> SendApplicationExitInstructionAsync(CancellationToken cancellationToken, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        {
+            // Format: /api/application/exit
+            string route = $"{VirtualClientApiClient.ApplicationApiRoute}/exit";
+            Uri requestUri = new Uri(this.BaseUri, route);
+
+            return (retryPolicy ?? VirtualClientApiClient.defaultHttpPostRetryPolicy).ExecuteAsync(async () =>
+            {
+                return await this.RestClient.PostAsync(requestUri, cancellationToken);
             });
         }
 

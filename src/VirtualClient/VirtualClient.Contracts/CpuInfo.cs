@@ -22,7 +22,7 @@ namespace VirtualClient.Contracts
         /// <param name="hyperThreadingEnabled">True/false whether CPU hyperthreading is enabled on the system.</param>
         public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled)
         {
-            name.ThrowIfNullOrWhiteSpace(nameof(name));
+            name.ThrowIfNull(nameof(name));
             physicalCoreCount.ThrowIfInvalid(nameof(physicalCoreCount), (count) => count > 0);
             logicalCoreCount.ThrowIfInvalid(nameof(logicalCoreCount), (count) => count > 0);
             socketCount.ThrowIfInvalid(nameof(socketCount), (count) => count > 0);

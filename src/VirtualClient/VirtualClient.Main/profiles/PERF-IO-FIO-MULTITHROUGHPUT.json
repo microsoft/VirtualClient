@@ -1,18 +1,20 @@
 {
     "Description": "FIO Multi Throughput (OLTP-C) Workload",
     "Metadata": {
-        "RecommendedMinimumExecutionTime": "02:00:00",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+        "DiskSelectionInformation": "Sequential disk count specifies the number of disks being used for Sequential I/O from selected disks. Out of which the smallest disks are selected.",
+	"RecommendedMinimumExecutionTime": "02:00:00",
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
+        "DirectIO": true,
         "DiskFilter": "BiggestSize",
+        "InitializeDisksInParallel": true,
         "RandomIOFileSize": "124G",
+        "SequentialDiskCount": "1",
         "SequentialIOFileSize": "20G",
         "TargetIOPS": "5000",
-        "TargetPercents": "10,40,90,98,100,102,110",
-        "DirectIO": true,
-        "InitializeDisksInParallel": true
+        "TargetPercents": "10,40,90,98,100,102,110"
     },
     "Actions": [
         {
@@ -28,6 +30,8 @@
                 "RandomIOFileSize": "$.Parameters.RandomIOFileSize",
                 "DurationSec": "300",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount",
+                "Tags": "IO,FIO,MultiThroughput,OLTP",
                 "TemplateJobFile": "oltp-c.fio.jobfile"
             }
         },
@@ -49,6 +53,7 @@
                 "RandomWriteNumJobs": 1,
                 "RandomWriteQueueDepth": 512,
                 "RandomWriteWeight": 4255,
+                "SequentialDiskCount": "$.Parameters.SequentialDiskCount",
                 "SequentialIOFileSize": "$.Parameters.SequentialIOFileSize",
                 "SequentialReadBlockSize": "56K",
                 "SequentialReadNumJobs": 1,
