@@ -14,10 +14,11 @@ namespace VirtualClient.Contracts
     public abstract class VirtualClientIntervalBasedMonitor : VirtualClientComponent
     {
         /// <summary>
-        /// The default frequency that monitors run at (every one minute)
+        /// The default frequency that monitors run at (every five minutes)
         /// </summary>
         private static TimeSpan defaultFrequency = TimeSpan.FromMinutes(5);
         private static TimeSpan defaultWarmupPeriod = TimeSpan.FromMinutes(5);
+        private static long defaultIterations = 6315489358112;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientIntervalBasedMonitor"/> class.
@@ -66,6 +67,18 @@ namespace VirtualClient.Contracts
             {
                 return this.Parameters.GetTimeSpanValue(
                     nameof(VirtualClientIntervalBasedMonitor.MonitorWarmupPeriod), VirtualClientIntervalBasedMonitor.defaultWarmupPeriod);
+            }
+        }
+
+        /// <summary>
+        /// The number of iterations with which this monitor runs
+        /// </summary>
+        public long MonitorIterations
+        {
+            get
+            {
+                return this.Parameters.GetValue<long>(
+                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations), VirtualClientIntervalBasedMonitor.defaultIterations);
             }
         }
     }
