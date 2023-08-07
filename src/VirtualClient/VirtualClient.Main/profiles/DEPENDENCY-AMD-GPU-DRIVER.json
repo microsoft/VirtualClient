@@ -2,13 +2,16 @@
   "Description": "AMD GPU Driver Installation Dependency",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "00:10:00",
-    "SupportedPlatforms": "win-x64",
-    "SupportedOperatingSystems": "Windows",
-    "SupportedGpuModel": "mi25,v620",
+    "SupportedPlatforms": "win-x64, linux-x64",
+    "SupportedOperatingSystems": "Windows, Linux",
+    "SupportedWindowsGpuModel": "mi25,v620",
+    "SupportedLinuxGpuModel": "all",
     "SpecialRequirements": "This is AMD GPU Driver dependency. It can only be installed on the system having an AMD GPU card/chip."
   },
   "Parameters": {
-    "GpuModel": "mi25"
+    "GpuModel": "mi25",
+    "Username": "",
+    "LinuxInstallationFile": "https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb"
   },
   "Dependencies": [
     {
@@ -26,7 +29,9 @@
       "Parameters": {
         "Scenario": "InstallAMDGPUDriver",
         "GpuModel": "$.Parameters.GpuModel",
-        "PackageName": "amdgpudriver"
+        "PackageName": "amdgpudriver",
+        "Username": "$.Parameters.Username",
+        "LinuxInstallationFile": "$.Parameters.LinuxInstallationFile"
       }
     }
   ]

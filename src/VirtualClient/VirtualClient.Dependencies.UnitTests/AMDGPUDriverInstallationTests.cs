@@ -47,16 +47,57 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void AMDGPUDriverInstallationDependencyThrowsForUnsupportedPlatform()
+        public void AMDGPUDriverInstallationDependencyThrowsForUnsupportedDistros()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);       
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestCentOS7",
+                LinuxDistribution = LinuxDistribution.Flatcar
+            };
 
-            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.PlatformNotSupported, exc.Reason);
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
+            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+
+            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exc.Reason);
         }
 
         [Test]
-        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcesseOnExecuteForMi25()
+        public void AMDGPUDriverInstallationDependencyThrowsIfLinuxInstallationFileIsEmpty()
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Unix, string.Empty, string.Empty);
+
+            DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => this.component.ExecuteAsync(CancellationToken.None));
+            Assert.AreEqual(ErrorReason.DependencyNotFound, exc.Reason);
+        }
+
+        [Test]
+        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcessesOnExecuteForLinux()
+        {
+            this.SetupDefaultMockBehavior(PlatformID.Unix);
+
+            List<string> commands = new List<string>
+            {
+                "apt-get -yq update",
+                "sudo apt-get install -yq libpci3 libpci-dev doxygen unzip cmake git",
+                "sudo apt-get install -yq libnuma-dev libncurses5",
+                "sudo apt-get install -yq libyaml-cpp-dev",
+                "sudo apt-get -yq update",
+                "wget https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb",
+                "apt-get install -yq ./amdgpu-install_5.5.50500-1_all.deb",
+                "sudo amdgpu-install --usecase=hiplibsdk,rocm,dkms",
+                $"sudo bash -c \"echo 'export PATH=/opt/rocm/bin${{PATH:+:${{PATH}}}}' | " +
+                $"sudo tee -a /home/testuser/.bashrc\"",
+                "sudo apt-get install -yq rocblas rocm-smi-lib",
+                "sudo apt-get install -yq rocm-validation-suite"
+            };
+
+            await this.component.ExecuteAsync(CancellationToken.None);
+            Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted(commands.ToArray()));
+        }
+
+        [Test]
+        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcessOnExecuteForMi25()
         {
             this.SetupDefaultMockBehavior(PlatformID.Win32NT, "mi25");
             string installScriptPath = this.fixture.Combine(this.mockPackage.Path, "mi25", "AMD-mi25.exe");
@@ -66,7 +107,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcesseOnExecuteForV620()
+        public async Task AMDGPUDriverInstallationDependencyStartsCorrectProcessOnExecuteForV620()
         {
             this.SetupDefaultMockBehavior(PlatformID.Win32NT);
             string installScriptPath = this.fixture.Combine(this.mockPackage.Path, "v620", "Setup.exe");
@@ -86,7 +127,7 @@ namespace VirtualClient.Dependencies
             Assert.IsFalse(this.fixture.ProcessManager.CommandsExecuted($"{installScriptPath} -INSTALL -OUTPUT screen"));
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platformID, string gpuModel = "v620")
+        private void SetupDefaultMockBehavior(PlatformID platformID, string gpuModel = "v620", string linuxInstallationFile = "https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb")
         {
             this.fixture.Setup(platformID);
             this.mockPackage = new DependencyPath("amddriverpackage", this.fixture.GetPackagePath("amddriverpackage"));
@@ -97,7 +138,9 @@ namespace VirtualClient.Dependencies
             {
                 { "PackageName", "amddriverpackage" },
                 { "GpuModel", gpuModel },
-                { "RebootRequired", false }
+                { "RebootRequired", false },
+                { "Username", "testuser" },
+                { "LinuxInstallationFile", linuxInstallationFile }
             };
 
             this.component = new TestComponent(this.fixture.Dependencies, this.fixture.Parameters);
