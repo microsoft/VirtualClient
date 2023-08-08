@@ -6,7 +6,7 @@
     [Category("Unit")]
     public class SshClientManagerTests
     {
-        private SshClientManager sshClientManager;
+        private ISshClientManager sshClientManager;
 
         [SetUp]
         public void SetupTest()
