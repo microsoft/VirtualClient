@@ -6,7 +6,7 @@ namespace VirtualClient.Common
     /// <summary>
     /// Provides methods for creating and managing ssh client.
     /// </summary>
-    internal interface ISshClientManager
+    public interface ISshClientManager
     {
         /// <summary>
         /// Creates a ssh on the system.
