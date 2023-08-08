@@ -39,6 +39,6 @@ chmod -R 775 "$DEB_DIR/opt/$PACKAGE_NAME"
 chmod -R 775 "$DEB_DIR/DEBIAN"
 
 # Build the package using dpkg-deb
-dpkg-deb --build "$DEB_DIR" "$PACKAGE_NAME"_"$DEB_DIR/$PACKAGE_VERSION"_amd64.deb
+dpkg-deb --build "$DEB_DIR" "$DEB_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_amd64.deb
 
-echo "Debian package created: "$PACKAGE_NAME"_"$DEB_DIR/$PACKAGE_VERSION"_amd64.deb"
+echo "Debian package created: "$DEB_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_amd64.deb"
