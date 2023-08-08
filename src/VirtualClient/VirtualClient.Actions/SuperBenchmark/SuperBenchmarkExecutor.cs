@@ -5,10 +5,12 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -168,10 +170,25 @@ namespace VirtualClient.Actions
                         file,
                         this.Combine(this.SuperBenchmarkDirectory, Path.GetFileName(file)),
                         true);
+
+                    await this.ExecuteCommandAsync("dos2unix", $"{Path.GetFileName(file)}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true);
                 }
 
-                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true);
-                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false);
+                IProcessProxy process = await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true);
+                
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Superbench", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
+                }
+
+                process = await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false);
+
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext, "Superbench", logToFile: true);
+                    process.ThrowIfWorkloadFailed();
+                }
 
                 state.SuperBenchmarkInitialized = true;
             }
