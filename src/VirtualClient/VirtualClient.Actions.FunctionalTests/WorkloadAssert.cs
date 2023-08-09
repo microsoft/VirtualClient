@@ -67,6 +67,44 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Confirms the shell commands were executed. This method uses regular expressions
+        /// to evaluate equality so the commands passed in can be explicit or using regular expressions
+        /// syntax.
+        /// </summary>
+        public static void SSHCommandsExecuted(DependencyFixture fixture, params string[] commands)
+        {
+            List<ISshCommandProxy> sshCommands = new List<ISshCommandProxy>();
+            List<ISshCommandProxy> sshCommandsConfirmed = new List<ISshCommandProxy>();
+            foreach (InMemorySshClient sshClient in fixture.SshClientManager.SshClients)
+            {
+                sshCommands.AddRange(sshClient.SshCommands);
+            }
+
+            foreach (string command in commands)
+            {
+                ISshCommandProxy matchingProcess = null;
+                try
+                {
+                    // Try to match regex
+                    matchingProcess = sshCommands.FirstOrDefault(
+                        sshCommand => Regex.IsMatch($"{sshCommand.CommandText}".Trim(), command, RegexOptions.IgnoreCase)
+                        && !sshCommandsConfirmed.Any(otherProc => object.ReferenceEquals(sshCommand, otherProc)));
+                }
+                catch
+                {
+                }
+
+                // Or command exact match
+                matchingProcess = matchingProcess ?? sshCommands.FirstOrDefault(
+                    sshCommand => $"{sshCommand.CommandText}".Trim() == command
+                    && !sshCommandsConfirmed.Any(otherProc => object.ReferenceEquals(sshCommand, otherProc)));
+
+                Assert.IsNotNull(matchingProcess, $"The command '{command}' was not executed.");
+                sshCommandsConfirmed.Add(matchingProcess);
+            }
+        }
+
+        /// <summary>
         /// Confirms all disks are initialized as expected (e.g. disks are formatted).
         /// </summary>
         public static void DisksAreInitialized(DependencyFixture fixture, Action<IEnumerable<Disk>> additionalValidation = null)
