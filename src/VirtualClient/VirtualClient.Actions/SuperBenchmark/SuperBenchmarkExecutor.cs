@@ -169,8 +169,6 @@ namespace VirtualClient.Actions
                         file,
                         this.Combine(this.SuperBenchmarkDirectory, Path.GetFileName(file)),
                         true);
-
-                    await this.ExecuteSbCommandAsync("dos2unix", $"{Path.GetFileName(file)}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
                 }
 
                 await this.ExecuteSbCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
