@@ -379,7 +379,7 @@ namespace VirtualClient.Common.Telemetry
             while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 // Waiting for the flush delay to elapse
-                this.autoFlushWaitHandle.WaitOne(TimeSpan.FromMilliseconds(100));
+                this.autoFlushWaitHandle.WaitOne(TimeSpan.FromMilliseconds(5000));
 
                 // Pulling all items from the buffer and sending as one transmission.
                 this.TransmitEvents();
