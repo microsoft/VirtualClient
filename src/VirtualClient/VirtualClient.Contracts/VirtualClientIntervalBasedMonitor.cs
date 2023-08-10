@@ -18,7 +18,6 @@ namespace VirtualClient.Contracts
         /// </summary>
         private static TimeSpan defaultFrequency = TimeSpan.FromMinutes(5);
         private static TimeSpan defaultWarmupPeriod = TimeSpan.FromMinutes(5);
-        private static long defaultIterations = long.MaxValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VirtualClientIntervalBasedMonitor"/> class.
@@ -78,7 +77,7 @@ namespace VirtualClient.Contracts
             get
             {
                 return this.Parameters.GetValue<long>(
-                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations), VirtualClientIntervalBasedMonitor.defaultIterations);
+                    nameof(VirtualClientIntervalBasedMonitor.MonitorIterations));
             }
         }
     }
