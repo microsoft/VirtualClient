@@ -20,7 +20,6 @@ namespace VirtualClient.Actions
     /// <summary>
     /// CtsTraffic Server executor.
     /// </summary>
-    [UnixCompatible]
     [WindowsCompatible]
     public class CtsTrafficServerExecutor : CtsTrafficExecutor
     {
@@ -71,15 +70,6 @@ namespace VirtualClient.Actions
         {
             try
             {
-                // 1. Start 1st phase
-                // 2. Create phase 1 state
-                // 3. Wait for phase 1 process to finish
-                // 4. delete phase1 state
-                // 5. Start 2nd phase
-                // 6. Create phase 2 state
-                // 7. wait for phase 2 to finish
-                // 8. Delet phase 2 state
-
                 string ctsTrafficCommandArgs = "-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
                 $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
                 $@"-Pattern:{this.Pattern} -Transfer:{this.BytesToTransfer} -ServerExitLimit:{this.ServerExitLimit} " +

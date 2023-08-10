@@ -21,7 +21,6 @@ namespace VirtualClient.Actions
     /// CtsTraffic Client executor.
     /// Executes the transactions to the server.
     /// </summary>
-    [UnixCompatible]
     [WindowsCompatible]
     public class CtsTrafficClientExecutor : CtsTrafficExecutor
     {
@@ -73,10 +72,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the client workload.
         /// 1. Polls and waits for server to be started on primary port.
-        /// 2. Get client parameters from server.
-        /// 3. Executes the client primary workload.
-        /// 4. Polls and wait for server to be started on secondary port.
-        /// 5. Executes the client secondary workload.
+        /// 2. Executes the client workload.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
@@ -94,7 +90,7 @@ namespace VirtualClient.Actions
                 cancellationToken,
                 this.PollingInterval);
 
-            // The CtsTraffic phase 1 must be confirmed to be initialized and ready.
+            // The CtsTraffic server must be confirmed to be initialized and ready.
             await this.ServerApiClient.PollForExpectedStateAsync<CtsTrafficServerState>(
                 nameof(CtsTrafficServerState),
                 (state => state.ServerSetupCompleted == true),

@@ -215,8 +215,6 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            bool isMultiRole = this.IsMultiRoleLayout();
-
             using (this.ServerCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
                 try
@@ -308,20 +306,12 @@ namespace VirtualClient.Actions
         {
             IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
             this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
-            bool isSingleVM = !this.IsMultiRoleLayout();
+            
+            ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-            if (isSingleVM)
-            {
-                this.ServerApiClient = this.LocalApiClient;
-            }
-            else
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
-
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
-                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
-            }
+            this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverInstance);
+            this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
         }
 
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
@@ -342,7 +332,10 @@ namespace VirtualClient.Actions
         {
             if (this.Platform == PlatformID.Unix)
             {
-                // Add logger
+                throw new WorkloadException(
+                        $"The CtsTraffic workload is not supported on the current platform/architecture " +
+                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
+                        ErrorReason.PlatformNotSupported);
             }
         }
 
