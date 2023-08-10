@@ -54,7 +54,7 @@ Runs the CtsTraffic workload which generate various metrics.
   * win-x64, win-arm64
 
 * **Supports Disconnected Scenarios**  
-  * Yes. Internet connection not required.
+  * No. Internet connection required.
 
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
@@ -64,6 +64,20 @@ Runs the CtsTraffic workload which generate various metrics.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
+
+* **Profile Parameters**  
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter                 | Purpose                                                                         | Default value |
+  |---------------------------|---------------------------------------------------------------------------------|---------------|
+  | Port              | Required. Port number on which the CtsTraffic server will run on. | 4444 |
+  | NumaNodeIndex           | Required. Index of NumaNode. -1 indicates running ctstraffic directly(not on any specific numanode)                               | -1 |
+  | BufferInBytes               | Required. Buffer in bytes that is being transferred.                                  | 65536 |
+  | Pattern | Required. Pattern used while executing workload (e.g. push, pull, pushpull, duplex) | Duplex |
+  | BytesToTransfer | Required. Total bytes to be transferred while running workload. | 0x400000000 |
+  | Connections | Required. Total number of concurrent connections being made by client to the server(s) specified by –Target | 20 | 
+  | Iterations | Required. Number of times ctsTraffic will cycle across all the connections specified with Connections.| 1 |
+  | ServerExitLimit | Required. The number of connections an instance of ctsTraffic should handle before exiting | 1 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

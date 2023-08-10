@@ -104,26 +104,50 @@ namespace VirtualClient.Actions
 
             string targetIPAddress = this.GetServerIPAddress(cancellationToken);
 
-            string command = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+            string ctsTrafficCommandArgs = $"-Target:{targetIPAddress} -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
             $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
             $@"-Connections:{this.Connections} -Pattern:{this.Pattern} -Iterations:{this.Iterations} -Transfer:{this.BytesToTransfer} " +
-            $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
+            $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000";
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    this.ProcessInNumaNodeExe,
-                    command,
+            string numaNodeCommandArgs = $@"{this.NumaNodeIndex} ""{this.CtsTrafficExe} {ctsTrafficCommandArgs}""";
+
+            if (this.NumaNodeIndex == -1)
+            {
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.CtsTrafficExe,
+                    ctsTrafficCommandArgs,
                     this.CtsTrafficPackagePath,
                     telemetryContext,
                     cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
-                    process.ThrowIfWorkloadFailed();
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
 
-                    await this.CaptureMetricsAsync(process, command, telemetryContext, cancellationToken);
+                        await this.CaptureMetricsAsync(process, ctsTrafficCommandArgs, telemetryContext, cancellationToken);
+                    }
                 }
             }
+            else
+            {
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    this.ProcessInNumaNodeExe,
+                    numaNodeCommandArgs,
+                    this.CtsTrafficPackagePath,
+                    telemetryContext,
+                    cancellationToken))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "CtsTraffic", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+
+                        await this.CaptureMetricsAsync(process, numaNodeCommandArgs, telemetryContext, cancellationToken);
+                    }
+                }
+            }
+            
         }
 
         private string GetServerIPAddress(CancellationToken cancellationToken)

@@ -7,11 +7,11 @@
     },
     "Parameters": {
         "Port": "4444",
-        "NumaNode": "0",
+        "NumaNodeIndex": "-1",
         "BufferInBytes": "65536",
         "Pattern":  "Duplex",
         "BytesToTransfer":  "0x400000000",
-        "Connections": "1",
+        "Connections": "20",
         "Iterations": "1",
         "ServerExitLimit": "1"
     },
@@ -21,7 +21,7 @@
           "Parameters": {
             "Scenario": "ExecuteCtsTrafficBenchmark",
             "Port": "$.Parameters.Port",
-            "NumaNode": "$.Parameters.NumaNode",
+            "NumaNodeIndex": "$.Parameters.NumaNodeIndex",
             "BufferInBytes": "$.Parameters.BufferInBytes",
             "Pattern": "$.Parameters.Pattern",
             "BytesToTransfer": "$.Parameters.BytesToTransfer",

@@ -80,18 +80,31 @@ namespace VirtualClient.Actions
                 // 7. wait for phase 2 to finish
                 // 8. Delet phase 2 state
 
-                string command = $@"{this.NumaNode} ""{this.CtsTrafficExe} -Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+                string ctsTrafficCommandArgs = "-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
                 $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
                 $@"-Pattern:{this.Pattern} -Transfer:{this.BytesToTransfer} -ServerExitLimit:{this.ServerExitLimit} " +
-                $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000""";
+                $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000";
 
-                await this.ExecuteAndWaitCommandAsync(this.ProcessInNumaNodeExe, command, this.CtsTrafficPackagePath, telemetryContext, cancellationToken);
+                string numaNodeCommandArgs = $@"{this.NumaNodeIndex} ""{this.CtsTrafficExe} {ctsTrafficCommandArgs}""";
 
-                using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
+                if (this.NumaNodeIndex == -1)
                 {
-                    response.ThrowOnError<WorkloadException>();
-                }
+                    await this.ExecuteAndWaitCommandAsync(this.CtsTrafficExe, ctsTrafficCommandArgs, this.CtsTrafficPackagePath, telemetryContext, cancellationToken);
 
+                    using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
+                    {
+                        response.ThrowOnError<WorkloadException>();
+                    }
+                }
+                else
+                {
+                    await this.ExecuteAndWaitCommandAsync(this.ProcessInNumaNodeExe, numaNodeCommandArgs, this.CtsTrafficPackagePath, telemetryContext, cancellationToken);
+
+                    using (HttpResponseMessage response = await this.LocalApiClient.DeleteStateAsync(nameof(CtsTrafficServerState), cancellationToken))
+                    {
+                        response.ThrowOnError<WorkloadException>();
+                    }
+                }
             }
             catch
             {

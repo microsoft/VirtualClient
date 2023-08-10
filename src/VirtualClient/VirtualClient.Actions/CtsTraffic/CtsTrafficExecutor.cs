@@ -57,11 +57,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Index of NumaNode.
         /// </summary>
-        public int NumaNode
+        public int NumaNodeIndex
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumaNode), 0);
+                return this.Parameters.GetValue<int>(nameof(this.NumaNodeIndex), -1);
             }
         }
 
@@ -169,6 +169,7 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.ValidatePlatformSupportedAsync(cancellationToken);
+            this.ThrowIfLayoutNotDefined();
 
             await CtsTrafficExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
 
@@ -177,15 +178,12 @@ namespace VirtualClient.Actions
             DependencyPath ctsTrafficPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
             this.CtsTrafficPackagePath = ctsTrafficPackage.Path;
 
-            if (this.IsMultiRoleLayout())
-            {
-                ClientInstance clientInstance = this.GetLayoutClientInstance();
-                string layoutIPAddress = clientInstance.IPAddress;
-                this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
+            ClientInstance clientInstance = this.GetLayoutClientInstance();
+            string layoutIPAddress = clientInstance.IPAddress;
+            this.ThrowIfLayoutClientIPAddressNotFound(layoutIPAddress);
 
-                this.Role = clientInstance.Role;
-                this.ThrowIfRoleNotSupported(this.Role);
-            }
+            this.Role = clientInstance.Role;
+            this.ThrowIfRoleNotSupported(this.Role);
 
             this.CtsTrafficExe = this.Combine(this.CtsTrafficPackagePath, "ctsTraffic.exe");
             this.ProcessInNumaNodeExe = this.Combine(this.CtsTrafficPackagePath, "StartProcessInNumaNode.exe");
@@ -225,7 +223,7 @@ namespace VirtualClient.Actions
                 {
                     CancellationToken serverCancellationToken = this.ServerCancellationSource.Token;
 
-                    if (!isMultiRole || this.IsInRole(ClientRole.Server))
+                    if (this.IsInRole(ClientRole.Server))
                     {
                         using (var serverExecutor = this.CreateServerExecutor())
                         {
@@ -236,9 +234,8 @@ namespace VirtualClient.Actions
                         }
                     }
 
-                    if (!isMultiRole || this.IsInRole(ClientRole.Client))
-                    {
-                        // After database creation completes. Runs threads querying database.
+                    if (this.IsInRole(ClientRole.Client))
+                    {                        
                         using (var clientExecutor = this.CreateClientExecutor())
                         {
                             await clientExecutor.ExecuteAsync(serverCancellationToken)
