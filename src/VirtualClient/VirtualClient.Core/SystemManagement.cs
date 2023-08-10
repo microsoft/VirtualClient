@@ -97,7 +97,7 @@ namespace VirtualClient
         public bool RunningInContainer { get; } = PlatformSpecifics.IsRunningInContainer();
 
         /// <inheritdoc />
-        public SshClientManager SshClientManager { get; internal set; }
+        public ISshClientManager SshClientManager { get; internal set; }
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.

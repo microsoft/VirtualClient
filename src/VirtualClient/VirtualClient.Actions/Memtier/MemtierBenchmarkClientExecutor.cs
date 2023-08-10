@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO.Packaging;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -102,6 +103,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// yes if TLS is enabled.
+        /// </summary>
+        public string IsTLSEnabled
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines the number of server instances/copies to run.
+        /// </summary>
+        public string RedisResourcesPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.RedisResourcesPackageName));
+            }
+        }
+
+        /// <summary>
         /// The benchmark target server (e.g. Redis, Memcached).
         /// </summary>
         protected string Benchmark { get; private set; }
@@ -131,6 +154,11 @@ namespace VirtualClient.Actions
         /// Path to Memtier Package.
         /// </summary>
         protected string MemtierPackagePath { get; set; }
+
+        /// <summary>
+        /// Path to Redis resources.
+        /// </summary>
+        protected string RedisResourcesPath { get; set; }
 
         /// <summary>
         /// The timespan at which the client will poll the server for responses before
@@ -230,6 +258,12 @@ namespace VirtualClient.Actions
                 this.Benchmark = "Redis";
             }
 
+            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+            {
+                DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
+                this.RedisResourcesPath = redisResourcesPath.Path;
+            }
+
             await this.SystemManagement.MakeFileExecutableAsync(this.MemtierExecutablePath, this.Platform, cancellationToken);
             this.InitializeApiClients();
         }
@@ -297,6 +331,7 @@ namespace VirtualClient.Actions
                 {
                     string command = this.MemtierExecutablePath;
                     string workingDirectory = this.MemtierPackagePath;
+                    string commandArguments = string.Empty;
                     List<string> commands = new List<string>();
 
                     relatedContext.AddContext("command", command);
@@ -311,8 +346,15 @@ namespace VirtualClient.Actions
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            string commandArguments = commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine}";
-                            
+                            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+                            {
+                                commandArguments = $"--server {serverIPAddress} --port {serverPort} --tls --cert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}  --key {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --cacert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")} {this.CommandLine}";
+                            }
+                            else
+                            {
+                                commandArguments = $"--server {serverIPAddress} --port {serverPort} {this.CommandLine}";
+                            }
+
                             commands.Add(commandArguments);
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
 
@@ -416,16 +458,9 @@ namespace VirtualClient.Actions
                 {
                     @".*\/memtier_benchmark",
                     @"--port\s+\d+",
-                    @"--protocol\s+\w+",
                     @"--key-prefix\s+\w+",
-                    @"--test-time\s+\d+",
-                    @"--key-minimum\s+\d+",
-                    @"--key-maximum\s+\d+",
-                    @"--key-prefix\s+\w+",
-                    @"--key-pattern\s+\w+:\w+",
-                    @"--run-count\s+\d+",
-                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+",
-                    @"--tls",
+                    @"--key-prefix\s+\w+", 
+                    @"--print-percentiles\s+(?:\d{1,2}(?:\.\d+)?(?:,\d{1,2}(?:\.\d+)?)*)+", 
                     @"--cert\s+.*\.crt",
                     @"--key\s+.*\.key",
                     @"--cacert\s+.*\.crt",
@@ -436,9 +471,7 @@ namespace VirtualClient.Actions
                 command = Regex.Replace(command, regexPattern, string.Empty);
             }
 
-            command = Regex.Replace(command, @"\s+", " "); // Remove extra spaces
-
-            Console.WriteLine($"final command without performance affecting values {command.Trim()}");
+            command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
             return command.Trim();
         }
