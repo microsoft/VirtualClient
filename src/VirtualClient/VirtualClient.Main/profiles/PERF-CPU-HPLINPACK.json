@@ -9,9 +9,10 @@
     "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
-    "ProblemSizeN": null,
+    "ProblemSizeN": "{LogicalCoreCount} * 10000",
     "BlockSizeNB": "256",
-    "NumberOfProcesses": null,
+    "NumberOfProcesses": "{LogicalCoreCount}",
+    "UseArmPerfLibraries": true,
     "CCFLAGS": "-march=native"
   },
   "Actions": [
@@ -25,6 +26,7 @@
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
         "CCFLAGS": "$.Parameters.CCFLAGS",
+        "UseArmPerfLibraries": "$.Parameters.UseArmPerfLibraries",
         "PackageName": "hplinpack"
       }
     }
@@ -52,6 +54,16 @@
         "BlobContainer": "packages",
         "BlobName": "hpl.2.3.zip",
         "PackageName": "hplinpack",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallARMPerformanceLibrariesPackage",
+        "BlobContainer": "packages",
+        "BlobName": "armperformancelibraries.zip",
+        "PackageName": "arm_performance_libraries",
         "Extract": true
       }
     }

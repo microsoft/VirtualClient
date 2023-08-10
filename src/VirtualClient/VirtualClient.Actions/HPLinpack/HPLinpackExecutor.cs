@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -52,7 +53,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username), string.Empty);
+                string username = this.Parameters.GetValue<string>(nameof(this.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     username = Environment.UserName;
@@ -69,12 +70,18 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(HPLinpackExecutor.HyperThreadingOn), true);
+                return this.Parameters.GetValue<bool>(nameof(this.HyperThreadingOn), true);
             }
+        }
 
-            set
+        /// <summary>
+        /// Parameter defines whether to bind the Memcached server process to cores on the system.
+        /// </summary>
+        public bool UseArmPerfLibraries
+        {
+            get
             {
-                this.Parameters[nameof(HPLinpackExecutor.HyperThreadingOn)] = value;
+                return this.Parameters.GetValue<bool>(nameof(this.UseArmPerfLibraries), true);
             }
         }
 
@@ -85,7 +92,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.ProblemSizeN), Environment.ProcessorCount * 10000);
+                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN));
             }
         }
 
@@ -96,7 +103,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.BlockSizeNB), out IConvertible nb);
+                this.Parameters.TryGetValue(nameof(this.BlockSizeNB), out IConvertible nb);
                 return nb?.ToString();
             }
         }
@@ -108,7 +115,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(HPLinpackExecutor.NumberOfProcesses), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses));
             }
         }
 
@@ -119,7 +126,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.Version), out IConvertible version);
+                this.Parameters.TryGetValue(nameof(this.Version), out IConvertible version);
                 return version?.ToString();
             }
         }
@@ -131,8 +138,19 @@ namespace VirtualClient.Actions
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(HPLinpackExecutor.CCFlags), out IConvertible ccflags);
+                this.Parameters.TryGetValue(nameof(this.CCFlags), out IConvertible ccflags);
                 return ccflags?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// The name of the package where the ARMPerformanceLibraries package is downloaded.
+        /// </summary>
+        public string ARMPerformanceLibrariesPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ARMPerformanceLibrariesPackageName), "arm_performance_libraries");
             }
         }
 
@@ -160,6 +178,20 @@ namespace VirtualClient.Actions
             this.coreCount = Environment.ProcessorCount;
 
             this.ValidateParameters();
+
+            // currently adding only single perf libraries for arm . Yet to add intel perf lib.
+            if (this.UseArmPerfLibraries)
+            {
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
+                    .ConfigureAwait(false);
+                    string armPackageLibrariesPath = armPerformanceLibrariesPackage.Path;
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+
+                    await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                }
+            }
 
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                                                     .ConfigureAwait(false);
@@ -272,30 +304,57 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"TOPdir *= *[^\n]*", $"TOPdir = {this.HPLDirectory}", cancellationToken);
 
-            string architecture;
-            if (this.CpuArchitecture == Architecture.Arm64)
+            await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"CCFLAGS *= *[^\n]*", $"CCFLAGS = $(HPL_DEFS) {this.CCFlags}", cancellationToken);
+
+            await this.fileSystem.File.ReplaceInFileAsync(
+                    makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken);
+
+            if (this.UseArmPerfLibraries)
             {
-                architecture = "aarch64";
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                    makeFilePath, @"LAdir *=", "LAdir = $(ARMPL_DIR)", cancellationToken);
+
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
+
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);
+
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
+                }
+                else
+                {
+                    throw new WorkloadException(
+                    $"The HPL workload is currently only supports with perf libraries on the following platform/architectures: " +
+                    $"'{PlatformSpecifics.LinuxArm64}'.",
+                    ErrorReason.PlatformNotSupported);
+                }
             }
             else
             {
-                architecture = "x86_64";
+                string architecture;
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    architecture = "aarch64";
+                }
+                else
+                {
+                    architecture = "x86_64";
+                }
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"MPinc *=", $"MPinc =  -I/usr/lib/{architecture}-linux-gnu/openmpi", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"MPlib *=", $"MPlib =  /usr/lib/{architecture}-linux-gnu/openmpi/lib/libmpi.so", cancellationToken);
+
+                await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LAinc *=", $"LAinc = -I/usr/lib/{architecture}-linux-gnu", cancellationToken);
             }
-
-            await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"MPinc *=", $"MPinc =  -I/usr/lib/{architecture}-linux-gnu/openmpi", cancellationToken);
-
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    makeFilePath, @"MPlib *=", $"MPlib =  /usr/lib/{architecture}-linux-gnu/openmpi/lib/libmpi.so", cancellationToken);
-
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    makeFilePath, @"LAinc *=", $"LAinc = -I/usr/lib/{architecture}-linux-gnu", cancellationToken);
-
-            await this.fileSystem.File.ReplaceInFileAsync(
-                        makeFilePath, @"CCFLAGS *= *[^\n]*", $"CCFLAGS = $(HPL_DEFS) {this.CCFlags}", cancellationToken);
-
-            await this.fileSystem.File.ReplaceInFileAsync(
-                    makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken); 
         }
 
         private async Task ConfigureDatFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -381,7 +440,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    commandArguments,
+                    $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
                     this.Tags,
                     telemetryContext,
                     result.Relativity,
