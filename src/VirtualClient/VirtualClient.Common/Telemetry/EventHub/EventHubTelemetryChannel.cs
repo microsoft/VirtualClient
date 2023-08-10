@@ -376,7 +376,7 @@ namespace VirtualClient.Common.Telemetry
 
         private void TransmitEventsInTheBackground()
         {
-            TimeSpan waitInterval = TimeSpan.FromMilliseconds(100);
+            TimeSpan waitInterval = TimeSpan.FromMilliseconds(5000);
             while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 // Waiting for the flush delay to elapse
