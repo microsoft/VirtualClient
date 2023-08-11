@@ -127,6 +127,12 @@ namespace VirtualClient.Common.Telemetry
         }
 
         /// <summary>
+        /// Gets or sets the intervel for which VC autoflushes telemetry.
+        /// Making the interval too short will stress eventhub and create throttle.
+        /// </summary>
+        public TimeSpan AutoFlushInterval { get; set; } = TimeSpan.FromMilliseconds(5000);
+
+        /// <summary>
         /// Gets the channel diagnostics instance if enabled.
         /// </summary>
         internal ChannelDiagnostics Diagnostics { get; }
@@ -376,11 +382,10 @@ namespace VirtualClient.Common.Telemetry
 
         private void TransmitEventsInTheBackground()
         {
-            TimeSpan waitInterval = TimeSpan.FromMilliseconds(100);
             while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 // Waiting for the flush delay to elapse
-                this.autoFlushWaitHandle.WaitOne(waitInterval);
+                this.autoFlushWaitHandle.WaitOne(this.AutoFlushInterval);
 
                 // Pulling all items from the buffer and sending as one transmission.
                 this.TransmitEvents();

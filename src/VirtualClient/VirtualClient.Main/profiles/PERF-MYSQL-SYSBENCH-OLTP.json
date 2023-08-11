@@ -8,7 +8,8 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
-        "DatabaseScenario":  "Default"
+        "DatabaseScenario": "Default",
+        "SkipInitialize": false
     },
     "Actions": [
         {
@@ -67,6 +68,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "StartServer",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipInitialize",
                 "Role": "Server"
             }
         },
@@ -75,7 +77,8 @@
             "Parameters": {
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
-                "DatabaseName": "$.Parameters.DatabaseName",
+              "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipInitialize",
                 "Role": "Server"
             }
         },
@@ -85,6 +88,7 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "RaisedStatementCount",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipInitialize",
                 "Role": "Server"
             }
         },
@@ -94,6 +98,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureNetwork",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipInitialize",
                 "Role": "Server"
             }
         },
@@ -103,6 +108,7 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "CreateUser",
                 "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipInitialize",
                 "Role": "Server"
             }
         },
