@@ -53,6 +53,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public bool SkipInitialize
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.SkipInitialize), false);
+            }
+        }
+
+        /// <summary>
         /// The name to use for the MySQL Database to manage.
         /// </summary>
         public string DatabaseName { get; }
@@ -74,7 +85,7 @@ namespace VirtualClient.Dependencies
 
             telemetryContext.AddContext(nameof(configurationState), configurationState);
 
-            if (configurationState == null)
+            if (configurationState == null && !this.SkipInitialize)
             {
                 switch (this.Action)
                 {
