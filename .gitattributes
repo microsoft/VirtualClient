@@ -70,3 +70,4 @@
 /src/VirtualClient/VirtualClient.Actions/**/*.sh eol=lf
 /src/VirtualClient/VirtualClient.Dependencies/**/*.sh eol=lf
 yarn.lock eol=lf
+/src/VirtualClient/VirtualClient.Actions/SuperBenchmark/local.ini eol=lf
