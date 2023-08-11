@@ -70,7 +70,7 @@ namespace VirtualClient.Actions
         {
             try
             {
-                string ctsTrafficCommandArgs = "-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
+                string ctsTrafficCommandArgs = $"-Listen:* -Consoleverbosity:1 -StatusFilename:{this.StatusFileName} " +
                 $@"-ConnectionFilename:{this.ConnectionsFileName} -ErrorFileName:{this.ErrorFileName} -Port:{this.Port} " +
                 $@"-Pattern:{this.Pattern} -Transfer:{this.BytesToTransfer} -ServerExitLimit:{this.ServerExitLimit} " +
                 $@"-Buffer:{this.BufferInBytes} -TimeLimit:150000";
