@@ -1,7 +1,7 @@
 ###############################################################################
 # Set default behavior to automatically normalize line endings.
 ###############################################################################
-* text=auto eol=lf
+* text=auto
 
 ###############################################################################
 # Set default behavior for command prompt diff.
@@ -70,3 +70,4 @@
 /src/VirtualClient/VirtualClient.Actions/**/*.sh eol=lf
 /src/VirtualClient/VirtualClient.Dependencies/**/*.sh eol=lf
 yarn.lock eol=lf
+/src/VirtualClient/VirtualClient.Actions/SuperBenchmark/local.ini eol=lf
