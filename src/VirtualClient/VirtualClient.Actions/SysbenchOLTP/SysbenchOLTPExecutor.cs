@@ -146,17 +146,17 @@ namespace VirtualClient.Actions
                 string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
                 await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balancedServer.sh"),
+                    this.Combine(scriptsDirectory, "balanced-Server.sh"),
                     this.Platform,
                     cancellationToken);
 
                 await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balancedClient.sh"),
+                    this.Combine(scriptsDirectory, "balanced-Client.sh"),
                     this.Platform,
                     cancellationToken);
 
                 await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "inMemory.sh"),
+                    this.Combine(scriptsDirectory, "in-Memory.sh"),
                     this.Platform,
                     cancellationToken);
             }
