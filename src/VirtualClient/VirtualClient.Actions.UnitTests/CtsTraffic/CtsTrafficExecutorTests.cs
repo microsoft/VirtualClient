@@ -58,28 +58,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task CtsTrafficClientExecutorIntializesTheExpectedAPIClients_SingleVM_Environment()
-        {
-            this.SetupDefaults();
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-
-            using (var executor = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                // Setup: API calls.
-                this.mockFixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<IPAddress>(), It.IsAny<int?>()))
-                   .Returns<string, IPAddress, int?>((id, ip, port) =>
-                   {
-                       Assert.IsTrue(id.Equals(IPAddress.Loopback.ToString()));
-                       Assert.AreEqual(IPAddress.Loopback, ip);
-
-                       return this.mockFixture.ApiClient.Object;
-                   });
-
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None);
-            }
-        }
-
-        [Test]
         public async Task CtsTrafficClientExecutorIntializesTheExpectedAPIClients_MultiVM_Environment()
         {
             this.SetupDefaults();
@@ -147,21 +125,6 @@ namespace VirtualClient.Actions
             using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
-            }
-        }
-
-        [Test]
-        public async Task CtsTrafficExecutorExecutesBothClientAndServerRolesWhenALayoutIsNotDefined()
-        {
-            this.SetupDefaults();
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
-
-            using (var component = new TestCtsTrafficExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await component.ExecuteAsync(CancellationToken.None);
-
-                Assert.IsTrue(component.IsClientExecuted);
-                Assert.IsTrue(component.IsServerExecuted);
             }
         }
 
