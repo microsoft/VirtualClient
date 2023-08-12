@@ -31,13 +31,7 @@
         <ScriptFiles Include="PostgreSQL\*.sh" />
         <ScriptFiles Include="SuperBenchmark\*.yaml;SuperBenchmark\*.sh;SuperBenchmark\*.ini" />
         <ScriptFiles Include="MLPerf\**\*.py" />
-	<ScriptFiles Include="SysbenchOLTP\*.sh" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ScriptFiles Remove="SysbenchOLTP\balanced-Client.sh" />
-      <ScriptFiles Remove="SysbenchOLTP\balanced-Server.sh" />
-      <ScriptFiles Remove="SysbenchOLTP\in-Memory.sh" />
+	    <ScriptFiles Include="SysbenchOLTP\*.sh" />
     </ItemGroup>
 
     <Target Name="CopyWorkloadScriptsToOutput" AfterTargets="Build">
