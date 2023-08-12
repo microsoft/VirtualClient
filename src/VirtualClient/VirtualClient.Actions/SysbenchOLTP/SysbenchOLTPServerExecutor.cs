@@ -133,7 +133,7 @@ namespace VirtualClient.Actions
             {
                 // server's job is to configure buffer size, in memory script updates the mysql config file
 
-                string inMemoryScript = "in-Memory.sh";
+                string inMemoryScript = "in-memory.sh";
                 string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
                 MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
@@ -217,7 +217,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                string balancedScript = "balanced-Server.sh";
+                string balancedScript = "balanced-server.sh";
                 string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
