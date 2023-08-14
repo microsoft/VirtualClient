@@ -384,7 +384,7 @@ namespace VirtualClient.Actions
             // client work in the balanced scenario includes copying all tables from OS disk to data disk,
             // dropping old tables & renaming them
 
-            string balancedScript = "balanced-Client.sh";
+            string balancedScript = "balanced-client.sh";
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
             string balancedArguments = $"{this.ServerIpAddress} 10 {this.DatabaseName} {diskPaths}";
 
