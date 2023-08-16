@@ -21,6 +21,12 @@ Windows
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Furmark needs AMD GPU drivers that needs to be installed on the system prior to running this profile. 
   On Virtual machines you can install AMD GPU drivers from [here](https://go.microsoft.com/fwlink/?linkid=2234555)
+
+  * VC already provides a feature of downloading and installing AMD GPU Drivers. For running Furmark we need to run two profiles in parallel.
+      1. [Furmark Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-FURMARK.json)
+      2. [AMD GPU Driver installation profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/DEPENDENCY-AMD-GPU-DRIVER.json)
+
+      Note: Check **Usage Examples** to the end of this document.
   
   **Command to install AMD GPU Driver:**
   ```
@@ -81,3 +87,6 @@ Windows
 
   # Run Furmark for more amount of time by passing it as parameter to the command line.
   ./VirtualClient --profile=PERF-GPU-FURMARK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Time=120000
+
+  # Run Furmark and AMD GPU Driver installation parallely for running experiments through Juno or automation purposes. 
+  ./VirtualClient --profile=PERF-GPU-FURMARK.json --profile=DEPENDENCY-AMD-GPU-DRIVER.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Time=120000
