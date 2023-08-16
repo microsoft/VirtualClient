@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
         public string PSexecExecutablePath { get; set; }
 
         /// <summary>
-        /// TestRunTime
+        /// The time in ms to run the test.
         /// </summary>
         public string Time
         {
@@ -75,7 +75,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// hight parameter
+        /// height parameter.
         /// </summary>
         public string Height
         {
@@ -87,7 +87,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Width parameter
+        /// Width parameter.
         /// </summary>
         public string Width
         {
@@ -99,7 +99,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Antialiasingparameter
+        /// Antialiasing parameter.
         /// </summary>
         public string Antialiasing 
         {
