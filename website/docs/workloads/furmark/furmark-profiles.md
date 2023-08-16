@@ -26,7 +26,7 @@ Windows
       1. [Furmark Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-GPU-FURMARK.json)
       2. [AMD GPU Driver installation profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/DEPENDENCY-AMD-GPU-DRIVER.json)
 
-      Note: Check Usage Examples to the end of this document.
+      Note: Check **Usage Examples** to the end of this document.
   
   **Command to install AMD GPU Driver:**
   ```
