@@ -80,7 +80,7 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Unix, Architecture.X64)]
-        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedOnUbuntuPlatform(PlatformID platform, Architecture architecture)
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithNoPerformanceLibrariesOnUbuntuPlatform(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
 
@@ -92,14 +92,51 @@ namespace VirtualClient.Actions
                     $"mv Make.UNKNOWN Make.Linux_GCC",
                     $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
                     $"make arch=Linux_GCC",
-                    $"sudo useradd -m {this.fixture.Parameters["Username"]}",
-                    $"sudo runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
                     expectedCommands.Remove(expectedCommands[0]);
-                    if (arguments == $"runuser -u {this.fixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
+                    {
+                        this.fixture.Process.StandardOutput.Append(this.rawString);
+                    }
+
+                    return this.fixture.Process;
+                };
+
+                await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.AreEqual(expectedCommands.Count, 0);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task HPLinpackExecutorExecutesWorkloadAsExpectedWithPerformanceLibrariesOnUbuntuArm64Platform(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            this.fixture.Parameters["UsePerformanceLibraries"] = true;
+
+            using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
+            {
+                List<string> expectedCommands = new List<string>()
+                {
+                    $"sudo chmod +x {this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "ARM", "arm-performance-libraries_23.04.1_Ubuntu-22.04.sh")}",
+                    $"sudo ./arm-performance-libraries_23.04.1_Ubuntu-22.04.sh -a",
+                    $"sudo bash -c \"source make_generic\"",
+                    $"mv Make.UNKNOWN Make.Linux_GCC",
+                    $"ln -s {this.fixture.PlatformSpecifics.Combine(executor.GetHPLDirectory, "setup", "Make.Linux_GCC" )} Make.Linux_GCC",
+                    $"make arch=Linux_GCC",
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl"
+                };
+
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    expectedCommands.Remove(expectedCommands[0]);
+                    if (arguments == $"runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {this.fixture.Parameters["NumberOfProcesses"] ?? Environment.ProcessorCount} ./xhpl")
                     {
                         this.fixture.Process.StandardOutput.Append(this.rawString);
                     }
@@ -152,7 +189,6 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["Username"] = "username",
                 ["CompilerName"] = "gcc",
                 ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
@@ -160,7 +196,8 @@ namespace VirtualClient.Actions
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "2"
+                ["NumberOfProcesses"] = "2",
+                ["UsePerformanceLibraries"] = false
             };
         }
 

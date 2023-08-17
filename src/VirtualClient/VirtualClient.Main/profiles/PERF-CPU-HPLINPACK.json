@@ -6,7 +6,6 @@
     "SupportedOperatingSystems": "Ubuntu"
   },
   "Parameters": {
-    "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
     "ProblemSizeN": null,
@@ -21,7 +20,6 @@
       "Type": "HPLinpackExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
-        "Username": "$.Parameters.Username",
         "HyperThreadingOn": true,
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
@@ -62,22 +60,12 @@
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "InstallARMPerformanceLibrariesPackage",
+        "Scenario": "DownloadHPLPerformanceLibrariesPackage",
         "BlobContainer": "packages",
-        "BlobName": "arm-performance-libraries_23.04.1_Ubuntu-22.04.zip",
-        "PackageName": "arm_performance_libraries",
+        "BlobName": "HPLPerformanceLibraries.1.0.0.zip",
+        "PackageName": "hpl_performance_libraries",
         "Extract": true
       }
     }
-    /*{
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallARMPerformanceLibrariesPackage",
-        "BlobContainer": "packages",
-        "BlobName": "armperformancelibraries.zip",
-        "PackageName": "arm_performance_libraries",
-        "Extract": true
-      }
-    }*/
   ]
 }

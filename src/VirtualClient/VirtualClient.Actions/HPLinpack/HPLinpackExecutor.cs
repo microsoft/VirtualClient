@@ -32,6 +32,8 @@ namespace VirtualClient.Actions
         private int coreCount;
         private string makeFileName = "Make.Linux_GCC";
         private string commandArguments;
+        private string hplPerfLibraryInfo;
+        private string loggedInUserName;
 
         /// <summary>
         /// Constructor for <see cref="HPLinpackExecutor"/>
@@ -45,24 +47,6 @@ namespace VirtualClient.Actions
             this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
             this.stateManager = this.systemManagement.StateManager;
-        }
-
-        /// <summary>
-        /// The user who has the ssh identity registered for.
-        /// </summary>
-        public string Username
-        {
-            get
-            {
-                // string username = 
-                string username = this.Parameters.GetValue<string>(nameof(this.Username), string.Empty);
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    username = Environment.UserName;
-                }
-
-                return username;
-            }
         }
 
         /// <summary>
@@ -148,11 +132,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The name of the package where the ARMPerformanceLibraries package is downloaded.
         /// </summary>
-        public string ARMPerformanceLibrariesPackageName
+        public string PerformanceLibrariesPackageName
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ARMPerformanceLibrariesPackageName), "arm_performance_libraries");
+                return this.Parameters.GetValue<string>(nameof(this.PerformanceLibrariesPackageName), "hpl_performance_libraries");
             }
         }
 
@@ -191,28 +175,19 @@ namespace VirtualClient.Actions
             this.coreCount = Environment.ProcessorCount;
 
             this.ValidateParameters();
-
-            // currently adding only single perf libraries for arm . Yet to add intel perf lib.
-            if (this.UsePerformanceLibraries)
-            {
-                if (this.CpuArchitecture == Architecture.Arm64)
-                {
-                    DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
-                    .ConfigureAwait(false);
-                    string armPackageLibrariesPath = armPerformanceLibrariesPackage.Path;
-                    // await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
-
-                    // await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-                    await this.ExecuteCommandAsync($"./arm-performance-libraries_23.04.1_Ubuntu-22.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
-                }
-            }
-
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                                                     .ConfigureAwait(false);
 
             this.HPLDirectory = workloadPackage.Path;
+            
+            this.loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+            if (this.loggedInUserName == null)
+            {
+                this.loggedInUserName = Environment.UserName;
+            }
 
+            await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken).ConfigureAwait(false);
+           
             await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName))
                 .ConfigureAwait(false);
 
@@ -238,22 +213,10 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("make", $"arch=Linux_GCC", this.HPLDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ExecuteCommandAsync("useradd", $" -m {this.Username}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true)
-                    .ConfigureAwait(false);
-
-                // await this.ExecuteCommandAsync("chmod", $"755 /home/{Environment.UserName}", this.HPLDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
-
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-                string updatedHPLPackagePath = this.PlatformSpecifics.Combine("/home", this.Username, this.PackageName);
-
-                // sudo cp -r hpl.2.3/ /home/testuser/
-                await this.ExecuteCommandAsync($"cp -r {this.HPLDirectory} {updatedHPLPackagePath}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true);
-
-                // string updatedHplPath = this.PlatformSpecifics.Combine(updatedHPLPackagePath, "bin", "Linux_GCC");
                 IProcessProxy process;
-                // string commandArguments = null;
 
                 if (this.HyperThreadingOn)
                 {
@@ -269,7 +232,7 @@ namespace VirtualClient.Actions
                     this.commandArguments += $"--bind-to core";
                 }
 
-                process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(updatedHPLPackagePath, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                process = await this.ExecuteCommandAsync("runuser", $"-u {this.loggedInUserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
 
                 using (process)
                 {
@@ -325,6 +288,23 @@ namespace VirtualClient.Actions
             }
         }
 
+        private async Task ConfigurePerformanceLibrary(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (this.UsePerformanceLibraries)
+            {
+                if (this.CpuArchitecture == Architecture.Arm64)
+                {
+                    this.hplPerfLibraryInfo = "arm-performance-libraries_23.04.1_Ubuntu-22.04";
+                    DependencyPath performanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.PerformanceLibrariesPackageName, cancellationToken)
+                                                                        .ConfigureAwait(false);
+
+                    string armperfLibrariesPath = this.PlatformSpecifics.Combine(performanceLibrariesPackage.Path, "ARM");
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armperfLibrariesPath, "arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.ExecuteCommandAsync($"./arm-performance-libraries_23.04.1_Ubuntu-22.04.sh", $"-a", armperfLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                }
+            }           
+        }
+
         private async Task ConfigureMakeFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string makeFilePath = this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName);
@@ -352,9 +332,6 @@ namespace VirtualClient.Actions
                     await this.fileSystem.File.ReplaceInFileAsync(
                             makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
 
-                    /*await this.fileSystem.File.ReplaceInFileAsync(
-                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);*/
-                    // armpl_23.04.1_gcc-11.3
                     await this.fileSystem.File.ReplaceInFileAsync(
                             makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
 
@@ -449,7 +426,6 @@ namespace VirtualClient.Actions
                 await this.systemManagement.FileSystem.File.DeleteAsync(filePath)
                     .ConfigureAwait(false);
             }
-
         }
 
         private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -475,7 +451,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary=arm-performance-libraries_23.04.1_Ubuntu-22.04 ]",
+                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary={this.hplPerfLibraryInfo} ]",
                     this.Tags,
                     telemetryContext,
                     result.Relativity,
