@@ -9,11 +9,12 @@
     "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
-    "ProblemSizeN": "{LogicalCoreCount} * 10000",
+    "ProblemSizeN": null,
     "BlockSizeNB": "256",
-    "NumberOfProcesses": "{LogicalCoreCount}",
-    "UseArmPerfLibraries": true,
-    "CCFLAGS": "-march=native"
+    "NumberOfProcesses": null,
+    "UsePerformanceLibraries": true,
+    "BindToCores": false,
+    "CCFLAGS": "-O3 -march=native"
   },
   "Actions": [
     {
@@ -26,25 +27,26 @@
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
         "CCFLAGS": "$.Parameters.CCFLAGS",
-        "UseArmPerfLibraries": "$.Parameters.UseArmPerfLibraries",
+        "UsePerformanceLibraries": "$.Parameters.UsePerformanceLibraries",
+        "BindToCores": "$.Parameters.BindToCores",
         "PackageName": "hplinpack"
       }
     }
   ],
   "Dependencies": [
     {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
+    {
       "Type": "LinuxPackageInstallation",
       "Parameters": {
         "Scenario": "InstallRequiredLinuxPackagesForHPL",
         "Repositories-Apt": "ppa:ubuntu-toolchain-r/test",
         "Packages": "build-essential,linux-generic,libmpich-dev,libopenmpi-dev,libatlas-base-dev"
-      }
-    },
-    {
-      "Type": "CompilerInstallation",
-      "Parameters": {
-        "CompilerName": "$.Parameters.CompilerName",
-        "CompilerVersion": "$.Parameters.CompilerVersion"
       }
     },
     {
@@ -62,10 +64,20 @@
       "Parameters": {
         "Scenario": "InstallARMPerformanceLibrariesPackage",
         "BlobContainer": "packages",
-        "BlobName": "armperformancelibraries.zip",
+        "BlobName": "arm-performance-libraries_23.04.1_Ubuntu-22.04.zip",
         "PackageName": "arm_performance_libraries",
         "Extract": true
       }
     }
+    /*{
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallARMPerformanceLibrariesPackage",
+        "BlobContainer": "packages",
+        "BlobName": "armperformancelibraries.zip",
+        "PackageName": "arm_performance_libraries",
+        "Extract": true
+      }
+    }*/
   ]
 }

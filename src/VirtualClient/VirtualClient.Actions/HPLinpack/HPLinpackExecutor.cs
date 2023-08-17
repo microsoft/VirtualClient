@@ -31,6 +31,7 @@ namespace VirtualClient.Actions
         private IPackageManager packageManager;
         private int coreCount;
         private string makeFileName = "Make.Linux_GCC";
+        private string commandArguments;
 
         /// <summary>
         /// Constructor for <see cref="HPLinpackExecutor"/>
@@ -53,6 +54,7 @@ namespace VirtualClient.Actions
         {
             get
             {
+                // string username = 
                 string username = this.Parameters.GetValue<string>(nameof(this.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
@@ -75,13 +77,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Parameter defines whether to bind the Memcached server process to cores on the system.
+        /// Parameter defines whether to use perf libraries or not.
         /// </summary>
-        public bool UseArmPerfLibraries
+        public bool UsePerformanceLibraries
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.UseArmPerfLibraries), true);
+                return this.Parameters.GetValue<bool>(nameof(this.UsePerformanceLibraries), true);
             }
         }
 
@@ -92,7 +94,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN));
+                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN), Environment.ProcessorCount * 1000);
             }
         }
 
@@ -115,7 +117,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses));
+                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), Environment.ProcessorCount);
             }
         }
 
@@ -155,6 +157,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Parameter defines whether to bind the a process to cores on the system.
+        /// </summary>
+        public bool BindToCores
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.BindToCores), true);
+            }
+        }
+
+        /// <summary>
         /// The path to the HPL directory.
         /// </summary>
         protected string HPLDirectory { get; set; }
@@ -180,16 +193,18 @@ namespace VirtualClient.Actions
             this.ValidateParameters();
 
             // currently adding only single perf libraries for arm . Yet to add intel perf lib.
-            if (this.UseArmPerfLibraries)
+            if (this.UsePerformanceLibraries)
             {
                 if (this.CpuArchitecture == Architecture.Arm64)
                 {
                     DependencyPath armPerformanceLibrariesPackage = await this.packageManager.GetPackageAsync(this.ARMPerformanceLibrariesPackageName, cancellationToken)
                     .ConfigureAwait(false);
                     string armPackageLibrariesPath = armPerformanceLibrariesPackage.Path;
-                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    // await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_22.1_Ubuntu-20.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
+                    await this.systemManagement.MakeFileExecutableAsync(this.PlatformSpecifics.Combine(armPackageLibrariesPath, "arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"), this.Platform, cancellationToken).ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                    // await this.ExecuteCommandAsync($"./arm-performance-libraries_22.1_Ubuntu-20.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
+                    await this.ExecuteCommandAsync($"./arm-performance-libraries_23.04.1_Ubuntu-22.04.sh", $"-a", armPackageLibrariesPath, telemetryContext, cancellationToken, runElevated: true);
                 }
             }
 
@@ -226,20 +241,37 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("useradd", $" -m {this.Username}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true)
                     .ConfigureAwait(false);
 
+                // await this.ExecuteCommandAsync("chmod", $"755 /home/{Environment.UserName}", this.HPLDirectory, telemetryContext, cancellationToken).ConfigureAwait(false);
+
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-                string commandArguments = null;
+                string updatedHPLPackagePath = this.PlatformSpecifics.Combine("/home", this.Username, this.PackageName);
+
+                // sudo cp -r hpl.2.3/ /home/testuser/
+                await this.ExecuteCommandAsync($"cp -r {this.HPLDirectory} {updatedHPLPackagePath}", this.HPLDirectory, telemetryContext, cancellationToken, runElevated: true);
+
+                // string updatedHplPath = this.PlatformSpecifics.Combine(updatedHPLPackagePath, "bin", "Linux_GCC");
+                IProcessProxy process;
+                // string commandArguments = null;
+
                 if (this.HyperThreadingOn)
                 {
-                    commandArguments = $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl";
+                    this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses}";
                 }
                 else
                 {
-                    commandArguments = $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl";
+                    this.commandArguments = $"-np {this.NumberOfProcesses}";
                 }
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("runuser", commandArguments, this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true))
+                if (this.BindToCores)
+                {
+                    this.commandArguments += $"--bind-to core";
+                }
+
+                process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(updatedHPLPackagePath, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+
+                using (process)
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -310,7 +342,7 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken);
 
-            if (this.UseArmPerfLibraries)
+            if (this.UsePerformanceLibraries)
             {
                 if (this.CpuArchitecture == Architecture.Arm64)
                 {
@@ -320,8 +352,11 @@ namespace VirtualClient.Actions
                     await this.fileSystem.File.ReplaceInFileAsync(
                             makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
 
+                    /*await this.fileSystem.File.ReplaceInFileAsync(
+                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);*/
+                    // armpl_23.04.1_gcc-11.3
                     await this.fileSystem.File.ReplaceInFileAsync(
-                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_22.1_gcc-11.2/lib/libarmpl.a", cancellationToken);
+                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
 
                     await this.fileSystem.File.ReplaceInFileAsync(
                             makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
@@ -440,7 +475,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
+                    $"[ -N {this.ProblemSizeN} -NB {this.BlockSizeNB} -P {this.ProcessRows} -Q {this.ProcessColumns} {this.commandArguments} --perfLibrary=arm-performance-libraries_23.04.1_Ubuntu-22.04 ]",
                     this.Tags,
                     telemetryContext,
                     result.Relativity,
