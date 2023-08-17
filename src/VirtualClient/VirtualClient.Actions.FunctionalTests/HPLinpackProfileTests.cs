@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -64,7 +65,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
-        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixX64Platform(string profile)
+        public void HPLinpackWorkloadProfileWithPerformanceLibrariesThroughsExceptionOnUnixX64Platform(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
@@ -81,6 +82,7 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
@@ -111,9 +113,13 @@ namespace VirtualClient.Actions
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
-                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
+                    () => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
+                // await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
+
+                // WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }
 
@@ -135,6 +141,12 @@ namespace VirtualClient.Actions
                 @"linux-arm64/bin/Linux_GCC/HPL.dat"
             };
 
+            string[] expectedPerfLibFiles = new string[]
+            {
+                @"ARM/arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"
+            };
+
+            this.mockFixture.SetupWorkloadPackage("hpl_performance_libraries", expectedFiles: expectedPerfLibFiles);
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -176,7 +188,6 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["Username"] = "testuser",
                 ["CompilerName"] = "gcc",
                 ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
@@ -191,8 +202,7 @@ namespace VirtualClient.Actions
                 {
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo useradd  -m {this.mockFixture.Parameters["Username"]}",
-                    $"sudo runuser -u {this.mockFixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
                 };
         }
     }
