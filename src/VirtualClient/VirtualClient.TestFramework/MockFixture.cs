@@ -59,6 +59,7 @@ namespace VirtualClient
         static MockFixture()
         {
             VirtualClientComponent.LogToFile = true;
+            VirtualClientComponent.ContentStorePathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>

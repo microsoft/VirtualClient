@@ -192,6 +192,9 @@ namespace VirtualClient
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
+                // --contentStorePathTemplate
+                OptionFactory.CreateContentStorePathTemplateOption(required: false, "{experimentId}/{agentId}/{toolName}/{role}/{scenario}"),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 

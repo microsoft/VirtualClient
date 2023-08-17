@@ -117,12 +117,6 @@ namespace VirtualClient.Contracts
                 appendedMetaData.AddRange(metadata, true);
             }
 
-            IDictionary<string, IConvertible> appendedParameters = new Dictionary<string, IConvertible>(VirtualClientComponent.GlobalParameters, StringComparer.OrdinalIgnoreCase);
-            if (!(parameters is null))
-            {
-                appendedParameters.AddRange(parameters, true);
-            }
-
             string identifier = null;
             if (!string.IsNullOrWhiteSpace(component.ContentPathFormat))
             {
@@ -130,7 +124,12 @@ namespace VirtualClient.Contracts
             }
             
             IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
-            FileUploadDescriptor descriptor = factory.CreateDescriptor(fileContext, component.ContentPathTemplate, appendedParameters, appendedMetaData, timestamped);
+            FileUploadDescriptor descriptor = factory.CreateDescriptor(
+                fileContext,
+                VirtualClientComponent.ContentStorePathTemplate,
+                parameters,
+                appendedMetaData,
+                timestamped);
 
             // The content path format...
             descriptor.Manifest["pathFormat"] = identifier ?? FileUploadDescriptorFactory.Default;

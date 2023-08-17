@@ -47,16 +47,18 @@ namespace VirtualClient.Contracts
         /// </para>
         /// </summary>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
-        /// <param name="contentPathTemplate">Content path template to use when uploading content to target storage resources.</param>
+        /// <param name="contentStorePathTemplate">Content path template to use when uploading content to target storage resources.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
         /// <param name="manifest">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+        public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentStorePathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
+            contentStorePathTemplate.ThrowIfNullOrWhiteSpace(nameof(contentStorePathTemplate));
+
             string blobName = Path.GetFileName(fileContext.File.Name);
 
             if (timestamped)
@@ -64,13 +66,13 @@ namespace VirtualClient.Contracts
                 blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
-            string blobContainer = GetInlinedContentArgumentValue(fileContext, contentPathTemplate.Split('/')[0], parameters);
+            string blobContainer = GetInlinedContentArgumentValue(fileContext, contentStorePathTemplate.Split('/')[0], parameters);
             if (string.IsNullOrWhiteSpace(blobContainer))
             {
-                throw new ArgumentException("The containerName in blob cannot be empty string.", contentPathTemplate);
+                throw new ArgumentException("The containerName in blob cannot be empty string.", contentStorePathTemplate);
             }
 
-            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, contentPathTemplate, parameters, blobName);
+            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, contentStorePathTemplate, parameters, blobName);
             
             // Create the default manifest information.
             IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, manifest);
@@ -86,13 +88,13 @@ namespace VirtualClient.Contracts
             return descriptor;
         }
 
-        private static string CreateBlobPath(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters, string blobName)
+        private static string CreateBlobPath(FileContext fileContext, string contentStorePathTemplate, IDictionary<string, IConvertible> parameters, string blobName)
         {
             string blobPath = null;
             List<string> pathSegments = new List<string>();
 
             int i = 0;
-            foreach (string element in contentPathTemplate.Split('/'))
+            foreach (string element in contentStorePathTemplate.Split('/'))
             {
                 if (i == 0)
                 {

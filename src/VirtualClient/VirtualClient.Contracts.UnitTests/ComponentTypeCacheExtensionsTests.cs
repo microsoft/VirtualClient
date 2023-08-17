@@ -158,7 +158,7 @@ namespace VirtualClient.Contracts
                 return null;
             }
 
-            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentStorePathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
             {
                 throw new NotImplementedException();
             }
@@ -172,7 +172,7 @@ namespace VirtualClient.Contracts
                 return null;
             }
 
-            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
+            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentStorePathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
             {
                 throw new NotImplementedException();
             }

@@ -178,6 +178,18 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("--contentStorePathTemplate")]
+        [TestCase("--contentstorepathtemplate")]
+        [TestCase("--contentPath")]
+        [TestCase("--cspt")]
+        public void ContentStorePathTemplateOptionSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateContentStorePathTemplateOption();
+            ParseResult result = option.Parse($"{alias}=\"anyname1/anyname2/{{experimentId}}/{{agentId}}/anyname3/{{toolName}}/{{role}}/{{scenario}}\"");
+            Assert.IsFalse(result.Errors.Any());
+        }
+
+        [Test]
         [TestCase("--debug")]
         public void DebugFlagSupportsExpectedAliases(string alias)
         {
