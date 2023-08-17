@@ -47,22 +47,6 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public void AMDGPUDriverInstallationDependencyThrowsForUnsupportedDistros()
-        {
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-            {
-                OperationSystemFullName = "TestCentOS7",
-                LinuxDistribution = LinuxDistribution.Flatcar
-            };
-
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-            this.fixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
-
-            WorkloadException exc = Assert.ThrowsAsync<WorkloadException>(() => this.component.ExecuteAsync(CancellationToken.None));
-            Assert.AreEqual(ErrorReason.LinuxDistributionNotSupported, exc.Reason);
-        }
-
-        [Test]
         public void AMDGPUDriverInstallationDependencyThrowsIfLinuxInstallationFileIsEmpty()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix, string.Empty, string.Empty);
@@ -85,7 +69,7 @@ namespace VirtualClient.Dependencies
                 "sudo apt-get -yq update",
                 "wget https://repo.radeon.com/amdgpu-install/5.5/ubuntu/focal/amdgpu-install_5.5.50500-1_all.deb",
                 "apt-get install -yq ./amdgpu-install_5.5.50500-1_all.deb",
-                "sudo amdgpu-install --usecase=hiplibsdk,rocm,dkms",
+                "sudo amdgpu-install -y --usecase=hiplibsdk,rocm,dkms",
                 $"sudo bash -c \"echo 'export PATH=/opt/rocm/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/testuser/.bashrc\"",
                 "sudo apt-get install -yq rocblas rocm-smi-lib",

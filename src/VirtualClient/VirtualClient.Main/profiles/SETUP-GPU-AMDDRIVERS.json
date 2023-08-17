@@ -6,6 +6,7 @@
     "SupportedOperatingSystems": "Windows, Linux",
     "SupportedWindowsGpuModel": "mi25,v620",
     "SupportedLinuxGpuModel": "all",
+    "SupportedLinuxDistros": "Ubuntu",
     "SpecialRequirements": "This is AMD GPU Driver dependency. It can only be installed on the system having an AMD GPU card/chip."
   },
   "Parameters": {

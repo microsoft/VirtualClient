@@ -14,6 +14,7 @@
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -152,9 +153,11 @@
 
                             default:
                                 // different distro installation to be addded.
-                                throw new WorkloadException(
-                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.",
-                                    ErrorReason.LinuxDistributionNotSupported);
+                                this.Logger.LogMessage(
+                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.", 
+                                    telemetryContext);
+
+                                break;
                         }
 
                         await this.InstallAMDGPUDriverLinux(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
