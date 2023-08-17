@@ -68,8 +68,8 @@ namespace VirtualClient.Contracts
                 null,
                 expectedRole);
 
-            string contentStorePathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
-            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentStorePathTemplate, timestamped: false);
+            string contentPathPattern = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentPathPattern, timestamped: false);
 
             Assert.AreEqual(expectedExperimentId.ToLowerInvariant(), descriptor.ContainerName);
             Assert.AreEqual(expectedFileName, descriptor.BlobName);
@@ -115,8 +115,8 @@ namespace VirtualClient.Contracts
                 null,
                 expectedRole);
 
-            string contentStorePathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
-            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentStorePathTemplate, timestamped: true);
+            string contentPathPattern = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentPathPattern, timestamped: true);
 
             Assert.AreEqual(expectedExperimentId.ToLowerInvariant(), descriptor.ContainerName);
             Assert.AreEqual(expectedFileName, descriptor.BlobName);
@@ -132,7 +132,7 @@ namespace VirtualClient.Contracts
         [TestCase("customContainer/{parameter1}/{experimentId}/{agentId}/{parameter2}/fixedFolder/{toolName}/{role}/{scenario}", "value1", null)]
         [TestCase("customContainer/{parameter1}/{experimentId}/{agentId}/{parameter2}/fixedFolder/{toolName}/{role}/{scenario}", "valueA", "valueB")]
         [TestCase("customContainer/{parameter1},stringValue1/{experimentId}/{agentId}/{parameter2}/fixedFolder,stringValue2/{toolName}/{role}/{scenario}", "valueA", "valueB")]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomTemplate(string contentStorePathTemplate, string parameter1, string parameter2)
+        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomTemplate(string contentPathPattern, string parameter1, string parameter2)
         {
             this.SetupDefaults();
 
@@ -150,7 +150,7 @@ namespace VirtualClient.Contracts
             string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
 
             string expectedBlobPath;
-            if (contentStorePathTemplate.Contains(","))
+            if (contentPathPattern.Contains(","))
             {
                 expectedBlobPath = string.Join('/', (new string[] { $"{parameter1},stringValue1", expectedExperimentId, "AgentIdA", parameter2, "fixedFolder,stringValue2", "ToolA", "RoleA", "ScenarioA" })
                     .Where(i => i != null))
@@ -183,7 +183,7 @@ namespace VirtualClient.Contracts
                 null,
                 "RoleA");
 
-            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentStorePathTemplate, parameters: parameters, timestamped: true);
+            FileUploadDescriptor descriptor = this.descriptorFactory.CreateDescriptor(context, contentPathPattern, parameters: parameters, timestamped: true);
 
             Assert.AreEqual("customContainer", descriptor.ContainerName);
             Assert.AreEqual(expectedFileName, descriptor.BlobName);

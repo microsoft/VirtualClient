@@ -126,7 +126,7 @@ namespace VirtualClient.Contracts
             IFileUploadDescriptorFactory factory = ComponentTypeCache.Instance.GetFileUploadDescriptorFactory(identifier);
             FileUploadDescriptor descriptor = factory.CreateDescriptor(
                 fileContext,
-                VirtualClientComponent.ContentStorePathTemplate,
+                VirtualClientComponent.ContentPathPattern,
                 parameters,
                 appendedMetaData,
                 timestamped);

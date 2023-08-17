@@ -178,13 +178,13 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--contentStorePathTemplate")]
-        [TestCase("--contentstorepathtemplate")]
+        [TestCase("--contentPathPattern")]
+        [TestCase("--contentpathpattern")]
         [TestCase("--contentPath")]
         [TestCase("--cspt")]
-        public void ContentStorePathTemplateOptionSupportsExpectedAliases(string alias)
+        public void ContentPathPatternOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateContentStorePathTemplateOption();
+            Option option = OptionFactory.CreateContentPathPatternOption();
             ParseResult result = option.Parse($"{alias}=\"anyname1/anyname2/{{experimentId}}/{{agentId}}/anyname3/{{toolName}}/{{role}}/{{scenario}}\"");
             Assert.IsFalse(result.Errors.Any());
         }

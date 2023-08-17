@@ -127,11 +127,11 @@ namespace VirtualClient
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateContentStorePathTemplateOption(bool required = true, object defaultValue = null)
+        public static Option CreateContentPathPatternOption(bool required = true, object defaultValue = null)
         {
-            Option<string> option = new Option<string>(new string[] { "--contentStorePathTemplate", "--contentstorepathtemplate", "--contentPath", "--cspt" })
+            Option<string> option = new Option<string>(new string[] { "--contentPathPattern", "--contentpathpattern", "--contentPath", "--cspt" })
             {
-                Name = "ContentStorePathTemplate",
+                Name = "ContentPathPattern",
                 Description = "A template for virtual folder structure to be followed in contentStore.",
                 ArgumentHelpName = "pathTemplate",
                 AllowMultipleArgumentsPerToken = false

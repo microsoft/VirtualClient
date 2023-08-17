@@ -143,7 +143,7 @@ namespace VirtualClient.Contracts
         /// Parameter defines the content path format/structure using a template to use when uploading content
         /// to target storage resources. When not defined the 'Default' structure is used.
         /// </summary>
-        public static string ContentStorePathTemplate { get; set; }
+        public static string ContentPathPattern { get; set; }
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
