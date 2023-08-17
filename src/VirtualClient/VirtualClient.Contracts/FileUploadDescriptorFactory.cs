@@ -66,13 +66,13 @@ namespace VirtualClient.Contracts
                 blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
-            string blobContainer = GetInlinedContentArgumentValue(fileContext, contentPathPattern.Split('/')[0], parameters);
+            string blobContainer = GetInlinedContentArgumentValue(fileContext, contentPathPattern.Split('/')[0]);
             if (string.IsNullOrWhiteSpace(blobContainer))
             {
                 throw new ArgumentException("The containerName in blob cannot be empty string.", contentPathPattern);
             }
 
-            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, contentPathPattern, parameters, blobName);
+            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, contentPathPattern, blobName);
             
             // Create the default manifest information.
             IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, manifest);
@@ -88,7 +88,7 @@ namespace VirtualClient.Contracts
             return descriptor;
         }
 
-        private static string CreateBlobPath(FileContext fileContext, string contentPathPattern, IDictionary<string, IConvertible> parameters, string blobName)
+        private static string CreateBlobPath(FileContext fileContext, string contentPathPattern, string blobName)
         {
             string blobPath = null;
             List<string> pathSegments = new List<string>();
@@ -102,7 +102,7 @@ namespace VirtualClient.Contracts
                     continue;
                 }
 
-                string segment = GetInlinedContentArgumentValue(fileContext, element, parameters);
+                string segment = GetInlinedContentArgumentValue(fileContext, element);
 
                 if (!string.IsNullOrWhiteSpace(segment))
                 {
@@ -124,7 +124,7 @@ namespace VirtualClient.Contracts
             return blobPath;
         }
 
-        private static string GetInlinedContentArgumentValue(FileContext fileContext, string contentArgumentName, IDictionary<string, IConvertible> parameters)
+        private static string GetInlinedContentArgumentValue(FileContext fileContext, string contentArgumentName)
         {
             IDictionary<string, IConvertible> fileContextDictionary = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
             {
@@ -141,14 +141,6 @@ namespace VirtualClient.Contracts
                 if (fileContextDictionary.ContainsKey(paramName))
                 {
                     return fileContextDictionary.GetValue<string>(paramName, string.Empty);
-                }
-                else if (parameters == null)
-                {
-                    return string.Empty;
-                }
-                else if (parameters.ContainsKey(paramName))
-                {
-                    return parameters.GetValue<string>(paramName, string.Empty);
                 }
 
                 return string.Empty;
