@@ -14,13 +14,10 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    ///  FurmarkMonitorMetricsParser.
+    ///  Furmark parser for xml file output.
     /// </summary>
     public class FurmarkXmlMetricsParser : MetricsParser
     {
-        /// <summary>
-        /// size of dictionary 
-        /// </summary>
         private static readonly string GpuPattern = "<gpu_data gpu=\"(.*?)\"";
         private static readonly string CoreTempPattern = "core_temp=\"(.*?)\"";
         private static readonly string FpsPattern = "fps=\"(.*?)\"";
@@ -28,8 +25,6 @@ namespace VirtualClient.Actions
         private static readonly string CoreLoadPattern = "core_load=\"(.*?)\"";
 
         private static int size = 0;
-
-        // private static readonly Regex GpuDataRegex = new Regex(GpuDataPattern);
 
         /// <summary>
         /// Constructor for <see cref="FurmarkXmlMetricsParser"/>
@@ -158,7 +153,7 @@ namespace VirtualClient.Actions
         {
             if (this.RawText == string.Empty || this.RawText == null)
             {
-                throw new SchemaException("furmark workload didn't generate results files.");
+                throw new SchemaException("Furmark workload didn't generate results files.");
             }
         }
     }

@@ -59,9 +59,9 @@ namespace VirtualClient.Actions
 
             string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
-            string balancedClientScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balancedClient.sh");
-            string balancedServerScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balancedServer.sh");
-            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "inMemory.sh");
+            string balancedClientScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-client.sh");
+            string balancedServerScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-server.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "in-memory.sh");
 
             this.mockFixture.SetupFile(balancedServerScript);
             this.mockFixture.SetupFile(balancedClientScript);
@@ -93,9 +93,9 @@ namespace VirtualClient.Actions
             {
                 "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
 
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balancedServer.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balancedClient.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/inMemory.sh\"",
+                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-server.sh\"",
+                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-client.sh\"",
+                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/in-memory.sh\"",
 
                 "sudo ./autogen.sh",
                 "sudo ./configure",

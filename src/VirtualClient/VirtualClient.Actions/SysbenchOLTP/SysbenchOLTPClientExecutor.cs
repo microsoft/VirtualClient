@@ -82,6 +82,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The workload option passed to Sysbench.
+        /// </summary>
+        public string NumTables
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.NumTables), 10);
+            }
+        }
+
+        /// <summary>
         /// Number of records per table.
         /// </summary>
         public string RecordCount
@@ -217,8 +228,8 @@ namespace VirtualClient.Actions
 
             // set arguments & path up based on prepare arguments in profile
 
-            this.sysbenchPrepareArguments = $@"oltp_common --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables=10 --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
@@ -238,7 +249,7 @@ namespace VirtualClient.Actions
 
                         this.Logger.LogMetrics(
                             toolName: "Sysbench",
-                            scenarioName: "OLTP",
+                            scenarioName: "OLTP " + this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
@@ -339,7 +350,7 @@ namespace VirtualClient.Actions
 
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
-                
+
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
@@ -373,7 +384,7 @@ namespace VirtualClient.Actions
             // client work in the balanced scenario includes copying all tables from OS disk to data disk,
             // dropping old tables & renaming them
 
-            string balancedScript = "balancedClient.sh";
+            string balancedScript = "balanced-client.sh";
             string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
             string balancedArguments = $"{this.ServerIpAddress} 10 {this.DatabaseName} {diskPaths}";
 
