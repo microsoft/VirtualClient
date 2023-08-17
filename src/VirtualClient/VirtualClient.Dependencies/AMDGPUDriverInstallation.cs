@@ -263,15 +263,13 @@
             string installationFileName = this.LinuxInstallationFile.Split('/').Last();
             List<string> commands = new List<string>()
             {
-                $"wget {this.LinuxInstallationFile}",
-                $"apt-get install -yq ./{installationFileName}"
             };
 
             switch (linuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                     commands.Add($"wget {this.LinuxInstallationFile}");
-                    commands.Add($"apt-get install -yq ./{installationFileName}");
+                    commands.Add($"DEBIAN_FRONTEND=noninteractive apt-get install -yq ./{installationFileName}");
                     break;
 
                 default:
@@ -283,11 +281,13 @@
 
         private List<string> PostInstallationCommands()
         {
+            // last command needs to be removed
             return new List<string>
             {
-                "amdgpu-install --usecase=hiplibsdk,rocm,dkms",
+                "amdgpu-install -y --usecase=hiplibsdk,rocm,dkms",
                 $"bash -c \"echo 'export PATH=/opt/rocm/bin${{PATH:+:${{PATH}}}}' | " +
-                $"sudo tee -a /home/{this.Username}/.bashrc\""
+                $"sudo tee -a /home/{this.Username}/.bashrc\"",
+                "update-initramfs -u -k all"
             };
         }
 
@@ -298,6 +298,8 @@
             switch (linuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
+                    // first command needs to be removed
+                    commands.Add("modprobe amdgpu");
                     commands.Add("apt-get install -yq rocblas rocm-smi-lib ");
                     commands.Add("apt-get install -yq rocm-validation-suite");
                     break;
