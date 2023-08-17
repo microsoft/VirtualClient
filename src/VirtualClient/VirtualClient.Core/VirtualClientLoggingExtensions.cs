@@ -270,7 +270,7 @@ namespace VirtualClient
                         (!string.IsNullOrWhiteSpace(processDetails.ToolName) ? processDetails.ToolName : component.TypeName).ToLowerInvariant().RemoveWhitespace(),
                         string.Empty);
 
-                    string effectiveCommand = $"{processDetails.CommandLine}".Trim();
+                    string effectiveCommand = $"{SensitiveData.ObscureSecrets(processDetails?.CommandLine)}".Trim();
                     string logPath = specifics.GetLogsPath(effectiveToolName.ToLowerInvariant().RemoveWhitespace());
 
                     if (!fileSystem.Directory.Exists(logPath))
@@ -314,7 +314,7 @@ namespace VirtualClient
                     // Any results from the output of the process
 
                     StringBuilder outputBuilder = new StringBuilder();
-                    outputBuilder.AppendLine($"Command           : {SensitiveData.ObscureSecrets(processDetails?.CommandLine)}");
+                    outputBuilder.AppendLine($"Command           : {effectiveCommand}");
                     outputBuilder.AppendLine($"Working Directory : {processDetails?.WorkingDirectory}");
                     outputBuilder.AppendLine($"Exit Code         : {processDetails?.ExitCode}");
                     outputBuilder.AppendLine();
@@ -339,6 +339,26 @@ namespace VirtualClient
                     {
                         await fileSystem.File.WriteAllTextAsync(logFilePath, outputBuilder.ToString());
                     });
+
+                    if (component.TryGetContentStoreManager(out IBlobManager blobManager))
+                    {
+                        FileContext fileContext = new FileContext(
+                            fileSystem.FileInfo.New(logFilePath),
+                            HttpContentType.PlainText,
+                            Encoding.UTF8.WebName,
+                            component.ExperimentId,
+                            component.AgentId,
+                            effectiveToolName,
+                            component.Scenario,
+                            effectiveCommand,
+                            component.Roles?.Any() == true ? string.Join(',', component.Roles) : null);
+
+                        // The file is already timestamped at this point, so there is no need to add any additional
+                        // timestamping information.
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, timestamped: false);
+
+                        await component.RequestFileUploadAsync(descriptor);
+                    }
                 }
             }
             catch (Exception exc)
