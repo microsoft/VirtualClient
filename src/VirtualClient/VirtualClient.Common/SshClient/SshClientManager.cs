@@ -8,7 +8,7 @@ namespace VirtualClient.Common
     /// <summary>
     /// Provides methods for creating and managing ssh client.
     /// </summary>
-    public class SshClientManager
+    public class SshClientManager : ISshClientManager
     {
         /// <summary>
         /// Creates a ssh on the system.

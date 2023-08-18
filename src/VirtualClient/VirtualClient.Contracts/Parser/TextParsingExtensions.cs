@@ -120,7 +120,7 @@ namespace VirtualClient.Contracts
         /// <param name="text">Original text.</param>
         public static string TranslateByteUnit(string text)
         {
-            // Unit thousand: K, k, kb, KB
+            // Unit thousand: K, k, kb, KB, KiB
             Regex thousandRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(k|kb|kib)$", RegexOptions.IgnoreCase);
             Match thousandMatch = Regex.Match(text, thousandRegex.ToString(), thousandRegex.Options);
             if (thousandMatch.Success)
@@ -128,7 +128,7 @@ namespace VirtualClient.Contracts
                 text = Convert.ToString(Convert.ToDouble(thousandMatch.Groups[1].Value) * 1024);
             }
 
-            // Unit million: M,m, MB, mb
+            // Unit million: M, m, MB, mb, MiB
             Regex millionRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(m|mb|mib)$", RegexOptions.IgnoreCase);
             Match millionMatch = Regex.Match(text, millionRegex.ToString(), millionRegex.Options);
             if (millionMatch.Success)
@@ -136,7 +136,7 @@ namespace VirtualClient.Contracts
                 text = Convert.ToString(Convert.ToDouble(millionMatch.Groups[1].Value) * 1024 * 1024);
             }
 
-            // Unit giga: G,g, GB, gb
+            // Unit giga: G, g, GB, gb, GiB
             Regex gigaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(g|gb|gib)", RegexOptions.IgnoreCase);
             Match gigaMatch = Regex.Match(text, gigaRegex.ToString(), gigaRegex.Options);
             if (gigaMatch.Success)
@@ -144,7 +144,7 @@ namespace VirtualClient.Contracts
                 text = Convert.ToString(Convert.ToDouble(gigaMatch.Groups[1].Value) * 1024 * 1024 * 1024);
             }
 
-            // Unit tera: T,t, TB, tb
+            // Unit tera: T, t, TB, tb, TiB
             Regex teraRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(t|tb|tib)", RegexOptions.IgnoreCase);
             Match teraMatch = Regex.Match(text, teraRegex.ToString(), teraRegex.Options);
             if (teraMatch.Success)
@@ -152,7 +152,7 @@ namespace VirtualClient.Contracts
                 text = Convert.ToString(Convert.ToDouble(teraMatch.Groups[1].Value) * 1024 * 1024 * 1024 * 1024);
             }
 
-            // Unit peta: P, p, PB, pb
+            // Unit peta: P, p, PB, pb, PiB
             Regex petaRegex = new Regex(@"((?:[0-9]*[.])?[0-9]*)\s?(p|pb|pib)", RegexOptions.IgnoreCase);
             Match petaMatch = Regex.Match(text, petaRegex.ToString(), petaRegex.Options);
             if (petaMatch.Success)

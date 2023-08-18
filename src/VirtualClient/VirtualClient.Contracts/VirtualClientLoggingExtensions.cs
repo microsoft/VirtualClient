@@ -9,13 +9,11 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
-    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Extension methods for logging facilities in the Virtual Client.

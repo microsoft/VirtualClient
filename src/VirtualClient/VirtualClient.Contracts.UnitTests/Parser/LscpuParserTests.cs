@@ -93,5 +93,22 @@ namespace VirtualClient.Contracts
             Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L2" && cache.SizeInBytes == 2097152));
             Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L3" && cache.SizeInBytes == 33554432));
         }
+
+        [Test]
+        public void LscpuParserParsesTheExpectedResultsFromAWSSystems_Scenario3()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results3.txt"));
+            LscpuParser parser = new LscpuParser(results);
+            CpuInfo info = parser.Parse();
+
+            Assert.IsNotNull(info);
+            Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Name);
+            Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Description);
+            Assert.AreEqual(2, info.LogicalCoreCount);
+            Assert.AreEqual(2, info.PhysicalCoreCount);
+            Assert.AreEqual(1, info.SocketCount);
+            Assert.AreEqual(1, info.NumaNodeCount);
+            Assert.IsFalse(info.IsHyperthreadingEnabled);
+        }
     }
 }

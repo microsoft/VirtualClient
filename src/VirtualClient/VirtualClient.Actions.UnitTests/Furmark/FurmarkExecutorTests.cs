@@ -79,13 +79,8 @@ namespace VirtualClient.Actions
                     string ExpectedPsexecCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "win-x64", "psexec.exe");
                     string furmarkCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path ,"win-x64","Geeks3D" ,"Benchmarks" ,"FurMark" ,"Furmark");
                     string packageDir = this.fixture.PlatformSpecifics.Combine(expectedFilePath, "win-x64");
-                    // packageDir = Regex.Replace(packageDir, @":", string.Empty);
 
-
-                    // string expectedmakeCommandArguments = @$"C:\Program Files (x86)\Geeks3D\Benchmarks\FurMark\Furmark";
                     string executeScriptCommandArguments = $"-accepteula -s -i 1 -w {packageDir} {furmarkCommand} /width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Antialiasing={this.fixture.Parameters["Antialiasing"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
-
-                    // string executeScriptCommandArguments = $"/width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Antialiasing={this.fixture.Parameters["Mssa"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
 
                     this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {

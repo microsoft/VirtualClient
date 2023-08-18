@@ -11,7 +11,7 @@ namespace VirtualClient
     /// <summary>
     /// A mock/test Ssh Client manager.
     /// </summary>
-    public class InMemorySshClientManager : SshClientManager
+    public class InMemorySshClientManager : ISshClientManager
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemorySshClientManager"/> class.
@@ -41,7 +41,7 @@ namespace VirtualClient
         public Func<string, string, string, ISshClientProxy> OnCreateSshClient { get; set; }
 
         /// <inheritdoc />
-        public override ISshClientProxy CreateSshClient(string host, string userName, string password)
+        public ISshClientProxy CreateSshClient(string host, string userName, string password)
         {
             ISshClientProxy sshClient = null;
             if (this.OnCreateSshClient != null)

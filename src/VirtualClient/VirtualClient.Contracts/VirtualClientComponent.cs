@@ -536,7 +536,7 @@ namespace VirtualClient.Contracts
                         this.MetadataContract.Add(
                             this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
                             MetadataContractCategory.Default,
-                            replace: false);
+                            replace: true);
                     }
 
                     if (this.Parameters?.Any() == true)

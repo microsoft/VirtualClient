@@ -67,10 +67,10 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
-                $"sudo {scriptPath}/inMemory.sh 8192"
+                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
+                $"sudo {scriptPath}/in-memory.sh 8192"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -126,10 +126,10 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
-                $"sudo {scriptPath}/balancedServer.sh {mountPaths}"
+                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
+                $"sudo {scriptPath}/balanced-server.sh {mountPaths}"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -170,10 +170,10 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/inMemory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedServer.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balancedClient.sh\"",
-                $"sudo {scriptPath}/balancedServer.sh"
+                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
+                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
+                $"sudo {scriptPath}/balanced-server.sh"
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
