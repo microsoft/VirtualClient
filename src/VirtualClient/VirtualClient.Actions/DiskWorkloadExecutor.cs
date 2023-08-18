@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,8 @@ namespace VirtualClient.Actions
         /// TestFocus -> DataIntegrity
         /// </summary>
         public const string TestFocusDataIntegrity = "DataIntegrity";
+
+        private const string FileNameParameterDelimiter = ",";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DiskWorkloadExecutor"/>
@@ -442,6 +445,39 @@ namespace VirtualClient.Actions
         {
             mountPoint.ThrowIfNullOrWhiteSpace(nameof(mountPoint));
             return this.PlatformSpecifics.Combine(mountPoint, this.FileName ?? Path.GetRandomFileName());
+        }
+
+        /// <summary>
+        /// Returns the name of the test files seperated by whitespace given a mount point.
+        /// </summary>
+        /// <param name="mountPoint">A mount point to the disk under test.</param>
+        /// <returns>
+        /// The full path to the test files seperated by whitespace.
+        /// </returns>
+        protected virtual string GetTestFiles(string mountPoint)
+        {
+            mountPoint.ThrowIfNullOrWhiteSpace(nameof(mountPoint));
+
+            List<string> testFileNames = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(this.FileName))
+            {
+                testFileNames.AddRange(Regex.Split(this.FileName, $@"\s*{DiskWorkloadExecutor.FileNameParameterDelimiter}\s*").Select(f => f.Trim())
+                            .Where(f => !string.IsNullOrWhiteSpace(f)));
+            }
+
+            if (testFileNames.Count() <= 1)
+            {
+                return this.GetTestFile(mountPoint);
+            }
+
+            List<string> testFiles = new List<string>();
+            foreach (string fileName in testFileNames)
+            {
+                testFiles.Add(this.PlatformSpecifics.Combine(mountPoint, fileName));
+            }
+
+            return string.Join(' ', testFiles);
         }
 
         /// <summary>
