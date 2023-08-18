@@ -64,6 +64,7 @@
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
 	    <WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
+        <WindowsProfiles Include="profiles\PERF-GPU-FURMARK-AMD.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
@@ -111,7 +112,9 @@
         <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
         <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
+        <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH-NVIDIA.json" />
         <LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
+        <LinuxProfiles Include="profiles\PERF-GPU-MLPERF-NVIDIA.json" />
         <LinuxProfiles Include="profiles\PERF-GRAPH500.json" />
         <LinuxProfiles Include="profiles\PERF-HPC-NASPARALLELBENCH.json" />
         <LinuxProfiles Include="profiles\PERF-IO-FIO.json" />
