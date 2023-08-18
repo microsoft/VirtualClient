@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
             this.rawText = File.ReadAllText(IncorrectFurmarkoutputPath);
             this.testParser = new FurmarkXmlMetricsParser (this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains("furmark workload didn't generate results files.", exception.Message);
+            StringAssert.Contains("Furmark workload didn't generate results files.", exception.Message);
 
         }
     }

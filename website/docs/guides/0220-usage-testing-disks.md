@@ -65,6 +65,6 @@ SizeEqualTo:4TB&OSDisk:false
 5. Test a Disk which has a specific path.
 This filter will select the disk, which contains exact match of any specified disk path, in either Disk or Volume. For example, if D:/, E:/ are volumes on same disk and D:/ is provided, the entire disk will be selected.
 ```bash
-DiskPath=C:/,D:/
-DiskPath=/dev/sda,/dev/sdb
+DiskPath:C:/,D:/
+DiskPath:/dev/sda,/dev/sdb
 ```
