@@ -89,7 +89,7 @@
         <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC70.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC100.json" />
-	<WindowsProfiles Include="profiles\SETUP-GPU-AMDDRIVERS.json" />
+	<WindowsProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -142,7 +142,7 @@
         <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
-	<LinuxProfiles Include="profiles\SETUP-GPU-AMDDRIVERS.json" />
+	<LinuxProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
         <LinuxProfiles Include="profiles\QUAL-GPU-DCGMI.json" />
     </ItemGroup>
 
