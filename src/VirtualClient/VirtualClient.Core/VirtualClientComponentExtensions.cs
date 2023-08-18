@@ -375,6 +375,16 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Getting logged-In UserName which corresponds to the user account that is currently authenticated for the session.
+        /// </summary>
+        /// <param name="component"></param>
+        /// <returns>Logged-In Username of current session</returns>
+        public static string GetLoggedInUserName(this VirtualClientComponent component)
+        {
+            return Environment.GetEnvironmentVariable("SUDO_USER") ?? Environment.UserName;
+        }
+
+        /// <summary>
         /// Returns true/false whether the content blob store is defined and exists in the dependencies.
         /// </summary>
         /// <param name="dependencies">The dependencies to verify.</param>

@@ -8,10 +8,10 @@
   "Parameters": {
     "CompilerName": "gcc",
     "CompilerVersion": "11",
-    "ProblemSizeN": null,
+    "ProblemSizeN": "{LogicalCoreCount} * 5000",
     "BlockSizeNB": "256",
-    "NumberOfProcesses": null,
-    "UsePerformanceLibraries": true,
+    "NumberOfProcesses": "{LogicalCoreCount}",
+    "UsePerformanceLibraries": false,
     "BindToCores": false,
     "CCFLAGS": "-O3 -march=native"
   },
@@ -20,7 +20,6 @@
       "Type": "HPLinpackExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
-        "HyperThreadingOn": true,
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
@@ -62,8 +61,8 @@
       "Parameters": {
         "Scenario": "DownloadHPLPerformanceLibrariesPackage",
         "BlobContainer": "packages",
-        "BlobName": "HPLPerformanceLibraries.1.0.0.zip",
-        "PackageName": "hpl_performance_libraries",
+        "BlobName": "hplperformancelibraries.1.0.0.zip",
+        "PackageName": "hplperformancelibraries",
         "Extract": true
       }
     }

@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
@@ -65,7 +66,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
-        public void HPLinpackWorkloadProfileWithPerformanceLibrariesThroughsExceptionOnUnixX64Platform(string profile)
+        public async Task HPLinpackWorkloadProfileWithOutPerformanceLibrariesExecutesExpectedCommandsOnUnixX64PlatformAsync(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
@@ -82,6 +83,8 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, true));
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -113,25 +116,30 @@ namespace VirtualClient.Actions
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
             {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
-                // await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
 
-                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-
-                // WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
             }
         }
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
-        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixArm64Platform(string profile)
+        public async Task HPLinpackWorkloadProfileExecutesThxeExpectedWorkloadsOnUnixArm64Platform(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.Arm64);
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestOS",
+                LinuxDistribution = LinuxDistribution.Ubuntu
+            };
+
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, true));
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
@@ -141,12 +149,6 @@ namespace VirtualClient.Actions
                 @"linux-arm64/bin/Linux_GCC/HPL.dat"
             };
 
-            string[] expectedPerfLibFiles = new string[]
-            {
-                @"ARM/arm-performance-libraries_23.04.1_Ubuntu-22.04.sh"
-            };
-
-            this.mockFixture.SetupWorkloadPackage("hpl_performance_libraries", expectedFiles: expectedPerfLibFiles);
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -191,11 +193,12 @@ namespace VirtualClient.Actions
                 ["CompilerName"] = "gcc",
                 ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
-                ["Version"] = "2.3",
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "2"
+                ["NumberOfProcesses"] = "2",
+                ["BindToCores"] = false,
+                ["UsePerformanceLibraries"] = false
             };
 
             return new List<string>

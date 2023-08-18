@@ -5,13 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -33,7 +31,7 @@ namespace VirtualClient.Actions
         private string makeFileName = "Make.Linux_GCC";
         private string commandArguments;
         private string hplPerfLibraryInfo;
-        private string loggedInUserName;
+        private CpuInfo cpuInfo;
 
         /// <summary>
         /// Constructor for <see cref="HPLinpackExecutor"/>
@@ -47,17 +45,7 @@ namespace VirtualClient.Actions
             this.packageManager = this.systemManagement.PackageManager;
             this.fileSystem = this.systemManagement.FileSystem;
             this.stateManager = this.systemManagement.StateManager;
-        }
-
-        /// <summary>
-        /// True if Hyperthreading is on
-        /// </summary>
-        public bool HyperThreadingOn
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.HyperThreadingOn), true);
-            }
+            this.cpuInfo = this.systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -78,7 +66,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN), Environment.ProcessorCount * 1000);
+                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN), this.cpuInfo.LogicalCoreCount * 5000);
             }
         }
 
@@ -101,7 +89,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), Environment.ProcessorCount);
+                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalCoreCount);
             }
         }
 
@@ -136,7 +124,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.PerformanceLibrariesPackageName), "hpl_performance_libraries");
+                return this.Parameters.GetValue<string>(nameof(this.PerformanceLibrariesPackageName), "hplperformancelibraries");
             }
         }
 
@@ -171,20 +159,17 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            await this.EvaluateParametersAsync(cancellationToken);
             this.ThrowIfPlatformIsNotSupported();
-            this.coreCount = Environment.ProcessorCount;
+            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+            this.coreCount = this.cpuInfo.LogicalCoreCount;
 
             this.ValidateParameters();
+
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                                                     .ConfigureAwait(false);
 
             this.HPLDirectory = workloadPackage.Path;
-            
-            this.loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
-            if (this.loggedInUserName == null)
-            {
-                this.loggedInUserName = Environment.UserName;
-            }
 
             await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken).ConfigureAwait(false);
            
@@ -218,7 +203,7 @@ namespace VirtualClient.Actions
 
                 IProcessProxy process;
 
-                if (this.HyperThreadingOn)
+                if (this.cpuInfo.IsHyperthreadingEnabled)
                 {
                     this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses}";
                 }
@@ -232,7 +217,7 @@ namespace VirtualClient.Actions
                     this.commandArguments += $"--bind-to core";
                 }
 
-                process = await this.ExecuteCommandAsync("runuser", $"-u {this.loggedInUserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                process = await this.ExecuteCommandAsync("runuser", $"-u {this.GetLoggedInUserName()} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
 
                 using (process)
                 {
@@ -277,11 +262,38 @@ namespace VirtualClient.Actions
                     $"'{PlatformSpecifics.LinuxX64}', '{PlatformSpecifics.LinuxArm64}'.",
                     ErrorReason.PlatformNotSupported);
             }
+            else if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.UsePerformanceLibraries == true)
+            {
+                throw new WorkloadException(
+                    $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +
+                    $"'{PlatformSpecifics.LinuxArm64}'",
+                    ErrorReason.PlatformNotSupported);
+            }
+        }
+
+        private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (this.Platform == PlatformID.Unix)
+            {
+                LinuxDistributionInfo distroInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait();
+
+                switch (distroInfo.LinuxDistribution)
+                {
+                    case LinuxDistribution.Ubuntu:
+                        break;
+                    default:
+                        throw new WorkloadException(
+                            $"The HPLinpack benchmark workload is not supported by Virtual Client on the current Linux distro " +
+                            $"'{distroInfo.LinuxDistribution}'.",
+                            ErrorReason.LinuxDistributionNotSupported);
+                }
+            }
         }
 
         private void ValidateParameters()
         {
-            if (this.HyperThreadingOn && this.NumberOfProcesses > this.coreCount)
+            if (this.cpuInfo.IsHyperthreadingEnabled && this.NumberOfProcesses > this.coreCount)
             {
                 throw new Exception(
                     $"NumberOfProcesses parameter value should be less than or equal to number of logical cores");
@@ -322,31 +334,28 @@ namespace VirtualClient.Actions
             await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"CC *= *[^\n]*", "CC = mpicc", cancellationToken);
 
-            if (this.UsePerformanceLibraries)
+            if (this.UsePerformanceLibraries && this.CpuArchitecture == Architecture.Arm64)
             {
-                if (this.CpuArchitecture == Architecture.Arm64)
-                {
-                    await this.fileSystem.File.ReplaceInFileAsync(
+                await this.fileSystem.File.ReplaceInFileAsync(
                     makeFilePath, @"LAdir *=", "LAdir = $(ARMPL_DIR)", cancellationToken);
 
-                    await this.fileSystem.File.ReplaceInFileAsync(
-                            makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
+                await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LAinc *=", $"LAinc = $(ARMPL_INCLUDES)", cancellationToken);
 
-                    await this.fileSystem.File.ReplaceInFileAsync(
-                            makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
+                await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LAlib *= *[^\n]*", "LAlib = /opt/arm/armpl_23.04.1_gcc-11.3/lib/libarmpl.a", cancellationToken);
 
-                    await this.fileSystem.File.ReplaceInFileAsync(
-                            makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
-                }
-                else
-                {
-                    throw new WorkloadException(
+                await this.fileSystem.File.ReplaceInFileAsync(
+                        makeFilePath, @"LINKER *= *[^\n]*", "LINKER = mpifort", cancellationToken);
+            }
+            else if (this.UsePerformanceLibraries && this.CpuArchitecture != Architecture.Arm64)
+            {
+                throw new WorkloadException(
                     $"The HPL workload is currently only supports with perf libraries on the following platform/architectures: " +
                     $"'{PlatformSpecifics.LinuxArm64}'.",
                     ErrorReason.PlatformNotSupported);
-                }
             }
-            else
+            else 
             {
                 string architecture;
                 if (this.CpuArchitecture == Architecture.Arm64)

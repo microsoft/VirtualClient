@@ -186,13 +186,14 @@ namespace VirtualClient.Actions
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
             this.fixture.Process.StandardOutput.Append(this.rawString);
+            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, 9, 11, 13, true));
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 ["CompilerName"] = "gcc",
                 ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
-                ["Version"] = "2.3",
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",

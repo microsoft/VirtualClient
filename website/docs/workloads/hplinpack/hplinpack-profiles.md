@@ -16,6 +16,12 @@ This profile is designed to identify general/broad regressions when compared aga
   * linux-x64
   * linux-arm64
 
+* **Supported Linux Distrbutions**
+    * Ubuntu
+
+  **Note**: Performance Libraries are enabled only for **Linux ARM-Ubuntu22.04 with gcc 11** as of now. Performance Libraries for AMD and Intel will be enabled soon.
+  By default this profile runs without performance libraries. User can customize it from the VC command line parameters.
+
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
@@ -31,14 +37,14 @@ This profile is designed to identify general/broad regressions when compared aga
 
   | Parameter                 | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
-  | Username | Which user needs to run HPLinpack | testuser |
   | CompilerName | Name of compiler used | gcc |
   | CompilerVersion | Version of compiler | 11 |
-  |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of cores* 10000 (This value is machine dependent) |
+  |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of logical cores* 1000 (This value is machine dependent) |
   |   BlockSizeNB       |  The partitioning blocking factor  | 256 |
-  | CCFLAGS | compiler flags| -march=native  |
-  | HyperThreadingON | True is hyperthreading to be on | True |
-  | NumberOfProcesses | Number of processes to be launched for the parallel program | null (By default it is equal to number of cores of the machine)|
+  |   UsePerformanceLibraries | Using Machine-specific performance Libraries | false |
+  | CCFLAGS | compiler flags| -O3 -march=native  |
+  |  BindToCores | If you want to bind the process to single core | false|
+  | NumberOfProcesses | Number of processes to be launched for the parallel program |  No. of logical cores|
 
   There are two other input values for HPLinpack. They are 
   * P (The number of process rows)
@@ -64,5 +70,17 @@ This profile is designed to identify general/broad regressions when compared aga
   The following section provides a few basic examples of how to use the workload profile.
 
   ``` bash
-  VirtualClient.exe --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
+
+  If you want to use performance libraries for the supported platforms and distribution run following command.
+
+  ``` bash
+  sudo ./VirtualClient --profile=PERF-CPU-HPLINPACK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=UsePerformanceLibraries=true
+
+  ```
+
+* **Resources**
+
+* [Performance Libraries for ARM] (https://developer.arm.com/downloads/-/arm-performance-libraries)
+* [HPLinpack related links] (https://netlib.org/benchmark/hpl/links.html)
