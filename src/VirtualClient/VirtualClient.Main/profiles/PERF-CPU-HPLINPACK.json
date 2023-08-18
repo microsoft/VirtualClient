@@ -8,7 +8,7 @@
   "Parameters": {
     "CompilerName": "gcc",
     "CompilerVersion": "11",
-    "ProblemSizeN": "{LogicalCoreCount} * 5000",
+    "ProblemSizeN": null,
     "BlockSizeNB": "256",
     "NumberOfProcesses": "{LogicalCoreCount}",
     "UsePerformanceLibraries": false,

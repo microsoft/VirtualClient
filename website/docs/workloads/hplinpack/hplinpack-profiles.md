@@ -39,7 +39,7 @@ This profile is designed to identify general/broad regressions when compared aga
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | CompilerName | Name of compiler used | gcc |
   | CompilerVersion | Version of compiler | 11 |
-  |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | No.of logical cores* 1000 (This value is machine dependent) |
+  |   ProblemSizeN      |  The order of coefficient matrix of set of linear equations that we want to solve  | Convert.ToInt32(Math.Sqrt(totalAvailableMemoryKiloBytes * 1024 * 0.8 / 8)) (This value is dependent on memory of machine, uses 80% of available memory) |
   |   BlockSizeNB       |  The partitioning blocking factor  | 256 |
   |   UsePerformanceLibraries | Using Machine-specific performance Libraries | false |
   | CCFLAGS | compiler flags| -O3 -march=native  |

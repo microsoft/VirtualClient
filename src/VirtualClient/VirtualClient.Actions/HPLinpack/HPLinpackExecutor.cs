@@ -32,6 +32,7 @@ namespace VirtualClient.Actions
         private string commandArguments;
         private string hplPerfLibraryInfo;
         private CpuInfo cpuInfo;
+        private long totalMemoryKiloBytes;
 
         /// <summary>
         /// Constructor for <see cref="HPLinpackExecutor"/>
@@ -66,7 +67,11 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN), this.cpuInfo.LogicalCoreCount * 5000);
+                // HPLinpack problemSize could take 80% of total available memory for optimal performance.-> xKiloByte * 0.8
+                // Number of double precision(8  bytes) elements that can fit the available memory -> ( xKiloByte * 0.8 ) / 8 -> ( xByte * 1024 * 0.8 ) /8
+                // The memory the benchmark uses is propotional to the 2nd-power of the size. -> sqrt( ( xByte * 1024 * 0.8 ) /8)
+                int size = Convert.ToInt32(Math.Sqrt(this.totalMemoryKiloBytes * 1024 * 0.8 / 8));
+                return this.Parameters.GetValue<string>(nameof(this.ProblemSizeN), size);
             }
         }
 
@@ -163,6 +168,9 @@ namespace VirtualClient.Actions
             this.ThrowIfPlatformIsNotSupported();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             this.coreCount = this.cpuInfo.LogicalCoreCount;
+
+            MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
+            this.totalMemoryKiloBytes = memoryInfo.TotalMemory;
 
             this.ValidateParameters();
 
