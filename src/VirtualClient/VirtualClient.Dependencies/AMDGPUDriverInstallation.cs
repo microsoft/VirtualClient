@@ -33,6 +33,7 @@
         private IFileSystem fileSystem;
         private ISystemManagement systemManager;
         private IStateManager stateManager;
+        private LinuxDistributionInfo linuxDistributionInfo;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AMDGPUDriverInstallation"/> class.
@@ -79,7 +80,7 @@
         }
 
         /// <summary>
-        /// The user who has the ssh identity registered for.
+        /// The user who is running.
         /// </summary>
         public string Username
         {
@@ -141,12 +142,9 @@
                     }
                     else if (this.Platform == PlatformID.Unix)
                     {
-                        LinuxDistributionInfo linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                        telemetryContext.AddContext("LinuxDistribution", this.linuxDistributionInfo.LinuxDistribution);
 
-                        telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
-
-                        switch (linuxDistributionInfo.LinuxDistribution)
+                        switch (this.linuxDistributionInfo.LinuxDistribution)
                         {
                             case LinuxDistribution.Ubuntu:                            
                                 break;
@@ -154,13 +152,13 @@
                             default:
                                 // different distro installation to be addded.
                                 this.Logger.LogMessage(
-                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{linuxDistributionInfo.LinuxDistribution}'.", 
+                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{this.linuxDistributionInfo.LinuxDistribution}'.", 
                                     telemetryContext);
 
                                 break;
                         }
 
-                        await this.InstallAMDGPUDriverLinux(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
+                        await this.InstallAMDGPUDriverLinux(telemetryContext, cancellationToken)
                                    .ConfigureAwait(false);
 
                         await this.stateManager.SaveStateAsync(nameof(AMDGPUDriverInstallation), new State(), cancellationToken)
@@ -172,17 +170,29 @@
 
                 if (this.Platform == PlatformID.Unix)
                 {
-                    LinuxDistributionInfo linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    await this.ExecutePostRebootCommands(linuxDistributionInfo.LinuxDistribution, telemetryContext, cancellationToken)
+                    await this.ExecutePostRebootCommands(telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             });
         }
 
+        /// <summary>
+        /// Initializes docker installation requirements.
+        /// </summary>
+        /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        /// <returns></returns>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (this.Platform == PlatformID.Unix)
+            {
+                this.linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);                
+            }
+        }
+
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Readability")]
-        private async Task InstallAMDGPUDriverLinux(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task InstallAMDGPUDriverLinux(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(this.LinuxInstallationFile))
             {
@@ -209,8 +219,8 @@
                     cancellationToken);
             }
 
-            List<string> prerequisiteCommands = this.PrerequisiteCommands(linuxDistribution);
-            List<string> installationCommands = this.VersionSpecificInstallationCommands(linuxDistribution);
+            List<string> prerequisiteCommands = this.PrerequisiteCommands();
+            List<string> installationCommands = this.VersionSpecificInstallationCommands();
             List<string> postInstallationCommands = this.PostInstallationCommands();
 
             List<List<string>> commandsLists = new List<List<string>>
@@ -239,11 +249,11 @@
 
         }
 
-        private List<string> PrerequisiteCommands(LinuxDistribution linuxDistribution)
+        private List<string> PrerequisiteCommands()
         {
             List<string> commands = new List<string>();
 
-            switch (linuxDistribution)
+            switch (this.linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                     commands.Add("apt-get -yq update");
@@ -261,14 +271,14 @@
             return commands;
         }
 
-        private List<string> VersionSpecificInstallationCommands(LinuxDistribution linuxDistribution)
+        private List<string> VersionSpecificInstallationCommands()
         {
             string installationFileName = this.LinuxInstallationFile.Split('/').Last();
             List<string> commands = new List<string>()
             {
             };
 
-            switch (linuxDistribution)
+            switch (this.linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                     commands.Add($"wget {this.LinuxInstallationFile}");
@@ -294,11 +304,11 @@
             };
         }
 
-        private async Task ExecutePostRebootCommands(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecutePostRebootCommands(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             List<string> commands = new List<string>();
 
-            switch (linuxDistribution)
+            switch (this.linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
                     // first command needs to be removed
