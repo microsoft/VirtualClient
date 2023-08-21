@@ -213,11 +213,11 @@ namespace VirtualClient.Actions
 
                 if (this.cpuInfo.IsHyperthreadingEnabled)
                 {
-                    this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses}";
+                    this.commandArguments = $"--use-hwthread-cpus -np {this.NumberOfProcesses} --allow-run-as-root";
                 }
                 else
                 {
-                    this.commandArguments = $"-np {this.NumberOfProcesses}";
+                    this.commandArguments = $"-np {this.NumberOfProcesses} --allow-run-as-root";
                 }
 
                 if (this.BindToCores)
@@ -225,7 +225,7 @@ namespace VirtualClient.Actions
                     this.commandArguments += $"--bind-to core";
                 }
 
-                process = await this.ExecuteCommandAsync("runuser", $"-u {this.GetLoggedInUserName()} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
 
                 using (process)
                 {

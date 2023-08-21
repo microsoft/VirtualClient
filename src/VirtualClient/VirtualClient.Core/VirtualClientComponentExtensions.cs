@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Drawing;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -372,16 +373,6 @@ namespace VirtualClient
         {
             component.ThrowIfNull(nameof(component));
             component.PlatformSpecifics.SetEnvironmentVariable(name, value, target, append);
-        }
-
-        /// <summary>
-        /// Getting logged-In UserName which corresponds to the user account that is currently authenticated for the session.
-        /// </summary>
-        /// <param name="component"></param>
-        /// <returns>Logged-In Username of current session</returns>
-        public static string GetLoggedInUserName(this VirtualClientComponent component)
-        {
-            return Environment.GetEnvironmentVariable("SUDO_USER") ?? Environment.UserName;
         }
 
         /// <summary>
