@@ -61,6 +61,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// PsExec session number
+        /// </summary>
+        public int PsExecSession
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(ThreeDMarkExecutor.PsExecSession));
+            }
+        }
+
+        /// <summary>
         /// The 3D Mark defintion file to execute.
         /// </summary>
         public List<string> Definitions { get; set; }
@@ -160,7 +171,7 @@ namespace VirtualClient.Actions
                 .AddContext("executable", this.ExecutablePath);
 
             string psexec = this.PlatformSpecifics.Combine(this.psexecDir, "PsExec.exe");
-            string baseArg = @$"-s -i 1 -w {this.psexecDir} -accepteula -nobanner";
+            string baseArg = @$"-s -i {this.PsExecSession} -w {this.psexecDir} -accepteula -nobanner";
 
             return this.Logger.LogMessageAsync($"{nameof(ThreeDMarkExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
@@ -224,7 +235,7 @@ namespace VirtualClient.Actions
 
                     // Workload execution
                     string commandArguments = this.GenerateCommandArguments(definition);
-
+                    Console.WriteLine($"{baseArg} {this.ExecutablePath} {commandArguments}");
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} {commandArguments}", this.psexecDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
