@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The LMbench workload virtual client action
@@ -122,6 +123,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "LMbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
                 IList<Metric> metrics = parser.Parse();
 

@@ -4,6 +4,7 @@
 namespace VirtualClient.Contracts
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -14,6 +15,7 @@ namespace VirtualClient.Contracts
     internal class CoreInfoParser : TextParser<CpuInfo>
     {
         private static readonly Regex AsteriskExpression = new Regex(@"\*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CacheExpression = new Regex(@"(Data\s*Cache|Instruction\s*Cache|Unified\s*Cache)\s*\d+,\s*Level\s*([0-9]+),\s*([0-9]+\s*[a-z]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex LogicalProcessorExpression = new Regex(@"\*+-*\s*Physical\s*Processor", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NoNumaNodeExpression = new Regex("No NUMA nodes", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NumaNodeExpression = new Regex(@"NUMA\s+Node\s+\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -107,6 +109,8 @@ namespace VirtualClient.Contracts
 
             bool hyperthreadingEnabled = logicalProcessorCount > physicalProcessors.Count;
 
+            IEnumerable<CpuCacheInfo> caches = CoreInfoParser.ParseCacheInfo(this.RawText);
+
             // The CoreInfo.exe toolset will return NUMA Node 0 if there are no NUMA nodes on the system.
             return new CpuInfo(
                 lines[0]?.Trim(),
@@ -115,7 +119,96 @@ namespace VirtualClient.Contracts
                 logicalProcessorCount,
                 sockets.Count,
                 numaNodeCount,
-                hyperthreadingEnabled);
+                hyperthreadingEnabled,
+                caches);
+        }
+
+        private static IEnumerable<CpuCacheInfo> ParseCacheInfo(string text)
+        {
+            List<CpuCacheInfo> caches = null;
+
+            try
+            {
+                MatchCollection matches = CoreInfoParser.CacheExpression.Matches(text);
+                if (matches?.Any() == true)
+                {
+                    caches = new List<CpuCacheInfo>();
+                    IDictionary<string, long> cacheInfo = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+
+                    foreach (Match cacheMatch in matches)
+                    {
+                        string cacheType = cacheMatch.Groups[1].Value.Trim();
+                        int.TryParse(cacheMatch.Groups[2].Value.Trim(), out int cacheLevel);
+                        string cacheSize = cacheMatch.Groups[3].Value.Trim();
+                        long.TryParse(TextParsingExtensions.TranslateByteUnit(cacheSize), out long cacheSizeBytes);
+
+                        // Account for the unlikely possibility of a toolset or parsing issue. If we cannot
+                        // determine the cache level, we do not include the info in the cache output. This is
+                        // not something we've seen before but is theoretically possible.
+                        if (cacheLevel <= 0 || cacheSizeBytes <= 0)
+                        {
+                            continue;
+                        }
+
+                        // CoreInfo output provides a breakdown of the CPU memory caches between
+                        // data caches, instruction caches and unified caches. We capture the total
+                        // cache size (e.g. L1 data + L1 instruction = total L1 bytes) as well as
+                        // the individuals.
+                        // e.g.
+                        // L1
+                        // L1d
+                        // L1i
+                        // L2
+                        // L3
+                        string cacheName = $"L{cacheLevel}";
+                        string cacheName2 = null;
+                        if (cacheType.Contains("Data", StringComparison.OrdinalIgnoreCase))
+                        {
+                            cacheName2 = $"{cacheName}d";
+                        }
+                        else if (cacheType.Contains("Instruction", StringComparison.OrdinalIgnoreCase))
+                        {
+                            cacheName2 = $"{cacheName}i";
+                        }
+
+                        // Cache Total Size (e.g. L1, L2, L3)
+                        long currentTotalCacheSize;
+                        if (cacheInfo.TryGetValue(cacheName, out currentTotalCacheSize))
+                        {
+                            cacheInfo[cacheName] += cacheSizeBytes;
+                        }
+                        else
+                        {
+                            cacheInfo[cacheName] = cacheSizeBytes;
+                        }
+
+                        // Cache Subset Size (e.g. L1d (data cache), L1i (instructions cache)).
+                        if (!string.IsNullOrWhiteSpace(cacheName2))
+                        {
+                            long currentIndividualCacheSize;
+                            if (cacheInfo.TryGetValue(cacheName2, out currentIndividualCacheSize))
+                            {
+                                cacheInfo[cacheName2] += cacheSizeBytes;
+                            }
+                            else
+                            {
+                                cacheInfo[cacheName2] = cacheSizeBytes;
+                            }
+                        }
+                    }
+
+                    foreach (var entry in cacheInfo)
+                    {
+                        caches.Add(new CpuCacheInfo(entry.Key, $"{entry.Key} CPU cache", entry.Value));
+                    }
+                }
+            }
+            catch
+            {
+                // Best effort only.
+            }
+
+            return caches;
         }
     }
 }

@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -15,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes a DiskSpd workload profile.
@@ -108,7 +108,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                await this.EvaluateParametersAsync(CancellationToken.None);
+                await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
                 relatedContext.AddContext("testName", this.TestName);
@@ -379,6 +379,13 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(DiskWorkloadProcess workload, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                "DiskSpd",
+                workload.CommandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             string result = workload.StandardOutput.ToString();
             IList<Metric> metrics = new List<Metric>()
                 .AddDiskIOMetrics(result)

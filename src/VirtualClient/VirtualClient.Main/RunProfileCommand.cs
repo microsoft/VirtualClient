@@ -13,6 +13,7 @@ namespace VirtualClient
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -22,7 +23,9 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -545,28 +548,6 @@ namespace VirtualClient
                 ["experimentId"] = this.ExperimentId.ToLowerInvariant(),
                 ["executionProfileParameters"] = this.Parameters?.ObscureSecrets()
             });
-
-            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
-
-            if (this.Metadata?.Any() == true)
-            {
-                this.Metadata.ToList().ForEach(entry =>
-                {
-                    string key = entry.Key.CamelCased();
-                    this.Metadata[key] = entry.Value;
-                });
-
-                metadata.AddRange(this.Metadata.ObscureSecrets());
-            }
-
-            // For backwards compatibility, ensure that the experiment ID and agent ID
-            // values are a part of the metadata. This is required for the original VC table
-            // JSON mappings that expect these properties to exist in the metadata supplied to
-            // VC on the command line.
-            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
-            metadata["agentId"] = this.AgentId;
-
-            EventContext.PersistentProperties["metadata"] = metadata;
         }
 
         /// <summary>
@@ -591,6 +572,7 @@ namespace VirtualClient
         protected void SetGlobalTelemetryProperties(IEnumerable<string> profiles, IServiceCollection dependencies)
         {
             ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+            ILogger logger = dependencies.GetService<ILogger>();
 
             string profile = profiles.First();
             string profileName = Path.GetFileName(profile);
@@ -609,10 +591,53 @@ namespace VirtualClient
                 ["executionProfilePath"] = profileFullPath
             });
 
-            IDictionary<string, IConvertible> systemInfo = systemManagement.GetSystemMetadataAsync(CancellationToken.None)
+
+            IDictionary<string, object> metadata = new Dictionary<string, object>();
+
+            if (this.Metadata?.Any() == true)
+            {
+                this.Metadata.ToList().ForEach(entry =>
+                {
+                    metadata[entry.Key] = entry.Value;
+                });
+            }
+
+            // For backwards compatibility, ensure that the experiment ID and agent ID
+            // values are a part of the metadata. This is required for the original VC table
+            // JSON mappings that expect these properties to exist in the metadata supplied to
+            // VC on the command line.
+            metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
+            metadata["agentId"] = this.AgentId;
+
+            MetadataContract.Persist(metadata, MetadataContractCategory.Default);
+
+            IDictionary<string, object> hostMetadata = systemManagement.GetHostMetadataAsync(logger)
                 .GetAwaiter().GetResult();
 
-            EventContext.PersistentProperties["systemInfo"] = systemInfo;
+            // Hardware Parts metadata contains information on the physical hardware
+            // parts on the system (e.g. CPU, memory chips, network cards).
+            hostMetadata.AddRange(systemManagement.GetHardwarePartsMetadataAsync(logger)
+                .GetAwaiter().GetResult());
+
+            List<IDictionary<string, object>> partsMetadata = new List<IDictionary<string, object>>();
+
+            MetadataContract.Persist(
+                hostMetadata,
+                MetadataContractCategory.Host);
+
+            MetadataContract.Persist(
+                new Dictionary<string, object>
+                {
+                    { "exitWait", this.ExitWait },
+                    { "layout", this.LayoutPath },
+                    { "logToFile", this.LogToFile },
+                    { "iterations", this.Iterations?.ProfileIterations },
+                    { "profiles", string.Join(",", profiles.Select(p => Path.GetFileName(p))) },
+                    { "timeout", this.Timeout?.Duration },
+                    { "timeoutScope", this.Timeout?.LevelOfDeterminism.ToString() },
+                    { "scenarios", this.Scenarios != null ? string.Join(",", this.Scenarios) : null },
+                },
+                MetadataContractCategory.Runtime);
         }
 
         private async Task CaptureSystemInfoAsync(IServiceCollection dependencies, CancellationToken cancellationToken)

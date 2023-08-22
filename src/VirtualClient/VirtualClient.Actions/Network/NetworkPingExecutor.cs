@@ -19,6 +19,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Profile executes a simple network ping test.
@@ -170,6 +171,13 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    this.MetadataContract.AddForScenario(
+                        "NetworkPing",
+                        null,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     if (responseTimes.Any())
                     {
                         this.Logger.LogMetrics(

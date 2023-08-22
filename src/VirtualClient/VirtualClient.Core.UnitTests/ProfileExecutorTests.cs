@@ -176,8 +176,7 @@ namespace VirtualClient
                         }
                     };
 
-                    DateTime timeout = DateTime.UtcNow.AddSeconds(5);
-                    await executor.ExecuteAsync(new ProfileTiming(timeout), cancellationTokenSource.Token)
+                    await executor.ExecuteAsync(new ProfileTiming(TimeSpan.FromSeconds(5)), cancellationTokenSource.Token)
                         .ConfigureAwait(false);
 
                     var monitorsStarted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
@@ -371,7 +370,7 @@ namespace VirtualClient
             // An explicit timeout is provided to the profile executor.
             using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
             {
-                ProfileTiming explicitTimeout = new ProfileTiming(DateTime.UtcNow.AddSeconds(1));
+                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromSeconds(5));
                 Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
@@ -444,8 +443,7 @@ namespace VirtualClient
                 executor.IterationBegin += (sender, args) => iterationsStarted++;
                 executor.IterationEnd += (sender, args) => iterationsCompleted++;
 
-                TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
-                ProfileTiming timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), DeterminismScope.IndividualAction);
+                ProfileTiming timing = new ProfileTiming(TimeSpan.FromMilliseconds(timeoutMilliseconds), DeterminismScope.IndividualAction);
                 Task executionTask = executor.ExecuteAsync(timing, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
@@ -491,8 +489,7 @@ namespace VirtualClient
                 executor.IterationBegin += (sender, args) => iterationsStarted++;
                 executor.IterationEnd += (sender, args) => iterationsCompleted++;
 
-                TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
-                ProfileTiming timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), DeterminismScope.AllActions);
+                ProfileTiming timing = new ProfileTiming(TimeSpan.FromMilliseconds(timeoutMilliseconds), DeterminismScope.AllActions);
                 Task executionTask = executor.ExecuteAsync(timing, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);

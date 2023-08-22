@@ -131,6 +131,24 @@ namespace VirtualClient
         public abstract Task<int> ExecuteAsync(string[] args, CancellationTokenSource cancellationTokenSource);
 
         /// <summary>
+        /// Returns assembly version information for the application.
+        /// </summary>
+        /// <param name="platformVersion">The version of the open source platform core..</param>
+        /// <param name="extensionsVersion">The version of any extensions to the platform.</param>
+        protected void GetVersionInfo(out string platformVersion, out string extensionsVersion)
+        {
+            platformVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+            extensionsVersion = null;
+
+            // If a VC extension dll exist, then the appVersion in telemetry will be replaced by the extension version.
+            string[] versionDllFiles = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*VirtualClient.Version.dll");
+            if (versionDllFiles.Length > 0)
+            {
+                extensionsVersion = versionDllFiles.ToList().Select(f => FileVersionInfo.GetVersionInfo(f).FileVersion).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
         /// Initializes dependencies required by Virtual Client application operations.
         /// </summary>
         protected virtual IServiceCollection InitializeDependencies(string[] args)
@@ -196,6 +214,7 @@ namespace VirtualClient
             dependencies.AddSingleton<ILogger>(logger);
             dependencies.AddSingleton<IConfiguration>(configuration);
             dependencies.AddSingleton<IApiClientManager>(new ApiClientManager(this.ApiPorts));
+            dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             dependencies.AddSingleton<PlatformSpecifics>(platformSpecifics);
             dependencies.AddSingleton<IEnumerable<IBlobManager>>(blobStores);
 
@@ -285,29 +304,17 @@ namespace VirtualClient
 
         private void InitializeGlobalTelemetryProperties(string[] args)
         {
-            string vcAssemblyVersion = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
-            string extensionVersion = null;
-            // If a VC extension dll exist, then the appVersion in telemetry will be replaced by the extension version.
-            string[] versionDllFiles = Directory.GetFiles(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "*VirtualClient.Version.dll");
-            if (versionDllFiles.Length > 0)
-            {
-                extensionVersion = versionDllFiles.ToList().Select(f => FileVersionInfo.GetVersionInfo(f).FileVersion).FirstOrDefault();
-            }
+            this.GetVersionInfo(out string platformVersion, out string extensionsVersion);
             
             EventContext.PersistentProperties.AddRange(new Dictionary<string, object>
             {
-                // 1/18/2022: Note that we are in the process of modifying the schema of the VC telemetry
-                // output. To enable a seamless transition, we are supporting the old and the new schema
-                // until we have all systems using the latest version of the Virtual Client.
-                ["agentId"] = this.AgentId.ToLowerInvariant(),
                 ["clientId"] = this.AgentId.ToLowerInvariant(),
+                ["appVersion"] = extensionsVersion ?? platformVersion,
+                ["appPlatformVersion"] = platformVersion,
                 ["executionArguments"] = SensitiveData.ObscureSecrets(string.Join(" ", args)),
-                ["appVersion"] = extensionVersion ?? vcAssemblyVersion,
-                ["binaryVersion"] = extensionVersion == null ? extensionVersion : $"{extensionVersion},{vcAssemblyVersion}",
+                ["executionSystem"] = this.ExecutionSystem,
                 ["operatingSystemPlatform"] = Environment.OSVersion.Platform.ToString(),
                 ["platformArchitecture"] = PlatformSpecifics.GetPlatformArchitectureName(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture),
-                ["executionPlatform"] = this.ExecutionSystem,
-                ["executionSystem"] = this.ExecutionSystem
             });
         }
     }

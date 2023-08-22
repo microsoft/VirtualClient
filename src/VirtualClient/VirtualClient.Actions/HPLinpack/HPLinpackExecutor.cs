@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The HPL(High Performance Linpack) workload executor.
@@ -196,17 +197,17 @@ namespace VirtualClient.Actions
                 this.SetParameters();
                 await this.ConfigureDatFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-                IProcessProxy process;
+                string commandArguments = null;
                 if (this.HyperThreadingOn)
                 {
-                    process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                    commandArguments = $"-u {this.Username} -- mpirun --use-hwthread-cpus -np {this.NumberOfProcesses} ./xhpl";
                 }
                 else
                 {
-                    process = await this.ExecuteCommandAsync("runuser", $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
+                    commandArguments = $"-u {this.Username} -- mpirun -np {this.NumberOfProcesses} ./xhpl";
                 }
 
-                using (process)
+                using (IProcessProxy process = await this.ExecuteCommandAsync("runuser", commandArguments, this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -214,7 +215,7 @@ namespace VirtualClient.Actions
                             .ConfigureAwait();
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        this.CaptureMetrics(process.StandardOutput.ToString(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                        this.CaptureMetrics(process.StandardOutput.ToString(), $"runuser {commandArguments}", startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
 
                     }
                 }
@@ -357,8 +358,15 @@ namespace VirtualClient.Actions
 
         }
 
-        private void CaptureMetrics(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.MetadataContract.AddForScenario(
+                "HPLinpack",
+                commandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             HPLinpackMetricsParser parser = new HPLinpackMetricsParser(results);
             IList<Metric> metrics = parser.Parse();
 
@@ -373,7 +381,7 @@ namespace VirtualClient.Actions
                     result.Value,
                     result.Unit,
                     null,
-                    $"{this.ProblemSizeN}N_{this.BlockSizeNB}NB_{this.ProcessRows}P_{this.ProcessColumns}Q",
+                    commandArguments,
                     this.Tags,
                     telemetryContext,
                     result.Relativity,

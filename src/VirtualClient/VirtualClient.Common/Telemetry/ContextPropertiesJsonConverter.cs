@@ -9,7 +9,7 @@ namespace VirtualClient.Common.Telemetry
     using System.Linq;
     using System.Text;
     using Newtonsoft.Json;
-    using VirtualClient.Common;
+    using Newtonsoft.Json.Serialization;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -18,6 +18,7 @@ namespace VirtualClient.Common.Telemetry
     public class ContextPropertiesJsonConverter : JsonConverter
     {
         private static Type supportedType = typeof(IEnumerable<KeyValuePair<string, object>>);
+        private static Type serializerType = typeof(IDictionary<string, object>);
 
         /// <summary>
         /// Returns true/false whether the object type is supported for JSON serialization/deserialization.
@@ -78,10 +79,16 @@ namespace VirtualClient.Common.Telemetry
             writer.WriteStartObject();
             if (contextProperties.Any())
             {
+                // There is a flaw/bug in some of the contract resolvers or naming strategies (e.g. CamelCaseNamingStrategy)
+                // that causes the logic to not apply the casing preferences. We are forcing the resolution of the appropriate
+                // JsonContract here to account for the discrepancy.
+                JsonDictionaryContract contract = serializer.ContractResolver.ResolveContract(ContextPropertiesJsonConverter.serializerType) as JsonDictionaryContract;
+
                 foreach (KeyValuePair<string, object> property in contextProperties.OrderBy(prop => prop.Key))
                 {
-                    writer.WritePropertyName(property.Key);
+                    writer.WritePropertyName(contract != null ? contract.DictionaryKeyResolver.Invoke(property.Key) : property.Key);
                     object propertyValue = property.Value as IConvertible;
+
                     if (propertyValue != null)
                     {
                         writer.WriteValue(propertyValue);

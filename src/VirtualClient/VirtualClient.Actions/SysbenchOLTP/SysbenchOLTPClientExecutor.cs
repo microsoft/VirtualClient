@@ -19,6 +19,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Sysbench Client workload executor.
@@ -238,6 +239,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Sysbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string text = process.StandardOutput.ToString();
 
                 if (!string.IsNullOrEmpty(text)) 

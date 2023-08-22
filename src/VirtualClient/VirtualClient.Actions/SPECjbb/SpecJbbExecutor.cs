@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SPECJbb workload executor.
@@ -150,6 +151,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "SPECjbb",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 // specjbb2015-C-20220301-00002-reporter.out
                 string resultsDirectory = this.PlatformSpecifics.Combine(this.packageDirectory, "result");
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "specjbb2015*-reporter.out", SearchOption.AllDirectories);

@@ -4,16 +4,10 @@
 namespace VirtualClient.Actions
 {
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using System.Text;
-    using System.Threading.Tasks;
     using NUnit.Framework;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using VirtualClient.Monitors;
 
     [TestFixture]
     [Category("Unit")]
@@ -32,6 +26,5 @@ namespace VirtualClient.Actions
             Assert.AreEqual(1, metrics.Count);
             MetricAssert.Exists(metrics, "performance.gpu [TFLOPs]", 14.501, "TFLOPs");
         }
-
     }
 }

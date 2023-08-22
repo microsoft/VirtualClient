@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The StressAppTest workload executor.
@@ -196,6 +197,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "StressAppTest",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 

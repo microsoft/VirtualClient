@@ -5,19 +5,17 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes the 3DMark workload.
@@ -234,8 +232,10 @@ namespace VirtualClient.Actions
                     this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
 
                     // Workload execution
-                    string commandArguments = this.GenerateCommandArguments(definition);
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} {commandArguments}", this.psexecDir))
+                    string arguments = this.GenerateCommandArguments(definition);
+                    string commandArguments = $"{baseArg} {this.ExecutablePath} {arguments}";
+
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -260,7 +260,8 @@ namespace VirtualClient.Actions
                     }
 
                     // Result Preparation
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml", this.psexecDir))
+                    string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -295,9 +296,16 @@ namespace VirtualClient.Actions
                     metrics.Add(metric);
                 }
 
+                this.MetadataContract.AddForScenario(
+                    "3DMark",
+                    null,
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 this.Logger.LogMetrics(
                     "3DMark",
-                    $"3DMark {this.Scenario} Results",
+                    this.Scenario,
                     startTime,
                     endTime,
                     metrics,

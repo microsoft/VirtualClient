@@ -260,7 +260,7 @@ namespace VirtualClient
             this.ProcessManager = new InMemoryProcessManager(platform);
             this.SshClientManager = new InMemorySshClientManager();
             this.StateManager = new InMemoryStateManager();
-            this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
+            this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
 
             this.SystemManagement = new Mock<ISystemManagement>();
             this.SystemManagement.SetupGet(sm => sm.AgentId).Returns(vcAgentId);
@@ -272,6 +272,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
+            this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(this.ProcessManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(this.StateManager);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
@@ -285,6 +286,41 @@ namespace VirtualClient
             };
 
             this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+
+            this.SystemManagement.Setup(sm => sm.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo(
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 2, GenuineIntel",
+                    4,
+                    8,
+                    1,
+                    1,
+                    true,
+                    new List<CpuCacheInfo>
+                    {
+                        new CpuCacheInfo("L1", null, 100000),
+                        new CpuCacheInfo("L1d", null, 60000),
+                        new CpuCacheInfo("L1i", null, 40000),
+                        new CpuCacheInfo("L2", null, 10000000),
+                        new CpuCacheInfo("L3", null, 80000000)
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(
+                    346801345,
+                    new List<MemoryChipInfo>
+                    {
+                        new MemoryChipInfo("Memory_1", "Memory", 123456789, 2166, "HK Hynix", "HM123456"),
+                        new MemoryChipInfo("Memory_2", "Memory", 223344556, 2432, "Micron", "M987654")
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new NetworkInfo(
+                    new List<NetworkInterfaceInfo>
+                    {
+                        new NetworkInterfaceInfo("Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)", "Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)"),
+                    }));
+
             this.Dependencies = this.InitializeDependencies();
 
             return this;
@@ -343,6 +379,7 @@ namespace VirtualClient
                 .AddSingleton<IApiManager>(this.ApiManager)
                 .AddSingleton<ILogger>((provider) => this.Logger)
                 .AddSingleton<IConfiguration>((provider) => this.Configuration)
+                .AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance)
                 .AddSingleton<EnvironmentLayout>((provider) => this.Layout)
                 .AddSingleton<ISystemInfo>((provider) => this.SystemManagement.Object)
                 .AddSingleton<ISystemManagement>((provider) => this.SystemManagement.Object)

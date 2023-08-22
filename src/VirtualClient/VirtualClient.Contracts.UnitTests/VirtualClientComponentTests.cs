@@ -478,7 +478,6 @@ namespace VirtualClient.Contracts
             public TestVirtualClientComponent(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
                 : base(dependencies, parameters)
             {
-                this.LogSuccessFailMetrics = true;
             }
 
             public Action<EventContext, CancellationToken> OnExecute { get; set; }
