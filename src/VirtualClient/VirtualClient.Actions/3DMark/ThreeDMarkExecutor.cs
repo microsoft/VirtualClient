@@ -235,7 +235,6 @@ namespace VirtualClient.Actions
 
                     // Workload execution
                     string commandArguments = this.GenerateCommandArguments(definition);
-                    Console.WriteLine($"{baseArg} {this.ExecutablePath} {commandArguments}");
                     using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} {commandArguments}", this.psexecDir))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
