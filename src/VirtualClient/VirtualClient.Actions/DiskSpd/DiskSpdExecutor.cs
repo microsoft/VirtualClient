@@ -284,7 +284,7 @@ namespace VirtualClient.Actions
         /// <param name="disksToTest">The disks under test.</param>
         protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFile(disk.GetPreferredAccessPath(this.Platform))).ToArray();
+            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
             string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);

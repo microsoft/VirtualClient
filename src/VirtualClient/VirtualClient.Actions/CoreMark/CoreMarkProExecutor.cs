@@ -36,12 +36,6 @@ namespace VirtualClient.Actions
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
-
-            if (this.Platform == PlatformID.Win32NT)
-            {
-                this.Parameters[nameof(this.CompilerName)] = "cygwin";
-                this.Parameters[nameof(this.CompilerVersion)] = null;
-            }
         }
 
         /// <summary>
