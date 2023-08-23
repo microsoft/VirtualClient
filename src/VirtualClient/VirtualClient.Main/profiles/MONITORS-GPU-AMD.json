@@ -1,5 +1,5 @@
 {
-  "Description": "Default Monitors for Nvidia GPU systems.",
+  "Description": "Default Monitors for AMD GPU systems.",
   "Metadata": {
     "SupportedPlatforms": "linux-x64,win-x64",
     "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
@@ -10,11 +10,11 @@
   },
   "Monitors": [
     {
-      "Type": "NvidiaSmiMonitor",
+      "Type": "AmdSmiMonitor",
       "Parameters": {
-        "Scenario": "CaptureNvidiaGpuCounters",
-        "MonitorFrequency": "$.Parameters.MonitorFrequency",
-        "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
+          "Scenario": "AmdGpuCounters",
+          "MonitorFrequency": "$.Parameters.MonitorFrequency",
+          "MonitorWarmupPeriod": "$.Parameters.MonitorWarmupPeriod"
       }
     },
     {
