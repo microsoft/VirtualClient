@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The LAPACK workload executor.
@@ -178,6 +179,14 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                   "LAPACK",
+                   null,
+                   toolVersion: null,
+                   this.PackageName);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 if (!this.fileSystem.File.Exists(resultsFilePath))
                 {
                     throw new WorkloadException(
@@ -193,7 +202,7 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogMetrics(
                     "LAPACK",
-                    "LAPACK",
+                    "Linear Algorithms",
                     process.StartTime,
                     process.ExitTime,
                     metrics,

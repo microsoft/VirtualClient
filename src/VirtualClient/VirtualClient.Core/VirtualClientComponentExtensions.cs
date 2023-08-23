@@ -32,28 +32,6 @@ namespace VirtualClient
             .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
-        /// Evaluates each of the parameters provided to the component to replace
-        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
-        /// </summary>
-        /// <param name="component">The component whose parameters to evaluate.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
-        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken, bool force = false)
-        {
-            component.ThrowIfNull(nameof(component));
-
-            if (!component.ParametersEvaluated || force)
-            {
-                if (component.Parameters?.Any() == true)
-                {
-                    await ProfileExpressionEvaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
-                }
-
-                component.ParametersEvaluated = true;
-            }
-        }
-
-        /// <summary>
         /// Executes a command within an isolated process.
         /// </summary>
         /// <param name="component">The component that is executing the process/command.</param>

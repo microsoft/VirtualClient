@@ -11,6 +11,10 @@ namespace VirtualClient.Common.Telemetry
     using global::Serilog.Events;
     using global::Serilog.Parsing;
     using Microsoft.Extensions.Logging;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Converters;
+    using Newtonsoft.Json.Serialization;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
@@ -27,6 +31,33 @@ namespace VirtualClient.Common.Telemetry
             { LogLevel.Warning, LogEventLevel.Warning },
             { LogLevel.Error, LogEventLevel.Error },
             { LogLevel.Critical, LogEventLevel.Fatal }
+        };
+
+        /// <summary>
+        /// Serializer settings to use when serializing/deserializing objects to/from
+        /// JSON.
+        /// </summary>
+        private static readonly JsonSerializerSettings SerializationSettings = new JsonSerializerSettings
+        {
+            // Format: 2012-03-21T05:40:12.340Z
+            DateFormatHandling = DateFormatHandling.IsoDateFormat,
+            Formatting = Formatting.None,
+            NullValueHandling = NullValueHandling.Ignore,
+
+            // We tried using PreserveReferenceHandling.All and Object, but ran into issues
+            // when deserializing string arrays and read only dictionaries
+            ReferenceLoopHandling = ReferenceLoopHandling.Error,
+
+            // This is the default setting, but to avoid remote code execution bugs do NOT change
+            // this to any other setting.
+            TypeNameHandling = TypeNameHandling.None,
+
+            // By default, serialize enum values to their string representation.
+            Converters = new JsonConverter[] { new StringEnumConverter() },
+
+            // By default, ALL properties in the JSON structure will be camel-cased including
+            // dictionary keys.
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
         };
 
         private Logger logger;
@@ -110,7 +141,7 @@ namespace VirtualClient.Common.Telemetry
 
                 foreach (KeyValuePair<string, object> property in context.Properties.OrderBy(p => p.Key))
                 {
-                    string serializedProperty = JsonContextSerialization.Serialize(property.Value);
+                    string serializedProperty = property.Value.ToJson(SerilogFileLogger.SerializationSettings);
                     properties.Add(new LogEventProperty(property.Key, new ScalarValue(serializedProperty)));
                 }
             }

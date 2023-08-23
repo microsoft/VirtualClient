@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Lzbench workload executor.
@@ -171,6 +172,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Lzbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.LzbenchDirectory, "results-summary.csv", SearchOption.AllDirectories);
 
                 foreach (string file in resultsFiles)

@@ -5,18 +5,16 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.VisualBasic;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Furmark workload executor.
@@ -239,6 +237,13 @@ namespace VirtualClient.Actions
                     FurmarkMetricsParser furmarkParser = new FurmarkMetricsParser(results);
                     metrics = furmarkParser.Parse();
                 }
+
+                this.MetadataContract.AddForScenario(
+                    "Furmark",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
 
                 this.Logger.LogMetrics(
                     "Furmark",

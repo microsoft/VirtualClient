@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Hpcg workload executor.
@@ -140,11 +141,19 @@ namespace VirtualClient.Actions
 
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
 
+                        this.MetadataContract.AddForScenario(
+                            "HPCG",
+                            $"{this.runShellText}|{this.hpcgDatText}",
+                            toolVersion: null,
+                            this.PackageName);
+
+                        this.MetadataContract.Apply(telemetryContext);
+
                         HpcgMetricsParser parser = new HpcgMetricsParser(results);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "Hpcg",
+                            toolName: "HPCG",
                             scenarioName: "Hpcg",
                             process.StartTime,
                             process.ExitTime,

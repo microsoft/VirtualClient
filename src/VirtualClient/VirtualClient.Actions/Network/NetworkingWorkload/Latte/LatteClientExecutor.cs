@@ -15,6 +15,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Latte client-side workload executor.
@@ -101,6 +102,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// </summary>
         protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                this.Tool.ToString(),
+                commandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             IFile fileAccess = this.SystemManagement.FileSystem.File;
 
             if (fileAccess.Exists(this.ResultsPath))

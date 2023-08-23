@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// OpenFOAM workload executor.
@@ -318,6 +319,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                   "OpenFOAM",
+                   process.FullCommand(),
+                   toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 if (!this.fileSystem.File.Exists(this.ResultsFilePath))
                 {
                     throw new WorkloadException(
@@ -338,7 +346,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         null,
-                        this.Parameters.ToString(),
+                        process.FullCommand(),
                         this.Tags,
                         telemetryContext);
             }

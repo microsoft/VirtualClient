@@ -21,7 +21,7 @@ namespace VirtualClient.Contracts
         /// Initializes a new instance of the <see cref="ExecutionProfileElement"/> class.
         /// </summary>
         [JsonConstructor]
-        public ExecutionProfileElement(string type, IDictionary<string, IConvertible> parameters, IEnumerable<ExecutionProfileElement> components = null)
+        public ExecutionProfileElement(string type, IDictionary<string, IConvertible> parameters, IDictionary<string, IConvertible> metadata = null, IEnumerable<ExecutionProfileElement> components = null)
         {
             type.ThrowIfNullOrWhiteSpace(nameof(type));
 
@@ -29,6 +29,10 @@ namespace VirtualClient.Contracts
 
             this.Parameters = parameters != null 
                 ? new Dictionary<string, IConvertible>(parameters, StringComparer.OrdinalIgnoreCase)
+                : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+            this.Metadata = metadata != null
+                ? new Dictionary<string, IConvertible>(metadata, StringComparer.OrdinalIgnoreCase)
                 : new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
             this.Extensions = new Dictionary<string, JToken>(StringComparer.OrdinalIgnoreCase);
@@ -44,7 +48,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="other">The instance to create a new object from.</param>
         public ExecutionProfileElement(ExecutionProfileElement other)
-            : this(other?.Type, other?.Parameters, other?.Components)
+            : this(other?.Type, other?.Parameters, other?.Metadata, other?.Components)
         { 
         }
 
@@ -53,6 +57,13 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Always, Order = 10)]
         public string Type { get; }
+
+        /// <summary>
+        /// Parameters for this element
+        /// </summary>
+        [JsonProperty(PropertyName = "Metadata", Required = Required.Default, Order = 20)]
+        [JsonConverter(typeof(ParameterDictionaryJsonConverter))]
+        public IDictionary<string, IConvertible> Metadata { get; }
 
         /// <summary>
         /// Parameters for this element

@@ -873,7 +873,7 @@ namespace VirtualClient
 
             if (parts.Length == 1)
             {
-                timing = new ProfileTiming(DateTime.UtcNow.Add(timeout));
+                timing = new ProfileTiming(timeout);
             }
             else if (parts.Length == 2)
             {
@@ -895,7 +895,7 @@ namespace VirtualClient
                             $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
                 }
 
-                timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), levelOfDeterminism);
+                timing = new ProfileTiming(timeout, levelOfDeterminism);
             }
             else
             {

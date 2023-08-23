@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SPECjvm workload executor.
@@ -154,6 +155,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "SPECjvm",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 // SPECjvm2008.012.txt
                 string resultsDirectory = this.PlatformSpecifics.Combine(this.packageDirectory, "results");
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "SPECjvm2008.*.txt", SearchOption.AllDirectories);

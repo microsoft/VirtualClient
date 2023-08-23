@@ -9,9 +9,9 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using global::VirtualClient;
     using global::VirtualClient.Common.Extensions;
-    using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
+    using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
@@ -54,6 +54,9 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.MetadataContract.AddForScenario("SPECpower", null);
+            this.MetadataContract.Apply(telemetryContext);
+
             this.SetupConfiguration();
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
