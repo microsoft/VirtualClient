@@ -1,0 +1,53 @@
+{
+    "Description": "FLOPs GPU Performance Workload",
+    "Metadata": {
+      "RecommendedMinimumExecutionTime": "02:00:00",
+      "SupportedPlatforms": "win-x64",
+      "SupportedOperatingSystems": "Windows"
+    },
+    "Parameters": {
+      "GpuModel": "v620",
+      "LisenceKey": ""
+    },
+    "Actions": [
+        {
+            "Type": "DXFLOPSExecutor",
+            "Parameters": {
+                "Scenario": "MeasureGPUPerformance",
+                "ShaderIterations": 100000,
+                "Precision": "f32",
+                "PackageName": "DXMicrobenchmarks"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+              "Scenario": "InstallAMDGPUDriverPackage",
+              "BlobContainer": "packages",
+              "BlobName": "amdgpudriver.zip",
+              "PackageName": "amdgpudriver",
+              "Extract": true
+            }
+          },
+          {
+            "Type": "AMDGPUDriverInstallation",
+            "Parameters": {
+              "Scenario": "InstallAMDGPUDriver",
+              "GpuModel": "$.Parameters.GpuModel",
+              "PackageName": "amdgpudriver"
+            }
+          },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallDXMicrobenchmarksPackage",
+                "BlobContainer": "packages",
+                "BlobName": "DXMicrobenchmarks.zip",
+                "PackageName": "DXMicrobenchmarks",
+                "Extract": true
+            }
+        }
+    ]
+}
