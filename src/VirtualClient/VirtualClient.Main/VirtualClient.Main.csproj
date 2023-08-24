@@ -58,12 +58,13 @@
         NuGet package in the /content/win-x64|win-arm64/profiles folder
         -->
         <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
-	    <WindowsProfiles Include="profiles\DEPENDENCY-AMD-GPU-DRIVER.json" />
+	    <WindowsProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
+        <WindowsProfiles Include="profiles\PERF-GPU-3DMARK-AMD.json" />
 	    <WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
         <WindowsProfiles Include="profiles\PERF-GPU-FURMARK-AMD.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
