@@ -89,4 +89,4 @@ Windows
   ./VirtualClient --profile=PERF-GPU-FURMARK.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Time=120000
 
   # Run Furmark and AMD GPU Driver installation parallely for running experiments through Juno or automation purposes. 
-  ./VirtualClient --profile=PERF-GPU-FURMARK.json --profile=DEPENDENCY-AMD-GPU-DRIVER.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Time=120000
+  ./VirtualClient --profile=PERF-GPU-FURMARK.json --profile=SETUP-AMD-GPU-DRIVER.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters=Time=120000
