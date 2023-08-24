@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.UsePerformanceLibraries), true);
+                return this.Parameters.GetValue<bool>(nameof(this.UsePerformanceLibraries), false);
             }
         }
 
@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
 
                 if (this.BindToCores)
                 {
-                    this.commandArguments += $"--bind-to core";
+                    this.commandArguments += $" --bind-to core";
                 }
 
                 process = await this.ExecuteCommandAsync("runuser", $"-u {Environment.UserName} -- mpirun {this.commandArguments} ./xhpl", this.PlatformSpecifics.Combine(this.HPLDirectory, "bin", "Linux_GCC"), telemetryContext, cancellationToken, runElevated: true);
