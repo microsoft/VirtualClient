@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -239,7 +240,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task FioDiscoveryExecutorUsesDirectNonBufferedIOWhenInstructed()
+        public async Task FioDiscoveryExecutorUsesDirectIOWhenInstructed()
         {
             this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = true;
 
@@ -249,6 +250,38 @@ namespace VirtualClient.Actions
                      .ConfigureAwait(false);
 
                 Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=1"));
+            }
+        }
+
+        [Test]
+        public async Task FioDiscoveryExecutorDoesNotUseDirectIOWhenInstructedOtherwise()
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = false;
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted("--direct=0"));
+            }
+        }
+
+        [Test]
+        [TestCase(true, 1)]
+        [TestCase(1, 1)]
+        [TestCase(false, 0)]
+        [TestCase(0, 0)]
+        public async Task FioDiscoveryExecutorHandlesBothBooleanAndIntegerValuesForDirectIOParameters(IConvertible parameterValue, int expectedCommandLineValue)
+        {
+            this.mockFixture.Parameters[nameof(FioDiscoveryExecutor.DirectIO)] = parameterValue;
+
+            using (TestFioDiscoveryExecutor executor = new TestFioDiscoveryExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                     .ConfigureAwait(false);
+
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"--direct={expectedCommandLineValue}"));
             }
         }
 

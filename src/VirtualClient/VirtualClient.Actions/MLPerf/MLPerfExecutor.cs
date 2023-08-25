@@ -17,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The MLPerf workload executor.
@@ -379,6 +380,13 @@ namespace VirtualClient.Actions
 
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
         {
+            this.MetadataContract.AddForScenario(
+                "MLPerf",
+                process.FullCommand(),
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             if (context == MLPerfExecutor.AccuracySummary)
             {
                 string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "accuracy_summary.json", SearchOption.AllDirectories);
@@ -398,7 +406,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         "AccuracyMode",
-                        null,
+                        process.FullCommand(),
                         this.Tags,
                         telemetryContext);
 
@@ -424,7 +432,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         "PerformanceMode",
-                        null,
+                        process.FullCommand(),
                         this.Tags,
                         telemetryContext);
 

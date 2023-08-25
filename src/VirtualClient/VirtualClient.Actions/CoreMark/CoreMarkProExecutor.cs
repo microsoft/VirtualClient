@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The CoreMarkPro workload executor.
@@ -35,6 +36,28 @@ namespace VirtualClient.Actions
         {
             this.systemManagement = this.Dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
+        }
+
+        /// <summary>
+        /// The name of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerName), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// The version of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerVersion
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerVersion), string.Empty);
+            }
         }
 
         /// <summary>
@@ -73,13 +96,14 @@ namespace VirtualClient.Actions
             // guide: https://github.com/eembc/coremark-pro/blob/main/docs/EEMBC%20Symmetric%20Multicore%20Benchmark%20User%20Guide%202.1.4.pdf
             // make TARGET=linux64 XCMD='-c4' certify-all
             // Even when using cygwin, the TARGET is still linux64.
-            string argument = @$"TARGET=linux64 XCMD='-c{this.ThreadCount}' certify-all";
-            this.StartTime = DateTime.UtcNow;
+            string commandArguments = @$"TARGET=linux64 XCMD='-c{this.ThreadCount}' certify-all";
+            DateTime startTime = DateTime.UtcNow;
             string output = string.Empty;
+
             switch (this.Platform)
             {
                 case PlatformID.Unix:
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", argument, this.CoreMarkProDirectory, telemetryContext, cancellationToken))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", commandArguments, this.CoreMarkProDirectory, telemetryContext, cancellationToken))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -100,7 +124,7 @@ namespace VirtualClient.Actions
                     DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
                         .ConfigureAwait(false);
 
-                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {argument}", this.CoreMarkProDirectory, cygwinPackage.Path, telemetryContext, cancellationToken))
+                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {commandArguments}", this.CoreMarkProDirectory, cygwinPackage.Path, telemetryContext, cancellationToken))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -118,18 +142,24 @@ namespace VirtualClient.Actions
                     break;
             }
 
-            this.EndTime = DateTime.UtcNow;
+            this.MetadataContract.AddForScenario(
+                "CoreMarkPro",
+                commandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             CoreMarkProMetricsParser parser = new CoreMarkProMetricsParser(output);
             IList<Metric> metrics = parser.Parse();
+
             this.Logger.LogMetrics(
                 toolName: "CoreMarkPro",
                 scenarioName: this.Scenario,
-                this.StartTime,
-                this.EndTime,
+                startTime,
+                DateTime.UtcNow,
                 metrics,
                 metricCategorization: this.Scenario,
-                scenarioArguments: this.Parameters.ToString(),
+                scenarioArguments: commandArguments,
                 this.Tags,
                 telemetryContext);
         }

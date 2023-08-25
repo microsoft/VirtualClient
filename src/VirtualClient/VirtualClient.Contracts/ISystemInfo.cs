@@ -73,6 +73,11 @@ namespace VirtualClient.Contracts
         Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken);
 
         /// <summary>
+        /// Returns information about network features on the system.
+        /// </summary>
+        Task<NetworkInfo> GetNetworkInfoAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Causes the process to idle until the operations are cancelled.
         /// </summary>
         /// <param name="cancellationToken">A token that can be used to cancel the wait operation.</param>

@@ -248,7 +248,16 @@ namespace VirtualClient
         {
             return new ExecutionProfileElement(
                 $"executionProfileType{(randomization ? randomGen.Next().ToString() : string.Empty)}",
-                new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase));
+                parameters: new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Parameter1"] = "Value1",
+                    ["Parameter2"] = 1234
+                },
+                metadata: new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["Metadata1"] = "00:30:00",
+                    ["Metadata2"] = false
+                });
         }
 
         private static ClientInstance CreateClientInstance(bool randomization = false)

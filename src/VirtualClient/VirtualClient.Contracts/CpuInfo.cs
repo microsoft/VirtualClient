@@ -3,6 +3,8 @@
 
 namespace VirtualClient.Contracts
 {
+    using System.Collections.Generic;
+    using System.Linq;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -20,7 +22,9 @@ namespace VirtualClient.Contracts
         /// <param name="socketCount">The number of CPU sockets on the system.</param>
         /// <param name="numaNodeCount">The number of NUMA nodes on the system.</param>
         /// <param name="hyperThreadingEnabled">True/false whether CPU hyperthreading is enabled on the system.</param>
-        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled)
+        /// <param name="caches">Memory caches for the CPU (e.g. L1, L2, L3).</param>
+        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled, IEnumerable<CpuCacheInfo> caches = null)
+            : base()
         {
             name.ThrowIfNull(nameof(name));
             physicalCoreCount.ThrowIfInvalid(nameof(physicalCoreCount), (count) => count > 0);
@@ -35,12 +39,22 @@ namespace VirtualClient.Contracts
             this.NumaNodeCount = numaNodeCount;
             this.SocketCount = socketCount;
             this.IsHyperthreadingEnabled = hyperThreadingEnabled;
+
+            if (caches?.Any() == true)
+            {
+                this.Caches = new List<CpuCacheInfo>(caches);
+            }
         }
 
         /// <summary>
         /// A description of the CPU (e.g. Intel64 Family 6 Model 106 Stepping 6, GenuineIntel).
         /// </summary>
         public string Description { get; }
+
+        /// <summary>
+        /// The set of memory cache components associated with the CPU (e.g. L1, L2, L3).
+        /// </summary>
+        public IEnumerable<CpuCacheInfo> Caches { get; }
 
         /// <summary>
         /// True/false whether CPU hyperthreading is enabled on the system.

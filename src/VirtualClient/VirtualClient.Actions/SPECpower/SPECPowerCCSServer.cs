@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
+    using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
@@ -72,6 +73,9 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.MetadataContract.AddForScenario("SPECpower", null);
+            this.MetadataContract.Apply(telemetryContext);
+
             this.Cleanup();
 
             string classPath = this.Platform == PlatformID.Win32NT ? WindowsClassPath : UnixClassPath;

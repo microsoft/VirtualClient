@@ -1,0 +1,110 @@
+Caption: Physical Memory
+Description: Physical Memory
+InstallDate: 
+Name: Physical Memory
+Status: 
+CreationClassName: Win32_PhysicalMemory
+Manufacturer: Microsoft Corporation
+Model: 
+OtherIdentifyingInfo: 
+PartNumber: None
+PoweredOn: 
+SerialNumber: None
+SKU: 
+Tag: Physical Memory 0
+Version: 
+HotSwappable: 
+Removable: 
+Replaceable: 
+FormFactor: 0
+BankLabel: None
+Capacity: 1073741824
+DataWidth: 
+InterleavePosition: 0
+MemoryType: 0
+PositionInRow: 
+Speed: 
+TotalWidth: 
+Attributes: 0
+ConfiguredClockSpeed: 0
+ConfiguredVoltage: 0
+DeviceLocator: M0001
+InterleaveDataDepth: 0
+MaxVoltage: 0
+MinVoltage: 0
+SMBIOSMemoryType: 2
+TypeDetail: 4
+
+Caption: Physical Memory
+Description: Physical Memory
+InstallDate: 
+Name: Physical Memory
+Status: 
+CreationClassName: Win32_PhysicalMemory
+Manufacturer: Microsoft Corporation
+Model: 
+OtherIdentifyingInfo: 
+PartNumber: None
+PoweredOn: 
+SerialNumber: None
+SKU: 
+Tag: Physical Memory 1
+Version: 
+HotSwappable: 
+Removable: 
+Replaceable: 
+FormFactor: 0
+BankLabel: None
+Capacity: 63350767616
+DataWidth: 
+InterleavePosition: 0
+MemoryType: 0
+PositionInRow: 
+Speed: 
+TotalWidth: 
+Attributes: 0
+ConfiguredClockSpeed: 0
+ConfiguredVoltage: 0
+DeviceLocator: M0002
+InterleaveDataDepth: 0
+MaxVoltage: 0
+MinVoltage: 0
+SMBIOSMemoryType: 2
+TypeDetail: 4
+
+Caption: Physical Memory
+Description: Physical Memory
+InstallDate: 
+Name: Physical Memory
+Status: 
+CreationClassName: Win32_PhysicalMemory
+Manufacturer: Microsoft Corporation
+Model: 
+OtherIdentifyingInfo: 
+PartNumber: None
+PoweredOn: 
+SerialNumber: None
+SKU: 
+Tag: Physical Memory 2
+Version: 
+HotSwappable: 
+Removable: 
+Replaceable: 
+FormFactor: 0
+BankLabel: None
+Capacity: 4294967296
+DataWidth: 
+InterleavePosition: 0
+MemoryType: 0
+PositionInRow: 
+Speed: 
+TotalWidth: 
+Attributes: 0
+ConfiguredClockSpeed: 0
+ConfiguredVoltage: 0
+DeviceLocator: M0003
+InterleaveDataDepth: 0
+MaxVoltage: 0
+MinVoltage: 0
+SMBIOSMemoryType: 2
+TypeDetail: 4

@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SuperBenchmark workload executor.
@@ -195,6 +196,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "SuperBenchmark",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "results-summary.jsonl", SearchOption.AllDirectories);
 
                 foreach (string file in outputFiles)
@@ -214,7 +222,7 @@ namespace VirtualClient.Actions
                         metricCategorization: $"{this.ConfigurationFile}",
                         scenarioArguments: commandArguments,
                         this.Tags,
-                        EventContext.Persisted());
+                        telemetryContext);
 
                     await this.fileSystem.File.DeleteAsync(file);
                 }

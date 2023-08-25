@@ -94,6 +94,9 @@
 
         <!-- Microsoft.Extensions.Http.Polly -->
         <Microsoft_Extensions_Http_Polly_PackageVersion>6.0.9</Microsoft_Extensions_Http_Polly_PackageVersion>
+        
+        <!-- Microsoft.Management.Infrastructure -->
+        <Microsoft_Management_Infrastructure_PackageVersion>2.0.0</Microsoft_Management_Infrastructure_PackageVersion>
 
         <!-- Microsoft.Windows.Compatibility -->
         <Microsoft_Windows_Compatibility_PackageVersion>6.0.0</Microsoft_Windows_Compatibility_PackageVersion>

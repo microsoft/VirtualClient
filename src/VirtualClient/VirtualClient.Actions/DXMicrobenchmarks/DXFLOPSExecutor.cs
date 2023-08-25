@@ -5,21 +5,16 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Web.Services.Description;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Monitors;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes the FLOPS workload.
@@ -111,7 +106,6 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes the environment
         /// </summary>
-#pragma warning disable AsyncFixer01 // Unnecessary async/await usage
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             PlatformSpecifics.ThrowIfNotSupported(this.Platform);
@@ -121,7 +115,6 @@ namespace VirtualClient.Actions
 
             this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "Benchmarks", "GPUCore.exe");
         }
-#pragma warning restore AsyncFixer01 // Unnecessary async/await usage
 
         private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string output, EventContext telemetryContext)
         {
@@ -144,7 +137,7 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath);
 
-            return this.Logger.LogMessageAsync($"{nameof(DXFLOPSParser)}.ExecuteWorkload", relatedContext, async () =>
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
@@ -181,9 +174,16 @@ namespace VirtualClient.Actions
 
                     DateTime endTime = DateTime.UtcNow;
 
+                    this.MetadataContract.AddForScenario(
+                        "DXFLOPS",
+                        $"{this.ExecutablePath} {cmdargs}",
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     this.Logger.LogMetrics(
                         "DXFLOPS",
-                        $"DXFLOPS Results",
+                        "GPU FLOPS",
                         startTime,
                         endTime,
                         metrics,

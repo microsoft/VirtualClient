@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The 7zip compression workload executor.
@@ -140,6 +141,13 @@ namespace VirtualClient.Actions
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, string commandArguments)
         {
             process.ThrowIfNull(nameof(process));
+
+            this.MetadataContract.AddForScenario(
+                "7Zip",
+                commandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
 
             Compression7zipMetricsParser parser = new Compression7zipMetricsParser(process.StandardOutput.ToString());
             IList<Metric> metrics = parser.Parse();

@@ -17,7 +17,9 @@
             "Parameters": {
                 "Scenario": "ExecuteCoremarkBenchmark",
                 "PackageName": "coremark",
-                "ThreadCount": "$.Parameters.ThreadCount"
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "CompilerName": "$.Parameters.CompilerName",
+                "CompilerVersion": "$.Parameters.CompilerVersion"
             }
         }
     ],

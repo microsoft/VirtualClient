@@ -1,0 +1,65 @@
+{
+  "Description": "3DMark TimeSpy GPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "02:00:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "GpuModel": "v620",
+    "LisenceKey": ""
+  },
+  "Actions": [
+    {
+      "Type": "ThreeDMarkExecutor",
+      "Parameters": {
+        "Scenario": "TimeSpy",
+        "LisenceKey": "$Parameters.LicenseKey",
+        "PackageName": "3dmark",
+        "PsExecPackageName": "pstools",
+        "PsExecSession": 2,
+        "Tags": "GPU,3DMark,Gaming"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriverPackage",
+        "BlobContainer": "packages",
+        "BlobName": "amdgpudriver.zip",
+        "PackageName": "amdgpudriver",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "AMDGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriver",
+        "GpuModel": "$.Parameters.GpuModel",
+        "PackageName": "amdgpudriver"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPsToolsPackage",
+        "BlobContainer": "packages",
+        "BlobName": "pstools.2.51.zip",
+        "PackageName": "pstools",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "Install3DMarkWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "3DMark.zip",
+        "PackageName": "3DMark",
+        "Extract": true
+      }
+    }
+  ]
+}
