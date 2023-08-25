@@ -294,12 +294,13 @@
 
         private List<string> PostInstallationCommands()
         {
-            // last command needs to be removed
+            // last 2 command are to make sure that we are blacklisting AMD GPU drivers before rebooting
             return new List<string>
             {
                 "amdgpu-install -y --usecase=hiplibsdk,rocm,dkms",
                 $"bash -c \"echo 'export PATH=/opt/rocm/bin${{PATH:+:${{PATH}}}}' | " +
                 $"sudo tee -a /home/{this.Username}/.bashrc\"",
+                $"bash -c \"echo 'blacklist amdgpu' | sudo tee -a /etc/modprobe.d/amdgpu.conf \"",
                 "update-initramfs -u -k all"
             };
         }
@@ -311,7 +312,7 @@
             switch (this.linuxDistributionInfo.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
-                    // first command needs to be removed
+                    // first command is to enable the AMD GPU drivers after reboot is completed.
                     commands.Add("modprobe amdgpu");
                     commands.Add("apt-get install -yq rocblas rocm-smi-lib ");
                     commands.Add("apt-get install -yq rocm-validation-suite");
