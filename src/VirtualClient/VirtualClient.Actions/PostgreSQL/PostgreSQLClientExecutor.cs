@@ -58,6 +58,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Not Applicable.")]
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // The VC server-side instance/API must be confirmed online.
@@ -118,6 +119,18 @@ namespace VirtualClient.Actions
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
+                    Action<IProcessProxy> setEnvironmentVariables = (process) =>
+                    {
+                        string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
+
+                        process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH] = string.Join(';', new string[]
+                        {
+                                this.Combine(this.HammerDBPackagePath, "bin"),
+                                this.Combine(this.PostgreSqlInstallationPath, "bin"),
+                                existingPath
+                        });
+                    };
+
                     string command = this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat");
                     string commandArguments = $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}";
 
@@ -133,7 +146,8 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.HammerDBPackagePath,
                         telemetryContext,
-                        cancellationToken))
+                        cancellationToken,
+                        beforeExecution: setEnvironmentVariables))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

@@ -13,16 +13,16 @@
     "Actions": [
         {
             "Type": "PostgreSQLExecutor",
-            "Parameters": {
-                "Scenario": "ExecuteTPCCBenchmark",
-                "StressScenario": "Default",
-                "PackageName": "postgresql",
-                "Benchmark": "tpcc",
-                "HammerDBPackageName": "hammerdb",
-                "DatabaseName": "$.Parameters.DatabaseName",
-                "ReuseDatabase": "$.Parameters.ReuseDatabase",
-                "Port": "$.Parameters.Port"
-            }
+          "Parameters": {
+            "Scenario": "ExecuteTPCCBenchmark",
+            "StressScenario": "Default",
+            "PackageName": "postgresql",
+            "Benchmark": "tpcc",
+            "HammerDBPackageName": "hammerdb",
+            "DatabaseName": "$.Parameters.DatabaseName",
+            "ReuseDatabase": "$.Parameters.ReuseDatabase",
+            "Port": "$.Parameters.Port"
+          }
         }
     ],
     "Dependencies": [

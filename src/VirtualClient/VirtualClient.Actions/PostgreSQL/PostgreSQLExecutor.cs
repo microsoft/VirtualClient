@@ -105,12 +105,12 @@ namespace VirtualClient.Actions
         protected IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// The file path where logs will be written.
+        /// The file path where Hammer DB package is downloaded.
         /// </summary>
         protected string HammerDBPackagePath { get; set; }
 
         /// <summary>
-        /// Workload package path.
+        /// Poatgresql Workload package path.
         /// </summary>
         protected string PostgreSqlPackagePath { get; set; }
 
