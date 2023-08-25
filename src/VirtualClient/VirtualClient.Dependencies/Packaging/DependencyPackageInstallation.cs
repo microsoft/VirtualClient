@@ -11,11 +11,11 @@ namespace VirtualClient.Dependencies.Packaging
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Provides functionality for downloading and installing dependency packages from
@@ -119,6 +119,12 @@ namespace VirtualClient.Dependencies.Packaging
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            MetadataContract.Persist(
+                $"package_{this.PackageName}",
+                this.BlobName,
+                MetadataContractCategory.Dependencies,
+                true);
+
             telemetryContext.AddContext("packageDirectory", this.PlatformSpecifics.PackagesDirectory);
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             IFileSystem fileSystem = this.Dependencies.GetService<IFileSystem>();

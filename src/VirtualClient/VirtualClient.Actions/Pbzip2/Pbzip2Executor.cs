@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The pbzip2 workload executor.
@@ -144,6 +145,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Pbzip2",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 bool compression = this.Scenario.Contains("Decompression") ? false : true;
 
                 // Pbzip2 workload produces metrics in standard error

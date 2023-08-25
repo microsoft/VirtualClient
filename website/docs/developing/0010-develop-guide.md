@@ -634,8 +634,6 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   There are 2 different levels of importance for trace messages in the Virtual Client. A "trace message" will always be LogLevel.Trace. These messages are typically used for 
   verbose output and will display in the console output ONLY when the "--debug" flag is used on the command line.
 
-  
-
   ``` csharp
   this.Logging.LogTraceMessage($"AnyComponent.PerformOperation", telemetryContext);
 
@@ -643,12 +641,9 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   await this.Logging.LogTraceMessageAsync($"AnyComponent.PerformOperation", telemetryContext)
       .ConfigureAwait(false);
   ```
-  
 
   The second type of trace message is the application informational message. The messages are typically LogLevel.Information but may be any log level. This type of trace message 
   is always output to console output and to other targets.
-
-  
 
   ``` csharp
   this.Logging.LogMessage($"AnyComponent.PerformOperation", LogLevel.Information, telemetryContext);
@@ -668,13 +663,10 @@ logging is routed correctly. There are 3 different categories of telemetry in th
       this.Logging.LogMessage("AnyComponent.SomeOperationError", LogLevel.Error, telemetryContext.AddError(exc));
   }
   ```
-  
 
   The developer will often see a particular LogMessage/LogMessageAsync extension method being used that wraps an entire block of 
   code. This extension provides additional functionality desirable when logging information including capturing the time (in milliseconds)
   that the logic in the block of code took to execute and automatically handling + capturing error information.
-
-  
 
   ``` csharp
   return this.Logging.LogMessageAsync($"AnyComponent.PerformOperation", telemetryContext, async () =>
@@ -698,11 +690,8 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   });
   ```
   
-
   The Virtual Client framework additionally has a logging extension method for cases where the developer wants to treat exceptions/errors as
   traditional free-form logging vs. structured logging.
-
-  
 
   ``` csharp
   try
@@ -715,13 +704,10 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   }
 
   ```
-  
 
 * **Metrics/Measurements Telemetry**  
   One of the primary goals of the Virtual Client runtime is to capture and structure metrics/measurements from the output of workloads, tests
   and monitors. To ensure consistency in the structure of metrics/measurements, a logging extension method is provided for the purpose.
-
-  
 
   ``` csharp
   private void CaptureMetrics(IProcessProxy process, DateTime startTime, DateTime endTime, EventContext telemetryContext)
@@ -742,13 +728,10 @@ logging is routed correctly. There are 3 different categories of telemetry in th
           telemetryContext);
   }
   ```
-  
 
 * **System Events Telemetry**  
   The Virtual Client also has a logging extension designed for capturing important information or events from the system on which it is running. This extension
   allows the developer to capture this information and to ensure it is routed together for distinction in telemetry storage resources.
-
-  
 
   ``` csharp
   // The only requirement for the dictionary values (e.g. the object instances) is that
@@ -756,7 +739,43 @@ logging is routed correctly. There are 3 different categories of telemetry in th
   IDictionary<string, object> eventLogEntries = this.GetEventLogEntries(eventId: 21);
   this.Logger.LogSystemEvents("AnyMonitor.CaptureEventLogs", eventLogEntries, telemetryContext)
   ```
-  
+
+* **Metadata Contract**
+  The Virtual Client framework provides a simple model for enabling developers to impart a "metadata contract" in the telemetry that is output from
+  the application. The metadata contract facilitates a consistent schema within telemetry events to include context information about the host, operating system,
+  hardware and workload/monitor scenarios. In fact certain information about the host, operating system, hardware and profile workload/monitor is included in
+  the output of the Virtual Client by default.
+
+  * [Metadata Contract Details and Examples](../guides/0040-telemetry.md)  
+    Familiarize yourself with the different categories of metadata available (e.g. default, dependencies, host, runtime, scenario).
+
+  * Persisted/Global Metadata  
+    The metadata contract feature allows users to persist metadata that will be included with the telemetry emitted by every
+    component within a Virtual Client profile (e.g. actions, monitors, and dependencies). Persisted metadata will be combined with
+    component-specific metadata (described below) when emitting telemetry within that component.
+
+    ``` csharp
+     // Persist metadata properties throughout the entire execution runtime of the Virtual Client.
+     MetadataContract.Persist("company", "Microsoft", MetadataContractCategory.Default);
+     MetadataContract.Persist("package_openssl", "openssl.3.0.0.zip", MetadataContractCategory.Dependencies);
+     MetadataContract.Persist("hostType", "Physical Blade", MetadataContractCategory.Host);
+     MetadataContract.Persist("", "Microsoft", MetadataContractCategory.Runtime);
+     MetadataContract.Persist("category", "CPU Performance", MetadataContractCategory.Scenario);
+    ```
+  * Component-Specific Metadata  
+    The metadata contract feature supports the ability for the developer to define information specific to a given component within a Virtual Client
+    profile. This metadata is merged with the persisted/global metadata described above and emitted with the telemetry for the specific component.
+
+    ``` csharp
+     // Each component within Virtual Client has a "MetadataContract" property to which the developer can add metadata specific to the
+     // execution context of that component at runtime (e.g. OpenSslExecutor).
+     this.MetadataContract.Add("company", "Microsoft", MetadataContractCategory.Default);
+     this.MetadataContract.Add("package_openssl", "openssl.3.0.0.zip", MetadataContractCategory.Dependencies);
+     this.MetadataContract.Add("hostType", "Physical Blade", MetadataContractCategory.Host);
+     this.MetadataContract.Add("", "Microsoft", MetadataContractCategory.Runtime);
+     this.MetadataContract.Add("category", "CPU Performance", MetadataContractCategory.Scenario);
+    ```
+
 
 ## Telemetry Loggers
 The Virtual Client uses a set of different types of loggers each implementing the .NET ILogger interface:

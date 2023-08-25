@@ -8,12 +8,15 @@ namespace VirtualClient.Dependencies
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// Provides functionality for installing compilers on the system (GCC, AOCC, etc).
@@ -95,6 +98,7 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string compiler = this.CompilerName.ToLowerInvariant();
             switch (this.CompilerName.ToLowerInvariant())
             {
                 case "gcc":
@@ -134,6 +138,11 @@ namespace VirtualClient.Dependencies
                 default:
                     throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
+
+            // The compiler + version installed is an important part of the metadata
+            // contract for VC scenarios.
+            IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
+            MetadataContract.Persist(compilerMetadata, MetadataContractCategory.Dependencies, true);
         }
 
         /// <summary>

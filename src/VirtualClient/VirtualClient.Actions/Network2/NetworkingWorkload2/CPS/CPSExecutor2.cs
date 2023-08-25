@@ -21,6 +21,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// CPS Executor

@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Graph500 Workload executor.
@@ -154,6 +155,13 @@ namespace VirtualClient.Actions
             {
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "Graph500",
+                        process?.StartInfo?.Arguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     Graph500MetricsParser graph500Parser = new Graph500MetricsParser(process.StandardOutput.ToString());
                     IList<Metric> metrics = graph500Parser.Parse();
 

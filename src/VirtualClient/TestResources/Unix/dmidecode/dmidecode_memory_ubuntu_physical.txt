@@ -1,0 +1,60 @@
+# dmidecode 3.1 
+Getting SMBIOS data from sysfs.
+SMBIOS 2.8 present.
+
+Handle 0x0016, DMI type 16, 23 bytes
+Physical Memory Array
+Location: System Board Or Motherboard
+Use: System Memory
+Error Correction Type: None
+Maximum Capacity: 8 GB
+Error Information Handle: Not Provided
+Number Of Devices: 2
+
+Handle 0x0018, DMI type 17, 40 bytes
+Memory Device
+Array Handle: 0x0016
+Error Information Handle: Not Provided
+Total Width: 64 bits
+Data Width: 64 bits
+Size: No Module Installed
+Form Factor: Unknown
+Set: None
+Locator: Bottom-Slot 1 (left)
+Bank Locator: CHANNEL A
+Type: DDR3
+Type Detail: None
+Speed: Unknown
+Manufacturer: A1_Manufacturer0
+Serial Number: A1_SerialNum0
+Asset Tag: A1_AssetTagNum0
+Part Number: A1_PartNum0
+Rank: Unknown
+Configured Clock Speed: Unknown
+Minimum Voltage: Unknown
+Maximum Voltage: Unknown
+Configured Voltage: Unknown
+
+Handle 0x0019, DMI type 17, 40 bytes
+Memory Device
+Array Handle: 0x0016
+Error Information Handle: Not Provided
+Total Width: 64 bits
+Data Width: 64 bits
+Size: 8192 MB
+Form Factor: SODIMM
+Set: None
+Locator: Bottom-Slot 2 (right)
+Bank Locator: CHANNEL A
+Type: DDR3
+Type Detail: Synchronous Unbuffered (Unregistered)
+Speed: 1866 MT/s
+Manufacturer: Micron
+Serial Number: 125CF00F
+Asset Tag: A1_AssetTagNum1
+Part Number: 16KTF1G64HZ-1G9P1 
+Rank: 2
+Configured Clock Speed: 1600 MT/s
+Minimum Voltage: 1.35 V
+Maximum Voltage: 1.5 V
+Configured Voltage: 1.5 V

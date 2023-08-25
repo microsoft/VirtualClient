@@ -18,6 +18,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// NTttcp(Test Bandwith and Throughput) Tool Client Executor. 
@@ -353,6 +354,11 @@ namespace VirtualClient.Actions.NetworkPerformance
         /// </summary>
         protected override async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                this.Tool.ToString(),
+                commandArguments,
+                toolVersion: null);
+
             IFile fileAccess = this.SystemManagement.FileSystem.File;
             EventContext relatedContext = telemetryContext.Clone();
 
@@ -368,11 +374,18 @@ namespace VirtualClient.Actions.NetworkPerformance
 
                     if (parser.Metadata.Any())
                     {
+                        this.MetadataContract.Add(
+                            parser.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value as object),
+                            MetadataContractCategory.Scenario,
+                            true);
+
                         foreach (var entry in parser.Metadata)
                         {
                             relatedContext.Properties[entry.Key] = entry.Value;
                         }
                     }
+
+                    this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
                         this.Tool.ToString(),

@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -18,6 +19,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Redis Benchmark Client Executor.
@@ -215,6 +217,13 @@ namespace VirtualClient.Actions
             {
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "Redis-Benchmark",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     // The Redis workloads run multi-threaded. The lock is meant to ensure we do not have
                     // race conditions that affect the parsing of the results.
                     lock (this.lockObject)

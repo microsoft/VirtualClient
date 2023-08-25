@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Storage.Blobs.Models;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -40,16 +41,12 @@ namespace VirtualClient
         /// Initializes a new instance of the <see cref="ProfileTiming"/> class set to timeout
         /// at a specific time.
         /// </summary>
-        /// <param name="timeout">An explicit timeout. If not defined, the application will not timeout until terminated.</param>
-        public ProfileTiming(DateTime timeout)
+        /// <param name="duration">The duration.</param>
+        public ProfileTiming(TimeSpan duration)
         {
-            this.Timeout = timeout;
-            if (timeout.Kind != DateTimeKind.Utc)
-            {
-                this.Timeout = timeout.ToUniversalTime();
-            }
+            this.Timeout = DateTime.UtcNow.Add(duration);
+            this.Duration = duration;
 
-            this.Duration = timeout - DateTime.UtcNow;
             if (this.Duration < TimeSpan.Zero)
             {
                 this.Duration = TimeSpan.Zero;
@@ -75,13 +72,13 @@ namespace VirtualClient
         /// Initializes a new instance of the <see cref="ProfileTiming"/> class set to timeout at a specific
         /// time but only with a deterministic outcome.
         /// </summary>
-        /// <param name="timeout">The explicit timeout.</param>
+        /// <param name="duration">The duration.</param>
         /// <param name="levelOfDeterminism">
         /// Defines the level of determinism for the completion of actions before allowing
         /// an explicit timeout to occur.
         /// </param>
-        public ProfileTiming(DateTime timeout, DeterminismScope levelOfDeterminism)
-            : this(timeout)
+        public ProfileTiming(TimeSpan duration, DeterminismScope levelOfDeterminism)
+            : this(duration)
         {
             levelOfDeterminism.ThrowIfInvalid(
                 nameof(levelOfDeterminism),

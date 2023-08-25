@@ -48,7 +48,7 @@ namespace VirtualClient.Contracts
         public void ExecutionProfileElementIsJsonSerializableWithChildComponentDefinitions()
         {
             // Add 2 child/subcomponents to the parent elements.
-            ExecutionProfileElement element = new ExecutionProfileElement("AnyType", null, new List<ExecutionProfileElement>
+            ExecutionProfileElement element = new ExecutionProfileElement("AnyType", null, null, new List<ExecutionProfileElement>
             {
                 this.fixture.Create<ExecutionProfileElement>(),
                 this.fixture.Create<ExecutionProfileElement>()
@@ -61,7 +61,7 @@ namespace VirtualClient.Contracts
         public void ExecutionProfileElementIsJsonSerializableWithParallelExecutionDefinitions()
         {
             // Add 2 child/subcomponents to the parent elements.
-            ExecutionProfileElement element = new ExecutionProfileElement(typeof(ParallelExecution).Name, null, new List<ExecutionProfileElement>
+            ExecutionProfileElement element = new ExecutionProfileElement(typeof(ParallelExecution).Name, null, null, new List<ExecutionProfileElement>
             {
                 this.fixture.Create<ExecutionProfileElement>(),
                 this.fixture.Create<ExecutionProfileElement>()

@@ -132,12 +132,12 @@ Logical Processor to NUMA Node Map:
 ****  NUMA Node 1
 
 Logical Processor to Cache Map:
-**--  Data Cache          0, Level 1,   48 KB, Assoc  12, LineSize  64
-**--  Instruction Cache   0, Level 1,   32 KB, Assoc   8, LineSize  64
+**--  Data Cache          0, Level 1,  256 KB, Assoc  12, LineSize  64
+**--  Instruction Cache   0, Level 1,  128 KB, Assoc   8, LineSize  64
 **--  Unified Cache       0, Level 2,    1 MB, Assoc  20, LineSize  64
-****  Unified Cache       1, Level 3,   48 MB, Assoc  12, LineSize  64
---**  Data Cache          1, Level 1,   48 KB, Assoc  12, LineSize  64
---**  Instruction Cache   1, Level 1,   32 KB, Assoc   8, LineSize  64
+****  Unified Cache       1, Level 3,   64 MB, Assoc  12, LineSize  64
+--**  Data Cache          1, Level 1,  256 KB, Assoc  12, LineSize  64
+--**  Instruction Cache   1, Level 1,  128 KB, Assoc   8, LineSize  64
 --**  Unified Cache       2, Level 2,    1 MB, Assoc  20, LineSize  64
 
 Logical Processor to Group Map:

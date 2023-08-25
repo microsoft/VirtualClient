@@ -9,7 +9,6 @@ namespace VirtualClient.Contracts
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;

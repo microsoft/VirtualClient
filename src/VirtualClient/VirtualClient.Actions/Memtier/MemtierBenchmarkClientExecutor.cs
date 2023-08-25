@@ -5,7 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Packaging;
+    using System.Diagnostics;
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading;
@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Redis/Memcached Memtier Client Executor.
@@ -293,6 +294,13 @@ namespace VirtualClient.Actions
 
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "Memtier",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     // The Memtier workloads run multi-threaded. The lock is meant to ensure we do not have
                     // race conditions that affect the parsing of the results.
                     lock (this.lockObject)

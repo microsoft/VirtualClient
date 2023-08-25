@@ -36,6 +36,18 @@
       </EmbeddedResource>
     </ItemGroup>
 
+    <ItemGroup>
+        <!-- 
+        Test Resources/Examples:
+        Include ALL of the examples/files in the solution 'TestResources' folder in the unit test
+        output.
+        -->
+        <Content Include="..\TestResources\**\*.*">
+            <Link>TestResources\%(RecursiveDir)%(Filename)%(Extension)</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

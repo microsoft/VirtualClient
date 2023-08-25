@@ -15,10 +15,11 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
+    using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
-    /// The Geek bench virtual client action
+    /// The Geekbench5 executor.
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
@@ -150,6 +151,13 @@ namespace VirtualClient.Actions
                         $"The content of the GeekBench results file at path '{resultsFilePath}' content could not be parsed as valid JSON.",
                         ErrorReason.WorkloadFailed);
                 }
+
+                this.MetadataContract.AddForScenario(
+                    "Geekbench5",
+                    commandArguments,
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
 
                 // using workload name as testName
                 IDictionary<string, Metric> metrics = geekbenchResult.GetResults();

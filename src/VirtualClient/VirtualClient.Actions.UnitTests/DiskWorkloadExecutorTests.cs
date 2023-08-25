@@ -84,6 +84,23 @@ namespace VirtualClient.Actions.DiskPerformance
         }
 
         [Test]
+        public void DiskWorkloadExecutorCreatesExpectdTestFilesStringSeperatedByWhitespace()
+        {
+            this.profileParameters[nameof(DiskWorkloadExecutor.FileName)] = "test-1.dat, test-2.dat, test-3.dat";
+            string mountPoint = "D:\\any\\";
+
+            string expectedTestFilesSeperatedByWhitesapce = "D:/any/test-1.dat D:/any/test-2.dat D:/any/test-3.dat";
+
+            using (TestDiskWorkloadExecutor workloadExecutor = new TestDiskWorkloadExecutor(this.mockFixture.Dependencies, this.profileParameters))
+            {
+                string testFilesSeperatedByWhitesapce = workloadExecutor.GetTestFiles(mountPoint);
+                IEnumerable<string> testFiles = testFilesSeperatedByWhitesapce.Split(" ");
+                Assert.AreEqual(3, testFiles.Count());
+                Assert.AreEqual(expectedTestFilesSeperatedByWhitesapce, testFilesSeperatedByWhitesapce);
+            }
+        }
+
+        [Test]
         public void DiskWorkloadExecutorCreatesTheExpectedProcessesInTheSingleProcessModel_RemoteDiskScenario()
         {
             string expectedCommand = "/home/any/path/to/fio";
@@ -243,6 +260,11 @@ namespace VirtualClient.Actions.DiskPerformance
             public new IEnumerable<Disk> GetDisksToTest(IEnumerable<Disk> disks)
             {
                 return base.GetDisksToTest(disks);
+            }
+
+            public new string GetTestFiles(string mountPoint)
+            {
+                return base.GetTestFiles(mountPoint);
             }
 
             protected override Task<bool> CreateMountPointsAsync(IEnumerable<Disk> disks, CancellationToken cancellationToken)
