@@ -75,7 +75,7 @@ Runs the CtsTraffic workload which generate various metrics.
   | BufferInBytes               | Required. Buffer in bytes that is being transferred.                                  | 65536 |
   | Pattern | Required. Pattern used while executing workload (e.g. push, pull, pushpull, duplex) | Duplex |
   | BytesToTransfer | Required. Total bytes to be transferred while running workload. | 0x400000000 |
-  | Connections | Required. Total number of concurrent connections being made by client to the server(s) specified by –Target | 20 | 
+  | Connections | Required. Total number of concurrent connections being made by client to the server(s) specified by –Target | 1 | 
   | Iterations | Required. Number of times ctsTraffic will cycle across all the connections specified with Connections.| 1 |
   | ServerExitLimit | Required. The number of connections an instance of ctsTraffic should handle before exiting | 1 |
 

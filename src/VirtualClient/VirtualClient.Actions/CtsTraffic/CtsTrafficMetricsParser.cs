@@ -47,65 +47,23 @@ namespace VirtualClient.Actions
                         }
                         else
                         {
-                            try
-                            {
-                                // bytes/sec that were sent within the TimeSlice period
-                                this.Metrics.Add(new Metric($"SendBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[1]), "B/s", MetricRelativity.Undefined));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // bytes/sec that were sent within the TimeSlice period
+                            this.AddMetric(new Metric($"SendBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[1]), "B/s", MetricRelativity.Undefined));
 
-                            try
-                            {
-                                // bytes/sec that were received within the TimeSlice period
-                                this.Metrics.Add(new Metric($"RecvBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[2]), "B/s", MetricRelativity.Undefined));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // bytes/sec that were received within the TimeSlice period
+                            this.AddMetric(new Metric($"RecvBps(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[2]), "B/s", MetricRelativity.Undefined));
 
-                            try
-                            {
-                                // count of established connections transmitting IO pattern data
-                                this.Metrics.Add(new Metric($"InFlight(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[3]), MetricRelativity.Undefined));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // count of established connections transmitting IO pattern data
+                            this.AddMetric(new Metric($"InFlight(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[3]), MetricRelativity.Undefined));
 
-                            try
-                            {
-                                // cumulative count of successfully completed IO patterns
-                                this.Metrics.Add(new Metric($"Completed(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[4]), MetricRelativity.HigherIsBetter));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // cumulative count of successfully completed IO patterns
+                            this.AddMetric(new Metric($"Completed(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[4]), MetricRelativity.HigherIsBetter));
 
-                            try
-                            {
-                                // cumulative count of failed IO patterns due to Winsock errors
-                                this.Metrics.Add(new Metric($"NetworkError(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[5]), MetricRelativity.LowerIsBetter));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // cumulative count of failed IO patterns due to Winsock errors
+                            this.AddMetric(new Metric($"NetworkError(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[5]), MetricRelativity.LowerIsBetter));
 
-                            try
-                            {
-                                // cumulative count of failed IO patterns due to data errors
-                                this.Metrics.Add(new Metric($"DataError(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[6]), MetricRelativity.LowerIsBetter));
-                            }
-                            catch
-                            {
-                                // do nothing as this result file has non-double values.
-                            }
+                            // cumulative count of failed IO patterns due to data errors
+                            this.AddMetric(new Metric($"DataError(TimeSlice-{values[0].Trim()})", Convert.ToDouble(values[6]), MetricRelativity.LowerIsBetter));
                         }
                     }
                 }
@@ -115,6 +73,18 @@ namespace VirtualClient.Actions
             catch (Exception exc)
             {
                 throw new WorkloadResultsException("Failed to parse CtsTraffic metrics from results.", exc, ErrorReason.InvalidResults);
+            }
+        }
+
+        private void AddMetric(Metric metric)
+        {
+            try
+            {
+                this.Metrics.Add(metric);
+            }
+            catch
+            {
+                // do nothing as this result file has non-double values.
             }
         }
     }

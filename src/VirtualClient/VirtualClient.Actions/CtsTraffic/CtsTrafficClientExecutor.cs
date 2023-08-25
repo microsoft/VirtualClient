@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.Connections), 20);
+                return this.Parameters.GetValue<int>(nameof(this.Connections), 1);
             }
         }
 
