@@ -66,7 +66,6 @@ namespace VirtualClient
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
             filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
-            PlatformSpecifics.ThrowIfNotSupported(platform);
 
             if (!systemManagement.FileSystem.File.Exists(filePath))
             {
@@ -100,7 +99,6 @@ namespace VirtualClient
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
             directoryPath.ThrowIfNullOrWhiteSpace(nameof(directoryPath));
-            PlatformSpecifics.ThrowIfNotSupported(platform);
 
             if (!systemManagement.FileSystem.Directory.Exists(directoryPath))
             {
@@ -132,7 +130,6 @@ namespace VirtualClient
         public static async Task RebootSystemAsync(this ISystemManagement systemManagement, CancellationToken cancellationToken)
         {
             systemManagement.ThrowIfNull(nameof(systemManagement));
-            PlatformSpecifics.ThrowIfNotSupported(systemManagement.Platform);
 
             if (!cancellationToken.IsCancellationRequested)
             {

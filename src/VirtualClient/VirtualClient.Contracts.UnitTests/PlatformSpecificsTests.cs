@@ -141,22 +141,6 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, true)]
-        [TestCase(PlatformID.Unix, true)]
-        [TestCase(PlatformID.Other , false)]
-        public void TheListOfSupportedPlatformsMatchesExpected(PlatformID platform, bool isSupported)
-        {
-            if (isSupported)
-            {
-                Assert.DoesNotThrow(() => PlatformSpecifics.ThrowIfNotSupported(platform));
-            }
-            else
-            {
-                Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(platform));
-            }
-        }
-
-        [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (win-x64)")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (win-arm64)")]
         [TestCase(PlatformID.Unix, Architecture.X64, "PERF-CPU-COREMARK.json", "PERF-CPU-COREMARK (linux-x64)")]
@@ -176,23 +160,6 @@ namespace VirtualClient.Contracts
         {
             string actualName = PlatformSpecifics.GetProfileName(profile, platform, architecture);
             Assert.AreEqual(expectedName, actualName);
-        }
-
-        [Test]
-        [TestCase(Architecture.X64, true)]
-        [TestCase(Architecture.Arm64, true)]
-        [TestCase(Architecture.Arm, false)]
-        [TestCase(Architecture.X86, false)]
-        public void TheListOfSupportedProcessorArchitecturesMatchesExpected(Architecture architecture, bool isSupported)
-        {
-            if (isSupported)
-            {
-                Assert.DoesNotThrow(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
-            }
-            else
-            {
-                Assert.Throws<NotSupportedException>(() => PlatformSpecifics.ThrowIfNotSupported(architecture));
-            }
         }
 
         [Test]

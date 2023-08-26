@@ -156,8 +156,6 @@ namespace VirtualClient
             PlatformID osPlatform = Environment.OSVersion.Platform;
             Architecture cpuArchitecture = RuntimeInformation.ProcessArchitecture;
 
-            PlatformSpecifics.ThrowIfNotSupported(osPlatform);
-            PlatformSpecifics.ThrowIfNotSupported(cpuArchitecture);
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(osPlatform, cpuArchitecture);
 
             this.InitializeGlobalTelemetryProperties(args);

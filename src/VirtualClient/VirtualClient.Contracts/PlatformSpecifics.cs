@@ -128,21 +128,10 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="platform">The OS/system platform (e.g. Windows, Unix).</param>
         /// <param name="architecture">The CPU/processor architecture (e.g. amd64, arm).</param>
-        /// <param name="throwIfNotSupported">True to throw an exception if the platform/architecture is not supported.</param>
         /// <returns></returns>
-        public static string GetPlatformArchitectureName(PlatformID platform, Architecture? architecture = null, bool throwIfNotSupported = true)
+        public static string GetPlatformArchitectureName(PlatformID platform, Architecture architecture)
         {
             string platformArchitectureName = null;
-
-            if (throwIfNotSupported)
-            {
-                PlatformSpecifics.ThrowIfNotSupported(platform);
-            }
-
-            if (throwIfNotSupported && architecture != null)
-            {
-                PlatformSpecifics.ThrowIfNotSupported(architecture.Value);
-            }
 
             switch (platform)
             {
@@ -155,18 +144,15 @@ namespace VirtualClient.Contracts
                     break;
             }
 
-            if (architecture != null && platformArchitectureName != null)
+            switch (architecture)
             {
-                switch (architecture.Value)
-                {
-                    case Architecture.X64:
-                        platformArchitectureName = $"{platformArchitectureName}-x64";
-                        break;
+                case Architecture.X64:
+                    platformArchitectureName = $"{platformArchitectureName}-x64";
+                    break;
 
-                    case Architecture.Arm64:
-                        platformArchitectureName = $"{platformArchitectureName}-arm64";
-                        break;
-                }
+                case Architecture.Arm64:
+                    platformArchitectureName = $"{platformArchitectureName}-arm64";
+                    break;
             }
 
             return platformArchitectureName;
@@ -202,42 +188,6 @@ namespace VirtualClient.Contracts
         public static bool IsRunningInContainer()
         {
             return (Convert.ToBoolean(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER")) == true);
-        }
-
-        /// <summary>
-        /// Throws an exception if the platform provided is not supported.
-        /// </summary>
-        /// <param name="platform">The OS/system platform to validate as supported.</param>
-        /// <exception cref="NotSupportedException">The platform is not supported.</exception>
-        public static void ThrowIfNotSupported(PlatformID platform)
-        {
-            switch (platform)
-            {
-                case PlatformID.Win32NT:
-                case PlatformID.Unix:
-                    return;
-
-                default:
-                    throw new NotSupportedException($"The OS/system platform '{platform}' is not supported.");
-            }
-        }
-
-        /// <summary>
-        /// Throws an exception if the CPU/processor architecture provided is not supported.
-        /// </summary>
-        /// <param name="architecture">The CPU/processor architecture to validate as supported.</param>
-        /// <exception cref="NotSupportedException">The CPU/processor architecture is not supported.</exception>
-        public static void ThrowIfNotSupported(Architecture architecture)
-        {
-            switch (architecture)
-            {
-                case Architecture.X64:
-                case Architecture.Arm64:
-                    return;
-
-                default:
-                    throw new NotSupportedException($"The CPU/processor architecture '{architecture}' is not supported.");
-            }
         }
 
         /// <summary>
@@ -433,7 +383,7 @@ namespace VirtualClient.Contracts
         /// The dependency/package path given the specific platform and CPU architecture
         /// (e.g. /home/any/path/virtualclient/1.2.3.4/Packages/geekbench5.1.0.0/linux-x64)
         /// </returns>
-        public DependencyPath ToPlatformSpecificPath(DependencyPath dependency, PlatformID platform, Architecture? architecture = null)
+        public DependencyPath ToPlatformSpecificPath(DependencyPath dependency, PlatformID platform, Architecture architecture)
         {
             dependency.ThrowIfNull(nameof(dependency));
 

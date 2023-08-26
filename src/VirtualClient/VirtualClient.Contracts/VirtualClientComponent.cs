@@ -17,6 +17,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging.Abstractions;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Extensions;
+    using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
 
@@ -440,7 +441,7 @@ namespace VirtualClient.Contracts
         {
             get
             {
-                if (!this.Parameters.TryGetCollection<string>(nameof(this.SupportedPlatforms), out IEnumerable<string> platforms))
+                if (!this.meta.Parameters.TryGetCollection<string>(nameof(this.SupportedPlatforms), out IEnumerable<string> platforms))
                 {
                     // Backwards compatibility.
                     this.Parameters.TryGetCollection<string>("Platforms", out platforms);
@@ -519,8 +520,13 @@ namespace VirtualClient.Contracts
 
             try
             {
-                PlatformSpecifics.ThrowIfNotSupported(this.Platform);
-                PlatformSpecifics.ThrowIfNotSupported(this.CpuArchitecture);
+                var compatibleAttribute = Attribute.GetCustomAttribute(this.GetType(), typeof(CompatibleAttribute)) as CompatibleAttribute;
+                string currentPlatformArchitecture = this.PlatformArchitectureName;
+                if (compatibleAttribute != null && !compatibleAttribute.CompatiblePlatformArchitectures.Contains(this.PlatformArchitectureName))
+                {
+                    // Skip execution for the specified platform
+                    return;
+                }
 
                 if (this.IsSupported())
                 {
