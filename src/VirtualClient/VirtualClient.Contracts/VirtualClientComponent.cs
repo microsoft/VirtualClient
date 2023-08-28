@@ -107,24 +107,6 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
-        /// Parameter defines the content path format/structure to use when uploading content
-        /// to target storage resources. When not defined the 'Default' structure is used.
-        /// </summary>
-        public string ContentPathFormat
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
-                return format?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.ContentPathFormat)] = value;
-            }
-        }
-
-        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -149,6 +131,12 @@ namespace VirtualClient.Contracts
         /// is participating.
         /// </summary>
         public string ExperimentId { get; }
+
+        /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of 
+        /// their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.

@@ -44,6 +44,11 @@ namespace VirtualClient
         public string ExperimentId { get; set; }
 
         /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
+
+        /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
         /// the profile actions and monitors should also be considered.
         /// </summary>
@@ -710,6 +715,7 @@ namespace VirtualClient
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
                 profileExecutor.ExitWait = this.ExitWait;
+                profileExecutor.FailFast = this.FailFast;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -779,6 +785,7 @@ namespace VirtualClient
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
                 profileExecutor.ExitWait = this.ExitWait;
+                profileExecutor.FailFast = this.FailFast;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {

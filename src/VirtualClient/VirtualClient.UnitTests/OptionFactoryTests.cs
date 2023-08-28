@@ -192,6 +192,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--debug")]
+        [TestCase("--verbose")]
         public void DebugFlagSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateDebugFlag();
@@ -244,6 +245,16 @@ namespace VirtualClient
             Assert.DoesNotThrow(() => option.Parse("--exit-wait=01.00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--exit-wait=00:30:00"));
             Assert.DoesNotThrow(() => option.Parse("--exit-wait=1440"));
+        }
+
+        [Test]
+        [TestCase("--fail-fast")]
+        [TestCase("--ff")]
+        public void FailFastFlagSupportsExpectedAliases(string alias)
+        {
+            Option option = OptionFactory.CreateFailFastFlag();
+            ParseResult result = option.Parse(alias);
+            Assert.IsFalse(result.Errors.Any());
         }
 
         [Test]

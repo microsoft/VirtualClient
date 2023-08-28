@@ -261,6 +261,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines whether VC should fail fast on errors.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--fail-fast", "--ff" })
+            {
+                Name = "FailFast",
+                Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// An option to set IP address of a Virtual Client API to target/monitor.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>
