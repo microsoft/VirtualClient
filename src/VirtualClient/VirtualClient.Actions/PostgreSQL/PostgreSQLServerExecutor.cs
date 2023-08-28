@@ -317,8 +317,6 @@ namespace VirtualClient.Actions
                     }
                     else if (this.Platform == PlatformID.Win32NT)
                     {
-                        // this.SetEnvironmentVariable("PGPASSWORD", this.ClientPassword, EnvironmentVariableTarget.Process);
-
                         Action<IProcessProxy> setEnvironmentVariables = (process) =>
                         {
                             string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
