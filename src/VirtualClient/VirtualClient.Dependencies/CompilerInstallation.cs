@@ -5,6 +5,9 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -135,6 +138,14 @@ namespace VirtualClient.Dependencies
 
                     break;
 
+                case Compilers.Charmplusplus:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        await this.InstallCharmplusplusAsync(this.CompilerVersion, telemetryContext, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    break;
+
                 default:
                     throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
@@ -254,6 +265,25 @@ namespace VirtualClient.Dependencies
             await this.ExecuteCommandAsync("bash", @$"install.sh", Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
+        private async Task InstallCharmplusplusAsync(string charmplusplusVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // default latest
+            IFile fileInterface = this.systemManager.FileSystem.File;
+            string lockFile = this.PlatformSpecifics.Combine(Environment.CurrentDirectory, "charmcompilersuccess.lock");
+            if (!fileInterface.Exists(lockFile))
+            {
+                charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
+                await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+                string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+                fileInterface.Create(lockFile);
+            }
+        }
+
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
@@ -309,5 +339,9 @@ namespace VirtualClient.Dependencies
         /// </summary>
         public const string Aocc = "aocc";
 
+        /// <summary>
+        /// Charm++ compiler.
+        /// </summary>
+        public const string Charmplusplus = "charm++";
     }
 }
