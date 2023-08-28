@@ -43,7 +43,7 @@ namespace VirtualClient
         static DependencyFixture()
         {
             VirtualClientComponent.LogToFile = true;
-            VirtualClientComponent.ContentPathPattern = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
