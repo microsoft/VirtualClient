@@ -192,6 +192,9 @@ namespace VirtualClient
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
+                // --contentPathPattern
+                OptionFactory.CreateContentPathPatternOption(required: false),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 

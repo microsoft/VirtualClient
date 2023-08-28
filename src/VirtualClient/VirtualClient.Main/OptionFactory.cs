@@ -122,6 +122,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines the template for virtual folder structure to be followed in
+        /// contentstore when logs are uploaded to it.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateContentPathPatternOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--contentPathPattern", "--contentpathpattern", "--contentPath", "--cspt" })
+            {
+                Name = "ContentPathPattern",
+                Description = "A template for virtual folder structure to be followed in contentStore.",
+                ArgumentHelpName = "pathTemplate",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines whether debug output should be emitted on the console/terminal.
         /// </summary>
         /// <param name="required">Sets this option as required.</param>

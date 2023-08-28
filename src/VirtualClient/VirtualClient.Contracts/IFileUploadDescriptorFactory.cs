@@ -27,13 +27,13 @@
         /// to upload to a blob store.
         /// </summary>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
-        /// <param name="contentPathTemplate">Content path template to use when uploading content to target storage resources.</param>
+        /// <param name="contentPathPattern">Content path template to use when uploading content to target storage resources.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
         /// <param name="manifest">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
-        FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true);
+        FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathPattern, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true);
     }
 }
