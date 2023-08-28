@@ -117,7 +117,7 @@ namespace VirtualClient
 
                 if (!string.IsNullOrWhiteSpace(this.ContentPathPattern))
                 {
-                    VirtualClientComponent.ContentPathPattern = this.ContentPathPattern;
+                    VirtualClientComponent.ContentPathTemplate = this.ContentPathPattern;
                 }                
 
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);

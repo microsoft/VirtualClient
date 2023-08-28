@@ -9,7 +9,6 @@ namespace VirtualClient
     using System.Diagnostics;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common;
@@ -21,6 +20,7 @@ namespace VirtualClient
     public class InMemoryProcess : Dictionary<string, IConvertible>, IProcessProxy
     {
         private ProcessDetails processDetails;
+        private DateTime? exitTime;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryProcess"/>
@@ -48,22 +48,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// The exit time for the process.
-        /// </summary>
-        public DateTime ExitTime
-        {
-            get
-            {
-                if (this.HasExited)
-                {
-                    return DateTime.UtcNow;
-                }
-
-                return DateTime.MinValue;
-            }
-        }
-
-        /// <summary>
         /// The fake process ID.
         /// </summary>
         public int Id { get; set; }
@@ -87,6 +71,32 @@ namespace VirtualClient
         /// The fake process exit code.
         /// </summary>
         public int ExitCode { get; set; }
+
+        /// <summary>
+        /// The exit time for the process.
+        /// </summary>
+        public DateTime ExitTime
+        {
+            get
+            {
+                if (this.exitTime != null)
+                {
+                    return this.exitTime.Value;
+                }
+
+                if (this.HasExited)
+                {
+                    return DateTime.UtcNow;
+                }
+
+                return DateTime.MinValue;
+            }
+
+            set
+            {
+                this.exitTime = value;
+            }
+        }
 
         /// <summary>
         /// A fake process handle.
@@ -130,7 +140,7 @@ namespace VirtualClient
         /// <summary>
         /// The start time for the process.
         /// </summary>
-        public DateTime StartTime { get; private set; }
+        public DateTime StartTime { get; set; }
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 
