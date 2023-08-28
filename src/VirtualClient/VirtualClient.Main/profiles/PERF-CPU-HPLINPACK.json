@@ -3,33 +3,41 @@
   "Metadata": {
     "RecommendedMinimumExecutionTime": "00:01:00",
     "SupportedPlatforms": "linux-x64,linux-arm64",
-    "SupportedOperatingSystems": "Ubuntu"
+    "SupportedOperatingSystems": "Ubuntu22"
   },
   "Parameters": {
-    "Username": "testuser",
     "CompilerName": "gcc",
     "CompilerVersion": "11",
     "ProblemSizeN": null,
     "BlockSizeNB": "256",
-    "NumberOfProcesses": null,
-    "CCFLAGS": "-march=native"
+    "NumberOfProcesses": "{LogicalCoreCount}",
+    "UsePerformanceLibraries": false,
+    "BindToCores": false,
+    "CCFLAGS": "-O3 -march=native"
   },
   "Actions": [
     {
       "Type": "HPLinpackExecutor",
       "Parameters": {
         "Scenario": "ProcessorSpeed",
-        "Username": "$.Parameters.Username",
-        "HyperThreadingOn": true,
         "ProblemSizeN": "$.Parameters.ProblemSizeN",
         "BlockSizeNB": "$.Parameters.BlockSizeNB",
         "NumberOfProcesses": "$.Parameters.NumberOfProcesses",
         "CCFLAGS": "$.Parameters.CCFLAGS",
+        "UsePerformanceLibraries": "$.Parameters.UsePerformanceLibraries",
+        "BindToCores": "$.Parameters.BindToCores",
         "PackageName": "hplinpack"
       }
     }
   ],
   "Dependencies": [
+    {
+      "Type": "CompilerInstallation",
+      "Parameters": {
+        "CompilerName": "$.Parameters.CompilerName",
+        "CompilerVersion": "$.Parameters.CompilerVersion"
+      }
+    },
     {
       "Type": "LinuxPackageInstallation",
       "Parameters": {
@@ -39,19 +47,22 @@
       }
     },
     {
-      "Type": "CompilerInstallation",
-      "Parameters": {
-        "CompilerName": "$.Parameters.CompilerName",
-        "CompilerVersion": "$.Parameters.CompilerVersion"
-      }
-    },
-    {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
         "Scenario": "InstallHPLinpackPackage",
         "BlobContainer": "packages",
         "BlobName": "hpl.2.3.zip",
         "PackageName": "hplinpack",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadHPLPerformanceLibrariesPackage",
+        "BlobContainer": "packages",
+        "BlobName": "hplperformancelibraries.1.0.0.zip",
+        "PackageName": "hplperformancelibraries",
         "Extract": true
       }
     }
