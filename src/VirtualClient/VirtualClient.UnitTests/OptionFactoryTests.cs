@@ -178,13 +178,14 @@ namespace VirtualClient
         }
 
         [Test]
-        [TestCase("--contentPathPattern")]
-        [TestCase("--contentpathpattern")]
+        [TestCase("--contentPathTemplate")]
+        [TestCase("--contentpathtemplate")]
         [TestCase("--contentPath")]
-        [TestCase("--cspt")]
+        [TestCase("--contentpath")]
+        [TestCase("--cp")]
         public void ContentPathPatternOptionSupportsExpectedAliases(string alias)
         {
-            Option option = OptionFactory.CreateContentPathPatternOption();
+            Option option = OptionFactory.CreateContentPathTemplateOption();
             ParseResult result = option.Parse($"{alias}=\"anyname1/anyname2/{{experimentId}}/{{agentId}}/anyname3/{{toolName}}/{{role}}/{{scenario}}\"");
             Assert.IsFalse(result.Errors.Any());
         }
@@ -248,6 +249,7 @@ namespace VirtualClient
 
         [Test]
         [TestCase("--fail-fast")]
+        [TestCase("--ff")]
         public void FailFastFlagSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateFailFastFlag();

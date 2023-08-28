@@ -94,6 +94,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines a template for the virtual folder structure to use when uploading 
+        /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateContentPathTemplateOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath", "--cp" })
+            {
+                Name = "ContentPathTemplate",
+                Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
+                ArgumentHelpName = "template",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines a dependency store to add to the storage options
         /// for the Virtual Client for uploading content/files.
         /// </summary>
@@ -113,27 +134,6 @@ namespace VirtualClient
                 Name = "ContentStore",
                 Description = "Blob store access token for the store to which content/monitoring files will be uploaded.",
                 ArgumentHelpName = "connectionstring|sas",
-                AllowMultipleArgumentsPerToken = false
-            };
-
-            OptionFactory.SetOptionRequirements(option, required, defaultValue);
-
-            return option;
-        }
-
-        /// <summary>
-        /// Command line option defines the template for virtual folder structure to be followed in
-        /// contentstore when logs are uploaded to it.
-        /// </summary>
-        /// <param name="required">Sets this option as required.</param>
-        /// <param name="defaultValue">Sets the default value when none is provided.</param>
-        public static Option CreateContentPathPatternOption(bool required = true, object defaultValue = null)
-        {
-            Option<string> option = new Option<string>(new string[] { "--contentPathPattern", "--contentpathpattern", "--contentPath", "--cspt" })
-            {
-                Name = "ContentPathPattern",
-                Description = "A template for virtual folder structure to be followed in contentStore.",
-                ArgumentHelpName = "pathTemplate",
                 AllowMultipleArgumentsPerToken = false
             };
 
@@ -267,7 +267,7 @@ namespace VirtualClient
         /// <param name="defaultValue">Sets the default value when none is provided.</param>
         public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
         {
-            Option<bool> option = new Option<bool>(new string[] { "--fail-fast", })
+            Option<bool> option = new Option<bool>(new string[] { "--fail-fast", "--ff" })
             {
                 Name = "FailFast",
                 Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",

@@ -714,6 +714,7 @@ namespace VirtualClient
                     {
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
+                        runtimeComponent.FailFast = this.FailFast;
 
                         // Metadata: Profile-level (global)
                         if (this.Metadata?.Any() == true)

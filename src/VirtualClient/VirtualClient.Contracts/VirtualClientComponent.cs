@@ -5,17 +5,14 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel.Design;
     using System.Linq;
     using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs.Producer;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
@@ -89,27 +86,15 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Parameter defines the content path template to use when uploading content
+        /// to target storage resources. When not defined the default template will be used.
+        /// </summary>
+        public static string ContentPathTemplate { get; set; }
+
+        /// <summary>
         /// True if the output of processes should be logged to files in the logs directory.
         /// </summary>
         public static bool LogToFile { get; set; } = false;
-
-        /// <summary>
-        /// The name to use for the metric emitted by each VC component when
-        /// execution fails.
-        /// </summary>
-        public static string FailureMetricName { get; set; } = "Failed";
-
-        /// <summary>
-        /// The name to use for the failure code metric emitted by each VC component when
-        /// execution fails.
-        /// </summary>
-        public static string FailureCodeMetricName { get; set; } = "FailureCode";
-
-        /// <summary>
-        /// The name to use for the metric emitted by each VC component when
-        /// execution succeeds.
-        /// </summary>
-        public static string SuccessMetricName { get; set; } = "Succeeded";
 
         /// <summary>
         /// The ID of the Virtual Client instance/agent as part of the larger experiment.
@@ -120,30 +105,6 @@ namespace VirtualClient.Contracts
         /// Cleanup tasks to execute when the component operations complete.
         /// </summary>
         public IList<Action> CleanupTasks { get; }
-
-        /// <summary>
-        /// Parameter defines the content path format/structure to use when uploading content
-        /// to target storage resources. When not defined the 'Default' structure is used.
-        /// </summary>
-        public string ContentPathFormat
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
-                return format?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.ContentPathFormat)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines the content path format/structure using a template to use when uploading content
-        /// to target storage resources. When not defined the 'Default' structure is used.
-        /// </summary>
-        public static string ContentPathPattern { get; set; } = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
@@ -170,6 +131,12 @@ namespace VirtualClient.Contracts
         /// is participating.
         /// </summary>
         public string ExperimentId { get; }
+
+        /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of 
+        /// their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
