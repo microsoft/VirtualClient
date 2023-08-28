@@ -721,11 +721,6 @@ namespace VirtualClient
                             runtimeComponent.Metadata.AddRange(component.Metadata, true);
                         }
 
-                        if (this.Profile.Parameters?.Any() == true)
-                        {
-                            VirtualClientComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
-                        }
-
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))
                         {
                             executeComponent = false;

@@ -115,6 +115,11 @@ namespace VirtualClient
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
 
+                if (!string.IsNullOrWhiteSpace(this.ContentPathPattern))
+                {
+                    VirtualClientComponent.ContentPathPattern = this.ContentPathPattern;
+                }                
+
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
 
