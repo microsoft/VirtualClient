@@ -687,6 +687,64 @@ namespace VirtualClient
             }
         }
 
+        [Test]
+        [TestCase(ErrorReason.MonitorFailed)]
+        [TestCase(ErrorReason.WorkloadFailed)]
+        public async Task ProfileExecutorHandlesNonTerminalExceptionsIfTheFailFastOptionIsNotRequested(ErrorReason errorReason)
+        {
+            int iterationsExecuted = 0;
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteActions = true;
+                executor.FailFast = false;
+
+                executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to be handled", errorReason);
+                executor.IterationEnd += (sender, args) => iterationsExecuted++;
+
+                Task executionTask = executor.ExecuteAsync(new ProfileTiming(profileIterations: 3), CancellationToken.None);
+
+                DateTime testTimeout = DateTime.UtcNow.AddSeconds(10);
+                while (!executionTask.IsCompleted)
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                Assert.DoesNotThrow(() => executionTask.ThrowIfErrored());
+                Assert.AreEqual(TaskStatus.RanToCompletion, executionTask.Status);
+                Assert.AreEqual(3, iterationsExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(ErrorReason.MonitorFailed)]
+        [TestCase(ErrorReason.WorkloadFailed)]
+        [TestCase(ErrorReason.WorkloadDependencyMissing)]
+        public async Task ProfileExecutorExitsImmediatelyOnAnyErrorWheneverTheFailFastOptionIsRequested(ErrorReason errorReason)
+        {
+            int iterationsExecuted = 0;
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteActions = true;
+                executor.FailFast = true;
+
+                executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to fail on first error", errorReason); 
+                executor.IterationEnd += (sender, args) => iterationsExecuted++;
+
+                Task executionTask = executor.ExecuteAsync(new ProfileTiming(profileIterations: 3), CancellationToken.None);
+
+                DateTime testTimeout = DateTime.UtcNow.AddSeconds(10);
+                while (!executionTask.IsCompleted)
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executionTask.ThrowIfErrored());
+
+                Assert.AreEqual(errorReason, exception.Reason);
+                Assert.AreEqual(1, iterationsExecuted);
+            }
+        }
+
         private class TestProfileExecutor : ProfileExecutor
         {
             public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, IDictionary<string, IConvertible> metadata = null, ILogger logger = null)

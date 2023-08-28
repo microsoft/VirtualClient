@@ -135,6 +135,12 @@ namespace VirtualClient
         public TimeSpan ExitWait { get; set; }
 
         /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of 
+        /// their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
+
+        /// <summary>
         /// Logs things to various sources
         /// </summary>
         public ILogger Logger { get; }
@@ -429,7 +435,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully
