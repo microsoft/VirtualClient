@@ -91,23 +91,20 @@ namespace VirtualClient.Monitors
 
                 try
                 {
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessFileUploads", relatedContext, async () =>
+                    // We do not honor the cancellation token until ALL files have been processed.
+                    while (await this.UploadFilesAsync(blobManager, relatedContext))
                     {
-                        // We do not honor the cancellation token until ALL files have been processed.
-                        while (await this.UploadFilesAsync(blobManager, telemetryContext))
+                        try
                         {
-                            try
-                            {
-                                await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                // If the cancellation is requested, we want to short-circuit the Task.Delay
-                                // so that we can quickly loop around to the processing. If there are no files
-                                // to process, we will exit.
-                            }
+                            await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
                         }
-                    });
+                        catch (OperationCanceledException)
+                        {
+                            // If the cancellation is requested, we want to short-circuit the Task.Delay
+                            // so that we can quickly loop around to the processing. If there are no files
+                            // to process, we will exit.
+                        }
+                    }
 
                     await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
                 }
@@ -174,24 +171,27 @@ namespace VirtualClient.Monitors
                         {
                             try
                             {
-                                bool deleteFile = false;
-                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
-                                FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
-
-                                try
+                                await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessFileUploads", telemetryContext, async () =>
                                 {
-                                    await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
-                                    deleteFile = descriptor.DeleteOnUpload;
+                                    bool deleteFile = false;
+                                    string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
+                                    FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
 
-                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
-                                }
-                                finally
-                                {
-                                    if (deleteFile)
+                                    try
                                     {
-                                        await this.fileSystem.File.DeleteAsync(descriptor.FilePath);
+                                        await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                                        deleteFile = descriptor.DeleteOnUpload;
+
+                                        await this.fileSystem.File.DeleteAsync(uploadDescriptor);
                                     }
-                                }
+                                    finally
+                                    {
+                                        if (deleteFile)
+                                        {
+                                            await this.fileSystem.File.DeleteAsync(descriptor.FilePath);
+                                        }
+                                    }
+                                });
                             }
                             catch (JsonSerializationException)
                             {

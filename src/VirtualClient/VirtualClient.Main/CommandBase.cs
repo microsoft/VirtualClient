@@ -62,6 +62,12 @@ namespace VirtualClient
         /// </summary>
         public DependencyStore ContentStore { get; set; }
 
+        /// <summary>
+        /// Parameter defines the content path format/structure using a template to use when uploading content
+        /// to target storage resources. When not defined the 'Default' structure is used.
+        /// </summary>
+        public string ContentPathPattern { get; set; }
+
         /// <summary>s
         /// True to have debug/verbose output emitted to standard output on
         /// the console/terminal.

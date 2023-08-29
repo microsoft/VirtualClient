@@ -21,6 +21,11 @@ namespace VirtualClient.Contracts
     public class FileUploadDescriptor
     {
         /// <summary>
+        /// The default template to use for defining blob paths with file uploads.
+        /// </summary>
+        public const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+
+        /// <summary>
         /// The default extension for the file uploads.
         /// </summary>
         public const string UploadDescriptorFileExtension = "upload.json";

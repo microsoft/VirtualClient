@@ -192,6 +192,9 @@ namespace VirtualClient
                 // --contentStore
                 OptionFactory.CreateContentStoreOption(required: false),
 
+                // --contentPathTemplate
+                OptionFactory.CreateContentPathTemplateOption(required: false),
+
                 // --debug
                 OptionFactory.CreateDebugFlag(required: false, false),
 
@@ -207,7 +210,10 @@ namespace VirtualClient
                 // --exit-wait
                 OptionFactory.CreateExitWaitOption(required: false, TimeSpan.FromMinutes(30)),
 
-                // --installDependencies
+                // --fail-fast
+                OptionFactory.CreateFailFastFlag(required: false, false),
+
+                // --dependencies
                 OptionFactory.CreateDependenciesFlag(required: false),
 
                 // --iterations

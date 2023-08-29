@@ -1,0 +1,54 @@
+{
+    "Description": "CtsTraffic Network Performance Workload",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "00:30:00",
+        "SupportedPlatforms": "win-x64, win-arm64",
+        "SupportedOperatingSystems": "Windows"
+    },
+    "Parameters": {
+        "Port": "4444",
+        "NumaNodeIndex": "-1",
+        "BufferInBytes": "65536",
+        "Pattern":  "Duplex",
+        "BytesToTransfer":  "0x400000000",
+        "Connections": "20",
+        "Iterations": "1",
+        "ServerExitLimit": "1"
+    },
+    "Actions": [
+        {
+            "Type": "CtsTrafficExecutor",
+          "Parameters": {
+            "Scenario": "ExecuteCtsTrafficBenchmark",
+            "Port": "$.Parameters.Port",
+            "NumaNodeIndex": "$.Parameters.NumaNodeIndex",
+            "BufferInBytes": "$.Parameters.BufferInBytes",
+            "Pattern": "$.Parameters.Pattern",
+            "BytesToTransfer": "$.Parameters.BytesToTransfer",
+            "Connections": "$.Parameters.Connections",
+            "Iterations": "$.Parameters.Iterations",
+            "PackageName": "ctstraffic",
+            "ServerExitLimit": "$.Parameters.ServerExitLimit",
+            "Tags": "ctsTraffic,Network"
+          }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCtsTrafficPackage",
+                "BlobContainer": "packages",
+                "BlobName": "ctstraffic.1.0.0.zip",
+                "PackageName": "ctstraffic",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
+}
