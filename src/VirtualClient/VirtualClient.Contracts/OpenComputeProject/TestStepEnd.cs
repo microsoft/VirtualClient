@@ -14,7 +14,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Status of the test step end.
         /// </summary>
-        [JsonProperty("status")]
+        [JsonProperty("status", Required = Required.Always)]
         public TestStatus Status { get; set; }
     }
 }

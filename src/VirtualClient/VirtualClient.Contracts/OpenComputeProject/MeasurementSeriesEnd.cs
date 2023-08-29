@@ -14,13 +14,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Measurement Series Id associated with the measurement series end.
         /// </summary>
-        [JsonProperty("measurementSeriesId")]
+        [JsonProperty("measurementSeriesId", Required = Required.Always)]
         public string MeasurementSeriesId { get; set; }
 
         /// <summary>
         /// Total count of measurements in the series.
         /// </summary>
-        [JsonProperty("totalCount")]
+        [JsonProperty("totalCount", Required = Required.Always)]
         public int TotalCount { get; set; }
     }
 }

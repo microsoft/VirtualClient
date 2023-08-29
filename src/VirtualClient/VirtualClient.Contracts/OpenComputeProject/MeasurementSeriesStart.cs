@@ -16,7 +16,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name of the measurement series.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Measurement Series Id associated with the measurement series start.
         /// </summary>
-        [JsonProperty("measurementSeriesId")]
+        [JsonProperty("measurementSeriesId", Required = Required.Always)]
         public string MeasurementSeriesId { get; set; }
 
         /// <summary>

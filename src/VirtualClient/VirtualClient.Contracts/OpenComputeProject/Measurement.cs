@@ -16,14 +16,14 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name of the measurement.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
         /// Value of the measurement, which can be a string, boolean, or number.
         /// </summary>
-        [JsonProperty("value")]
-        public object Value { get; set; }
+        [JsonProperty("value", Required = Required.Always)]
+        public IConvertible Value { get; set; }
 
         /// <summary>
         /// Unit of the measurement.

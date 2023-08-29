@@ -9,6 +9,32 @@ namespace VirtualClient.Contracts.OpenComputeProject
     using VirtualClient.Common.Extensions;
 
     /// <summary>
+    /// SoftwareType
+    /// </summary>
+    public enum SoftwareType
+    {
+        /// <summary>
+        /// Unspecified
+        /// </summary>
+        UNSPECIFIED,
+
+        /// <summary>
+        /// Firmware
+        /// </summary>
+        FIRMWARE,
+
+        /// <summary>
+        /// System
+        /// </summary>
+        SYSTEM,
+
+        /// <summary>
+        /// Application
+        /// </summary>
+        APPLICATION
+    }
+
+    /// <summary>
     /// Dut Info class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/dut_info.json
     /// </summary>
@@ -17,7 +43,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// DUT Info Id
         /// </summary>
-        [JsonProperty("dutInfoId")]
+        [JsonProperty("dutInfoId", Required = Required.Always)]
         public string DutInfoId { get; set; }
 
         /// <summary>
@@ -59,7 +85,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Info
         /// </summary>
-        [JsonProperty("info")]
+        [JsonProperty("info", Required = Required.Always)]
         public string Info { get; set; }
     }
 
@@ -71,7 +97,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
@@ -95,7 +121,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Software Info Id
         /// </summary>
-        [JsonProperty("softwareInfoId")]
+        [JsonProperty("softwareInfoId", Required = Required.Always)]
         public string SoftwareInfoId { get; set; }
 
         /// <summary>
@@ -113,7 +139,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
@@ -137,7 +163,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Hardware Info Id
         /// </summary>
-        [JsonProperty("hardwareInfoId")]
+        [JsonProperty("hardwareInfoId", Required = Required.Always)]
         public string HardwareInfoId { get; set; }
 
         /// <summary>

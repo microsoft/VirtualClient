@@ -14,13 +14,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Sequence Number
         /// </summary>
-        [JsonProperty("sequenceNumber")]
+        [JsonProperty("sequenceNumber", Required = Required.Always)]
         public int SequenceNumber { get; set; }
 
         /// <summary>
         /// Timestamp
         /// </summary>
-        [JsonProperty("timestamp")]
+        [JsonProperty("timestamp", Required = Required.Always)]
         public string Timestamp { get; set; }
 
         /// <summary>
@@ -50,13 +50,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Major
         /// </summary>
-        [JsonProperty("major")]
+        [JsonProperty("major", Required = Required.Always)]
         public int Major { get; set; }
 
         /// <summary>
         /// Minor
         /// </summary>
-        [JsonProperty("minor")]
+        [JsonProperty("minor", Required = Required.Always)]
         public int Minor { get; set; }
     }
 }

@@ -14,13 +14,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// A part of the full path of the code that generates the output.
         /// </summary>
-        [JsonProperty("file")]
+        [JsonProperty("file", Required = Required.Always)]
         public string File { get; set; }
 
         /// <summary>
         /// The line number in the file that generates the output.
         /// </summary>
-        [JsonProperty("line")]
+        [JsonProperty("line", Required = Required.Always)]
         public int Line { get; set; }
     }
 }

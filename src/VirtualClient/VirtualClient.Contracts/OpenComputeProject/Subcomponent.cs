@@ -6,6 +6,42 @@ using Newtonsoft.Json;
 namespace VirtualClient.Contracts.OpenComputeProject
 {
     /// <summary>
+    /// SubcomponentType
+    /// </summary>
+    public enum SubcomponentType
+    {
+        /// <summary>
+        /// Unspecified
+        /// </summary>
+        UNSPECIFIED,
+
+        /// <summary>
+        /// Asic
+        /// </summary>
+        ASIC,
+
+        /// <summary>
+        /// Asic subsystem
+        /// </summary>
+        ASIC_SUBSYSTEM,
+
+        /// <summary>
+        /// Bus
+        /// </summary>
+        BUS,
+
+        /// <summary>
+        /// Function
+        /// </summary>
+        FUNCTION,
+
+        /// <summary>
+        /// Connector
+        /// </summary>
+        CONNECTOR
+    }
+
+    /// <summary>
     /// Subcomponent class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/subcomponent.json
     /// </summary>
@@ -20,7 +56,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// The name of the subcomponent.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>

@@ -9,6 +9,27 @@ namespace VirtualClient.Contracts.OpenComputeProject
     using VirtualClient.Common.Extensions;
 
     /// <summary>
+    /// DiagnosisType
+    /// </summary>
+    public enum DiagnosisType
+    {
+        /// <summary>
+        /// Pass
+        /// </summary>
+        PASS,
+
+        /// <summary>
+        /// Fail
+        /// </summary>
+        FAIL,
+
+        /// <summary>
+        /// Unknown
+        /// </summary>
+        UNKNOWN
+    }
+
+    /// <summary>
     /// Dut Info class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/diagnosis.json
     /// </summary>
@@ -17,13 +38,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Verdict
         /// </summary>
-        [JsonProperty("verdict")]
+        [JsonProperty("verdict", Required = Required.Always)]
         public string Verdict { get; set; }
 
         /// <summary>
         /// Type
         /// </summary>
-        [JsonProperty("type")]
+        [JsonProperty("type", Required = Required.Always)]
         public string Type { get; set; }
 
         /// <summary>

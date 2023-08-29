@@ -14,7 +14,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name of the test step.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
     }
 }

@@ -15,7 +15,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Symptom
         /// </summary>
-        [JsonProperty("symptom")]
+        [JsonProperty("symptom", Required = Required.Always)]
         public string Symptom { get; set; }
 
         /// <summary>

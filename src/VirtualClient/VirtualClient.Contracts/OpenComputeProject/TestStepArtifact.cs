@@ -92,13 +92,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Name of the extension.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
         /// Content of the extension.
         /// </summary>
-        [JsonProperty("content")]
+        [JsonProperty("content", Required = Required.Always)]
         public object Content { get; set; }
     }
 }

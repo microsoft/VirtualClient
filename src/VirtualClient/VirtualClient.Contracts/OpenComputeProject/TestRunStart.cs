@@ -16,31 +16,31 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// The name of the test run.
         /// </summary>
-        [JsonProperty("name")]
+        [JsonProperty("name", Required = Required.Always)]
         public string Name { get; set; }
 
         /// <summary>
         /// The version of the test run.
         /// </summary>
-        [JsonProperty("version")]
+        [JsonProperty("version", Required = Required.Always)]
         public string Version { get; set; }
 
         /// <summary>
         /// The command line used to start the test run.
         /// </summary>
-        [JsonProperty("commandLine")]
+        [JsonProperty("commandLine", Required = Required.Always)]
         public string CommandLine { get; set; }
 
         /// <summary>
         /// Test run parameters (custom object structure to be defined).
         /// </summary>
-        [JsonProperty("parameters")]
+        [JsonProperty("parameters", Required = Required.Always)]
         public Dictionary<string, IConvertible> Parameters { get; set; }
 
         /// <summary>
         /// Device Under Test (DUT) information.
         /// </summary>
-        [JsonProperty("dutInfo")]
+        [JsonProperty("dutInfo", Required = Required.Always)]
         public DutInfo DutInfo { get; set; }
 
         /// <summary>

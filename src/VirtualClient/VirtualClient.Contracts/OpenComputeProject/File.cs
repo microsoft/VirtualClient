@@ -16,13 +16,13 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Display Name
         /// </summary>
-        [JsonProperty("displayName")]
+        [JsonProperty("displayName", Required = Required.Always)]
         public string DisplayName { get; set; }
 
         /// <summary>
         /// URI
         /// </summary>
-        [JsonProperty("uri")]
+        [JsonProperty("uri", Required = Required.Always)]
         public string Uri { get; set; }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Is Snapshot
         /// </summary>
-        [JsonProperty("isSnapshot")]
+        [JsonProperty("isSnapshot", Required = Required.Always)]
         public bool IsSnapshot { get; set; }
 
         /// <summary>

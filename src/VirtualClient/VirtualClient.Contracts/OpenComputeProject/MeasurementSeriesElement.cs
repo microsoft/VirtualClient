@@ -16,25 +16,25 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// <summary>
         /// Index of the measurement series element.
         /// </summary>
-        [JsonProperty("index")]
+        [JsonProperty("index", Required = Required.Always)]
         public int Index { get; set; }
 
         /// <summary>
         /// Value of the measurement series element, which can be a string, boolean, or number.
         /// </summary>
-        [JsonProperty("value")]
+        [JsonProperty("value", Required = Required.Always)]
         public object Value { get; set; }
 
         /// <summary>
         /// Timestamp associated with the measurement series element.
         /// </summary>
-        [JsonProperty("timestamp")]
+        [JsonProperty("timestamp", Required = Required.Always)]
         public string Timestamp { get; set; }
 
         /// <summary>
         /// Measurement Series Id associated with the measurement series element.
         /// </summary>
-        [JsonProperty("measurementSeriesId")]
+        [JsonProperty("measurementSeriesId", Required = Required.Always)]
         public string MeasurementSeriesId { get; set; }
 
         /// <summary>
