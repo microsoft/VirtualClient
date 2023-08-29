@@ -425,7 +425,7 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    // await this.fileSystem.File.DeleteAsync(file);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
             else if (context == MLPerfExecutor.PerformanceSummary)
@@ -451,7 +451,7 @@ namespace VirtualClient.Actions
                         this.Tags,
                         telemetryContext);
 
-                    // await this.fileSystem.File.DeleteAsync(file);
+                    await this.fileSystem.File.DeleteAsync(file);
                 }
             }
         }
