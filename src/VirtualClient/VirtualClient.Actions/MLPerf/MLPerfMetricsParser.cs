@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
     public class MLPerfMetricsParser : MetricsParser
     {
         private static readonly string AccuracyResultsPattern = @"(\w+)\s*=\s*([\d.]+)"; 
-        private static readonly string PerformanceResultsPattern = @"([\w_]+)\s*:\s*([\d.]+)";
+        private static readonly string PerformanceResultsPattern = @"([\w\d_.]+)\s*:\s*([\d.]+)";
         private static readonly string ValueSplitRegexPattern = @"^[^:]+:";
         private static readonly string RemoveEndDotPattern = @"\.$";
 
@@ -56,6 +56,7 @@ namespace VirtualClient.Actions
                     
                     if (this.AccuracyMode && (model.Value.ToString().Contains("PASSED") || model.Value.ToString().Contains("FAILED")))
                     {
+                        // Adding metric for accuracy result being passed/failed
                         metricName = model.Name + "-AccuracyMode";
                         bool value = model.Value.ToString().Contains("PASSED");
                         metricValue = Convert.ToDouble(value);
@@ -64,21 +65,41 @@ namespace VirtualClient.Actions
                         Metric metric = new Metric(metricName, metricValue, metricUnit, relativity);
                         this.Metrics.Add(metric);
 
+                        // Adding exact and threshold value for each accuracy run
                         string metricValueString = Regex.Replace(model.Value.ToString(), ValueSplitRegexPattern, string.Empty);
-
                         MatchCollection matches = Regex.Matches(metricValueString, AccuracyResultsPattern);
+                        double thresholdValue = 1;
+                        double accuracyValue = 0;
 
-                        foreach (Match match in matches)
+                        if (matches.Count == 2)
                         {
-                            metricName = model.Name + "-" + match.Groups[1].Value + "Value";
+                            foreach (Match match in matches)
+                            {
+                                metricName = model.Name + "-" + match.Groups[1].Value + "Value";
 
-                            string metricValueWithoutEndDot = Regex.Replace(match.Groups[2].Value, RemoveEndDotPattern, string.Empty);
-                            metricValue = double.Parse(metricValueWithoutEndDot);
-                            this.Metrics.Add(new Metric(metricName, metricValue));
+                                string metricValueWithoutEndDot = Regex.Replace(match.Groups[2].Value, RemoveEndDotPattern, string.Empty);
+                                metricValue = double.Parse(metricValueWithoutEndDot);
+                                this.Metrics.Add(new Metric(metricName, metricValue));
+
+                                if (match.Groups[1].Value.Contains("Threshold"))
+                                {
+                                    thresholdValue = metricValue;
+                                }
+                                else
+                                {
+                                    accuracyValue = metricValue;
+                                }
+                            }
+
+                            // Adding ratio of Accuracy Value and Threshold Value
+                            metricValue = accuracyValue / thresholdValue;
+                            metricName = model.Name + "-Accuracy Threshold Ratio";
+                            this.Metrics.Add(new Metric(metricName, metricValue, relativity));
                         }
                     }
                     else if (model.Value.ToString().Contains("INVALID") || model.Value.ToString().Contains("VALID"))
                     {
+                        // Adding metric for perf result being valid/invalid
                         metricName = model.Name + "-PerformanceMode";
                         bool value = !model.Value.ToString().Contains("INVALID");
                         metricValue = Convert.ToDouble(value);
@@ -87,6 +108,7 @@ namespace VirtualClient.Actions
                         Metric metric = new Metric(metricName, metricValue, metricUnit, relativity);
                         this.Metrics.Add(metric);
 
+                        // Getting exact value of metric
                         string metricValueString = Regex.Replace(model.Value.ToString(), ValueSplitRegexPattern, string.Empty);
                         Match match = Regex.Match(metricValueString, PerformanceResultsPattern);
 
