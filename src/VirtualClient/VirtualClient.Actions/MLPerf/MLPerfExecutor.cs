@@ -117,6 +117,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf.
+        /// </summary>
+        public bool RequireCustomSystemSupport
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(MLPerfExecutor.RequireCustomSystemSupport), false);
+            }
+        }
+
+        /// <summary>
         /// The MLPerf Nvidia code directory.
         /// </summary>
         protected string NvidiaDirectory
@@ -220,8 +231,12 @@ namespace VirtualClient.Actions
                 // add user in docker group and create scratch space
                 await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.NvidiaDirectory, cancellationToken);
                
-                // If GPUConfig is not included in the MLPerf code but is supported
-                this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
+                if (this.RequireCustomSystemSupport)
+                {
+                    // This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf..
+                    this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
+                }
+               
                 string makefileFilePath = this.PlatformSpecifics.Combine(this.NvidiaDirectory, "Makefile");
 
                 // Update the docker flags in MLPerf docker file
@@ -451,7 +466,7 @@ namespace VirtualClient.Actions
                     true);
             }
 
-            foreach (string directory in this.fileSystem.Directory.GetDirectories(this.NvidiaDirectory))
+            foreach (string directory in this.fileSystem.Directory.GetDirectories(this.Combine(this.NvidiaDirectory, "configs"), "*", SearchOption.AllDirectories))
             {
                 string newDirectory = this.Combine(Path.GetDirectoryName(directory), Path.GetFileName(directory).ToLowerInvariant());
 
