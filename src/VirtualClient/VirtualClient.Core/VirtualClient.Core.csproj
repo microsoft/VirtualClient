@@ -12,7 +12,6 @@
         <!-- Global package dependency versions are defined in the Module.props for the solution. -->
         <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="$(Microsoft_AspNetCore_Hosting_PackageVersion)" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)" />
-        <PackageReference Include="Microsoft.Management.Infrastructure" Version="$(Microsoft_Management_Infrastructure_PackageVersion)" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="$(Microsoft_Win32_Registry_PackageVersion)" />
         <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="$(System_Diagnostics_PerformanceCounter_PackageVersion)" />
     </ItemGroup>
