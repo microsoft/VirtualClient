@@ -25,9 +25,6 @@ namespace VirtualClient.Logging
     public class OcpFileLogger : ILogger, IFlushableChannel, IDisposable
     {
         internal static readonly IEnumerable<MetricsCsvField> CsvFields;
-
-        private static readonly AssemblyName LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-        private static readonly AssemblyName ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;
@@ -43,39 +40,6 @@ namespace VirtualClient.Logging
         private long maxFileSizeBytes;
         private SemaphoreSlim semaphore;
         private bool disposed;
-
-        static OcpFileLogger()
-        {
-            OcpFileLogger.LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-            OcpFileLogger.ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
-            OcpFileLogger.CsvFields = new List<MetricsCsvField>
-            {
-                new MetricsCsvField("Timestamp", (ctx) => DateTime.UtcNow.ToString("o")),
-                new MetricsCsvField("ExperimentId", "experimentId"),
-                new MetricsCsvField("ClientId", "agentId"),
-                new MetricsCsvField("Profile", "executionProfile"),
-                new MetricsCsvField("ProfileName", "executionProfileName"),
-                new MetricsCsvField("ToolName", "toolName"),
-                new MetricsCsvField("ScenarioName", "scenarioName"),
-                new MetricsCsvField("ScenarioStartTime", "scenarioStartTime"),
-                new MetricsCsvField("ScenarioEndTime", "scenarioEndTime"),
-                new MetricsCsvField("MetricCategorization", "metricCategorization"),
-                new MetricsCsvField("MetricName", "metricName"),
-                new MetricsCsvField("MetricValue", "metricValue"),
-                new MetricsCsvField("MetricUnit", "metricUnit"),
-                new MetricsCsvField("MetricDescription", "metricDescription"),
-                new MetricsCsvField("MetricRelativity", "metricRelativity"),
-                new MetricsCsvField("ExecutionSystem", "executionSystem"),
-                new MetricsCsvField("OperatingSystemPlatform", "operatingSystemPlatform"),
-                new MetricsCsvField("OperationId", (ctx) => ctx.ActivityId.ToString()),
-                new MetricsCsvField("OperationParentId", (ctx) => ctx.ParentActivityId.ToString()),
-                new MetricsCsvField("AppHost", propertyValue: Environment.MachineName),
-                new MetricsCsvField("AppName", propertyValue: OcpFileLogger.ExecutingAssembly.Name),
-                new MetricsCsvField("AppVersion", propertyValue: OcpFileLogger.ExecutingAssembly.Version.ToString()),
-                new MetricsCsvField("AppTelemetryVersion", propertyValue: OcpFileLogger.LoggingAssembly.Version.ToString()),
-                new MetricsCsvField("Tags", "tags")
-            };
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OcpFileLogger"/> class.
@@ -208,8 +172,7 @@ namespace VirtualClient.Logging
                     }
                     catch
                     {
-                        // Best effort. We do not want to crash the application on failures to access
-                        // the CSV file.
+                        // Best effort. We do not want to crash the application on failures to write file.
                     }
                 }
             });
