@@ -66,7 +66,7 @@ namespace VirtualClient
         /// Parameter defines the content path format/structure using a template to use when uploading content
         /// to target storage resources. When not defined the 'Default' structure is used.
         /// </summary>
-        public string ContentPathPattern { get; set; }
+        public string ContentPathTemplate { get; set; }
 
         /// <summary>s
         /// True to have debug/verbose output emitted to standard output on

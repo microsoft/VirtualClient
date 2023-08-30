@@ -121,9 +121,9 @@ namespace VirtualClient
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
 
-                if (!string.IsNullOrWhiteSpace(this.ContentPathPattern))
+                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
-                    VirtualClientComponent.ContentPathTemplate = this.ContentPathPattern;
+                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
                 }                
 
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
