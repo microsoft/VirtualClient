@@ -183,7 +183,7 @@ namespace VirtualClient
         [TestCase("--contentPath")]
         [TestCase("--contentpath")]
         [TestCase("--cp")]
-        public void ContentPathPatternOptionSupportsExpectedAliases(string alias)
+        public void ContentPathTemplateOptionSupportsExpectedAliases(string alias)
         {
             Option option = OptionFactory.CreateContentPathTemplateOption();
             ParseResult result = option.Parse($"{alias}=\"anyname1/anyname2/{{experimentId}}/{{agentId}}/anyname3/{{toolName}}/{{role}}/{{scenario}}\"");
