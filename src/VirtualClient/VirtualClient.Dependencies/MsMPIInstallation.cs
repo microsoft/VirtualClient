@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -32,7 +31,6 @@
             : base(dependencies, parameters)
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManagement.PackageManager;rge
             this.processManager = this.systemManagement.ProcessManager;
         }
 
