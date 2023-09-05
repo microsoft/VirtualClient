@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -31,7 +32,7 @@
             : base(dependencies, parameters)
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
-            this.packageManager = this.systemManagement.PackageManager;
+            this.packageManager = this.systemManagement.PackageManager;rge
             this.processManager = this.systemManagement.ProcessManager;
         }
 
@@ -55,9 +56,7 @@
                 if (!fileInterface.Exists(lockFile))
                 {
                     string msmpiBin = this.PlatformSpecifics.Combine(packageDirectory, "bin");
-                    this.systemManagement.AddDirectoryToPath(msmpiBin, EnvironmentVariableTarget.Machine);
-                    await this.systemManagement.RefreshEnvironmentVariableAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    this.SetEnvironmentVariable(EnvironmentVariable.PATH, msmpiBin, EnvironmentVariableTarget.Machine, true);
 
                     FirewallEntry firewallEntry = new FirewallEntry(
                     $"Virtual Client: Allow {this.PlatformSpecifics.Combine(msmpiBin, "smpd.exe")}",
@@ -86,7 +85,8 @@
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    this.Logger.LogProcessDetails<MSMPIInstallation>(installationProcess, telemetryContext.Clone());
+                    await this.LogProcessDetailsAsync(installationProcess, telemetryContext.Clone(), logToFile: true)
+                        .ConfigureAwait(false);
                     installationProcess.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
                 }
             }
