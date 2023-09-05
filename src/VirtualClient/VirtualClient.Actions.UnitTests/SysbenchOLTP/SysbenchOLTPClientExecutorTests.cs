@@ -89,8 +89,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
@@ -156,8 +155,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
@@ -230,8 +228,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                SysbenchInitialized = false
             }));
 
             this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
@@ -338,8 +335,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = true,
-                DatabaseInitialized = false,
+                SysbenchInitialized = true
             }));
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -353,11 +349,12 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
+            this.mockFixture.Parameters["SkipInitialize"] = true;
+
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                DatabaseScenarioInitialized = true,
-                DatabaseInitialized = true,
+                DatabaseScenarioInitialized = true
             }));
 
             string[] expectedCommands =

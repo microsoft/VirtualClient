@@ -111,6 +111,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Skips initialization of the tables and records in the database
+        /// </summary>
+        public bool SkipInitialize
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(SysbenchOLTPClientExecutor.SkipInitialize), false);
+            }
+        }
+
+        /// <summary>
         /// Number of threads.
         /// </summary>
         public string Threads
@@ -352,7 +363,15 @@ namespace VirtualClient.Actions
         {
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
 
-            if (!state.DatabaseInitialized)
+            string currentTables = state.Properties[nameof(SysbenchOLTPState.NumTables)].ToString();
+            string currentRecords = state.Properties[nameof(SysbenchOLTPState.RecordCount)].ToString();
+
+            int curTables = int.Parse(currentTables);
+            int curRecords = int.Parse(currentRecords);
+            int numTables = int.Parse(this.NumTables);
+            int recordCount = int.Parse(this.RecordCount);
+
+            if (!this.SkipInitialize || numTables > curTables || recordCount > curRecords)
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
@@ -362,11 +381,12 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
-                // update the state object accordingly
+                state.Properties[nameof(SysbenchOLTPState.NumTables)] = numTables;
+                state.Properties[nameof(SysbenchOLTPState.RecordCount)] = recordCount;
 
-                state.DatabaseInitialized = true;
+                // save the updated state configuration
 
-                await this.stateManager.SaveStateAsync(nameof(SysbenchOLTPState), state, cancellationToken);
+                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
 
             if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
