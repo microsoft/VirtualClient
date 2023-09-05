@@ -31,6 +31,7 @@
             : base(dependencies, parameters)
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.packageManager = dependencies.GetService<IPackageManager>();
             this.processManager = this.systemManagement.ProcessManager;
         }
 
