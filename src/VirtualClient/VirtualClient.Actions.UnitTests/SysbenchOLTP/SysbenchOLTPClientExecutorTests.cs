@@ -49,7 +49,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SysbenchOLTPClientExecutor.DatabaseName), "sbtest" },
-                { nameof(SysbenchOLTPClientExecutor.DurationSecs), "10" },
+                { nameof(SysbenchOLTPClientExecutor.Duration), "00:00:10" },
                 { nameof(SysbenchOLTPClientExecutor.Workload), "oltp_read_write" },
                 { nameof(SysbenchOLTPClientExecutor.PackageName), "sysbench" },
             };
@@ -89,7 +89,9 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false
+                SysbenchInitialized = false,
+                NumTables = -1,
+                RecordCount = -1
             }));
 
             string[] expectedCommands =
@@ -228,7 +230,9 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false
+                SysbenchInitialized = false,
+                NumTables = -1,
+                RecordCount = -1
             }));
 
             this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
@@ -335,7 +339,9 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = true
+                SysbenchInitialized = true,
+                NumTables = -1,
+                RecordCount = -1
             }));
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -354,7 +360,9 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                DatabaseScenarioInitialized = true
+                DatabaseScenarioInitialized = true,
+                NumTables = 10,
+                RecordCount = this.recordCount
             }));
 
             string[] expectedCommands =

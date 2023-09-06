@@ -52,11 +52,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The total time of execution option passed to Sysbench.
         /// </summary>
-        public string DurationSecs
+        public string Duration
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.DurationSecs));
+                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Duration));
             }
         }
 
@@ -89,7 +89,13 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.NumTables), 10);
+                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumTables), out IConvertible numTables);
+                return numTables?.ToString();
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.NumTables)] = value;
             }
         }
 
@@ -130,11 +136,6 @@ namespace VirtualClient.Actions
             {
                 this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads);
                 return threads?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.Threads)] = value;
             }
         }
 
@@ -237,13 +238,6 @@ namespace VirtualClient.Actions
 
                 await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
-
-            // set arguments & path up based on prepare arguments in profile
-
-            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.DurationSecs} ";
-            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -346,28 +340,37 @@ namespace VirtualClient.Actions
                 numThreads = 1;
             }
 
+            // safeguard against arm64 table setup
+
+            if (this.CpuArchitecture == Architecture.Arm64 || string.IsNullOrEmpty(this.NumTables))
+            {
+                this.NumTables = "10";
+            }
+
             int numRecords = (int)Math.Pow(10, recordCountExponent);
 
-            string threadCount = numThreads.ToString();
-            string recordCount = numRecords.ToString();
-
-            // update the threads & record count only if they are not defined
+            // update the threads, table count & record count only if they are not defined
             // recommended for balanced & in memory scenarios to utilize
             // programmatic setup
 
-            this.Threads = string.IsNullOrEmpty(this.Threads) ? threadCount : this.Threads;
-            this.RecordCount = string.IsNullOrEmpty(this.RecordCount) ? recordCount : this.RecordCount;
+            string durationSecs = TimeSpan.Parse(this.Duration).TotalSeconds.ToString();
+            string threads = string.IsNullOrEmpty(this.Threads) ? numThreads.ToString() : this.Threads;
+            this.RecordCount = string.IsNullOrEmpty(this.RecordCount) ? numRecords.ToString() : this.RecordCount;
+
+            // set arguments & path up based on prepare arguments in profile
+
+            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={durationSecs} ";
+            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
 
-            string currentTables = state.Properties[nameof(SysbenchOLTPState.NumTables)].ToString();
-            string currentRecords = state.Properties[nameof(SysbenchOLTPState.RecordCount)].ToString();
-
-            int curTables = int.Parse(currentTables);
-            int curRecords = int.Parse(currentRecords);
+            int curTables = state.NumTables;
+            int curRecords = state.RecordCount;
             int numTables = int.Parse(this.NumTables);
             int recordCount = int.Parse(this.RecordCount);
 
