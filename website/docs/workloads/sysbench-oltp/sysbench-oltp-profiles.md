@@ -115,8 +115,9 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Default          |
   | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8         |
   | RecordCount              | Not Required. Number of records per table in the database.                                                      | 10^(vCPU + 2)         |
-  | DurationSecs              | Required. Duration, in seconds, to run the workload.                                                               | N/A          |
+  | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
+  | SkipInitialize              | Not Required. If true, skips the initialization of the tables and records in the database.  | True        |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

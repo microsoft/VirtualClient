@@ -27,10 +27,11 @@
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Role": "Client",
-                "Duration": "00:01:00",
-                "RecordCount": "10000",
+                "Duration": "00:30:00",
+                "RecordCount": 10000,
                 "Workload": "oltp_read_write",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipInitialize"
             }
         }
     ],

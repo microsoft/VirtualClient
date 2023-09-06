@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Net.Http;
     using System.Runtime.InteropServices;
@@ -55,8 +56,9 @@ namespace VirtualClient.Actions
         public string Duration
         {
             get
-            {
-                return this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Duration));
+            { 
+                string timeSpan = this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Duration));
+                return TimeSpan.Parse(timeSpan).TotalSeconds.ToString();
             }
         }
 
@@ -85,34 +87,44 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The workload option passed to Sysbench.
         /// </summary>
-        public string NumTables
+        public int NumTables
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumTables), out IConvertible numTables);
-                return numTables?.ToString();
-            }
+                int numTables = 10;
 
-            set
-            {
-                this.Parameters[nameof(this.NumTables)] = value;
+                if (this.Parameters.TryGetValue(nameof(this.NumTables), out IConvertible value) && value != null
+                    && this.CpuArchitecture != Architecture.Arm64)
+                {
+                    numTables = value.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return numTables;
             }
         }
 
         /// <summary>
         /// Number of records per table.
         /// </summary>
-        public string RecordCount
+        public int RecordCount
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount);
-                return recordCount?.ToString();
-            }
+                // default formulaic setup of the database
+                // records & threads depend on the core count
 
-            set
-            {
-                this.Parameters[nameof(this.RecordCount)] = value;
+                int coreCount = Environment.ProcessorCount;
+                int recordCountExponent = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
+                    (int)Math.Log2(coreCount) : (int)Math.Log2(coreCount) + 2;
+
+                int numRecords = (int)Math.Pow(10, recordCountExponent);
+
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount))
+                {
+                    numRecords = recordCount.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return numRecords;
             }
         }
 
@@ -123,19 +135,28 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(SysbenchOLTPClientExecutor.SkipInitialize), false);
+                return this.Parameters.GetValue<bool>(nameof(SysbenchOLTPClientExecutor.SkipInitialize), true);
             }
         }
 
         /// <summary>
         /// Number of threads.
         /// </summary>
-        public string Threads
+        public int Threads
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads);
-                return threads?.ToString();
+                // default formulaic setup of the database threads depend on the core count
+
+                int numThreads = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
+                    1 : Environment.ProcessorCount * 8;
+
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads) && threads != null)
+                {
+                    numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return numThreads;
             }
         }
 
@@ -223,8 +244,6 @@ namespace VirtualClient.Actions
 
             this.sysbenchDirectory = this.GetPackagePath(this.PackageName);
 
-            this.SetupDatabaseParameters();
-
             // store state with initialization status & record/table counts, if does not exist already
 
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
@@ -238,6 +257,11 @@ namespace VirtualClient.Actions
 
                 await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
+
+            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
+            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.Duration} ";
+            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -322,59 +346,11 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
         }
 
-        private void SetupDatabaseParameters()
-        {
-            // default formulaic setup of the database
-            // records & threads depend on the core count
-
-            int coreCount = Environment.ProcessorCount;
-            int numThreads = coreCount * 8;
-            int recordCountExponent = (int)Math.Log2(coreCount) + 2;
-
-            // balanced scenario requires less records & threads since
-            // focus is just on disk i/o
-
-            if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
-            {
-                recordCountExponent -= 2;
-                numThreads = 1;
-            }
-
-            // safeguard against arm64 table setup
-
-            if (this.CpuArchitecture == Architecture.Arm64 || string.IsNullOrEmpty(this.NumTables))
-            {
-                this.NumTables = "10";
-            }
-
-            int numRecords = (int)Math.Pow(10, recordCountExponent);
-
-            // update the threads, table count & record count only if they are not defined
-            // recommended for balanced & in memory scenarios to utilize
-            // programmatic setup
-
-            string durationSecs = TimeSpan.Parse(this.Duration).TotalSeconds.ToString();
-            string threads = string.IsNullOrEmpty(this.Threads) ? numThreads.ToString() : this.Threads;
-            this.RecordCount = string.IsNullOrEmpty(this.RecordCount) ? numRecords.ToString() : this.RecordCount;
-
-            // set arguments & path up based on prepare arguments in profile
-
-            this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={durationSecs} ";
-            this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
-        }
-
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
 
-            int curTables = state.NumTables;
-            int curRecords = state.RecordCount;
-            int numTables = int.Parse(this.NumTables);
-            int recordCount = int.Parse(this.RecordCount);
-
-            if (!this.SkipInitialize || numTables > curTables || recordCount > curRecords)
+            if (!this.SkipInitialize || this.NumTables > state.NumTables || this.RecordCount > state.RecordCount)
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
@@ -384,8 +360,8 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
-                state.Properties[nameof(SysbenchOLTPState.NumTables)] = numTables;
-                state.Properties[nameof(SysbenchOLTPState.RecordCount)] = recordCount;
+                state.Properties[nameof(SysbenchOLTPState.NumTables)] = this.NumTables;
+                state.Properties[nameof(SysbenchOLTPState.RecordCount)] = this.RecordCount;
 
                 // save the updated state configuration
 
