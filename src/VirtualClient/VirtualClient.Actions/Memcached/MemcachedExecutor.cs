@@ -58,7 +58,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string username = this.Parameters.GetValue<string>(nameof(HPLinpackExecutor.Username), string.Empty);
+                string username = this.Parameters.GetValue<string>(nameof(MemcachedExecutor.Username), string.Empty);
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     username = Environment.UserName;

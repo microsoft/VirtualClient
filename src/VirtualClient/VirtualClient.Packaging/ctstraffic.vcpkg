@@ -1,0 +1,6 @@
+{
+    "name": "ctstraffic",
+    "description": "Executable for running ctstraffic benchmark and exe to run process on numamode",
+    "version": "1",
+    "metadata": {}
+}

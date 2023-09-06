@@ -21,8 +21,7 @@ namespace VirtualClient.Contracts
                 {
                     List<Type> expectedTypes = new List<Type>
                     {
-                        typeof(VirtualClientComponent),
-                        typeof(IFileUploadDescriptorFactory)
+                        typeof(VirtualClientComponent)
                     };
 
                     ComponentTypeCache.Instance.LoadComponentTypes(MockFixture.TestAssemblyDirectory);

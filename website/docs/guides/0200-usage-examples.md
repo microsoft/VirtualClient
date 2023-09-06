@@ -60,10 +60,20 @@ the application can be correlated with the data captured by the automation syste
 will be included in ALL metrics, counters, logs etc... telemetry that is emitted by the application.
 
 ```
-VirtualClient.exe --profile=PERF-CPU-COREMARK.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --metadata="experimentGroup=Group A,,,nodeId=eB3fc2d9-157b-4efc-b39c-a454a0779a5b,,,tipSessionId=73e8ae54-e0a0-48b6-9bda-4a269672b9b1,,,cluster=cluster01,,,region=East US 2"
 ```
 
-## Scenario: Log Process Output to the File System
+## Scenario: Instruct the Application to Fail Fast
+Virtual Client typically will continue to retry the execution of actions within a profile in the event that one of the actions fails
+for a non-terminal reason. Users may want to instruct the application to promptly exist on any errors regardless of the severity (terminal or not).
+Note that this generally refers to 'Actions' in the profile. The application always fails fast on the failure of 'Dependencies'. 'Monitors' are
+typically implemented to handle exceptions due to the requirement they continue to operate in the background even on failure.
+
+```
+VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --packages="{BlobStoreConnectionString|SAS URI}" --fail-fast
+```
+
+## Scenario: Write the Output of Processes to the File System
 Virtual Client runs a wide range of workloads, monitors and dependency handlers when executing a given profile. The following examples show
 how to instruct the application to log the output of processes to files in the logs directory on the file system.
 

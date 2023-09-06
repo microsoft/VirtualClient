@@ -18,6 +18,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Polly;
+    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -42,6 +43,11 @@ namespace VirtualClient
         /// The ID to use for the experiment and to include in telemetry output.
         /// </summary>
         public string ExperimentId { get; set; }
+
+        /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
 
         /// <summary>
         /// True if the profile dependencies should be installed as the only operations. False if
@@ -115,6 +121,11 @@ namespace VirtualClient
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
 
+                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
+                {
+                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
+                }                
+
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
 
@@ -127,6 +138,8 @@ namespace VirtualClient
                 // the 'packages' directory already).
                 await this.InstallExtensionsAsync(packageManager, cancellationToken)
                     .ConfigureAwait(false);
+
+                this.SetHostMetadata(profileNames, dependencies);
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
@@ -608,8 +621,17 @@ namespace VirtualClient
             // VC on the command line.
             metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
             metadata["agentId"] = this.AgentId;
-
             MetadataContract.Persist(metadata, MetadataContractCategory.Default);
+        }
+
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        protected void SetHostMetadata(IEnumerable<string> profiles, IServiceCollection dependencies)
+        {
+            ILogger logger = dependencies.GetService<ILogger>();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
 
             IDictionary<string, object> hostMetadata = systemManagement.GetHostMetadataAsync(logger)
                 .GetAwaiter().GetResult();
@@ -705,6 +727,7 @@ namespace VirtualClient
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
                 profileExecutor.ExitWait = this.ExitWait;
+                profileExecutor.FailFast = this.FailFast;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {
@@ -774,6 +797,7 @@ namespace VirtualClient
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
                 profileExecutor.ExitWait = this.ExitWait;
+                profileExecutor.FailFast = this.FailFast;
 
                 profileExecutor.BeforeExiting += (source, args) =>
                 {

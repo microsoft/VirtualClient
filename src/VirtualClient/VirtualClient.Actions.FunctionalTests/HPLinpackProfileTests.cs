@@ -10,8 +10,10 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -64,7 +66,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
-        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixX64Platform(string profile)
+        public async Task HPLinpackWorkloadProfileWithOutPerformanceLibrariesExecutesExpectedCommandsOnUnixX64PlatformAsync(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
@@ -81,6 +83,11 @@ namespace VirtualClient.Actions
             };
 
             this.mockFixture.SetupWorkloadPackage("hpl.2.3", expectedFiles: expectedFiles);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1000 * 1024 * 1024));
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, true));
+
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
@@ -119,13 +126,24 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-CPU-HPLINPACK.json")]
-        public async Task HPLinpackWorkloadProfileExecutesTheExpectedWorkloadsOnUnixArm64Platform(string profile)
+        public async Task HPLinpackWorkloadProfileExecutesThxeExpectedWorkloadsOnUnixArm64Platform(string profile)
         {
             // Setup the expectations for the workload
             // - Workload package is installed and exists.
             // - Workload binaries/executables exist on the file system.
             // - The workload generates valid results.
             this.mockFixture.Setup(PlatformID.Unix, Architecture.Arm64);
+            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            {
+                OperationSystemFullName = "TestOS",
+                LinuxDistribution = LinuxDistribution.Ubuntu
+            };
+
+            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(1000 * 1024 * 1024));
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 7, Environment.ProcessorCount, 9, 10, true));
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands();
 
             string[] expectedFiles = new string[]
@@ -176,23 +194,22 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["Username"] = "testuser",
                 ["CompilerName"] = "gcc",
                 ["CompilerVersion"] = "11",
                 ["PackageName"] = "HPL",
-                ["Version"] = "2.3",
                 ["ProblemSizeN"] = "20000",
                 ["BlockSizeNB"] = "256",
                 ["Scenario"] = "ProcessorSpeed",
-                ["NumberOfProcesses"] = "2"
+                ["NumberOfProcesses"] = "2",
+                ["BindToCores"] = false,
+                ["UsePerformanceLibraries"] = false
             };
 
             return new List<string>
                 {
                     $"sudo bash -c \"source make_generic\"",
                     $"make arch=Linux_GCC",
-                    $"sudo useradd  -m {this.mockFixture.Parameters["Username"]}",
-                    $"sudo runuser -u {this.mockFixture.Parameters["Username"]} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} ./xhpl"
+                    $"sudo runuser -u {Environment.UserName} -- mpirun --use-hwthread-cpus -np {Environment.ProcessorCount} --allow-run-as-root ./xhpl"
                 };
         }
     }
