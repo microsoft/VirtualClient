@@ -113,7 +113,9 @@ namespace VirtualClient.Actions
                 // default formulaic setup of the database
                 // records & threads depend on the core count
 
-                int coreCount = Environment.ProcessorCount;
+                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                int coreCount = cpuInfo.LogicalCoreCount;
+
                 int recordCountExponent = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
                     (int)Math.Log2(coreCount) : (int)Math.Log2(coreCount) + 2;
 
@@ -148,8 +150,10 @@ namespace VirtualClient.Actions
             {
                 // default formulaic setup of the database threads depend on the core count
 
+                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+
                 int numThreads = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
-                    1 : Environment.ProcessorCount * 8;
+                    1 : cpuInfo.LogicalCoreCount * 8;
 
                 if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads) && threads != null)
                 {
