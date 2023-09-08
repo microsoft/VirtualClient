@@ -121,7 +121,8 @@ namespace VirtualClient.Actions
 
                 int numRecords = (int)Math.Pow(10, recordCountExponent);
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount))
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount)
+                    && this.DatabaseScenario != SysbenchOLTPScenario.Balanced)
                 {
                     numRecords = recordCount.ToInt32(CultureInfo.InvariantCulture);
                 }

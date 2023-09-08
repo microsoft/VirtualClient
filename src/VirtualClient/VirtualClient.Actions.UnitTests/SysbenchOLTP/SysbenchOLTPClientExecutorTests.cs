@@ -238,8 +238,8 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
-                //$"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                //$"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo {this.scriptPath}/balanced-client.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
