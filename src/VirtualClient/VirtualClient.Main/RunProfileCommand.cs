@@ -18,6 +18,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Polly;
+    using Serilog.Core;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -120,9 +121,9 @@ namespace VirtualClient
                 logger = dependencies.GetService<ILogger>();
                 packageManager = dependencies.GetService<IPackageManager>();
 
-                if (!string.IsNullOrWhiteSpace(this.ContentPathPattern))
+                if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
-                    VirtualClientComponent.ContentPathTemplate = this.ContentPathPattern;
+                    VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
                 }                
 
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
@@ -137,6 +138,8 @@ namespace VirtualClient
                 // the 'packages' directory already).
                 await this.InstallExtensionsAsync(packageManager, cancellationToken)
                     .ConfigureAwait(false);
+
+                this.SetHostMetadata(profileNames, dependencies);
 
                 // Ensure all Virtual Client types are loaded from .dlls in the execution directory.
                 ComponentTypeCache.Instance.LoadComponentTypes(Path.GetDirectoryName(Assembly.GetAssembly(typeof(Program)).Location));
@@ -618,8 +621,17 @@ namespace VirtualClient
             // VC on the command line.
             metadata["experimentId"] = this.ExperimentId.ToLowerInvariant();
             metadata["agentId"] = this.AgentId;
-
             MetadataContract.Persist(metadata, MetadataContractCategory.Default);
+        }
+
+        /// <summary>
+        /// Initializes the global/persistent telemetry properties that will be included
+        /// with all telemetry emitted from the Virtual Client.
+        /// </summary>
+        protected void SetHostMetadata(IEnumerable<string> profiles, IServiceCollection dependencies)
+        {
+            ILogger logger = dependencies.GetService<ILogger>();
+            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
 
             IDictionary<string, object> hostMetadata = systemManagement.GetHostMetadataAsync(logger)
                 .GetAwaiter().GetResult();

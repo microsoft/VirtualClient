@@ -82,13 +82,13 @@ namespace VirtualClient.Contracts
             return descriptor;
         }
 
-        private static string CreateBlobPath(FileContext fileContext, string contentPathPattern, string blobName)
+        private static string CreateBlobPath(FileContext fileContext, string pathTemplate, string blobName)
         {
             string blobPath = null;
             List<string> pathSegments = new List<string>();
 
             int i = 0;
-            foreach (string element in contentPathPattern.Split('/'))
+            foreach (string element in pathTemplate.Split('/'))
             {
                 if (i == 0)
                 {

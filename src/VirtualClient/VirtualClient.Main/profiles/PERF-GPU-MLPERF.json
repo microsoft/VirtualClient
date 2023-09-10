@@ -4,6 +4,7 @@
         "RecommendedMinimumExecutionTime": "10:00:00",
         "SupportedPlatforms": "linux-x64",
         "SupportedOperatingSystems": "Ubuntu",
+        "SupportedRequireCustomSystemSupport": "A100_PCIe_80GBx4",
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
     },
     "Parameters": {
@@ -11,7 +12,8 @@
         "DiskFilter": "SizeGreaterThan:1000gb",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
-        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run",
+        "RequireCustomSystemSupport": true
     },
     "Actions": [
         {
@@ -20,7 +22,8 @@
                 "Scenario": "inferencemodels-bert",
                 "Model": "bert",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
             }
         },
         {
@@ -29,7 +32,8 @@
                 "Scenario": "inferencemodels-rnnt",
                 "Model": "rnnt",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
             }
         },
         {
@@ -38,7 +42,8 @@
                 "Scenario": "inferencemodels-ssd-mobilenet",
                 "Model": "ssd-mobilenet",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
             }
         },
         {
@@ -47,7 +52,8 @@
                 "Scenario": "inferencemodels-ssd-resnet34",
                 "Model": "ssd-resnet34",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter"
+                "DiskFilter": "$.Parameters.DiskFilter",
+                "RequireCustomSystemSupport": "$.Parameters.RequireCustomSystemSupport"
             }
         }
     ],

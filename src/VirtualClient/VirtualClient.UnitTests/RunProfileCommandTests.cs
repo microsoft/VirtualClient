@@ -224,6 +224,11 @@ namespace VirtualClient
             {
                 base.SetGlobalTelemetryProperties(profiles, dependencies);
             }
+
+            public new void SetHostMetadata(IEnumerable<string> profiles, IServiceCollection dependencies)
+            {
+                base.SetHostMetadata(profiles, dependencies);
+            }
         }
 
         private static Tuple<string, string> GetAccessTokenPair()

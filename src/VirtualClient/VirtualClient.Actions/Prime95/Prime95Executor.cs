@@ -10,11 +10,13 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Prime95 workload executor.
@@ -158,7 +160,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path to the Prime95 workload package.
         /// </summary>
-        protected DependencyPath WorkloadPackage { get; private set; }
+        protected DependencyPath Prime95Package { get; private set; }
 
         /// <summary>
         /// Executes cleanup operations.
@@ -187,16 +189,16 @@ namespace VirtualClient.Actions
         {
             await this.EvaluateParametersAsync(cancellationToken);
 
-            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
+            this.Prime95Package = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "prime95.exe");
+                    this.ExecutablePath = this.Combine(this.Prime95Package.Path, "prime95.exe");
                     break;
 
                 case PlatformID.Unix:
-                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "mprime");
+                    this.ExecutablePath = this.Combine(this.Prime95Package.Path, "mprime");
                     break;
 
                 default:
@@ -217,8 +219,8 @@ namespace VirtualClient.Actions
                     ErrorReason.DependencyNotFound);
             }
 
-            this.SettingsFilePath = this.Combine(this.WorkloadPackage.Path, "prime.txt");
-            this.ResultsFilePath = this.Combine(this.WorkloadPackage.Path, "results.txt");
+            this.SettingsFilePath = this.Combine(this.Prime95Package.Path, "prime.txt");
+            this.ResultsFilePath = this.Combine(this.Prime95Package.Path, "results.txt");
         }
 
         /// <summary>
@@ -231,6 +233,22 @@ namespace VirtualClient.Actions
                 await this.CreatePrime95SettingsFileAsync(this.SettingsFilePath);
                 await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
             }
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// operating system and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported() && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("Prime95", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>
@@ -275,7 +293,7 @@ namespace VirtualClient.Actions
 
                 await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.WorkloadPackage.Path))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.Prime95Package.Path))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -291,19 +309,28 @@ namespace VirtualClient.Actions
                             if (!cancellationToken.IsCancellationRequested)
                             {
                                 string results = null;
-                                if (this.fileSystem.File.Exists(this.ResultsFilePath))
+
+                                try
                                 {
-                                    results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
-                                }
+                                    if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                    {
+                                        results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
+                                    }
+                                    
+                                    if (string.IsNullOrWhiteSpace(results))
+                                    {
+                                        throw new WorkloadResultsException(
+                                            $"Prime95 results file not found at path '{this.ResultsFilePath}'.",
+                                            ErrorReason.WorkloadResultsNotFound);
+                                    }
 
-                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results?.AsArray(), logToFile: true);
-
-                                // The exit code on SafeKill is -1 which is not a part of the default success codes.
-                                process.ThrowIfWorkloadFailed(this.successExitCodes);
-
-                                if (!string.IsNullOrWhiteSpace(results))
-                                {
+                                    // The exit code on SafeKill is -1 which is not a part of the default success codes.
+                                    process.ThrowIfWorkloadFailed(this.successExitCodes);
                                     this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
+                                }
+                                finally
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results?.AsArray());
                                 }
                             }
                         }
@@ -340,6 +367,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "Prime95",
+                    process.FullCommand(),
+                    toolVersion: this.Prime95Package.Version);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 Prime95MetricsParser parser = new Prime95MetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
 

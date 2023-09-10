@@ -132,7 +132,7 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
                 
-                Assert.AreEqual("Invalid results. The Prime95 workload did not produce valid results.", exception.Message);
+                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
             }
         }
 
@@ -152,7 +152,7 @@ namespace VirtualClient.Actions
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                     () => executor.ExecuteAsync(CancellationToken.None));
 
-                Assert.AreEqual($"Expected results file '{this.mockPackage.Path + resultsPath}' not found.", exception.Message);
+                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
             }
         }
 

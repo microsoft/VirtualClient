@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -227,7 +226,7 @@ namespace VirtualClient.Actions
                     }
                     finally
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, "FurMark", furmarkResults, logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "FurMark", furmarkResults);
                     }
                 }
             }

@@ -89,21 +89,21 @@ are granted to the Virtual Client application for uploading and downloading blob
 
 
 ### Blob Store Folder/File Naming Conventions
-In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, Virtual Client supports a flexible blob path pattern.
+In  order to ensure that files associated with Virtual Client executors or monitors are easy to find in the blob stores, Virtual Client supports a flexible blob path template.
 At a high level, all files associated with a given experiment are contained together in the blob store.
 
-The virtual path of uploaded logs in blob storage is controlled by a VirtualClient Command Line Option parameter "--contentPathPattern".
+The virtual path of uploaded logs in blob storage is controlled by a VirtualClient Command Line Option parameter "--contentPathTemplate".
 
-Example: --contentPathPattern="any-value1/{standardProperty1}any-value2{standardProperty2}/{standardProperty3}/any-value3/{standardProperty4}".
+Example: --contentPathTemplate="any-value1/{standardProperty1}any-value2{standardProperty2}/{standardProperty3}/any-value3/{standardProperty4}".
 
 In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in the 
-ContentPathPattern. The inlined values that are enclosed within brackets "{}", like "standaradProperty1" and "standaradProperty2", 
+ContentPathTemplate. The inlined values that are enclosed within brackets "{}", like "standaradProperty1" and "standaradProperty2", 
 needs to be one among the 5 defined standard properties of Virtual Client (ExperimentId, AgentId, ToolName, Role, Scenario).
 
-The first component of ContentPathPattern (any-value1 in above example) will be taken up as the name of Blob storage Container where all files will be uploaded.
+The first component of ContentPathTemplate (any-value1 in above example) will be taken up as the name of Blob storage Container where all files will be uploaded.
 The next component ({standardProperty1} in above example) will be the root folder within the container and so on for the complete virtual folder structure within the blob storage.
 
-The default value of "ContentPathPattern" is "{experimentId}/{agentId}/{toolName}/{role}/{scenario}". In the default template, each element 
+The default value of "ContentPathTemplate" is "{experimentId}/{agentId}/{toolName}/{role}/{scenario}". In the default template, each element 
 is a standard property identified by Virtual Client.
 
 * **Experiment ID**  
@@ -124,7 +124,7 @@ is a standard property identified by Virtual Client.
 * **ScenarioName**  
   It is an indicator of the scenario being tested by the workload. It is defined for each action/monitor in an execution profile.
 
-All files will be uploaded in a virtual folder structure as defined by the ContentPathPattern. For each file uploaded, a timestamp will be 
+All files will be uploaded in a virtual folder structure as defined by the ContentPathTemplate. For each file uploaded, a timestamp will be 
 prefixed to it so as to provide unique names.
 
 * **File Name**  
@@ -140,9 +140,9 @@ Given the pieces of information noted above, the format for virtual paths and fi
 
 
 ``` csharp
-// ContentPathPattern and Parameters as defined in Virtual Client CommandLine:
+// ContentPathTemplate and Parameters as defined in Virtual Client CommandLine:
 // -----------------------------------------------
-VirtualClient.exe --profile=........ --contentPathPattern="value1/expt_{experimentId}_agent_{agentId}/{toolName}/value-2" 
+VirtualClient.exe --profile=........ --contentPathTemplate="value1/expt_{experimentId}_agent_{agentId}/{toolName}/value-2" 
 
 // Examples:
 // -----------------------------------------------

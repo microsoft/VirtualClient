@@ -1,30 +1,65 @@
 {
-    "Description": "Prime95 Workload",
+    "Description": "Prime95 CPU stress workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",
         "SupportedPlatforms": "linux-x64,win-x64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "TimeInMins": "60",
-        "MinTortureFFT": "4",
-        "MaxTortureFFT": "8192",
-        "TortureHyperthreading": "1",
-        "FFTConfiguration": "0",
-        "ThreadCount": ""
+        "Duration": "00:15:00",
+        "ThreadCount": "{calculate({LogicalCoreCount} - 1)}"
     },
     "Actions": [
         {
             "Type": "Prime95Executor",
             "Parameters": {
-                "Scenario": "ApplyCPUStress",
-                "CommandLine": "-t",
-                "TimeInMins": "$.Parameters.TimeInMins",
-                "MinTortureFFT": "$.Parameters.MinTortureFFT",
-                "MaxTortureFFT": "$.Parameters.MaxTortureFFT",
-                "TortureHyperthreading": "$.Parameters.TortureHyperthreading",
-                "FFTConfiguration": "$.Parameters.FFTConfiguration",
+                "Scenario": "CPUStress_FFT_512",
+                "MetricScenario": "cpustress_t{ThreadCount}_fft{MaxTortureFFT}_{Duration.TotalMinutes}mins",
+                "MinTortureFFT": 512,
+                "MaxTortureFFT": 512,
+                "UseHyperthreading": true,
                 "ThreadCount": "$.Parameters.ThreadCount",
+                "Duration": "$.Parameters.Duration",
+                "PackageName": "prime95",
+                "Notes": "Prime95 will run through a range of FFT sizes from the minimum to maximum defined above. Each FFT size will be executed for the amount of time defined so the total time equals #FFTs x time. Ranges = 512K, 560K, 640K, 672K, 800K, 896K, 960K, 1024K..."
+            }
+        },
+        {
+            "Type": "Prime95Executor",
+            "Parameters": {
+                "Scenario": "CPUStress_FFT_640",
+                "MetricScenario": "cpustress_t{ThreadCount}_fft{MaxTortureFFT}_{Duration.TotalMinutes}mins",
+                "MinTortureFFT": 640,
+                "MaxTortureFFT": 640,
+                "UseHyperthreading": true,
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "Duration": "$.Parameters.Duration",
+                "PackageName": "prime95"
+            }
+        },
+        {
+            "Type": "Prime95Executor",
+            "Parameters": {
+                "Scenario": "CPUStress_FFT_896",
+                "MetricScenario": "cpustress_t{ThreadCount}_fft{MaxTortureFFT}_{Duration.TotalMinutes}mins",
+                "MinTortureFFT": 896,
+                "MaxTortureFFT": 896,
+                "UseHyperthreading": true,
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "Duration": "$.Parameters.Duration",
+                "PackageName": "prime95"
+            }
+        },
+        {
+            "Type": "Prime95Executor",
+            "Parameters": {
+                "Scenario": "CPUStress_FFT_1024",
+                "MetricScenario": "cpustress_t{ThreadCount}_fft{MaxTortureFFT}_{Duration.TotalMinutes}mins",
+                "MinTortureFFT": 1024,
+                "MaxTortureFFT": 1024,
+                "UseHyperthreading": true,
+                "ThreadCount": "$.Parameters.ThreadCount",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "prime95"
             }
         }

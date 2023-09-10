@@ -56,19 +56,30 @@ namespace VirtualClient.Actions
                 this.testParser = new MLPerfMetricsParser(this.rawText, true);
                 IList<Metric> metrics = this.testParser.Parse();
 
-                Assert.AreEqual(3, metrics.Count);
+                Assert.AreEqual(12, metrics.Count);
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-AccuracyMode", 1, "PASS/FAIL");
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-ThresholdValue", 90.783);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-AccuracyValue", 91.873);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Server-Accuracy Threshold Ratio", 1.0120066532280274);
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-AccuracyMode", 1, "PASS/FAIL");
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-ThresholdValue", 90.783);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-AccuracyValue", 91.568);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-SingleStream-Accuracy Threshold Ratio", 1.0086469933798177);
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-AccuracyMode", 0, "PASS/FAIL");
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-ThresholdValue", 90.783);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-AccuracyValue", 90.723);
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT-custom_k_99_9_MaxP-Offline-Accuracy Threshold Ratio", 0.99933908330854893);
             }
             else
             {
                 this.testParser = new MLPerfMetricsParser(this.rawText, false);
                 IList<Metric> metrics = this.testParser.Parse();
 
-                Assert.AreEqual(2, metrics.Count);
+                Assert.AreEqual(4, metrics.Count);
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server-PerformanceMode", 0, "VALID/INVALID");
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-Server-result_scheduled_samples_per_sec", 4751.78);
                 MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream-PerformanceMode", 1, "VALID/INVALID");
+                MetricAssert.Exists(metrics, "A100-PCIe-80GBx4_TRT_Triton-triton_k_99_9_MaxP-SingleStream-result_90.00_percentile_latency_ns", 2202969);
             }
         }
     }
