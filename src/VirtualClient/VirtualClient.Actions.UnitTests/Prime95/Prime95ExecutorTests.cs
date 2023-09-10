@@ -7,17 +7,12 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Reflection;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using VirtualClient.Common;
-    using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
-    using VirtualClient.Contracts;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -92,53 +87,29 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
-        public void Prime95ExecutorThrowsOnInvalidProfileDefinition(PlatformID platform)
+        public void Prime95ExecutorValidatesProfileParameters(PlatformID platform)
         {
             this.SetupDefaultBehavior(platform);
-            
-            this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = string.Empty;
+
+            this.fixture.Parameters[nameof(Prime95Executor.Duration)] = TimeSpan.Zero.ToString();
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(Prime95Executor.Scenario)] = "Prime95Workload";
-            this.fixture.Parameters[nameof(Prime95Executor.CommandLine)] = null;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(Prime95Executor.CommandLine)] = "-t";
-            this.fixture.Parameters[nameof(Prime95Executor.TimeInMins)] = "0";
+            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = -1;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
             }
 
-            this.fixture.Parameters[nameof(Prime95Executor.TimeInMins)] = "1";
-            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = "-1";
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
-            {
-                Assert.Throws<WorkloadException>(() => executor.Validate());
-            }
-
-            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = "8";
-            this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = "4";
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
-            {
-                Assert.Throws<WorkloadException>(() => executor.Validate());
-            }
-
-            this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = "8192";
-            this.fixture.Parameters[nameof(Prime95Executor.FFTConfiguration)] = "5";
-            using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
-            {
-                Assert.Throws<WorkloadException>(() => executor.Validate());
-            }
-
-            this.fixture.Parameters[nameof(Prime95Executor.FFTConfiguration)] = "0";
-            this.fixture.Parameters[nameof(Prime95Executor.TortureHyperthreading)] = "5";
+            this.fixture.Parameters[nameof(Prime95Executor.MinTortureFFT)] = 100;
+            this.fixture.Parameters[nameof(Prime95Executor.MaxTortureFFT)] = 1;
             using (TestPrime95Executor executor = new TestPrime95Executor(this.fixture))
             {
                 Assert.Throws<WorkloadException>(() => executor.Validate());
@@ -206,14 +177,12 @@ namespace VirtualClient.Actions
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(Prime95Executor.PackageName), "prime95" },
-                { nameof(Prime95Executor.CommandLine), "-t" },
                 { nameof(Prime95Executor.Scenario), "Prime95Workload" },
-                { nameof(Prime95Executor.TimeInMins), "1" },
+                { nameof(Prime95Executor.Duration), "00:30:00" },
                 { nameof(Prime95Executor.MinTortureFFT), "4" },
                 { nameof(Prime95Executor.MaxTortureFFT), "8192" },
-                { nameof(Prime95Executor.TortureHyperthreading), "1" },
-                { nameof(Prime95Executor.ThreadCount), "" },
-                { nameof(Prime95Executor.FFTConfiguration), "0" }
+                { nameof(Prime95Executor.UseHyperthreading), true },
+                { nameof(Prime95Executor.ThreadCount), 2 }
             };
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;

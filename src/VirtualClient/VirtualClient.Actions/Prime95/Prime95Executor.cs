@@ -5,7 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +15,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Prime95 workload executor.
@@ -42,57 +43,38 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The command line argument defined in the profile.
+        /// The length of time in which to run the Prime95 workload.
         /// </summary>
-        public string CommandLine
+        public TimeSpan Duration
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(Prime95Executor.CommandLine));
-            }
-        }
-
-        /// <summary>
-        /// The TimeInMins argument defined in the profile.
-        /// </summary>
-        public int TimeInMins
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(Prime95Executor.TimeInMins));
-            }
-        }
-
-        /// <summary>
-        /// The TortureHyperthreading argument defined in the profile, Switch to toggle Prime95 built-in hyperthreading option
-        /// </summary>
-        public int TortureHyperthreading
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(Prime95Executor.TortureHyperthreading));
-            }
-        }
-
-        /// <summary>
-        /// The FFT Configuration argument defined in the profile.
-        /// </summary>
-        public int FFTConfiguration
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(Prime95Executor.FFTConfiguration));
+                return this.Parameters.GetTimeSpanValue(nameof(this.Duration));
             }
         }
 
         /// <summary>
         /// The argument for Mininum FFTSize defined in the profile.
+        /// <list type="bullet">
+        /// <item>
+        /// <term>Smallest FFT values</term>
+        /// <description>4K-32K</description>
+        /// </item>
+        /// <item>
+        /// <term>Small FFT values</term>
+        /// <description>32K-1024K</description>
+        /// </item>
+        /// <item>
+        /// <term>Large FFT values</term>
+        /// <description>2048K-8192K</description>
+        /// </item>
+        /// </list>
         /// </summary>
         public int MinTortureFFT
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(Prime95Executor.MinTortureFFT));
+                return this.Parameters.GetValue<int>(nameof(this.MinTortureFFT));
             }
 
             set
@@ -103,12 +85,26 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// The argument for Maximum FFTSize defined in the profile.
+        /// <list type="bullet">
+        /// <item>
+        /// <term>Smallest FFT values</term>
+        /// <description>4K-32K</description>
+        /// </item>
+        /// <item>
+        /// <term>Small FFT values</term>
+        /// <description>32K-1024K</description>
+        /// </item>
+        /// <item>
+        /// <term>Large FFT values</term>
+        /// <description>2048K-8192K</description>
+        /// </item>
+        /// </list>
         /// </summary>
         public int MaxTortureFFT
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(Prime95Executor.MaxTortureFFT));
+                return this.Parameters.GetValue<int>(nameof(this.MaxTortureFFT));
             }
 
             set
@@ -124,8 +120,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string numThread = this.Parameters.GetValue<string>(nameof(Prime95Executor.ThreadCount));
-                return string.IsNullOrWhiteSpace(numThread) ? 0 : int.Parse(numThread);
+                return this.Parameters.GetValue<int>(nameof(this.ThreadCount), (Environment.ProcessorCount / 2));
             }
 
             set
@@ -135,34 +130,73 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The path to the Prime95 package.
+        /// True to use Intel/AMD hyperthreading.
         /// </summary>
-        private string PackageDirectory { get; set; }
+        public bool UseHyperthreading
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.UseHyperthreading), true);
+            }
+        }
 
         /// <summary>
         /// The path to the Prime95 executable file.
         /// </summary>
-        private string ExecutablePath { get; set; }
+        protected string ExecutablePath { get; private set; }
+
+        /// <summary>
+        /// The path to the Prime95 results file.
+        /// </summary>
+        protected string ResultsFilePath { get; private set; }
+
+        /// <summary>
+        /// The path to the prime95.txt file.
+        /// </summary>
+        protected string SettingsFilePath { get; private set; }
+
+        /// <summary>
+        /// The path to the Prime95 workload package.
+        /// </summary>
+        protected DependencyPath WorkloadPackage { get; private set; }
+
+        /// <summary>
+        /// Executes cleanup operations.
+        /// </summary>
+        protected override async Task CleanupAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            await base.CleanupAsync(telemetryContext, cancellationToken);
+            ProcessManager processManager = this.Dependencies.GetService<ProcessManager>();
+
+            string processName = Path.GetFileNameWithoutExtension(this.ExecutablePath);
+            IEnumerable<IProcessProxy> runningProcesses = processManager.GetProcesses(Path.GetFileNameWithoutExtension(processName));
+
+            if (runningProcesses?.Any() == true)
+            {
+                foreach (IProcessProxy processProxy in runningProcesses)
+                {
+                    processProxy.SafeKill();
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes the environment for execution of the Prime95 workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            await this.EvaluateParametersAsync(cancellationToken);
 
-            this.PackageDirectory = workloadPackage.Path;
+            this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "prime95.exe");
+                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "prime95.exe");
                     break;
 
                 case PlatformID.Unix:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "mprime");
+                    this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, "mprime");
                     break;
 
                 default:
@@ -172,8 +206,7 @@ namespace VirtualClient.Actions
                         ErrorReason.PlatformNotSupported);
             }
 
-            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken)
-                .ConfigureAwait(false);
+            await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
             {
@@ -183,6 +216,9 @@ namespace VirtualClient.Actions
                     $"exists in the path expected '{this.ExecutablePath}'.",
                     ErrorReason.DependencyNotFound);
             }
+
+            this.SettingsFilePath = this.Combine(this.WorkloadPackage.Path, "prime.txt");
+            this.ResultsFilePath = this.Combine(this.WorkloadPackage.Path, "results.txt");
         }
 
         /// <summary>
@@ -190,12 +226,10 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ApplyFFTConfiguration();
-
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.CreatePrime95SettingsFileAsync(this.SettingsFilePath);
+                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
             }
         }
 
@@ -204,79 +238,25 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override void Validate()
         {
-            if (string.IsNullOrWhiteSpace(this.Scenario))
+            if (this.Duration <= TimeSpan.Zero)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition. The action in the profile does not contain the " +
-                    $"required '{nameof(this.Scenario)}' arguments defined.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (string.IsNullOrWhiteSpace(this.CommandLine))
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required '{nameof(this.CommandLine)}' arguments defined.",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (this.TimeInMins <= 0)
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.TimeInMins)}' arguments defined. {nameof(this.TimeInMins)} should be greater than 0",
+                    $"Invalid '{nameof(this.Duration)}' parameter value. The duration parameter must be greater than zero." +
                     ErrorReason.InvalidProfileDefinition);
             }
 
             if (this.MinTortureFFT <= 0)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for'{nameof(this.MinTortureFFT)}' arguments defined. {nameof(this.MinTortureFFT)} should be greater than 0",
+                    $"Invalid '{nameof(this.MinTortureFFT)}' parameter value. The minimum torture FFT value must be greater than zero.",
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.MaxTortureFFT <= this.MinTortureFFT)
+            if (this.MaxTortureFFT < this.MinTortureFFT)
             {
                 throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for '{nameof(this.MaxTortureFFT)}' arguments defined. {nameof(this.MaxTortureFFT)} should be greater than {nameof(this.MinTortureFFT)}",
+                    $"Invalid '{nameof(this.MaxTortureFFT)}' parameter value. The maximum torture FFT value must be greater than or equal to the '{nameof(this.MinTortureFFT)}' parameter value.",
                     ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (this.FFTConfiguration < 0 || this.FFTConfiguration > 3)
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for '{nameof(this.FFTConfiguration)}' arguments defined. Expected Range of {nameof(this.FFTConfiguration)} is 0-3 " +
-                    $"0 -  Custom/Blend, 1- Smallest FFTs, 2- Small FFTs, 3- Large FFTs",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            if (this.TortureHyperthreading < 0 || this.TortureHyperthreading > 1)
-            {
-                throw new WorkloadException(
-                    $"Unexpected profile definition.The action in the profile does not contain the " +
-                    $"required value for '{nameof(this.TortureHyperthreading)}' arguments defined. Expected Range of {nameof(this.TortureHyperthreading)} is 0-1 " +
-                    $"0- false, 1- true",
-                    ErrorReason.InvalidProfileDefinition);
-            }
-
-            // SetDefaultThreadValue if not set and Validate Parameter
-            int numberOfLogicalCores = Environment.ProcessorCount;
-            if (this.ThreadCount <= 0 ||
-                this.ThreadCount > numberOfLogicalCores ||
-                (this.ThreadCount > numberOfLogicalCores / 2 && this.TortureHyperthreading == 1))
-            {
-                switch (this.TortureHyperthreading)
-                {
-                    case 0:
-                        this.ThreadCount = numberOfLogicalCores;
-                        break;
-                    case 1:
-                        this.ThreadCount = numberOfLogicalCores / 2;
-                        break;
-                }
             }
         }
 
@@ -287,154 +267,94 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                string commandArguments = this.CommandLine;
+                string commandArguments = "-t";
 
                 EventContext relatedContext = telemetryContext.Clone()
                     .AddContext("command", this.ExecutablePath)
                     .AddContext("commandArguments", commandArguments);
 
-                string prime95ParameterFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "prime.txt");
-                this.CreateFileForPrime95Parameters(prime95ParameterFilePath);
-
-                await this.Logger.LogMessageAsync($"{nameof(Prime95Executor)}.ExecuteProcess", telemetryContext, async () =>
+                await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
                 {
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.PackageDirectory))
+                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.WorkloadPackage.Path))
                     {
                         this.CleanupTasks.Add(() => process.SafeKill());
-                        System.TimeSpan timeSpanInMins = TimeSpan.FromMinutes(this.TimeInMins);
 
-                        try
-                        {
-                            await process.StartAndWaitAsync(cancellationToken, timeSpanInMins);
-                        }
-                        catch (System.TimeoutException)
-                        {
-                            // Expected if the process does not exit as expected.
-                        }
-                        finally
-                        {
-                            if (!process.HasExited)
-                            {
-                                process.SafeKill();
-                            }
-                        }
+                        // Prime95 does not stop on it's own. It will run until you tell it to stop.
+                        // We have to definitively stop the program.
+                        DateTime explicitTimeout = DateTime.UtcNow.Add(this.Duration);
 
-                        if (!cancellationToken.IsCancellationRequested)
+                        if (process.Start())
                         {
-                            if (process.IsErrored(this.successExitCodes))
+                            await this.WaitAsync(explicitTimeout, cancellationToken);
+                            process.SafeKill();
+
+                            if (!cancellationToken.IsCancellationRequested)
                             {
-                                this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", logToFile: true);
+                                string results = null;
+                                if (this.fileSystem.File.Exists(this.ResultsFilePath))
+                                {
+                                    results = await this.fileSystem.File.ReadAllTextAsync(this.ResultsFilePath);
+                                }
+
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results?.AsArray(), logToFile: true);
 
                                 // The exit code on SafeKill is -1 which is not a part of the default success codes.
                                 process.ThrowIfWorkloadFailed(this.successExitCodes);
-                            }
 
-                            await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
+                                if (!string.IsNullOrWhiteSpace(results))
+                                {
+                                    this.CaptureMetrics(process, results, telemetryContext, cancellationToken);
+                                }
+                            }
                         }
                     }
-                }).ConfigureAwait(false);
+                });
             }
         }
 
         /// <summary>
         /// Creates prime.txt file in working directory for providing configuration arguments to prime95
         /// </summary>
-        /// <param name="argumentsFilePath">The file path to write the argument file to.</param>
-        private void CreateFileForPrime95Parameters(string argumentsFilePath)
+        /// <param name="settingsFilePath">The file path to write the argument file to.</param>
+        private Task CreatePrime95SettingsFileAsync(string settingsFilePath)
         {
-            string prime95Arguments = 
-                $"ErrorCheck=1\n" +
-                $"SumInputsErrorCheck=1\n" +
-                $"V24OptionsConverted=1\n" +
-                $"TortureHyperthreading={this.TortureHyperthreading}\n" +
-                $"StressTester=1\n" +
-                $"TortureThreads={this.ThreadCount}\n" +
-                $"MinTortureFFT={this.MinTortureFFT}\n" +
-                $"MaxTortureFFT={this.MaxTortureFFT}\n" +
-                $"TortureTime=5\n" +
+            string prime95Arguments =
+                $"ErrorCheck=1{Environment.NewLine}" +
+                $"SumInputsErrorCheck=1{Environment.NewLine}" +
+                $"V24OptionsConverted=1{Environment.NewLine}" +
+                $"TortureHyperthreading={(this.UseHyperthreading ? 1 : 0)}{Environment.NewLine}" +
+                $"StressTester=1{Environment.NewLine}" +
+                $"TortureThreads={this.ThreadCount}{Environment.NewLine}" +
+                $"MinTortureFFT={this.MinTortureFFT}{Environment.NewLine}" +
+                $"MaxTortureFFT={this.MaxTortureFFT}{Environment.NewLine}" +
+                $"TortureTime=1{Environment.NewLine}" +
                 $"UsePrimenet=0\n";
 
-            this.fileSystem.File.WriteAllText(argumentsFilePath, prime95Arguments);
-
-            if (!this.fileSystem.File.Exists(argumentsFilePath))
-            {
-                throw new WorkloadException(
-                    "The Prime95 workload couldn't create the prime.txt for setting arguments and configurations of WL.",
-                    ErrorReason.WorkloadDependencyMissing);
-            }
-        }
-
-        /// <summary>
-        /// Sets MinTortureFFT and MaxTortureFFT as per FFTConfiguration provided
-        /// FFTConfiguration 0: Custom values or Default Values (4K-8192K)
-        /// FFTConfiguration 1: Smallest FFT values (4K-32K)
-        /// FFTConfiguration 2: Small FFT values (32K-1024K)
-        /// FFTConfiguration 3: Large FFT values (2048K-8192K)
-        /// </summary>
-        private void ApplyFFTConfiguration()
-        {
-            switch (this.FFTConfiguration)
-            {
-                case 0:
-                    break;
-                case 1:
-                    this.MinTortureFFT = 4;
-                    this.MaxTortureFFT = 32;
-                    break;
-                case 2:
-                    this.MinTortureFFT = 32;
-                    this.MaxTortureFFT = 1024;
-                    break;
-                case 3:
-                    this.MinTortureFFT = 2048;
-                    this.MaxTortureFFT = 8192;
-                    break;
-            }
+            return this.fileSystem.File.WriteAllTextAsync(settingsFilePath, prime95Arguments);
         }
 
         /// <summary>
         /// Logs the Prime95 workload metrics.
         /// </summary>
-        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, string results, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                this.MetadataContract.AddForScenario(
-                    "Prime95",
-                    process.FullCommand(),
-                    toolVersion: null);
-
-                this.MetadataContract.Apply(telemetryContext);
-
-                DateTime endtime = DateTime.UtcNow;
-                string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, "results.txt");
-                string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
-
-                await this.LogProcessDetailsAsync(process, telemetryContext, "Prime95", results: results.AsArray(), logToFile: true);
-
-                if (string.IsNullOrWhiteSpace(results))
-                {
-                    throw new WorkloadResultsException($"Invalid results. The Prime95 workload did not produce valid results.", ErrorReason.InvalidResults);
-                }
-
-                double runTimeInSeconds = process.ExitTime.Subtract(process.StartTime).TotalSeconds;
-                
                 Prime95MetricsParser parser = new Prime95MetricsParser(results);
                 IList<Metric> workloadMetrics = parser.Parse();
-                workloadMetrics.Add(new Metric("testTime", runTimeInSeconds, "seconds", MetricRelativity.HigherIsBetter));
 
                 this.Logger.LogMetrics(
                     "Prime95",
-                    this.Scenario + "_" + this.TimeInMins + "mins_" + this.MinTortureFFT + "K-" + this.MaxTortureFFT + "K_" + this.ThreadCount + "threads",
+                    // e.g.
+                    // cpustress_t32_fft4-8192_20mins
+                    $"cpustress_t{this.ThreadCount}_fft{this.MinTortureFFT}-{this.MaxTortureFFT}_{this.Duration.TotalMinutes}mins",
                     process.StartTime,
-                    endtime,
+                    DateTime.UtcNow,
                     workloadMetrics,
                     null,
-                    this.CommandLine,
+                    process.FullCommand(),
                     this.Tags,
                     telemetryContext);
-
-                await this.fileSystem.File.DeleteAsync(resultsPath);
             }
         }
     }

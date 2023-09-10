@@ -1,9 +1,4 @@
 ﻿# Developing Extensions
-
-:::danger
-This document hasn't been migrated. Links will be broken.
-:::
-
 The following sections cover the fundamentals to consider when developing extensions to the Virtual Client. Extensions refers to profiles or component
 binaries/.dlls containing actions, monitors, dependency handlers etc... that are developed in a separate repo/location than the Virtual Client platform/core
 repo. Extensions allow development teams to add features to the Virtual Client runtime platform that are specialized towards their team's needs and charter.
@@ -249,7 +244,7 @@ be integrated into the Virtual Client runtime.
   }
   ```
   
-  ...Then use it! Note that the profile can exist in another directory location and be referenced by the path to the file (full or relative path).
+  ...Then you can use it! Note that the profile can exist in another directory location and be referenced by the path to the file (full or relative path).
 
 
   ```bash
@@ -257,7 +252,7 @@ be integrated into the Virtual Client runtime.
   /container=packages/blob=crc.vc.extensions.zip
 
   # 1) Execute Bootstrap Command
-  /VirtualClient/VirtualClient.exe --profile=S:\Some\Other\Folder\BOOTSTRAP-EXTENSIONS.json --installDependencies --packages="{BlobStoreConnectionString|SAS URI}"
+  /VirtualClient/VirtualClient.exe --profile=S:\Some\Other\Folder\BOOTSTRAP-EXTENSIONS.json --dependencies --packages="{BlobStoreConnectionString|SAS URI}"
 
   # 2) Execute Extensions Profile
   /VirtualClient/VirtualClient.exe --profile=EXAMPLE-WORKLOAD-PROFILE.json --timeout=1440

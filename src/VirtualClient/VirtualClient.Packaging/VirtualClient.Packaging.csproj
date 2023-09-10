@@ -43,6 +43,9 @@
         <!-- Framework Package = Microsoft.AspNetCore.Hosting -->
         <NuspecProperties>$(NuspecProperties);Microsoft_AspNetCore_Hosting_Version=$(Microsoft_AspNetCore_Hosting_PackageVersion)</NuspecProperties>
 
+        <!-- Framework Package = Microsoft.CodeAnalysis.CSharp.Scripting -->
+        <NuspecProperties>$(NuspecProperties);Microsoft_CodeAnalysis_CSharp_Scripting_Version=$(Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion)</NuspecProperties>
+        
         <!-- Framework Package = Microsoft.Extensions.Configuration -->
         <NuspecProperties>$(NuspecProperties);Microsoft_Extensions_Configuration_Version=$(Microsoft_Extensions_Configuration_PackageVersion)</NuspecProperties>
 
