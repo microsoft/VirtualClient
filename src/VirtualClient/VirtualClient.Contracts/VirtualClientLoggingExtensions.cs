@@ -8,6 +8,7 @@ namespace VirtualClient.Contracts
     using System.Diagnostics;
     using System.Linq;
     using System.Net.Http;
+    using System.Runtime.InteropServices;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -759,6 +760,38 @@ namespace VirtualClient.Contracts
             metricsContext.Properties.AddRange(properties, withReplace: true);
 
             VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName}.ScenarioResult", LogLevel.Information, LogType.Metrics, metricsContext);
+        }
+
+        /// <summary>
+        /// Extension logs a message indicating the component, toolset or scenario is not supported.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="toolName">Provides context The component, toolset or scenario that is not supported.</param>
+        /// <param name="platform">The OS platform for which the application is running and for which the component, toolset or scenario is not supported.</param>
+        /// <param name="architecture">The CPU architecture for which the application is running and for which the component, toolset or scenario is not supported.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        /// <param name="additionalContext">A message providing additional context on why the component, toolset or scenario is not supported.</param>
+        public static void LogNotSupported(this ILogger logger, string toolName, PlatformID platform, Architecture architecture, EventContext eventContext, string additionalContext = null)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            toolName.ThrowIfNullOrWhiteSpace(nameof(toolName));
+            eventContext.ThrowIfNull(nameof(eventContext));
+
+            string platformArchitecture = PlatformSpecifics.GetPlatformArchitectureName(platform, architecture, false);
+
+            EventContext relatedContext = eventContext.Clone()
+                .AddContext("unsupportedOnPlatform", platformArchitecture);
+
+            if (!string.IsNullOrWhiteSpace(additionalContext))
+            {
+                relatedContext.AddContext("unsupportedOnPlatformContext", additionalContext);
+            }
+
+            // e.g.
+            // Component.NotSupported
+            // DiskSpd.NotSupported
+            VirtualClientLoggingExtensions.LogMessage(logger, $"{toolName.RemoveWhitespace()}.NotSupported", relatedContext);
+            VirtualClientLoggingExtensions.LogTraceMessage(logger, $"'{toolName}' not supported on '{platformArchitecture}' systems. {additionalContext}".Trim(), relatedContext);
         }
 
         /// <summary>

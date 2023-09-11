@@ -14,6 +14,7 @@
             <group targetFramework=".net6.0">
                 <dependency id="MathNet.Numerics.Signed" version="$MathNet_Numerics_Signed_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.AspNetCore.Hosting" version="$Microsoft_AspNetCore_Hosting_Version$" exclude="Build,Analyzers" />
+                <dependency id="Microsoft.CodeAnalysis.CSharp.Scripting" version="$Microsoft_CodeAnalysis_CSharp_Scripting_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Configuration" version="$Microsoft_Extensions_Configuration_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.DependencyInjection" version="$Microsoft_Extensions_DependencyInjection_Version$" exclude="Build,Analyzers" />
                 <dependency id="Microsoft.Extensions.Logging" version="$Microsoft_Extensions_Logging_Version$" exclude="Build,Analyzers" />

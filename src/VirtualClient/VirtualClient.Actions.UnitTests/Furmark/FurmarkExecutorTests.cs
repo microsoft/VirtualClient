@@ -3,60 +3,51 @@
 
 namespace VirtualClient.Actions
 {
-    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using AutoFixture;
-    using VirtualClient.Contracts;
-    using Microsoft.Extensions.DependencyInjection;
-    using System.Threading;
-    using System.Reflection;
     using System.IO;
-    using Moq;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+    using Moq;
+    using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
-    using Microsoft.VisualStudio.TestPlatform.TestHost;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
     public class FurmarkExecutorTests
     {
-        private MockFixture fixture;
-        private DependencyPath mockPath;
-        private DependencyPath currentDirectoryPath;
-
-        private string resultsPath;
-        private string rawString;
+        private MockFixture mockFixture;
+        private DependencyPath mockFurmarkPackage;
+        private DependencyPath mockPsExecPackage;
+        private string results;
 
         [SetUp]
         public void SetUpTests()
         {
-            this.fixture = new MockFixture();
-            this.mockPath = this.fixture.Create<DependencyPath>();
+            this.mockFixture = new MockFixture();
         }
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task FurmarkExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                 {
-                    return this.fixture.Process;
+                    return this.mockFixture.Process;
                 };
 
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                string expectedScriptFilePath = this.fixture.PlatformSpecifics.Combine(
-                    this.mockPath.Path,"win-x64", "Geeks3D", "Benchmarks", "FurMark", "Furmark");
+                string expectedScriptFilePath = this.mockFixture.PlatformSpecifics.Combine(
+                    this.mockFurmarkPackage.Path,"win-x64", "Geeks3D", "Benchmarks", "FurMark", "FurMark.exe");
 
-                Assert.AreEqual(expectedScriptFilePath, executor.ExecutableLocation);
+                Assert.AreEqual(expectedScriptFilePath, executor.ExecutablePath);
             }
         }
 
@@ -65,36 +56,30 @@ namespace VirtualClient.Actions
         public async Task FurmarkExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            this.fixture.Parameters["Time"] = "10";
-            this.fixture.Parameters["Width"] = "100";
-            this.fixture.Parameters["Height"] = "200";
-            this.fixture.Parameters["Antialiasing"] = "4";
 
-            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.mockFixture))
             {
-                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path);
                 int executed = 0;
                 if (platform == PlatformID.Win32NT)
                 {
-                    string ExpectedPsexecCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, "win-x64", "psexec.exe");
-                    string furmarkCommand = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path ,"win-x64","Geeks3D" ,"Benchmarks" ,"FurMark" ,"Furmark");
-                    string packageDir = this.fixture.PlatformSpecifics.Combine(expectedFilePath, "win-x64");
+                    string psExecPath = this.mockFixture.Combine(this.mockPsExecPackage.Path, "win-x64", "PsExec.exe");
+                    string expectedFurmarkExecutablePath = this.mockFixture.Combine(this.mockFurmarkPackage.Path ,"win-x64", "Geeks3D" , "Benchmarks" ,"FurMark" ,"FurMark.exe");
+                    string workingDir = this.mockFixture.Combine(this.mockFurmarkPackage.Path, "win-x64");
 
-                    string executeScriptCommandArguments = $"-accepteula -s -i 1 -w {packageDir} {furmarkCommand} /width={this.fixture.Parameters["Width"]} /height={this.fixture.Parameters["Height"]} /Antialiasing={this.fixture.Parameters["Antialiasing"]} /max_time={this.fixture.Parameters["Time"]} /nogui /nomenubar /noscore /run_mode=1 /log_score /disable_catalyst_warning /log_temperature /max_frames";
+                    string expectedFurmarkArguments = this.mockFixture.Parameters["CommandLine"].ToString();
+                    string expectedCommandArguments = $"-accepteula -s -i 1 -w {workingDir} {expectedFurmarkExecutablePath} {expectedFurmarkArguments}";
 
-                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                    this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
-                        if (arguments == executeScriptCommandArguments && command == ExpectedPsexecCommand)
+                        if (arguments == expectedCommandArguments && command == psExecPath)
                         {
                             executed++;
                         }
                         
-                        return this.fixture.Process;
+                        return this.mockFixture.Process;
                     };
 
-                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
-                        .ConfigureAwait(false);
-
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                 }
 
                 Assert.AreEqual(1, executed);
@@ -102,44 +87,76 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void FurmarkExecutorThrowsWhenTheResultsFileIsNotGenerated()
+        public void FurmarkExecutorThrowsWhenTheResultsFileIsNotFoundAfterExecutingFurMark()
         {
             this.SetupDefaultMockBehavior();
 
-            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.fixture))
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.mockFixture))
             {
-                this.fixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
-                    this.fixture.FileSystem.Setup(fe => fe.File.Exists(executor.ResultsFilePath)).Returns(false);
-                    this.fixture.Process.StandardError.Append("123");
-                    return this.fixture.Process;
+                    this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(executor.ResultsFilePath)).Returns(false);
+                    this.mockFixture.Process.StandardError.Append("123");
+                    return this.mockFixture.Process;
                 };
+
                 WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
                      () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
 
-                Assert.AreEqual(ErrorReason.WorkloadFailed, exception.Reason);
+                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
+            }
+        }
+
+        [Test]
+        public void FurmarkExecutorThrowsWhenTheXmlResultsFileIsNotFoundAfterExecutingFurMark()
+        {
+            this.SetupDefaultMockBehavior();
+
+            using (TestFurmarkxecutor executor = new TestFurmarkxecutor(this.mockFixture))
+            {
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
+                {
+                    this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(executor.ResultsXMLFilePath)).Returns(false);
+                    this.mockFixture.Process.StandardError.Append("123");
+                    return this.mockFixture.Process;
+                };
+
+                WorkloadResultsException exception = Assert.ThrowsAsync<WorkloadResultsException>(
+                     () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
+
+                Assert.AreEqual(ErrorReason.WorkloadResultsNotFound, exception.Reason);
             }
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
         {
-            this.fixture.Setup(platform, architecture);
-            string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            this.currentDirectoryPath = new DependencyPath("Furmark", currentDirectory);
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
+            this.mockFixture.Setup(platform, architecture);
 
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\Furmark\FurmarkExampleResults.txt");
-            this.rawString = File.ReadAllText(resultsPath);
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { "Scenario", "Resolution_VGA" },
+                { "MetricScenario", "gpu_benchmarking_640x480_2x_antialiasing" },
+                { "PackageName", "furmark" },
+                { "PsExecPackageName", "pstools" },
+                { "CommandLine", "/width=640 /height=480 /antialiasing=2 /run_mode=1 /max_time=60000 /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature" },
+                { "Duration", "00:01:00" }
+            };
 
-            this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.rawString);
+            this.mockFurmarkPackage = new DependencyPath("furmark", this.mockFixture.GetPackagePath("furmark"));
+            this.mockPsExecPackage = new DependencyPath("pstools", this.mockFixture.GetPackagePath("pstools"));
 
-            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
-            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
+            this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
-            this.fixture.Parameters["PackageName"] = "Furmark";
-            this.fixture.Parameters["PsExecPackageName"] = "pstools";
+            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "Furmark", "FurmarkExampleResults.txt"));
+
+            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.results);
+
+            this.mockFixture.PackageManager.OnGetPackage("furmark").ReturnsAsync(this.mockFurmarkPackage);
+            this.mockFixture.PackageManager.OnGetPackage("pstools").ReturnsAsync(this.mockPsExecPackage);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
         }
 
         private class TestFurmarkxecutor : FurmarkExecutor
@@ -153,6 +170,12 @@ namespace VirtualClient.Actions
                 : base(dependencies, parameters)
             {
             }
+
+            public new string ExecutablePath => base.ExecutablePath;
+
+            public new string ResultsFilePath => base.ResultsFilePath;
+
+            public new string ResultsXMLFilePath => base.ResultsXMLFilePath;
 
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)

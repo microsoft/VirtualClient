@@ -11,7 +11,6 @@ namespace VirtualClient
     using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
@@ -47,7 +46,7 @@ namespace VirtualClient
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, IProcessProxy process, EventContext telemetryContext, string toolName = null, IEnumerable<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             process.ThrowIfNull(nameof(process));
@@ -75,7 +74,7 @@ namespace VirtualClient
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, ISshCommandProxy sshCommandProxy, EventContext telemetryContext, string toolName = null, List<string> results = null, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             sshCommandProxy.ThrowIfNull(nameof(sshCommandProxy));
@@ -93,7 +92,11 @@ namespace VirtualClient
         /// <param name="processDetails">The process details that will be captured.</param>
         /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
         /// <param name="logToTelemetry">True to log the results to telemetry. Default = true.</param>
-        /// <param name="logToFile">True to log the results to a log file on the file system. Default = false.</param>
+        /// <param name="logToFile">
+        /// True to log the results to a log file on the file system. This enables an override at a component-level to the user's request to log results 
+        /// to the file system for components whose output is not sufficient or useful as a log file. Logging to file is enabled by default when the user
+        /// has requested logging to file on the file system (e.g. --log-to-file). Default = true.
+        /// </param>
         /// <param name="logToTelemetryMaxChars">
         /// The maximum number of characters that will be logged in the telemetry event. There are often limitations on the size 
         /// of telemetry events. The goal here is to capture as much of the information about the process in the telemetry event
@@ -101,7 +104,7 @@ namespace VirtualClient
         /// there are about 3000 characters in an average single-spaced page of text.
         /// </param>
         public static async Task LogProcessDetailsAsync(
-            this VirtualClientComponent component, ProcessDetails processDetails, EventContext telemetryContext, bool logToTelemetry = true, bool logToFile = false, int logToTelemetryMaxChars = 125000)
+            this VirtualClientComponent component, ProcessDetails processDetails, EventContext telemetryContext, bool logToTelemetry = true, bool logToFile = true, int logToTelemetryMaxChars = 125000)
         {
             component.ThrowIfNull(nameof(component));
             processDetails.ThrowIfNull(nameof(processDetails));
