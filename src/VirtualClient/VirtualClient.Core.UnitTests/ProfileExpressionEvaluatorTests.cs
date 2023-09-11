@@ -402,6 +402,46 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase("11.00:00:00", "TotalDays", 11)]
+        [TestCase("05:00:00", "TotalHours", 5)]
+        [TestCase("00:02:00", "TotalMilliseconds", 120000)]
+        [TestCase("00:02:11", "TotalMilliseconds", 131000)]
+        [TestCase("00:30:00", "TotalMinutes", 30)]
+        [TestCase("00:01:00", "TotalSeconds", 60)]
+        public async Task ProfileExpressionEvaluatorSupportsExpectedVariationsOfTimeRangeUnitReferences(string duration, string unitOfTime, double expectedValue)
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "Duration", duration },
+                { "CommandLine1", $"--duration={{Duration.{unitOfTime}}}" },
+
+                { "Timeout", duration },
+                { "CommandLine2", $"--timeout={{Timeout.{unitOfTime}}}" }
+            };
+
+            await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters, CancellationToken.None);
+            Assert.AreEqual($"--duration={expectedValue}", parameters["CommandLine1"].ToString());
+            Assert.AreEqual($"--timeout={expectedValue}", parameters["CommandLine2"].ToString());
+        }
+
+        [Test]
+        public void ProfileExpressionEvaluatorThrowsIfTheReferencedParameterIsNotAValidTimeSpanWhenHandlingTimeRanges()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            IDictionary<string, IConvertible> parameters = new Dictionary<string, IConvertible>
+            {
+                { "Duration", "NotATimeSpan" },
+                { "CommandLine1", $"--duration={{Duration.TotalSeconds}}" }
+            };
+
+            DependencyException error = Assert.ThrowsAsync<DependencyException>(() => ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, parameters, CancellationToken.None));
+            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, error.Reason);
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsLogicalCoreCountReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);

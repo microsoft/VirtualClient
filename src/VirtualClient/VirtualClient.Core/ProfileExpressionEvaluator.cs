@@ -62,16 +62,26 @@ namespace VirtualClient
             @"\{PhysicalCoreCount\}",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+        // e.g.
+        // {Duration.TotalDays}
+        // {Duration.TotalHours}
+        // {Duration.TotalMilliseconds}
+        // {Duration.TotalMinutes}
+        // {Duration.TotalSeconds}
+        private static readonly Regex TimeSpanExpression = new Regex(
+            @"\{([a-z0-9_-]+)\.(TotalDays|TotalHours|TotalMilliseconds|TotalMinutes|TotalSeconds)\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
         /// The set of expressions and evaluators supported by the editor. Additional expressions
         /// and evaluators can be added (e.g. {PackagePath/Special:redis}).
         /// </summary>
-        private static readonly IList<Func<IServiceCollection, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, string, Task<EvaluationResult>>>
+        private static readonly IList<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>> Evaluators = new List<Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>>
         {
             // Expression: {ScriptPath:xyz}
             // this.PlatformSpecifics.GetScriptPath("a","b");
             // Resolves to the path to the Script folder location (e.g. /home/users/virtualclient/scripts/redis).
-            new Func<IServiceCollection, string, Task<EvaluationResult>>((dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -105,7 +115,7 @@ namespace VirtualClient
             }),
             // Expression: {PackagePath:xyz}
             // Resolves to the path to the package folder location (e.g. /home/users/virtualclient/packages/redis).
-            new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -139,7 +149,7 @@ namespace VirtualClient
             }),
             // Expression: {PackagePath/Platform:xyz}
             // Resolves to the path to the package platform-specific folder location (e.g. /home/users/virtualclient/packages/fio/linux-x64).
-            new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -176,9 +186,83 @@ namespace VirtualClient
                     Outcome = evaluatedExpression
                 };
             }),
+            // e.g.
+            // {Duration.TotalDays}
+            // {Duration.TotalHours}
+            // {Duration.TotalMilliseconds}
+            // {Duration.TotalMinutes}
+            // {Duration.TotalSeconds}
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+
+                if (parameters?.Any() == true)
+                {
+                    MatchCollection matches = ProfileExpressionEvaluator.TimeSpanExpression.Matches(expression);
+
+                    if (matches?.Any() == true)
+                    {
+                        string timespanParameterName = null;
+                        string unitOfTime = null;
+
+                        foreach (Match match in matches)
+                        {
+                            timespanParameterName = match.Groups[1].Value?.Trim();
+                            if (parameters.TryGetValue(timespanParameterName, out IConvertible value) == true)
+                            {
+                                if (!TimeSpan.TryParse(value.ToString(), out TimeSpan duration))
+                                {
+                                    throw new DependencyException(
+                                        $"Invalid '{timespanParameterName}' parameter value. The value of the '{timespanParameterName}' parameter is expected to be formatted as a time span (e.g. 00:30:00).",
+                                        ErrorReason.InvalidProfileDefinition);
+                                }
+
+                                isMatched = true;
+                                unitOfTime = match.Groups[2].Value;
+
+                                switch (unitOfTime.ToLowerInvariant())
+                                {
+                                    case "totaldays":
+                                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, duration.TotalDays.ToString());
+                                        break;
+
+                                    case "totalhours":
+                                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, duration.TotalHours.ToString());
+                                        break;
+
+                                    case "totalmilliseconds":
+                                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, duration.TotalMilliseconds.ToString());
+                                        break;
+
+                                    case "totalminutes":
+                                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, duration.TotalMinutes.ToString());
+                                        break;
+
+                                    case "totalseconds":
+                                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, duration.TotalSeconds.ToString());
+                                        break;
+
+                                    default:
+                                        throw new DependencyException(
+                                            $"Invalid duration parameter reference value. The parameter reference '{timespanParameterName}.{unitOfTime}' is not a supported duration reference. The following " +
+                                            $"duration references are valid: Duration.TotalDays, Duration.TotalHours, Duration.TotalMilliseconds, Duration.TotalMinutes, Duration.TotalSeconds",
+                                            ErrorReason.InvalidProfileDefinition);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
             // Expression: {LogicalCoreCount}
             // Resolves to the count of logical cores on the system (e.g. Environment.ProcessorCount)
-            new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -204,7 +288,7 @@ namespace VirtualClient
             }),
             // Expression: {PhysicalCoreCount}
             // Resolves to the count of the physical cores on the system.
-            new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -234,7 +318,7 @@ namespace VirtualClient
             //
             // **IMPORTANT**
             // This expression evaluation MUST come last after ALL other expression evaluators.
-            new Func<IServiceCollection, string, Task<EvaluationResult>>(async (dependencies, expression) =>
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
             {
                 bool isMatched = false;
                 string evaluatedExpression = expression;
@@ -316,7 +400,7 @@ namespace VirtualClient
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
-            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, text, cancellationToken);
+            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, null, text, cancellationToken);
             return evaluation.Outcome;
         }
 
@@ -359,7 +443,7 @@ namespace VirtualClient
             }
         }
 
-        private static async Task<EvaluationResult> EvaluateExpressionAsync(IServiceCollection dependencies, string text, CancellationToken cancellationToken)
+        private static async Task<EvaluationResult> EvaluateExpressionAsync(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters, string text, CancellationToken cancellationToken)
         {
             dependencies.ThrowIfNull(nameof(dependencies));
 
@@ -371,7 +455,7 @@ namespace VirtualClient
                 {
                     foreach (var evaluator in ProfileExpressionEvaluator.Evaluators)
                     {
-                        EvaluationResult evaluation = await evaluator.Invoke(dependencies, evaluatedExpression);
+                        EvaluationResult evaluation = await evaluator.Invoke(dependencies, parameters, evaluatedExpression);
                         if (evaluation.IsMatched)
                         {
                             isMatched = true;
@@ -459,7 +543,7 @@ namespace VirtualClient
                             // Parameters:
                             //    CommandLine: --port=1234 --threads=8 --package=/home/users/virtualclient/packages/anypackage
                             //    Port: 1234
-                            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, parameter.Value.ToString(), cancellationToken);
+                            EvaluationResult evaluation = await ProfileExpressionEvaluator.EvaluateExpressionAsync(dependencies, parameters, parameter.Value.ToString(), cancellationToken);
                             if (evaluation.IsMatched)
                             {
                                 parameters[parameter.Key] = evaluation.Outcome;

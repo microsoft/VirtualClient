@@ -65,7 +65,7 @@ namespace VirtualClient.Actions
 
                 WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
-        }        
+        }
 
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform)
         {

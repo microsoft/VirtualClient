@@ -171,27 +171,33 @@ namespace VirtualClient.Monitors
                         {
                             try
                             {
-                                await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessFileUploads", telemetryContext, async () =>
+                                bool deleteFile = false;
+                                string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
+                                FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
+
+                                try
                                 {
-                                    bool deleteFile = false;
-                                    string uploadDescriptorContent = await this.fileSystem.File.ReadAllTextAsync(uploadDescriptor, CancellationToken.None);
-                                    FileUploadDescriptor descriptor = uploadDescriptorContent.FromJson<FileUploadDescriptor>();
+                                    await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
+                                    deleteFile = descriptor.DeleteOnUpload;
 
-                                    try
-                                    {
-                                        await this.UploadFileAsync(blobManager, this.fileSystem, descriptor, CancellationToken.None);
-                                        deleteFile = descriptor.DeleteOnUpload;
+                                    await this.fileSystem.File.DeleteAsync(uploadDescriptor);
+                                }
+                                catch (Exception exc)
+                                {
+                                    this.Logger.LogMessage(
+                                        $"{this.TypeName}.UploadFileError",
+                                        LogLevel.Warning,
+                                        telemetryContext.Clone().AddError(exc).AddContext("fileDescriptor", descriptor));
 
-                                        await this.fileSystem.File.DeleteAsync(uploadDescriptor);
-                                    }
-                                    finally
+                                    throw;
+                                }
+                                finally
+                                {
+                                    if (deleteFile)
                                     {
-                                        if (deleteFile)
-                                        {
-                                            await this.fileSystem.File.DeleteAsync(descriptor.FilePath);
-                                        }
+                                        await this.fileSystem.File.DeleteAsync(descriptor.FilePath);
                                     }
-                                });
+                                }
                             }
                             catch (JsonSerializationException)
                             {
@@ -203,9 +209,10 @@ namespace VirtualClient.Monitors
                                 // It is common that there will be read/write access errors at certain times while
                                 // upload request files are being created at the same time as attempts to read. 
                             }
-                            catch (Exception exc)
+                            catch
                             {
-                                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                                // We are logging within the upload logic block above. We do not want to allow the
+                                // file upload monitor logic to crash. We move forward to the next upload request.
                             }
                         }
                     }
