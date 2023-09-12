@@ -1,0 +1,24 @@
+{
+  "Description": "SPEC view GPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "02:00:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "GpuModel": "v620",
+    "LisenceKey": ""
+  },
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "Install3DMarkWorkloadPackage",
+        "BlobContainer": "testing",
+        "BlobName": "specviewperf2020.3.0.zip",
+        "PackageName": "specviewperf2020",
+        "Extract": true
+      }
+    }
+  ]
+}
