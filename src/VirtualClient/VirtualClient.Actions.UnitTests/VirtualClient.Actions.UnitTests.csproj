@@ -10,6 +10,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Compile Remove="DiskPerformance\**" />
+      <EmbeddedResource Remove="DiskPerformance\**" />
+      <None Remove="DiskPerformance\**" />
+    </ItemGroup>
+
+    <ItemGroup>
 	  <Content Include="..\TestResources\expectedoltp-c.fio1.jobfile" Link="Examples\FIO\expectedoltp-c.fio1.jobfile">
 		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
@@ -92,7 +98,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DiskPerformance\" />
     <Folder Include="Examples\FIO\" />
   </ItemGroup>
 

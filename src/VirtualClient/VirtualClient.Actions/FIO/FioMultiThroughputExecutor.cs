@@ -29,11 +29,11 @@ namespace VirtualClient.Actions
         private static int variationNumber = 0;
         private string randomIOFilePath;
         private string sequentialIOFilePath;
-        private int totalIOPS;
-        private int randomReadIOPS;
-        private int randomWriteIOPS;
-        private int sequentialReadIOPS;
-        private int sequentialWriteIOPS;
+        private long totalIOPS;
+        private long randomReadIOPS;
+        private long randomWriteIOPS;
+        private long sequentialReadIOPS;
+        private long sequentialWriteIOPS;
 
         private static IAsyncPolicy fioMultiThroughputRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(3, _ => RetryWaitTime);
 
@@ -569,7 +569,7 @@ namespace VirtualClient.Actions
 
                 DiskWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
-                metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
+                metricsMetadata[nameof(this.CommandLine)] = process.CommandArguments;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
@@ -779,7 +779,7 @@ namespace VirtualClient.Actions
         private void SetRuntimeParameters(int targetPercent)
         {
             this.totalIOPS = (this.TargetIOPS * targetPercent) / 100;
-            int totalWeights = this.RandomReadWeight + this.RandomWriteWeight + this.SequentialReadWeight + this.SequentialWriteWeight;
+            long totalWeights = this.RandomReadWeight + this.RandomWriteWeight + this.SequentialReadWeight + this.SequentialWriteWeight;
             totalWeights = totalWeights == 0 ? 1 : totalWeights;
 
             this.randomReadIOPS = ((this.totalIOPS * this.RandomReadWeight) / totalWeights) / this.RandomReadNumJobs;
