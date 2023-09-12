@@ -28,8 +28,7 @@ namespace VirtualClient.Logging
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;
-        private string filePath;
-        private string fileNameNoExtension;
+        private string logDirectory;
         private string fileDirectory;
         private string fileExtension;
         private List<string> filePaths;
@@ -44,17 +43,16 @@ namespace VirtualClient.Logging
         /// <summary>
         /// Initializes a new instance of the <see cref="OcpFileLogger"/> class.
         /// </summary>
-        /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
+        /// <param name="logDirectory">The path to the CSV file to which the metrics should be written.</param>
         /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
         /// <param name="retryPolicy"></param>
-        public OcpFileLogger(string csvFilePath, long maximumFileSizeBytes, IAsyncPolicy retryPolicy = null)
+        public OcpFileLogger(string logDirectory, long maximumFileSizeBytes, IAsyncPolicy retryPolicy = null)
         {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
+            logDirectory.ThrowIfNullOrWhiteSpace(nameof(logDirectory));
 
-            this.filePath = csvFilePath;
-            this.fileNameNoExtension = Path.GetFileNameWithoutExtension(csvFilePath);
-            this.fileDirectory = Path.GetDirectoryName(csvFilePath);
-            this.fileExtension = Path.GetExtension(csvFilePath);
+            this.logDirectory = logDirectory;
+            this.fileDirectory = Path.GetDirectoryName(logDirectory);
+            this.fileExtension = Path.GetExtension(logDirectory);
             this.filePaths = new List<string>();
             this.fileSystem = new FileSystem();
             this.buffer = new ConcurrentBuffer();
@@ -129,15 +127,6 @@ namespace VirtualClient.Logging
             }
         }
 
-        internal static string CreateMessage(EventContext context)
-        {
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
-            messageBuilder.AppendJoin(',', OcpFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
-
-            return messageBuilder.ToString();
-        }
-
         /// <summary>
         /// Disposes of resources used by the instance.
         /// </summary>
@@ -151,6 +140,16 @@ namespace VirtualClient.Logging
                     this.disposed = true;
                 }
             }
+        }
+
+
+        private static string WriteMeasurementStart(EventContext context)
+        {
+            StringBuilder messageBuilder = new StringBuilder();
+            messageBuilder.Append(Environment.NewLine);
+            messageBuilder.AppendJoin(',', OcpFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
+
+            return messageBuilder.ToString();
         }
 
         private Task MonitorBufferAsync()
@@ -232,7 +231,7 @@ namespace VirtualClient.Logging
             IEnumerable<string> matchingFiles = this.fileSystem.Directory.EnumerateFiles(this.fileDirectory, $"{this.fileNameNoExtension}*{this.fileExtension}");
             if (matchingFiles?.Any() != true)
             {
-                this.filePaths.Add(this.filePath);
+                this.filePaths.Add(this.logDirectory);
             }
             else
             {

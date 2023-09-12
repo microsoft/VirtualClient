@@ -4,6 +4,7 @@
 namespace VirtualClient.Logging
 {
     using System;
+    using System.IO;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -15,20 +16,20 @@ namespace VirtualClient.Logging
     /// </summary>
     public sealed class OcpFileLoggerProvider : ILoggerProvider
     {
-        private string filePath;
+        private string logDirectory;
         private long maxFileSize;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OcpFileLoggerProvider"/> class.
-        /// <param name="csvFilePath">The path to the CSV file to which the metrics should be written.</param>
+        /// <param name="logDirectory">The path to the CSV file to which the metrics should be written.</param>
         /// <param name="maximumFileSizeBytes">The maximum size of each CSV file (in bytes) before a new file (rollover) will be created.</param>
         /// </summary>
-        public OcpFileLoggerProvider(string csvFilePath, long maximumFileSizeBytes)
+        public OcpFileLoggerProvider(string logDirectory, long maximumFileSizeBytes)
         {
-            csvFilePath.ThrowIfNullOrWhiteSpace(nameof(csvFilePath));
+            logDirectory.ThrowIfNullOrWhiteSpace(nameof(logDirectory));
             maximumFileSizeBytes.ThrowIfInvalid(nameof(maximumFileSizeBytes), (size) => size > 0);
 
-            this.filePath = csvFilePath;
+            this.logDirectory = Path.Combine(logDirectory, "ocp");
             this.maxFileSize = maximumFileSizeBytes;
         }
 
@@ -43,7 +44,7 @@ namespace VirtualClient.Logging
         /// </returns>
         public ILogger CreateLogger(string categoryName)
         {
-            OcpFileLogger logger = new OcpFileLogger(this.filePath, this.maxFileSize);
+            OcpFileLogger logger = new OcpFileLogger(this.logDirectory, this.maxFileSize);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
                 logger.Flush();

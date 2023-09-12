@@ -208,6 +208,26 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Creates logger providers for writing logs in OCP schema.
+        /// </summary>
+        /// <param name="ocpLogDirectory">The directory for the log file (e.g. C:\users\any\VirtualClient\logs\).</param>
+        public static ILoggerProvider CreateOcpFileLoggerProvider(string ocpLogDirectory)
+        {
+            ocpLogDirectory.ThrowIfNullOrWhiteSpace(nameof(ocpLogDirectory));
+
+            // 50MB
+            // General Sizing:
+            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
+            const long maxFileSizeBytes = 50000000;
+
+            ILoggerProvider loggerProvider = null;
+
+            loggerProvider = new OcpFileLoggerProvider(ocpLogDirectory, maxFileSizeBytes);
+            VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
+            return loggerProvider;
+        }
+
+        /// <summary>
         /// Creates logger providers for writing telemetry to local CSV files.
         /// </summary>
         /// <param name="csvFilePath">The full path for the log file (e.g. C:\users\any\VirtualClient\logs\metrics.csv).</param>
@@ -279,6 +299,13 @@ namespace VirtualClient
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => metricsCsvLoggerProvider.Dispose()));
                 loggerProviders.Add(metricsCsvLoggerProvider);
+
+                // Metrics/Results in CSV Format
+                ILoggerProvider ocpFileLoggerProvider = DependencyFactory.CreateOcpFileLoggerProvider(Path.Combine(logFileDirectory))
+                    .HandleMetricsEvents();
+
+                VirtualClientRuntime.CleanupTasks.Add(new Action_(() => ocpFileLoggerProvider.Dispose()));
+                loggerProviders.Add(ocpFileLoggerProvider);
 
                 // Performance Counters
                 ILoggerProvider countersLoggerProvider = DependencyFactory.CreateFileLoggerProvider(Path.Combine(logFileDirectory, settings.CountersFileName), TimeSpan.FromSeconds(5), metricsExcludes)
