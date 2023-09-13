@@ -13,7 +13,7 @@
       "Type": "DependencyPackageInstallation",
       "Parameters": {
         "Scenario": "InstallSpecViewWorkloadPackage",
-        "BlobContainer": "testing",
+        "BlobContainer": "spec-dev",
         "BlobName": "specviewperf.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
