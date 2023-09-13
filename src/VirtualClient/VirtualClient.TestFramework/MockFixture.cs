@@ -303,11 +303,25 @@ namespace VirtualClient
             this.FileStream = new Mock<IFileStreamFactory>();
             this.Directory = new Mock<IDirectory>();
             this.DirectoryInfo = new Mock<IDirectoryInfo>();
+
             this.Directory.Setup(dir => dir.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.FileSystem.SetupGet(fs => fs.File).Returns(this.File.Object);
             this.FileSystem.SetupGet(fs => fs.FileInfo).Returns(this.FileInfo.Object);
             this.FileSystem.SetupGet(fs => fs.FileStream).Returns(this.FileStream.Object);
             this.FileSystem.SetupGet(fs => fs.Directory).Returns(this.Directory.Object);
+            this.FileInfo.Setup(file => file.New(It.IsAny<string>()))
+                .Returns<string>(path =>
+                {
+                    Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
+
+                    mockFile.Setup(file => file.Name).Returns(Path.GetFileName(path));
+                    mockFile.Setup(file => file.CreationTime).Returns(DateTime.Now);
+                    mockFile.Setup(file => file.CreationTimeUtc).Returns(DateTime.UtcNow);
+                    mockFile.Setup(file => file.Length).Returns(12345);
+                    mockFile.Setup(file => file.FullName).Returns(path);
+
+                    return mockFile.Object;
+                });
 
             this.DiskManager = new Mock<IDiskManager>();
             this.Logger = new InMemoryLogger();

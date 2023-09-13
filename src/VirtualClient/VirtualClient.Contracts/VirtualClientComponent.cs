@@ -188,6 +188,23 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Defines the name/description to use for metrics scenario (e.g. fio_randwrite_496GB_4k_d64_th16).
+        /// </summary>
+        public string MetricScenario
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MetricScenario), out IConvertible scenario);
+                return scenario?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.MetricScenario)] = value;
+            }
+        }
+
+        /// <summary>
         /// Defines the name of the package associated with the component.
         /// </summary>
         public string PackageName

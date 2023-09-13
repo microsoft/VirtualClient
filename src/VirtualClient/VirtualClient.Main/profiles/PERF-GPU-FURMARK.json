@@ -1,162 +1,215 @@
 {
-  "Description": "Furmark GPU Performance Workload",
-  "Metadata": {
-    "SupportedPlatforms": "win-x64",
-    "SupportedOperatingSystem": "Windows",
-    "SpecialRequirements": "This workload expects AMD GPU drivers to be preinstalled on the stystem "
-  },
-  "Parameters": {
-    "Time": "60000",
-    "Height": "640",
-    "Width": "480",
-    "Antialiasing": "4"
-  },
-  "Actions": [
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "ExecuteFurmarkBenchmark",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "$.Parameters.Height",
-        "Width": "$.Parameters.Width",
-        "Antialiasing": "$.Parameters.Antialiasing"
-      }
+    "Description": "FurMark GPU Stress and Performance Workload",
+    "Metadata": {
+        "SupportedPlatforms": "win-x64",
+        "SupportedOperatingSystem": "Windows",
+        "SpecialRequirements": "This workload expects GPU drivers to be preinstalled on the stystem "
     },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_640X360_8",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "360",
-        "Width": "640",
-        "Antialiasing": "8"
-      }
+    "Parameters": {
+        "Duration": "00:01:00"
     },
-
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_2160X11520_2",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "11520",
-        "Width": "2160",
-        "Antialiasing": "2"
-      }
-    },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_2160X11520_8",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "11520",
-        "Width": "2160",
-        "Antialiasing": "8"
-      }
-    },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_1440X2560_2",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "2560",
-        "Width": "1440",
-        "Antialiasing": "2"
-      }
-    },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_1440X2560_4",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "2560",
-        "Width": "1440",
-        "Antialiasing": "4"
-      }
-    },
-
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_720X1280_4",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "1280",
-        "Width": "720",
-        "Antialiasing": "4"
-      }
-    },
-
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_720X1280_2",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "1280",
-        "Width": "720",
-        "Antialiasing": "2"
-      }
-    },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_5120X2880_4",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "2880",
-        "Width": "5120",
-        "Antialiasing": "4"
-      }
-    },
-    {
-      "Type": "FurmarkExecutor",
-      "Parameters": {
-        "Scenario": "Furmmark_5120X2880_2",
-        "PackageName": "Furmark",
-        "PsExecPackageName": "pstools",
-        "Time": "$.Parameters.Time",
-        "Height": "2880",
-        "Width": "5120",
-        "Antialiasing": "2"
-      }
-    }
-
-  ],
-  "Dependencies": [
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallPsToolsPackage",
-        "BlobContainer": "packages",
-        "BlobName": "pstools.2.51.zip",
-        "PackageName": "pstools",
-        "Extract": true
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallFurmarkPackage",
-        "BlobContainer": "packages",
-        "BlobName": "Furmark1.34.0.0.zip",
-        "PackageName": "furmark",
-        "Extract": true
-      }
-    }
-  ]
+    "Actions": [
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_VGA",
+                "MetricScenario": "gpu_benchmarking_640x480_2x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=640 /height=480 /antialiasing=2 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Description": "VGA Monochrome resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_VGA",
+                "MetricScenario": "gpu_benchmarking_640x480_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=640 /height=480 /antialiasing=4 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "VGA Monochrome resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_VGA",
+                "MetricScenario": "gpu_benchmarking_640x480_8x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=640 /height=480 /antialiasing=8 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "VGA Monochrome resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_SXGA",
+                "MetricScenario": "gpu_benchmarking_1280x1024_2x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1280 /height=1024 /antialiasing=2 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Super-eXtended Graphics Array (SXGA) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_SXGA",
+                "MetricScenario": "gpu_benchmarking_1280x1024_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1280 /height=1024 /antialiasing=4 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Super-eXtended Graphics Array (SXGA) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_SXGA",
+                "MetricScenario": "gpu_benchmarking_1280x1024_8x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1280 /height=1024 /antialiasing=8 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Super-eXtended Graphics Array (SXGA) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_HD",
+                "MetricScenario": "gpu_benchmarking_1366x768_2x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1366 /height=768 /antialiasing=2 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "High Definition (HD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_HD",
+                "MetricScenario": "gpu_benchmarking_1366x768_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1366 /height=768 /antialiasing=4 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "High Definition (HD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_HD",
+                "MetricScenario": "gpu_benchmarking_1366x768_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1366 /height=768 /antialiasing=8 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "High Definition (HD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_FHD",
+                "MetricScenario": "gpu_benchmarking_1920x1080_2x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1920 /height=1080 /antialiasing=2 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Full High Definition (FHD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_FHD",
+                "MetricScenario": "gpu_benchmarking_1920x1080_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1920 /height=1080 /antialiasing=4 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Full High Definition (FHD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_FHD",
+                "MetricScenario": "gpu_benchmarking_1920x1080_8x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=1920 /height=1080 /antialiasing=8 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Full High Definition (FHD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_UHD",
+                "MetricScenario": "gpu_benchmarking_3840x2160_2x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=3480 /height=2160 /antialiasing=2 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Ultra High Definition (4K/UHD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_UHD",
+                "MetricScenario": "gpu_benchmarking_3840x2160_4x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=3480 /height=2160 /antialiasing=4 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Ultra High Definition (4K/UHD) resolution"
+            }
+        },
+        {
+            "Type": "FurmarkExecutor",
+            "Parameters": {
+                "Scenario": "Resolution_UHD",
+                "MetricScenario": "gpu_benchmarking_3840x2160_8x_antialiasing",
+                "PackageName": "furmark",
+                "PsExecPackageName": "pstools",
+                "CommandLine": "/width=3480 /height=2160 /antialiasing=8 /run_mode=1 /max_time={Duration.TotalMilliseconds} /nogui /nomenubar /noscore /log_score /disable_catalyst_warning /log_temperature",
+                "Duration": "$.Parameters.Duration",
+                "Comments": "Ultra High Definition (4K/UHD) resolution"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallPsToolsPackage",
+                "BlobContainer": "packages",
+                "BlobName": "pstools.2.51.zip",
+                "PackageName": "pstools",
+                "Extract": true
+            }
+        },
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallFurmarkPackage",
+                "BlobContainer": "packages",
+                "BlobName": "furmark.1.34.0.0.zip",
+                "PackageName": "furmark",
+                "Extract": true
+            }
+        }
+    ]
 }
