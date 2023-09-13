@@ -8,6 +8,17 @@
   "Parameters": {
     "GpuModel": "v620"
   },
+  "Actions": [
+    {
+      "Type": "SpecViewExecutor",
+      "Parameters": {
+        "Scenario": "AllTests",
+        "CommandArguments": "-viewset \"3dsmax,catia,creo,energy,maya,medical,snx,sw\" -nogui",
+        "PackageName": "specviewperf2020",
+        "Tags": "GPU,SPECview,Gaming"
+      }
+    }
+  ],
   "Dependencies": [
     {
       "Type": "DependencyPackageInstallation",

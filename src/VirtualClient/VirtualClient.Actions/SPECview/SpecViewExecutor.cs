@@ -41,14 +41,25 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The path for the intermediate results file.
+        /// The command line argument defined in the profile.
         /// </summary>
-        public string OutFileName { get; set; }
+        public string CommandArguments
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(OpenSslExecutor.CommandArguments));
+            }
+        }
 
         /// <summary>
         /// The path to the RunViewperf.exe.
         /// </summary>
         public string ExecutablePath { get; set; }
+
+        /// <summary>
+        /// The path for the intermediate results file.
+        /// </summary>
+        public string OutFileName { get; set; }
 
         /// <summary>
         /// Defines the path to the SPEC view package that contains the workload
@@ -80,13 +91,15 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string commandArguments, string definition, EventContext telemetryContext)
+        private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-                    string resultsFilePath = this.PlatformSpecifics.Combine(this.Package.Path, "SPECviewperf2020", "result.xml");
+                    // TODO: find the result folder using regex
+
+                    string resultsFilePath = this.PlatformSpecifics.Combine(this.Package.Path, "results_xxxxx", "result.xml");
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
                     SpecViewMetricsParser resultsParser = new SpecViewMetricsParser(resultsContent);
                     return resultsParser.Parse();
@@ -108,77 +121,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Run the 3DMark Definitions
+        /// Run the Spec View Workload
         /// </summary>
         private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IList<Metric> metrics = new List<Metric>();
 
+            string commandArguments = this.CommandArguments;
+
             EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath);
-
-            string psexec = this.PlatformSpecifics.Combine(this.psexecDir, "PsExec.exe");
-            string baseArg = @$"-s -i {this.PsExecSession} -w {this.psexecDir} -accepteula -nobanner";
-
-            return this.Logger.LogMessageAsync($"{nameof(ThreeDMarkExecutor)}.ExecuteWorkload", relatedContext, async () =>
+                .AddContext("executable", this.ExecutablePath)
+                .AddContext("commandArguments", commandArguments);
+            
+            return this.Logger.LogMessageAsync($"{nameof(SpecViewExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                // Point 3DMark to DLC Path
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --path={this.DLCPath}", this.psexecDir))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-
-                    try
-                    {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.Logger.LogInformation("Registering 3DMark License");
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
-                        }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                    }
-                }
-
-                // Lisence Registry
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, $"{baseArg} {this.ExecutablePath} --register={this.LisenceKey}", this.psexecDir))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-
-                    try
-                    {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            this.Logger.LogInformation("Initializing 3DMark DLC");
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
-                        }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                    }
-                }
-
-                // Run Workload
-                DateTime startTime = DateTime.Now;
-
-                // Workload execution
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.psexecDir))
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
                 {
                     this.CleanupTasks.Add(() => process.SafeKill());
 
@@ -189,8 +146,8 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
+                            process.ThrowIfWorkloadFailed();
+                            this.CaptureResults(process, commandArguments, telemetryContext);
                         }
                     }
                     finally
@@ -201,36 +158,6 @@ namespace VirtualClient.Actions
                         }
                     }
                 }
-
-                // Result Preparation
-                string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-
-                    try
-                    {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                            foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
-                            {
-                                metrics.Add(metric);
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                    }
-                }
-
 
                 DateTime endTime = DateTime.UtcNow;
 
@@ -316,9 +243,6 @@ namespace VirtualClient.Actions
                 DependencyPath workloadPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                DependencyPath psExecPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PsExecPackageName, CancellationToken.None)
-                    .ConfigureAwait(false);
-
                 if (workloadPackage == null)
                 {
                     throw new DependencyException(
@@ -326,17 +250,8 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadDependencyMissing);
                 }
 
-                if (psExecPackage == null)
-                {
-                    throw new DependencyException(
-                        $"The expected package '{this.psexecDir}' does not exist on the system or is not registered.",
-                        ErrorReason.WorkloadDependencyMissing);
-                }
-
                 workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
-                psExecPackage = this.PlatformSpecifics.ToPlatformSpecificPath(psExecPackage, this.Platform, this.CpuArchitecture);
                 this.Package = workloadPackage;
-                this.psexecDir = psExecPackage.Path;
             }
         }
     }
