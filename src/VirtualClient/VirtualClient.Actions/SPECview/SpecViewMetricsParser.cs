@@ -24,14 +24,10 @@ namespace VirtualClient.Actions
         /// Parser for the 3DMark workload
         /// </summary>
         /// <param name="rawText">The raw text from the 3DMark export process.</param>
-        /// <param name="definition">The 3dmark definition.</param>
-        public SpecViewMetricsParser(string rawText, string definition)
+        public SpecViewMetricsParser(string rawText)
             : base(rawText)
         {
-            this.Defintion = definition;
         }
-
-        private string Defintion { get; set; }
 
         /// <inheritdoc/>
         public override IList<Metric> Parse()
