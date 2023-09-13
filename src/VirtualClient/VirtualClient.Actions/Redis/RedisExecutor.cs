@@ -126,6 +126,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            await this.ValidatePlatformSupportAsync(cancellationToken);
             await this.EvaluateParametersAsync(cancellationToken);
 
             if (this.IsMultiRoleLayout())
@@ -176,7 +177,49 @@ namespace VirtualClient.Actions
                 this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
                 this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
             }
-        }        
+        }
+
+        private async Task ValidatePlatformSupportAsync(CancellationToken cancellationToken)
+        {
+            switch (this.Platform)
+            {
+                case PlatformID.Unix:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        LinuxDistributionInfo distroInfo = await this.SystemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            switch (distroInfo.LinuxDistribution)
+                            {
+                                case LinuxDistribution.Ubuntu:
+                                case LinuxDistribution.Debian:
+                                case LinuxDistribution.CentOS8:
+                                case LinuxDistribution.RHEL8:
+                                    break;
+                                default:
+                                    throw new WorkloadException(
+                                        $"The Redis Memtier benchmark workload is not supported on the current Linux distro " +
+                                        $"'{distroInfo.LinuxDistribution}'.  Supported distros include: " +
+                                        $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Ubuntu)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.Debian)}" +
+                                        $"{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.CentOS8)},{Enum.GetName(typeof(LinuxDistribution), LinuxDistribution.RHEL8)}",
+                                        ErrorReason.LinuxDistributionNotSupported);
+                            }
+                        }
+                    }
+
+                    break;
+
+                default:
+                    throw new WorkloadException(
+                        $"The Redis Memtier benchmark workload is currently not supported on the current platform/architecture " +
+                        $"'{this.PlatformArchitectureName}'." +
+                        $" Supported platform/architectures include: " +
+                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
+                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
+                        ErrorReason.PlatformNotSupported);
+            }
+        }
 
         internal class ServerState : State
         {

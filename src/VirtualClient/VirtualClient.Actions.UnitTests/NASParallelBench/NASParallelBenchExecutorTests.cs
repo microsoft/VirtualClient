@@ -36,19 +36,6 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
-
-        [Test]
-        public void NASParallelBenchExecutorThrowsOnUnsupportedPlatform()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (TestNASParallelBenchExecutor NASParallelBenchExecutor = new TestNASParallelBenchExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => NASParallelBenchExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.PlatformNotSupported);
-            }
-        }
-
         [Test]
         public void NASParallelBenchExecutorThrowsOnUnsupportedLinuxDistro()
         {

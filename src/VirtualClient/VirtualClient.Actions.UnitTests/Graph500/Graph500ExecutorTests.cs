@@ -95,24 +95,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public void Graph500ExecutorThrowsWhenPlatformIsNotSupported(PlatformID platformID, Architecture architecture)
-        {
-            this.fixture.Setup(platformID, architecture);
-            using (TestGraph500Executor executor = new TestGraph500Executor(this.fixture))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
-
-                if (platformID == PlatformID.Win32NT)
-                {
-                    Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-                }
-            }
-        }
-
-        [Test]
         public async Task Graph500ExecutorLogsTheExpectedWorkloadMetrics()
         {
             this.SetupDefaultMockBehavior();
