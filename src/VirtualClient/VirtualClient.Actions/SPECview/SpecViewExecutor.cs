@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
                 {
                     string resultsFilePath = this.PlatformSpecifics.Combine(this.Package.Path, "SPECviewperf2020", "result.xml");
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
-                    SpecViewMetricsParser resultsParser = new SpecViewMetricsParser(resultsContent, definition);
+                    SpecViewMetricsParser resultsParser = new SpecViewMetricsParser(resultsContent);
                     return resultsParser.Parse();
 
                 }
@@ -175,68 +175,62 @@ namespace VirtualClient.Actions
                 }
 
                 // Run Workload
-                DateTime startTime = DateTime.UtcNow;
-                foreach (string definition in this.Definitions)
+                DateTime startTime = DateTime.Now;
+
+                // Workload execution
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments, this.psexecDir))
                 {
-                    this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
+                    this.CleanupTasks.Add(() => process.SafeKill());
 
-                    // Workload execution
-                    string arguments = this.GenerateCommandArguments(definition);
-                    string commandArguments = $"{baseArg} {this.ExecutablePath} {arguments}";
-
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
+                    try
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                        try
+                        if (!cancellationToken.IsCancellationRequested)
                         {
-                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
 
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-
-                            }
-                        }
-                        finally
-                        {
-                            if (!process.HasExited)
-                            {
-                                process.Kill();
-                            }
                         }
                     }
-
-                    // Result Preparation
-                    string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
+                    finally
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        try
+                        if (!process.HasExited)
                         {
-                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
-                                {
-                                    metrics.Add(metric);
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            if (!process.HasExited)
-                            {
-                                process.Kill();
-                            }
+                            process.Kill();
                         }
                     }
                 }
+
+                // Result Preparation
+                string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
+                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
+                {
+                    this.CleanupTasks.Add(() => process.SafeKill());
+
+                    try
+                    {
+                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
+                            {
+                                metrics.Add(metric);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill();
+                        }
+                    }
+                }
+
 
                 DateTime endTime = DateTime.UtcNow;
 
