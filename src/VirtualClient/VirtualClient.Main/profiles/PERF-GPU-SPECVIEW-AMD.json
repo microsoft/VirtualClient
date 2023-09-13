@@ -15,7 +15,7 @@
       "Parameters": {
         "Scenario": "Install3DMarkWorkloadPackage",
         "BlobContainer": "testing",
-        "BlobName": "SPECviewperf2020.zip",
+        "BlobName": "specviewperf2020.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
       }
