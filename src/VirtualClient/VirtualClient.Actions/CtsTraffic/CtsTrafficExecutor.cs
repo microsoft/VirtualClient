@@ -8,9 +8,11 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Net;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using VirtualClient;
     using VirtualClient.Common;
@@ -168,7 +170,6 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ValidatePlatformSupportedAsync(cancellationToken);
             this.ThrowIfLayoutNotDefined();
 
             await CtsTrafficExecutor.OpenFirewallPortsAsync(this.Port, this.SystemManagement.FirewallManager, cancellationToken);
@@ -314,6 +315,24 @@ namespace VirtualClient.Actions
             this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && this.Platform == PlatformID.Win32NT
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("CtsTraffic", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
         {
             return firewallManager.EnableInboundConnectionsAsync(
@@ -326,17 +345,6 @@ namespace VirtualClient.Actions
                         new List<int> { port })
                 },
                 cancellationToken);
-        }
-
-        private void ValidatePlatformSupportedAsync(CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                throw new WorkloadException(
-                        $"The CtsTraffic workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        ErrorReason.PlatformNotSupported);
-            }
         }
 
         /// <summary>

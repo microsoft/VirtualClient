@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -157,9 +158,16 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override bool IsSupported()
         {
-            return base.IsSupported() 
-                && this.Platform == PlatformID.Win32NT 
-                && this.CpuArchitecture == Architecture.X64;
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("Furmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>
