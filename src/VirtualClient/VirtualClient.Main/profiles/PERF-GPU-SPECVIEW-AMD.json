@@ -6,14 +6,13 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "GpuModel": "v620",
-    "LisenceKey": ""
+    "GpuModel": "v620"
   },
   "Dependencies": [
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "Install3DMarkWorkloadPackage",
+        "Scenario": "InstallSpecViewWorkloadPackage",
         "BlobContainer": "testing",
         "BlobName": "specviewperf2020.zip",
         "PackageName": "specviewperf2020",
