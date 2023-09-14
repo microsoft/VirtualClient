@@ -9,6 +9,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using AutoFixture;
@@ -40,39 +41,34 @@ namespace VirtualClient.Actions
             this.mockPath = this.mockFixture.Create<DependencyPath>();
             this.mockFixture.SetupMocks();
 
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TemplateJobFile), "oltp-c.fio.jobfile");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.GroupReporting), 1);
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.DurationSec), 1);
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomIOFileSize), "124G");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialIOFileSize), "20G");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.DirectIO), 1);
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TargetIOPS), "5000");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TargetPercents), "10");
-
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomReadBlockSize), "8K");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomReadQueueDepth), "512");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomReadNumJobs), "1");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomReadWeight), "5416");
-
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomWriteBlockSize), "8K");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomWriteQueueDepth), "512");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomWriteNumJobs), "1");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.RandomWriteWeight), "4255");
-
-
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialReadBlockSize), "56K");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialReadQueueDepth), "64");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialReadNumJobs), "1");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialReadWeight), "0");
-
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialWriteBlockSize), "56K");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialWriteQueueDepth), "64");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialWriteNumJobs), "1");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialWriteWeight), "329");
-
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.TestName), "mockTestName");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.PackageName), "fio");
-            this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.CommandLine), "--output-format=json --fallocate=none");
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { nameof(FioMultiThroughputExecutor.TemplateJobFile), "oltp-c.fio.jobfile" },
+                { nameof(FioMultiThroughputExecutor.GroupReporting), 1 },
+                { nameof(FioMultiThroughputExecutor.DurationSec), 1 },
+                { nameof(FioMultiThroughputExecutor.DirectIO), 1 },
+                { nameof(FioMultiThroughputExecutor.TargetIOPS), "5000" },
+                { nameof(FioMultiThroughputExecutor.TargetPercents), 10 },
+                { nameof(FioMultiThroughputExecutor.RandomIOFileSize), "124G" },
+                { nameof(FioMultiThroughputExecutor.RandomReadBlockSize), "8K" },
+                { nameof(FioMultiThroughputExecutor.RandomReadQueueDepth), 512 },
+                { nameof(FioMultiThroughputExecutor.RandomReadNumJobs), 1 },
+                { nameof(FioMultiThroughputExecutor.RandomReadWeight), 5416 },
+                { nameof(FioMultiThroughputExecutor.RandomWriteBlockSize), "8K" },
+                { nameof(FioMultiThroughputExecutor.RandomWriteQueueDepth), 512 },
+                { nameof(FioMultiThroughputExecutor.RandomWriteNumJobs), 1 },
+                { nameof(FioMultiThroughputExecutor.RandomWriteWeight), 4255 },
+                { nameof(FioMultiThroughputExecutor.SequentialIOFileSize), "20G" },
+                { nameof(FioMultiThroughputExecutor.SequentialReadBlockSize), "56K" },
+                { nameof(FioMultiThroughputExecutor.SequentialReadQueueDepth), 64 },
+                { nameof(FioMultiThroughputExecutor.SequentialReadNumJobs), 1 },
+                { nameof(FioMultiThroughputExecutor.SequentialReadWeight), 0 },
+                { nameof(FioMultiThroughputExecutor.SequentialWriteBlockSize), "56K" },
+                { nameof(FioMultiThroughputExecutor.SequentialWriteQueueDepth), 64 },
+                { nameof(FioMultiThroughputExecutor.SequentialWriteNumJobs), 1 },
+                { nameof(FioMultiThroughputExecutor.SequentialWriteWeight), 329 },
+                { nameof(FioMultiThroughputExecutor.PackageName), "fio" }
+            };
 
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPath);
             this.mockFixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
@@ -220,14 +216,14 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
                 FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
             };
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
 
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio1.jobfile"));
 
             using (TestFioMultiThroughputExecutor fioMultiThroughputExecutor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -255,16 +251,15 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(5, PlatformID.Unix, true, os: false),
                 FixtureExtensions.CreateDisk(6, PlatformID.Unix, true, os: false)
             };
+
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
-
             this.mockFixture.Parameters.Add(nameof(FioMultiThroughputExecutor.SequentialDiskCount), "2");
-
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio2.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -287,14 +282,14 @@ namespace VirtualClient.Actions
                 FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
                 FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
             };
-            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
 
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(this.disks);
             string expectedJobFile = File.ReadAllText(Path.Combine(FioMultiThroughputExecutorTests.ExamplesPath, "expectedoltp-c.fio3.jobfile"));
 
             using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
-                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), expectedJobFile))
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
                     .Callback((string path, string contents) =>
                     {
                         createdExpectedJobFile = true;
@@ -305,6 +300,52 @@ namespace VirtualClient.Actions
             }
 
             Assert.IsTrue(createdExpectedJobFile);
+        }
+
+        [Test]
+        public async Task FioMultiThroughputExecutorCreatesExpectedJobFile_Anomalous_Scenario_1()
+        {
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadNumJobs)] = 8;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomReadQueueDepth)] = 2048;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteNumJobs)] = 8;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.RandomWriteQueueDepth)] = 2048;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteNumJobs)] = 2;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.SequentialWriteQueueDepth)] = 128;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.TargetIOPS)] = 400000;
+            this.mockFixture.Parameters[nameof(FioMultiThroughputExecutor.TargetPercents)] = "10,40,80,90,98,100,102,110";
+
+            this.disks = new List<Disk>
+            {
+                FixtureExtensions.CreateDisk(0, PlatformID.Unix, true, os: true),
+                FixtureExtensions.CreateDisk(1, PlatformID.Unix, true, os: false)
+            };
+
+            this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(this.disks);
+
+            using (TestFioMultiThroughputExecutor executor = new TestFioMultiThroughputExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                List<int> iopsValues = new List<int>();
+
+                this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) => this.defaultMemoryProcess;
+                this.mockFixture.FileSystem.Setup(fe => fe.File.WriteAllText(It.IsAny<string>(), It.IsAny<string>()))
+                    .Callback((string path, string contents) =>
+                    {
+                        MatchCollection rateIops = Regex.Matches(contents, "rate_iops=(-*[0-9]+)");
+                        foreach (System.Text.RegularExpressions.Match match in rateIops)
+                        {
+                            // Bug:
+                            // We found a scenario where the use of Int32/int data types cause the mathematical
+                            // calculations for some of the target IOPS to be negative numbers.
+                            iopsValues.Add(int.Parse(match.Groups[1].Value));
+                        }
+                    });
+
+                await executor.ExecuteAsync(CancellationToken.None);
+
+                Assert.IsNotEmpty(iopsValues);
+                Assert.IsTrue(iopsValues.All(rate => rate >= 0));
+            }
         }
 
         private class TestFioMultiThroughputExecutor : FioMultiThroughputExecutor
