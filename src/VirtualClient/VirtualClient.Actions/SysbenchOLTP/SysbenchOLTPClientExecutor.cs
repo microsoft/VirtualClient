@@ -256,7 +256,7 @@ namespace VirtualClient.Actions
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "Sysbench",
+                            toolName: "MySQL-Sysbench",
                             scenarioName: "OLTP " + this.Scenario,
                             process.StartTime,
                             process.ExitTime,
