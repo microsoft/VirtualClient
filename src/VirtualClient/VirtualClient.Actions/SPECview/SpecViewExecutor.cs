@@ -95,13 +95,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private IList<Metric> CaptureResults(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-
                     // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
                     string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path);
                     // Sort the subdirectories by creation time in descending order
@@ -116,18 +115,28 @@ namespace VirtualClient.Actions
                     }
 
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
+                    
                     SpecViewMetricsParser resultsParser = new (resultsContent);
-
-
+                    // TODO: how to get the node id/vm Id and where to log the node id/ vm Id.
+                    IList<Metric> metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
-   "OpenSSL Speed",
-   workloadProcess.FullCommand(),
-   toolVersion: null);
-
+                        this.Scenario, 
+                        workloadProcess.FullCommand(), 
+                        toolVersion: "2020 v3.0");
                     this.MetadataContract.Apply(telemetryContext);
-                    return resultsParser.Parse();
 
+                    // TODO: do we want a metric categorization.
+                    this.Logger.LogMetrics(
+                        "SPECview",
+                        this.Scenario,
+                        workloadProcess.StartTime,
+                        workloadProcess.ExitTime,
+                        metrics,
+                        null,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {
@@ -135,20 +144,16 @@ namespace VirtualClient.Actions
                         .AddError(exc);
 
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
-                    return new List<Metric>();
                 }
+
+                // TODO: experiment null file and see if we need this block. I suspect that SchemaException will catch everything.
                 catch (ArgumentNullException exc)
                 {
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
-                    return new List<Metric>();
                 }
-            }
-            else
-            {
-                return new List<Metric>();
             }
         }
 
@@ -164,7 +169,7 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
-            
+
             return this.Logger.LogMessageAsync($"{nameof(SpecViewExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
@@ -179,7 +184,7 @@ namespace VirtualClient.Actions
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext);
                             process.ThrowIfWorkloadFailed();
-                            this.CaptureResults(process, commandArguments, telemetryContext);
+                            this.CaptureMetrics(process, commandArguments, telemetryContext);
                         }
                     }
                     finally
@@ -190,98 +195,20 @@ namespace VirtualClient.Actions
                         }
                     }
                 }
-
-                DateTime endTime = DateTime.UtcNow;
-
-                foreach (Metric metric in this.CalculateTimeSpyAggregates(metrics))
-                {
-                    metrics.Add(metric);
-                }
-
-                this.MetadataContract.AddForScenario(
-                    "3DMark",
-                    null,
-                    toolVersion: null);
-
-                this.MetadataContract.Apply(telemetryContext);
-
-                this.Logger.LogMetrics(
-                    "3DMark",
-                    this.Scenario,
-                    startTime,
-                    endTime,
-                    metrics,
-                    null,
-                    string.Empty,
-                    this.Tags,
-                    telemetryContext);
             });
         }
 
-        /// <summary>
-        /// Calculates the 3DMark TimeSpy aggregate scores
-        /// </summary>
-        private IList<Metric> CalculateTimeSpyAggregates(IList<Metric> metrics)
-        {
-            IList<Metric> aggregates = new List<Metric>();
-            double tsgt1 = 0;
-            double tsgt2 = 0;
-            double tsct = 0;
-            foreach (Metric metric in metrics)
-            {
-                if (metric.Name == "timespy.graphics.1")
-                {
-                    tsgt1 = metric.Value;
-                }
-                else if (metric.Name == "timespy.graphics.2")
-                {
-                    tsgt2 = metric.Value;
-                }
-                else if (metric.Name == "timespy.cpu")
-                {
-                    tsct = metric.Value;
-                }
-            }
-
-            // Weighted Harmonic Mean of Individual Scores
-            if (tsgt1 != 0 && tsgt2 != 0 && tsct != 0)
-            {
-                double graphicsScore = 165 * (2 / ((1 / tsgt1) + (1 / tsgt2)));
-                double cpuScore = 298 * tsct;
-                double aggScore = 1 / ((0.85 / graphicsScore) + (0.15 / cpuScore));
-                aggregates.Add(new Metric("timespy.graphics.agg", graphicsScore, "score", MetricRelativity.HigherIsBetter));
-                aggregates.Add(new Metric("timespy.cpu.agg", cpuScore, "score", MetricRelativity.HigherIsBetter));
-                aggregates.Add(new Metric("timespy.finalscore", aggScore, "score", MetricRelativity.HigherIsBetter));
-            }
-
-            return aggregates;
-        }
-
-        /// <summary>
-        /// Generate the 3DMark Command Arguments
-        /// </summary>
-        private string GenerateCommandArguments(string definition)
-        {
-            return $"--definition={definition} --out={this.OutFileName}";
-        }
-
-        /// <summary>
-        /// Validate the 3DMark Package
-        /// </summary>
+            /// <summary>
+            /// Validate the 3DMark Package
+            /// </summary>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 DependencyPath workloadPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PackageName, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                if (workloadPackage == null)
-                {
-                    throw new DependencyException(
+                    .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                }
-
                 workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
                 this.Package = workloadPackage;
             }
