@@ -5,9 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.IO.Abstractions;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -97,11 +101,31 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    // TODO: find the result folder using regex
 
-                    string resultsFilePath = this.PlatformSpecifics.Combine(this.Package.Path, "results_xxxxx", "result.xml");
+                    // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
+                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path);
+                    // Sort the subdirectories by creation time in descending order
+                    var sortedSubdirectories = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d));
+                    string? resultsFilePath = null;
+                    foreach (string directory in sortedSubdirectories)
+                    {
+                        if (directory.StartsWith("results_", StringComparison.Ordinal))
+                        {
+                            resultsFilePath = this.PlatformSpecifics.Combine(directory, "resultCSV.csv");
+                        }
+                    }
+
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
-                    SpecViewMetricsParser resultsParser = new SpecViewMetricsParser(resultsContent);
+                    SpecViewMetricsParser resultsParser = new (resultsContent);
+
+
+
+                    this.MetadataContract.AddForScenario(
+   "OpenSSL Speed",
+   workloadProcess.FullCommand(),
+   toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
                     return resultsParser.Parse();
 
                 }
@@ -110,7 +134,15 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
 
-                    this.Logger.LogMessage($"{nameof(ThreeDMarkExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+                    return new List<Metric>();
+                }
+                catch (ArgumentNullException exc)
+                {
+                    EventContext relatedContext = telemetryContext.Clone()
+                        .AddError(exc);
+
+                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
                     return new List<Metric>();
                 }
             }
