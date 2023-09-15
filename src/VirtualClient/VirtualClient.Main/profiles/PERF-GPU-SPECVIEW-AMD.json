@@ -10,8 +10,8 @@
     {
       "Type": "SpecViewExecutor",
       "Parameters": {
-        "Scenario": "SPECTesting",
-        "CommandArguments": "-viewset \"3dsmax\" -nogui",
+        "Scenario": "SPECTestingAllViewSets",
+        "CommandArguments": "-viewset \"3dsmax,catia,creo,energy,maya,medical,snx,sw\" -nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
       }

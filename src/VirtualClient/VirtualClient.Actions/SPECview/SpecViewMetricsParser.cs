@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Xml.Linq;
     using System.Xml.Serialization;
+    using Renci.SshNet.Common;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -35,27 +36,32 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = new List<Metric>();
             try
             {
+                string[] lines = this.RawText.Split('\n');
+                foreach (string line in lines)
+                {
+                    // Skip empty lines
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    string[] parts = line.Split(',');
+
+                    // Check if the line is a composite row - only two items
+                    if (parts.Length == 2 && double.TryParse(parts[1], out double value))
+                    {
+                        string name = parts[0];
+                        Metric metric = new (name, value);
+                        metrics.Add(metric);
+                    }
+                }
             }
             catch (Exception exc)
             {
-                throw new WorkloadException($"Results not found. The workload '3DMark' did not produce any valid results.", exc, ErrorReason.WorkloadFailed);
+                throw new WorkloadException($"Results not found. The workload 'SpecView' did not produce any valid results.", exc, ErrorReason.WorkloadFailed);
             }
 
             return metrics;
-        }
-
-        /// <summary>
-        /// Gets the value sandwiched between the given XML tags
-        /// </summary>
-        /// <param name="tagName"></param>
-        /// <returns></returns>
-        private double ParseXMLTag(string tagName)
-        {
-            string pattern = $"<{tagName}.*>((.|\\n)*?)<\\/{tagName}>";
-            Match m = Regex.Match(this.RawText, pattern);
-            XElement tag = XElement.Parse(m.Value);
-            double val = double.Parse(tag.Value);
-            return val;
         }
     }
 }
