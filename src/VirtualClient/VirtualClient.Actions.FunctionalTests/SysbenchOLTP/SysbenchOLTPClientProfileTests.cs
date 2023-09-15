@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis.Scripting;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
@@ -87,8 +88,6 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform, Architecture architecture)
         {
-            int threads = Environment.ProcessorCount * 8;
-            
             return new List<string>()
             {
                 "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
@@ -102,9 +101,9 @@ namespace VirtualClient.Actions
                 "sudo make -j",
                 "sudo make install",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threads} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={threads} --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
             };
         }
 
@@ -121,6 +120,9 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix, architecture, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
         }
     }
 }
