@@ -64,7 +64,7 @@
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
         <WindowsProfiles Include="profiles\PERF-GPU-3DMARK-AMD.json" />
-	    <WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
+	      <WindowsProfiles Include="profiles\PERF-GPU-FURMARK.json" />
         <WindowsProfiles Include="profiles\PERF-GPU-FURMARK-AMD.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
@@ -78,7 +78,7 @@
         <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK-PING.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK.json" />
-	    <WindowsProfiles Include="profiles\PERF-NETWORK-CTSTRAFFIC.json" />
+	      <WindowsProfiles Include="profiles\PERF-NETWORK-CTSTRAFFIC.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
@@ -91,7 +91,7 @@
         <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC70.json" />
         <WindowsProfiles Include="profiles\POWER-SPEC100.json" />
-	<WindowsProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
+	      <WindowsProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
     </ItemGroup>
 
     <ItemGroup>
@@ -145,7 +145,7 @@
         <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
         <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
-	    <LinuxProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
+	      <LinuxProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
         <LinuxProfiles Include="profiles\QUAL-GPU-DCGMI.json" />
     </ItemGroup>
 
