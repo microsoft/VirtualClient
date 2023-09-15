@@ -1,9 +1,7 @@
 {
   "Description": "SPEC view GPU Performance Workload",
   "Metadata": {
-    "RecommendedMinimumExecutionTime": "02:00:00",
-    "SupportedPlatforms": "win-x64",
-    "SupportedOperatingSystems": "Windows"
+    "RecommendedMinimumExecutionTime": "02:00:00"
   },
   "Parameters": {
     "GpuModel": "v620"
@@ -12,8 +10,8 @@
     {
       "Type": "SpecViewExecutor",
       "Parameters": {
-        "Scenario": "SPECAllViewSets",
-        "CommandArguments": "-viewset \"3dsmax,catia,creo,energy,maya,medical,snx,sw\" -nogui",
+        "Scenario": "SPECTesting",
+        "CommandArguments": "-viewset \"3dsmax\" -nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
       }

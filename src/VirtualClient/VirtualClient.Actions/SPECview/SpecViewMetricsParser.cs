@@ -35,18 +35,6 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = new List<Metric>();
             try
             {
-                if (this.Defintion == "custom_TSGT1.3dmdef")
-                {
-                    metrics.Add(new Metric("timespy.graphics.1 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest1"), "fps", MetricRelativity.HigherIsBetter));
-                }
-                else if (this.Defintion == "custom_TSGT2.3dmdef")
-                {
-                    metrics.Add(new Metric("timespy.graphics.2 [fps]", this.ParseXMLTag("TimeSpyPerformanceGraphicsTest2"), "fps", MetricRelativity.HigherIsBetter));
-                }
-                else if (this.Defintion == "custom_TSCT.3dmdef")
-                {
-                    metrics.Add(new Metric("timespy.cpu [fps]", this.ParseXMLTag("TimeSpyPerformanceCpuSection2"), "fps", MetricRelativity.HigherIsBetter));
-                }
             }
             catch (Exception exc)
             {

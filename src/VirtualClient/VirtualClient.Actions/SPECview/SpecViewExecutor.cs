@@ -51,7 +51,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(OpenSslExecutor.CommandArguments));
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.CommandArguments));
             }
         }
 
@@ -97,64 +97,78 @@ namespace VirtualClient.Actions
         /// </summary>
         private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
-            if (workloadProcess.ExitCode == 0)
-            {
-                try
-                {
-                    // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
-                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path);
-                    // Sort the subdirectories by creation time in descending order
-                    var sortedSubdirectories = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d));
-                    string? resultsFilePath = null;
-                    foreach (string directory in sortedSubdirectories)
-                    {
-                        if (directory.StartsWith("results_", StringComparison.Ordinal))
-                        {
-                            resultsFilePath = this.PlatformSpecifics.Combine(directory, "resultCSV.csv");
-                        }
-                    }
+            // if (workloadProcess.ExitCode == 0)
+            // {
+                DateTime testDate = new DateTime(2099, 12, 31);
+                IList<Metric> metrics = new List<Metric>();
+                metrics.Add(new Metric("SPECTestMetric1", -1));
+                metrics.Add(new Metric("SPECTestMetric2", -1));
+                this.Logger.LogMetrics(
+                    "SPECview",
+                    this.Scenario,
+                    testDate,
+                    testDate,
+                    metrics,
+                    null,
+                    commandArguments,
+                    this.Tags,
+                    telemetryContext);
+            // try
+            // {
+            //    // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
+            //    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path);
+            //    // Sort the subdirectories by creation time in descending order
+            //    var sortedSubdirectories = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d));
+            //    string? resultsFilePath = null;
+            //    foreach (string directory in sortedSubdirectories)
+            //    {
+            //        if (directory.StartsWith("results_", StringComparison.Ordinal))
+            //        {
+            //            resultsFilePath = this.PlatformSpecifics.Combine(directory, "resultCSV.csv");
+            //        }
+            //    }
 
-                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
-                    
-                    SpecViewMetricsParser resultsParser = new (resultsContent);
-                    // TODO: how to get the node id/vm Id and where to log the node id/ vm Id.
-                    IList<Metric> metrics = resultsParser.Parse();
+            // string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
-                    this.MetadataContract.AddForScenario(
-                        this.Scenario, 
-                        workloadProcess.FullCommand(), 
-                        toolVersion: "2020 v3.0");
-                    this.MetadataContract.Apply(telemetryContext);
+            // SpecViewMetricsParser resultsParser = new (resultsContent);
+            //    // TODO: how to get the node id/vm Id and where to log the node id/ vm Id.
+            //    IList<Metric> metrics = resultsParser.Parse();
 
-                    // TODO: do we want a metric categorization.
-                    this.Logger.LogMetrics(
-                        "SPECview",
-                        this.Scenario,
-                        workloadProcess.StartTime,
-                        workloadProcess.ExitTime,
-                        metrics,
-                        null,
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext);
-                }
-                catch (SchemaException exc)
-                {
-                    EventContext relatedContext = telemetryContext.Clone()
-                        .AddError(exc);
+            // this.MetadataContract.AddForScenario(
+            //        this.Scenario, 
+            //        workloadProcess.FullCommand(), 
+            //        toolVersion: "2020 v3.0");
+            //    this.MetadataContract.Apply(telemetryContext);
 
-                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
-                }
+            // // TODO: do we want a metric categorization.
+            //    this.Logger.LogMetrics(
+            //        "SPECview",
+            //        this.Scenario,
+            //        workloadProcess.StartTime,
+            //        workloadProcess.ExitTime,
+            //        metrics,
+            //        null,
+            //        commandArguments,
+            //        this.Tags,
+            //        telemetryContext);
+            // }
+            // catch (SchemaException exc)
+            // {
+            //    EventContext relatedContext = telemetryContext.Clone()
+            //        .AddError(exc);
 
-                // TODO: experiment null file and see if we need this block. I suspect that SchemaException will catch everything.
-                catch (ArgumentNullException exc)
-                {
-                    EventContext relatedContext = telemetryContext.Clone()
-                        .AddError(exc);
+            // this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+            // }
 
-                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
-                }
-            }
+            //// TODO: experiment null file and see if we need this block. I suspect that SchemaException will catch everything.
+            // catch (ArgumentNullException exc)
+            // {
+            //    EventContext relatedContext = telemetryContext.Clone()
+            //        .AddError(exc);
+
+            // this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
+            // }
+            // }
         }
 
         /// <summary>
@@ -172,29 +186,31 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(SpecViewExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                await Task.Run(() => this.CaptureMetrics(null, commandArguments, telemetryContext));
+            
+                // using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                // {
+                //    this.CleanupTasks.Add(() => process.SafeKill());
 
-                    try
-                    {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                // try
+                //    {
+                //        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfWorkloadFailed();
-                            this.CaptureMetrics(process, commandArguments, telemetryContext);
-                        }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                    }
-                }
+                // if (!cancellationToken.IsCancellationRequested)
+                //        {
+                //            await this.LogProcessDetailsAsync(process, telemetryContext);
+                //            process.ThrowIfWorkloadFailed();
+                //            this.CaptureMetrics(process, commandArguments, telemetryContext);
+                //        }
+                //    }
+                //    finally
+                //    {
+                //        if (!process.HasExited)
+                //        {
+                //            process.Kill();
+                //        }
+                //    }
+                // }
             });
         }
 
@@ -209,7 +225,8 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+                // TODO: do we plan to run spec on linux; should I create a folder like win-x64?
+                // workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
                 this.Package = workloadPackage;
             }
         }
