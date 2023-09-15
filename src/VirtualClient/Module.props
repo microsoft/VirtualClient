@@ -27,10 +27,10 @@
         <Azure_Identity_PackageVersion>1.6.1</Azure_Identity_PackageVersion>
 
         <!-- Azure.Messaging.EventHubs -->
-        <Azure_Messaging_EventHubs_PackageVersion>5.7.2</Azure_Messaging_EventHubs_PackageVersion>
+        <Azure_Messaging_EventHubs_PackageVersion>5.9.3</Azure_Messaging_EventHubs_PackageVersion>
 
         <!-- Azure.Storage.Blobs -->
-        <Azure_Storage_Blobs_PackageVersion>12.13.1</Azure_Storage_Blobs_PackageVersion>
+        <Azure_Storage_Blobs_PackageVersion>12.18.0</Azure_Storage_Blobs_PackageVersion>
 
         <!-- Extreme.Numerics -->
         <Extreme_Numerics_PackageVersion>8.1.9</Extreme_Numerics_PackageVersion>
@@ -45,7 +45,7 @@
         <Microsoft_AspNetCore_Authentication_PackageVersion>2.2.0</Microsoft_AspNetCore_Authentication_PackageVersion>
 
         <!-- Microsoft.AspNetCore.Hosting -->
-        <Microsoft_AspNetCore_Hosting_PackageVersion>2.2.0</Microsoft_AspNetCore_Hosting_PackageVersion>
+        <Microsoft_AspNetCore_Hosting_PackageVersion>2.2.7</Microsoft_AspNetCore_Hosting_PackageVersion>
 
         <!-- Microsoft.AspNetCore.Mvc -->
         <Microsoft_AspNetCore_Mvc_PackageVersion>2.2.0</Microsoft_AspNetCore_Mvc_PackageVersion>
@@ -54,40 +54,34 @@
         <Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion>2.2.0</Microsoft_AspNetCore_Mvc_Formatters_Json_PackageVersion>
 
         <!-- Microsoft.AspNetCore.Mvc.Versioning -->
-        <Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>5.0.0</Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>
+        <Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>5.1.0</Microsoft_AspNetCore_Mvc_Versioning_PackageVersion>
 
-        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson 6.0.0 -->
-        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>5.0.4</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
-
-        <!-- Microsoft_Azure_Profiling_PackageVersion -->
-        <Microsoft_Azure_Profiling_PackageVersion>1.0.30</Microsoft_Azure_Profiling_PackageVersion>
-
-        <!-- Microsoft.Azure.Services.AppAuthentication -->
-        <Microsoft_Azure_Services_AppAuthentication_PackageVersion>1.3.1</Microsoft_Azure_Services_AppAuthentication_PackageVersion>
+        <!-- Microsoft.AspNetCore.Mvc.NewtonsoftJson -->
+        <Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>6.0.12</Microsoft_AspNetCore_Mvc_NewtonsoftJson_PackageVersion>
 
         <!-- Microsoft.CodeAnalysis.Common -->
-        <Microsoft_CodeAnalysis_Common_PackageVersion>4.5.0</Microsoft_CodeAnalysis_Common_PackageVersion>
+        <Microsoft_CodeAnalysis_Common_PackageVersion>4.7.0</Microsoft_CodeAnalysis_Common_PackageVersion>
         
         <!-- Microsoft.CodeAnalysis.CSharp.Scripting -->
-        <Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>4.5.0</Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>
+        <Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>4.7.0</Microsoft_CodeAnalysis_CSharp_Scripting_PackageVersion>
         
         <!-- Microsoft.Diagnostics.Tracing.TraceEvent -->
         <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>2.0.61</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration -->
-        <Microsoft_Extensions_Configuration_PackageVersion>6.0.1</Microsoft_Extensions_Configuration_PackageVersion>
+        <Microsoft_Extensions_Configuration_PackageVersion>7.0.0</Microsoft_Extensions_Configuration_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration.Json -->
-        <Microsoft_Extensions_Configuration_Json_PackageVersion>6.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
+        <Microsoft_Extensions_Configuration_Json_PackageVersion>7.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
 
         <!-- Microsoft.Extensions.DependencyInjection -->
-        <Microsoft_Extensions_DependencyInjection_PackageVersion>6.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
+        <Microsoft_Extensions_DependencyInjection_PackageVersion>7.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging -->
-        <Microsoft_Extensions_Logging_PackageVersion>6.0.0</Microsoft_Extensions_Logging_PackageVersion>
+        <Microsoft_Extensions_Logging_PackageVersion>7.0.0</Microsoft_Extensions_Logging_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging.Console -->
-        <Microsoft_Extensions_Logging_Console_PackageVersion>6.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
+        <Microsoft_Extensions_Logging_Console_PackageVersion>7.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
 
         <!-- Microsoft.NET.Test.Sdk -->
         <Microsoft_NET_Test_Sdk_PackageVersion>17.0.0</Microsoft_NET_Test_Sdk_PackageVersion>
@@ -96,7 +90,7 @@
         <Microsoft_Extensions_Http_Polly_PackageVersion>6.0.9</Microsoft_Extensions_Http_Polly_PackageVersion>
 
         <!-- Microsoft.Windows.Compatibility -->
-        <Microsoft_Windows_Compatibility_PackageVersion>6.0.0</Microsoft_Windows_Compatibility_PackageVersion>
+        <Microsoft_Windows_Compatibility_PackageVersion>7.0.5</Microsoft_Windows_Compatibility_PackageVersion>
 
         <!-- Microsoft.Win32.Registry -->
         <Microsoft_Win32_Registry_PackageVersion>5.0.0</Microsoft_Win32_Registry_PackageVersion>
@@ -120,7 +114,7 @@
         <Polly_Extensions_Http_PackageVersion>3.0.0</Polly_Extensions_Http_PackageVersion>
 
         <!-- Serilog.Extensions.Logging -->
-        <Serilog_Extensions_Logging_PackageVersion>3.1.0</Serilog_Extensions_Logging_PackageVersion>
+        <Serilog_Extensions_Logging_PackageVersion>7.0.0</Serilog_Extensions_Logging_PackageVersion>
 
         <!-- Serilog.Sinks.File -->
         <Serilog_Sinks_File_PackageVersion>5.0.0</Serilog_Sinks_File_PackageVersion>
@@ -141,10 +135,10 @@
         <System_Diagnostics_Debug_PackageVersion>4.3.0</System_Diagnostics_Debug_PackageVersion>
 
         <!-- System.Diagnostics.EventLog -->
-        <System_Diagnostics_EventLog_PackageVersion>6.0.0</System_Diagnostics_EventLog_PackageVersion>
+        <System_Diagnostics_EventLog_PackageVersion>7.0.0</System_Diagnostics_EventLog_PackageVersion>
 
         <!-- System.Diagnostics.PerformanceCounter -->
-        <System_Diagnostics_PerformanceCounter_PackageVersion>6.0.0</System_Diagnostics_PerformanceCounter_PackageVersion>
+        <System_Diagnostics_PerformanceCounter_PackageVersion>7.0.0</System_Diagnostics_PerformanceCounter_PackageVersion>
 
         <!-- System.IO.Abstractions -->
         <System_IO_Abstractions_PackageVersion>19.1.5</System_IO_Abstractions_PackageVersion>
@@ -168,7 +162,7 @@
         <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
 
         <!-- YamlDotNet -->
-        <YamlDotNet_PackageVersion>11.2.1</YamlDotNet_PackageVersion>
+        <YamlDotNet_PackageVersion>13.3.1</YamlDotNet_PackageVersion>
 
     </PropertyGroup>
 
