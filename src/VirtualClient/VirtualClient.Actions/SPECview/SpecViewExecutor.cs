@@ -169,27 +169,25 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(SpecViewExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments))
+                using IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments);
+                this.CleanupTasks.Add(() => process.SafeKill());
+
+                try
                 {
-                    this.CleanupTasks.Add(() => process.SafeKill());
+                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                    try
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfWorkloadFailed();
-                            this.CaptureMetrics(process, commandArguments, telemetryContext);
-                        }
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        process.ThrowIfWorkloadFailed();
+                        this.CaptureMetrics(process, commandArguments, telemetryContext);
                     }
-                    finally
+                }
+                finally
+                {
+                    if (!process.HasExited)
                     {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
+                        process.Kill();
                     }
                 }
             });
