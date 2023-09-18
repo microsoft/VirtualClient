@@ -236,8 +236,8 @@ namespace VirtualClient.Actions
             if (results != null)
             {
                 this.Logger.LogMetrics(
-                    "PostgreSQL",
-                    "TPC-C",
+                    "PostgreSQL-HammerDB",
+                    "TPC-C" + this.Scenario,
                     startTime,
                     endTime,
                     results.ToList(),

@@ -417,6 +417,10 @@ namespace VirtualClient
                 profile = profile.MergeWith(fileUploadMonitorProfile);
             }
 
+            MetadataContract.Persist(
+                profile.Metadata.Keys.ToDictionary(key => key, entry => profile.Metadata[entry] as object).ObscureSecrets(),
+                MetadataContractCategory.Default);
+
             return profile;
         }
 
