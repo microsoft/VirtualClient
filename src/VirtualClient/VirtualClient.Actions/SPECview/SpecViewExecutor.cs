@@ -141,8 +141,6 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
                 }
-
-                // TODO: experiment null file and see if we need this block. I suspect that SchemaException will catch everything.
                 catch (ArgumentNullException exc)
                 {
                     EventContext relatedContext = telemetryContext.Clone()
