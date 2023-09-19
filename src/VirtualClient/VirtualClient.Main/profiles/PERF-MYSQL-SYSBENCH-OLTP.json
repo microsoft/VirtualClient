@@ -9,7 +9,7 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Default",
-        "SkipInitialize": false
+        "SkipInitialize": true
     },
     "Actions": [
         {
