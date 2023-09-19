@@ -97,8 +97,8 @@ namespace VirtualClient.Actions
         /// </summary>
         private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
         {
-            // if (workloadProcess.ExitCode == 0)
-            // {
+            if (workloadProcess.ExitCode == 0)
+            {
                 try
                 {
                     // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
@@ -122,10 +122,8 @@ namespace VirtualClient.Actions
                     this.Logger.LogMetrics(
                         "SPECview",
                         this.Scenario,
-                        new DateTime(2099, 12, 31),
-                        new DateTime(2099, 12, 31),
-                        // workloadProcess.StartTime,
-                        // workloadProcess.ExitTime,
+                        workloadProcess.StartTime,
+                        workloadProcess.ExitTime,
                         metrics,
                         null,
                         commandArguments,
@@ -147,8 +145,8 @@ namespace VirtualClient.Actions
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputFileNotFound", LogLevel.Warning, relatedContext);
                 }
 
-            // }
-    }
+            }
+        }
 
         /// <summary>
         /// Run the Spec View Workload
@@ -200,8 +198,6 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                // TODO: do we plan to run spec on linux; should I create a folder like win-x64?
-                // workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
                 this.Package = workloadPackage;
             }
         }
