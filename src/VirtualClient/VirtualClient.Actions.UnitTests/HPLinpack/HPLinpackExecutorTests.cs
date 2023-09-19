@@ -151,24 +151,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public void HPLinpackExecutorThrowsWhenPlatformIsNotSupported(PlatformID platformID, Architecture architecture)
-        {
-            this.fixture.Setup(platformID, architecture);
-            using (TestHPLExecutor executor = new TestHPLExecutor(this.fixture))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
-
-                if (platformID == PlatformID.Win32NT)
-                {
-                    Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-                }
-            }
-        }
-
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.fixture.Setup(platform, architecture);

@@ -10,9 +10,11 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Actions.NetworkPerformance;
@@ -132,8 +134,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ThrowIfPlatformIsNotSupported();
-
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait();
 
@@ -393,12 +393,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns true/false whether the component should execute on the system/platform.
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
         /// </summary>
-        /// <returns>Returns True or false</returns>
         protected override bool IsSupported()
         {
-            bool isSupported = this.Platform == PlatformID.Unix;
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("DeathStarBench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
 
             return isSupported;
         }
@@ -572,16 +579,6 @@ namespace VirtualClient.Actions
             await this.ExecuteCommandAsync(luarocksCommand, this.PackageDirectory, cancellationToken)
                 .ConfigureAwait();
 
-        }
-
-        private void ThrowIfPlatformIsNotSupported()
-        {
-            if (this.Platform != PlatformID.Unix)
-            {
-                throw new WorkloadException(
-                    $"'{this.Platform.ToString()}' is not currently supported, only {PlatformID.Unix} is currently supported",
-                    ErrorReason.PlatformNotSupported);
-            }
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)

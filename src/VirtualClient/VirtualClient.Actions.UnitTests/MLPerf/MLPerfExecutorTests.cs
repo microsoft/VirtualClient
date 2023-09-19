@@ -36,18 +36,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void MLPerfExecutorThrowsOnUnsupportedPlatform()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (TestMLPerfExecutor MLPerfExecutor = new TestMLPerfExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.PlatformNotSupported);
-            }
-        }
-
-        [Test]
         public void MLPerfExecutorThrowsOnUnsupportedLinuxDistro()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
