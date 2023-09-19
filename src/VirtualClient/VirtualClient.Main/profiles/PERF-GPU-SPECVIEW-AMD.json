@@ -23,7 +23,7 @@
       "Parameters": {
         "Scenario": "InstallAMDGPUDriverPackage",
         "BlobContainer": "packages",
-        "BlobName": "amdgpudriver.zip",
+        "BlobName": "AMDdependencyv620.zip",
         "PackageName": "amdgpudriver",
         "Extract": true
       }
@@ -40,7 +40,7 @@
       "Type": "DependencyPackageInstallation",
       "Parameters": {
         "Scenario": "InstallSpecViewWorkloadPackage",
-        "BlobContainer": "spec-dev",
+        "BlobContainer": "packages",
         "BlobName": "specviewperf.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
