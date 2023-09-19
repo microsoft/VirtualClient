@@ -79,7 +79,7 @@
         /// </summary>
         protected override bool IsSupported()
         {
-            bool isSupported = base.IsSupported() && this.Platform == PlatformID.Win32NT;
+            bool isSupported = base.IsSupported() && this.Platform == PlatformID.Win32NT && this.CpuArchitecture == Architecture.X64;
 
             if (!isSupported)
             {
