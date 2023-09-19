@@ -149,7 +149,7 @@ namespace VirtualClient.Actions
             if (!state.ExecutablesInitialized)
             {
                 // install sysbench using repo scripts
-                if (this.Platform == PlatformID.Unix)
+                if (this.Platform == PlatformID.Unix && this.DatabaseScenario != SysbenchOLTPScenario.Default)
                 {
                     string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 

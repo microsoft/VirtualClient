@@ -92,10 +92,6 @@ namespace VirtualClient.Actions
             {
                 "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
 
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-server.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-client.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/in-memory.sh\"",
-
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
