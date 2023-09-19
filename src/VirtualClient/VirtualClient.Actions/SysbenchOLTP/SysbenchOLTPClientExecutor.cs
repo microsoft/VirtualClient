@@ -91,15 +91,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                int numTables = 10;
-
-                if (this.Parameters.TryGetValue(nameof(this.NumTables), out IConvertible value) && value != null
-                    && this.CpuArchitecture != Architecture.Arm64)
-                {
-                    numTables = value.ToInt32(CultureInfo.InvariantCulture);
-                }
-
-                return numTables;
+                return this.Parameters.GetValue<int>(nameof(SysbenchOLTPClientExecutor.NumTables), 10);
             }
         }
 
