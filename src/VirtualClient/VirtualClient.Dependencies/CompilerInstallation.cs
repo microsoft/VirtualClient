@@ -268,19 +268,23 @@ namespace VirtualClient.Dependencies
         private async Task InstallCharmplusplusAsync(string charmplusplusVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // default latest
-            IFile fileInterface = this.systemManager.FileSystem.File;
-            string lockFile = this.PlatformSpecifics.Combine(Environment.CurrentDirectory, "charmcompilersuccess.lock");
-            if (!fileInterface.Exists(lockFile))
+            charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
+            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+            string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
+
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
-                charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
-                await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-                await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
-                string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
                 await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
-                fileInterface.Create(lockFile);
+            }
+
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+            {
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -305,7 +309,7 @@ namespace VirtualClient.Dependencies
                          process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                      }
                  }
-            });
+             });
         }
     }
 
