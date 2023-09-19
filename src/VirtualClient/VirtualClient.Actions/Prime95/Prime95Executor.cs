@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
@@ -237,11 +238,13 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Returns true/false whether the component is supported on the current
-        /// operating system and CPU architecture.
+        /// OS platform and CPU architecture.
         /// </summary>
         protected override bool IsSupported()
         {
-            bool isSupported = base.IsSupported() && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix);
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
 
             if (!isSupported)
             {

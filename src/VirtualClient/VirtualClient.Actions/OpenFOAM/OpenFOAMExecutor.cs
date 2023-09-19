@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -153,8 +154,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ThrowIfPlatformOrArchitectureIsNotSupported();
-
             await this.InitializeExecutorPropertiesAsync(cancellationToken, telemetryContext)
                 .ConfigureAwait(false);
 
@@ -162,6 +161,24 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             this.ThrowIfExeNotPresent();
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("OpenFOAM", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         private async Task InitializeExecutorPropertiesAsync(CancellationToken cancellationToken, EventContext telemetryContext)
@@ -254,19 +271,6 @@ namespace VirtualClient.Actions
             foreach (string fileName in this.fileSystem.Directory.GetFiles(source, "*", SearchOption.AllDirectories))
             {
                 this.fileSystem.File.Copy(fileName, this.PlatformSpecifics.Combine(target, fileName.Substring(source.Length + 1)), true);
-            }
-        }
-
-        private void ThrowIfPlatformOrArchitectureIsNotSupported()
-        {
-            if (this.Platform != PlatformID.Unix)
-            {
-                throw new WorkloadException($"The OpenFOAM workload only supported on the following platform/architectures: {PlatformID.Unix}{Architecture.X64} and {PlatformID.Unix}{Architecture.Arm64}.", ErrorReason.PlatformNotSupported);
-            }
-
-            if ((this.CpuArchitecture != Architecture.X64) && (this.CpuArchitecture != Architecture.Arm64))
-            {
-                throw new WorkloadException($"The OpenFOAM workload only supported on the following platform/architectures: {PlatformID.Unix}{Architecture.X64} and {PlatformID.Unix}{Architecture.Arm64}.", ErrorReason.ProcessorArchitectureNotSupported);
             }
         }
 

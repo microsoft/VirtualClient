@@ -10,6 +10,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System.Linq;
     using System.Net;
     using System.Net.NetworkInformation;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -100,6 +101,24 @@ namespace VirtualClient.Actions.NetworkPerformance
             }
 
             return this.ExecutePingServerAsync(ipAddress, telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("NetworkPing", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         private async Task ExecutePingServerAsync(IPAddress ipAddress, EventContext telemetryContext, CancellationToken cancellationToken)

@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -126,6 +127,24 @@ namespace VirtualClient.Actions
 
             this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "3DMark", "3DMarkCmd.exe");
             this.DLCPath = this.PlatformSpecifics.Combine(this.Package.Path, "DLC", "3DMark");
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && this.Platform == PlatformID.Win32NT
+                && this.CpuArchitecture == Architecture.X64;
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("ThreeDMark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>

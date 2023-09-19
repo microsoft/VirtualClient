@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -90,6 +91,25 @@ namespace VirtualClient.Actions
 
             await this.InitializeWorkloadToolsetsAsync(cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && 
+                ((this.Platform == PlatformID.Win32NT && this.CpuArchitecture == Architecture.X64)
+                || (this.Platform == PlatformID.Unix && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64)));
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("OpenSsl", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
