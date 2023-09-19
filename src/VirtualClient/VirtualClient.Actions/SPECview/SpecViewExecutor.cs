@@ -110,7 +110,6 @@ namespace VirtualClient.Actions
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
                     SpecViewMetricsParser resultsParser = new (resultsContent);
-                    // TODO: how to get the node id/vm Id and where to log the node id/ vm Id.
                     IList<Metric> metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
@@ -120,7 +119,6 @@ namespace VirtualClient.Actions
                            toolVersion: "2020 v3.0");
                     this.MetadataContract.Apply(telemetryContext);
 
-                    // TODO: do we want a metric categorization.
                     this.Logger.LogMetrics(
                         "SPECview",
                         this.Scenario,

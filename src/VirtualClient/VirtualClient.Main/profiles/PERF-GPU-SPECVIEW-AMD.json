@@ -1,7 +1,9 @@
 {
   "Description": "SPEC view GPU Performance Workload",
   "Metadata": {
-    "RecommendedMinimumExecutionTime": "02:00:00"
+    "RecommendedMinimumExecutionTime": "02:00:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
     "GpuModel": "v620"
@@ -11,7 +13,7 @@
       "Type": "SpecViewExecutor",
       "Parameters": {
         "Scenario": "SPECTestingAllViewSets",
-        "CommandArguments": "-viewset \"3dsmax,catia,creo,energy,maya,medical,snx,sw\" -nogui",
+        "CommandArguments": "-viewset \"snx,sw\" -nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
       }
@@ -23,7 +25,7 @@
       "Parameters": {
         "Scenario": "InstallAMDGPUDriverPackage",
         "BlobContainer": "packages",
-        "BlobName": "amdgpudriver.zip",
+        "BlobName": "AMDDependencyTesting.zip",
         "PackageName": "amdgpudriver",
         "Extract": true
       }
@@ -40,7 +42,7 @@
       "Type": "DependencyPackageInstallation",
       "Parameters": {
         "Scenario": "InstallSpecViewWorkloadPackage",
-        "BlobContainer": "spec-dev",
+        "BlobContainer": "packages",
         "BlobName": "specviewperf.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
