@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -242,6 +243,24 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("HPLinPack", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private void SetParameters()
         {
             // gives you P*Q = Number of processes( Default: Environment.ProcessorCount, overwrite to value from command line to VC if supplied) and P <= Q and  Q-P to be the minimum possible value.
@@ -263,14 +282,7 @@ namespace VirtualClient.Actions
 
         private void ThrowIfPlatformIsNotSupported()
         {
-            if (this.Platform != PlatformID.Unix)
-            {
-                throw new WorkloadException(
-                    $"The HPL workload is currently only supported on the following platform/architectures: " +
-                    $"'{PlatformSpecifics.LinuxX64}', '{PlatformSpecifics.LinuxArm64}'.",
-                    ErrorReason.PlatformNotSupported);
-            }
-            else if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.UsePerformanceLibraries == true)
+            if (this.Platform == PlatformID.Unix && this.CpuArchitecture != Architecture.Arm64 && this.UsePerformanceLibraries == true)
             {
                 throw new WorkloadException(
                     $"The HPL workload with performance Libraries is currently only supported on the following platform/architectures: " +

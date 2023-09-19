@@ -38,28 +38,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public void OpenFOAMExecutorThrowsWhenPlatformOrArchitectureIsNotSupported(PlatformID platformID, Architecture architecture)
-        {
-            this.SetupDefaultMockBehavior(platformID, architecture);
-            using (TestOpenFOAMExecutor executor = new TestOpenFOAMExecutor(this.fixture))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => executor.ExecuteAsync(EventContext.None, CancellationToken.None));
-
-                if (platformID == PlatformID.Win32NT)
-                {
-                    Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-                }
-                else
-                {
-                    Assert.AreEqual(ErrorReason.ProcessorArchitectureNotSupported, exception.Reason);
-                } 
-            }
-        }
-
-        [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
         public async Task OpenFOAMExecutorInitializesItsDependenciesAsExpected(PlatformID platformID, Architecture architecture)

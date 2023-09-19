@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -17,6 +18,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Contracts.Metadata;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// The Geekbench5 executor.
@@ -131,6 +133,25 @@ namespace VirtualClient.Actions
                     $"Geekbench executable not found at path '{this.ExecutablePath}'",
                     ErrorReason.WorkloadDependencyMissing);
             }
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && 
+                ((this.Platform == PlatformID.Win32NT && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64))
+                || (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64));
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("Geekbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)

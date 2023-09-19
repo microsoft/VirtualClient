@@ -48,18 +48,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void RedisExecutorThrowsOnUnsupportedPlatformAsync()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (var executor = new TestRedisExecutorExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-            }
-        }
-
-        [Test]
         public void RedisExecutorThrowsOnUnsupportedDistroAsync()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
