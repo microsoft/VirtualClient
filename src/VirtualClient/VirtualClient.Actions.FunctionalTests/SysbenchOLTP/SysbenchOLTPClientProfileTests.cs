@@ -105,8 +105,8 @@ namespace VirtualClient.Actions
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
             };
         }
 
