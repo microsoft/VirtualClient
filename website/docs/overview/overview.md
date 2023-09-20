@@ -76,6 +76,7 @@ VirtualClient handles the installation and execution of various tools. Individua
 | [Redis](../workloads/redis/redis.md) | Redis Performance | linux-x64, linux-arm64 | [**Redis**:BSD-3](https://github.com/redis/redis/blob/unstable/COPYING)<br/>[**Memtier**:GPL-2.0](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
 | [SockPerf](../workloads/network-suite/network-suite.md) | Network latency | linux-x64, linux-arm64 | [Custom](https://github.com/Mellanox/sockperf/blob/sockperf_v2/copying)  |
 | [SPECjvm](../workloads/specjvm/specjvm.md) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
+| [SPECview](../workloads/specview/specview.md) | 3D graphics performance | win-x64 | [SPEC](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-0/)  |
 | [stressapptest](../workloads/stressapptest/stressapptest.md) | Fault Tolerance | linux-x64, linux-arm64 | [Apache-2.0](https://github.com/stressapptest/stressapptest/blob/master/NOTICE)  |
 | [stress-ng](../workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](../workloads/superbenchmark/superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |

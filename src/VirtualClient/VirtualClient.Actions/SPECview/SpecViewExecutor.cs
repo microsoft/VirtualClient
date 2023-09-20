@@ -188,7 +188,7 @@ namespace VirtualClient.Actions
         }
 
             /// <summary>
-            /// Validate the 3DMark Package
+            /// Validate the SPECview Package
             /// </summary>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
         {

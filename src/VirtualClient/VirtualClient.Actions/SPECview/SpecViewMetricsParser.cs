@@ -21,6 +21,8 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SpecViewMetricsParser : MetricsParser
     {
+        private const string Unit = "fps";
+
         /// <summary>
         /// Parser for the 3DMark workload
         /// </summary>
@@ -51,7 +53,7 @@ namespace VirtualClient.Actions
                     if (parts.Length == 2 && double.TryParse(parts[1], out double value))
                     {
                         string name = parts[0];
-                        Metric metric = new (name, value);
+                        Metric metric = new (name, value, SpecViewMetricsParser.Unit);
                         metrics.Add(metric);
                     }
                 }

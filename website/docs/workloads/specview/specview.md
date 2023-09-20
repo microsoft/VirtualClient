@@ -3,9 +3,6 @@ SPECviewperf software measures the 3D graphics performance of systems running un
 
 Applications represented by viewsets in SPECviewperf 2020 include Autodesk 3ds Max and Maya for media and entertainment; Dassault Systèmes Catia and Solidworks, PTC Creo, and Siemens NX for CAD/CAM; and two datasets representing professional energy and medical applications.
 
-This benchmark needs a GPU-enabled machine to run.
-
-
 * [SPECviewperf Website](https://www.spec.org/gwpg/publish/vp2020_rel.html)
 
 ## Workload Metrics

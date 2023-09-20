@@ -10,6 +10,7 @@ namespace VirtualClient.Actions
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
@@ -18,46 +19,49 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SpecViewMetricsParserTests
     {
-        [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT1()
+        private string ExamplePath
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt1.xml");
+            get
+            {
+                string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                return Path.Combine(workingDirectory, "Examples", "SPECview");
+            }
+        }
+
+
+        [Test]
+        public void SpecViewMetricsParserTestsCorrectly_MultipleViewSets()
+        {
+            string outputPath = Path.Combine(ExamplePath, "resultCSV_multipleViewSets.csv");
             string rawText = File.ReadAllText(outputPath);
 
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT1.3dmdef");
+            SpecViewMetricsParser testParser = new SpecViewMetricsParser(rawText);
             IList<Metric> metrics = testParser.Parse();
+            IList<Metric> expected = new List<Metric>();
 
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.graphics.1 [fps]", 59.65, "fps");
+            expected.Add(new Metric("3dsmax-07", 35.46, "fps"));
+            expected.Add(new Metric("catia-06", 27.46, "fps"));
+            expected.Add(new Metric("energy-03", 227.8, "fps"));
+            expected.Add(new Metric("medical-03", 35.16, "fps"));
+            expected.Add(new Metric("snx-04", 139.11, "fps"));
+            expected.Add(new Metric("solidworks-07", 97.8, "fps"));
+
+            MetricAssert.Equals(metrics, expected);
         }
 
         [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSGT2()
+        public void SpecViewMetricsParserTestsCorrectly_OneViewSet()
         {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsgt2.xml");
+            string outputPath = Path.Combine(ExamplePath, "resultCSV_oneViewSet.csv");
             string rawText = File.ReadAllText(outputPath);
 
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSGT2.3dmdef");
+            SpecViewMetricsParser testParser = new SpecViewMetricsParser(rawText);
             IList<Metric> metrics = testParser.Parse();
+            IList<Metric> expected = new List<Metric>();
 
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.graphics.2 [fps]", 58.10, "fps");
-        }
+            expected.Add(new Metric("3dsmax-07", 29.33, "fps"));
 
-        [Test]
-        public void ThreeDMarkMetricsParserTestsCorrectly_ScenarioTSCT()
-        {
-            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, "Examples", "3DMark", "result_tsct.xml");
-            string rawText = File.ReadAllText(outputPath);
-
-            ThreeDMarkMetricsParser testParser = new ThreeDMarkMetricsParser(rawText, "custom_TSCT.3dmdef");
-            IList<Metric> metrics = testParser.Parse();
-
-            Assert.AreEqual(1, metrics.Count);
-            MetricAssert.Exists(metrics, "timespy.cpu [fps]", 28.50, "fps");
+            MetricAssert.Equals(metrics, expected);
         }
 
     }
