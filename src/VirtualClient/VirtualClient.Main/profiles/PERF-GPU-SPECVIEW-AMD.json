@@ -1,7 +1,7 @@
 {
   "Description": "SPEC view GPU Performance Workload",
   "Metadata": {
-    "RecommendedMinimumExecutionTime": "02:00:00",
+    "RecommendedMinimumExecutionTime": "01:00:00",
     "SupportedPlatforms": "win-x64",
     "SupportedOperatingSystems": "Windows"
   },

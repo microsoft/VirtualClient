@@ -32,7 +32,7 @@ namespace VirtualClient.Actions
         private ISystemManagement systemManagement;
 
         /// <summary>
-        /// ConstructorD
+        /// Constructor
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
@@ -41,7 +41,6 @@ namespace VirtualClient.Actions
         {
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.systemManagement = dependencies.GetService<ISystemManagement>();
-            this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
         }
 
         /// <summary>
@@ -63,16 +62,15 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path for the intermediate results file.
         /// </summary>
-        public string OutFileName { get; set; }
 
         /// <summary>
-        /// Defines the path to the SPEC view package that contains the workload
+        /// Defines the path to the SPECview package that contains the workload
         /// executable.
         /// </summary>
         protected DependencyPath Package { get; set; }
 
         /// <summary>
-        /// Executes the SPEC view workload.
+        /// Executes the SPECview workload.
         /// </summary>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
