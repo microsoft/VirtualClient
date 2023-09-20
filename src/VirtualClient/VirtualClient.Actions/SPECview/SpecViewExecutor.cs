@@ -112,8 +112,7 @@ namespace VirtualClient.Actions
 
                     this.MetadataContract.AddForScenario(
                            this.Scenario,
-                           "test args",
-                           // workloadProcess.FullCommand(),
+                           workloadProcess.FullCommand(),
                            toolVersion: "2020 v3.0");
                     this.MetadataContract.Apply(telemetryContext);
 
@@ -135,7 +134,7 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
                 }
-                catch (ArgumentNullException exc)
+                catch (FileNotFoundException exc)
                 {
                     EventContext relatedContext = telemetryContext.Clone()
                         .AddError(exc);
