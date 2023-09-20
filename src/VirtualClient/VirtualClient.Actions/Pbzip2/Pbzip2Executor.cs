@@ -6,9 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -131,12 +133,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Returns true/false whether the component should execute on the system/platform.
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
         /// </summary>
-        /// <returns>Returns True or false</returns>
         protected override bool IsSupported()
         {
-            bool isSupported = this.Platform == PlatformID.Unix;
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("Pbzip2", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
 
             return isSupported;
         }

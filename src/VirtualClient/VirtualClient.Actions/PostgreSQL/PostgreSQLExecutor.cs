@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using VirtualClient;
     using VirtualClient.Common;
@@ -235,8 +236,8 @@ namespace VirtualClient.Actions
             if (results != null)
             {
                 this.Logger.LogMetrics(
-                    "PostgreSQL",
-                    "TPC-C",
+                    "PostgreSQL-HammerDB",
+                    "TPC-C" + this.Scenario,
                     startTime,
                     endTime,
                     results.ToList(),
@@ -245,6 +246,24 @@ namespace VirtualClient.Actions
                     this.Tags,
                     telemetryContext);
             }
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("PostgreSQL", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>

@@ -11,6 +11,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -58,7 +59,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -125,6 +125,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("NASParallel", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Gets name of the benchmark directory based on single or multi role layout.
         /// </summary>
         protected string GetBenchmarkDirectory()
@@ -174,23 +192,6 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false);
 
                 response.ThrowOnError<WorkloadException>();
-            }
-        }
-
-        private void CheckPlatformSupport()
-        {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The NAS parallel benchmark workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
             }
         }
 

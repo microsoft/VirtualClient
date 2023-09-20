@@ -6,9 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -129,62 +131,51 @@ namespace VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+
+            switch (linuxDistributionInfo.LinuxDistribution)
             {
-                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+                case LinuxDistribution.Ubuntu:
+                case LinuxDistribution.Debian:
+                case LinuxDistribution.CentOS8:
+                case LinuxDistribution.RHEL8:
+                case LinuxDistribution.SUSE:
+                    break;
 
-                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+                default:
+                    throw new WorkloadException(
+                        $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                        $" Supported distros include:" +
+                        $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
+                        ErrorReason.LinuxDistributionNotSupported);
+            }
 
-                switch (linuxDistributionInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                    case LinuxDistribution.CentOS8:
-                    case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.SUSE:
-                        break;
-
-                    default:
-                        throw new WorkloadException(
-                            $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
-                            $" Supported distros include:" +
-                            $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-
-                if (this.Subsystem == DCGMIExecutor.Diagnostics)
-                {
-                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
-                            .ConfigureAwait(false);
-
-                    State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIExecutor), cancellationToken)
-                            .ConfigureAwait(false);
-
-                    if (installationState == null)
-                    {
-                        await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
+            if (this.Subsystem == DCGMIExecutor.Diagnostics)
+            {
+                await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
                         .ConfigureAwait(false);
 
-                        this.RequestReboot();
-                    }
-                }
+                State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIExecutor), cancellationToken)
+                        .ConfigureAwait(false);
 
-                if (this.Subsystem == DCGMIExecutor.Health)
+                if (installationState == null)
                 {
-                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"dcgmi health -s mpi", Environment.CurrentDirectory, cancellationToken)
+                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
                     .ConfigureAwait(false);
+
+                    this.RequestReboot();
                 }
             }
-            else
+
+            if (this.Subsystem == DCGMIExecutor.Health)
             {
-                throw new WorkloadException(
-                            $"{nameof(DCGMIExecutor)} is not supported on the current platform {this.Platform} through VC." +
-                            $"Supported Platforms include:" +
-                            $" Unix ",
-                            ErrorReason.PlatformNotSupported);
+                await this.ExecuteCommandAsync<DCGMIExecutor>(@"dcgmi health -s mpi", Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
             }
         }
 
@@ -241,6 +232,24 @@ namespace VirtualClient.Actions
 
                     break;
             }
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("DCGMI", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>
