@@ -12,10 +12,11 @@ Runs the stock SPECviewperf Workloads.
   * win-x64
 
 * **Supports Disconnected Scenarios**  
-  * Yes.
+  * No. Internet connection required.
 
 * **Dependencies**  
-  An AMD GPU driver installation is required for this workload.
+  The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
+  * Internet connection.
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -24,7 +25,9 @@ Runs the stock SPECviewperf Workloads.
 NA
 
 * **Profile Runtimes**  
-  The SPECviewperf workload takes about 30 minutes to run depending on the performance of the target system.
+  * The SPECviewperf package is around 30GB. Downloading and extracting this file takes about 30 minutes to complete. 
+  * The SPECviewperf workload takes about 30 minutes to run.
+  * The exact numbers may vary depending on the system and the internet performance. 
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
