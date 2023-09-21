@@ -13,9 +13,8 @@ namespace VirtualClient.Contracts
     /// </summary>
     internal class LscpuParser : TextParser<CpuInfo>
     {
-        // L1d cache:
-        private static readonly Regex CacheExpression = new Regex(@"L([0-9]+)([a-z]*)\s*(?:cache)?\s*:\s*(\d+)([\x20-\x7E]+)(?=\s*\()|L([0-9]+)([a-z]*)\s*(?:cache)?\s*:\s*(\d+)([\x20-\x7E]+)(?:(?=\s*\())?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        // private static readonly Regex CacheExpression = new Regex(@"L([0-9]+)([a-z]*)\s+cache\s*\:\s*([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CacheExpression1 = new Regex(@"L([0-9]+)([a-z]*)\s*:\s*(\d+)([\x20-\x7E]+)(?=\s*\()", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CacheExpression2 = new Regex(@"L([0-9]+)([a-z]*)\s+cache\s*:\s*(\d+)([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CoresPerSocketExpression = new Regex(@"Core\(s\)\s+per\s+socket\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CpusExpression = new Regex(@"CPU\(s\)\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CpuFamilyExpression = new Regex(@"CPU\s+family\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -30,11 +29,10 @@ namespace VirtualClient.Contracts
         private static readonly Regex ArchitectureExpression = new Regex(@"Architecture:\s+(\S+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CpuOpModesExpression = new Regex(@"CPU\s+op-mode\(s\):\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex AddressSizesExpression = new Regex(@"Address\s+sizes:\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex ByteOrderExpression = new Regex(@"Byte\s+Order:\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase); // also accomodate space between words
+        private static readonly Regex ByteOrderExpression = new Regex(@"Byte\s+Order:\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex OnlineCpuListExpression = new Regex(@"On-line\s+CPU\(s\)\s+list:\s+(\d+(?:-\d+)*(?:,\s*\d+(?:-\d+)*)*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex CpuFrequencyExpression = new Regex(@"CPU\s+(?:max|min)?MHz:\s+(\d+\.\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CpuFrequencyExpression = new Regex(@"CPU\s+(?:max|min)?\s*MHz:\s+(\d+\.\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex BogoMipsExpression = new Regex(@"BogoMIPS:\s+(\d+\.\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        // CPU MHz:
 
         public LscpuParser(string text)
             : base(text)
@@ -170,7 +168,7 @@ namespace VirtualClient.Contracts
 
             if (onlineCpuList.Success)
             {
-                flags.Add("On-line CPU(s) list", $"{onlineCpuList.Groups[0].Value.Trim()}");
+                flags.Add("On-line CPU(s) list", $"{onlineCpuList.Groups[1].Value.Trim()}");
             }
 
             if (cpuFrequencyMatches.Count > 0)
@@ -222,13 +220,17 @@ namespace VirtualClient.Contracts
             
             try
             {
-                MatchCollection matches = LscpuParser.CacheExpression.Matches(text);
-                if (matches?.Any() == true)
+                MatchCollection matches1 = LscpuParser.CacheExpression1.Matches(text);
+                MatchCollection matches2 = LscpuParser.CacheExpression2.Matches(text);
+
+                IEnumerable<Match> mergedCollection = matches1.Cast<Match>().Concat(matches2.Cast<Match>());
+
+                if (mergedCollection?.Any() == true)
                 {
                     caches = new List<CpuCacheInfo>();
                     IDictionary<string, long> cacheInfo = new Dictionary<string, long>();
 
-                    foreach (Match cacheMatch in matches)
+                    foreach (Match cacheMatch in mergedCollection)
                     {
                         string cacheType = cacheMatch.Groups[2].Value.Trim();
                         int.TryParse(cacheMatch.Groups[1].Value.Trim(), out int cacheLevel);

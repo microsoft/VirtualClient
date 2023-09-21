@@ -28,6 +28,18 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsTrue(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(0, info.MaxFrequencyMHz);
+            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(2793.438, info.FrequencyMHz);
+
+            Assert.AreEqual(7, info.Flags.Count);
+            Assert.AreEqual("x86_64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("46 bits physical, 48 bits virtual", info.Flags["Address sizes"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0-3", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("0-3", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("5586.87", info.Flags["BogoMIPS"]);
 
             IConvertible cacheMemory = 0;
             Assert.IsNotEmpty(info.Caches);
@@ -55,6 +67,18 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(0, info.MaxFrequencyMHz);
+            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(2793.438, info.FrequencyMHz);
+
+            Assert.AreEqual(7, info.Flags.Count);
+            Assert.AreEqual("x86_64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("46 bits physical, 48 bits virtual", info.Flags["Address sizes"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0-3", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("0-3", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("5586.87", info.Flags["BogoMIPS"]);
 
             IConvertible cacheMemory = 0;
             Assert.IsNotEmpty(info.Caches);
@@ -82,6 +106,17 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(0, info.MaxFrequencyMHz);
+            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(0, info.FrequencyMHz);
+
+            Assert.AreEqual(6, info.Flags.Count);
+            Assert.AreEqual("aarch64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0,1", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("0,1", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("50", info.Flags["BogoMIPS"]);
 
             IConvertible cacheMemory = 0;
             Assert.IsNotEmpty(info.Caches);
@@ -97,7 +132,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void LscpuParserParsesTheExpectedResultsFromAWSSystems_Scenario3()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results3.txt"));
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results_intel_3.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
@@ -109,6 +144,17 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(0, info.MaxFrequencyMHz);
+            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(0, info.FrequencyMHz);
+
+            Assert.AreEqual(6, info.Flags.Count);
+            Assert.AreEqual("aarch64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0,1", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("0,1", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("2100", info.Flags["BogoMIPS"]);
 
             IConvertible cacheMemory = 0;
             Assert.IsNotEmpty(info.Caches);
@@ -122,30 +168,43 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void LscpuParserParsesTheExpectedResultsSystems_Scenario3()
+        public void LscpuParserParsesTheExpectedResultsIntelLabSystems_Scenario4()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results_intel_multpleNUMAnodes.txt"));
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results_intel_4.txt"));
             LscpuParser parser = new LscpuParser(results);
             CpuInfo info = parser.Parse();
 
             Assert.IsNotNull(info);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C Family 6 Model 143 Stepping 8, GenuineIntel", info.Description);
-            Assert.AreEqual(224, info.LogicalCoreCount);
-            Assert.AreEqual(112, info.PhysicalCoreCount);
+            Assert.AreEqual(28, info.LogicalCoreCount);
+            Assert.AreEqual(14, info.PhysicalCoreCount);
             Assert.AreEqual(2, info.SocketCount);
             Assert.AreEqual(2, info.NumaNodeCount);
             Assert.IsTrue(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(380, info.MaxFrequencyMHz);
+            Assert.AreEqual(80, info.MinFrequencyMHz);
+            Assert.AreEqual(0, info.FrequencyMHz);
+
+            Assert.AreEqual(8, info.Flags.Count);
+            Assert.AreEqual("x86_64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("46 bits physical, 57 bits virtual", info.Flags["Address sizes"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0-5,18-23", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("6-17,24-27", info.Flags["NUMA node1 CPU(s)"]);
+            Assert.AreEqual("0-27", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("4000", info.Flags["BogoMIPS"]);
 
             IConvertible cacheMemory = 0;
             Assert.IsNotEmpty(info.Caches);
 
             Assert.IsTrue(info.Caches.Count() == 5);
-            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1" && cache.SizeInBytes == 9227468));
-            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1d" && cache.SizeInBytes == 5557452));
-            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1i" && cache.SizeInBytes == 3670016));
-            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L2" && cache.SizeInBytes == 234881024));
-            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L3" && cache.SizeInBytes == 220200960));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1" && cache.SizeInBytes == 7130316));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1d" && cache.SizeInBytes == 4508876));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1i" && cache.SizeInBytes == 2621440));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L2" && cache.SizeInBytes == 25165824));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L3" && cache.SizeInBytes == 20971520));
         }
     }
 }
