@@ -13,17 +13,28 @@ namespace VirtualClient.Contracts
     /// </summary>
     internal class LscpuParser : TextParser<CpuInfo>
     {
-        private static readonly Regex CacheExpression = new Regex(@"L([0-9]+)([a-z]*)\s+cache\s*\:\s*([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // L1d cache:
+        private static readonly Regex CacheExpression = new Regex(@"L([0-9]+)([a-z]*)\s*(?:cache)?\s*:\s*(\d+)([\x20-\x7E]+)(?=\s*\()|L([0-9]+)([a-z]*)\s*(?:cache)?\s*:\s*(\d+)([\x20-\x7E]+)(?:(?=\s*\())?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // private static readonly Regex CacheExpression = new Regex(@"L([0-9]+)([a-z]*)\s+cache\s*\:\s*([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CoresPerSocketExpression = new Regex(@"Core\(s\)\s+per\s+socket\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CpusExpression = new Regex(@"CPU\(s\)\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CpuFamilyExpression = new Regex(@"CPU\s+family\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ModelExpression = new Regex(@"Model\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ModelNameExpression = new Regex(@"Model\s+name\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NumaNodeExpression = new Regex(@"NUMA\s+node\(s\)\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex NumaNodeCpuRangeExpression = new Regex(@"NUMA\s+node(\d+)\s+CPU\(s\):\s+((\d+(-\d+)?( *, *\d+(-\d+)?)*)|\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SocketExpression = new Regex(@"Socket\(s\)\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex SteppingExpression = new Regex(@"Stepping\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex ThreadsPerCoreExpression = new Regex(@"Thread\(s\)\s+per\s+core\s*\:\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex VendorIdExpression = new Regex(@"Vendor\s+ID\:([\x20-\x7E]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex ArchitectureExpression = new Regex(@"Architecture:\s+(\S+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CpuOpModesExpression = new Regex(@"CPU\s+op-mode\(s\):\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex AddressSizesExpression = new Regex(@"Address\s+sizes:\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex ByteOrderExpression = new Regex(@"Byte\s+Order:\s+(.*)", RegexOptions.Compiled | RegexOptions.IgnoreCase); // also accomodate space between words
+        private static readonly Regex OnlineCpuListExpression = new Regex(@"On-line\s+CPU\(s\)\s+list:\s+(\d+(?:-\d+)*(?:,\s*\d+(?:-\d+)*)*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex CpuFrequencyExpression = new Regex(@"CPU\s+(?:max|min)?MHz:\s+(\d+\.\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex BogoMipsExpression = new Regex(@"BogoMIPS:\s+(\d+\.\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // CPU MHz:
 
         public LscpuParser(string text)
             : base(text)
@@ -31,7 +42,7 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Parses the output of the CoreInfo.exe toolset and returns a information
+        /// Parses the output of the lscpu and returns a information
         /// about the system.
         /// </summary>
         /// <returns></returns>
@@ -59,6 +70,10 @@ namespace VirtualClient.Contracts
             // L2 cache:                        2.5 MiB
             // L3 cache:                        48 MiB
 
+            Match architecture = LscpuParser.ArchitectureExpression.Match(this.RawText);
+            Match cpuOpModes = LscpuParser.CpuOpModesExpression.Match(this.RawText);
+            Match addressSizes = LscpuParser.AddressSizesExpression.Match(this.RawText);
+            Match byteOrder = LscpuParser.ByteOrderExpression.Match(this.RawText);
             Match modelName = LscpuParser.ModelNameExpression.Match(this.RawText);
             Match coresPerSocket = LscpuParser.CoresPerSocketExpression.Match(this.RawText);
             Match cpus = LscpuParser.CpusExpression.Match(this.RawText);
@@ -69,6 +84,10 @@ namespace VirtualClient.Contracts
             Match threadsPerCore = LscpuParser.ThreadsPerCoreExpression.Match(this.RawText);
             Match numaNodes = LscpuParser.NumaNodeExpression.Match(this.RawText);
             Match vendor = LscpuParser.VendorIdExpression.Match(this.RawText);
+            MatchCollection numaNodesCPURangeMatches = LscpuParser.NumaNodeCpuRangeExpression.Matches(this.RawText);
+            Match onlineCpuList = LscpuParser.OnlineCpuListExpression.Match(this.RawText);
+            MatchCollection cpuFrequencyMatches = LscpuParser.CpuFrequencyExpression.Matches(this.RawText);
+            Match bogoMips = LscpuParser.BogoMipsExpression.Match(this.RawText);
 
             if (!coresPerSocket.Success || !cpus.Success || !sockets.Success || !threadsPerCore.Success)
             {
@@ -85,11 +104,35 @@ namespace VirtualClient.Contracts
 
             string name = null;
             string description = string.Empty;
+            Dictionary<string, string> flags = new Dictionary<string, string>();
+            double frequency = -1;
+            double maxfrequency = -1;
+            double minfrequency = -1;
+
+            if (architecture.Success)
+            {
+                flags.Add("Architecture", $"{architecture.Groups[1].Value.Trim()}");
+            }
+
+            if (cpuOpModes.Success)
+            {
+                flags.Add("CPU op-mode(s)", $"{cpuOpModes.Groups[1].Value.Trim()}");
+            }
+
+            if (addressSizes.Success)
+            {
+                flags.Add("Address sizes", $"{addressSizes.Groups[1].Value.Trim()}");
+            }
+
+            if (byteOrder.Success)
+            {
+                flags.Add("Byte Order", $"{byteOrder.Groups[1].Value.Trim()}");
+            }
 
             if (modelName.Success)
             {
                 name = modelName.Groups[1].Value.Trim();
-                description = name;
+                description += name;
             }
 
             if (numaNodes.Success)
@@ -117,6 +160,45 @@ namespace VirtualClient.Contracts
                 description += $", {vendor.Groups[1].Value.Trim()}";
             }
 
+            if (numaNodesCPURangeMatches.Count > 0)
+            {
+                foreach (Match numaNodesCPURangeMatch in numaNodesCPURangeMatches)
+                {
+                    flags.Add($"NUMA node{numaNodesCPURangeMatch.Groups[1].Value.Trim()} CPU(s)", $"{numaNodesCPURangeMatch.Groups[2].Value.Trim()}");
+                }
+            }
+
+            if (onlineCpuList.Success)
+            {
+                flags.Add("On-line CPU(s) list", $"{onlineCpuList.Groups[0].Value.Trim()}");
+            }
+
+            if (cpuFrequencyMatches.Count > 0)
+            {             
+                foreach (Match cpuFrequencyMatch in cpuFrequencyMatches)
+                {
+                    string frequencymatch = cpuFrequencyMatch.Groups[0].Value.Trim();
+                    double frequencyValue = double.Parse(cpuFrequencyMatch.Groups[1].Value.Trim());
+                    if (frequencymatch.Contains("max"))
+                    {
+                        maxfrequency = frequencyValue;
+                    }
+                    else if (frequencymatch.Contains("min"))
+                    {
+                        minfrequency = frequencyValue;
+                    }
+                    else
+                    {
+                        frequency = frequencyValue;
+                    }
+                }
+            }
+
+            if (bogoMips.Success)
+            {
+                flags.Add("BogoMIPS", $"{double.Parse(bogoMips.Groups[1].Value.Trim())}");
+            }
+
             IEnumerable<CpuCacheInfo> caches = LscpuParser.ParseCacheInfo(this.RawText);
 
             return new CpuInfo(
@@ -127,7 +209,11 @@ namespace VirtualClient.Contracts
                 socketCount,
                 numaNodeCount,
                 hyperthreadingEnabled,
-                caches);
+                caches,
+                flags,
+                maxfrequency,
+                minfrequency,
+                frequency);
         }
 
         private static IEnumerable<CpuCacheInfo> ParseCacheInfo(string text)
@@ -146,8 +232,9 @@ namespace VirtualClient.Contracts
                     {
                         string cacheType = cacheMatch.Groups[2].Value.Trim();
                         int.TryParse(cacheMatch.Groups[1].Value.Trim(), out int cacheLevel);
-                        string cacheSize = cacheMatch.Groups[3].Value.Trim();
-                        long.TryParse(TextParsingExtensions.TranslateByteUnit(cacheSize), out long cacheSizeBytes);
+                        string cacheSize = string.Concat(cacheMatch.Groups[3].Value, cacheMatch.Groups[4].Value.TrimEnd());
+                        double.TryParse(TextParsingExtensions.TranslateByteUnit(cacheSize), out double cacheSizeBytesDouble);
+                        long cacheSizeBytes = (long)cacheSizeBytesDouble;
 
                         // Account for the unlikely possibility of a toolset or parsing issue. If we cannot
                         // determine the cache level, we do not include the info in the cache output. This is
