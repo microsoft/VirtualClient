@@ -225,9 +225,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
+                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/scripts/sysbencholtp\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
