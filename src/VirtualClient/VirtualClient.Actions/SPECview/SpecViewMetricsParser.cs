@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
                     if (parts.Length == 2 && double.TryParse(parts[1], out double value))
                     {
                         string name = parts[0];
-                        Metric metric = new (name, value, SpecViewMetricsParser.Unit);
+                        Metric metric = new (name, value, SpecViewMetricsParser.Unit, MetricRelativity.HigherIsBetter);
                         metrics.Add(metric);
                     }
                 }

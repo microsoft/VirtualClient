@@ -26,7 +26,7 @@ Runs the stock SPECviewperf Workloads.
 NA
 
 * **Profile Runtimes**  
-  * The SPECviewperf package is around 30GB. Downloading and extracting this file takes about 30 minutes to complete. 
+  * The SPECviewperf package zip file is around 30GB. Downloading and extracting this file take about 30 minutes to complete. 
   * The SPECviewperf workload takes about 30 minutes to run.
   * The exact numbers may vary depending on the system and the internet performance. 
 

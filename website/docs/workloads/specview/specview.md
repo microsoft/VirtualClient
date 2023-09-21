@@ -12,13 +12,13 @@ The benchmark measures the 3D graphics performance of systems running under the 
 ## System Requirements
 * Microsoft Windows 10 Version 1709 (Fall Creators Update / RS3) or newer
 * 16GB of system RAM or greater
-* 80GB of available disk space
+* 120GB of available disk space
 * A minimum screen resolution of 1920×1080 for submissions published on the SPEC website
 OpenGL 4.5 (for catia-06, creo-03, energy-03, maya-06, medical-03, snx-04, and solidworks-07) and DirectX 12 API support (for 3dsmax-07)
 * A GPU with 2GB or greater dedicated GPU memory
 
 ## Benchmark License
-A paid license is required for any for-profit entity that sells computers or computer  related products in the commercial marketplace, with the exception of SPEC/GWPG member companies (AMD, Dell, Fujitsu, HP Inc, Intel, Lenovo, Nvidia, VeriSilicon) that receive benchmark licenses as a membership benefit. Examples of those requiring a paid license include:
+The SPECviewperf 2020 benchmark is available for free downloading to everyone except for any for-profit entity that sells computers or computer  related products in the commercial marketplace, with the exception of SPEC/GWPG member companies (AMD, Dell, Fujitsu, HP Inc, Intel, Lenovo, Nvidia, VeriSilicon) that receive benchmark licenses as a membership benefit. Examples of those requiring a paid license include:
 
 * Computer hardware and software vendors
 * Computer component manufacturers (hard drives, memory, device vendors)
@@ -77,5 +77,3 @@ The following metrics are examples of those captured by the Virtual Client when 
 | solidworks-07  | 2     | SW2020_RallyCar_ShadedEdges    | 10     | 191.75 |
 | solidworks-07  | 3     | SW2020_RallyCar_Shaded         | 15     | 256.76 |
 | solidworks-07  | ....  | ....                           | ....   | ....   |
-
-
