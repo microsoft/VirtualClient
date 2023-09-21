@@ -86,20 +86,5 @@
 
             return isSupported;
         }
-
-        private async Task InstallComponentAsync(string msiPath, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            using (IProcessProxy installationProcess = this.processManager.CreateProcess("msiexec.exe", $"/i \"{msiPath}\" /qn"))
-            {
-                await installationProcess.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(installationProcess, telemetryContext.Clone(), logToFile: true)
-                        .ConfigureAwait(false);
-                    installationProcess.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.DependencyInstallationFailed);
-                }
-            }
-        }
     }
 }
