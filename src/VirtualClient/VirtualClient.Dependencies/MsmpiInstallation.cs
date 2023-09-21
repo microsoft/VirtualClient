@@ -63,10 +63,8 @@
                 await this.systemManagement.FirewallManager.EnableInboundAppAsync(firewallEntry, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.InstallComponentAsync(
-                    this.PlatformSpecifics.Combine(packageDirectory, "msmpisdk.msi"),
-                    telemetryContext,
-                    cancellationToken)
+                string msiPath = this.PlatformSpecifics.Combine(packageDirectory, "msmpisdk.msi");
+                await this.ExecuteCommandAsync("msiexec.exe", $"/i \"{msiPath}\" /qn", packageDirectory, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 fileInterface.Create(lockFile);
