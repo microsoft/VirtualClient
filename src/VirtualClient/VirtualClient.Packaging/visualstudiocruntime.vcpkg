@@ -3,6 +3,7 @@
     "description": "Visual Studio C Runtime library.",
     "version": "14.30.30708.0",
     "metadata": {
-        "built-in": true
+        "built-in": true,
+	"added-dlls": "msvcr100.dll for Ms-MPI"
     }
 }
