@@ -107,9 +107,9 @@ namespace VirtualClient.Dependencies
                 case "gcc":
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
 
-                        if (!await this.ConfirmGccVersionInstalledAsync(cancellationToken).ConfigureAwait(false))
+                        if (!await this.ConfirmGccVersionInstalledAsync(cancellationToken))
                         {
                             throw new DependencyException($"'{this.CompilerName.ToLowerInvariant()}' compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
                         }
@@ -120,11 +120,9 @@ namespace VirtualClient.Dependencies
                         string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
-                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
 
-                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
                     }
 
                     break;
@@ -132,8 +130,7 @@ namespace VirtualClient.Dependencies
                 case "aocc":
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
                     }
 
                     break;
@@ -141,7 +138,7 @@ namespace VirtualClient.Dependencies
                 case Compilers.Charmplusplus:
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallCharmplusplusAsync(this.CompilerVersion, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.InstallCharmplusplusAsync(this.CompilerVersion, telemetryContext, cancellationToken);
                     }
 
                     break;
@@ -172,13 +169,11 @@ namespace VirtualClient.Dependencies
                     this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
                     Console.WriteLine(compiler + "1");
 
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion")
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion");
 
                         ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());
 
@@ -213,7 +208,7 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallGccAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+            LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
             switch (distro.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
@@ -269,22 +264,19 @@ namespace VirtualClient.Dependencies
         {
             // default latest
             charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
-            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
-            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken)
-                .ConfigureAwait(false);
+
+            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
             string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
 
             if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
             {
-                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
             }
 
             if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
             {
-                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
             }
         }
 
@@ -298,13 +290,11 @@ namespace VirtualClient.Dependencies
                      this.CleanupTasks.Add(() => process.SafeKill());
                      this.LogProcessTrace(process);
 
-                     await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                     await process.StartAndWaitAsync(cancellationToken);
 
                      if (!cancellationToken.IsCancellationRequested)
                      {
-                         await this.LogProcessDetailsAsync(process, telemetryContext)
-                            .ConfigureAwait(false);
+                         await this.LogProcessDetailsAsync(process, telemetryContext);
 
                          process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                      }

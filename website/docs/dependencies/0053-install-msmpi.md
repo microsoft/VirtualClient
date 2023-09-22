@@ -21,9 +21,9 @@ The following section describes the parameters used by the individual component 
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "DownloadMSMPIPackage",
+        "Scenario": "InstallMsmpiPackage",
         "BlobContainer": "packages",
-        "BlobName": "msmpi10.1.2.zip",
+        "BlobName": "msmpi.10.1.2.zip",
         "PackageName": "msmpi",
         "Extract": true
       }

@@ -21,7 +21,7 @@
 
         private ISystemManagement systemManagement;
         private IPackageManager packageManager;
-        private ProcessManager processManager;
+        private IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MsmpiInstallation"/> class.
@@ -33,7 +33,7 @@
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.packageManager = dependencies.GetService<IPackageManager>();
-            this.processManager = this.systemManagement.ProcessManager;
+            this.stateManager = this.systemManagement.StateManager;
         }
 
         /// <summary>
@@ -41,16 +41,13 @@
         /// </summary>
         protected async override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
-                this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None);
 
             string packageDirectory = workloadPackage.Path;
 
-            string lockFile = this.PlatformSpecifics.Combine(packageDirectory, MsmpiInstallation.LockFileName);
-            IFile fileInterface = this.systemManagement.FileSystem.File;
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(MsmpiInstallation), cancellationToken);
 
-            if (!fileInterface.Exists(lockFile))
+            if (installationState == null)
             {
                 string msmpiBin = this.PlatformSpecifics.Combine(packageDirectory, "bin");
                 this.SetEnvironmentVariable(EnvironmentVariable.PATH, msmpiBin, EnvironmentVariableTarget.Machine, true);
@@ -60,14 +57,12 @@
                 $"Allows smpd to Communicate in Multiple Machine Scenario.",
                 this.PlatformSpecifics.Combine(msmpiBin, "smpd.exe"));
 
-                await this.systemManagement.FirewallManager.EnableInboundAppAsync(firewallEntry, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.systemManagement.FirewallManager.EnableInboundAppAsync(firewallEntry, cancellationToken);
 
                 string msiPath = this.PlatformSpecifics.Combine(packageDirectory, "msmpisdk.msi");
-                await this.ExecuteCommandAsync("msiexec.exe", $"/i \"{msiPath}\" /qn", packageDirectory, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
+                await this.ExecuteCommandAsync("msiexec.exe", $"/i \"{msiPath}\" /qn", packageDirectory, telemetryContext, cancellationToken);
 
-                fileInterface.Create(lockFile);
+                await this.stateManager.SaveStateAsync(nameof(MsmpiInstallation), new State(), cancellationToken);
             }
         }
 
@@ -81,7 +76,7 @@
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("MsMPI", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("Msmpi", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;

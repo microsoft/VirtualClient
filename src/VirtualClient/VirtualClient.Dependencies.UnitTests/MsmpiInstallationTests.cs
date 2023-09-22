@@ -52,14 +52,14 @@ namespace VirtualClient.Dependencies
 
             using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await installation.ExecuteAsync(CancellationToken.None);
             }
 
             Assert.AreEqual(1, commandExecuted);
         }
 
         [Test]
-        public async Task MsmpiInstallationRunsNoCommandsOnLinux()
+        public async Task MsmpiInstallationDoesNotExecuteOnLinuxSystems()
         {
             this.SetupMockFixture(PlatformID.Unix);
 
@@ -82,7 +82,7 @@ namespace VirtualClient.Dependencies
 
             using (TestMsmpiInstallation installation = new TestMsmpiInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await installation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await installation.ExecuteAsync(CancellationToken.None);
             }
 
             Assert.AreEqual(0, commandExecuted);
