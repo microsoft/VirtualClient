@@ -118,16 +118,16 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Maximum CPU frequency in MHz.
         /// </summary>
-        public double MaxFrequencyMHz { get; set; }
+        public double MaxFrequencyMHz { get; set; } = double.NaN;
 
         /// <summary>
         /// Minimum CPU frequency in MHz.
         /// </summary>
-        public double MinFrequencyMHz { get; set; }
+        public double MinFrequencyMHz { get; set; } = double.NaN;
 
         /// <summary>
         /// Currrent frequency of CPU in MHz.
         /// </summary>
-        public double FrequencyMHz { get; set; }   
+        public double FrequencyMHz { get; set; } = double.NaN;
     }
 }

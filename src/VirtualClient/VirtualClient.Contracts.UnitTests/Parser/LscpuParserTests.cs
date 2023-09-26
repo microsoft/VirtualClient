@@ -28,8 +28,8 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsTrue(info.IsHyperthreadingEnabled);
-            Assert.AreEqual(0, info.MaxFrequencyMHz);
-            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MaxFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MinFrequencyMHz);
             Assert.AreEqual(2793.438, info.FrequencyMHz);
 
             Assert.AreEqual(7, info.Flags.Count);
@@ -67,8 +67,8 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
-            Assert.AreEqual(0, info.MaxFrequencyMHz);
-            Assert.AreEqual(0, info.MinFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MaxFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MinFrequencyMHz);
             Assert.AreEqual(2793.438, info.FrequencyMHz);
 
             Assert.AreEqual(7, info.Flags.Count);
@@ -106,9 +106,9 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
-            Assert.AreEqual(0, info.MaxFrequencyMHz);
-            Assert.AreEqual(0, info.MinFrequencyMHz);
-            Assert.AreEqual(0, info.FrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MaxFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MinFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.FrequencyMHz);
 
             Assert.AreEqual(6, info.Flags.Count);
             Assert.AreEqual("aarch64", info.Flags["Architecture"]);
@@ -144,9 +144,9 @@ namespace VirtualClient.Contracts
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
             Assert.IsFalse(info.IsHyperthreadingEnabled);
-            Assert.AreEqual(0, info.MaxFrequencyMHz);
-            Assert.AreEqual(0, info.MinFrequencyMHz);
-            Assert.AreEqual(0, info.FrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MaxFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MinFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.FrequencyMHz);
 
             Assert.AreEqual(6, info.Flags.Count);
             Assert.AreEqual("aarch64", info.Flags["Architecture"]);
@@ -184,7 +184,7 @@ namespace VirtualClient.Contracts
             Assert.IsTrue(info.IsHyperthreadingEnabled);
             Assert.AreEqual(380, info.MaxFrequencyMHz);
             Assert.AreEqual(80, info.MinFrequencyMHz);
-            Assert.AreEqual(0, info.FrequencyMHz);
+            Assert.AreEqual(double.NaN, info.FrequencyMHz);
 
             Assert.AreEqual(8, info.Flags.Count);
             Assert.AreEqual("x86_64", info.Flags["Architecture"]);
