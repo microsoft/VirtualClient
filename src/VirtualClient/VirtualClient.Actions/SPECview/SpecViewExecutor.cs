@@ -22,10 +22,9 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// Executes the 3DMark workload.
+    /// Executes the SPECView workload.
     /// </summary>
     [WindowsCompatible]
-
     public class SpecViewExecutor : VirtualClientComponent
     {
         private IFileSystem fileSystem;
@@ -60,10 +59,6 @@ namespace VirtualClient.Actions
         public string ExecutablePath { get; set; }
 
         /// <summary>
-        /// The path for the intermediate results file.
-        /// </summary>
-
-        /// <summary>
         /// Defines the path to the SPECview package that contains the workload
         /// executable.
         /// </summary>
@@ -72,9 +67,18 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Executes the SPECview workload.
         /// </summary>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            return this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+            IList<Metric> metrics = new List<Metric>();
+
+            string command = this.ExecutablePath + this.CommandArguments;
+
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("executable", this.ExecutablePath)
+                .AddContext("commandArguments", this.CommandArguments);
+
+            IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, relatedContext, cancellationToken).ConfigureAwait(false);
+            this.CaptureMetrics(process, this.CommandArguments, relatedContext);
         }
 
         /// <summary>
@@ -126,6 +130,9 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         telemetryContext);
+
+                    // rename the result file to avoid confusions on future runs
+                    this.fileSystem.File.Move(resultsFilePath, "hist_" + resultsFilePath);
                 }
                 catch (SchemaException exc)
                 {
@@ -146,47 +153,8 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Run the Spec View Workload
+        /// Validate the SPECview Package
         /// </summary>
-        private Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            IList<Metric> metrics = new List<Metric>();
-
-            string commandArguments = this.CommandArguments;
-
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
-
-            return this.Logger.LogMessageAsync($"{nameof(SpecViewExecutor)}.ExecuteWorkload", relatedContext, async () =>
-            {
-                using IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(this.ExecutablePath, commandArguments);
-                this.CleanupTasks.Add(() => process.SafeKill());
-
-                try
-                {
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                        process.ThrowIfWorkloadFailed();
-                        this.CaptureMetrics(process, commandArguments, telemetryContext);
-                    }
-                }
-                finally
-                {
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                    }
-                }
-            });
-        }
-
-            /// <summary>
-            /// Validate the SPECview Package
-            /// </summary>
         private async Task InitializePackageLocationAsync(CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
