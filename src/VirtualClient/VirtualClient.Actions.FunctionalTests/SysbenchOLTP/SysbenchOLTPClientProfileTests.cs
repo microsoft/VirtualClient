@@ -92,18 +92,21 @@ namespace VirtualClient.Actions
             {
                 "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
 
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-server.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/balanced-client.sh\"",
-                $"sudo chmod +x \"/home/user/tools/VirtualClient/scripts/sysbencholtp/in-memory.sh\"",
-
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
 
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1800 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
             };
         }
 
