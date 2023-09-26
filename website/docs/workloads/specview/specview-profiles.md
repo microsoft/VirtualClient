@@ -27,7 +27,7 @@ NA
 
 * **Profile Runtimes**  
   * The SPECviewperf package zip file is around 30GB. Downloading and extracting this file take about 30 minutes to complete. 
-  * The SPECviewperf workload takes about 30 minutes to run.
+  * Each SPECviewperf viewset takes about 5 min to complete on a machine with a single AMD v620 GPU. Running all the viewsets takes about 40 minutes to complete.
   * The exact numbers may vary depending on the system and the internet performance. 
 
 * **Usage Examples**  

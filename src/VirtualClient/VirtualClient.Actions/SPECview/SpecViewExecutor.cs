@@ -54,6 +54,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The viewset that will be run by SPECviewperf.
+        /// </summary>
+        public string Viewset
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.Viewset));
+            }
+        }
+
+        /// <summary>
         /// The path to the RunViewperf.exe.
         /// </summary>
         public string ExecutablePath { get; set; }
@@ -71,7 +82,8 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = new List<Metric>();
 
-            string command = this.ExecutablePath + this.CommandArguments;
+            string viewset = this.GenerateCommandArguments(this.Viewset);
+            string command = $"{this.ExecutablePath} {viewset} {this.CommandArguments}";
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
@@ -165,6 +177,14 @@ namespace VirtualClient.Actions
                         ErrorReason.WorkloadDependencyMissing);
                 this.Package = workloadPackage;
             }
+        }
+
+        /// <summary>
+        /// Generate the SPECview viewset Command Arguments
+        /// </summary>
+        private string GenerateCommandArguments(string viewset)
+        {
+            return $"-viewset \"{viewset}\"";
         }
     }
 
