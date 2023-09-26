@@ -27,7 +27,7 @@ namespace VirtualClient.Contracts
         /// <param name="maxFrequency">Maximum CPU frequency in MHz.</param>
         /// <param name="minFrequency">Minimum CPU frequency in MHz.</param>
         /// <param name="frequency">Currrent frequency of CPU in MHz.</param>
-        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled, IEnumerable<CpuCacheInfo> caches = null,  Dictionary<string, string> flags = null, double maxFrequency = -1, double minFrequency = -1, double frequency = -1)
+        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled, IEnumerable<CpuCacheInfo> caches = null,  Dictionary<string, string> flags = null, double maxFrequency = double.NaN, double minFrequency = double.NaN, double frequency = double.NaN)
             : base()
         {
             name.ThrowIfNull(nameof(name));
@@ -54,17 +54,17 @@ namespace VirtualClient.Contracts
                 this.Flags = flags;
             }
 
-            if (maxFrequency != -1)
+            if (!double.IsNaN(maxFrequency))
             {
                 this.MaxFrequencyMHz = maxFrequency;
             }
 
-            if (minFrequency != -1)
+            if (!double.IsNaN(minFrequency))
             {
                 this.MinFrequencyMHz = minFrequency;
             }
 
-            if (frequency != -1)
+            if (!double.IsNaN(frequency))
             {
                 this.FrequencyMHz = frequency;
             }

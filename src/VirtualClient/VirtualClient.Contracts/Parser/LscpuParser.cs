@@ -103,9 +103,9 @@ namespace VirtualClient.Contracts
             string name = null;
             string description = string.Empty;
             Dictionary<string, string> flags = new Dictionary<string, string>();
-            double frequency = -1;
-            double maxfrequency = -1;
-            double minfrequency = -1;
+            double frequency = double.NaN;
+            double maxfrequency = double.NaN;
+            double minfrequency = double.NaN;
 
             if (architecture.Success)
             {
