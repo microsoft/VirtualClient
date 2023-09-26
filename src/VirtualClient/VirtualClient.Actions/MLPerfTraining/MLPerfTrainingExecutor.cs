@@ -50,9 +50,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                // Change the size -----------------------------------------------------------------------------------------------------------------------------
                 string filter = this.Parameters.GetValue<string>(nameof(MLPerfTrainingExecutor.DiskFilter), "SizeGreaterThan:1000gb");
-                // Enforce filter to remove OS disk.
                 filter = $"{filter}&OSDisk:false";
                 return filter;
             }
@@ -370,33 +368,6 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                await this.Logger.LogMessageAsync($"{nameof(MLPerfExecutor)}.ExecuteProcess", telemetryContext, async () =>
-                {
-                    using (IProcessProxy process = this.systemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, commandLineArguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext).ConfigureAwait();
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-                        }
-                    }
-                }).ConfigureAwait(false);
-            }
-        }
-
         /// <summary>
         ///  Filter the disks using the disk filter and return them
         /// </summary>
@@ -406,35 +377,9 @@ namespace VirtualClient.Actions
         private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
         {
             diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
-            List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, System.PlatformID.Unix).ToList();
+            List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Unix).ToList();
 
             return filteredDisks;
-        }
-
-        /// <summary>
-        /// Get the GPU labels to be used for training (To be made a parameter later)
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="WorkloadException"></exception>
-        private string GetGPULabels()
-        {
-            if (int.TryParse(this.GPUCount, out int gpuCount))
-            {
-                if (gpuCount < 0)
-                {
-                    throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.GPUCount}) provided",
-                    ErrorReason.EnvironmentIsInsufficent);
-                }
-
-                return string.Join(",", Enumerable.Range(0, gpuCount));
-            }
-            else
-            {
-                throw new WorkloadException(
-                    $"Invalid number of GPUs ({this.GPUCount}) provided",
-                    ErrorReason.EnvironmentIsInsufficent);
-            }
         }
 
         internal class MLPerfTrainingState : State
