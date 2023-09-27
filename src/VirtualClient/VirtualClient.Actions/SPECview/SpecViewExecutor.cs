@@ -104,6 +104,8 @@ namespace VirtualClient.Actions
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", this.CommandArguments);
 
+            await this.SetEnvironmentVariable().ConfigureAwait(false); ;
+
             IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, relatedContext, cancellationToken).ConfigureAwait(false);
             this.CaptureMetrics(process, this.CommandArguments, relatedContext);
         }
