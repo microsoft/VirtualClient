@@ -92,11 +92,21 @@ namespace VirtualClient.Actions
             get
             {
                 int numTables = 10;
-
-                if (this.Parameters.TryGetValue(nameof(this.NumTables), out IConvertible value) && value != null
-                    && this.CpuArchitecture != Architecture.Arm64)
+                string[] oneTableWorkloads =
                 {
-                    numTables = value.ToInt32(CultureInfo.InvariantCulture);
+                    "select_random_points",
+                    "select_random_ranges"
+                };
+
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumTables), out IConvertible recordCount)
+                    && this.DatabaseScenario != SysbenchOLTPScenario.Balanced)
+                {
+                    numTables = recordCount.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                if (oneTableWorkloads.Contains(this.Workload))
+                {
+                    numTables = 1;
                 }
 
                 return numTables;
