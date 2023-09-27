@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -27,6 +28,7 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class SpecViewExecutor : VirtualClientComponent
     {
+        private const string VisualStudioCRuntimePackageName = "vcruntime140.dll";
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
 
@@ -76,6 +78,19 @@ namespace VirtualClient.Actions
         protected DependencyPath Package { get; set; }
 
         /// <summary>
+        /// Initializes the environment
+        /// </summary>
+        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
+
+            await this.InitializePackageLocationAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+        }
+
+        /// <summary>
         /// Executes the SPECview workload.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -94,16 +109,21 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes the environment
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
         /// </summary>
-        protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override bool IsSupported()
         {
-            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
+            bool isSupported = base.IsSupported()
+                && this.Platform == PlatformID.Win32NT
+                && this.CpuArchitecture == Architecture.X64;
 
-            await this.InitializePackageLocationAsync(cancellationToken)
-                .ConfigureAwait(false);
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("SPECviewperf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+            return isSupported;
         }
 
         /// <summary>
@@ -185,6 +205,14 @@ namespace VirtualClient.Actions
         private string GenerateCommandArguments(string viewset)
         {
             return $"-viewset \"{viewset}\"";
+        }
+
+        private async Task SetEnvironmentVariable()
+        {
+            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
+            DependencyPath visualStudioCRuntimePackage = await packageManager.GetPackageAsync(VisualStudioCRuntimePackageName, CancellationToken.None).ConfigureAwait(false);
+            string visualStudioCRuntimeDllPath = this.PlatformSpecifics.ToPlatformSpecificPath(visualStudioCRuntimePackage, this.Platform, this.CpuArchitecture).Path;
+            this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
         }
     }
 
