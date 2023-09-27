@@ -9,14 +9,13 @@ namespace VirtualClient.Dependencies
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// A dependency to mount each volume of each disk at a user specified mount point
+    /// A dependency to mount each volume of each disk at a user specified mount point.
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
@@ -49,11 +48,11 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// User Defined Mount Point Name
         /// </summary>
-        public string MountPointName
+        public string MountPointPrefix
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.MountPointName), string.Empty);
+                return this.Parameters.GetValue<string>(nameof(this.MountPointPrefix), "mountPoint");
             }
         }
 
@@ -98,7 +97,7 @@ namespace VirtualClient.Dependencies
                 filteredDisks = GetFilteredDisks(updatedDisks, this.DiskFilter);
             }
 
-            filteredDisks.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target: '{disk}'"));
+            filteredDisks.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk}'"));
 
             string accessPath = filteredDisks.OrderBy(d => d.Index).First().GetPreferredAccessPath(this.Platform);
         }
@@ -121,35 +120,27 @@ namespace VirtualClient.Dependencies
         /// <summary>
         /// Mount each volume of each disk at the user specified mount point
         /// </summary>
-        /// <param name="disks"></param>
-        /// <param name="systemManager"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         private async Task<bool> GenerateMountPointsAsync(IEnumerable<Disk> disks, ISystemManagement systemManager, CancellationToken cancellationToken)
         {
             bool mountPointsCreated = false;
 
+            double counter = 0;
             // Don't mount any partition in OS drive.
             foreach (Disk disk in disks.Where(d => !d.IsOperatingSystem()))
             {
-                double counter = 0;
                 // mount every volume that doesn't have an accessPath.
                 foreach (DiskVolume volume in disk.Volumes.Where(v => v.AccessPaths?.Any() != true))
                 {
-                    await Task.Run(async () =>
+                    string newMountPoint = $"{this.MountPointPrefix}{counter++}";
+                    
+                    if (!systemManager.FileSystem.Directory.Exists(newMountPoint))
                     {
-                        string newMountPoint = $"{this.MountPointName}{counter}";
-                        if (!systemManager.FileSystem.Directory.Exists(newMountPoint))
-                        {
-                            systemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
-                        }
+                        systemManager.FileSystem.Directory.CreateDirectory(newMountPoint).Create();
+                    }
 
-                        await this.diskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken)
-                            .ConfigureAwait(false);
+                    await this.diskManager.CreateMountPointAsync(volume, newMountPoint, cancellationToken);
 
-                        mountPointsCreated = true;
-
-                    }).ConfigureAwait(false);
+                    mountPointsCreated = true;
                 }
             }
 

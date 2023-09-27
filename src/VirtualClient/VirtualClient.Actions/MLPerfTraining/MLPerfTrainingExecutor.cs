@@ -5,13 +5,10 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -73,7 +70,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The current running user
+        /// The current running user.
         /// </summary>
         public string Username
         {
@@ -129,7 +126,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DataPath), "mlperf - training - data - bert.1.0.0");
+                return this.Parameters.GetValue<string>(nameof(this.DataPath), "mlperf-training-data-bert.1.0.0");
             }
         }
 
@@ -184,8 +181,6 @@ namespace VirtualClient.Actions
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.InitializationStarted", telemetryContext);
 
-            this.ThrowIfPlatformNotSupported();
-
             await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -194,11 +189,10 @@ namespace VirtualClient.Actions
 
             if (!state.Initialized)
             {
-                // add user in docker group
-                await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionPath, cancellationToken);
-
+                
                 // Setup Environment
-                await this.SetupDocker(cancellationToken);
+                await this.SetupDocker(telemetryContext, cancellationToken);
+
                 state.Initialized = true;
                 await this.stateManager.SaveStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", state, cancellationToken);
             }
@@ -207,41 +201,27 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Creates setup for MLPerf Training workload.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        protected async Task SetupDocker(CancellationToken cancellationToken)
+        protected async Task SetupDocker(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // add user in docker group
+            await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionPath, telemetryContext, cancellationToken);
+
             string dockerImageCommand = $"docker build --pull -t {this.GetContainerName()} .";
             string dockerRunCommand = $"docker run --runtime=nvidia {this.GetContainerName()}";
 
-            await this.ExecuteCommandAsync(
-                "sudo",
-                dockerImageCommand,
-                this.ExecutionPath,
-                cancellationToken);
-
-            await this.ExecuteCommandAsync(
-                "sudo",
-                dockerRunCommand,
-                this.ExecutionPath,
-                cancellationToken);
+            await this.ExecuteCommandAsync("sudo", dockerImageCommand, this.ExecutionPath, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("sudo", dockerRunCommand, this.ExecutionPath, telemetryContext, cancellationToken);
         }
 
         /// <summary>
         /// Gets the container name created by MLPerf Training.
         /// </summary>
-        /// <returns>Container name created by MLPerf Training</returns>
-        /// <exception cref="WorkloadException"></exception>
         protected string GetContainerName()
         {
             // Update this function to accomodate other architectures
             if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64)
             {
                 return $"mlperf-training-{this.Username}-x86_64:{this.ContainerName}";
-            }
-            else if (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.Arm64)
-            {
-                return $"mlperf-training-{this.Username}-arm64:{this.ContainerName}";
             }
             else
             {
@@ -266,40 +246,54 @@ namespace VirtualClient.Actions
                 string execCommand = $"su -c \"source {this.ConfigFile}; " + 
                                      $"env BATCHSIZE={this.BatchSize} " + 
                                      $"DGXNGPU={this.GPUCount} " + 
-                                     $"CUDA_VISIBLE_DEVICES=\"{this.GetGPULabels()}\" " + 
+                                     $"CUDA_VISIBLE_DEVICES=\"{this.GPUCount}\" " + 
                                      $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionPath, telemetryContext, cancellationToken)
-                   .ConfigureAwait())
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionPath, telemetryContext, cancellationToken))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext)
-                            .ConfigureAwait();
+                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
                         process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
 
-                        await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken, MLPerfTrainingExecutor.AccuracySummary)
-                            .ConfigureAwait();
+                        this.CaptureMetrics(process, telemetryContext, cancellationToken);
                     }
                 }
             }
         }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Parse metrics and push to telemetry
         /// </summary>
-        /// <param name="process">Execute process for StandardOutput containing the metrics</param>
-        /// <param name="telemetryContext"></param>
-        /// <param name="cancellationToken"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
+        private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.MetadataContract.AddForScenario(
+                "MLPerf",
+                process.FullCommand(),
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
             // Convert StandardOutput to string
             string logs = string.Concat(process.StandardOutput.ToString(), Environment.NewLine);
-
-            await this.LogProcessDetailsAsync(process, telemetryContext, "MLPerf Training", results: logs.AsArray(), logToFile: true);
 
             MLPerfTrainingMetricsParser parser = new MLPerfTrainingMetricsParser(logs);
             IList<Metric> metrics = parser.Parse();
@@ -310,31 +304,24 @@ namespace VirtualClient.Actions
                 process.StartTime,
                 process.ExitTime,
                 metrics,
-                "GPU",
-                null,
+                "MLPerfTrainingPerformance",
+                process.FullCommand(),
                 this.Tags,
                 telemetryContext);
         }
 
         /// <summary>
-        /// Unsupported platform error handling
+        ///  Filter the disks using the disk filter and return them
         /// </summary>
-        /// <exception cref="WorkloadException"></exception>
-        private void ThrowIfPlatformNotSupported()
+        /// <param name="disks"></param>
+        /// <param name="diskFilter"></param>
+        /// <returns></returns>
+        private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
         {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The MLPerf Training benchmark workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
-            }
+            diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
+            List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Unix).ToList();
+
+            return filteredDisks;
         }
 
         /// <summary>
@@ -366,20 +353,6 @@ namespace VirtualClient.Actions
                             ErrorReason.LinuxDistributionNotSupported);
                 }
             }
-        }
-
-        /// <summary>
-        ///  Filter the disks using the disk filter and return them
-        /// </summary>
-        /// <param name="disks"></param>
-        /// <param name="diskFilter"></param>
-        /// <returns></returns>
-        private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
-        {
-            diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
-            List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Unix).ToList();
-
-            return filteredDisks;
         }
 
         internal class MLPerfTrainingState : State

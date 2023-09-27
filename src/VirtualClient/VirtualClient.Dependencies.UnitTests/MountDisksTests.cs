@@ -62,7 +62,7 @@ namespace VirtualClient.Dependencies
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(MountDisks.MountPointName), "/mockmountpath" }
+                { nameof(MountDisks.MountPointPrefix), "/mockmountpath" }
             };
         }
     }
