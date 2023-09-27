@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class SpecViewExecutor : VirtualClientComponent
     {
-        private const string VisualStudioCRuntimePackageName = "vcruntime140.dll";
+        private const string VisualStudioCRuntimePackageName = "visualstudiocruntime";
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
 
@@ -98,15 +98,14 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = new List<Metric>();
 
             string viewset = this.GenerateCommandArguments(this.Viewset);
-            string command = $"{this.ExecutablePath} {viewset} {this.CommandArguments}";
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", this.CommandArguments);
 
-            await this.SetEnvironmentVariable().ConfigureAwait(false); ;
+            await this.SetEnvironmentVariable().ConfigureAwait(false);
 
-            IProcessProxy process = await this.ExecuteCommandAsync(command, Environment.CurrentDirectory, relatedContext, cancellationToken).ConfigureAwait(false);
+            IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, $"{viewset} {this.CommandArguments}", Environment.CurrentDirectory, relatedContext, cancellationToken).ConfigureAwait(false);
             this.CaptureMetrics(process, this.CommandArguments, relatedContext);
         }
 
@@ -142,6 +141,13 @@ namespace VirtualClient.Actions
 
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
+                    if (resultsFileDir == null) 
+                    {
+                        throw new WorkloadResultsException(
+                            $"The expected SPECviewperf result directory was not found in '{this.Package.Path}'.",
+                            ErrorReason.WorkloadResultsNotFound);
+                    }
+
                     string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
@@ -175,14 +181,6 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputParsingFailed", LogLevel.Warning, relatedContext);
                 }
-                catch (FileNotFoundException exc)
-                {
-                    EventContext relatedContext = telemetryContext.Clone()
-                        .AddError(exc);
-
-                    this.Logger.LogMessage($"{nameof(SpecViewExecutor)}.WorkloadOutputFileNotFound", LogLevel.Warning, relatedContext);
-                }
-
             }
         }
 
@@ -205,7 +203,7 @@ namespace VirtualClient.Actions
         /// Generate the SPECview viewset Command Arguments
         /// </summary>
         private string GenerateCommandArguments(string viewset)
-        {
+        {      
             return $"-viewset \"{viewset}\"";
         }
 

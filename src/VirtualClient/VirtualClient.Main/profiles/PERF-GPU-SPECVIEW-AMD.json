@@ -12,7 +12,7 @@
     {
       "Type": "SpecViewExecutor",
       "Parameters": {
-        "Scenario": "SPECTestingAllViewSets",
+        "Scenario": "SPECviewperf",
         "CommandArguments": "-nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
