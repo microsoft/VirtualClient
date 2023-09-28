@@ -7,6 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -107,6 +108,68 @@ namespace VirtualClient.Dependencies
             }
 
             Assert.AreEqual(5, commandExecuted);
+        }
+
+        [Test]
+        [TestCase(Architecture.X64)]
+        [TestCase(Architecture.Arm64)]
+        public async Task CompilerInstallationRunsTheExpectedCommandForCharmPlusPlusOnLinux(Architecture architecture)
+        {
+            this.mockFixture.Setup(PlatformID.Unix, architecture);
+
+            this.mockFixture.File.Reset();
+            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
+                .Returns(true);
+
+            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
+
+            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
+            {
+                { nameof(CompilerInstallation.CompilerName), "charm++" },
+                { nameof(CompilerInstallation.CompilerVersion), "6.5.0" }
+            };
+
+            ProcessStartInfo expectedInfo = new ProcessStartInfo();
+            List<string> expectedCommands = new List<string>()
+            {
+                "sudo wget https://charm.cs.illinois.edu/distrib/charm-6.5.0.tar.gz -O charm.tar.gz",
+                "sudo tar -xzf charm.tar.gz",
+                "sudo ./build charm++ netlrts-linux-x86_64 --with-production -j4",
+                "sudo ./build charm++ netlrts-linux-arm8 --with-production -j4"
+            };
+
+            int commandExecuted = 0;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                if (expectedCommands.Any(c => c == $"{exe} {arguments}"))
+                {
+                    commandExecuted++;
+                }
+
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+                process.StandardOutput.AppendLine("gcc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
+                process.StandardOutput.AppendLine("cc (Ubuntu 10.3.0-1ubuntu1~20.04) 123.3.0");
+                return process;
+            };
+
+            using (TestCompilerInstallation compilerInstallation = new TestCompilerInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            Assert.AreEqual(3, commandExecuted);
         }
 
         [Test]

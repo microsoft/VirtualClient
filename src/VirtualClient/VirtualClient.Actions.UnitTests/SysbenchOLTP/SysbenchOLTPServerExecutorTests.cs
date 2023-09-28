@@ -67,9 +67,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
+                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/scripts/sysbencholtp\"",
                 $"sudo {scriptPath}/in-memory.sh 8192"
             };
 
@@ -89,7 +87,7 @@ namespace VirtualClient.Actions
 
             await executor.ExecuteAsync(cancellationToken);
 
-            Assert.AreEqual(4, commandsExecuted);
+            Assert.AreEqual(2, commandsExecuted);
         }
 
         [Test]
@@ -126,9 +124,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
+                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/scripts/sysbencholtp\"",
                 $"sudo {scriptPath}/balanced-server.sh {mountPaths}"
             };
 
@@ -148,7 +144,7 @@ namespace VirtualClient.Actions
 
             await executor.ExecuteAsync(cancellationToken);
 
-            Assert.AreEqual(4, commandsExecuted);
+            Assert.AreEqual(2, commandsExecuted);
         }
 
         [Test]
@@ -170,10 +166,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{scriptPath}/in-memory.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{scriptPath}/balanced-client.sh\"",
-                $"sudo {scriptPath}/balanced-server.sh"
+                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/scripts/sysbencholtp\""
             };
 
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
@@ -192,7 +185,7 @@ namespace VirtualClient.Actions
 
             await executor.ExecuteAsync(cancellationToken);
 
-            Assert.AreEqual(3, commandsExecuted);
+            Assert.AreEqual(1, commandsExecuted);
         }
 
         private class TestSysbenchOLTPServerExecutor : SysbenchOLTPServerExecutor

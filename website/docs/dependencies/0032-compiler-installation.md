@@ -17,6 +17,14 @@ The following section describes the parameters used by the individual component 
 | CygwinPackages | N/A         | Optional. Windows Only. Comma-delimited list of packages that needs to be installed with cygwin (e.g. gcc-fortran,python3).
 Note: VC automatically installs make & cmake with Cygwin. |
 
+## Compilers Supported
+
+| **CompilerName** | **Supported Platform/Architectures**                                   |
+|------------------|------------------------------------------------------------------------|
+|gcc               | linux-arm64,linux-x64,win-arm64,win-x64                                |
+|aocc              | linux-arm64,linux-x64                                                  |
+|charm++           | linux-arm64,linux-x64                                                  |
+
 ## Example
 The following section describes the parameters used by the individual component in the profile.
 
