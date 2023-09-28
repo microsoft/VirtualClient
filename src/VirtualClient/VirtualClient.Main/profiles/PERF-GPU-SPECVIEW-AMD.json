@@ -6,13 +6,15 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "GpuModel": "v620"
+    "GpuModel": "v620",
+    "Viewset":  ""
   },
   "Actions": [
     {
       "Type": "SpecViewExecutor",
       "Parameters": {
         "Scenario": "SPECviewperf",
+        "Viewset": "$.Parameters.Viewset",
         "CommandArguments": "-nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
