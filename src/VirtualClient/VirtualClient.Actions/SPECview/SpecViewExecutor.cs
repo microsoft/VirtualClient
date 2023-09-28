@@ -28,7 +28,7 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class SpecViewExecutor : VirtualClientComponent
     {
-        private const string VisualStudioCRuntimePackageName = "wget";
+        private const string VisualStudioCRuntimePackageName = "visualstudiocruntime";
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
 
