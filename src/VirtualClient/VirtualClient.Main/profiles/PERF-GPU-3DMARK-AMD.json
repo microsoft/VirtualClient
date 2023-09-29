@@ -57,7 +57,7 @@
         "Scenario": "Install3DMarkWorkloadPackage",
         "BlobContainer": "packages",
         "BlobName": "3DMark.zip",
-        "PackageName": "3dmark",
+        "PackageName": "3DMark",
         "Extract": true
       }
     }

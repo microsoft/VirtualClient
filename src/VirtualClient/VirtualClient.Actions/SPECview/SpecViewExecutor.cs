@@ -103,10 +103,28 @@ namespace VirtualClient.Actions
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", this.CommandArguments);
 
-            await this.SetEnvironmentVariable().ConfigureAwait(false);
+            await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, $"{viewset} {this.CommandArguments}", Environment.CurrentDirectory, relatedContext, cancellationToken).ConfigureAwait(false);
-            this.CaptureMetrics(process, this.CommandArguments, relatedContext);
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, $"{viewset} {this.CommandArguments}", this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            {
+                    try
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                            this.CaptureMetrics(process, this.CommandArguments, relatedContext);
+                        }
+                    }
+                    finally
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill();
+                        }
+                    }
+            }            
+            
         }
 
         /// <summary>
@@ -207,7 +225,7 @@ namespace VirtualClient.Actions
             return $"-viewset \"{viewset}\"";
         }
 
-        private async Task SetEnvironmentVariable()
+        private async Task SetUpEnvironmentVariable()
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath visualStudioCRuntimePackage = await packageManager.GetPackageAsync(VisualStudioCRuntimePackageName, CancellationToken.None).ConfigureAwait(false);
