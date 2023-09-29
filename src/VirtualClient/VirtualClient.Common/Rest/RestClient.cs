@@ -7,47 +7,19 @@ namespace VirtualClient.Common.Rest
     using System.Collections.Generic;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Reflection.Metadata;
     using System.Threading;
     using System.Threading.Tasks;
-    using Polly;
-    using Polly.Extensions.Http;
 
     /// <summary>
     /// Interface for generic rest client
     /// </summary>
     public class RestClient : IRestClient
     {
-        /// <summary>
-        /// Defines the default retry policy rest client to handle transient http error.
-        /// </summary>
-        private static IAsyncPolicy<HttpResponseMessage> defaultRetryPolicy = HttpPolicyExtensions.HandleTransientHttpError()
-            .WaitAndRetryAsync(5, (retries) => TimeSpan.FromMilliseconds(retries * 100));
-
-        /// <summary>
-        /// When unauthorized the authored code below does two things:
-        /// <list type="number">
-        /// <item>Resets the authentication header value.</item>
-        /// <item>Throws a <see cref="UnauthorizedAccessException"/>.</item>
-        /// </list>
-        /// This means the client should retry once, with the intent the unauth from the Http response was due to
-        /// an expired bearer token, and refreshing this token solves the issue.
-        /// </summary>
-        private static IAsyncPolicy unauthorizedRetryPolicy = Policy.Handle<UnauthorizedAccessException>()
-            .RetryAsync();
-
         private bool disposed = false;
 
-        /// <summary>
-        /// Gets the retry policy to apply when experiencing transient issues.
-        /// </summary>
-        private IAsyncPolicy<HttpResponseMessage> retryPolicy;
-
-        internal RestClient(HttpClient httpClient = null, IAsyncPolicy<HttpResponseMessage> retryPolicy = null)
+        internal RestClient(HttpClient httpClient = null)
         {
             this.Client = httpClient ?? new HttpClient();
-            this.retryPolicy = retryPolicy ?? RestClient.defaultRetryPolicy
-                .WrapAsync(RestClient.unauthorizedRetryPolicy);
         }
 
         /// <summary>
@@ -61,101 +33,91 @@ namespace VirtualClient.Common.Rest
         public HttpClient Client { get; }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> DeleteAsync(Uri requestUri, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> DeleteAsync(Uri requestUri, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.DeleteAsync(requestUri, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.DeleteAsync(requestUri, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> DeleteAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> DeleteAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            using (HttpRequestMessage request = new HttpRequestMessage
             {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpRequestMessage request = new HttpRequestMessage
-                {
-                    Content = content,
-                    Method = HttpMethod.Delete,
-                    RequestUri = requestUri
-                };
-                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                Content = content,
+                Method = HttpMethod.Delete,
+                RequestUri = requestUri
+            })
+            {
+                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, cancellationToken);
                 this.ResetAuthenticationOnUnauthorized(responseMessage);
+
                 return responseMessage;
-            });
+            }
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
             this.Dispose(true);
-            // Suppress finalization.
             GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> GetAsync(Uri requestUri, CancellationToken cancellationToken, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+        public async Task<HttpResponseMessage> GetAsync(Uri requestUri, CancellationToken cancellationToken, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.GetAsync(requestUri, completionOption, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.GetAsync(requestUri, completionOption, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> GetAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
+        public async Task<HttpResponseMessage> GetAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken, HttpCompletionOption completionOption = HttpCompletionOption.ResponseContentRead)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            using (HttpRequestMessage request = new HttpRequestMessage
             {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpRequestMessage request = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Get,
-                    RequestUri = requestUri,
-                    Content = content
-                };
-
-                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, completionOption, cancellationToken)
-                    .ConfigureAwait(false);
-
+                Method = HttpMethod.Get,
+                RequestUri = requestUri,
+                Content = content
+            })
+            {
+                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, completionOption, cancellationToken);
                 this.ResetAuthenticationOnUnauthorized(responseMessage);
+
                 return responseMessage;
-            });
+            }
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> HeadAsync(Uri requestUri, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> HeadAsync(Uri requestUri, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                // Http Client doesn't have HEAD wrapper.
-                // https://github.com/mono/mono/blob/master/mcs/class/System.Net.Http/System.Net.Http/HttpClient.cs#L144
-                // https://stackoverflow.com/questions/16416699/http-head-request-with-httpclient-in-net-4-5-and-c-sharp
-                HttpResponseMessage responseMessage = await this.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, requestUri), cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+
+            // HttpClient class DOES NOT have HEAD convenience method.
+            // https://github.com/mono/mono/blob/master/mcs/class/System.Net.Http/System.Net.Http/HttpClient.cs#L144
+            // https://stackoverflow.com/questions/16416699/http-head-request-with-httpclient-in-net-4-5-and-c-sharp
+
+            HttpResponseMessage responseMessage = await this.Client.SendAsync(new HttpRequestMessage(HttpMethod.Head, requestUri), cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> PatchAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> PatchAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.PatchAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.PatchAsync(requestUri, content, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
@@ -165,15 +127,13 @@ namespace VirtualClient.Common.Rest
         /// <param name="requestUri">The request uri.</param>
         /// <param name="cancellationToken">Calcellation token.</param>
         /// <returns>Http response message.</returns>
-        public Task<HttpResponseMessage> PostAsync(Uri requestUri, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> PostAsync(Uri requestUri, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.PostAsync(requestUri, null, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.PostAsync(requestUri, null, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <summary>
@@ -183,39 +143,33 @@ namespace VirtualClient.Common.Rest
         /// <param name="content">Http content to send.</param>
         /// <param name="cancellationToken">Calcellation token.</param>
         /// <returns>Http response message.</returns>
-        public Task<HttpResponseMessage> PostAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> PostAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.PostAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.PostAsync(requestUri, content, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> PutAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> PutAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.PutAsync(requestUri, content, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.PutAsync(requestUri, content, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         /// <inheritdoc/>
-        public Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return this.retryPolicy.ExecuteAsync(async () =>
-            {
-                await this.ApplyAuthenticationHeaderAsync(cancellationToken).ConfigureAwait(false);
-                HttpResponseMessage responseMessage = await this.Client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-                this.ResetAuthenticationOnUnauthorized(responseMessage);
-                return responseMessage;
-            });
+            await this.ApplyAuthenticationHeaderAsync(cancellationToken);
+            HttpResponseMessage responseMessage = await this.Client.SendAsync(request, cancellationToken);
+            this.ResetAuthenticationOnUnauthorized(responseMessage);
+
+            return responseMessage;
         }
 
         internal void AddAcceptedMediaTypeHeader(MediaTypeWithQualityHeaderValue mediaTypeHeader)
