@@ -106,12 +106,13 @@ namespace VirtualClient.Actions
                     string workingDir = this.mockSpecViewPackage.Path;
                     string expectedSpecViewArguments = this.mockFixture.Parameters["CommandArguments"].ToString();
                     string expectedCommandArguments = $"-viewset \"{viewsetArg}\" -nogui";
-                    string mockResultDir = "results_19991231T235959";
+                    string mockResultDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "results_19991231T235959");
                     string mockResultFilePath = this.mockFixture.Combine(mockResultDir, "resultCSV.csv");
+                    string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
 
                     // Test that the result is properly renamed
                     mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] {mockResultDir});
-                    mockFixture.FileSystem.Setup(fe => fe.File.Move(mockResultFilePath, "hist_" + mockResultFilePath)).Callback(() => renamed++);
+                    mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
                     this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
                         if (arguments == expectedCommandArguments && command == expectedSpecViewExecutablePath)

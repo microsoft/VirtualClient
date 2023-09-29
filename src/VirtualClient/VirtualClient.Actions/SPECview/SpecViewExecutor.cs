@@ -107,22 +107,12 @@ namespace VirtualClient.Actions
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, $"{viewset} {this.CommandArguments}", this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
             {
-                    try
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfWorkloadFailed();
-                            this.CaptureMetrics(process, this.CommandArguments, relatedContext);
-                        }
-                    }
-                    finally
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                        }
-                    }
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await this.LogProcessDetailsAsync(process, telemetryContext);
+                    process.ThrowIfWorkloadFailed();
+                    this.CaptureMetrics(process, this.CommandArguments, relatedContext);
+                }
             }            
             
         }
@@ -190,7 +180,8 @@ namespace VirtualClient.Actions
                         telemetryContext);
 
                     // rename the result file to avoid confusions on future runs
-                    this.fileSystem.File.Move(resultsFilePath, "hist_" + resultsFilePath);
+                    string historyResultsDir = this.PlatformSpecifics.Combine(this.Package.Path, "hist_" + Path.GetFileName(resultsFileDir));
+                    this.fileSystem.Directory.Move(resultsFileDir, historyResultsDir);
                 }
                 catch (SchemaException exc)
                 {
