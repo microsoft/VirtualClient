@@ -318,7 +318,7 @@ namespace VirtualClient.Contracts.Proxy
                 using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.Ambiguous))
                 {
                     int attempts = 0;
-                    int expectedRetries = 10;
+                    int expectedRetries = 5;
 
                     this.mockRestClient
                         .Setup(client => client.GetAsync(
@@ -478,7 +478,7 @@ namespace VirtualClient.Contracts.Proxy
                 using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.Ambiguous))
                 {
                     int attempts = 0;
-                    int expectedRetries = 10;
+                    int expectedRetries = 5;
 
                     this.mockRestClient.Setup(client => client.PostAsync(
                             It.IsAny<Uri>(),
@@ -604,7 +604,7 @@ namespace VirtualClient.Contracts.Proxy
                 using (HttpResponseMessage response = VirtualClientProxyApiClientTests.CreateResponseMessage(HttpStatusCode.Ambiguous))
                 {
                     int attempts = 0;
-                    int expectedRetries = 10;
+                    int expectedRetries = 5;
 
                     this.mockRestClient.Setup(client => client.PostAsync(
                             It.IsAny<Uri>(),
@@ -712,8 +712,8 @@ namespace VirtualClient.Contracts.Proxy
                             return Task.FromResult(response);
                         }).ConfigureAwait(false);
 
-                        // First attempt + 10 retries
-                        Assert.IsTrue(attempts == 11);
+                        // First attempt + 5 retries
+                        Assert.IsTrue(attempts == 6);
                     }
                 }
             }

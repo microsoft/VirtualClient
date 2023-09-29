@@ -118,7 +118,7 @@ namespace VirtualClient.Contracts
             char[] forbiddenChars = new char[] { '"',  ':', '|', '<', '>', '*', '?' };
             foreach (char c in forbiddenChars)
             {
-                name = name.Replace(c.ToString(), "_");
+                name = name.Replace(c.ToString(), "-");
             }
 
             name = name.Replace('\\', '/').Replace(@"//", "/");

@@ -140,24 +140,27 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            // store state with initialization status & record/table counts, if does not exist already
+
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+                ?? new SysbenchOLTPState();
+
+            if (!state.ExecutablesInitialized)
             {
-                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+                // install sysbench using repo scripts
+                if (this.Platform == PlatformID.Unix && this.DatabaseScenario != SysbenchOLTPScenario.Default)
+                {
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balanced-server.sh"),
-                    this.Platform,
-                    cancellationToken);
+                    await this.SystemManager.MakeFilesExecutableAsync(
+                        scriptsDirectory,
+                        this.Platform,
+                        cancellationToken);
+                }
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balanced-client.sh"),
-                    this.Platform,
-                    cancellationToken);
+                state.ExecutablesInitialized = true;
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "in-memory.sh"),
-                    this.Platform,
-                    cancellationToken);
+                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
         }
 
@@ -264,6 +267,19 @@ namespace VirtualClient.Actions
                 set
                 {
                     this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
+                }
+            }
+
+            public bool ExecutablesInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.ExecutablesInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.ExecutablesInitialized)] = value;
                 }
             }
 
