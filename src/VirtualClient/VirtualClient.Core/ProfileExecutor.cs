@@ -15,6 +15,7 @@ namespace VirtualClient
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Extensions;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// This is the main class that will take an execution profile and execute it
@@ -22,6 +23,7 @@ namespace VirtualClient
     public class ProfileExecutor : IDisposable
     {
         private static int currentIteration;
+        private MetadataContract metadataContact;
         private bool disposed;
         
         /// <summary>
@@ -47,6 +49,7 @@ namespace VirtualClient
             this.RandomizationSeed = 777;
             this.Logger = logger ?? NullLogger.Instance;
 
+            this.metadataContact = new MetadataContract();
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             if (metadata?.Any() == true)
             {
@@ -132,6 +135,12 @@ namespace VirtualClient
         public TimeSpan ExitWait { get; set; }
 
         /// <summary>
+        /// True if VC should exit/crash on first/any error(s) regardless of 
+        /// their severity. Default = false.
+        /// </summary>
+        public bool FailFast { get; set; }
+
+        /// <summary>
         /// Logs things to various sources
         /// </summary>
         public ILogger Logger { get; }
@@ -199,6 +208,8 @@ namespace VirtualClient
                     // activity ID of the parent to enable correlation of events all the way down the
                     // callstack.
                     EventContext parentContext = EventContext.Persist(Guid.NewGuid());
+                    this.metadataContact.Apply(parentContext);
+
                     this.Initialize();
 
                     if (this.ExecuteDependencies)
@@ -424,7 +435,7 @@ namespace VirtualClient
                                                 this.ActionEnd?.Invoke(this, new ComponentEventArgs(action));
                                             }
                                         }
-                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500)
+                                        catch (VirtualClientException exc) when ((int)exc.Reason >= 500 || this.FailFast)
                                         {
                                             // Error reasons have numeric/integer values that indicate their severity. Error reasons
                                             // with a value >= 500 are terminal situations where the workload cannot run successfully
@@ -703,14 +714,18 @@ namespace VirtualClient
                     {
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
+                        runtimeComponent.FailFast = this.FailFast;
+
+                        // Metadata: Profile-level (global)
                         if (this.Metadata?.Any() == true)
                         {
                             runtimeComponent.Metadata.AddRange(this.Metadata, true);
                         }
 
-                        if (this.Profile.Parameters?.Any() == true)
+                        // Metadata: Profile Component-level (overrides global)
+                        if (component.Metadata?.Any() == true)
                         {
-                            VirtualClientComponent.GlobalParameters.AddRange(this.Profile.Parameters, true);
+                            runtimeComponent.Metadata.AddRange(component.Metadata, true);
                         }
 
                         if (!VirtualClientComponent.IsSupported(runtimeComponent))

@@ -4,7 +4,6 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -26,8 +25,7 @@ namespace VirtualClient.Contracts
         // or even extensions libraries. They are dynamically loaded at runtime.
         private static readonly List<Type> ComponentDependencyTypes = new List<Type>
         {
-            typeof(VirtualClientComponent),
-            typeof(IFileUploadDescriptorFactory)
+            typeof(VirtualClientComponent)
         };
 
         private ComponentTypeCache()
@@ -38,11 +36,6 @@ namespace VirtualClient.Contracts
         /// Gets the singleton instance of the <see cref="ComponentTypeCache"/>
         /// </summary>
         public static ComponentTypeCache Instance { get; } = new ComponentTypeCache();
-
-        /// <summary>
-        /// Used to cache descriptor factory objects at-will.
-        /// </summary>
-        internal IDictionary<string, IFileUploadDescriptorFactory> DescriptorFactoryCache { get; } = new ConcurrentDictionary<string, IFileUploadDescriptorFactory>();
 
         /// <summary>
         /// Loads provider types from assemblies in the path provided.

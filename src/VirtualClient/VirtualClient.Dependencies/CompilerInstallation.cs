@@ -5,15 +5,21 @@ namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
+    using System.IO.Abstractions;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
+    using VirtualClient.Metadata;
 
     /// <summary>
     /// Provides functionality for installing compilers on the system (GCC, AOCC, etc).
@@ -95,14 +101,15 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string compiler = this.CompilerName.ToLowerInvariant();
             switch (this.CompilerName.ToLowerInvariant())
             {
                 case "gcc":
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.InstallGccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
 
-                        if (!await this.ConfirmGccVersionInstalledAsync(cancellationToken).ConfigureAwait(false))
+                        if (!await this.ConfirmGccVersionInstalledAsync(cancellationToken))
                         {
                             throw new DependencyException($"'{this.CompilerName.ToLowerInvariant()}' compiler version '{this.CompilerVersion}' not confirmed.", ErrorReason.DependencyInstallationFailed);
                         }
@@ -113,11 +120,9 @@ namespace VirtualClient.Dependencies
                         string cygwinInstallationPath = this.PlatformSpecifics.Combine(chocolateyToolsLocation, "cygwin");
 
                         DependencyPath cygwinPackage = new DependencyPath("cygwin", cygwinInstallationPath);
-                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.systemManager.PackageManager.RegisterPackageAsync(cygwinPackage, cancellationToken);
 
-                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.InstallCygwinAsync(cygwinPackage, telemetryContext, cancellationToken);
                     }
 
                     break;
@@ -125,8 +130,15 @@ namespace VirtualClient.Dependencies
                 case "aocc":
                     if (this.Platform == PlatformID.Unix)
                     {
-                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.InstallAoccAsync(this.CompilerVersion, telemetryContext, cancellationToken);
+                    }
+
+                    break;
+
+                case Compilers.Charmplusplus:
+                    if (this.Platform == PlatformID.Unix)
+                    {
+                        await this.InstallCharmplusplusAsync(this.CompilerVersion, telemetryContext, cancellationToken);
                     }
 
                     break;
@@ -134,6 +146,11 @@ namespace VirtualClient.Dependencies
                 default:
                     throw new NotSupportedException($"Compiler '{this.CompilerName}' is not supported.");
             }
+
+            // The compiler + version installed is an important part of the metadata
+            // contract for VC scenarios.
+            IDictionary<string, object> compilerMetadata = await this.systemManager.GetInstalledCompilerMetadataAsync(this.Logger, cancellationToken);
+            MetadataContract.Persist(compilerMetadata, MetadataContractCategory.Dependencies, true);
         }
 
         /// <summary>
@@ -152,13 +169,11 @@ namespace VirtualClient.Dependencies
                     this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
                     Console.WriteLine(compiler + "1");
 
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                    await process.StartAndWaitAsync(cancellationToken);
 
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion")
-                            .ConfigureAwait(false);
+                        await this.LogProcessDetailsAsync(process, EventContext.Persisted(), "CompilerVersion");
 
                         ConsoleLogger.Default.LogTraceMessage(compiler + "2" + process.StandardOutput.ToString());
 
@@ -193,7 +208,7 @@ namespace VirtualClient.Dependencies
 
         private async Task InstallGccAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken).ConfigureAwait(false);
+            LinuxDistributionInfo distro = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
             switch (distro.LinuxDistribution)
             {
                 case LinuxDistribution.Ubuntu:
@@ -245,6 +260,26 @@ namespace VirtualClient.Dependencies
             await this.ExecuteCommandAsync("bash", @$"install.sh", Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
+        private async Task InstallCharmplusplusAsync(string charmplusplusVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            // default latest
+            charmplusplusVersion = (string.IsNullOrEmpty(charmplusplusVersion)) ? "latest" : charmplusplusVersion;
+
+            await this.ExecuteCommandAsync("wget", $"https://charm.cs.illinois.edu/distrib/charm-{charmplusplusVersion}.tar.gz -O charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("tar", $"-xzf charm.tar.gz", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+            string charmPath = Directory.GetDirectories(Environment.CurrentDirectory, "charm-v*").FirstOrDefault();
+
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.X64)
+            {
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-x86_64 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+            }
+
+            if (this.CpuArchitecture == System.Runtime.InteropServices.Architecture.Arm64)
+            {
+                await this.ExecuteCommandAsync("./build", "charm++ netlrts-linux-arm8 --with-production -j4", workingDirectory: charmPath, telemetryContext, cancellationToken);
+            }
+        }
+
         private Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return this.RetryPolicy.ExecuteAsync(async () =>
@@ -255,18 +290,16 @@ namespace VirtualClient.Dependencies
                      this.CleanupTasks.Add(() => process.SafeKill());
                      this.LogProcessTrace(process);
 
-                     await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
+                     await process.StartAndWaitAsync(cancellationToken);
 
                      if (!cancellationToken.IsCancellationRequested)
                      {
-                         await this.LogProcessDetailsAsync(process, telemetryContext)
-                            .ConfigureAwait(false);
+                         await this.LogProcessDetailsAsync(process, telemetryContext);
 
                          process.ThrowIfErrored<DependencyException>(errorReason: ErrorReason.DependencyInstallationFailed);
                      }
                  }
-            });
+             });
         }
     }
 
@@ -300,5 +333,9 @@ namespace VirtualClient.Dependencies
         /// </summary>
         public const string Aocc = "aocc";
 
+        /// <summary>
+        /// Charm++ compiler.
+        /// </summary>
+        public const string Charmplusplus = "charm++";
     }
 }

@@ -5,9 +5,8 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO.Abstractions;
-    using System.Linq;
-    using System.Text;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The DCGMI Executor for GPU
@@ -131,63 +131,51 @@ namespace VirtualClient.Actions
         /// <exception cref="WorkloadException"></exception>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken);
+
+            telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+
+            switch (linuxDistributionInfo.LinuxDistribution)
             {
-                var linuxDistributionInfo = await this.systemManagement.GetLinuxDistributionAsync(cancellationToken)
-                                                .ConfigureAwait(false);
+                case LinuxDistribution.Ubuntu:
+                case LinuxDistribution.Debian:
+                case LinuxDistribution.CentOS8:
+                case LinuxDistribution.RHEL8:
+                case LinuxDistribution.SUSE:
+                    break;
 
-                telemetryContext.AddContext("LinuxDistribution", linuxDistributionInfo.LinuxDistribution);
+                default:
+                    throw new WorkloadException(
+                        $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
+                        $" Supported distros include:" +
+                        $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
+                        ErrorReason.LinuxDistributionNotSupported);
+            }
 
-                switch (linuxDistributionInfo.LinuxDistribution)
-                {
-                    case LinuxDistribution.Ubuntu:
-                    case LinuxDistribution.Debian:
-                    case LinuxDistribution.CentOS8:
-                    case LinuxDistribution.RHEL8:
-                    case LinuxDistribution.SUSE:
-                        break;
-
-                    default:
-                        throw new WorkloadException(
-                            $"{nameof(DCGMIExecutor)} is not supported on the current Linux distro - {linuxDistributionInfo.LinuxDistribution.ToString()}.  through VC " +
-                            $" Supported distros include:" +
-                            $" Ubuntu, Debian, CentOS8, RHEL8, SUSE",
-                            ErrorReason.LinuxDistributionNotSupported);
-                }
-
-                if (this.Subsystem == DCGMIExecutor.Diagnostics)
-                {
-                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
-                            .ConfigureAwait(false);
-
-                    State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIExecutor), cancellationToken)
-                            .ConfigureAwait(false);
-
-                    if (installationState == null)
-                    {
-                        await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
+            if (this.Subsystem == DCGMIExecutor.Diagnostics)
+            {
+                await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -pm 1", Environment.CurrentDirectory, cancellationToken)
                         .ConfigureAwait(false);
 
-                        this.RequestReboot();
-                    }
-                }
+                State installationState = await this.stateManager.GetStateAsync<State>(nameof(DCGMIExecutor), cancellationToken)
+                        .ConfigureAwait(false);
 
-                if (this.Subsystem == DCGMIExecutor.Health)
+                if (installationState == null)
                 {
-                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"dcgmi health -s mpi", Environment.CurrentDirectory, cancellationToken)
+                    await this.ExecuteCommandAsync<DCGMIExecutor>(@"nvidia-smi -e 1", Environment.CurrentDirectory, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    await this.stateManager.SaveStateAsync(nameof(DCGMIExecutor), new State(), cancellationToken)
                     .ConfigureAwait(false);
+
+                    this.RequestReboot();
                 }
             }
-            else
+
+            if (this.Subsystem == DCGMIExecutor.Health)
             {
-                throw new WorkloadException(
-                            $"{nameof(DCGMIExecutor)} is not supported on the current platform {this.Platform} through VC." +
-                            $"Supported Platforms include:" +
-                            $" Unix ",
-                            ErrorReason.PlatformNotSupported);
+                await this.ExecuteCommandAsync<DCGMIExecutor>(@"dcgmi health -s mpi", Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
             }
         }
 
@@ -247,6 +235,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("DCGMI", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Executes the commands.
         /// </summary>
         /// <param name="command">Command that needs to be executed</param>
@@ -291,75 +297,75 @@ namespace VirtualClient.Actions
         private async Task ExecuteDCGMIDiagnosticsSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = $"dcgmi diag -r {this.Level} -j";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
 
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIDiscoverySubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi discovery -l";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
 
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIFieldGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi fieldgroup -l";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi group -l";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIHealthSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi health -c -j";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIModulesSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string command = "dcgmi modules -l";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
             string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false);
 
             Console.WriteLine("results are " + results);
 
-            this.CaptureWorkloadResultsAsync(results, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
         private async Task ExecuteDCGMIProfTesterSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -367,38 +373,49 @@ namespace VirtualClient.Actions
             List<Task<string>> tasksList = new List<Task<string>>();
             string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
             string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
-            this.StartTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
+
             tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false)));
+
             tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
             .ConfigureAwait(false)));
+
             string[] outputresults = await Task.WhenAll<string>(tasksList);
 
             string dcgmiproftesterresults = outputresults[0];
             string dcgmidmonresults = outputresults[1];
 
-            this.CaptureDmonResultsAsync(dcgmidmonresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
-            this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureDmonResultsAsync(dcgmidmonresults, dmoncommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+            this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, dcgmproftestercommand, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
         }
 
-        private void CaptureDmonResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureDmonResultsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "DCGMI",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     DCGMIResultsParser dcgmiResultsParser = new DCGMIResultsParser(results, $"{this.Subsystem}Dmon");
                     IList<Metric> metrics = dcgmiResultsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "DCGMI",
-                                scenarioName: $"{this.Subsystem}Dmon",
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "DCGMI",
+                        scenarioName: $"{this.Subsystem}Dmon",
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {
@@ -407,24 +424,32 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void CaptureWorkloadResultsAsync(string results, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureWorkloadResultsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "DCGMI",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     DCGMIResultsParser dcgmiResultsParser = new DCGMIResultsParser(results, this.Subsystem);
                     IList<Metric> metrics = dcgmiResultsParser.Parse();
+
                     this.Logger.LogMetrics(
-                                "DCGMI",
-                                scenarioName: this.Subsystem,
-                                startTime,
-                                endTime,
-                                metrics,
-                                string.Empty,
-                                this.Parameters.ToString(),
-                                this.Tags,
-                                telemetryContext);
+                        "DCGMI",
+                        scenarioName: this.Subsystem,
+                        startTime,
+                        endTime,
+                        metrics,
+                        string.Empty,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {

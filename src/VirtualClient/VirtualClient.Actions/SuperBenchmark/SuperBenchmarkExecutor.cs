@@ -7,14 +7,17 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SuperBenchmark workload executor.
@@ -159,7 +162,7 @@ namespace VirtualClient.Actions
                 string cloneDir = this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "superbenchmark");
                 if (!this.fileSystem.Directory.Exists(cloneDir))
                 {
-                    await this.ExecuteCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, runElevated: true);
+                    await this.ExecuteSbCommandAsync("git", $"clone -b v{this.Version} https://github.com/microsoft/superbenchmark", this.PlatformSpecifics.PackagesDirectory, telemetryContext, cancellationToken, true);
                 }
 
                 foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("superbenchmark")))
@@ -170,8 +173,8 @@ namespace VirtualClient.Actions
                         true);
                 }
 
-                await this.ExecuteCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: true);
-                await this.ExecuteCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, runElevated: false);
+                await this.ExecuteSbCommandAsync("bash", $"initialize.sh {this.Username}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, true);
+                await this.ExecuteSbCommandAsync("sb", $"deploy --host-list localhost -i {this.ContainerVersion}", this.SuperBenchmarkDirectory, telemetryContext, cancellationToken, false);
 
                 state.SuperBenchmarkInitialized = true;
             }
@@ -179,10 +182,46 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<SuperBenchmarkState>($"{nameof(SuperBenchmarkState)}", state, cancellationToken);
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("SuperBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        private async Task ExecuteSbCommandAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, bool runElevated)
+        {
+            IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: runElevated);
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await this.LogProcessDetailsAsync(process, telemetryContext, "Superbench", logToFile: true);
+                process.ThrowIfWorkloadFailed();
+            }
+        }
+
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "SuperBenchmark",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "results-summary.jsonl", SearchOption.AllDirectories);
 
                 foreach (string file in outputFiles)
@@ -202,7 +241,7 @@ namespace VirtualClient.Actions
                         metricCategorization: $"{this.ConfigurationFile}",
                         scenarioArguments: commandArguments,
                         this.Tags,
-                        EventContext.Persisted());
+                        telemetryContext);
 
                     await this.fileSystem.File.DeleteAsync(file);
                 }

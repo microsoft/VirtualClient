@@ -1,0 +1,64 @@
+{
+    "Description": "SuperBenchmark GPU Performance Workload",
+    "MinimumExecutionInterval": "00:01:00",
+    "Metadata": {
+        "RecommendedMinimumExecutionTime": "08:00:00",
+        "SupportedPlatforms": "linux-x64",
+        "SupportedOperatingSystems": "Ubuntu",
+        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip."
+    },
+    "Parameters": {
+        "ConfigurationFile": "default.yaml",
+        "Username": "",
+        "LinuxCudaVersion": "12.0",
+        "LinuxDriverVersion": "525",
+        "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+    },
+    "Actions": [
+        {
+            "Type": "SuperBenchmarkExecutor",
+            "Parameters": {
+                "Scenario": "Models",
+                "Username": "$.Parameters.Username",
+                "Version": "0.8.0",
+                "ConfigurationFile": "$.Parameters.ConfigurationFile",
+                "ContainerVersion": "superbench/superbench:v0.8.0-cuda11.1.1"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "NvidiaCudaInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaCuda",
+                "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+                "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
+                "Username": "$.Parameters.Username",
+                "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+            }
+        },
+        {
+            "Type": "DockerInstallation",
+            "Parameters": {
+                "Scenario": "InstallDocker"
+            }
+        },
+        {
+            "Type": "NvidiaContainerToolkitInstallation",
+            "Parameters": {
+                "Scenario": "InstallNvidiaContainerToolkit"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "sshpass,python3-pip",
+                "Packages-Apt": "nvidia-common",
+                "Packages-Dnf": "nvidia-driver",
+                "Packages-Yum": "nvidia-driver",
+                "Packages-Zypper": ""
+            }
+        }
+    ]
+}

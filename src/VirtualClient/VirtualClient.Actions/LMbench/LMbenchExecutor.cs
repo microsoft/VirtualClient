@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The LMbench workload virtual client action
@@ -118,10 +120,35 @@ namespace VirtualClient.Actions
             this.resultsDirectory = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results");
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("LMbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "LMbench",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 LMbenchMetricsParser parser = new LMbenchMetricsParser(process.StandardOutput.ToString());
                 IList<Metric> metrics = parser.Parse();
 

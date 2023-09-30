@@ -6,7 +6,9 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -15,7 +17,9 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Platform;
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes the SPEC Power workload used to stress the system.
@@ -127,7 +131,9 @@ namespace VirtualClient.Actions
             this.GetAllProcessComponents().ForEach(component => component.Cleanup());
 
             this.Logger.LogTraceMessage($"Beginning SPEC-Power execution.");
-            this.StartTime = DateTime.UtcNow;
+
+            this.MetadataContract.AddForScenario("SPECpower", null);
+            this.MetadataContract.Apply(telemetryContext);
 
             this.serverComponent.ExecuteAsync(cancellationToken);
             this.directorComponent.ExecuteAsync(cancellationToken);
@@ -175,6 +181,24 @@ namespace VirtualClient.Actions
             }
 
             SPECPowerExecutor.JavaExecutablePath = javaExecutable.Metadata[PackageMetadata.ExecutablePath].ToString();
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("SPECPower", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>
@@ -288,7 +312,6 @@ namespace VirtualClient.Actions
                 }
 
                 this.Logger.LogTraceMessage("SPEC Power Completed Successfully.");
-                this.EndTime = DateTime.UtcNow;
             }
         }
     }

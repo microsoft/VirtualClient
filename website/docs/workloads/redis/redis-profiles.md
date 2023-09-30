@@ -52,9 +52,7 @@ Runs the Memtier workload against to generate various network traffic patterns a
 the Redis benchmark itself can also be run to evaluate the performance of the Redis server.
 We have two profiles for Redis.One supports redis with TLS and one without TLS.
 
-* [Workload Profile without TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
-* [Workload Profile with TLS](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS-TLS.json) 
-
+* [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-REDIS.json) 
 
 * **Supported Platform/Architectures**
   * linux-x64 
@@ -83,6 +81,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | ServerInstances           | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.   | # logical processors |
   | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
   | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
+  | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
 
 * **Component Parameters**  
   The following parameters describe the parameters within the profile components.
@@ -97,6 +96,8 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | ServerInstances           | The number of distinct Redis server instances to run concurrently. | # logical processors |
   | ServerThreadCount         | The number of threads to use by the Redis server to handle operations. | 4 |
   | Username                  | <mark>Required when Virtual Client itself is launched by any process running as 'root' (e.g. a daemon)</mark><br/><br/>Defines a specific username under which to run the Redis server. | The user account for the process that launches Virtual Client.  |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+
 
   | Client Role Parameter     | Purpose                                                                         | Default Value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
@@ -105,6 +106,8 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
+  | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 

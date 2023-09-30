@@ -46,6 +46,6 @@ namespace VirtualClient
         /// <summary>
         /// Provides features for creating and managing processes on the system.
         /// </summary>
-        SshClientManager SshClientManager { get; }
+        ISshClientManager SshClientManager { get; }
     }
 }

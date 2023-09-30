@@ -10,6 +10,7 @@ namespace VirtualClient.Contracts
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Moq;
     using Newtonsoft.Json;
@@ -34,6 +35,10 @@ namespace VirtualClient.Contracts
             this.mockFixture = new MockFixture();
             this.mockLogger = new Mock<ILogger>();
             this.mockEventContext = new EventContext(Guid.NewGuid());
+
+            // When there is a content manager, the application will also write a file
+            // upload notification file (e.g. upload.json). We validate this separately.
+            this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
         }
 
         [Test]
@@ -1611,6 +1616,112 @@ namespace VirtualClient.Contracts
             await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()), toolsetName, logToTelemetry: false, logToFile: true)
                .ConfigureAwait(false);
 
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionWritesAFileUploadNotificationFileWhenAContentStoreIsDefinedOnTheCommandLine()
+        {
+            // Ensure there is a content store defined. This indicates to the application that the user
+            // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
+            // storage account.
+            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+                new List<IBlobManager>
+                {
+                    this.mockFixture.ContentBlobManager.Object,
+                    this.mockFixture.PackagesBlobManager.Object
+                });
+
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    if (path.EndsWith("upload.json"))
+                    {
+                        string expectedLogPath = this.mockFixture.PlatformSpecifics.ContentUploadsDirectory;
+                        Assert.IsTrue(path.StartsWith(expectedLogPath));
+                        confirmed = true;
+                    }
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()));
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionFileUploadDescriptionContentContainsExpectedContextInformationToTheRelatedLogFile()
+        {
+            // Ensure there is a content store defined. This indicates to the application that the user
+            // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
+            // storage account.
+            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+                new List<IBlobManager>
+                {
+                    this.mockFixture.ContentBlobManager.Object,
+                    this.mockFixture.PackagesBlobManager.Object
+                });
+
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    if (path.EndsWith("upload.json"))
+                    {
+                        FileUploadDescriptor descriptor = content.FromJson<FileUploadDescriptor>();
+                        Assert.IsNotNull(descriptor);
+                        Assert.IsNotNull(descriptor.BlobName);
+                        Assert.IsNotNull(descriptor.ContainerName);
+                        Assert.IsNotNull(descriptor.ContentEncoding);
+                        Assert.IsNotNull(descriptor.ContentType);
+                        Assert.IsNotNull(descriptor.FilePath);
+                        confirmed = true;
+                    }
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()));
+            Assert.IsTrue(confirmed);
+        }
+
+        [Test]
+        public async Task LogProcessDetailsExtensionFileUploadDescriptionContentContainsAManifest()
+        {
+            // Ensure there is a content store defined. This indicates to the application that the user
+            // supplied an intention on the command line (e.g. --contentStore) to have files uploaded to a
+            // storage account.
+            this.mockFixture.Dependencies.AddSingleton<IEnumerable<IBlobManager>>(
+                new List<IBlobManager>
+                {
+                    this.mockFixture.ContentBlobManager.Object,
+                    this.mockFixture.PackagesBlobManager.Object
+                });
+
+            InMemoryProcess process = new InMemoryProcess();
+            TestExecutor component = new TestExecutor(this.mockFixture);
+            component.Parameters.Clear();
+
+            bool confirmed = false;
+            this.mockFixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Callback<string, string, CancellationToken>((path, content, token) =>
+                {
+                    if (path.EndsWith("upload.json"))
+                    {
+                        FileUploadDescriptor descriptor = content.FromJson<FileUploadDescriptor>();
+                        Assert.IsNotNull(descriptor);
+                        Assert.IsNotNull(descriptor.Manifest);
+                        Assert.IsNotEmpty(descriptor.Manifest);
+                        confirmed = true;
+                    }
+                });
+
+            await component.LogProcessDetailsAsync(process, new EventContext(Guid.NewGuid()));
             Assert.IsTrue(confirmed);
         }
 

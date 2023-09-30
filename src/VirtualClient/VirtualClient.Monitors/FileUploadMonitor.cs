@@ -91,23 +91,20 @@ namespace VirtualClient.Monitors
 
                 try
                 {
-                    await this.Logger.LogMessageAsync($"{this.TypeName}.ProcessFileUploads", relatedContext, async () =>
+                    // We do not honor the cancellation token until ALL files have been processed.
+                    while (await this.UploadFilesAsync(blobManager, relatedContext))
                     {
-                        // We do not honor the cancellation token until ALL files have been processed.
-                        while (await this.UploadFilesAsync(blobManager, telemetryContext))
+                        try
                         {
-                            try
-                            {
-                                await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                // If the cancellation is requested, we want to short-circuit the Task.Delay
-                                // so that we can quickly loop around to the processing. If there are no files
-                                // to process, we will exit.
-                            }
+                            await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
                         }
-                    });
+                        catch (OperationCanceledException)
+                        {
+                            // If the cancellation is requested, we want to short-circuit the Task.Delay
+                            // so that we can quickly loop around to the processing. If there are no files
+                            // to process, we will exit.
+                        }
+                    }
 
                     await Task.Delay(this.ProcessingIntervalWaitTime, cancellationToken);
                 }
@@ -185,6 +182,15 @@ namespace VirtualClient.Monitors
 
                                     await this.fileSystem.File.DeleteAsync(uploadDescriptor);
                                 }
+                                catch (Exception exc)
+                                {
+                                    this.Logger.LogMessage(
+                                        $"{this.TypeName}.UploadFileError",
+                                        LogLevel.Warning,
+                                        telemetryContext.Clone().AddError(exc).AddContext("fileDescriptor", descriptor));
+
+                                    throw;
+                                }
                                 finally
                                 {
                                     if (deleteFile)
@@ -203,9 +209,10 @@ namespace VirtualClient.Monitors
                                 // It is common that there will be read/write access errors at certain times while
                                 // upload request files are being created at the same time as attempts to read. 
                             }
-                            catch (Exception exc)
+                            catch
                             {
-                                this.Logger.LogErrorMessage(exc, telemetryContext, LogLevel.Warning);
+                                // We are logging within the upload logic block above. We do not want to allow the
+                                // file upload monitor logic to crash. We move forward to the next upload request.
                             }
                         }
                     }

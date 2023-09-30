@@ -1,0 +1,106 @@
+{
+    "timestamp": "2023-08-10T22:34:41.4831010+00:00",
+    "level": "Information",
+    "message": "OpenSSL.ScenarioResult",
+    "appPlatformVersion": "0.0.1.0",
+    "appVersion": "1.7.02377.1059",
+    "clientId": "demo-vm02",
+    "executionProfileName": "PERF-CPU-OPENSSL.json",
+    "executionProfilePath": "/home/junovmadmin/VirtualClient/content/linux-x64/profiles/PERF-CPU-OPENSSL.json",
+    "executionSystem": null,
+    "experimentId": "416dccea-1745-4c13-9a5d-558e87aea533",
+    "metadata": {
+        "experimentId": "416dccea-1745-4c13-9a5d-558e87aea533",
+        "agentId": "demo-vm02"
+    },
+    "metadata_dependencies": { "openssl": "openssl.3.0.0.zip" },
+    "metadata_host": {
+        "computerName": "LONGRUN",
+        "osFamily": "Windows",
+        "osName": "Windows",
+        "osDescription": "Microsoft Windows NT 10.0.19045.0",
+        "osVersion": "10.0.19045.0",
+        "osPlatformArchitecture": "win-x64",
+        "cpuArchitecture": "X64",
+        "cpuSockets": 1,
+        "cpuPhysicalCores": 4,
+        "cpuPhysicalCoresPerSocket": 4,
+        "cpuLogicalProcessors": 8,
+        "cpuLogicalProcessorsPerCore": 8,
+        "cpuVendor": "Intel",
+        "cpuFamily": "6",
+        "cpuStepping": "11",
+        "cpuModel": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz",
+        "cpuModelDescription": "Intel64 Family 6 Model 142 Stepping 11, GenuineIntel",
+        "numaNodes": 0,
+        "cpuCacheBytes_L1d": 131072,
+        "cpuCacheBytes_L1i": 131072,
+        "cpuCacheBytes_L1": 262144,
+        "cpuCacheBytes_L2": 1048576,
+        "cpuCacheBytes_L3": 8388608,
+        "cpuLastCacheBytes": 8388608,
+        "memoryBytes": 16588596,
+        "parts": [
+            {
+                "type": "Memory",
+                "vendor": "SK Hynix",
+                "totalBytes": 8589934592,
+                "speed": 2400,
+                "partNumber": "HMA81GS6JJR8N-VK"
+            },
+            {
+                "type": "Memory",
+                "vendor": "SK Hynix",
+                "totalBytes": 8589934592,
+                "speed": 2400,
+                "partNumber": "HMA81GS6JJR8N-VK"
+            },
+            {
+                "type": "Network",
+                "description": "Intel(R) Wireless-AC 9560 160MHz"
+            },
+            {
+                "type": "Network",
+                "description": "Realtek PCIe GBE Family Controller"
+            }
+        ]
+    },
+    "metadata_runtime": {
+        "exitWait": "00:30:00",
+        "layout": null,
+        "logToFile": false,
+        "iterations": 3,
+        "profiles": "PERF-CPU-OPENSSL.json",
+        "timeout": null,
+        "timeoutScope": null,
+        "scenarios": null
+    },
+    "metadata_scenario": {
+        "scenario": "MD5",
+        "commandArguments": "speed -elapsed -seconds 100 md5",
+        "packageName": null,
+        "tags": "CPU,OpenSSL,Cryptography",
+        "profileIteration": 1,
+        "profileIterationStartTime": "2023-08-10T22:24:41.4182226Z",
+        "toolName": "OpenSSL Speed",
+        "toolArguments": "/home/junovmadmin/VirtualClient/content/linux-x64/packages/openssl.3.0.0/linux-x64/bin/openssl speed -multi 2 -elapsed -seconds 100 md5",
+        "toolVersion": null,
+        "packageVersion": null
+    },
+    "metricCategorization": "",
+    "metricDescription": "",
+    "metricMetadata": {},
+    "metricName": "md5 256-byte",
+    "metricRelativity": "HigherIsBetter",
+    "metricUnit": "kilobytes/sec",
+    "metricValue": 468409.66,
+    "platformArchitecture": "linux-x64",
+    "scenarioArguments": "speed -multi 2 -elapsed -seconds 100 md5",
+    "scenarioEndTime": "2023-08-10T22:34:41.4631165Z",
+    "scenarioName": "OpenSSL Speed",
+    "scenarioStartTime": "2023-08-10T22:24:41.4456628Z",
+    "tags": "CPU,OpenSSL,Cryptography",
+    "toolName": "OpenSSL",
+    "toolResults": "",
+    "toolVersion": ""
+}

@@ -20,7 +20,9 @@ namespace VirtualClient.Actions
     /// The Sysbench workload executor.
     /// </summary>
     public class SysbenchOLTPExecutor : VirtualClientComponent
-    { 
+    {
+        private readonly IStateManager stateManager;
+
         /// <summary>
         /// Constructor for <see cref="SysbenchOLTPExecutor"/>
         /// </summary>
@@ -29,12 +31,25 @@ namespace VirtualClient.Actions
         public SysbenchOLTPExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
+            this.stateManager = this.SystemManager.StateManager;
             // Supported roles for this client/server workload.
             this.SupportedRoles = new List<string>
             {
                 ClientRole.Client,
                 ClientRole.Server
             };
+        }
+
+        /// <summary>
+        /// Parameter defines the scenario to use for the MySQL user accounts used
+        /// to create the DB and run transactions against it.
+        /// </summary>
+        public string DatabaseScenario
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchOLTPScenario.Default);
+            }
         }
 
         /// <summary>
@@ -76,9 +91,10 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
+
+            await this.InitializeExecutablesAsync(cancellationToken);
 
             if (this.IsMultiRoleLayout())
             {
@@ -116,6 +132,35 @@ namespace VirtualClient.Actions
                 IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
 
                 this.ClientIpAddress = clientIPAddress.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Initializes the workload executables on the system (e.g. attributes them as executable).
+        /// </summary>
+        protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
+        {
+            // store state with initialization status & record/table counts, if does not exist already
+
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+                ?? new SysbenchOLTPState();
+
+            if (!state.ExecutablesInitialized)
+            {
+                // install sysbench using repo scripts
+                if (this.Platform == PlatformID.Unix && this.DatabaseScenario != SysbenchOLTPScenario.Default)
+                {
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+                    await this.SystemManager.MakeFilesExecutableAsync(
+                        scriptsDirectory,
+                        this.Platform,
+                        cancellationToken);
+                }
+
+                state.ExecutablesInitialized = true;
+
+                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
         }
 
@@ -162,21 +207,22 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        private void CheckPlatformSupport()
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
         {
-            switch (this.Platform)
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
             {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The Sysbench OLTP workload is currently not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
+                this.Logger.LogNotSupported("SysbenchOLTP", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
+
+            return isSupported;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -224,28 +270,61 @@ namespace VirtualClient.Actions
                 }
             }
 
-            /// <summary>
-            /// Workload/action scenario/tableCount
-            /// </summary>
-            public int TableCount
+            public bool ExecutablesInitialized
             {
                 get
                 {
-                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.TableCount), -1);
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.ExecutablesInitialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(SysbenchOLTPState.TableCount)] = value;
+                    this.Properties[nameof(SysbenchOLTPState.ExecutablesInitialized)] = value;
                 }
             }
 
-            /// <summary>
-            /// Workload/action scenario/recordCount
-            /// </summary>
-            public int RecordCount
+            public bool DatabaseScenarioInitialized
             {
                 get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseScenarioInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = value;
+                }
+            }
+
+            public string DiskPathsArgument
+            {
+                get
+                {
+                    return this.Properties.GetValue<string>(nameof(SysbenchOLTPState.DiskPathsArgument), string.Empty);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)] = value;
+                }
+            }
+
+            public int NumTables
+            {
+                get 
+                {
+                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.NumTables), -1);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.NumTables)] = value;
+                }
+            }
+
+            public int RecordCount
+            {
+                get 
                 {
                     return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.RecordCount), -1);
                 }
@@ -255,6 +334,18 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(SysbenchOLTPState.RecordCount)] = value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Defines the Sysbench OLTP benchmark scenario.
+        /// </summary>
+        internal class SysbenchOLTPScenario
+        {
+            public const string Balanced = nameof(Balanced);
+
+            public const string InMemory = nameof(InMemory);
+
+            public const string Default = nameof(Default);
         }
     }
 }

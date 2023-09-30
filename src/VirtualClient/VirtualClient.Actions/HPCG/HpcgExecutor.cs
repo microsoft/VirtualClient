@@ -8,14 +8,17 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Hpcg workload executor.
@@ -126,6 +129,24 @@ namespace VirtualClient.Actions
                 .ConfigureAwait();
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("Hpcg", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
@@ -140,11 +161,19 @@ namespace VirtualClient.Actions
 
                         await this.LogProcessDetailsAsync(process, telemetryContext, "Hpcg", results: results.AsArray(), logToFile: true);
 
+                        this.MetadataContract.AddForScenario(
+                            "HPCG",
+                            $"{this.runShellText}|{this.hpcgDatText}",
+                            toolVersion: null,
+                            this.PackageName);
+
+                        this.MetadataContract.Apply(telemetryContext);
+
                         HpcgMetricsParser parser = new HpcgMetricsParser(results);
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "Hpcg",
+                            toolName: "HPCG",
                             scenarioName: "Hpcg",
                             process.StartTime,
                             process.ExitTime,

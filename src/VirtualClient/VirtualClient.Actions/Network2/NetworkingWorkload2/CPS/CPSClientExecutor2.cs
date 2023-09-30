@@ -16,6 +16,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes client side of CPS.
@@ -210,6 +211,13 @@ namespace VirtualClient.Actions
         /// </summary>
         protected Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                "CPS",
+                commandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             if (!string.IsNullOrWhiteSpace(this.Results))
             {
                 MetricsParser parser = new CPSMetricsParser2(this.Results, this.ConfidenceLevel, this.WarmupTime);

@@ -10,11 +10,13 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Graph500 Workload executor.
@@ -78,8 +80,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.ThrowIfPlatformIsNotSupported();
-
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
                 .ConfigureAwait(false);
@@ -110,15 +110,22 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void ThrowIfPlatformIsNotSupported()
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
         {
-            if (this.Platform != PlatformID.Unix)
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
             {
-                throw new WorkloadException(
-                    $"The Graph500 workload is currently only supported on the following platform/architectures: " +
-                    $"'{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}', '{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}'. ",
-                    ErrorReason.PlatformNotSupported);
+                this.Logger.LogNotSupported("Graph500", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
+
+            return isSupported;
         }
 
         private async Task ExecuteCommandAsync(string pathToExe, string commandLineArguments, string workingDirectory, CancellationToken cancellationToken)
@@ -154,6 +161,13 @@ namespace VirtualClient.Actions
             {
                 try
                 {
+                    this.MetadataContract.AddForScenario(
+                        "Graph500",
+                        process?.StartInfo?.Arguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     Graph500MetricsParser graph500Parser = new Graph500MetricsParser(process.StandardOutput.ToString());
                     IList<Metric> metrics = graph500Parser.Parse();
 

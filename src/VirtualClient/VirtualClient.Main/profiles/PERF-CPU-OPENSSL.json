@@ -5,7 +5,7 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
-    "Parameters": {},
+    "Parameters": { },
     "Actions": [
         {
             "Type": "OpenSslExecutor",

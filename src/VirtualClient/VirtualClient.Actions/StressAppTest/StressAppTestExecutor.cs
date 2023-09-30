@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The StressAppTest workload executor.
@@ -156,6 +158,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("StressAppTest", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Executes the StressAppTest workload command and generates the results file for the logs
         /// </summary>
         private async Task ExecuteWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -196,6 +216,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "StressAppTest",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 string resultsPath = this.PlatformSpecifics.Combine(this.PackageDirectory, resultsFileName);
                 string results = await this.LoadResultsAsync(resultsPath, cancellationToken);
 

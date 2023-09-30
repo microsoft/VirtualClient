@@ -1,6 +1,9 @@
 {
     "Description": "Test Profile Executor",
     "MinimumExecutionInterval": "00:00:05",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
     "Parameters": {
         "ProfilingEnabled": false,
         "ProfilingMode": "None"
@@ -8,6 +11,10 @@
     "Actions": [
         {
             "Type": "ExampleWorkloadExecutor",
+            "Metadata": {
+                "ExampleMetadata1": "Value1",
+                "ExampleMetadata2": true
+            },
             "Parameters": {
                 "Scenario": "Scenario1",
                 "CommandLine": "Workload --duration=00:00:15",

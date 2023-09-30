@@ -12,11 +12,13 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The MLPerf workload executor.
@@ -116,6 +118,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf.
+        /// </summary>
+        public bool RequireCustomSystemSupport
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(MLPerfExecutor.RequireCustomSystemSupport), false);
+            }
+        }
+
+        /// <summary>
         /// The MLPerf Nvidia code directory.
         /// </summary>
         protected string NvidiaDirectory
@@ -203,8 +216,6 @@ namespace VirtualClient.Actions
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.InitializationStarted", telemetryContext);
 
-            this.ThrowIfPlatformNotSupported();
-
             await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -219,8 +230,12 @@ namespace VirtualClient.Actions
                 // add user in docker group and create scratch space
                 await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.NvidiaDirectory, cancellationToken);
                
-                // If GPUConfig is not included in the MLPerf code but is supported
-                this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
+                if (this.RequireCustomSystemSupport)
+                {
+                    // This enables A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf..
+                    this.ReplaceGPUConfigFilesToSupportAdditionalGPUs();
+                }
+               
                 string makefileFilePath = this.PlatformSpecifics.Combine(this.NvidiaDirectory, "Makefile");
 
                 // Update the docker flags in MLPerf docker file
@@ -377,8 +392,33 @@ namespace VirtualClient.Actions
 
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
         {
+            this.MetadataContract.AddForScenario(
+                "MLPerf",
+                process.FullCommand(),
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             if (context == MLPerfExecutor.AccuracySummary)
             {
                 string[] resultsFiles = this.fileSystem.Directory.GetFiles(this.OutputDirectory, "accuracy_summary.json", SearchOption.AllDirectories);
@@ -398,7 +438,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         "AccuracyMode",
-                        null,
+                        process.FullCommand(),
                         this.Tags,
                         telemetryContext);
 
@@ -424,7 +464,7 @@ namespace VirtualClient.Actions
                         process.ExitTime,
                         metrics,
                         "PerformanceMode",
-                        null,
+                        process.FullCommand(),
                         this.Tags,
                         telemetryContext);
 
@@ -456,23 +496,6 @@ namespace VirtualClient.Actions
                         true);
                     }
                 }
-            }
-        }
-
-        private void ThrowIfPlatformNotSupported()
-        {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The MLPerf benchmark workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
             }
         }
 

@@ -17,6 +17,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// CPS(Connections Per Second) Tool Client Executor. 
@@ -309,6 +310,13 @@ namespace VirtualClient.Actions.NetworkPerformance
         {
             if (!string.IsNullOrWhiteSpace(this.results))
             {
+                this.MetadataContract.AddForScenario(
+                    this.Tool.ToString(),
+                    commandArguments,
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 MetricsParser parser = new CPSMetricsParser(this.results, this.ConfidenceLevel, this.WarmupTime);
                 IList<Metric> metrics = parser.Parse();
 

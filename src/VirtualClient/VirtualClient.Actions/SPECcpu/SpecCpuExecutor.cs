@@ -18,6 +18,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SpecCpu workload executor.
@@ -121,30 +122,28 @@ namespace VirtualClient.Actions
             {
                 string commandLineArguments = this.GetCommandLineArguments();
 
+                string command = null;
+                string commandArguments = null;
+
                 if (this.Platform == PlatformID.Unix)
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
-
-                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
-                        }
-                    }
+                    command = "bash";
+                    commandArguments = $"{SpecCpuExecutor.SpecCpuRunShell} \"{commandLineArguments}\"";
                 }
                 else
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync($"cmd", $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}", this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
+                    command = "cmd";
+                    commandArguments = $"/c {SpecCpuExecutor.SpecCpuRunBat} {commandLineArguments}";
+                }
 
-                            await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
-                        }
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                {
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SPECcpu", logToFile: true);
+                        process.ThrowIfWorkloadFailed();
+
+                        await this.CaptureMetricsAsync(process, commandLineArguments, telemetryContext, cancellationToken);
                     }
                 }
             }
@@ -175,6 +174,24 @@ namespace VirtualClient.Actions
             telemetryContext.AddContext(nameof(imageFile), imageFile);
 
             await this.SetupSpecCpuAsync(imageFile, telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("SpecCpu", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         private string GetConfigurationFileName()
@@ -295,6 +312,13 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    $"SPECcpu/{this.SpecProfile}",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 // CPU2017.008.intrate.txt
                 string resultsDirectory = this.PlatformSpecifics.Combine(this.PackageDirectory, "result");
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "CPU2017.*.txt", SearchOption.TopDirectoryOnly);

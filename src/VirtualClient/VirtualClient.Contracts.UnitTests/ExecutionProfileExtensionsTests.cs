@@ -61,7 +61,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void ExecutionProfileInlinesParameterReferencesInSubComponents()
         {
-            ExecutionProfileElement elementWithSubcomponents = new ExecutionProfileElement("AnyTypeWithSubComponents", null, new List<ExecutionProfileElement>
+            ExecutionProfileElement elementWithSubcomponents = new ExecutionProfileElement("AnyTypeWithSubComponents", null, null, new List<ExecutionProfileElement>
             {
                 new ExecutionProfileElement("AnyType", new Dictionary<string, IConvertible>
                 {
@@ -95,13 +95,13 @@ namespace VirtualClient.Contracts
             };
 
             // Parameter inlining should support any number of recursive layers.
-            ExecutionProfileElement elementWithSubcomponents = new ExecutionProfileElement("AnyTypeWithSubComponents", null, new List<ExecutionProfileElement>
+            ExecutionProfileElement elementWithSubcomponents = new ExecutionProfileElement("AnyTypeWithSubComponents", null, null, new List<ExecutionProfileElement>
             {
-                new ExecutionProfileElement("SubComponentLayer1", parameters, new List<ExecutionProfileElement>
+                new ExecutionProfileElement("SubComponentLayer1", parameters, null, new List<ExecutionProfileElement>
                 {
-                    new ExecutionProfileElement("SubComponentLayer2", parameters, new List<ExecutionProfileElement>
+                    new ExecutionProfileElement("SubComponentLayer2", parameters, null, new List<ExecutionProfileElement>
                     {
-                        new ExecutionProfileElement("SubComponentLayer3", parameters, new List<ExecutionProfileElement>
+                        new ExecutionProfileElement("SubComponentLayer3", parameters, null, new List<ExecutionProfileElement>
                         {
                             new ExecutionProfileElement("SubComponentLayer4", parameters)
                         })

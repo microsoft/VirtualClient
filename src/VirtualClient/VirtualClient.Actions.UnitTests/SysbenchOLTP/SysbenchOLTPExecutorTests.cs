@@ -48,19 +48,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void SysbenchOLTPExecutorThrowsOnUnsupportedPlatformAsync()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (TestSysbenchOLTPExecutor SysbenchOLTPExecutor = new TestSysbenchOLTPExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => SysbenchOLTPExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-            }
-        }
-
-        [Test]
         public void SysbenchOLTPExecutorThrowsOnUnsupportedDistroAsync()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);

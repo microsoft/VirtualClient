@@ -5,9 +5,11 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient;
     using VirtualClient.Common;
@@ -15,6 +17,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// PostgreSQL Client executor.
@@ -55,6 +58,7 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
+        [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Not Applicable.")]
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // The VC server-side instance/API must be confirmed online.
@@ -87,9 +91,19 @@ namespace VirtualClient.Actions
                 string results = string.Empty;
                 if (this.Platform == PlatformID.Unix)
                 {
+                    string command = "bash";
+                    string commandArguments = $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.RunTransactionsTclName}\"";
+
+                    this.MetadataContract.AddForScenario(
+                        "HammerDB",
+                        $"{command} {commandArguments}",
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        "bash",
-                        $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.RunTransactionsTclName}\"",
+                        command,
+                        commandArguments,
                         this.HammerDBPackagePath,
                         telemetryContext,
                         cancellationToken))
@@ -105,12 +119,35 @@ namespace VirtualClient.Actions
                 }
                 else if (this.Platform == PlatformID.Win32NT)
                 {
+                    Action<IProcessProxy> setEnvironmentVariables = (process) =>
+                    {
+                        string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
+
+                        process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH] = string.Join(';', new string[]
+                        {
+                                this.Combine(this.HammerDBPackagePath, "bin"),
+                                this.Combine(this.PostgreSqlInstallationPath, "bin"),
+                                existingPath
+                        });
+                    };
+
+                    string command = this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat");
+                    string commandArguments = $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}";
+
+                    this.MetadataContract.AddForScenario(
+                        "HammerDB",
+                        $"{command} {commandArguments}",
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat"),
-                        $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}",
+                        command,
+                        commandArguments,
                         this.HammerDBPackagePath,
                         telemetryContext,
-                        cancellationToken))
+                        cancellationToken,
+                        beforeExecution: setEnvironmentVariables))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

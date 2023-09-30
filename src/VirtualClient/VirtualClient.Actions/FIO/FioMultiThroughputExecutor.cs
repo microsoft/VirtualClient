@@ -29,11 +29,11 @@ namespace VirtualClient.Actions
         private static int variationNumber = 0;
         private string randomIOFilePath;
         private string sequentialIOFilePath;
-        private int totalIOPS;
-        private int randomReadIOPS;
-        private int randomWriteIOPS;
-        private int sequentialReadIOPS;
-        private int sequentialWriteIOPS;
+        private long totalIOPS;
+        private long randomReadIOPS;
+        private long randomWriteIOPS;
+        private long sequentialReadIOPS;
+        private long sequentialWriteIOPS;
 
         private static IAsyncPolicy fioMultiThroughputRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(3, _ => RetryWaitTime);
 
@@ -47,16 +47,24 @@ namespace VirtualClient.Actions
         {
             // Since in this case we are testing on raw disks, we are not cleaning up test files
             this.DeleteTestFilesOnFinish = false;
+
+            // Convert to desired data types.
+            this.DirectIO = parameters.GetValue<bool>(nameof(this.DirectIO), true) ? 1 : 0;
         }
 
         /// <summary>
         /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
         /// </summary>
-        public bool DirectIO
+        public int DirectIO
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.DirectIO), true);
+                return this.Parameters.GetValue<int>(nameof(this.DirectIO), 1);
+            }
+
+            private set
+            {
+                this.Parameters[nameof(this.DirectIO)] = value;
             }
         }
 
@@ -561,7 +569,7 @@ namespace VirtualClient.Actions
 
                 DiskWorkloadProcess process = this.CreateWorkloadProcess(this.ExecutablePath, jobFilePath);
 
-                metricsMetadata[nameof(this.CommandLine).CamelCased()] = process.CommandArguments;
+                metricsMetadata[nameof(this.CommandLine)] = process.CommandArguments;
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
                     await this.ExecuteWorkloadAsync(process, testName, telemetryContext, cancellationToken, metricsMetadata)
@@ -588,7 +596,7 @@ namespace VirtualClient.Actions
         private void CreateOrUpdateJobFile(string sourcePath, string destinationPath)
         {
             string text = this.SystemManagement.FileSystem.File.ReadAllText(sourcePath);
-            int direct = this.DirectIO ? 1 : 0;
+            int direct = this.DirectIO;
 
             if (this.DiskFill)
             {
@@ -771,7 +779,7 @@ namespace VirtualClient.Actions
         private void SetRuntimeParameters(int targetPercent)
         {
             this.totalIOPS = (this.TargetIOPS * targetPercent) / 100;
-            int totalWeights = this.RandomReadWeight + this.RandomWriteWeight + this.SequentialReadWeight + this.SequentialWriteWeight;
+            long totalWeights = this.RandomReadWeight + this.RandomWriteWeight + this.SequentialReadWeight + this.SequentialWriteWeight;
             totalWeights = totalWeights == 0 ? 1 : totalWeights;
 
             this.randomReadIOPS = ((this.totalIOPS * this.RandomReadWeight) / totalWeights) / this.RandomReadNumJobs;

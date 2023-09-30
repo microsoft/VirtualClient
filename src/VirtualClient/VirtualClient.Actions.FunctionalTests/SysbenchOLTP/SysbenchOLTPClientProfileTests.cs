@@ -10,6 +10,8 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis.Scripting;
+    using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
@@ -34,11 +36,37 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
+        public void SysbenchOLTPWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehaviors(platform, architecture);
+            this.mockFixture.PackageManager.Clear();
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteDependencies = false;
+
+                DependencyException error = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None));
+                Assert.IsTrue(error.Reason == ErrorReason.WorkloadDependencyMissing);
+            }
+        }
+
+        [Test]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task SysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(platform, architecture);
             this.SetupDefaultMockBehaviors(platform, architecture);
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
+
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+            string balancedClientScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-client.sh");
+            string balancedServerScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-server.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "in-memory.sh");
+
+            this.mockFixture.SetupFile(balancedServerScript);
+            this.mockFixture.SetupFile(balancedClientScript);
+            this.mockFixture.SetupFile(inMemoryScript);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
@@ -60,110 +88,26 @@ namespace VirtualClient.Actions
 
         private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform, Architecture architecture)
         {
-            List<string> commands = null;
-            commands = new List<string>
+            return new List<string>()
             {
-                $"sudo su -c \"bash <( curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh)\"",
-                $"sudo apt install sysbench --yes --quiet",
+                "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
 
-                $"sudo sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
+                "sudo ./autogen.sh",
+                "sudo ./configure",
+                "sudo make -j",
+                "sudo make install",
 
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_write --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_read_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=8 --time=1800 --tables=16 --table-size=500 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=16 --table-size=5000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=16 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=32 --time=1800 --tables=16 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=8 --time=1800 --tables=32 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=32 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=16 --time=1800 --tables=32 --table-size=500000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=92 --time=1800 --tables=4 --table-size=50000 --mysql-db=sbtest --mysql-host=1.2.3.5 run",
-
-                $"sudo sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 cleanup",
-                $"sudo sysbench oltp_common --tables=4 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo sysbench oltp_write_only --threads=152 --time=1800 --tables=4 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
             };
-
-            return commands;
         }
 
         private void SetupApiClient(string serverName, string serverIPAddress)
@@ -175,10 +119,13 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehaviors(PlatformID platform, Architecture architecture)
         {
             this.mockFixture.Setup(platform, architecture);
-            this.mockFixture.SetupWorkloadPackage("sysbench", expectedFiles: @"sysbench");
+            this.mockFixture.SetupWorkloadPackage("sysbench", expectedFiles: "sysbench");
             this.mockFixture.Setup(PlatformID.Unix, architecture, this.clientAgentId).SetupLayout(
                 new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
                 new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
         }
     }
 }

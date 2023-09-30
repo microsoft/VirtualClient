@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
@@ -18,6 +19,7 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using Microsoft.Extensions.DependencyInjection;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The SPECJbb workload executor.
@@ -146,10 +148,35 @@ namespace VirtualClient.Actions
             this.gcLogPath = this.PlatformSpecifics.Combine(this.packageDirectory, SpecJbbExecutor.GcLogName);
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("SpecJbb", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
+                this.MetadataContract.AddForScenario(
+                    "SPECjbb",
+                    process.FullCommand(),
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 // specjbb2015-C-20220301-00002-reporter.out
                 string resultsDirectory = this.PlatformSpecifics.Combine(this.packageDirectory, "result");
                 string[] outputFiles = this.fileSystem.Directory.GetFiles(resultsDirectory, "specjbb2015*-reporter.out", SearchOption.AllDirectories);

@@ -121,10 +121,10 @@ function NativeCode() {
       <TwoColumns
         columnOne={
           <TextColumn
-            title="Performance testing, with ease"
-            text="Driver and compiler installation are confusing? We got you. <br><br/>
-            Virtual Client componentize various dependencies for a benchmark, which you can define in a json flow. <br><br/>
-            Performance experts curate those profiles so that you don't have to learn every intricacies of every benchmark."
+            title="Evaluating performance with ease"
+            text="Driver and compiler installation are confusing? We know! We are right there with you. <br><br/>
+            Virtual Client componentizes various dependencies for a benchmark and allows authors to describe your desired workflow steps in a simple JSON document we call a 'profile'. <br><br/>
+            The profiles offered out-of-the-box are curated by experts within Microsoft with a simple goal. Make it easy to run benchmarks in a reliable manner with little or no knowledge required beforehand."
           />
         }
         columnTwo={
@@ -140,8 +140,8 @@ export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Benchmarking and system monitoring automation, from MSFT.">
+      title={`${siteConfig.title}`}
+          description="Cloud-ready standardized workload automation from Microsoft Azure teams.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

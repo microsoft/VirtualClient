@@ -5,16 +5,18 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Executes a DiskSpd workload profile.
@@ -108,7 +110,7 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                await this.EvaluateParametersAsync(CancellationToken.None);
+                await this.EvaluateParametersAsync(CancellationToken.None, true);
 
                 relatedContext.AddContext("commandLine", this.CommandLine);
                 relatedContext.AddContext("testName", this.TestName);
@@ -284,12 +286,30 @@ namespace VirtualClient.Actions
         /// <param name="disksToTest">The disks under test.</param>
         protected override DiskWorkloadProcess CreateWorkloadProcess(string executable, string commandArguments, string testedInstance, params Disk[] disksToTest)
         {
-            string[] testFiles = disksToTest.Select(disk => this.GetTestFile(disk.GetPreferredAccessPath(this.Platform))).ToArray();
+            string[] testFiles = disksToTest.Select(disk => this.GetTestFiles(disk.GetPreferredAccessPath(this.Platform))).ToArray();
             string diskSpdArguments = $"{commandArguments} {string.Join(" ", testFiles)}";
 
             IProcessProxy process = this.SystemManagement.ProcessManager.CreateProcess(executable, diskSpdArguments);
 
             return new DiskWorkloadProcess(process, testedInstance, testFiles);
+        }
+
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("DiskSpd", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
         }
 
         /// <summary>
@@ -379,6 +399,13 @@ namespace VirtualClient.Actions
 
         private void CaptureMetrics(DiskWorkloadProcess workload, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+                "DiskSpd",
+                workload.CommandArguments,
+                toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             string result = workload.StandardOutput.ToString();
             IList<Metric> metrics = new List<Metric>()
                 .AddDiskIOMetrics(result)

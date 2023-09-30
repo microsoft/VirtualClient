@@ -5,7 +5,6 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Abstract parser for various VC documents

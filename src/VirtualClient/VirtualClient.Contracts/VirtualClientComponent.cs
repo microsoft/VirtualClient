@@ -15,6 +15,7 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.Logging.Abstractions;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The base class for all Virtual Client profile actions and monitors.
@@ -60,6 +61,7 @@ namespace VirtualClient.Contracts
             }
 
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+            this.MetadataContract = new MetadataContract();
             this.Dependencies = dependencies;
             this.Logger = NullLogger.Instance;
 
@@ -76,13 +78,18 @@ namespace VirtualClient.Contracts
             this.systemInfo = this.Dependencies.GetService<ISystemInfo>();
             this.AgentId = this.systemInfo.AgentId;
             this.ExperimentId = this.systemInfo.ExperimentId;
-            this.LogSuccessFailMetrics = true;
             this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
             this.Platform = this.systemInfo.Platform;
             this.CpuArchitecture = this.systemInfo.CpuArchitecture;
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
         }
+
+        /// <summary>
+        /// Parameter defines the content path template to use when uploading content
+        /// to target storage resources. When not defined the default template will be used.
+        /// </summary>
+        public static string ContentPathTemplate { get; set; }
 
         /// <summary>
         /// True if the output of processes should be logged to files in the logs directory.
@@ -100,36 +107,6 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
-        /// Parameter defines the content path format/structure to use when uploading content
-        /// to target storage resources. When not defined the 'Default' structure is used.
-        /// </summary>
-        public string ContentPathFormat
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.ContentPathFormat), out IConvertible format);
-                return format?.ToString();
-            }
-
-            set
-            {
-                this.Parameters[nameof(this.ContentPathFormat)] = value;
-            }
-        }
-
-        /// <summary>
-        /// Parameter defines the content path format/structure using a template to use when uploading content
-        /// to target storage resources. When not defined the 'Default' structure is used.
-        /// </summary>
-        public string ContentPathTemplate
-        {
-            get
-            {
-                return VirtualClientComponent.GlobalParameters.GetValue<string>(nameof(this.ContentPathTemplate), "{experimentId}/{agentId}/{toolName}/{role}/{scenario}");
-            }
-        }
-
-        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -142,7 +119,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Component end time
         /// </summary>
-        public DateTime EndTime { get; set; }
+        public DateTime EndTime { get; private set; }
 
         /// <summary>
         /// Random execution seed
@@ -156,9 +133,10 @@ namespace VirtualClient.Contracts
         public string ExperimentId { get; }
 
         /// <summary>
-        /// Global Parameters provided to the application on the command line or through Parameters in respective profiles.
+        /// True if VC should exit/crash on first/any error(s) regardless of 
+        /// their severity. Default = false.
         /// </summary>
-        public static IDictionary<string, IConvertible> GlobalParameters { get; } = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+        public bool FailFast { get; set; }
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.
@@ -174,6 +152,12 @@ namespace VirtualClient.Contracts
         /// Metadata provided to the application on the command line.
         /// </summary>
         public IDictionary<string, IConvertible> Metadata { get; }
+
+        /// <summary>
+        /// Metadata to add to the "standard data contract" in the telemetry
+        /// emitted by the application.
+        /// </summary>
+        public MetadataContract MetadataContract { get; }
 
         /// <summary>
         /// Defines the metric filter as provided in the profile. This defines the list of metrics to include in 
@@ -200,6 +184,23 @@ namespace VirtualClient.Contracts
             set
             {
                 this.Parameters[nameof(this.MetricFilters)] = string.Join(VirtualClientComponent.CommonDelimiters.First(), value);
+            }
+        }
+
+        /// <summary>
+        /// Defines the name/description to use for metrics scenario (e.g. fio_randwrite_496GB_4k_d64_th16).
+        /// </summary>
+        public string MetricScenario
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.MetricScenario), out IConvertible scenario);
+                return scenario?.ToString();
+            }
+
+            protected set
+            {
+                this.Parameters[nameof(this.MetricScenario)] = value;
             }
         }
 
@@ -403,7 +404,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Action start time
         /// </summary>
-        public DateTime StartTime { get; set; }
+        public DateTime StartTime { get; private set; }
 
         /// <summary>
         /// Parameter describes the platform/architectures for which the component is supported.
@@ -465,11 +466,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// The toolname or component name to use when logging completion metrics.
-        /// </summary>
-        protected bool LogSuccessFailMetrics { get; set; }
-
-        /// <summary>
         /// Disposes of resources used by the instance.
         /// </summary>
         public void Dispose()
@@ -492,56 +488,88 @@ namespace VirtualClient.Contracts
         /// </summary>
         public async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            PlatformSpecifics.ThrowIfNotSupported(this.Platform);
-            PlatformSpecifics.ThrowIfNotSupported(this.CpuArchitecture);
+            this.StartTime = DateTime.UtcNow;
 
-            if (this.IsSupported())
+            try
             {
-                EventContext telemetryContext = EventContext.Persisted().AddParameters(this.Parameters);
+                PlatformSpecifics.ThrowIfNotSupported(this.Platform);
+                PlatformSpecifics.ThrowIfNotSupported(this.CpuArchitecture);
 
-                await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
+                if (this.IsSupported())
                 {
-                    bool succeeded = false;
-                    DateTime executionStartTime = DateTime.UtcNow;
+                    EventContext telemetryContext = EventContext.Persisted();
 
-                    try
+                    if (!this.ParametersEvaluated)
                     {
-                        await this.InitializeAsync(telemetryContext, cancellationToken);
-                        this.Validate();
+                        await this.EvaluateParametersAsync(cancellationToken);
+                    }
 
-                        await this.ExecuteAsync(telemetryContext, cancellationToken);
-                        succeeded = true;
-                    }
-                    catch (OperationCanceledException)
+                    if (this.Metadata?.Any() == true)
                     {
-                        // Expected for cases where a cancellation token is cancelled.
+                        this.MetadataContract.Add(
+                            this.Metadata.Keys.ToDictionary(key => key, entry => this.Metadata[entry] as object).ObscureSecrets(),
+                            MetadataContractCategory.Default,
+                            replace: true);
                     }
-                    catch (Exception)
+
+                    if (this.Parameters?.Any() == true)
                     {
-                        // Occasionally some of the workloads throw exceptions right as VC receives a
-                        // cancellation/exit request.
-                        if (!cancellationToken.IsCancellationRequested)
+                        this.MetadataContract.Add(
+                            this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
+                            MetadataContractCategory.Scenario,
+                            replace: true);
+                    }
+
+                    this.MetadataContract.Apply(telemetryContext);
+
+                    await this.Logger.LogMessageAsync($"{this.TypeName}.Execute", telemetryContext, async () =>
+                    {
+                        bool succeeded = false;
+
+                        try
                         {
-                            throw;
+                            await this.InitializeAsync(telemetryContext, cancellationToken);
+                            this.Validate();
+
+                            await this.ExecuteAsync(telemetryContext, cancellationToken);
+                            succeeded = true;
                         }
-                    }
-                    finally
-                    {
-                        if (this.LogSuccessFailMetrics)
+                        catch (OperationCanceledException)
                         {
+                            // Expected for cases where a cancellation token is cancelled.
+                        }
+                        catch (Exception)
+                        {
+                            // Occasionally some of the workloads throw exceptions right as VC receives a
+                            // cancellation/exit request.
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                throw;
+                            }
+                        }
+                        finally
+                        {
+                            this.EndTime = DateTime.UtcNow;
+
                             if (succeeded)
                             {
-                                this.LogSuccessMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                                this.LogSuccessMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
                             }
                             else
                             {
-                                this.LogFailedMetric(scenarioStartTime: executionStartTime, scenarioEndTime: DateTime.UtcNow);
+                                this.LogFailedMetric(scenarioStartTime: this.StartTime, scenarioEndTime: this.EndTime);
                             }
                         }
 
                         await this.CleanupAsync(telemetryContext, cancellationToken);
-                    }
-                }, displayErrors: true);
+
+                    }, displayErrors: true);
+                }
+            }
+            catch
+            {
+                this.EndTime = DateTime.UtcNow;
+                throw;
             }
         }
 

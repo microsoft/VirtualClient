@@ -94,6 +94,27 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Command line option defines a template for the virtual folder structure to use when uploading 
+        /// files to a target storage account (e.g. /{experimentId}/{agentId}/{toolName}/{role}/{scenario}).
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateContentPathTemplateOption(bool required = true, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--contentPathTemplate", "--contentpathtemplate", "--contentPath", "--contentpath", "--cp" })
+            {
+                Name = "ContentPathTemplate",
+                Description = "A template defining the virtual folder structure to use when uploading files to a target storage account. Default = /{experimentId}/{agentId}/{toolName}/{role}/{scenario}.",
+                ArgumentHelpName = "template",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
         /// Command line option defines a dependency store to add to the storage options
         /// for the Virtual Client for uploading content/files.
         /// </summary>
@@ -232,6 +253,26 @@ namespace VirtualClient
                 Description = "An identifier that will be used to correlate all operations with telemetry/data emitted by the application. If not defined, a random identifier will be used.",
                 ArgumentHelpName = "id",
                 AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines whether VC should fail fast on errors.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateFailFastFlag(bool required = true, object defaultValue = null)
+        {
+            Option<bool> option = new Option<bool>(new string[] { "--fail-fast", "--ff" })
+            {
+                Name = "FailFast",
+                Description = "Flag indicates that the application should fail fast and exit immediately on any errors experienced regardless of severity.",
+                ArgumentHelpName = "Flag",
+                AllowMultipleArgumentsPerToken = false,
             };
 
             OptionFactory.SetOptionRequirements(option, required, defaultValue);
@@ -873,7 +914,7 @@ namespace VirtualClient
 
             if (parts.Length == 1)
             {
-                timing = new ProfileTiming(DateTime.UtcNow.Add(timeout));
+                timing = new ProfileTiming(timeout);
             }
             else if (parts.Length == 2)
             {
@@ -895,7 +936,7 @@ namespace VirtualClient
                             $"Supported values include 'deterministic' and 'deterministic*' (e.g. --timeout=1440,deterministic, --timeout=1440,deterministic*).");
                 }
 
-                timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), levelOfDeterminism);
+                timing = new ProfileTiming(timeout, levelOfDeterminism);
             }
             else
             {

@@ -36,6 +36,9 @@ namespace VirtualClient.Actions
         {
             // Since in this case we are testing on raw disks, we are not cleaning up test files
             this.DeleteTestFilesOnFinish = false;
+
+            // Convert to desired data types.
+            this.DirectIO = parameters.GetValue<bool>(nameof(this.DirectIO), true) ? 1 : 0;
         }
 
         /// <summary>
@@ -52,11 +55,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Parameter. True to used direct, non-buffered I/O (default). False to use buffered I/O.
         /// </summary>
-        public bool DirectIO
+        public int DirectIO
         {
             get
             {
-                return this.Parameters.GetValue<bool>(nameof(this.DirectIO), true);
+                return this.Parameters.GetValue<int>(nameof(this.DirectIO), 1);
+            }
+
+            private set
+            {
+                this.Parameters[nameof(this.DirectIO)] = value;
             }
         }
 
@@ -245,7 +253,7 @@ namespace VirtualClient.Actions
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.BlockSize), blockSize);
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.DurationSec), this.DurationSec.ToString());
 
-                                            int direct = this.DirectIO ? 1 : 0;
+                                            int direct = this.DirectIO;
                                             commandLine = this.ApplyParameter(commandLine, nameof(this.DirectIO), direct);
                                             commandLine = $"--name={testName} --numjobs={numJobs} --iodepth={queueDepthPerThread} --ioengine={ioEngine} " + commandLine;
 

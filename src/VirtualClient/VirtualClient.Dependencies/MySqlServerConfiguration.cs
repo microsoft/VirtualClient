@@ -53,6 +53,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// The specifed action that controls the execution of the dependency.
+        /// </summary>
+        public bool SkipInitialize
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.SkipInitialize), false);
+            }
+        }
+
+        /// <summary>
         /// The name to use for the MySQL Database to manage.
         /// </summary>
         public string DatabaseName { get; }
@@ -74,7 +85,7 @@ namespace VirtualClient.Dependencies
 
             telemetryContext.AddContext(nameof(configurationState), configurationState);
 
-            if (configurationState == null)
+            if (configurationState == null && !this.SkipInitialize)
             {
                 switch (this.Action)
                 {
@@ -223,7 +234,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"{WindowsMySQLPackagePath}mysql.exe --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\" --user=root", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
@@ -237,7 +248,7 @@ namespace VirtualClient.Dependencies
                     await this.ExecuteCommandAsync(manager, $"mysql --execute=\"CREATE USER '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
 
-                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON {this.DatabaseName}.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
+                    await this.ExecuteCommandAsync(manager, $"mysql --execute=\"GRANT ALL ON *.* TO '{this.DatabaseName}'@'{clientIp}'\"", null, telemetryContext, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }

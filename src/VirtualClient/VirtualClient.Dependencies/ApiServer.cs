@@ -27,7 +27,6 @@ namespace VirtualClient.Dependencies
         public ApiServer(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
-            this.LogSuccessFailMetrics = false;
         }
 
         /// <summary>

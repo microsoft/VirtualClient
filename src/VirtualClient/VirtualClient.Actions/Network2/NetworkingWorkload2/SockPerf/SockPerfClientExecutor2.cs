@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
     using static VirtualClient.Actions.LatteExecutor2;
     using static VirtualClient.Actions.NTttcpExecutor2;
 
@@ -304,7 +305,7 @@ namespace VirtualClient.Actions
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                await this.LogMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
+                await this.CaptureMetricsAsync(commandArguments, startTime, endTime, telemetryContext)
                     .ConfigureAwait(false);
             }
 
@@ -428,8 +429,15 @@ namespace VirtualClient.Actions
                 $"--full-log {this.ResultsPath}";
         }
 
-        private async Task LogMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
+        private async Task CaptureMetricsAsync(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext)
         {
+            this.MetadataContract.AddForScenario(
+               "SockPerf",
+               commandArguments,
+               toolVersion: null);
+
+            this.MetadataContract.Apply(telemetryContext);
+
             IFile fileAccess = this.SystemManager.FileSystem.File;
 
             if (fileAccess.Exists(this.ResultsPath))
@@ -451,7 +459,7 @@ namespace VirtualClient.Actions
                         string.Empty,
                         commandArguments,
                         this.Tags,
-                        EventContext.Persisted());
+                        telemetryContext);
                 }
             }
         }

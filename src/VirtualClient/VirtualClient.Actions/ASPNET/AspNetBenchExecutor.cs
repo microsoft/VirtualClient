@@ -6,15 +6,17 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
-    using Polly;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The AspNetBench workload executor.
@@ -96,6 +98,24 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("AspNetBench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Executes the AspNetBench workload.
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -165,6 +185,13 @@ namespace VirtualClient.Actions
         {
             try
             {
+                this.MetadataContract.AddForScenario(
+                    "AspNetBench",
+                    $"{this.clientArgument},{this.serverArgument}",
+                    toolVersion: null);
+
+                this.MetadataContract.Apply(telemetryContext);
+
                 BombardierMetricsParser parser = new BombardierMetricsParser(process.StandardOutput.ToString());
 
                 this.Logger.LogMetrics(

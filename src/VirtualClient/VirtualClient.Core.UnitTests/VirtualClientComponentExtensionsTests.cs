@@ -27,78 +27,6 @@ namespace VirtualClient
         }
 
         [Test]
-        public void CreateFileUploadDescriptorExtensionReturnsTheExpectedDefaultDescriptor()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-
-            Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
-            mockFile.Setup(f => f.Name).Returns("file.log");
-            mockFile.Setup(f => f.FullName).Returns("/home/any/path/to/file.log");
-            mockFile.Setup(f => f.CreationTime).Returns(DateTime.Now);
-            mockFile.Setup(f => f.CreationTimeUtc).Returns(DateTime.UtcNow);
-
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
-            {
-                lock (ComponentTypeCache.LockObject)
-                {
-                    try
-                    {
-                        ComponentTypeCache.Instance.Clear();
-                        FileContext fileContext = new FileContext(mockFile.Object, "text/plain", "utf-8", component.ExperimentId);
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext);
-
-                        Assert.IsNotNull(descriptor);
-                        Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
-                        Assert.AreEqual(FileUploadDescriptorFactory.Default, format.ToString());
-                    }
-                    finally
-                    {
-                        ComponentTypeCache.Instance.Clear();
-                        ComponentTypeCache.Instance.DescriptorFactoryCache.Clear();
-                    }
-                }
-            }
-        }
-
-        [Test]
-        public void CreateFileUploadDescriptorExtensionReturnsTheExpectedDescriptorForASpecificPathStructure()
-        {
-            this.SetupDefaults(PlatformID.Unix);
-
-            Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
-            mockFile.Setup(f => f.Name).Returns("file.log");
-            mockFile.Setup(f => f.FullName).Returns("/home/any/path/to/file.log");
-            mockFile.Setup(f => f.CreationTime).Returns(DateTime.Now);
-            mockFile.Setup(f => f.CreationTimeUtc).Returns(DateTime.UtcNow);
-
-            using (TestExecutor component = new TestExecutor(this.mockFixture))
-            {
-                component.ContentPathFormat = "Format1234";
-
-                lock (ComponentTypeCache.LockObject)
-                {
-                    try
-                    {
-                        ComponentTypeCache.Instance.Clear();
-                        ComponentTypeCache.Instance.Add(new ComponentType(typeof(TestFileUploadDescriptorFactory_A)));
-
-                        FileContext fileContext = new FileContext(mockFile.Object, "text/plain", "utf-8", component.ExperimentId);
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext);
-
-                        Assert.IsNotNull(descriptor);
-                        Assert.IsTrue(descriptor.Manifest.TryGetValue("pathFormat", out IConvertible format));
-                        Assert.AreEqual("Format1234", format.ToString());
-                    }
-                    finally
-                    {
-                        ComponentTypeCache.Instance.Clear();
-                        ComponentTypeCache.Instance.DescriptorFactoryCache.Clear();
-                    }
-                }
-            }
-        }
-
-        [Test]
         public async Task ExecuteCommandAsyncExtensionExecutesTheExpectedProcessOnWindowsSystems()
         {
             this.SetupDefaults(PlatformID.Win32NT);
@@ -234,21 +162,6 @@ namespace VirtualClient
             {
                 Assert.ThrowsAsync<NotSupportedException>(
                     () => component.ExecuteCommandAsync(command, commandArguments, workingDirectory, EventContext.None, CancellationToken.None, username: "notsupported"));
-            }
-        }
-
-        [ComponentDescription(Id = "Format1234")]
-        private class TestFileUploadDescriptorFactory_A : IFileUploadDescriptorFactory
-        {
-            public FileUploadDescriptor CreateDescriptor(FileContext fileContext, string contentPathTemplate, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true)
-            {
-                return new FileUploadDescriptor(
-                    $"/any/path/to/blob/{fileContext.File.Name}",
-                    "anyContainer",
-                    "utf-8",
-                    "text/plain",
-                    fileContext.File.FullName,
-                    manifest);
             }
         }
     }

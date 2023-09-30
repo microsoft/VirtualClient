@@ -4,8 +4,8 @@
 /** @type {import('@docusaurus/types').Config} */
 
 const config = {
-  title: 'Virtual Client',
-  tagline: 'Cloud-ready standardized workload automation from Microsoft Azure.',
+  title: 'Virtual Client Platform',
+  tagline: 'Cloud-ready standardized workload automation from Microsoft Azure teams.',
   url: 'https://microsoft.github.io',
   baseUrl: '/VirtualClient/',
   onBrokenLinks: 'warn',

@@ -51,6 +51,81 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 ]
 ```
 
+## Well-Known Parameters
+There are certain parameters that can be used in a profile that represent aspects of the system that differ from one to another. These parameters are used to allow
+designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
+to have profiles be as clear and self-describing as possible. It helps users to establish context into the purpose of the profile and what it will do when running on
+the system. The following table describes the set of well-known parameters that can be used in profiles.
+
+| Parameter                             | Description |
+|---------------------------------------|-------------|
+| LogicalCoreCount                      | Represents the number of logical cores/vCPUs on the system. |
+| PhysicalCoreCount                     | Represents the number of physical cores on the system. |
+| PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
+| PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+
+``` json
+"Actions": [
+    {
+        "Type": "RedisServerExecutor",
+        "Parameters": {
+            "Scenario": "Server",
+            "PackageName": "redis",
+            "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
+            "BindToCores": true,
+            "Port": "$.Parameters.ServerPort",
+            "ServerInstances": "{LogicalCoreCount}",
+            "ServerThreadCount": "$.Parameters.ServerThreadCount",
+            "Role": "Server"
+        }
+    }
+]
+
+"Dependencies": [
+    {
+        "Type": "WgetPackageInstallation",
+        "Parameters": {
+            "Scenario": "InstallMemcached",
+            "PackageName": "memcached",
+            "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
+            "SubPath": "memcached-1.6.17",
+            "Notes": "Example path to package -> /packages/memcached/memcached-1.6.17"
+        }
+    },
+    {
+        "Type": "ExecuteCommand",
+        "Parameters": {
+            "Scenario": "CompileMemcached",
+            "Platforms": "linux-x64,linux-arm64",
+            "Command": "bash -c './configure'&&make",
+            "WorkingDirectory": "{PackagePath:memcached}"
+        }
+    }
+]
+
+"Dependencies": [
+    {
+        "Type": "DependencyPackageInstallation",
+        "Parameters": {
+            "Scenario": "InstallCoreMark",
+            "BlobContainer": "packages",
+            "BlobName": "coremark.1.0.0.zip",
+            "PackageName": "coremark",
+            "Extract": true
+        }
+    },
+    {
+        "Type": "ExecuteCommand",
+        "Parameters": {
+            "Scenario": "CompileCoremark",
+            "Platforms": "linux-x64,linux-arm64",
+            "Command": "bash -c './configure'&&make",
+            "WorkingDirectory": "{PackagePath/Platform:memcached}"
+        }
+    }
+]
+```
+
 ## Inline Parameter References
 There are scenarios where the author of a profile would like to reference parameters defined in the set associated with the action, monitor or dependency within the value
 for another parameter. This is typically used to allow global parameters to be defined at the profile level and then referenced parameters defined at the action level.
@@ -125,78 +200,118 @@ of the application + profile). The following example illustrates how this works 
   }
   ```
 
-## Well-Known Parameters
-There are certain parameters that can be used in a profile that represent aspects of the system that differ from one to another. These parameters are used to allow
-designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
-to have profiles be as clear and self-describing as possible. It helps users to establish context into the purpose of the profile and what it will do when running on
-the system. The following table describes the set of well-known parameters that can be used in profiles.
+## Inline Parameter References -> Time Spans
+Time span parameters are very common in profiles (e.g. Duration: 00:30:00) and are often used to describe a time ranges or timeouts for executing operations. 
+It is sometimes beneficial to be able to reference a duration as different units of time. The table below describes the different units of time that are supported for
+time span parameter references in Virtual Client profiles.
 
-| Parameter                           | Description |
-|-------------------------------------|-------------|
-| LogicalCoreCount                    | Represents the number of logical cores/vCPUs on the system. |
-| PhysicalCoreCount                   | Represents the number of physical cores on the system. |
-| PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
-| PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+| Parameter                             | Description |
+|---------------------------------------|-------------|
+| \{ParameterName\}.TotalDays           | Given a parameter with a value formatted as a time span (e.g. 11.00:00:00) in a set of profile parameters, this represents the total number of days for the range of time defined by the time span value (e.g. 11.00:00:00 -> 11 days). |
+| \{ParameterName\}.TotalHours          | Given a parameter with a value formatted as a time span (e.g. 05:00:00) in a set of profile parameters, this represents the total number of hours for the range of time defined by the time span value (e.g. 05:00:00 -> 5 hours). |
+| \{ParameterName\}.TotalMilliseconds   | Given a parameter with a value formatted as a time span (e.g. 00:02:00) in a set of profile parameters, this represents the total number of milliseconds for the range of time defined by the time span value (e.g. 00:02:00 -> 120000 milliseconds). |
+| \{ParameterName\}.TotalMinutes        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of minutes for the range of time defined by the time span value (e.g. 00:30:00 -> 30 minutes). |
+| \{ParameterName\}.TotalSeconds        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of seconds for the range of time defined by the time span value (e.g. 00:01:00 -> 60 seconds). |
 
 ``` json
 "Actions": [
     {
-        "Type": "RedisServerExecutor",
+        "Type": "DiskSpdExecutor",
         "Parameters": {
-            "Scenario": "Server",
-            "PackageName": "redis",
-            "CommandLine": "--protected-mode no --io-threads {ServerThreadCount} --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save",
-            "BindToCores": true,
-            "Port": "$.Parameters.ServerPort",
-            "ServerInstances": "{LogicalCoreCount}",
-            "ServerThreadCount": "$.Parameters.ServerThreadCount",
-            "Role": "Server"
+            "Scenario": "RandomWrite_8k_BlockSize",
+            "PackageName": "diskspd",
+            "DiskFilter": "$.Parameters.DiskFilter",
+            "CommandLine": "-c496G -b8K -r4K -t32 -o128 -w100 -d{Duration.TotalSeconds} -Suw -W15 -D -L -Rtext",
+            "TestName": "diskspd_randwrite_496g_8k_d128_th32",
+            "FileName": "diskspd-test.dat",
+            "Duration": "00:05:00",
+            "Configuration": "Stress",
+            "ProcessModel": "$.Parameters.ProcessModel",
+            "DeleteTestFilesOnFinish": false,
+            "Tags": "IO,DiskSpd,randwrite"
         }
     }
 ]
 
-"Dependencies": [
+"Actions": [
     {
-        "Type": "WgetPackageInstallation",
+        "Type": "DiskSpdExecutor",
         "Parameters": {
-            "Scenario": "InstallMemcached",
-            "PackageName": "memcached",
-            "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
-            "SubPath": "memcached-1.6.17",
-            "Notes": "Example path to package -> /packages/memcached/memcached-1.6.17"
-        }
-    },
-    {
-        "Type": "ExecuteCommand",
-        "Parameters": {
-            "Scenario": "CompileMemcached",
-            "Platforms": "linux-x64,linux-arm64",
-            "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath:memcached}"
+            "Scenario": "RandomWrite_8k_BlockSize",
+            "PackageName": "diskspd",
+            "DiskFilter": "$.Parameters.DiskFilter",
+            "CommandLine": "-c496G -b8K -r4K -t32 -o128 -w100 -d{Timeout.TotalSeconds} -Suw -W15 -D -L -Rtext",
+            "TestName": "diskspd_randwrite_496g_8k_d128_th32",
+            "FileName": "diskspd-test.dat",
+            "Timeout": "00:05:00",
+            "Configuration": "Stress",
+            "ProcessModel": "$.Parameters.ProcessModel",
+            "DeleteTestFilesOnFinish": false,
+            "Tags": "IO,DiskSpd,randwrite"
         }
     }
 ]
+```
 
-"Dependencies": [
-    {
-        "Type": "DependencyPackageInstallation",
-        "Parameters": {
-            "Scenario": "InstallCoreMark",
-            "BlobContainer": "packages",
-            "BlobName": "coremark.1.0.0.zip",
-            "PackageName": "coremark",
-            "Extract": true
-        }
-    },
-    {
-        "Type": "ExecuteCommand",
-        "Parameters": {
-            "Scenario": "CompileCoremark",
-            "Platforms": "linux-x64,linux-arm64",
-            "Command": "bash -c './configure'&&make",
-            "WorkingDirectory": "{PackagePath/Platform:memcached}"
-        }
-    }
+## Inline Parameter References -> Calculations
+In addition to the different types of parameter references above, Virtual Client also has limited support for using calculations in parameter values. One of the fundamental
+goals when defining profiles is to make the "recipe" as self-describing as possible. Inline calculations helps to make this possible with certain types of scenarios. For example,
+the author may want to adjust the number of concurrent threads that are used to run a given workload depending upon the size of the system on which Virtual Client is running.
+Whereas this could certainly be done in the code itself, it hides the calculations from the user/reader of the profile. Calculations are often used in conjunction with the well-known
+parameters described above. The following examples illustrate how to use calculations in profiles.
+
+[CSharp Scripting Support](https://github.com/dotnet/roslyn/blob/main/docs/wiki/Scripting-API-Samples.md)  
+Support for performing calculations against string literals is possible using the Roslyn compiler and scripting foundation in .NET. More specifically, the 'Microsoft.CodeAnalysis.CSharp.Scripting' library is used
+to translate string literals into mathematical calculations.
+
+```
+Calculations in parameter values should use the following format:  
+{calculate(<expression>)}
+
+e.g.
+{calculate(100 / {TotalThreads})}
+{calculate({LogicalCoreCount} - 2)}
+{calculate(({LogicalCoreCount} - 2) / 512)}
+```
+
+``` json
+"Actions": [
+  {
+      "Type": "DiskSpdExecutor",
+      "Parameters": {
+          "Scenario": "RandomWrite_4k_BlockSize",
+          "PackageName": "diskspd",
+          "DiskFilter": "$.Parameters.DiskFilter",
+          "CommandLine": "-c496G -b4K -r4K -t{calculate({LogicalCoreCount}/2)} -o{calculate(512/{ThreadCount})} -w100 -d300 -Suw -W15 -D -L -Rtext",
+          "FileName": "diskspd-test.dat",
+          "ProcessModel": "SingleProcess",
+          "DeleteTestFilesOnFinish": false,
+          "Tags": "IO,DiskSpd,randwrite"
+      }
+  }
+]
+
+// Calculations can be used to define the value of parameters which are then themselves
+// referenced in the values of other parameters (e.g. ThreadCount and QueueDepth below).
+"Actions": [
+  {
+      "Type": "DiskSpdExecutor",
+      "Parameters": {
+          "Scenario": "RandomWrite_4k_BlockSize",
+          "PackageName": "diskspd",
+          "DiskFilter": "$.Parameters.DiskFilter",
+          "CommandLine": "-c{FileSize} -b4K -r4K -t{ThreadCount} -o{QueueDepth} -w100 -d{Duration} -Suw -W15 -D -L -Rtext",
+          "TestName": "diskspd_randwrite_{FileSize}_4k_d{ThreadCount}_th{ThreadCount}",
+          "Duration": "$.Parameters.Duration",
+          "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
+          "QueueDepth": "{calculate(512/{ThreadCount})}",
+          "FileSize": "$.Parameters.FileSize",
+          "FileName": "diskspd-test.dat",
+          "ProcessModel": "SingleProcess",
+          "DeleteTestFilesOnFinish": false,
+          "Tags": "IO,DiskSpd,randwrite"
+      }
+  }
 ]
 ```
 

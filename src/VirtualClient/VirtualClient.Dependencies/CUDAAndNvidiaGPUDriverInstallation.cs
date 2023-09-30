@@ -20,6 +20,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Provides functionality for installing specific version of CUDA and supported Nvidia GPU driver on linux and Windows.
@@ -184,7 +185,7 @@ namespace VirtualClient.Dependencies
                                .ConfigureAwait(false);
 
                     await this.stateManager.SaveStateAsync(nameof(this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync), new State(), cancellationToken)
-                        .ConfigureAwait(false);                    
+                        .ConfigureAwait(false);
                 }
 
                 VirtualClientRuntime.IsRebootRequested = this.RebootRequired;
@@ -196,6 +197,16 @@ namespace VirtualClient.Dependencies
         [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1118:Parameter should not span multiple lines", Justification = "Readability")]
         private async Task InstallCudaAndDriversAsync(LinuxDistribution linuxDistribution, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            MetadataContract.Persist(
+                new Dictionary<string, object>
+                {
+                    { "gpuVendor", "Nvidia" },
+                    { "gpuDriverVersion_nvidia", this.LinuxDriverVersion },
+                    { "cudaVersion", this.LinuxDriverVersion }
+                },
+                MetadataContractCategory.Dependencies,
+                true);
+
             // The .bashrc file is used to define commands that should be run whenever the system
             // is booted. For the purpose of the CUDA driver installation, we want to include extra
             // paths in the $PATH environment variable post installation.
@@ -239,7 +250,7 @@ namespace VirtualClient.Dependencies
                         .ConfigureAwait(false);
                 }
             }
-        }        
+        }
 
         private List<string> CleanupCommands(LinuxDistribution linuxDistribution)
         {
@@ -367,9 +378,15 @@ namespace VirtualClient.Dependencies
         {
             string installerPath = string.Empty;
 
-            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(
-                this.PackageName, cancellationToken)
-                    .ConfigureAwait(false);
+            DependencyPath nvidiaDriverInstallerPackage = await this.packageManager.GetPackageAsync(this.PackageName, cancellationToken);
+
+            MetadataContract.Persist(
+                new Dictionary<string, object>
+                {
+                    { "package_nvidia_driver", this.PackageName }
+                },
+                MetadataContractCategory.Dependencies,
+                true);
 
             if (this.fileSystem.Directory.GetFiles(nvidiaDriverInstallerPackage.Path, "*.exe", SearchOption.AllDirectories).Length > 0)
             {

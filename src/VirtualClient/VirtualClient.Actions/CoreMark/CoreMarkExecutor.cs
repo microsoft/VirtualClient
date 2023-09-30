@@ -6,20 +6,18 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO.Abstractions;
-    using System.Linq;
-    using System.Reflection.Metadata;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The CoreMark workload executor.
@@ -44,6 +42,28 @@ namespace VirtualClient.Actions
         {
             this.systemManagement = dependencies.GetService<ISystemManagement>();
             this.packageManager = this.systemManagement.PackageManager;
+        }
+
+        /// <summary>
+        /// The name of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerName), string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// The version of the compiler used to compile the CoreMark workload.
+        /// </summary>
+        public string CompilerVersion
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CompilerVersion), string.Empty);
+            }
         }
 
         /// <summary>
@@ -126,6 +146,24 @@ namespace VirtualClient.Actions
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Win32NT || this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("CoreMark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private string GetCommandLineArguments()
         {
             return @$"XCFLAGS=""-DMULTITHREAD={this.ThreadCount} -DUSE_PTHREAD"" REBUILD=1 LFLAGS_END=-pthread";
@@ -137,6 +175,13 @@ namespace VirtualClient.Actions
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
+                    this.MetadataContract.AddForScenario(
+                       "CoreMark",
+                       commandArguments,
+                       toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
                     IEnumerable<string> results = await this.LoadResultsAsync(
                         new string[] { this.OutputFile1Path, this.OutputFile2Path },
                         cancellationToken);

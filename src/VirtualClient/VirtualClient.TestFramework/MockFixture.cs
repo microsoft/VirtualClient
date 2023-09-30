@@ -48,11 +48,18 @@ namespace VirtualClient
         /// </summary>
         public static readonly string ExamplesDirectory = Path.Combine(TestAssemblyDirectory, "Examples");
 
+        /// <summary>
+        /// The path to the directory where test test resource/example files can be found. Note that this requires the
+        /// test project to copy the files to a directory called 'TestResources'.
+        /// </summary>
+        public static readonly string TestResourcesDirectory = Path.Combine(TestAssemblyDirectory, "TestResources");
+
         private string experimentId;
 
         static MockFixture()
         {
             VirtualClientComponent.LogToFile = true;
+            VirtualClientComponent.ContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
         }
 
         /// <summary>
@@ -296,24 +303,39 @@ namespace VirtualClient
             this.FileStream = new Mock<IFileStreamFactory>();
             this.Directory = new Mock<IDirectory>();
             this.DirectoryInfo = new Mock<IDirectoryInfo>();
+
             this.Directory.Setup(dir => dir.CreateDirectory(It.IsAny<string>())).Returns(this.DirectoryInfo.Object);
             this.FileSystem.SetupGet(fs => fs.File).Returns(this.File.Object);
             this.FileSystem.SetupGet(fs => fs.FileInfo).Returns(this.FileInfo.Object);
             this.FileSystem.SetupGet(fs => fs.FileStream).Returns(this.FileStream.Object);
             this.FileSystem.SetupGet(fs => fs.Directory).Returns(this.Directory.Object);
+            this.FileInfo.Setup(file => file.New(It.IsAny<string>()))
+                .Returns<string>(path =>
+                {
+                    Mock<IFileInfo> mockFile = new Mock<IFileInfo>();
+
+                    mockFile.Setup(file => file.Name).Returns(Path.GetFileName(path));
+                    mockFile.Setup(file => file.CreationTime).Returns(DateTime.Now);
+                    mockFile.Setup(file => file.CreationTimeUtc).Returns(DateTime.UtcNow);
+                    mockFile.Setup(file => file.Length).Returns(12345);
+                    mockFile.Setup(file => file.FullName).Returns(path);
+
+                    return mockFile.Object;
+                });
 
             this.DiskManager = new Mock<IDiskManager>();
             this.Logger = new InMemoryLogger();
             this.FirewallManager = new Mock<IFirewallManager>();
             this.PlatformSpecifics = new TestPlatformSpecifics(platform, architecture);
             this.ProcessManager = new InMemoryProcessManager(platform);
+            this.SshClientManager = new InMemorySshClientManager();
             this.Process = new InMemoryProcess();
             this.PackageManager = new Mock<IPackageManager>();
             this.PackageManager.SetupGet(pm => pm.PlatformSpecifics).Returns(this.PlatformSpecifics);
             this.ContentBlobManager = new Mock<IBlobManager>();
             this.PackagesBlobManager = new Mock<IBlobManager>();
             this.StateManager = new Mock<IStateManager>();
-            this.Timing = new ProfileTiming(DateTime.UtcNow.AddMilliseconds(2));
+            this.Timing = new ProfileTiming(TimeSpan.FromMilliseconds(2));
             this.Parameters = new Dictionary<string, IConvertible>();
             this.Parameters[nameof(VirtualClientComponent.Scenario)] = "AnyScenario";
 
@@ -371,6 +393,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.ExperimentId).Returns(this.experimentId);
             this.SystemManagement.SetupGet(sm => sm.Platform).Returns(platform);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(this.PlatformSpecifics);
+            this.SystemManagement.SetupGet(sm => sm.PlatformArchitectureName).Returns(this.PlatformSpecifics.PlatformArchitectureName);
             this.SystemManagement.SetupGet(sm => sm.CpuArchitecture).Returns(architecture);
             this.SystemManagement.SetupGet(sm => sm.DiskManager).Returns(() => this.DiskManager.Object);
             this.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(() => this.FileSystem.Object);
@@ -378,6 +401,7 @@ namespace VirtualClient
             this.SystemManagement.SetupGet(sm => sm.PackageManager).Returns(() => this.PackageManager.Object);
             this.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(() => this.PlatformSpecifics);
             this.SystemManagement.SetupGet(sm => sm.ProcessManager).Returns(() => this.ProcessManager);
+            this.SystemManagement.SetupGet(sm => sm.SshClientManager).Returns(() => this.SshClientManager);
             this.SystemManagement.SetupGet(sm => sm.StateManager).Returns(() => this.StateManager.Object);
             this.SystemManagement.Setup(sm => sm.IsLocalIPAddress(It.IsAny<string>())).Returns(true);
             this.SystemManagement.Setup(sm => sm.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
@@ -391,14 +415,50 @@ namespace VirtualClient
 
             this.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
 
+            this.SystemManagement.Setup(sm => sm.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo(
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+                    "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 2, GenuineIntel",
+                    4,
+                    8,
+                    1,
+                    1,
+                    true,
+                    new List<CpuCacheInfo>
+                    {
+                        new CpuCacheInfo("L1", null, 100000),
+                        new CpuCacheInfo("L1d", null, 60000),
+                        new CpuCacheInfo("L1i", null, 40000),
+                        new CpuCacheInfo("L2", null, 10000000),
+                        new CpuCacheInfo("L3", null, 80000000)
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(
+                    346801345,
+                    new List<MemoryChipInfo>
+                    {
+                        new MemoryChipInfo("Memory_1", "Memory", 123456789, 2166, "HK Hynix", "HM123456"),
+                        new MemoryChipInfo("Memory_2", "Memory", 223344556, 2432, "Micron", "M987654")
+                    }));
+
+            this.SystemManagement.Setup(sm => sm.GetNetworkInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new NetworkInfo(
+                    new List<NetworkInterfaceInfo>
+                    {
+                        new NetworkInterfaceInfo("Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)", "Mellanox Technologies MT27800 Family [ConnectX-5 Virtual Function] (rev 80)"),
+                    }));
+
             this.Dependencies = new ServiceCollection();
             this.Dependencies.AddSingleton<ILogger>((p) => this.Logger);
             this.Dependencies.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
+            this.Dependencies.AddSingleton<IExpressionEvaluator>(ProfileExpressionEvaluator.Instance);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<ISystemInfo>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<ISystemManagement>((p) => this.SystemManagement.Object);
             this.Dependencies.AddSingleton<PlatformSpecifics>((p) => this.PlatformSpecifics);
             this.Dependencies.AddSingleton<ProcessManager>((p) => this.ProcessManager);
+            this.Dependencies.AddSingleton<ISshClientManager>((p) => this.SshClientManager);
             this.Dependencies.AddSingleton<IDiskManager>((p) => this.DiskManager.Object);
             this.Dependencies.AddSingleton<IFileSystem>((p) => this.FileSystem.Object);
             this.Dependencies.AddSingleton<IPackageManager>((p) => this.PackageManager.Object);

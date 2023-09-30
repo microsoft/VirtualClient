@@ -176,8 +176,7 @@ namespace VirtualClient
                         }
                     };
 
-                    DateTime timeout = DateTime.UtcNow.AddSeconds(5);
-                    await executor.ExecuteAsync(new ProfileTiming(timeout), cancellationTokenSource.Token)
+                    await executor.ExecuteAsync(new ProfileTiming(TimeSpan.FromSeconds(5)), cancellationTokenSource.Token)
                         .ConfigureAwait(false);
 
                     var monitorsStarted = this.mockFixture.Logger.MessagesLogged("TestMonitor.ExecuteStart");
@@ -371,7 +370,7 @@ namespace VirtualClient
             // An explicit timeout is provided to the profile executor.
             using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
             {
-                ProfileTiming explicitTimeout = new ProfileTiming(DateTime.UtcNow.AddSeconds(1));
+                ProfileTiming explicitTimeout = new ProfileTiming(TimeSpan.FromSeconds(5));
                 Task executionTask = executor.ExecuteAsync(explicitTimeout, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
@@ -444,8 +443,7 @@ namespace VirtualClient
                 executor.IterationBegin += (sender, args) => iterationsStarted++;
                 executor.IterationEnd += (sender, args) => iterationsCompleted++;
 
-                TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
-                ProfileTiming timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), DeterminismScope.IndividualAction);
+                ProfileTiming timing = new ProfileTiming(TimeSpan.FromMilliseconds(timeoutMilliseconds), DeterminismScope.IndividualAction);
                 Task executionTask = executor.ExecuteAsync(timing, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
@@ -491,8 +489,7 @@ namespace VirtualClient
                 executor.IterationBegin += (sender, args) => iterationsStarted++;
                 executor.IterationEnd += (sender, args) => iterationsCompleted++;
 
-                TimeSpan timeout = TimeSpan.FromMilliseconds(timeoutMilliseconds);
-                ProfileTiming timing = new ProfileTiming(DateTime.UtcNow.Add(timeout), DeterminismScope.AllActions);
+                ProfileTiming timing = new ProfileTiming(TimeSpan.FromMilliseconds(timeoutMilliseconds), DeterminismScope.AllActions);
                 Task executionTask = executor.ExecuteAsync(timing, CancellationToken.None);
 
                 DateTime testTimeout = DateTime.UtcNow.AddSeconds(5);
@@ -687,6 +684,64 @@ namespace VirtualClient
 
                 // None of the monitors should have the same activity ID
                 Assert.IsTrue(monitors.Select(a => a.ActivityId).Distinct().Count() == monitors.Count());
+            }
+        }
+
+        [Test]
+        [TestCase(ErrorReason.MonitorFailed)]
+        [TestCase(ErrorReason.WorkloadFailed)]
+        public async Task ProfileExecutorHandlesNonTerminalExceptionsIfTheFailFastOptionIsNotRequested(ErrorReason errorReason)
+        {
+            int iterationsExecuted = 0;
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteActions = true;
+                executor.FailFast = false;
+
+                executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to be handled", errorReason);
+                executor.IterationEnd += (sender, args) => iterationsExecuted++;
+
+                Task executionTask = executor.ExecuteAsync(new ProfileTiming(profileIterations: 3), CancellationToken.None);
+
+                DateTime testTimeout = DateTime.UtcNow.AddSeconds(10);
+                while (!executionTask.IsCompleted)
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                Assert.DoesNotThrow(() => executionTask.ThrowIfErrored());
+                Assert.AreEqual(TaskStatus.RanToCompletion, executionTask.Status);
+                Assert.AreEqual(3, iterationsExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(ErrorReason.MonitorFailed)]
+        [TestCase(ErrorReason.WorkloadFailed)]
+        [TestCase(ErrorReason.WorkloadDependencyMissing)]
+        public async Task ProfileExecutorExitsImmediatelyOnAnyErrorWheneverTheFailFastOptionIsRequested(ErrorReason errorReason)
+        {
+            int iterationsExecuted = 0;
+            using (TestProfileExecutor executor = new TestProfileExecutor(this.mockProfile, this.mockFixture.Dependencies))
+            {
+                executor.ExecuteActions = true;
+                executor.FailFast = true;
+
+                executor.ActionBegin += (sender, args) => throw new WorkloadException($"Expected to fail on first error", errorReason); 
+                executor.IterationEnd += (sender, args) => iterationsExecuted++;
+
+                Task executionTask = executor.ExecuteAsync(new ProfileTiming(profileIterations: 3), CancellationToken.None);
+
+                DateTime testTimeout = DateTime.UtcNow.AddSeconds(10);
+                while (!executionTask.IsCompleted)
+                {
+                    await Task.Delay(10).ConfigureAwait(false);
+                }
+
+                WorkloadException exception = Assert.Throws<WorkloadException>(() => executionTask.ThrowIfErrored());
+
+                Assert.AreEqual(errorReason, exception.Reason);
+                Assert.AreEqual(1, iterationsExecuted);
             }
         }
 

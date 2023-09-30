@@ -13,6 +13,8 @@ namespace VirtualClient
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Win32;
+    using Polly;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
 
@@ -97,7 +99,7 @@ namespace VirtualClient
         public bool RunningInContainer { get; } = PlatformSpecifics.IsRunningInContainer();
 
         /// <inheritdoc />
-        public SshClientManager SshClientManager { get; internal set; }
+        public ISshClientManager SshClientManager { get; internal set; }
 
         /// <summary>
         /// Provides features for managing/preserving state on the system.
@@ -113,38 +115,11 @@ namespace VirtualClient
 
             if (this.Platform == PlatformID.Win32NT)
             {
-                string command = "CoreInfo64.exe";
-                if (this.CpuArchitecture == Architecture.Arm64)
-                {
-                    command = "CoreInfo64a.exe";
-                }
-
-                DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
-                    VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
-                    this.Platform,
-                    this.CpuArchitecture,
-                    CancellationToken.None);
-
-                string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);
-                using (IProcessProxy process = this.ProcessManager.CreateProcess(coreInfoExe, "-nobanner /accepteula"))
-                {
-                    await process.StartAndWaitAsync(CancellationToken.None);
-                    process.ThrowIfWorkloadFailed();
-
-                    CoreInfoParser parser = new CoreInfoParser(process.StandardOutput.ToString());
-                    info = parser.Parse();
-                }
+                info = await this.GetCpuInfoOnWindowsAsync();
             }
             else if (this.Platform == PlatformID.Unix)
             {
-                using (IProcessProxy process = this.ProcessManager.CreateProcess("lscpu"))
-                {
-                    await process.StartAndWaitAsync(CancellationToken.None);
-                    process.ThrowIfWorkloadFailed();
-
-                    LscpuParser parser = new LscpuParser(process.StandardOutput.ToString());
-                    info = parser.Parse();
-                }
+                info = await this.GetCpuInfoOnUnixAsync();
             }
 
             return info;
@@ -168,9 +143,45 @@ namespace VirtualClient
         /// <summary>
         /// Returns information about memory on the system.
         /// </summary>
-        public Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
+        public async Task<MemoryInfo> GetMemoryInfoAsync(CancellationToken cancellationToken)
         {
-            return Task.FromResult(new MemoryInfo(this.GetTotalSystemMemoryKiloBytes()));
+            MemoryInfo memoryInfo = null;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    memoryInfo = this.GetMemoryInfoOnWindows();
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    memoryInfo = await this.GetMemoryInfoOnUnixAsync();
+                }
+            }
+
+            return memoryInfo;
+        }
+
+        /// <summary>
+        /// Returns information about network features on the system.
+        /// </summary>
+        public async Task<NetworkInfo> GetNetworkInfoAsync(CancellationToken cancellationToken)
+        {
+            NetworkInfo networkInfo = null;
+
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                if (this.Platform == PlatformID.Win32NT)
+                {
+                    networkInfo = this.GetNetworkInfoOnWindows();
+                }
+                else if (this.Platform == PlatformID.Unix)
+                {
+                    networkInfo = await this.GetNetworkInfoOnUnixAsync();
+                }
+            }
+
+            return networkInfo;
         }
 
         /// <summary>
@@ -242,6 +253,148 @@ namespace VirtualClient
         public Task WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             return Task.Delay(timeout, cancellationToken);
+        }
+
+        private async Task<CpuInfo> GetCpuInfoOnUnixAsync()
+        {
+            CpuInfo cpuInfo = null;
+            using (IProcessProxy process = this.ProcessManager.CreateProcess("lscpu"))
+            {
+                await process.StartAndWaitAsync(CancellationToken.None);
+                process.ThrowIfWorkloadFailed();
+
+                LscpuParser parser = new LscpuParser(process.StandardOutput.ToString());
+                cpuInfo = parser.Parse();
+            }
+
+            return cpuInfo;
+        }
+
+        private async Task<CpuInfo> GetCpuInfoOnWindowsAsync()
+        {
+            CpuInfo cpuInfo = null;
+            string command = "CoreInfo64.exe";
+            if (this.CpuArchitecture == Architecture.Arm64)
+            {
+                command = "CoreInfo64a.exe";
+            }
+
+            DependencyPath package = await this.PackageManager.GetPlatformSpecificPackageAsync(
+                VirtualClient.PackageManager.BuiltInSystemToolsPackageName,
+                this.Platform,
+                this.CpuArchitecture,
+                CancellationToken.None);
+
+            string coreInfoExe = this.PlatformSpecifics.Combine(package.Path, command);
+            using (IProcessProxy process = this.ProcessManager.CreateProcess(coreInfoExe, "-nobanner /accepteula"))
+            {
+                await process.StartAndWaitAsync(CancellationToken.None);
+                process.ThrowIfWorkloadFailed();
+
+                CoreInfoParser parser = new CoreInfoParser(process.StandardOutput.ToString());
+                cpuInfo = parser.Parse();
+            }
+
+            return cpuInfo;
+        }
+
+        private async Task<MemoryInfo> GetMemoryInfoOnUnixAsync()
+        {
+            using (IProcessProxy process = this.ProcessManager.CreateElevatedProcess(PlatformID.Unix, "dmidecode", "--type memory"))
+            {
+                IEnumerable<MemoryChipInfo> chips = null;
+                await process.StartAndWaitAsync(CancellationToken.None);
+
+                if (!process.IsErrored())
+                {
+                    DmiDecodeParser parser = new DmiDecodeParser();
+                    parser.TryParse(process.StandardOutput.ToString(), out chips);
+                }
+
+                return new MemoryInfo(this.GetTotalSystemMemoryKiloBytes(), chips);
+            }
+        }
+
+        private MemoryInfo GetMemoryInfoOnWindows()
+        {
+            return new MemoryInfo(this.GetTotalSystemMemoryKiloBytes());
+        }
+
+        private async Task<NetworkInfo> GetNetworkInfoOnUnixAsync()
+        {
+            List<NetworkInterfaceInfo> interfaces = new List<NetworkInterfaceInfo>();
+            IAsyncPolicy<int> retryPolicy = Policy.HandleResult<int>(exitCode => exitCode != 0).WaitAndRetryAsync(3, retries => TimeSpan.FromSeconds(retries));
+
+            using (IProcessProxy lspci = this.ProcessManager.CreateProcess("lspci"))
+            {
+                // We will retry a few times if the process returns an exit code that is a non-success/non-zero value.
+                await retryPolicy.ExecuteAsync(async () =>
+                {
+                    await lspci.StartAndWaitAsync(CancellationToken.None);
+                    return lspci.ExitCode;
+                });
+
+                string pciDevices = lspci.StandardOutput?.ToString();
+                if (!string.IsNullOrWhiteSpace(pciDevices))
+                {
+                    Regex networkControllerExpression = new Regex(@"Network\s+controller\:\s*([\x20-\x7E]+)", RegexOptions.IgnoreCase);
+                    MatchCollection matches1 = networkControllerExpression.Matches(pciDevices);
+
+                    if (matches1?.Any() == true)
+                    {
+                        foreach (Match match in matches1)
+                        {
+                            string description = match.Groups[1].Value?.ToString().Trim();
+                            interfaces.Add(new NetworkInterfaceInfo(description, description));
+                        }
+                    }
+
+                    // On VM systems, there will not necessarily be a Network Controller
+                    // presented, but an ethernet controller may be.
+                    Regex ethernetControllerExpression = new Regex(@"Ethernet\s+controller\:\s*([\x20-\x7E]+)", RegexOptions.IgnoreCase);
+                    MatchCollection matches2 = ethernetControllerExpression.Matches(pciDevices);
+
+                    if (matches2?.Any() == true)
+                    {
+                        foreach (Match match in matches2)
+                        {
+                            string description = match.Groups[1].Value?.ToString().Trim();
+                            interfaces.Add(new NetworkInterfaceInfo(description, description));
+                        }
+                    }
+                }
+            }
+
+            return new NetworkInfo(interfaces);
+        }
+
+        private NetworkInfo GetNetworkInfoOnWindows()
+        {
+            List<NetworkInterfaceInfo> interfaces = new List<NetworkInterfaceInfo>();
+            var networkCardsKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkCards", false);
+
+            if (networkCardsKey != null)
+            {
+                string[] keyNames = networkCardsKey.GetSubKeyNames();
+                if (keyNames?.Any() == true)
+                {
+                    foreach (string key in keyNames)
+                    {
+                        var specificNetworkCardKey = networkCardsKey.OpenSubKey(key);
+                        if (specificNetworkCardKey != null)
+                        {
+                            object cardDescription = specificNetworkCardKey.GetValue("Description");
+
+                            if (cardDescription != null)
+                            {
+                                interfaces.Add(new NetworkInterfaceInfo(cardDescription.ToString(), cardDescription.ToString()));
+                            }
+                        }
+                    }
+                }
+            }
+
+            return new NetworkInfo(interfaces);
         }
 
         private long GetTotalSystemMemoryKiloBytes()

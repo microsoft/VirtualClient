@@ -50,20 +50,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void MemcachedMemtierExecutorThrowsOnUnsupportedPlatformAsync()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (var memcachedMemtierExecutor = new TestMemcachedMemtierExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => memcachedMemtierExecutor.ExecuteAsync(CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-            }
-        }
-
-        [Test]
         public void MemcachedMemtierExecutorThrowsOnUnsupportedDistroAsync()
         {
             this.SetupDefaultMockBehavior(PlatformID.Unix);
