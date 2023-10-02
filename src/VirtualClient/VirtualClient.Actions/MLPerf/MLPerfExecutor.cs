@@ -483,16 +483,6 @@ namespace VirtualClient.Actions
                     true);
             }
 
-            foreach (string directory in this.fileSystem.Directory.GetDirectories(this.Combine(this.NvidiaDirectory, "configs"), "*", SearchOption.AllDirectories))
-            {
-                string newDirectory = this.Combine(Path.GetDirectoryName(directory), Path.GetFileName(directory).ToLowerInvariant());
-
-                if (directory != newDirectory)
-                {
-                    this.fileSystem.Directory.Move(directory, newDirectory);
-                }
-            }
-
             foreach (string directory in this.fileSystem.Directory.GetDirectories(
                 this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
             {
