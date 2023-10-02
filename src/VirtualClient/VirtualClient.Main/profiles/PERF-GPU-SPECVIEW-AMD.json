@@ -15,7 +15,7 @@
       "Parameters": {
         "Scenario": "SPECviewperf",
         "Viewset": "$.Parameters.Viewset",
-        "CommandArguments": "-nogui",
+        "GUIOption": "-nogui",
         "PackageName": "specviewperf2020",
         "Tags": "GPU,SPECview,Gaming"
       }

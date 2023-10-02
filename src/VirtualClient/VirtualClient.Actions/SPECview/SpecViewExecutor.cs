@@ -47,11 +47,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The command line argument defined in the profile.
         /// </summary>
-        public string CommandArguments
+        public string GUIOption
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.CommandArguments));
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.GUIOption));
             }
         }
 
@@ -97,21 +97,21 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = new List<Metric>();
 
-            string viewset = this.GenerateCommandArguments(this.Viewset);
+            string commandArguments = this.GenerateCommandArguments();
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", this.CommandArguments);
+                .AddContext("commandArguments", commandArguments);
 
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, $"{viewset} {this.CommandArguments}", this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext);
                     process.ThrowIfWorkloadFailed();
-                    this.CaptureMetrics(process, this.CommandArguments, relatedContext);
+                    this.CaptureMetrics(process, commandArguments, relatedContext);
                 }
             }            
             
@@ -209,11 +209,11 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Generate the SPECview viewset Command Arguments
+        /// Generate the SPECview Command Arguments
         /// </summary>
-        private string GenerateCommandArguments(string viewset)
+        private string GenerateCommandArguments()
         {      
-            return $"-viewset \"{viewset}\"";
+            return $"-viewset \"{this.Viewset}\" {this.GUIOption}";
         }
 
         private async Task SetUpEnvironmentVariable()
