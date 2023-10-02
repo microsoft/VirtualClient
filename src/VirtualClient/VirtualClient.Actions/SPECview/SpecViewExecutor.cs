@@ -224,5 +224,4 @@ namespace VirtualClient.Actions
             this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
         }
     }
-
 }

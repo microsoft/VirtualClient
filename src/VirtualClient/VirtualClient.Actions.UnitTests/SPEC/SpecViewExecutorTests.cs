@@ -160,11 +160,8 @@ namespace VirtualClient.Actions
             public TestSpecViewExecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)
             {
-                this.Logger = fixture.Logger;
             }
             public new string ExecutablePath => base.ExecutablePath;
-
-            public new ILogger Logger;
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {
