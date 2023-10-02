@@ -104,8 +104,8 @@ namespace VirtualClient.Actions
                 {
                     string expectedSpecViewExecutablePath = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "RunViewperf.exe");
                     string workingDir = this.mockSpecViewPackage.Path;
-                    string expectedSpecViewArguments = this.mockFixture.Parameters["CommandArguments"].ToString();
-                    string expectedCommandArguments = $"-viewset \"{viewsetArg}\" -nogui";
+                    string expectedGUIOption = this.mockFixture.Parameters["GUIOption"].ToString();
+                    string expectedCommandArguments = $"-viewset \"{viewsetArg}\" {expectedGUIOption}";
                     string mockResultDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "results_19991231T235959");
                     string mockResultFilePath = this.mockFixture.Combine(mockResultDir, "resultCSV.csv");
                     string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
@@ -139,7 +139,7 @@ namespace VirtualClient.Actions
             {
                 { "Scenario", "SPECviewperf" },
                 { "PackageName", "specviewperf2020" },
-                { "CommandArguments", "-nogui" },
+                { "GUIOption", "-nogui" },
                 { "Viewset", "3dsmax" }
             };
 
