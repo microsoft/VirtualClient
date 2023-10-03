@@ -23,11 +23,13 @@ Runs the stock SPECviewperf Workloads.
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**  
-NA
+  | Parameter                 | Purpose                                                                                           | Default Value |
+  |---------------------------|---------------------------------------------------------------------------------------------------|---------------|
+  | Viewset                   | Optional. Specify which particular benchmarks should be run. See the list of viewsets in the [Workload Details](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-0/) section.                                                                                                                        | "3dsmax,catia"
 
 * **Profile Runtimes**  
   * The SPECviewperf package zip file is around 30GB. Downloading and extracting this file take about 30 minutes to complete. 
-  * Each SPECviewperf viewset takes about 5 min to complete on a machine with a single AMD v620 GPU. Running all the viewsets takes about 40 minutes to complete.
+  * Each SPECviewperf viewset takes about 5 min to complete on a machine with a single AMD v620 GPU. Running all eight viewsets takes about 40 minutes to complete.
   * The exact numbers may vary depending on the system and the internet performance. 
 
 * **Usage Examples**  
@@ -37,6 +39,6 @@ NA
   # Execute the workload profile
   VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
 
-  # Override the profile default parameters to use a different .NET SDK version
-  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
+  # Override the profile default parameters to include all viewsets
+  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="Viewset=3dsmax,catia,creo,energy,maya,medical,snx,sw" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
   ```
