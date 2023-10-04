@@ -1,0 +1,15 @@
+Composites
+3dsmax-07,29.33
+
+viewset,index,name,weight,fps
+3dsmax-07,1,3dsmax_Arch_Shaded,9.52,45.9
+3dsmax-07,2,3dsmax_Arch_Graphite,9.52,38.25
+3dsmax-07,3,3dsmax_Space_Wireframe,9.52,101.46
+3dsmax-07,4,3dsmax_Space_Clay,9.52,95.22
+3dsmax-07,5,3dsmax_ProjectSoane_Shaded,9.52,8.3
+3dsmax-07,6,3dsmax_ProjectSoane_Wireframe,9.52,10.3
+3dsmax-07,7,3dsmax_HugeFish_Wireframe,9.52,6.46
+3dsmax-07,8,3dsmax_HugeFish_Shaded,9.52,7.26
+3dsmax-07,9,3dsmax_Office_Realistic,9.52,63.75
+3dsmax-07,10,3dsmax_Office_Shaded,9.52,92.39
+3dsmax-07,11,3dsmax_Office_RealisticMats,4.8,40.56

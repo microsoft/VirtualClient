@@ -1,0 +1,54 @@
+{
+  "Description": "SPEC view GPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "01:00:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "GpuModel": "v620",
+    "Viewset":  ""
+  },
+  "Actions": [
+    {
+      "Type": "SpecViewExecutor",
+      "Parameters": {
+        "Scenario": "SPECviewperf",
+        "Viewset": "$.Parameters.Viewset",
+        "GUIOption": "-nogui",
+        "PackageName": "specviewperf2020",
+        "Tags": "GPU,SPECview,Gaming"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriverPackage",
+        "BlobContainer": "packages",
+        "BlobName": "amdgpudriver.zip",
+        "PackageName": "amdgpudriver",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "AMDGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriver",
+        "GpuModel": "$.Parameters.GpuModel",
+        "PackageName": "amdgpudriver"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallSpecViewWorkloadPackage",
+        "BlobContainer": "packages",
+        "BlobName": "specviewperf.zip",
+        "PackageName": "specviewperf2020",
+        "Extract": true
+      }
+    }
+  ]
+}
