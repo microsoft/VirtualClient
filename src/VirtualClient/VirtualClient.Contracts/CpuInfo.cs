@@ -23,7 +23,11 @@ namespace VirtualClient.Contracts
         /// <param name="numaNodeCount">The number of NUMA nodes on the system.</param>
         /// <param name="hyperThreadingEnabled">True/false whether CPU hyperthreading is enabled on the system.</param>
         /// <param name="caches">Memory caches for the CPU (e.g. L1, L2, L3).</param>
-        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled, IEnumerable<CpuCacheInfo> caches = null)
+        /// <param name="flags">List of other information about CPU</param>
+        /// <param name="maxFrequency">Maximum CPU frequency in MHz.</param>
+        /// <param name="minFrequency">Minimum CPU frequency in MHz.</param>
+        /// <param name="frequency">Currrent frequency of CPU in MHz.</param>
+        public CpuInfo(string name, string description, int physicalCoreCount, int logicalCoreCount, int socketCount, int numaNodeCount, bool hyperThreadingEnabled, IEnumerable<CpuCacheInfo> caches = null,  Dictionary<string, string> flags = null, double maxFrequency = double.NaN, double minFrequency = double.NaN, double frequency = double.NaN)
             : base()
         {
             name.ThrowIfNull(nameof(name));
@@ -43,6 +47,26 @@ namespace VirtualClient.Contracts
             if (caches?.Any() == true)
             {
                 this.Caches = new List<CpuCacheInfo>(caches);
+            }
+
+            if (flags != null)
+            {
+                this.Flags = flags;
+            }
+
+            if (!double.IsNaN(maxFrequency))
+            {
+                this.MaxFrequencyMHz = maxFrequency;
+            }
+
+            if (!double.IsNaN(minFrequency))
+            {
+                this.MinFrequencyMHz = minFrequency;
+            }
+
+            if (!double.IsNaN(frequency))
+            {
+                this.FrequencyMHz = frequency;
             }
         }
 
@@ -85,5 +109,25 @@ namespace VirtualClient.Contracts
         /// The number of CPU sockets on the system.
         /// </summary>
         public int SocketCount { get; }
+
+        /// <summary>
+        /// Dictionary of other information about CPU.
+        /// </summary>
+        public Dictionary<string, string> Flags { get; }
+
+        /// <summary>
+        /// Maximum CPU frequency in MHz.
+        /// </summary>
+        public double MaxFrequencyMHz { get; set; } = double.NaN;
+
+        /// <summary>
+        /// Minimum CPU frequency in MHz.
+        /// </summary>
+        public double MinFrequencyMHz { get; set; } = double.NaN;
+
+        /// <summary>
+        /// Currrent frequency of CPU in MHz.
+        /// </summary>
+        public double FrequencyMHz { get; set; } = double.NaN;
     }
 }
