@@ -106,7 +106,7 @@ namespace VirtualClient.Actions
                 case PlatformID.Win32NT:
                     commands = new List<string>
                     {
-                        @"dotnet\.exe build -c Release -p:BenchmarksTargetFramework=net6.0",
+                        @"dotnet\.exe build -c Release -p:BenchmarksTargetFramework=net7.0",
                         @"dotnet\.exe .+Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:9876 --server Kestrel --kestrelTransport Sockets --protocol http --header ""Accept:.+ keep-alive",
                         @"bombardier\.exe --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:9876/json --print r --format json"
                     };
@@ -116,7 +116,7 @@ namespace VirtualClient.Actions
                     commands = new List<string>
                     {
                         @"chmod \+x .+bombardier",
-                        @"dotnet build -c Release -p:BenchmarksTargetFramework=net6.0",
+                        @"dotnet build -c Release -p:BenchmarksTargetFramework=net7.0",
                         @"dotnet .+Benchmarks.dll --nonInteractive true --scenarios json --urls http://localhost:9876 --server Kestrel --kestrelTransport Sockets --protocol http --header ""Accept:.+ keep-alive",
                         @"bombardier --duration 15s --connections 256 --timeout 10s --fasthttp --insecure -l http://localhost:9876/json --print r --format json"
                     };
