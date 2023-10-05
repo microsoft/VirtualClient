@@ -17,16 +17,16 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// Parser for the NTttcp workload.
+    /// Parser for the SPECview workload.
     /// </summary>
     public class SpecViewMetricsParser : MetricsParser
     {
         private const string Unit = "fps";
 
         /// <summary>
-        /// Parser for the 3DMark workload
+        /// Constructor for <see cref="SpecViewMetricsParser"/>
         /// </summary>
-        /// <param name="rawText">The raw text from the 3DMark export process.</param>
+        /// <param name="rawText">The raw text from the SPECview export process.</param>
         public SpecViewMetricsParser(string rawText)
             : base(rawText)
         {

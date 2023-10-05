@@ -7,7 +7,7 @@
   },
   "Parameters": {
     "GpuModel": "v620",
-    "Viewset":  ""
+    "Viewset": "3dsmax,catia"
   },
   "Actions": [
     {
