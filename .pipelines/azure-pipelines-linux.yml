@@ -37,12 +37,7 @@ jobs:
       artifactFeeds: 'CRC-Dev'
   - script: pip install pmc-cli
 
-  - task: AzureKeyVault@2
-    inputs:
-      azureSubscription: 'CRC-AIR-AME-Infra'
-      KeyVaultName: 'junoprod01vault01'
-      SecretsFilter: 'virtualclient'
-      RunAsPreJob: false
+
   - task: UseDotNet@2
     continueOnError: false
     inputs:
@@ -89,7 +84,13 @@ jobs:
       SessionTimeout: '60'
       MaxConcurrency: '50'
       MaxRetryAttempts: '5'
-
+      
+  - task: AzureKeyVault@2
+    inputs:
+      azureSubscription: 'CRC-AIR-AME-Infra'
+      KeyVaultName: 'junoprod01vault01'
+      SecretsFilter: 'virtualclient'
+      RunAsPreJob: false
   - task: PublishLinuxPackagesPMC@0
     inputs:
       profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
