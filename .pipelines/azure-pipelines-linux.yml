@@ -87,7 +87,7 @@ jobs:
       
   - task: AzureKeyVault@2
     inputs:
-      azureSubscription: 'CRC-AIR-AME-Infra'
+      ConnectedServiceName: 'VirtualClient-AzureRM-AME'
       KeyVaultName: 'junoprod01vault01'
       SecretsFilter: 'virtualclient'
       RunAsPreJob: false
