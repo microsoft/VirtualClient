@@ -15,8 +15,6 @@ resources:
     image: 'mcr.microsoft.com/pmc/pmc-cli:latest'
     options: --entrypoint=""
 
-
-
 variables:
   VcVersion : 1.11.0
   ROOT: $(Build.SourcesDirectory)
@@ -76,6 +74,11 @@ stages:
         SessionTimeout: '60'
         MaxConcurrency: '50'
         MaxRetryAttempts: '5'
+        
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.SourcesDirectory)/out/packages'
+        artifactName: drop
 
 
   - job: PublishPackage
@@ -94,13 +97,14 @@ stages:
       inputs:
         ConnectedServiceName: 'VirtualClient-AzureRM-AME'
         KeyVaultName: 'junoprod01vault01'
-        SecretsFilter: 'virtualclient'
-        RunAsPreJob: false
+        SecretsFilter: 'virtualclient-cert-pem'
+        RunAsPreJob: true
+    - script: echo $(virtualclient-cert-pem)
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient)
+        msal_cert: $(virtualclient-cert-pem)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
         repository: 'virtualclient-apt'
