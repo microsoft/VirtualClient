@@ -25,7 +25,7 @@ variables:
   GitVersion.SemVer: ''
 
 jobs:
-- job: PublishPackage
+- job: Build Package
   pool:
     vmImage: 'ubuntu-latest'
 
