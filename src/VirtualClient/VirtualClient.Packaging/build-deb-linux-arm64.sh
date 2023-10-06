@@ -11,7 +11,8 @@ fi
 PACKAGE_NAME="virtualclient"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../../"
 BUILD_DIR="$REPO_ROOT/out/bin/Debug/ARM64/VirtualClient.Main/net6.0/linux-arm64/publish/"
-DEB_DIR="$REPO_ROOT/out/packages"
+DEB_DIR="$REPO_ROOT/out/packages/deb_arm64"
+OUT_DIR="$REPO_ROOT/out/packages/"
 
 # Create the DEBIAN control directory
 mkdir -p "$DEB_DIR/DEBIAN"
@@ -39,6 +40,6 @@ chmod -R 775 "$DEB_DIR/opt/$PACKAGE_NAME"
 chmod -R 775 "$DEB_DIR/DEBIAN"
 
 # Build the package using dpkg-deb
-dpkg-deb --build "$DEB_DIR" "$DEB_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_arm64.deb
+dpkg-deb --build "$DEB_DIR" "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_arm64.deb
 
-echo "Debian package created: "$DEB_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_arm64.deb"
+echo "Debian package created: "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_arm64.deb"

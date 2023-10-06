@@ -14,6 +14,26 @@ SHA256 algorithm.
 Virtual Client is a self-contained .NET 6 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
 [all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
 
+### Ubuntu (Deb)
+
+#### linux-x64
+```bash
+sudo apt-get install wget gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_x64.deb
+sudo apt install ./virtualclient_1.11.0_x64.deb
+```
+
+#### linux-arm64
+```bash
+sudo apt-get install wget gpg
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_arm64.deb
+sudo apt install ./virtualclient_1.11.0_arm64.deb
+```
+
 ### NuGet Packages
 - The Virtual Client is published as a NuGet package at the following location:  
   https://www.nuget.org/packages/VirtualClient
@@ -25,7 +45,7 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 
   ```powershell
   # Example
-  PM> NuGet\Install-Package VirtualClient -Version 1.8.0
+  PM> NuGet\Install-Package VirtualClient -Version 1.11.0
   ```
 
 - If you are on a Windows system, you can download from the command line using the NuGet.exe:
@@ -33,7 +53,7 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 
   ``` bash
   # Example
-  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.8.0 -Source nuget.org
+  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.11.0 -Source nuget.org
   ```
 
 ### NuGet Package Contents
