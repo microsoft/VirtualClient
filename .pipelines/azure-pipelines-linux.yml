@@ -78,7 +78,7 @@ stages:
         
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/out/packages/*.deb'
+        pathToPublish: '$(Build.SourcesDirectory)/out/packages'
         artifactName: drop
 
 
