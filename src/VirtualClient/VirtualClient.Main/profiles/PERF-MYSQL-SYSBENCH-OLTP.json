@@ -9,7 +9,8 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Default",
-        "SkipInitialize": false
+        "SkipDatabaseInitialize": true,
+        "SkipServerInitialize": false
     },
     "Actions": [
         {
@@ -27,10 +28,123 @@
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
                 "Role": "Client",
-                "DurationSecs": "1800",
-                "RecordCount": "10000",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
                 "Workload": "oltp_read_write",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_read_only",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_read_only",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_write_only",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_write_only",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_delete",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_delete",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_insert",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_insert",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_update_index",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_update_index",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "oltp_update_non_index",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "oltp_update_non_index",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "select_random_points",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "select_random_points",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
+                "Scenario": "select_random_ranges",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Role": "Client",
+                "Duration": "00:20:00",
+                "RecordCount": 10000,
+                "Workload": "select_random_ranges",
+                "PackageName": "sysbench",
+                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
             }
         }
     ],
@@ -68,7 +182,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "StartServer",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipInitialize",
+                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -77,8 +191,8 @@
             "Parameters": {
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
-              "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipInitialize",
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -88,7 +202,7 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "RaisedStatementCount",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipInitialize",
+                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -98,7 +212,7 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureNetwork",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipInitialize",
+                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -108,7 +222,7 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "CreateUser",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipInitialize",
+                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },

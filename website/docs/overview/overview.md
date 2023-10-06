@@ -38,65 +38,71 @@ In the workload and profile sections below, the following designations are used 
   The workload is supported on the Windows operating system for ARM64/AARCH64 architectures.
 
 
-## Supported Benchmark Workloads
+## Supported Workloads/Benchmarks
 The following list of workloads are used by Virtual Client profiles to exercise the system components in a consistent way required to measure performance baselines and differences.
 
 :::caution Comply to licenses you are using
-VirtualClient handles the installation and execution of various tools. Individual license files are not prompted for each workload. By using VirtualClient, users accept the license of each of the benchmarks individually, comply to the terms for the tool you are using, and take responsibility for using them.
+VirtualClient handles the installation and execution of various tools. Individual license files are not prompted for each workload. By using 
+VirtualClient, users accept the license of each of the benchmarks individually, comply to the terms for the tool you are using, and take responsibility 
+for using them.
 :::
 
-| **Benchmark** | **Specialization** | **Supported Platforms/Architectures** | **License(s)**  |
-|---|---|---|---|
-| [7zip](../workloads/compression/7zip.md) | 7zip compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html)  |
-| [AspNetBench](../workloads/aspnetbench/aspnetbench.md) | ASP.NET server | linux-x64, linux-arm64, win-x64, win-arm64 | [**ASP.NET**:MIT](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[**Bombardier**:MIT](https://github.com/codesenberg/bombardier/blob/master/LICENSE)  |
-| [CoreMark](../workloads/coremark/coremark.md) | Generic CPU | linux-x64,linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
-| [CPS](../workloads/network-suite/network-suite.md) | Network RoundTripTime | linux-x64, linux-arm64, win-x64, win-arm64 | MSFT developed  |
-| [DCGMI](../workloads/dcgmi/dcgmi.md)| GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE)
-| [DeathStarBench](../workloads/deathstarbench/deathstarbench.md) | Swarm container microservices | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache-2.0](https://github.com/delimitrou/DeathStarBench/blob/master/LICENSE)  |
-| [DiskSpd](../workloads/diskspd/diskspd.md) | Disk Stress | win-x64, win-arm64 | [MIT](https://github.com/microsoft/diskspd/blob/master/LICENSE)  |
-| [Flexible IO Tester (FIO)](../workloads/fio/fio.md) | Disk IO Performance | linux-x64, linux-arm64, win-x64 | [GPL-2.0](https://github.com/axboe/fio/blob/master/COPYING)  |
-| [Graph500](../workloads/graph500/graph500.md) | 3D Simulation | linux-x64, linux-arm64 | [Custom](https://github.com/graph500/graph500/blob/newreference/license.txt)  |
-| [gzip](../workloads/compression/gzip.md) | pbzip2 compression | linux-x64, linux-arm64 | [GPL](https://www.gnu.org/software/gzip/)  |
-| [HPCG](../workloads/hpcg/hpcg.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [Custom](https://github.com/hpcg-benchmark/hpcg/blob/master/COPYING)  |
-| [HPLinpack](../workloads/hplinpack/hplinpack.md) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
-| [LAPACK](../workloads/lapack/lapack.md) | Linear Equations | linux-x64, linux-arm64, win-x64, win-arm64 | [Custom](https://github.com/Reference-LAPACK/lapack/blob/master/LICENSE)  |
-| [Latte](../workloads/network-suite/network-suite.md) | Network latency | win-x64, win-arm64 | [MIT](https://github.com/microsoft/latte/blob/main/LICENSE)  |
-| [LMbench](../workloads/lmbench/lmbench.md) | Generic Memory | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |
-| [LZBench](https://github.com/inikep/lzbench ) | Compression/Streaming | linux-x64, linux-arm64, win-x64, win-arm64 | [None](https://github.com/inikep/lzbench)  |
-| [Memcached](../workloads/memcached/memcached.md) | Memcached Performance | linux-x64, linux-arm64 | [**memcached**:BSD-3](https://github.com/memcached/memcached/blob/master/LICENSE)<br/>[**Memtier**:GPL-2.0](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
-| [MLPerf](../workloads/mlperf/mlperf.md) | Machine learning | linux-x64 | [Custom](https://github.com/mlcommons/training/blob/master/LICENSE.md)  |
-| [NAS Parallel](../workloads/nasparallel/nasparallel.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [NASA-1.3](https://opensource.org/licenses/nasa1.3.php)  |
-| [Network ICMP Ping](../workloads/network-ping/network-ping.md) | Simple Network Ping | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/VirtualClient/blob/main/LICENSE)  |
-| [NTttcp](../workloads/network-suite/network-suite.md) | Network bandwidth | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/ntttcp/blob/main/LICENSE)  |
-| [OpenFOAM](../workloads/openfoam/openfoam.md) | Fluidmechanics | linux-x64, linux-arm64 | [Custom](https://github.com/OpenFOAM/OpenFOAM-10/blob/master/COPYING)  |
-| [OpenSSL](../workloads/openssl/openssl.md) | Cryptography | linux-x64, linux-arm64, win-x64 | [Apache-2.0](https://github.com/openssl/openssl/blob/master/LICENSE.txt)  |
-| [pbzip2](../workloads/compression/pbzip2.md) | pbzip2 compression | linux-x64, linux-arm64 | [BSD](http://compression.great-site.net/pbzip2/)  |
-| [PostgreSQL](../workloads/postgresql//postgresql.md) | Database | linux-x64, linux-arm64, win-x64 | [PostgreSQL](https://www.postgresql.org/about/licence/)
-| [Prime95](../workloads/prime95/prime95.md) | Prime number search | linux-x64 | [Custom](https://www.mersenne.org/legal/)  |
-| [Redis](../workloads/redis/redis.md) | Redis Performance | linux-x64, linux-arm64 | [**Redis**:BSD-3](https://github.com/redis/redis/blob/unstable/COPYING)<br/>[**Memtier**:GPL-2.0](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
-| [SockPerf](../workloads/network-suite/network-suite.md) | Network latency | linux-x64, linux-arm64 | [Custom](https://github.com/Mellanox/sockperf/blob/sockperf_v2/copying)  |
-| [SPECjvm](../workloads/specjvm/specjvm.md) | Java Runtime | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
-| [stressapptest](../workloads/stressapptest/stressapptest.md) | Fault Tolerance | linux-x64, linux-arm64 | [Apache-2.0](https://github.com/stressapptest/stressapptest/blob/master/NOTICE)  |
-| [stress-ng](../workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
-| [SuperBench](../workloads/superbenchmark/superbenchmark.md) | Machine learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
-| [Sysbench OLTP](../workloads/sysbench-oltp/sysbench-oltp.md) | MySQL Server Performance | linux-x64, linux-arm64 | [**Sysbench**:GPL-2.0](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[**MySQL**:GPL-2.0](https://www.mysql.com/about/legal/licensing/oem/) |
+| **Workload/Benchmark** | **Specialization** | **Supported Platforms/Architectures** | **License(s)** | 
+|------------------------|--------------------|---------------------------------------|----------------|
+| [7zip](https://microsoft.github.io/VirtualClient/docs/workloads/compression/7zip) | Compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html) |
+| [AspNetBench](https://microsoft.github.io/VirtualClient/docs/workloads/aspnetbench/aspnetbench) | ASP.NET Web Server.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE) |
+| [CoreMark](https://microsoft.github.io/VirtualClient/docs/workloads/coremark/coremark) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
+| [CoreMark Pro](https://microsoft.github.io/VirtualClient/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
+| [CPS](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
+| [DCGMI](https://microsoft.github.io/VirtualClient/docs/workloads/dcgmi/dcgmi.md)| GPU Qualification| linux-x64 | [Apache-2.0](https://github.com/NVIDIA/DCGM/blob/master/LICENSE)
+| [DeathStarBench](https://microsoft.github.io/VirtualClient/docs/workloads/deathstarbench/deathstarbench.md) | Docker Swarm/Container Microservices | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache-2.0](https://github.com/delimitrou/DeathStarBench/blob/master/LICENSE)  |
+| [DiskSpd](https://microsoft.github.io/VirtualClient/docs/workloads/diskspd/diskspd.md) | Disk I/O Performance | win-x64, win-arm64 | [MIT](https://github.com/microsoft/diskspd/blob/master/LICENSE)  |
+| [Flexible IO Tester (FIO)](https://microsoft.github.io/VirtualClient/docs/workloads/fio/fio.md) | Disk I/O Performance | linux-x64, linux-arm64, win-x64 | [GPL-2.0](https://github.com/axboe/fio/blob/master/COPYING)  |
+| [GeekBench5](https://microsoft.github.io/VirtualClient/docs/workloads/geekbench/) | CPU Performance | linux-x64, win-x64, win-arm64 | [End User License Required](https://www.primatelabs.com/legal/eula-v5.html) |
+| [Graph500](https://microsoft.github.io/VirtualClient/docs/workloads/graph500/graph500.md) | 3D Simulation | linux-x64, linux-arm64 | [Custom](https://github.com/graph500/graph500/blob/newreference/license.txt)  |
+| [Gzip](https://microsoft.github.io/VirtualClient/docs/workloads/compression/gzip.md) | Compression | linux-x64, linux-arm64 | [GPL](https://www.gnu.org/software/gzip/)  |
+| [HPCG](https://microsoft.github.io/VirtualClient/docs/workloads/hpcg/hpcg.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [Custom](https://github.com/hpcg-benchmark/hpcg/blob/master/COPYING)  |
+| [HPLinpack](https://microsoft.github.io/VirtualClient/docs/workloads/hplinpack/hplinpack.md) | Linear Equations | linux-x64, linux-arm64| [IBM](https://netlib.org/benchmark/hpl/IBM_LICENSE.TXT)  |
+| [LAPACK](https://microsoft.github.io/VirtualClient/docs/workloads/lapack/lapack.md) | Linear Equations | linux-x64, linux-arm64, win-x64, win-arm64 | [Custom](https://github.com/Reference-LAPACK/lapack/blob/master/LICENSE)  |
+| [Latte](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Latencies | win-x64, win-arm64 | [MIT](https://github.com/microsoft/latte/blob/main/LICENSE)  |
+| [LMbench](https://microsoft.github.io/VirtualClient/docs/workloads/lmbench/lmbench.md) | Memory Performance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/intel/lmbench/blob/master/COPYING)  |
+| [LZBench](https://microsoft.github.io/VirtualClient/docs/workloads/compression/lzbench) | Compression/Streaming | linux-x64, linux-arm64, win-x64, win-arm64 | [None](https://github.com/inikep/lzbench)  |
+| [Memcached](https://microsoft.github.io/VirtualClient/docs/workloads/memcached/memcached.md) | In-Memory Data Cache | linux-x64, linux-arm64 | [BSD-3 (Memcached)](https://github.com/memcached/memcached/blob/master/LICENSE)<br/>[GPL-2.0 (Memtier)](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
+| [MLPerf](https://microsoft.github.io/VirtualClient/docs/workloads/mlperf/mlperf.md) | Machine Learning | linux-x64 | [Custom](https://github.com/mlcommons/training/blob/master/LICENSE.md)  |
+| [NAS Parallel](https://microsoft.github.io/VirtualClient/docs/workloads/nasparallel/nasparallel.md) | High Performance Compute (HPC) | linux-x64, linux-arm64 | [NASA-1.3](https://opensource.org/licenses/nasa1.3.php)  |
+| [Network ICMP Ping](https://microsoft.github.io/VirtualClient/docs/workloads/network-ping/network-ping.md) | Network Latencies | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/VirtualClient/blob/main/LICENSE)  |
+| [NTttcp](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Bandwidth | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT](https://github.com/microsoft/ntttcp/blob/main/LICENSE)  |
+| [OpenFOAM](https://microsoft.github.io/VirtualClient/docs/workloads/openfoam/openfoam.md) | Computational Fluid Dynamics | linux-x64, linux-arm64 | [Custom](https://github.com/OpenFOAM/OpenFOAM-10/blob/master/COPYING)  |
+| [OpenSSL](https://microsoft.github.io/VirtualClient/docs/workloads/openssl/openssl.md) | Cryptography/Encryption | linux-x64, linux-arm64, win-x64 | [Apache-2.0](https://github.com/openssl/openssl/blob/master/LICENSE.txt)  |
+| [Pbzip2](https://microsoft.github.io/VirtualClient/docs/workloads/compression/pbzip2.md) | Compression | linux-x64, linux-arm64 | [BSD](http://compression.great-site.net/pbzip2/)  |
+| [PostgreSQL](https://microsoft.github.io/VirtualClient/docs/workloads/postgresql//postgresql.md) | Relational Database Performance | linux-x64, linux-arm64, win-x64 | [PostgreSQL](https://www.postgresql.org/about/licence/)
+| [Prime95](https://microsoft.github.io/VirtualClient/docs/workloads/prime95/prime95.md) | CPU Stress | linux-x64 | [Custom](https://www.mersenne.org/legal/)  |
+| [Redis](https://microsoft.github.io/VirtualClient/docs/workloads/redis/redis.md) | In-Memory Data Cache | linux-x64, linux-arm64 | [BSD-3 (Redis)](https://github.com/redis/redis/blob/unstable/COPYING)<br/>[GPL-2.0 (Memtier)](https://github.com/RedisLabs/memtier_benchmark/blob/master/COPYING)  |
+| [SockPerf](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Latencies | linux-x64, linux-arm64 | [Custom](https://github.com/Mellanox/sockperf/blob/sockperf_v2/copying)  |
+| [SPEC CPU 2017, SPECrate Integer](https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/) | Precision CPU, Integer Calculations | linux-x64, linux-arm64 | [End User License Required](https://www.spec.org/cpu2017/Docs/licenses.html) |
+| [SPEC CPU 2017, SPECrate Floating Point](https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/) | Precision CPU, Floating-point Calculations | linux-x64, linux-arm64 | [End User License Required](https://www.spec.org/cpu2017/Docs/licenses.html) |
+| [SPEC CPU 2017, SPECspeed Integer](https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/) | Precision CPU, Integer Calculations | linux-x64, linux-arm64 | [End User License Required](https://www.spec.org/cpu2017/Docs/licenses.html) |
+| [SPEC CPU 2017, SPECspeed Floating Point](https://microsoft.github.io/VirtualClient/docs/workloads/speccpu/) | Precision CPU, Floating-point Calculations | linux-x64, linux-arm64 | [End User License Required](https://www.spec.org/cpu2017/Docs/licenses.html) |
+| [SPEC JBB 2015, SPECjbb](https://microsoft.github.io/VirtualClient/docs/workloads/specjbb/) | Java Server | linux-x64, linux-arm64, win-x64, win-arm64 | [End User License Required](https://www.spec.org/jbb2015/) |
+| [SPEC JVM 2008, SPECjvm](https://microsoft.github.io/VirtualClient/docs/workloads/specjvm/specjvm.md) | Java Runtime Performance | linux-x64, linux-arm64, win-x64, win-arm64 | [SPEC](https://www.spec.org/spec/docs/SPEC_General_License.pdf)  |
+| [SPEC Power 2008, SPECpower](https://microsoft.github.io/VirtualClient/docs/workloads/specpower/) | High precision, steady-state CPU usage | linux-x64, linux-arm64, win-x64, win-arm64 | [End User License Required](https://www.spec.org/power_ssj2008/) |
+| [SPECviewperf 2020, SPECview](../workloads/specview/specview.md) | 3D graphics performance | win-x64 | [SPEC](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-0/)  |
+| [Stressapptest](https://microsoft.github.io/VirtualClient/docs/workloads/stressapptest/stressapptest.md) | Fault Tolerance | linux-x64, linux-arm64 | [Apache-2.0](https://github.com/stressapptest/stressapptest/blob/master/NOTICE)  |
+| [Stress-ng](https://microsoft.github.io/VirtualClient/docs/workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
+| [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark/superbenchmark.md) | Machine Learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
+| [Sysbench OLTP w/MySQL](https://microsoft.github.io/VirtualClient/docs/workloads/sysbench-oltp/sysbench-oltp.md) | Relational Database Performance | linux-x64, linux-arm64 | [GPL-2.0 (Sysbench)](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[GPL-2.0 (MySQL)](https://www.mysql.com/about/legal/licensing/oem/) |
 
-## System Monitoring Facilities
+## Supported System Monitoring Facilities
 The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client.
 
 :::info
 Certain monitoring facilities are only available on specific hardware because they expect specific tools/hardware on the system (e.g. ipmiutil, nvidia monitors).
 :::
 
-| Monitoring Category          | Monitor                 | Dependency                    | Supported Platforms/Architectures          | Notes |
-|------------------------------|-------------------------|--------------------------------------------|--------------------------------------------|-------|
-| Performance/Reliability      | Performance Counters    | None     | linux-x64, linux-arm64, win-x64, win-arm64 | A standard set of performance counters is captured for all executions of the application: [Counters Captured](../monitors/0100-perf-counter-metrics.md) |
-
-:::tip More workloads and monitors are coming
-VirtualClient is just migrated from MSFT inner-source to GitHub. We are still reviewing the feasibility of some internal workloads and monitors. We are also
-implementing a way to safely release automation for paid/commercial workloads (SPECcpu, SPECjbb, GeekBench5, 3DMark). They will come to VC in the future.
-:::
-
+| **Monitor** | **Specialization** | **Supported Platforms/Architectures** | **License(s)**  | 
+|-------------|--------------------|---------------------------------------|-----------------|
+| [Nvidia SMI](https://microsoft.github.io/VirtualClient/docs/monitors/0300-nvidia-smi/)                     | Nvidia GPUs          | linux-x64, linux-arm64 | |
+| [Performance Counters](https://microsoft.github.io/VirtualClient/docs/monitors/0100-perf-counter-metrics/) | Performance Counters | linux-x64, linux-arm64, win-x64, win-arm64 | |
 
 ## Data Collection Notice
 The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services

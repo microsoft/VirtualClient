@@ -12,6 +12,7 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -215,8 +216,6 @@ namespace VirtualClient.Actions
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.InitializationStarted", telemetryContext);
 
-            this.ThrowIfPlatformNotSupported();
-
             await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -393,6 +392,24 @@ namespace VirtualClient.Actions
 
         }
 
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64);
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
         private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken, string context = null)
         {
             this.MetadataContract.AddForScenario(
@@ -458,7 +475,7 @@ namespace VirtualClient.Actions
 
         private void ReplaceGPUConfigFilesToSupportAdditionalGPUs()
         {
-            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "gpuconfigfiles")))
+            foreach (string file in this.fileSystem.Directory.GetFiles(this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles")))
             {
                 this.fileSystem.File.Copy(
                     file,
@@ -466,18 +483,8 @@ namespace VirtualClient.Actions
                     true);
             }
 
-            foreach (string directory in this.fileSystem.Directory.GetDirectories(this.Combine(this.NvidiaDirectory, "configs"), "*", SearchOption.AllDirectories))
-            {
-                string newDirectory = this.Combine(Path.GetDirectoryName(directory), Path.GetFileName(directory).ToLowerInvariant());
-
-                if (directory != newDirectory)
-                {
-                    this.fileSystem.Directory.Move(directory, newDirectory);
-                }
-            }
-
             foreach (string directory in this.fileSystem.Directory.GetDirectories(
-                this.PlatformSpecifics.GetScriptPath("mlperf", "gpuconfigfiles"), "*", SearchOption.AllDirectories))
+                this.PlatformSpecifics.GetScriptPath("mlperf", "GPUConfigFiles"), "*", SearchOption.AllDirectories))
             {
                 foreach (string subDirectory in this.fileSystem.Directory.GetDirectories(directory))
                 {
@@ -489,23 +496,6 @@ namespace VirtualClient.Actions
                         true);
                     }
                 }
-            }
-        }
-
-        private void ThrowIfPlatformNotSupported()
-        {
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The MLPerf benchmark workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
             }
         }
 

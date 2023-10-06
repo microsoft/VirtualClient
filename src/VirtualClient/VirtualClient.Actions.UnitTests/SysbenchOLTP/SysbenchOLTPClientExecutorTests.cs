@@ -34,8 +34,6 @@ namespace VirtualClient.Actions
         private ClientInstance clientInstance;
         private string scriptPath;
         private string mockPackagePath;
-        private int threadCount;
-        private int recordCount;
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -49,7 +47,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(SysbenchOLTPClientExecutor.DatabaseName), "sbtest" },
-                { nameof(SysbenchOLTPClientExecutor.DurationSecs), "10" },
+                { nameof(SysbenchOLTPClientExecutor.Duration), "00:00:10" },
                 { nameof(SysbenchOLTPClientExecutor.Workload), "oltp_read_write" },
                 { nameof(SysbenchOLTPClientExecutor.PackageName), "sysbench" },
             };
@@ -77,9 +75,8 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.threadCount = Environment.ProcessorCount * 8;
-            int recordsExponent = (int)Math.Log2(Environment.ProcessorCount) + 2;
-            this.recordCount = (int)Math.Pow(10, recordsExponent);
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
         }
 
         [Test]
@@ -90,21 +87,19 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                NumTables = -1,
+                RecordCount = -1
             }));
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -156,15 +151,11 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -217,9 +208,6 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            int recordsExponent = (int)Math.Log2(Environment.ProcessorCount);
-            int records = (int)Math.Pow(10, recordsExponent);
-
             SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
             {
                 [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
@@ -230,25 +218,22 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                DatabaseInitialized = false,
+                SysbenchInitialized = false
             }));
 
             this.mockFixture.Parameters["DatabaseScenario"] = "Balanced";
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
+                $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient/scripts/sysbencholtp\"",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo {this.scriptPath}/balanced-client.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size={records} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -290,18 +275,15 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchOLTPClientExecutorSkipsInitializationOfTheWorkloadForExecutionAfterTheFirstRun()
+        public async Task SysbenchOLTPClientExecutorSkipsInitializationOfTheBenchmarkForExecutionAfterTheFirstRun()
         {
             SetupDefaultBehavior();
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
             };
 
             int commandNumber = 0;
@@ -339,7 +321,8 @@ namespace VirtualClient.Actions
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                DatabaseInitialized = false,
+                NumTables = -1,
+                RecordCount = -1
             }));
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -353,19 +336,139 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
+            this.mockFixture.Parameters["SkipInitialize"] = true;
+
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
                 DatabaseScenarioInitialized = true,
-                DatabaseInitialized = true,
+                NumTables = 10,
+                RecordCount = 100000
             }));
 
             string[] expectedCommands =
             {
-                $"sudo chmod +x \"{this.scriptPath}/balanced-server.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/balanced-client.sh\"",
-                $"sudo chmod +x \"{this.scriptPath}/in-memory.sh\"",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads={this.threadCount} --tables=10 --table-size={this.recordCount} --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+
+                return process;
+            };
+
+            using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorPreparesWhenSkipInitializeIsFalse()
+        {
+            SetupDefaultBehavior();
+
+            this.mockFixture.Parameters["SkipInitialize"] = false;
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = true,
+                DatabaseScenarioInitialized = true,
+                NumTables = 10,
+                RecordCount = 100000
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
+            };
+
+            int commandNumber = 0;
+            bool commandExecuted = false;
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+
+                string expectedCommand = expectedCommands[commandNumber];
+                if (expectedCommand == $"{exe} {arguments}")
+                {
+                    commandExecuted = true;
+                }
+                Assert.IsTrue(commandExecuted);
+                commandExecuted = false;
+                commandNumber += 1;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+
+                return process;
+            };
+
+            using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        [Test]
+        public async Task SysbenchOLTPClientExecutorPreparesWhenDatabaseStateUninitialized()
+        {
+            SetupDefaultBehavior();
+
+            this.mockFixture.Parameters["SkipInitialize"] = true;
+
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
+            {
+                SysbenchInitialized = true,
+                DatabaseScenarioInitialized = true,
+                NumTables = -1,
+                RecordCount = -1
+            }));
+
+            string[] expectedCommands =
+            {
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
             };
 
             int commandNumber = 0;

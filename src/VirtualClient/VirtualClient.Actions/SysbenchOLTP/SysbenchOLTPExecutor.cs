@@ -91,7 +91,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.CheckPlatformSupport();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -141,24 +140,27 @@ namespace VirtualClient.Actions
         /// </summary>
         protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
         {
-            if (this.Platform == PlatformID.Unix)
+            // store state with initialization status & record/table counts, if does not exist already
+
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+                ?? new SysbenchOLTPState();
+
+            if (!state.ExecutablesInitialized)
             {
-                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+                // install sysbench using repo scripts
+                if (this.Platform == PlatformID.Unix && this.DatabaseScenario != SysbenchOLTPScenario.Default)
+                {
+                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balanced-server.sh"),
-                    this.Platform,
-                    cancellationToken);
+                    await this.SystemManager.MakeFilesExecutableAsync(
+                        scriptsDirectory,
+                        this.Platform,
+                        cancellationToken);
+                }
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "balanced-client.sh"),
-                    this.Platform,
-                    cancellationToken);
+                state.ExecutablesInitialized = true;
 
-                await this.SystemManager.MakeFileExecutableAsync(
-                    this.Combine(scriptsDirectory, "in-memory.sh"),
-                    this.Platform,
-                    cancellationToken);
+                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
         }
 
@@ -205,21 +207,22 @@ namespace VirtualClient.Actions
             return output;
         }
 
-        private void CheckPlatformSupport()
+        /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
         {
-            switch (this.Platform)
+            bool isSupported = base.IsSupported()
+                && (this.Platform == PlatformID.Unix)
+                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+
+            if (!isSupported)
             {
-                case PlatformID.Unix:
-                    break;
-                default:
-                    throw new WorkloadException(
-                        $"The Sysbench OLTP workload is currently not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}." +
-                        $" Supported platform/architectures include: " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
-                        ErrorReason.PlatformNotSupported);
+                this.Logger.LogNotSupported("SysbenchOLTP", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
+
+            return isSupported;
         }
 
         private async Task CheckDistroSupportAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -267,6 +270,19 @@ namespace VirtualClient.Actions
                 }
             }
 
+            public bool ExecutablesInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.ExecutablesInitialized), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.ExecutablesInitialized)] = value;
+                }
+            }
+
             public bool DatabaseScenarioInitialized
             {
                 get
@@ -293,16 +309,29 @@ namespace VirtualClient.Actions
                 }
             }
 
-            public bool DatabaseInitialized
+            public int NumTables
             {
-                get
+                get 
                 {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseInitialized), false);
+                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.NumTables), -1);
                 }
 
                 set
                 {
-                    this.Properties[nameof(SysbenchOLTPState.DatabaseInitialized)] = value;
+                    this.Properties[nameof(SysbenchOLTPState.NumTables)] = value;
+                }
+            }
+
+            public int RecordCount
+            {
+                get 
+                {
+                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.RecordCount), -1);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.RecordCount)] = value;
                 }
             }
         }

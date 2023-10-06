@@ -226,11 +226,10 @@ namespace VirtualClient.Contracts.Proxy
 
                 return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
-                    HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken)
-                        .ConfigureAwait(false);
+                    HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken);
 
                     return response;
-                }).ConfigureAwait(false);
+                });
             }
         }
 
@@ -245,11 +244,10 @@ namespace VirtualClient.Contracts.Proxy
 
                 return await (retryPolicy ?? defaultPostRetryPolicy).ExecuteAsync(async () =>
                 {
-                    HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken)
-                        .ConfigureAwait(false);
+                    HttpResponseMessage response = await this.RestClient.PostAsync(requestUri, requestBody, cancellationToken);
 
                     return response;
-                }).ConfigureAwait(false);
+                });
             }
         }
 
@@ -293,7 +291,7 @@ namespace VirtualClient.Contracts.Proxy
                 }
 
                 return shouldRetry;
-            }).WaitAndRetryAsync(10, retryWaitInterval);
+            }).WaitAndRetryAsync(5, retryWaitInterval);
         }
 
         private static bool IsRangeEnabled(HttpResponseMessage response)
