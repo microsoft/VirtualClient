@@ -24,78 +24,81 @@ variables:
   ENABLE_PRS_DELAYSIGN: 1
   GitVersion.SemVer: ''
 
-jobs:
-- job: BuildPackage
-  pool:
-    vmImage: 'ubuntu-latest'
+stages:
+- stage: BuildPackage
+  jobs:
+  - job: BuildPackage
+    pool:
+      vmImage: 'ubuntu-latest'
 
-  steps:
-  - task: UseDotNet@2
-    continueOnError: false
-    inputs:
-      packageType: 'sdk'
-      version: '6.0.406'
-      useGlobalJson: false
-      performMultiLevelLookup: true
-      workingDirectory: '$(Build.SourcesDirectory)'
+    steps:
+    - task: UseDotNet@2
+      continueOnError: false
+      inputs:
+        packageType: 'sdk'
+        version: '6.0.406'
+        useGlobalJson: false
+        performMultiLevelLookup: true
+        workingDirectory: '$(Build.SourcesDirectory)'
 
-  - script: chmod -R +x $(Build.SourcesDirectory)
-    displayName: 'Allow scripts to be executable on Linux'
+    - script: chmod -R +x $(Build.SourcesDirectory)
+      displayName: 'Allow scripts to be executable on Linux'
 
-    # Ensure the artifact output/bin/obj directories are clean.
-  # - script: $(Build.SourcesDirectory)/clean.cmd
-    # displayName: 'Clean Output Directories'
-    
-    # Build the repo.
-  - script: $(Build.SourcesDirectory)/build.sh $(VcVersion)
-    displayName: 'Build Solutions'
-
-  - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
-    displayName: 'Build deb package for linux x64'
-
-  - task: EsrpCodeSigning@1
-    inputs:
-      ConnectedServiceName: 'virtualclient-esrp'
-      FolderPath: '$(Build.SourcesDirectory)/out/packages'
-      Pattern: '*.deb'
-      signConfigType: 'inlineSignParams'
-      inlineOperation: |
-        [
-            {
-                "KeyCode" : "CP-450779-Pgp",
-                "OperationCode" : "LinuxSign",
-                "Parameters" : {},
-                "ToolName" : "sign",
-                "ToolVersion" : "1.0"
-            }
-        ]
-      SessionTimeout: '60'
-      MaxConcurrency: '50'
-      MaxRetryAttempts: '5'
-
-
-- job: PublishPackage
-  pool:
-    vmImage: 'ubuntu-latest'
-  container: pmc-cli
-
-  steps:
-  - task: PipAuthenticate@1
-    inputs:
-      artifactFeeds: 'CRC-Dev'
-  - script: pip install pmc-cli
+      # Ensure the artifact output/bin/obj directories are clean.
+    # - script: $(Build.SourcesDirectory)/clean.cmd
+      # displayName: 'Clean Output Directories'
       
-  - task: AzureKeyVault@2
-    inputs:
-      ConnectedServiceName: 'VirtualClient-AzureRM-AME'
-      KeyVaultName: 'junoprod01vault01'
-      SecretsFilter: 'virtualclient'
-      RunAsPreJob: false
-  - task: PublishLinuxPackagesPMC@0
-    inputs:
-      profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
-      msal_SNIAuth: 'msal-sniauth'
-      msal_cert: virtualclient # notice: no single quotation marks
-      msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
-      package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
-      repository: 'virtualclient'
+      # Build the repo.
+    - script: $(Build.SourcesDirectory)/build.sh $(VcVersion)
+      displayName: 'Build Solutions'
+
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
+      displayName: 'Build deb package for linux x64'
+
+    - task: EsrpCodeSigning@1
+      inputs:
+        ConnectedServiceName: 'virtualclient-esrp'
+        FolderPath: '$(Build.SourcesDirectory)/out/packages'
+        Pattern: '*.deb'
+        signConfigType: 'inlineSignParams'
+        inlineOperation: |
+          [
+              {
+                  "KeyCode" : "CP-450779-Pgp",
+                  "OperationCode" : "LinuxSign",
+                  "Parameters" : {},
+                  "ToolName" : "sign",
+                  "ToolVersion" : "1.0"
+              }
+          ]
+        SessionTimeout: '60'
+        MaxConcurrency: '50'
+        MaxRetryAttempts: '5'
+
+
+  - job: PublishPackage
+    dependsOn: BuildPackage
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: pmc-cli
+
+    steps:
+    - task: PipAuthenticate@1
+      inputs:
+        artifactFeeds: 'CRC-Dev'
+    - script: pip install pmc-cli
+        
+    - task: AzureKeyVault@2
+      inputs:
+        ConnectedServiceName: 'VirtualClient-AzureRM-AME'
+        KeyVaultName: 'junoprod01vault01'
+        SecretsFilter: 'virtualclient'
+        RunAsPreJob: false
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: virtualclient # notice: no single quotation marks
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
+        repository: 'virtualclient-apt'
