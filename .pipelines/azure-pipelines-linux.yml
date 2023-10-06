@@ -28,8 +28,6 @@ stages:
   - job: BuildPackage
     pool:
       vmImage: 'ubuntu-latest'
-    variables:
-      ob_outputDirectory: '$(Build.SourcesDirectory)/out/packages'
 
     steps:
     - task: UseDotNet@2
@@ -55,6 +53,9 @@ stages:
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
       displayName: 'Build deb package for linux x64'
 
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh $(VcVersion)
+      displayName: 'Build deb package for linux arm64'
+
     - task: EsrpCodeSigning@1
       inputs:
         ConnectedServiceName: 'virtualclient-esrp'
@@ -77,7 +78,7 @@ stages:
         
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/out/packages'
+        pathToPublish: '$(Build.SourcesDirectory)/out/packages/*.deb'
         artifactName: drop
 
 
@@ -99,7 +100,7 @@ stages:
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient-cert-pem'
         RunAsPreJob: true
-    - script: echo $(virtualclient-cert-pem)
+    - script: echo $(virtualclient-cert-pem) | cut -c 1-5
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
