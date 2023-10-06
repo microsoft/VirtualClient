@@ -9,11 +9,20 @@ trigger:
     
 pr: none
 
-pool:
-  vmImage: ubuntu-latest
+resources:
+  containers:
+  - container: pmc-cli
+    image: 'mcr.microsoft.com/pmc/pmc-cli:latest'
+    options: --entrypoint=""
+
+jobs:
+- job: PublishPackage
+  pool:
+    vmImage: 'ubuntu-latest'
+  container: pmc-cli
 
 variables:
-  VcVersion : 1.10.6
+  VcVersion : 1.11.0
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
@@ -26,6 +35,13 @@ steps:
   inputs:
     artifactFeeds: 'CRC-Dev'
 - script: pip install pmc-cli
+
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'CRC-AIR-AME-Infra'
+    KeyVaultName: 'junoprod01vault01'
+    SecretsFilter: 'virtualclient'
+    RunAsPreJob: false
 - task: UseDotNet@2
   continueOnError: false
   inputs:
@@ -73,19 +89,11 @@ steps:
     MaxConcurrency: '50'
     MaxRetryAttempts: '5'
 
-
-  - task: AzureKeyVault@2
-    inputs:
-      azureSubscription: 'CRC-AIR-AME-Infra'
-      KeyVaultName: 'YOUR_KEYVAULT_NAME'
-      SecretsFilter: 'YOUR_SECRETS_FILTER_NAME'
-      RunAsPreJob: false
-  
-  - task: PublishLinuxPackagesPMC@0
-    inputs:
-      profile: 'prod' # or tux-dev or ppe depending on what you selected
-      msal_SNIAuth: 'msal-sniauth'
-      msal_cert: $(YOUR_SECRETS_FILTER_NAME) # notice: no single quotation marks
-      msal_client_ID: 'YOUR_MSAL_CLIENT_ID'
-      package_path: 'YOUR_PACKAGE_PATH'
-      repository: 'YOUR_REPO_NAME_OR_ID'
+- task: PublishLinuxPackagesPMC@0
+  inputs:
+    profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
+    msal_SNIAuth: 'msal-sniauth'
+    msal_cert: virtualclient # notice: no single quotation marks
+    msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+    package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
+    repository: 'virtualclient'

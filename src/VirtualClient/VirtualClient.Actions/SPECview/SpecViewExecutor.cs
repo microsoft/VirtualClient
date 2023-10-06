@@ -33,7 +33,7 @@ namespace VirtualClient.Actions
         private ISystemManagement systemManagement;
 
         /// <summary>
-        /// Constructor
+        /// Constructor for <see cref="SpecViewExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
