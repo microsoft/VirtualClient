@@ -24,20 +24,12 @@ variables:
   ENABLE_PRS_DELAYSIGN: 1
   GitVersion.SemVer: ''
 
-
 jobs:
 - job: PublishPackage
   pool:
     vmImage: 'ubuntu-latest'
-  container: pmc-cli
 
   steps:
-  - task: PipAuthenticate@1
-    inputs:
-      artifactFeeds: 'CRC-Dev'
-  - script: pip install pmc-cli
-
-
   - task: UseDotNet@2
     continueOnError: false
     inputs:
@@ -61,10 +53,6 @@ jobs:
   - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
     displayName: 'Build deb package for linux x64'
 
-    # Build NuGet packages for the services/agents in the repo.
-  # - script: $(Build.SourcesDirectory)/build-packages.cmd $(VcVersion)$(VersionSuffix)
-    # displayName: 'Build NuGet Packages'
-
   - task: EsrpCodeSigning@1
     inputs:
       ConnectedServiceName: 'virtualclient-esrp'
@@ -84,6 +72,18 @@ jobs:
       SessionTimeout: '60'
       MaxConcurrency: '50'
       MaxRetryAttempts: '5'
+
+
+- job: PublishPackage
+  pool:
+    vmImage: 'ubuntu-latest'
+  container: pmc-cli
+
+  steps:
+  - task: PipAuthenticate@1
+    inputs:
+      artifactFeeds: 'CRC-Dev'
+  - script: pip install pmc-cli
       
   - task: AzureKeyVault@2
     inputs:
