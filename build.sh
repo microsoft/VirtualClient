@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ -n "$1" ]; then
+    VCBuildVersion="$1"
+fi
+
+if [ -z "$VCBuildVersion" ]; then
+    VCBuildVersion="0.0.1"
+fi
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --build-all)

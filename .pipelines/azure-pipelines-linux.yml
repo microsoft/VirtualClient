@@ -83,6 +83,7 @@ stages:
 
 
   - job: PublishPackage
+    condition: false
     dependsOn: BuildPackage
     pool:
       vmImage: 'ubuntu-latest'
@@ -100,7 +101,7 @@ stages:
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient-cert-pem'
         RunAsPreJob: true
-    - script: echo $(virtualclient-cert-pem) | cut -c 1-5
+        
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected

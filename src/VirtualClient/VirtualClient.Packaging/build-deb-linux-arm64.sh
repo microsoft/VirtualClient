@@ -9,7 +9,7 @@ fi
 
 # Define variables
 PACKAGE_NAME="virtualclient"
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../../"
+REPO_ROOT="$(cd "$(dirname "$0")" && pwd)/../../../"
 BUILD_DIR="$REPO_ROOT/out/bin/Debug/ARM64/VirtualClient.Main/net6.0/linux-arm64/publish/"
 DEB_DIR="$REPO_ROOT/out/packages/deb_arm64"
 OUT_DIR="$REPO_ROOT/out/packages/"
@@ -21,7 +21,7 @@ mkdir -p "$DEB_DIR/DEBIAN"
 cat > "$DEB_DIR/DEBIAN/control" << EOF
 Package: $PACKAGE_NAME
 Version: $PACKAGE_VERSION
-Architecture: all
+Architecture: arm64
 Maintainer: Virtual Client Team <virtualclient@microsoft.com>
 Description: VirtualClient, the open sourced workload automation.
 EOF
