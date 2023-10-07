@@ -47,7 +47,7 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
-    - script: $(Build.SourcesDirectory)/build.sh $(VcVersion)
+    - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
       displayName: 'Build Solutions'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
@@ -101,7 +101,7 @@ stages:
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient-cert-pem'
         RunAsPreJob: true
-        
+
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
