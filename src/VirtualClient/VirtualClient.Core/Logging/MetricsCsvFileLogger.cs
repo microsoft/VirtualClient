@@ -17,6 +17,7 @@ namespace VirtualClient.Logging
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -24,8 +25,6 @@ namespace VirtualClient.Logging
     /// </summary>
     public class MetricsCsvFileLogger : ILogger, IFlushableChannel, IDisposable
     {
-        internal static readonly IEnumerable<MetricsCsvField> CsvFields;
-
         private static readonly AssemblyName LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
         private static readonly AssemblyName ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
@@ -43,39 +42,6 @@ namespace VirtualClient.Logging
         private long maxFileSizeBytes;
         private SemaphoreSlim semaphore;
         private bool disposed;
-
-        static MetricsCsvFileLogger()
-        {
-            MetricsCsvFileLogger.LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-            MetricsCsvFileLogger.ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
-            MetricsCsvFileLogger.CsvFields = new List<MetricsCsvField>
-            {
-                new MetricsCsvField("Timestamp", (ctx) => DateTime.UtcNow.ToString("o")),
-                new MetricsCsvField("ExperimentId", "experimentId"),
-                new MetricsCsvField("ClientId", "agentId"),
-                new MetricsCsvField("Profile", "executionProfile"),
-                new MetricsCsvField("ProfileName", "executionProfileName"),
-                new MetricsCsvField("ToolName", "toolName"),
-                new MetricsCsvField("ScenarioName", "scenarioName"),
-                new MetricsCsvField("ScenarioStartTime", "scenarioStartTime"),
-                new MetricsCsvField("ScenarioEndTime", "scenarioEndTime"),
-                new MetricsCsvField("MetricCategorization", "metricCategorization"),
-                new MetricsCsvField("MetricName", "metricName"),
-                new MetricsCsvField("MetricValue", "metricValue"),
-                new MetricsCsvField("MetricUnit", "metricUnit"),
-                new MetricsCsvField("MetricDescription", "metricDescription"),
-                new MetricsCsvField("MetricRelativity", "metricRelativity"),
-                new MetricsCsvField("ExecutionSystem", "executionSystem"),
-                new MetricsCsvField("OperatingSystemPlatform", "operatingSystemPlatform"),
-                new MetricsCsvField("OperationId", (ctx) => ctx.ActivityId.ToString()),
-                new MetricsCsvField("OperationParentId", (ctx) => ctx.ParentActivityId.ToString()),
-                new MetricsCsvField("AppHost", propertyValue: Environment.MachineName),
-                new MetricsCsvField("AppName", propertyValue: MetricsCsvFileLogger.ExecutingAssembly.Name),
-                new MetricsCsvField("AppVersion", propertyValue: MetricsCsvFileLogger.ExecutingAssembly.Version.ToString()),
-                new MetricsCsvField("AppTelemetryVersion", propertyValue: MetricsCsvFileLogger.LoggingAssembly.Version.ToString()),
-                new MetricsCsvField("Tags", "tags")
-            };
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetricsCsvFileLogger"/> class.
@@ -169,7 +135,7 @@ namespace VirtualClient.Logging
         {
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.Append(Environment.NewLine);
-            messageBuilder.AppendJoin(',', MetricsCsvFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
+            messageBuilder.Append(context.ToCsvRow());
 
             return messageBuilder.ToString();
         }
@@ -233,7 +199,7 @@ namespace VirtualClient.Logging
                                 // We need to ensure that the CSV headers are written to the file first. Here, we are using
                                 // a simple technique to check if the file (at the path provided) was initialized or not.
                                 // The very first time the file is opened, the stream will have a length of zero bytes.
-                                string columnHeaders = string.Join(",", MetricsCsvFileLogger.CsvFields.Select(field => $"\"{field.ColumnName}\""));
+                                string columnHeaders = EventContextLoggingExtensions.GetCsvHeaders();
                                 fileStream.Write(MetricsCsvFileLogger.ContentEncoding.GetBytes(columnHeaders));
                             }
 
@@ -275,63 +241,6 @@ namespace VirtualClient.Logging
             {
                 this.filePaths.AddRange(matchingFiles.OrderBy(file => file));
             }
-        }
-    }
-
-    internal class MetricsCsvField
-    {
-        // We are very purposefully using member variables here vs. properties to keep
-        // the evaluation of the EventContext objects as efficient as possible
-        // (i.e. avoiding unnecessary method callstacks).
-        private string propertyName;
-        private string propertyValue;
-        private Func<EventContext, string> propertyQuery;
-
-        public MetricsCsvField(string columnName, Func<EventContext, string> query)
-        {
-            this.ColumnName = columnName;
-            this.propertyQuery = query;
-        }
-
-        public MetricsCsvField(string columnName, string propertyName = null, string propertyValue = null)
-        {
-            this.ColumnName = columnName;
-            this.propertyName = propertyName;
-            this.propertyValue = propertyValue;
-        }
-
-        public string ColumnName { get; }
-
-        public string GetFieldValue(EventContext context)
-        {
-            string value = null;
-            if (context?.Properties != null)
-            {
-                if (this.propertyValue != null)
-                {
-                    value = this.propertyValue;
-                }
-                else if (this.propertyName != null)
-                {
-                    if (context.Properties.TryGetValue(this.propertyName, out object propertyValue) && propertyValue != null)
-                    {
-                        if (propertyValue is DateTime)
-                        {
-                            value = ((DateTime)propertyValue).ToString("o");
-                        }
-                        else
-                        {
-                            value = propertyValue.ToString();
-                        }
-                    }
-                }
-                else if (this.propertyQuery != null)
-                {
-                    value = this.propertyQuery.Invoke(context);
-                }
-            }
-
-            return value;
         }
     }
 }

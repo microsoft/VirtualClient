@@ -17,6 +17,7 @@ namespace VirtualClient.Logging
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
@@ -24,7 +25,6 @@ namespace VirtualClient.Logging
     /// </summary>
     public class OcpFileLogger : ILogger, IFlushableChannel, IDisposable
     {
-        internal static readonly IEnumerable<MetricsCsvField> CsvFields;
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;
@@ -142,12 +142,10 @@ namespace VirtualClient.Logging
             }
         }
 
-
         private static string WriteMeasurementStart(EventContext context)
         {
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.Append(Environment.NewLine);
-            messageBuilder.AppendJoin(',', OcpFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
 
             return messageBuilder.ToString();
         }
@@ -192,10 +190,7 @@ namespace VirtualClient.Logging
                         {
                             if (fileStream.Length == 0)
                             {
-                                // We need to ensure that the CSV headers are written to the file first. Here, we are using
-                                // a simple technique to check if the file (at the path provided) was initialized or not.
-                                // The very first time the file is opened, the stream will have a length of zero bytes.
-                                string columnHeaders = string.Join(",", OcpFileLogger.CsvFields.Select(field => $"\"{field.ColumnName}\""));
+                                string columnHeaders = EventContextLoggingExtensions.GetCsvHeaders();
                                 fileStream.Write(OcpFileLogger.ContentEncoding.GetBytes(columnHeaders));
                             }
 
