@@ -109,4 +109,4 @@ stages:
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
-        repository: 'virtualclient-apt'
+        repository: 'deb-test-apt'
