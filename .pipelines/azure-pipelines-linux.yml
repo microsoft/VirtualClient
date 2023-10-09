@@ -83,7 +83,7 @@ stages:
 
 
   - job: PublishPackage
-    condition: false
+    # condition: false
     dependsOn: BuildPackage
     pool:
       vmImage: 'ubuntu-latest'
