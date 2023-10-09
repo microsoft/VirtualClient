@@ -86,7 +86,7 @@ namespace VirtualClient.Dependencies
                     ErrorReason.DependencyNotFound);
             }
 
-            if (await this.GenerateMountPointsAsync(filteredDisks, this.systemManager, cancellationToken).ConfigureAwait(false))
+            if (await this.GenerateMountPointsAsync(filteredDisks, this.systemManager, cancellationToken))
             {
                 // Refresh the disks to pickup the mount point changes.
                 await Task.Delay(1000).ConfigureAwait(false);
@@ -98,8 +98,6 @@ namespace VirtualClient.Dependencies
             }
 
             filteredDisks.ToList().ForEach(disk => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk}'"));
-
-            string accessPath = filteredDisks.OrderBy(d => d.Index).First().GetPreferredAccessPath(this.Platform);
         }
 
         /// <summary>

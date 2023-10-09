@@ -19,6 +19,7 @@ namespace VirtualClient.Dependencies
     {
         private MockFixture mockFixture;
         private IEnumerable<Disk> disks;
+        private int diskVolumeCount = 0;
 
         [SetUp]
         public void SetupTest()
@@ -29,7 +30,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        public async Task MountDisksMountsTheDisksWithUserProvidedName()
+        public async Task MountDisksMountsTheExpectedNumberOfDisks()
         {
             this.SetupDefaultMockBehaviors();
 
@@ -37,10 +38,13 @@ namespace VirtualClient.Dependencies
 
             using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
-                await diskMounter.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+                await diskMounter.ExecuteAsync(CancellationToken.None);
 
-                Assert.IsNotEmpty(disksMounted);
-                CollectionAssert.AreEquivalent(this.disks.Where(disk => !disk.Volumes.Any()), disksMounted);
+                this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
+                   It.IsAny<DiskVolume>(),
+                   It.IsAny<string>(),
+                   It.IsAny<CancellationToken>()),
+                   Times.Exactly(this.diskVolumeCount));
             }
         }
 
@@ -53,13 +57,13 @@ namespace VirtualClient.Dependencies
                     // (disk.Volumes as ICollection<DiskVolume>).Clear();
                     disk.Volumes.ToList().ForEach(volume =>
                         volume.AccessPaths = new List<string>());
+                    this.diskVolumeCount += disk.Volumes.Count();
                 }
             });
 
             this.mockFixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.disks);
-            // this.mockFixture.DiskManager.Setup(mgr => mgr.CreateMountPointAsync(It.IsAny<DiskVolume>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task = new);
-
+            
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MountDisks.MountPointPrefix), "/mockmountpath" }

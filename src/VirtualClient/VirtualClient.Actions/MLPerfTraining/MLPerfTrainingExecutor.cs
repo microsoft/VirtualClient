@@ -9,12 +9,14 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The MLPerf Training workload executor.
@@ -133,11 +135,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Number of GPUs to be utilized
         /// </summary>
-        public string GPUCount
+        public int GPUCount
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.GPUCount), "8");
+                return this.Parameters.GetValue<int>(nameof(this.GPUCount), 8);
             }
         }
 
@@ -189,7 +191,6 @@ namespace VirtualClient.Actions
 
             if (!state.Initialized)
             {
-                
                 // Setup Environment
                 await this.SetupDocker(telemetryContext, cancellationToken);
 
@@ -244,9 +245,9 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 string execCommand = $"su -c \"source {this.ConfigFile}; " + 
-                                     $"env BATCHSIZE={this.BatchSize} " + 
+                                     $"env BATCHSIZE={this.BatchSize} " +
                                      $"DGXNGPU={this.GPUCount} " + 
-                                     $"CUDA_VISIBLE_DEVICES=\"{this.GPUCount}\" " + 
+                                     $"CUDA_VISIBLE_DEVICES=\"{string.Join(',', Enumerable.Range(0, this.GPUCount).ToArray())}\" " + 
                                      $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionPath, telemetryContext, cancellationToken))

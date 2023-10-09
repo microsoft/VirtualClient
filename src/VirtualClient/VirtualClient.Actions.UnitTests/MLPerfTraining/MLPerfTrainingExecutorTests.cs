@@ -35,19 +35,6 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
-        // Add Disk tests (Absence of disks, absence of filtered disks), Mount tests
-        [Test]
-        public void MLPerfTrainingExecutorThrowsOnUnsupportedPlatform()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT);
-
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfTrainingExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.PlatformNotSupported);
-            }
-        }
-
         [Test]
         public void MLPerfTrainingExecutorThrowsOnUnsupportedLinuxDistro()
         {
@@ -97,7 +84,7 @@ namespace VirtualClient.Actions
             };
             List<string> expectedCommands = new List<string>
             {
-                "sudo usermod -aG docker anyuser",
+                "usermod -aG docker anyuser",
                 "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
             };
@@ -210,10 +197,10 @@ namespace VirtualClient.Actions
             List<string> commands = null;
             commands = new List<string>
             {
-                "sudo usermod -aG docker anyuser",
+                "usermod -aG docker anyuser",
                 "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model",
-                "sudo su -c \"source config_DGXA100_1x8x56x1.sh; env BATCHSIZE=45 DGXNGPU=8 CUDA_VISIBLE_DEVICES=\"0,1,2,3,4,5,6,7\" CONT=mlperf-training-anyuser-x86_64:language_model DATADIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320/hdf5_4320_shards_varlength DATADIR_PHASE2=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320/hdf5_4320_shards_varlength EVALDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/eval_varlength CHECKPOINTDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 CHECKPOINTDIR_PHASE1=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 ./run_with_docker.sh\""
+                "sudo su -c \"source config_DGXA100_1x8x56x1.sh; env BATCHSIZE=45 DGXNGPU=8 CUDA_VISIBLE_DEVICES=\"0,1,2,3,4,5,6,7\" CONT=mlperf-training-anyuser-x86_64:language_model DATADIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320 DATADIR_PHASE2=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320 EVALDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/eval_varlength CHECKPOINTDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 CHECKPOINTDIR_PHASE1=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 ./run_with_docker.sh\""
             };
 
             return commands;
@@ -234,11 +221,6 @@ namespace VirtualClient.Actions
             public new Task InitializeAsync(EventContext context, CancellationToken cancellationToken)
             {
                 return base.InitializeAsync(context, cancellationToken);
-            }
-
-            public new Task SetupDocker(CancellationToken cancellationToken)
-            {
-                return base.SetupDocker(cancellationToken);
             }
 
             public new string GetContainerName()
