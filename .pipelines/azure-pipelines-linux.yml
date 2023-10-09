@@ -94,6 +94,9 @@ stages:
       inputs:
         artifactFeeds: 'CRC-Dev'
     - script: pip install pmc-cli
+    
+    - download: current
+      artifact: drop
         
     - task: AzureKeyVault@2
       inputs:
@@ -108,5 +111,5 @@ stages:
         msal_SNIAuth: 'msal-sniauth'
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
-        package_path: '$(Build.SourcesDirectory)/out/packages/virtualclient_$(VcVersion)_x64.deb'
+        package_path: '$(Pipeline.Workspace)\drop'
         repository: 'deb-test-apt'
