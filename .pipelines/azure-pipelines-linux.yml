@@ -81,8 +81,6 @@ stages:
         pathToPublish: '$(Build.SourcesDirectory)/out/packages'
         artifactName: drop
 
-    - script: ls $(Pipeline.Workspace)\drop
-
   - job: PublishPackage
     # condition: false
     dependsOn: BuildPackage
@@ -98,6 +96,8 @@ stages:
     
     - download: current
       artifact: drop
+
+    - script: ls $(Pipeline.Workspace)\drop
         
     - task: AzureKeyVault@2
       inputs:
