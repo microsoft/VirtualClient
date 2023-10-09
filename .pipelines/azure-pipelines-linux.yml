@@ -99,14 +99,14 @@ stages:
       inputs:
         ConnectedServiceName: 'VirtualClient-AzureRM-AME'
         KeyVaultName: 'junoprod01vault01'
-        SecretsFilter: 'virtualclient-cert-pem'
+        SecretsFilter: 'virtualclient'
         RunAsPreJob: true
 
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'ppe' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
-        msal_cert: $(virtualclient-cert-pem)
+        msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Build.SourcesDirectory)/out/packages/*.deb'
         repository: 'virtualclient-apt'
