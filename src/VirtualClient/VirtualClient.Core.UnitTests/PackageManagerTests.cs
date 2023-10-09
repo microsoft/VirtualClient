@@ -420,6 +420,7 @@ namespace VirtualClient
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
+            name = name?.ToLowerInvariant();
             this.mockDependencyDescription.Name = name;
             this.mockDependencyDescription.ArchiveType = ArchiveType.Zip;
             string expectedArchivePath = this.mockFixture.GetPackagePath(name);
@@ -459,6 +460,7 @@ namespace VirtualClient
             this.SetupMocks(PlatformID.Unix);
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();
 
+            name = name?.ToLowerInvariant();
             this.mockDependencyDescription.Name = name;
             this.mockDependencyDescription.ArchiveType = ArchiveType.Tgz;
             string expectedArchivePath = this.mockFixture.GetPackagePath(name);

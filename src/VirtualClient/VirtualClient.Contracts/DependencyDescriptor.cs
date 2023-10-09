@@ -65,7 +65,7 @@ namespace VirtualClient.Contracts
 
             set
             {
-                this[nameof(this.Name)] = value;
+                this[nameof(this.Name)] = value?.ToLowerInvariant();
             }
         }
 

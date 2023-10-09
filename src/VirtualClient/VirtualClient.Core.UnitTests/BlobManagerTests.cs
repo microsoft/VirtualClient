@@ -91,7 +91,7 @@ namespace VirtualClient
             {
                 invalidBlobNames.ForEach(name =>
                 {
-                    this.mockDescriptor.Name = name;
+                    this.mockDescriptor.Name = name ?.ToLowerInvariant();
 
                     Assert.ThrowsAsync<ArgumentException>(
                         () => this.blobManager.DownloadBlobAsync(this.mockDescriptor, downloadStream, CancellationToken.None, Policy.NoOpAsync()));
@@ -99,7 +99,7 @@ namespace VirtualClient
 
                 validBlobNames.ForEach(name =>
                 {
-                    this.mockDescriptor.Name = name;
+                    this.mockDescriptor.Name = name.ToLowerInvariant();
 
                     Assert.DoesNotThrowAsync(
                         () => this.blobManager.DownloadBlobAsync(this.mockDescriptor, downloadStream, CancellationToken.None, Policy.NoOpAsync()));
@@ -288,7 +288,7 @@ namespace VirtualClient
             {
                 invalidBlobNames.ForEach(name =>
                 {
-                    this.mockDescriptor.Name = name;
+                    this.mockDescriptor.Name = name ?.ToLowerInvariant();
 
                     Assert.ThrowsAsync<ArgumentException>(
                         () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
@@ -296,7 +296,7 @@ namespace VirtualClient
 
                 validBlobNames.ForEach(name =>
                 {
-                    this.mockDescriptor.Name = name;
+                    this.mockDescriptor.Name = name.ToLowerInvariant();
 
                     Assert.DoesNotThrowAsync(
                         () => this.blobManager.UploadBlobAsync(this.mockDescriptor, uploadStream, CancellationToken.None, Policy.NoOpAsync()));
