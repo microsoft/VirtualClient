@@ -55,11 +55,17 @@ stages:
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh $(VcVersion)
       displayName: 'Build deb package for linux arm64'
+      
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/out/packages'
+        Contents: '*.deb'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
       inputs:
         ConnectedServiceName: 'virtualclient-esrp'
-        FolderPath: '$(Build.SourcesDirectory)/out/packages'
+        FolderPath: '$(Build.ArtifactStagingDirectory)'
         Pattern: '*.deb'
         signConfigType: 'inlineSignParams'
         inlineOperation: |
@@ -78,7 +84,7 @@ stages:
         
     - task: PublishBuildArtifacts@1
       inputs:
-        pathToPublish: '$(Build.SourcesDirectory)/out/packages'
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: drop
 
   - job: PublishPackage
@@ -97,7 +103,7 @@ stages:
     - download: current
       artifact: drop
 
-    - script: ls $(Pipeline.Workspace)\drop
+    - script: ls $(Agent.BuildDirectory)\drop
         
     - task: AzureKeyVault@2
       inputs:
@@ -112,5 +118,5 @@ stages:
         msal_SNIAuth: 'msal-sniauth'
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
-        package_path: '$(Pipeline.Workspace)\drop\virtualclient_$(VcVersion)_x64.deb'
+        package_path: '$(Agent.BuildDirectory)\drop\virtualclient_$(VcVersion)_x64.deb'
         repository: 'deb-test-apt'
