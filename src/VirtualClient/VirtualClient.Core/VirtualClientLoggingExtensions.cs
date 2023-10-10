@@ -358,7 +358,7 @@ namespace VirtualClient
 
                         // The file is already timestamped at this point, so there is no need to add any additional
                         // timestamping information.
-                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, component.Metadata, timestamped: false);
+                        FileUploadDescriptor descriptor = component.CreateFileUploadDescriptor(fileContext, component.Parameters, timestamped: false);
 
                         await component.RequestFileUploadAsync(descriptor);
                     }
