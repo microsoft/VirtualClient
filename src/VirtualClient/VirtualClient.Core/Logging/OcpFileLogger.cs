@@ -18,15 +18,16 @@ namespace VirtualClient.Logging
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.OpenComputeProject;
     using ILogger = Microsoft.Extensions.Logging.ILogger;
 
     /// <summary>
     /// An <see cref="ILogger"/> implementation for writing metrics data to a CSV file.
     /// </summary>
-    public class OcpFileLogger : ILogger, IFlushableChannel, IDisposable
+    public class OcpFileLogger : ILogger, IDisposable
     {
+#pragma warning disable CS0169 // The field 'OcpFileLogger.initialized' is never used
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
-
         private ConcurrentBuffer buffer;
         private string logDirectory;
         private string fileDirectory;
@@ -34,11 +35,11 @@ namespace VirtualClient.Logging
         private List<string> filePaths;
         private IAsyncPolicy fileAccessRetryPolicy;
         private IFileSystem fileSystem;
-        private Task flushTask;
         private bool initialized;
         private long maxFileSizeBytes;
         private SemaphoreSlim semaphore;
         private bool disposed;
+#pragma warning restore CS0169 // The field 'OcpFileLogger.initialized' is never used
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OcpFileLogger"/> class.
@@ -76,21 +77,6 @@ namespace VirtualClient.Logging
             GC.SuppressFinalize(this);
         }
 
-        /// <summary>
-        /// Flushes the remaining buffer content to the file system.
-        /// </summary>
-        /// <param name="timeout">Not used.</param>
-        public void Flush(TimeSpan? timeout = null)
-        {
-            this.FlushBufferAsync().GetAwaiter().GetResult();
-        }
-
-        /// <inheritdoc />
-        public bool IsEnabled(LogLevel logLevel)
-        {
-            return true;
-        }
-
         /// <inheritdoc />
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
@@ -105,7 +91,7 @@ namespace VirtualClient.Logging
                         try
                         {
                             this.semaphore.Wait();
-                            string message = OcpFileLogger.CreateMessage(eventContext);
+                            string message = OcpFileLogger.WriteMeasurement(eventContext);
                             this.buffer.Append(message);
                         }
                         finally
@@ -113,10 +99,6 @@ namespace VirtualClient.Logging
                             this.semaphore.Release();
                         }
 
-                        if (this.flushTask == null)
-                        {
-                            this.flushTask = this.MonitorBufferAsync();
-                        }
                     }
                     catch
                     {
@@ -125,6 +107,12 @@ namespace VirtualClient.Logging
                     }
                 }
             }
+        }
+
+        /// <inheritdoc />
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return true;
         }
 
         /// <summary>
@@ -142,96 +130,19 @@ namespace VirtualClient.Logging
             }
         }
 
-        private static string WriteMeasurementStart(EventContext context)
+        private static string WriteMeasurement(EventContext context)
         {
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.Append(Environment.NewLine);
 
+            Measurement measurement = new Measurement()
+            {
+                Name = context.GetFieldValue("MetricName"),
+                Unit = context.GetFieldValue("MetricUnit"),
+                Value = context.GetFieldValue("MetricValue"),
+            };
+
             return messageBuilder.ToString();
-        }
-
-        private Task MonitorBufferAsync()
-        {
-            return Task.Run(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        if (!this.initialized)
-                        {
-                            this.InitializeFilePaths();
-                            this.initialized = true;
-                        }
-
-                        await Task.Delay(300);
-                        await this.FlushBufferAsync();
-                    }
-                    catch
-                    {
-                        // Best effort. We do not want to crash the application on failures to write file.
-                    }
-                }
-            });
-        }
-
-        private async Task FlushBufferAsync()
-        {
-            if (this.buffer.Length > 0)
-            {
-                await this.fileAccessRetryPolicy.ExecuteAsync(async () =>
-                {
-                    try
-                    {
-                        await this.semaphore.WaitAsync();
-                        string latestFilePath = this.filePaths.Last();
-
-                        using (FileSystemStream fileStream = this.fileSystem.FileStream.New(latestFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
-                        {
-                            if (fileStream.Length == 0)
-                            {
-                                string columnHeaders = EventContextLoggingExtensions.GetCsvHeaders();
-                                fileStream.Write(OcpFileLogger.ContentEncoding.GetBytes(columnHeaders));
-                            }
-
-                            byte[] bufferContents = OcpFileLogger.ContentEncoding.GetBytes(this.buffer.ToString());
-
-                            if (fileStream.Length + bufferContents.Length > this.maxFileSizeBytes)
-                            {
-                                this.filePaths.Add(Path.Combine(this.fileDirectory, $"{this.fileNameNoExtension}_{this.filePaths.Count}{this.fileExtension}"));
-                            }
-
-                            fileStream.Position = fileStream.Length;
-                            fileStream.Write(bufferContents);
-                            await fileStream.FlushAsync();
-
-                            this.buffer.Clear();
-                        }
-                    }
-                    finally
-                    {
-                        this.semaphore.Release();
-                    }
-                });
-            }
-        }
-
-        private void InitializeFilePaths()
-        {
-            if (!this.fileSystem.Directory.Exists(this.fileDirectory))
-            {
-                this.fileSystem.Directory.CreateDirectory(this.fileDirectory);
-            }
-
-            IEnumerable<string> matchingFiles = this.fileSystem.Directory.EnumerateFiles(this.fileDirectory, $"{this.fileNameNoExtension}*{this.fileExtension}");
-            if (matchingFiles?.Any() != true)
-            {
-                this.filePaths.Add(this.logDirectory);
-            }
-            else
-            {
-                this.filePaths.AddRange(matchingFiles.OrderBy(file => file));
-            }
         }
     }
 }

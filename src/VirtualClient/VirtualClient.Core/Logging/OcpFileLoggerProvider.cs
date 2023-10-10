@@ -47,7 +47,6 @@ namespace VirtualClient.Logging
             OcpFileLogger logger = new OcpFileLogger(this.logDirectory, this.maxFileSize);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() =>
             {
-                logger.Flush();
                 logger.Dispose();
             }));
 

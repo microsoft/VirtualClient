@@ -7,6 +7,7 @@ namespace VirtualClient.Contracts
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using Polly;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
 
@@ -63,6 +64,17 @@ namespace VirtualClient.Contracts
         public static string ToCsvRow(this EventContext context)
         {
             return string.Join(",", contextFields.Select(field => field.GetFieldValue(context)));
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
+        public static string GetFieldValue(this EventContext context, string fieldName)
+        {
+            return contextFields.Where(field => field.ColumnName == fieldName).First().GetFieldValue(context);
         }
 
         internal class EventContextField

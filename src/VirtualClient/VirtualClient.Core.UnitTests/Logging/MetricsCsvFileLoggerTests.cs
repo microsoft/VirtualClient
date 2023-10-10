@@ -9,6 +9,7 @@ namespace VirtualClient.Logging
     using System.Reflection;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
+    using VirtualClient.Contracts;
 
     [TestFixture]
     [Category("Unit")]
@@ -49,7 +50,7 @@ namespace VirtualClient.Logging
             };
 
             // Order matters, so we are doing an explicit equality check here.
-            CollectionAssert.AreEqual(expectedColumnHeaders, MetricsCsvFileLogger.CsvFields.Select(field => field.ColumnName));
+            CollectionAssert.AreEqual(expectedColumnHeaders, EventContextLoggingExtensions.GetCsvHeaders());
         }
 
         [Test]
