@@ -120,3 +120,4 @@ stages:
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/virtualclient_$(VcVersion)_x64.deb'
         repository: 'deb-test-apt'
+        release: 'testing'
