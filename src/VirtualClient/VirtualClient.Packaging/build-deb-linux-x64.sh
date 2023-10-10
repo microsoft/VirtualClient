@@ -21,7 +21,7 @@ mkdir -p "$DEB_DIR/DEBIAN"
 cat > "$DEB_DIR/DEBIAN/control" << EOF
 Package: $PACKAGE_NAME
 Version: $PACKAGE_VERSION
-Architecture: x64
+Architecture: amd64
 Maintainer: Virtual Client Team <virtualclient@microsoft.com>
 Description: VirtualClient, the open sourced workload automation.
 EOF
@@ -40,6 +40,6 @@ chmod -R 775 "$DEB_DIR/opt/$PACKAGE_NAME"
 chmod -R 775 "$DEB_DIR/DEBIAN"
 
 # Build the package using dpkg-deb
-dpkg-deb --build "$DEB_DIR" "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_x64.deb
+dpkg-deb --build "$DEB_DIR" "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_amd64.deb
 
-echo "Debian package created: "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_x64.deb"
+echo "Debian package created: "$OUT_DIR/$PACKAGE_NAME"_"$PACKAGE_VERSION"_amd64.deb"
