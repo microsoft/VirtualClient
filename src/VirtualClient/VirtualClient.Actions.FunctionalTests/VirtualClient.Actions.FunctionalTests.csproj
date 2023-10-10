@@ -23,7 +23,7 @@
         <Content Include="..\TestResources\oltp-c.fio.jobfile" Link="Resources\oltp-c.fio.jobfile">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="..\TestResources\OpenFOAMResults.txt" Link="Resources\OpenFOAMResults.txt">
+        <Content Include="..\TestResources\OpenFoamResults.txt" Link="Resources\OpenFoamResults.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\TestResources\Pbzip2Results.txt" Link="Resources\Pbzip2Results.txt">
