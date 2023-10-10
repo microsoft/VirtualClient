@@ -17,25 +17,13 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 ### Ubuntu (Deb)
 We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/VirtualClient`, which is typically in Linux `$PATH`.
 
-#### linux-x64
 ```bash
-sudo apt-get install wget gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_x64.deb
-sudo apt install ./virtualclient_1.11.0_x64.deb
+curl -sSL -O https://packages.microsoft.com/config/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/$(lsb_release -rs)/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install virtualclient
 ```
-
-#### linux-arm64
-```bash
-sudo apt-get install wget gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_arm64.deb
-sudo apt install ./virtualclient_1.11.0_arm64.deb
-```
-
-
 
 ### Zip Package
 You can find zip files in the latest [GitHub Releases](https://github.com/microsoft/VirtualClient/releases).

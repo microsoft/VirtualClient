@@ -116,6 +116,7 @@ stages:
         SecretsFilter: 'virtualclient'
         RunAsPreJob: true
 
+    # Debian
     - task: PublishLinuxPackagesPMC@0
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
@@ -125,3 +126,214 @@ stages:
         package_path: '$(Agent.BuildDirectory)/drop/packages'
         repository: 'microsoft-debian-bookworm-prod-apt'
         release: 'bookworm'
+
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-debian-bullseye-prod-apt'
+        release: 'bullseye'
+
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-debian-buster-prod-apt'
+        release: 'buster'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-debian-jessie-prod-apt'
+        release: 'jessie'      
+
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-debian-stretch-prod-apt'
+        release: 'stretch'    
+        
+    # Ubuntu
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-artful-prod-apt'
+        release: 'artful'
+
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-bionic-prod-apt'
+        release: 'bionic'
+
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-cosmic-prod-apt'
+        release: 'cosmic'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-disco-prod-apt'
+        release: 'disco'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-eoan-prod-apt'
+        release: 'eoan'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-focal-prod-apt'
+        release: 'focal'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-groovy-prod-apt'
+        release: 'groovy'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-hirsute-prod-apt'
+        release: 'hirsute'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-impish-prod-apt'
+        release: 'impish'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-jammy-prod-apt'
+        release: 'jammy'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-kinetic-prod-apt'
+        release: 'kinetic'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-lunar-prod-apt'
+        release: 'lunar'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-trusty-prod-apt'
+        release: 'trusty'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-wily-prod-apt'
+        release: 'wily'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-xenial-prod-apt'
+        release: 'xenial'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-yakkety-prod-apt'
+        release: 'yakkety'
+        
+    - task: PublishLinuxPackagesPMC@0
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/packages'
+        repository: 'microsoft-ubuntu-zesty-prod-apt'
+        release: 'zesty'
