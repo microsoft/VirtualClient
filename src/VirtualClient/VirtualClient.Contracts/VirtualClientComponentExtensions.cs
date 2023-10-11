@@ -111,18 +111,19 @@ namespace VirtualClient.Contracts
             component.ThrowIfNull(nameof(component));
             fileContext.ThrowIfNull(nameof(fileContext));
 
-            IDictionary<string, IConvertible> appendedMetaData = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
-            if (!(metadata is null))
+            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
+            
+            if (metadata?.Any() == true)
             {
-                appendedMetaData.AddRange(metadata, true);
+                effectiveMetadata.AddRange(metadata, true);
             }
 
             FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(
                 fileContext,
                 parameters,
-                appendedMetaData,
+                effectiveMetadata,
                 timestamped,
-                VirtualClientComponent.ContentPathTemplate ?? FileUploadDescriptor.DefaultContentPathTemplate);
+                VirtualClientComponent.ContentPathTemplate);
 
             return descriptor;
         }
