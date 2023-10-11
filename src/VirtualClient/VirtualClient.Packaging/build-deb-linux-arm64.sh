@@ -29,6 +29,7 @@ EOF
 cat > "$DEB_DIR/DEBIAN/postinst" << EOF
 #!/bin/bash
 ln -sf /opt/virtualclient/VirtualClient /usr/local/bin/VirtualClient
+ln -sf /opt/virtualclient/VirtualClient /usr/local/bin/virtualclient
 EOF
 
 # Copy the build files to the package directory (/opt/package-name)
