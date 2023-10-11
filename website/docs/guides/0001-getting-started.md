@@ -14,28 +14,21 @@ SHA256 algorithm.
 Virtual Client is a self-contained .NET 6 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
 [all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
 
-### Ubuntu (Deb)
-We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/VirtualClient`, which is typically in Linux `$PATH`.
+### Debian / Ubuntu
+We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
 
-#### linux-x64
 ```bash
-sudo apt-get install wget gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_x64.deb
-sudo apt install ./virtualclient_1.11.0_x64.deb
+# example: ubuntu
+declare os_distro=$(if command -v lsb_release &> /dev/null; then lsb_release -is | tr '[:upper:]' '[:lower:]' ; else grep -oP '(?<=^ID=).+' /etc/os-release ; fi)
+# example: 20.04
+declare os_version=$(if command -v lsb_release &> /dev/null; then lsb_release -rs; else grep -oP '(?<=^VERSION_ID=).+' /etc/os-release | tr -d '"'; fi)
+# Add Microsoft deb repo
+curl -sSL -O https://packages.microsoft.com/config/$os_distro/$os_version/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update
+sudo apt-get install virtualclient
 ```
-
-#### linux-arm64
-```bash
-sudo apt-get install wget gpg
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
-sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
-wget https://virtualclient.blob.core.windows.net/packages/virtualclient_1.11.0_arm64.deb
-sudo apt install ./virtualclient_1.11.0_arm64.deb
-```
-
-
 
 ### Zip Package
 You can find zip files in the latest [GitHub Releases](https://github.com/microsoft/VirtualClient/releases).
