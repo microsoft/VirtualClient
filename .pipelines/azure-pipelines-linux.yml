@@ -87,8 +87,8 @@ stages:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: drop
 
-  - job: PublishPackage
-    # condition: false
+  - job: PublishDebPackage
+    timeoutInMinutes: 180
     dependsOn: BuildPackage
     pool:
       vmImage: 'ubuntu-latest'
@@ -118,6 +118,7 @@ stages:
 
     # Debian
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Debian 12.0 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -128,6 +129,7 @@ stages:
         release: 'bookworm'
 
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Debian 11.0 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -138,6 +140,7 @@ stages:
         release: 'bullseye'
 
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Debian 10.0 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -148,6 +151,7 @@ stages:
         release: 'buster'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Debian 8.0 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -158,6 +162,7 @@ stages:
         release: 'jessie'      
 
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Debian 9.0 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -169,6 +174,7 @@ stages:
         
     # Ubuntu
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 17.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -179,6 +185,7 @@ stages:
         release: 'artful'
 
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 18.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -189,6 +196,7 @@ stages:
         release: 'bionic'
 
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 18.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -199,6 +207,7 @@ stages:
         release: 'cosmic'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 19.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -209,6 +218,7 @@ stages:
         release: 'disco'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 19.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -219,6 +229,7 @@ stages:
         release: 'eoan'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 20.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -229,6 +240,7 @@ stages:
         release: 'focal'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 20.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -239,6 +251,7 @@ stages:
         release: 'groovy'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 21.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -249,6 +262,7 @@ stages:
         release: 'hirsute'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 21.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -259,6 +273,7 @@ stages:
         release: 'impish'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 22.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -269,6 +284,7 @@ stages:
         release: 'jammy'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 22.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -279,6 +295,7 @@ stages:
         release: 'kinetic'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 23.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -289,6 +306,7 @@ stages:
         release: 'lunar'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 14.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -299,6 +317,7 @@ stages:
         release: 'trusty'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 15.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -309,6 +328,7 @@ stages:
         release: 'wily'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 16.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -319,6 +339,7 @@ stages:
         release: 'xenial'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 16.10 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
@@ -329,6 +350,7 @@ stages:
         release: 'yakkety'
         
     - task: PublishLinuxPackagesPMC@0
+      displayName: 'Ubuntu 17.04 deb publish'
       inputs:
         profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
         msal_SNIAuth: 'msal-sniauth'
