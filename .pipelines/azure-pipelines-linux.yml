@@ -66,7 +66,7 @@ stages:
         SourceFolder: '$(Build.SourcesDirectory)/out/packages'
         Contents: |
           *.deb
-          *.rpm
+          **/RPMS/*.rpm
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
