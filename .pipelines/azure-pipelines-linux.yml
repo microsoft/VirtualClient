@@ -67,6 +67,7 @@ stages:
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(Build.SourcesDirectory)/out/packages'
+        flattenFolders: true
         Contents: |
           *.deb
           **/RPMS/**/*.rpm
@@ -117,15 +118,32 @@ stages:
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(Agent.BuildDirectory)/drop/'
-        Contents: '*.deb,*.rpm'
+        Contents: '*.deb'
         TargetFolder: '$(Agent.BuildDirectory)/drop/packages'
-        
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Agent.BuildDirectory)/drop/'
+        Contents: '*.rpm'
+        TargetFolder: '$(Agent.BuildDirectory)/drop/rpmpackages'
+
     - task: AzureKeyVault@2
       inputs:
         ConnectedServiceName: 'VirtualClient-AzureRM-AME'
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient'
         RunAsPreJob: true
+
+    # RedHat
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 9.0 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'rpm-test-yum'
 
     # Debian
     - task: PublishLinuxPackagesPMC@0
