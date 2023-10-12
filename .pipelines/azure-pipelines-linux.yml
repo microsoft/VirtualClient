@@ -50,6 +50,7 @@ stages:
       displayName: 'Build Solutions'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
+      failOnStderr: false
       continueOnError: true
       displayName: 'Build rpm package for linux arm64'
 
