@@ -98,8 +98,7 @@ stages:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
         artifactName: drop
 
-  - job: PublishDebPackage
-    condition: false
+  - job: PublishRpmPackage
     timeoutInMinutes: 180
     dependsOn: BuildPackage
     pool:
@@ -114,12 +113,6 @@ stages:
     
     - download: current
       artifact: drop
-
-    - task: CopyFiles@2
-      inputs:
-        SourceFolder: '$(Agent.BuildDirectory)/drop/'
-        Contents: '*.deb'
-        TargetFolder: '$(Agent.BuildDirectory)/drop/packages'
 
     - task: CopyFiles@2
       inputs:
@@ -144,6 +137,14 @@ stages:
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
         repository: 'rpm-test-yum'
+
+  - job: PublishDebPackage
+    condition: false
+    timeoutInMinutes: 180
+    dependsOn: BuildPackage
+    pool:
+      vmImage: 'ubuntu-latest'
+    container: pmc-cli
 
     # Debian
     - task: PublishLinuxPackagesPMC@0
