@@ -23,6 +23,7 @@ mkdir -p "$RPM_DIR/SRPMS"
 
 # Create the RPM spec file with package metadata
 cat > "$RPM_DIR/SPECS/$PACKAGE_NAME.spec" << EOF
+%global __os_install_post %{nil}
 Name: $PACKAGE_NAME
 Version: $PACKAGE_VERSION
 Release: 1
