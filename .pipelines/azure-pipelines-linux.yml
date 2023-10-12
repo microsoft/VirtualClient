@@ -391,6 +391,28 @@ stages:
       vmImage: 'ubuntu-latest'
     container: pmc-cli
 
+    steps:
+    - task: PipAuthenticate@1
+      inputs:
+        artifactFeeds: 'CRC-Dev'
+    - script: pip install pmc-cli
+    
+    - download: current
+      artifact: drop
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Agent.BuildDirectory)/drop/'
+        Contents: '*.deb'
+        TargetFolder: '$(Agent.BuildDirectory)/drop/packages'
+
+    - task: AzureKeyVault@2
+      inputs:
+        ConnectedServiceName: 'VirtualClient-AzureRM-AME'
+        KeyVaultName: 'junoprod01vault01'
+        SecretsFilter: 'virtualclient'
+        RunAsPreJob: true
+        
     # Debian
     - task: PublishLinuxPackagesPMC@0
       displayName: 'Debian 12.0 deb publish'
