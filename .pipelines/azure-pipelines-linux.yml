@@ -124,6 +124,110 @@ stages:
         KeyVaultName: 'junoprod01vault01'
         SecretsFilter: 'virtualclient'
         RunAsPreJob: true
+        
+    # Amazon Linux
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Amazon Linux 2023 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-amazonlinux2023-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Amazon Linux 2 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-amazonlinux2-prod-yum'
+        
+    # Centos
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'CentOS 7 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-centos7-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'CentOS 6 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-centos6-prod-yum'
+
+    # Fedora
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Fedora 39 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-fedora39-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Fedora 38 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-fedora38-prod-yum'
+        
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Fedora 37 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-fedora37-prod-yum'
+   
+    # OpenSUSE
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'OpenSUSE 15 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-opensuse15-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'OpenSUSE 42.2 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-opensuse42.2-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'OpenSUSE 42.3 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-opensuse42.3-prod-yum'
 
     # RedHat
     - task: PublishLinuxPackagesPMC@0
@@ -134,7 +238,150 @@ stages:
         msal_cert: $(virtualclient)
         msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
         package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
-        repository: 'rpm-test-yum'
+        repository: 'microsoft-rhel9.0-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 8.2 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel8.2-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 8.1 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel8.1-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 8.0 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel8.0-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.9 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.9-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.8 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.8-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.5 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.5-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.4 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.4-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.3 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.3-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.2 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.2-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 7.1 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel7.1-prod-yum'
+        
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'Red Hat 6.9 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-rhel6.9-prod-yum'
+
+
+    # SUSE Linux Enterprise Server
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'SLES 15 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-sles15-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'SLES 12 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-sles12-prod-yum'
+
+    - task: PublishLinuxPackagesPMC@0
+      displayName: 'SLES 11 rpm publish'
+      inputs:
+        profile: 'prod' # or tux-dev or ppe or prod depending on what you selected
+        msal_SNIAuth: 'msal-sniauth'
+        msal_cert: $(virtualclient)
+        msal_client_ID: 'f407a268-1184-4845-92b1-eebfbe0749c0'
+        package_path: '$(Agent.BuildDirectory)/drop/rpmpackages'
+        repository: 'microsoft-sles11-prod-yum'
+
 
   - job: PublishDebPackage
     condition: false
