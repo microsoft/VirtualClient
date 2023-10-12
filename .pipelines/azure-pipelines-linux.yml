@@ -95,7 +95,7 @@ stages:
         artifactName: drop
 
   - job: PublishDebPackage
-    enabled: false
+    condition: false
     timeoutInMinutes: 180
     dependsOn: BuildPackage
     pool:
