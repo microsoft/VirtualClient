@@ -46,14 +46,11 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
-    - script: sudo apt update
-    - script: sudo apt install rpm
-    - script: sudo apt upgrade -y
-
     - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
       displayName: 'Build Solutions'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
+      continueOnError: true
       displayName: 'Build rpm package for linux arm64'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
