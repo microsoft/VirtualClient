@@ -95,6 +95,7 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             await this.InitializeExecutablesAsync(cancellationToken);
+            this.InitializeApiClients(telemetryContext, cancellationToken);
 
             if (this.IsMultiRoleLayout())
             {
@@ -109,29 +110,31 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes API client.
         /// </summary>
-        protected void InitializeApiClients()
+        protected void InitializeApiClients(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            bool isSingleVM = !this.IsMultiRoleLayout();
-
-            if (isSingleVM)
+            if (!cancellationToken.IsCancellationRequested)
             {
-                this.ServerIpAddress = IPAddress.Loopback.ToString();
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
-            }
-            else
-            {
-                ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
-                IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+                IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
 
-                this.ServerIpAddress = serverIPAddress.ToString();
-                this.ServerApiClient = clientManager.GetOrCreateApiClient(serverIPAddress.ToString(), serverIPAddress);
-                this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
+                if (!this.IsMultiRoleLayout())
+                {
+                    this.ServerIpAddress = IPAddress.Loopback.ToString();
+                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, IPAddress.Loopback);
+                }
+                else
+                {
+                    ClientInstance serverInstance = this.GetLayoutClientInstances(ClientRole.Server).First();
+                    IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-                ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
-                IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
+                    this.ServerIpAddress = serverIPAddress.ToString();
+                    this.ServerApiClient = clientManager.GetOrCreateApiClient(this.ServerIpAddress, serverIPAddress);
+                    this.RegisterToSendExitNotifications($"{this.TypeName}.ExitNotification", this.ServerApiClient);
 
-                this.ClientIpAddress = clientIPAddress.ToString();
+                    ClientInstance clientInstance = this.GetLayoutClientInstances(ClientRole.Client).First();
+                    IPAddress.TryParse(clientInstance.IPAddress, out IPAddress clientIPAddress);
+
+                    this.ClientIpAddress = clientIPAddress.ToString();
+                }
             }
         }
 

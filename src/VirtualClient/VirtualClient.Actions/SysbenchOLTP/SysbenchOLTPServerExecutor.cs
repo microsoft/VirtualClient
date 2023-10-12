@@ -8,11 +8,13 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -22,6 +24,9 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchOLTPServerExecutor : SysbenchOLTPExecutor
     {
+        private const string GetMySQLTableCountCommand = $"mysql --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"";
+        private const string GetMySQLRecordCountCommand = $"mysql --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPServerExecutor"/> class.
         /// </summary>
@@ -45,12 +50,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Client used to communicate with the locally self-hosted instance of the
-        /// Virtual Client API.
-        /// </summary>
-        public IApiClient LocalApiClient { get; private set; }
-
-        /// <summary>
         /// Provides access to the local state management facilities.
         /// </summary>
         protected IStateManager StateManager { get; }
@@ -63,14 +62,37 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.InitializeApiClients();
+            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken).ConfigureAwait(false);
 
-            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+            await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
             SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
+
+            // first, update the record and table counts based on what are in the database
+
+            string result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(GetMySQLTableCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
+
+            Match match = Regex.Match(result, "[1-9][0-9]*");
+
+            if (match.Success)
+            {
+                state.NumTables = Convert.ToInt32(match.Value); 
+
+                result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(GetMySQLRecordCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+
+                match = Regex.Match(result, "[1-9][0-9]*|0");
+                state.RecordCount = match.Success ? Convert.ToInt32(match.Value) : -1;
+            }
+            else if (!match.Success)
+            {
+                state.NumTables = -1;
+                state.RecordCount = -1;
+            }
+
+            // prepare the server for a specific scenario
 
             if (!state.DatabaseScenarioInitialized)
             {
@@ -95,13 +117,15 @@ namespace VirtualClient.Actions
                         break;
                 }
 
-                HttpResponseMessage response = await this.LocalApiClient.GetOrCreateStateAsync(nameof(SysbenchOLTPState), JObject.FromObject(state), cancellationToken)
+                Item<SysbenchOLTPState> stateUpdate = new Item<SysbenchOLTPState>(nameof(SysbenchOLTPState), state);
+
+                HttpResponseMessage response = await this.ServerApiClient.UpdateStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), stateUpdate, cancellationToken)
                     .ConfigureAwait(false);
 
                 response.ThrowOnError<WorkloadException>();
 
                 await this.StateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
         }
 

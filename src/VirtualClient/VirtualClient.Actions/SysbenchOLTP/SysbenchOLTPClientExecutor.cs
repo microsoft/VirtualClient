@@ -142,17 +142,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Skips initialization of the tables and records in the database
-        /// </summary>
-        public bool SkipInitialize
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(SysbenchOLTPClientExecutor.SkipInitialize), true);
-            }
-        }
-
-        /// <summary>
         /// Number of threads.
         /// </summary>
         public int Threads
@@ -250,7 +239,6 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.InitializeApiClients();
 
             // get sysbench workload path
 
@@ -363,9 +351,20 @@ namespace VirtualClient.Actions
 
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
+            // grab state stored by the server -- this has the list of disk paths
 
-            if (!this.SkipInitialize || this.NumTables > state.NumTables || this.RecordCount > state.RecordCount)
+            HttpResponseMessage response = await this.ServerApiClient.GetStateAsync(nameof(SysbenchOLTPState), cancellationToken)
+                .ConfigureAwait(false);
+
+            string responseContent = await response.Content.ReadAsStringAsync()
+                .ConfigureAwait(false);
+
+            SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
+
+            int numTables = serverState.NumTables;
+            int recordCount = serverState.RecordCount;
+
+            if (this.NumTables > numTables || this.RecordCount > recordCount)
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
@@ -375,8 +374,11 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
 
-                state.Properties[nameof(SysbenchOLTPState.NumTables)] = this.NumTables;
-                state.Properties[nameof(SysbenchOLTPState.RecordCount)] = this.RecordCount;
+                SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken) 
+                    ?? new SysbenchOLTPState();
+
+                state.NumTables = this.NumTables;
+                state.RecordCount = this.RecordCount;
 
                 // save the updated state configuration
 
@@ -385,17 +387,7 @@ namespace VirtualClient.Actions
 
             if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
             {
-                // grab state stored by the server -- this has the list of disk paths
-
-                HttpResponseMessage response = await this.ServerApiClient.GetStateAsync(nameof(SysbenchOLTPState), cancellationToken)
-                    .ConfigureAwait(false);
-
-                string responseContent = await response.Content.ReadAsStringAsync()
-                    .ConfigureAwait(false);
-
-                SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
-
-                string diskPaths = serverState.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)].ToString();
+                string diskPaths = serverState.DiskPathsArgument;
 
                 await this.PrepareBalancedScenarioAsync(diskPaths, telemetryContext, cancellationToken);
             }
