@@ -384,7 +384,6 @@ stages:
 
 
   - job: PublishDebPackage
-    condition: false
     timeoutInMinutes: 180
     dependsOn: BuildPackage
     pool:
