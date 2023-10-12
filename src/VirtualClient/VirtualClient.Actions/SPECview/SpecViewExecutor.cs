@@ -146,7 +146,6 @@ namespace VirtualClient.Actions
 
                 await Task.WhenAll(tasks);
             }
-
         }
 
         /// <summary>
@@ -273,7 +272,6 @@ namespace VirtualClient.Actions
                     this.Roles?.FirstOrDefault()));
 
             return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
-
         }
     }
 }
