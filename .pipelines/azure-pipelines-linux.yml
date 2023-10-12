@@ -46,9 +46,9 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
-    - script: apt update
-    - script: apt install rpm
-    - script: apt upgrade -y
+    - script: sudo apt update
+    - script: sudo apt install rpm
+    - script: sudo apt upgrade -y
 
     - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
       displayName: 'Build Solutions'
