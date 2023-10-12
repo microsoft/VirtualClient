@@ -62,8 +62,6 @@ namespace VirtualClient.Actions
         /// <returns></returns>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken).ConfigureAwait(false);
-
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
             SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
