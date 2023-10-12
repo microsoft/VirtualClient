@@ -46,20 +46,25 @@ stages:
       # displayName: 'Clean Output Directories'
       
       # Build the repo.
+    - script: apt update
+    - script: apt install rpm
+    - script: apt upgrade -y
+
     - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
       displayName: 'Build Solutions'
-
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
-      displayName: 'Build rpm package for linux x64'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
       displayName: 'Build rpm package for linux arm64'
 
-    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
-      displayName: 'Build deb package for linux x64'
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
+      displayName: 'Build rpm package for linux x64'
 
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-arm64.sh $(VcVersion)
       displayName: 'Build deb package for linux arm64'
+
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
+      displayName: 'Build deb package for linux x64'
+
       
     - task: CopyFiles@2
       inputs:
