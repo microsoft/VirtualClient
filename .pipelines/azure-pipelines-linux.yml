@@ -20,7 +20,6 @@ variables:
   ROOT: $(Build.SourcesDirectory)
   CDP_DEFINITION_BUILD_COUNT: $[counter('', 0)] # needed for onebranch.pipeline.version task https://aka.ms/obpipelines/versioning
   ENABLE_PRS_DELAYSIGN: 1
-  GitVersion.SemVer: ''
 
 stages:
 - stage: BuildPackage
@@ -50,6 +49,12 @@ stages:
     - script: $(Build.SourcesDirectory)/build.sh $(VcVersion) --build-all
       displayName: 'Build Solutions'
 
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-x64.sh $(VcVersion)
+      displayName: 'Build rpm package for linux x64'
+
+    - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-rpm-linux-arm64.sh $(VcVersion)
+      displayName: 'Build rpm package for linux arm64'
+
     - script: $(Build.SourcesDirectory)/src/VirtualClient/VirtualClient.Packaging/build-deb-linux-x64.sh $(VcVersion)
       displayName: 'Build deb package for linux x64'
 
@@ -59,14 +64,14 @@ stages:
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(Build.SourcesDirectory)/out/packages'
-        Contents: '*.deb'
+        Contents: '*.deb,*.rpm'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
     - task: EsrpCodeSigning@1
       inputs:
         ConnectedServiceName: 'virtualclient-esrp'
         FolderPath: '$(Build.ArtifactStagingDirectory)'
-        Pattern: '*.deb'
+        Pattern: '*.deb,*.rpm'
         signConfigType: 'inlineSignParams'
         inlineOperation: |
           [
@@ -88,6 +93,7 @@ stages:
         artifactName: drop
 
   - job: PublishDebPackage
+    enabled: false
     timeoutInMinutes: 180
     dependsOn: BuildPackage
     pool:
@@ -106,7 +112,7 @@ stages:
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(Agent.BuildDirectory)/drop/'
-        Contents: '*.deb'
+        Contents: '*.deb,*.rpm'
         TargetFolder: '$(Agent.BuildDirectory)/drop/packages'
         
     - task: AzureKeyVault@2
