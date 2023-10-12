@@ -14,8 +14,8 @@ SHA256 algorithm.
 Virtual Client is a self-contained .NET 6 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
 [all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
 
-### Debian / Ubuntu
-We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
+### Debian / Ubuntu (deb)
+VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
 
 ```bash
 # example: ubuntu
@@ -28,6 +28,22 @@ sudo dpkg -i packages-microsoft-prod.deb
 rm packages-microsoft-prod.deb
 sudo apt-get update
 sudo apt-get install virtualclient
+```
+
+### Red Hat-based distributions (rpm)
+We maintain deb package for releases. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
+
+```bash
+# example: ubuntu
+declare os_distro=$(if command -v lsb_release &> /dev/null; then lsb_release -is | tr '[:upper:]' '[:lower:]' ; else grep -oP '(?<=^ID=).+' /etc/os-release ; fi)
+# example: 20.04
+declare os_version=$(if command -v lsb_release &> /dev/null; then lsb_release -rs; else grep -oP '(?<=^VERSION_ID=).+' /etc/os-release | tr -d '"'; fi)
+# Add Microsoft deb repo
+curl -sSL -O https://packages.microsoft.com/config/$os_distro/$os_version/packages-microsoft-prod.rpm
+sudo rpm -i packages-microsoft-prod.rpm
+rm rpm -i packages-microsoft-prod.rpm
+sudo dnf update
+sudo dnf install virtualclient
 ```
 
 ### Zip Package
