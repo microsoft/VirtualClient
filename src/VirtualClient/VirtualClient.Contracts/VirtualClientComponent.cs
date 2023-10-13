@@ -37,6 +37,7 @@ namespace VirtualClient.Contracts
         /// </summary>
         public static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly();
 
+        private const string Role = "Role";
         private ISystemInfo systemInfo;
 
         /// <summary>
@@ -60,10 +61,23 @@ namespace VirtualClient.Contracts
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
+            this.systemInfo = dependencies.GetService<ISystemInfo>();
+            this.AgentId = this.systemInfo.AgentId;
+            this.CpuArchitecture = this.systemInfo.CpuArchitecture;
+            this.Dependencies = dependencies;
+            this.ExperimentId = this.systemInfo.ExperimentId;
+            this.Logger = NullLogger.Instance;
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
-            this.Dependencies = dependencies;
-            this.Logger = NullLogger.Instance;
+            this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
+            this.Platform = this.systemInfo.Platform;
+            this.SupportingExecutables = new List<string>();
+            this.CleanupTasks = new List<Action>();
+
+            if (VirtualClientRuntime.Metadata?.Any() == true)
+            {
+                this.Metadata.AddRange(VirtualClientRuntime.Metadata, true);
+            }
 
             if (dependencies.TryGetService<ILogger>(out ILogger logger))
             {
@@ -73,16 +87,19 @@ namespace VirtualClient.Contracts
             if (dependencies.TryGetService<EnvironmentLayout>(out EnvironmentLayout layout))
             {
                 this.Layout = layout;
-            }
 
-            this.systemInfo = this.Dependencies.GetService<ISystemInfo>();
-            this.AgentId = this.systemInfo.AgentId;
-            this.ExperimentId = this.systemInfo.ExperimentId;
-            this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            this.Platform = this.systemInfo.Platform;
-            this.CpuArchitecture = this.systemInfo.CpuArchitecture;
-            this.SupportingExecutables = new List<string>();
-            this.CleanupTasks = new List<Action>();
+                if (this.Roles?.Any() != true)
+                {
+                    // Backwards Compatibility:
+                    // Add in the roles from the layout if they are defined within it.
+                    ClientInstance clientInstance = this.GetLayoutClientInstance(throwIfNotExists: false);
+
+                    if (clientInstance != null && !string.IsNullOrWhiteSpace(clientInstance.Role))
+                    {
+                        this.Parameters[VirtualClientComponent.Role] = clientInstance.Role;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -375,7 +392,9 @@ namespace VirtualClient.Contracts
             get
             {
                 IEnumerable<string> rolesList = null;
-                if (this.Parameters.TryGetValue("Role", out IConvertible roles))
+                IConvertible roles;
+
+                if (this.Parameters.TryGetValue("Role", out roles) || this.Parameters.TryGetValue(nameof(this.Roles), out roles))
                 {
                     rolesList = roles?.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.None);
                 }
