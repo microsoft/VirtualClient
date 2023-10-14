@@ -9,6 +9,7 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -29,8 +30,11 @@ namespace VirtualClient.Actions
     public class SpecViewExecutor : VirtualClientComponent
     {
         private const string VisualStudioCRuntimePackageName = "visualstudiocruntime";
+        private const string RenamePrefix = "hist_";
+
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
+        private string historyResultsPath;
 
         /// <summary>
         /// Constructor for <see cref="SpecViewExecutor"/>
@@ -62,7 +66,8 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.Viewset));
+                // Remove whitespaces in the argument (e.g. "3dsmax, catia" -> "3dsmax,catia")
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.Viewset)).Replace(" ", string.Empty);
             }
         }
 
@@ -113,8 +118,34 @@ namespace VirtualClient.Actions
                     process.ThrowIfWorkloadFailed();
                     this.CaptureMetrics(process, commandArguments, relatedContext);
                 }
-            }            
-            
+            }
+
+            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+            {
+                // specview logs are distributed in subdirectories corresponding to the viewsets
+                string[] viewsetArray = this.Viewset.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                string specviewOriginalLogPath;
+                string specviewRenamedLogPath;
+                List<Task> tasks = new List<Task>();
+                foreach (string viewset in viewsetArray)
+                {
+                    // log file is inside a folder that starts with the viewset name e.g. 3dsmax-07
+                    string? viewsetLogDir = this.fileSystem.Directory.GetDirectories(this.historyResultsPath, $"{viewset}*", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                    if (viewsetLogDir == null)
+                    {
+                        throw new WorkloadResultsException(
+                            $"The expected SPECviewperf viewset log directory was not found in '{this.historyResultsPath}'.",
+                            ErrorReason.WorkloadResultsNotFound);
+                    }
+
+                    specviewOriginalLogPath = this.PlatformSpecifics.Combine(viewsetLogDir, "log.txt");
+                    specviewRenamedLogPath = this.PlatformSpecifics.Combine(viewsetLogDir, viewset + "-" + Path.GetFileName(specviewOriginalLogPath));
+                    this.fileSystem.Directory.Move(specviewOriginalLogPath, specviewRenamedLogPath);
+                    tasks.Add(this.UploadSpecviewLogAsync(blobManager, specviewRenamedLogPath, DateTime.UtcNow, cancellationToken));
+                }
+
+                await Task.WhenAll(tasks);
+            }
         }
 
         /// <summary>
@@ -180,8 +211,8 @@ namespace VirtualClient.Actions
                         telemetryContext);
 
                     // rename the result file to avoid confusions on future runs
-                    string historyResultsDir = this.PlatformSpecifics.Combine(this.Package.Path, "hist_" + Path.GetFileName(resultsFileDir));
-                    this.fileSystem.Directory.Move(resultsFileDir, historyResultsDir);
+                    this.historyResultsPath = this.PlatformSpecifics.Combine(this.Package.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
+                    this.fileSystem.Directory.Move(resultsFileDir, this.historyResultsPath);
                 }
                 catch (SchemaException exc)
                 {
@@ -222,6 +253,25 @@ namespace VirtualClient.Actions
             DependencyPath visualStudioCRuntimePackage = await packageManager.GetPackageAsync(VisualStudioCRuntimePackageName, CancellationToken.None).ConfigureAwait(false);
             string visualStudioCRuntimeDllPath = this.PlatformSpecifics.ToPlatformSpecificPath(visualStudioCRuntimePackage, this.Platform, this.CpuArchitecture).Path;
             this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
+        }
+
+        private Task UploadSpecviewLogAsync(IBlobManager blobManager, string specviewLogPath, DateTime logTime, CancellationToken cancellationToken)
+        {
+            // Example Blob Store Structure:
+            // 9ed58814-435b-4900-8eb2-af86393e0059/my-vc/specview/specviewperf/2023-10-11T22-07-41-73235Z-log.txt
+            FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
+                new FileContext(
+                    this.fileSystem.FileInfo.New(specviewLogPath),
+                    HttpContentType.PlainText,
+                    Encoding.UTF8.WebName,
+                    this.ExperimentId,
+                    this.AgentId,
+                    "specview",
+                    this.Scenario,
+                    null,
+                    this.Roles?.FirstOrDefault()));
+
+            return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
         }
     }
 }
