@@ -32,9 +32,8 @@ namespace VirtualClient
         /// <param name="profile">The profile to execute.</param>
         /// <param name="dependencies">Shared platform dependencies to pass along to individual components in the profile.</param>
         /// <param name="scenarios">A specific set of profile scenarios to execute or to exclude.</param>
-        /// <param name="metadata">Metadata supplied</param>
         /// <param name="logger">A logger to use for capturing telemetry.</param>
-        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, IDictionary<string, IConvertible> metadata = null, ILogger logger = null)
+        public ProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
         {
             profile.ThrowIfNull(nameof(profile));
             dependencies.ThrowIfNull(nameof(dependencies));
@@ -50,11 +49,6 @@ namespace VirtualClient
             this.Logger = logger ?? NullLogger.Instance;
 
             this.metadataContact = new MetadataContract();
-            this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
-            if (metadata?.Any() == true)
-            {
-                this.Metadata.AddRange(metadata, true);
-            }
         }
 
         /// <summary>
@@ -146,11 +140,6 @@ namespace VirtualClient
         public ILogger Logger { get; }
 
         /// <summary>
-        /// Metadata supplied to the application on the command line.
-        /// </summary>
-        public IDictionary<string, IConvertible> Metadata { get; }
-
-        /// <summary>
         /// The profile to execute.
         /// </summary>
         public ExecutionProfile Profile { get; }
@@ -204,6 +193,11 @@ namespace VirtualClient
                 CancellationToken profileCancellationToken = tokenSource.Token;
                 if (!profileCancellationToken.IsCancellationRequested)
                 {
+                    if (this.Profile.Metadata?.Any() == true)
+                    {
+                        VirtualClientRuntime.Metadata.AddRange(this.Profile.Metadata, true);
+                    }
+
                     // The parent context is created when the profile operations start up. We can use the
                     // activity ID of the parent to enable correlation of events all the way down the
                     // callstack.
@@ -715,12 +709,6 @@ namespace VirtualClient
                         bool executeComponent = true;
                         VirtualClientComponent runtimeComponent = ComponentFactory.CreateComponent(component, this.Dependencies, this.RandomizationSeed);
                         runtimeComponent.FailFast = this.FailFast;
-
-                        // Metadata: Profile-level (global)
-                        if (this.Metadata?.Any() == true)
-                        {
-                            runtimeComponent.Metadata.AddRange(this.Metadata, true);
-                        }
 
                         // Metadata: Profile Component-level (overrides global)
                         if (component.Metadata?.Any() == true)

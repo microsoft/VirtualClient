@@ -374,6 +374,62 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [TestCase("contentpathtemplate")]
+        [TestCase("CONTENTPATHTEMPLATE")]
+        [TestCase("ContentPathTemplate")]
+        [TestCase("contentPathTemplate")]
+        public void FileUploadDescriptorFactoryIsNotCaseSensitiveOnContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplateParameterName)
+        {
+            this.SetupDefaults();
+
+            string expectedContentPathTemplate = "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}";
+            string expectedExperimentName = "Test_Experiment";
+            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
+            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
+            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
+            string expectedRevision = "Revision01";
+            string expectedToolName = "Toolkit";
+            string expectedScenario = "Cycle-VegaServer";
+            string expectedRole = "Client";
+            string expectedContentType = HttpContentType.PlainText;
+            string expectedContentEncoding = Encoding.UTF8.WebName;
+            string expectedFilePath = this.mockFile.Object.FullName;
+            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
+
+            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
+            string expectedContainer = "customcontainer";
+            string expectedBlobPath = $"/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8f5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver/client/{expectedFileName}";
+
+            FileContext context = new FileContext(
+                this.mockFile.Object,
+                expectedContentType,
+                expectedContentEncoding,
+                expectedExperimentId,
+                expectedAgentId,
+                expectedToolName,
+                expectedScenario,
+                null,
+                expectedRole);
+
+            IDictionary<string, IConvertible> componentMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Revision", expectedRevision },
+                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
+                { "ExperimentName", expectedExperimentName },
+                { contentPathTemplateParameterName, expectedContentPathTemplate }
+            };
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, metadata: componentMetadata, timestamped: true);
+
+            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
+            Assert.AreEqual(expectedFileName, descriptor.BlobName);
+            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
+            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
+            Assert.AreEqual(expectedContentType, descriptor.ContentType);
+            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
+        }
+
+        [Test]
         [TestCase
         (
             "customcontainer",

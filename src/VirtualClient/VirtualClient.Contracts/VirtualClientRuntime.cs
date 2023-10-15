@@ -4,6 +4,7 @@
 namespace VirtualClient
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -68,6 +69,16 @@ namespace VirtualClient
         /// Set to true to request a system reboot of the system..
         /// </summary>
         public static bool IsRebootRequested { get; set; }
+
+        /// <summary>
+        /// Metadata provided to the application on the command line.
+        /// </summary>
+        public static IDictionary<string, IConvertible> Metadata { get; } = new ConcurrentDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Parameters provided to the application on the command line.
+        /// </summary>
+        public static IDictionary<string, IConvertible> Parameters { get; } = new ConcurrentDictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Cleans up any tracked resources.
