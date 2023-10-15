@@ -78,6 +78,9 @@ namespace VirtualClient.Actions
             this.ParseLatencyResult();
 
             List<Metric> metrics = new List<Metric>();
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[1].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[2].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[3].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
             metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"total {this.TotalIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
             metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"total {this.TotalIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
@@ -138,11 +141,17 @@ namespace VirtualClient.Actions
             // Change all the 'total:' to 'total|'
             this.PreprocessedText = this.PreprocessedText.Replace("total:", $"total|");
 
+            // Change all the 'avg:' to 'average'
+            this.PreprocessedText = this.PreprocessedText.Replace("avg.", $"average");
+
             // change all 'I/O per s' to 'iops'
             this.PreprocessedText = this.PreprocessedText.Replace("I/O per s", $"iops");
 
             // Removing % sign as it will be reflected in the unit.
             this.PreprocessedText = this.PreprocessedText.Replace("%", string.Empty);
+
+            // AvgLat -> latency average
+            this.PreprocessedText = this.PreprocessedText.Replace("AvgLat", "latency average");
 
             // LatStdDev -> latency stdev
             this.PreprocessedText = this.PreprocessedText.Replace("LatStdDev", "latency stdev");
@@ -151,7 +160,7 @@ namespace VirtualClient.Actions
             this.PreprocessedText = this.PreprocessedText.Replace("IopsStdDev", "iops stdev");
 
             // I/Os -> I/O operations
-            this.PreprocessedText = this.PreprocessedText.Replace("I/Os", "I/O operations");
+            this.PreprocessedText = this.PreprocessedText.Replace("I/Os", "io operations");
 
             // MiB/s -> throughput
             this.PreprocessedText = this.PreprocessedText.Replace("MiB/s", "throughput");
