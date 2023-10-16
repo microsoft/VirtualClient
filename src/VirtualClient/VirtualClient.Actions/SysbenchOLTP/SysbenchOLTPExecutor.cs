@@ -311,32 +311,6 @@ namespace VirtualClient.Actions
                     this.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)] = value;
                 }
             }
-
-            public int NumTables
-            {
-                get 
-                {
-                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.NumTables), -1);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.NumTables)] = value;
-                }
-            }
-
-            public int RecordCount
-            {
-                get 
-                {
-                    return this.Properties.GetValue<int>(nameof(SysbenchOLTPState.RecordCount), -1);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.RecordCount)] = value;
-                }
-            }
         }
 
         /// <summary>

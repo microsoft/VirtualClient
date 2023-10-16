@@ -7,18 +7,13 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Linq;
     using System.Net;
-    using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Fare;
-    using Microsoft.CodeAnalysis.Scripting;
     using Moq;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
-    using VirtualClient.Common.Rest;
     using VirtualClient.Contracts;
     using static VirtualClient.Actions.SysbenchOLTPExecutor;
 
@@ -191,11 +186,6 @@ namespace VirtualClient.Actions
         {
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
-
-            Item<SysbenchOLTPState> state = new Item<SysbenchOLTPState>(nameof(SysbenchOLTPState), new SysbenchOLTPState());
-
-            apiClient.UpdateStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, CancellationToken.None)
-                .GetAwaiter().GetResult();
         }
 
         private void SetupDefaultMockBehaviors(PlatformID platform, Architecture architecture)

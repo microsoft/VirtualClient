@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using Moq;
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
+    using NUnit.Framework.Interfaces;
     using Polly;
     using System;
     using System.Collections.Generic;
@@ -84,20 +85,9 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = -1,
-                [nameof(SysbenchOLTPState.RecordCount)] = -1
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                NumTables = -1,
-                RecordCount = -1
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
@@ -106,6 +96,8 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -154,20 +146,9 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = 4,
-                [nameof(SysbenchOLTPState.RecordCount)] = 2000000
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                NumTables = -1,
-                RecordCount = -1
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
@@ -176,6 +157,8 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -207,8 +190,33 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
-                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+                if (arguments.Contains("run"))
+                {
+                    string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                    process.StandardOutput.Append(File.ReadAllText(resultsPath));
+                }
+
+                if (arguments.Contains("FOUND_ROWS()"))
+                {
+                    string numRows = 
+                    "+--------------+" +
+                    "| FOUND_ROWS() |" +
+                    "+--------------+" +
+                    "|            4 |" +
+                    "+--------------+";
+                    process.StandardOutput.Append(numRows);
+                }
+
+                if (arguments.Contains("COUNT(*)"))
+                {
+                    string tableCount = 
+                    "+----------+" +
+                    "| COUNT(*) |" +
+                    "+----------+" +
+                    "|  2000000 |" +
+                    "+----------+";
+                    process.StandardOutput.Append(tableCount);
+                }
 
                 return process;
             };
@@ -224,20 +232,9 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = 10,
-                [nameof(SysbenchOLTPState.RecordCount)] = 200
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = false,
-                NumTables = -1,
-                RecordCount = -1
+                SysbenchInitialized = false
             }));
 
             string[] expectedCommands =
@@ -246,6 +243,8 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -277,8 +276,27 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
-                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+                if (arguments.Contains("FOUND_ROWS()"))
+                {
+                    string numRows = 
+                    "+--------------+" +
+                    "| FOUND_ROWS() |" +
+                    "+--------------+" +
+                    "|           10 |" +
+                    "+--------------+";
+                    process.StandardOutput.Append(numRows);
+                }
+
+                if (arguments.Contains("COUNT(*)"))
+                {
+                    string tableCount = 
+                    "+----------+" +
+                    "| COUNT(*) |" +
+                    "+----------+" +
+                    "|        0 |" +
+                    "+----------+";
+                    process.StandardOutput.Append(tableCount);
+                }
 
                 return process;
             };
@@ -303,21 +321,14 @@ namespace VirtualClient.Actions
                 SysbenchInitialized = false
             }));
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = -1,
-                [nameof(SysbenchOLTPState.RecordCount)] = -1,
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             string[] expectedCommands =
             {
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=40 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=40 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=40 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -368,9 +379,7 @@ namespace VirtualClient.Actions
 
             SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
             {
-                [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2",
-                [nameof(SysbenchOLTPState.NumTables)] = -1,
-                [nameof(SysbenchOLTPState.RecordCount)] = -1,
+                [nameof(SysbenchOLTPState.DiskPathsArgument)] = "/testdrive1 /testdrive2"
             });
 
             this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
@@ -390,6 +399,8 @@ namespace VirtualClient.Actions
                 "sudo ./configure",
                 "sudo make -j",
                 "sudo make install",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=1 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo {this.scriptPath}/balanced-client.sh 1.2.3.5 10 sbtest /testdrive1 /testdrive2",
@@ -439,17 +450,10 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = -1,
-                [nameof(SysbenchOLTPState.RecordCount)] = -1
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             string[] expectedCommands =
             {
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run"
@@ -489,9 +493,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
-                SysbenchInitialized = true,
-                NumTables = -1,
-                RecordCount = -1
+                SysbenchInitialized = true
             }));
 
             using (TestSysbenchOLTPClientExecutor SysbenchExecutor = new TestSysbenchOLTPClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -505,25 +507,16 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = 10,
-                [nameof(SysbenchOLTPState.RecordCount)] = 100000
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                DatabaseScenarioInitialized = true,
-                NumTables = 10,
-                RecordCount = 100000
+                DatabaseScenarioInitialized = true
             }));
 
             string[] expectedCommands =
             {
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",
             };
 
@@ -533,6 +526,7 @@ namespace VirtualClient.Actions
             {
 
                 string expectedCommand = expectedCommands[commandNumber];
+
                 if (expectedCommand == $"{exe} {arguments}")
                 {
                     commandExecuted = true;
@@ -553,8 +547,33 @@ namespace VirtualClient.Actions
                     OnHasExited = () => true
                 };
 
-                string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
-                process.StandardOutput.Append(File.ReadAllText(resultsPath));
+                if (arguments.Contains("run"))
+                {
+                    string resultsPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP", "SysbenchOLTPExample.txt");
+                    process.StandardOutput.Append(File.ReadAllText(resultsPath));
+                }
+
+                if (arguments.Contains("FOUND_ROWS()"))
+                {
+                    string numRows = 
+                    "+--------------+" +
+                    "| FOUND_ROWS() |" +
+                    "+--------------+" +
+                    "|           10 |" +
+                    "+--------------+";
+                    process.StandardOutput.Append(numRows);
+                }
+
+                if (arguments.Contains("COUNT(*)"))
+                {
+                    string tableCount = 
+                    "+----------+" +
+                    "| COUNT(*) |" +
+                    "+----------+" +
+                    "|   100000 |" +
+                    "+----------+";
+                    process.StandardOutput.Append(tableCount);
+                }
 
                 return process;
             };
@@ -570,26 +589,16 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            SysbenchOLTPState expectedState = new SysbenchOLTPState(new Dictionary<string, IConvertible>
-            {
-                [nameof(SysbenchOLTPState.NumTables)] = -1,
-                [nameof(SysbenchOLTPState.RecordCount)] = -1
-            });
-
-            this.mockFixture.ApiClient.Setup(client => client.GetStateAsync(nameof(SysbenchOLTPState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK, expectedState));
-
-
             this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchOLTPExecutor.SysbenchOLTPState()
             {
                 SysbenchInitialized = true,
-                DatabaseScenarioInitialized = true,
-                NumTables = -1,
-                RecordCount = -1
+                DatabaseScenarioInitialized = true
             }));
 
             string[] expectedCommands =
             {
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"",
+                $"sudo mysql -u sbtest -h 1.2.3.5 sbtest --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 cleanup",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
                 $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run",

@@ -6,13 +6,10 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -24,9 +21,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SysbenchOLTPServerExecutor : SysbenchOLTPExecutor
     {
-        private const string GetMySQLTableCountCommand = $"mysql --execute=\"USE sbtest; SHOW tables; SELECT FOUND_ROWS();\"";
-        private const string GetMySQLRecordCountCommand = $"mysql --execute=\"USE sbtest; SELECT COUNT(*) FROM sbtest1;\"";
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchOLTPServerExecutor"/> class.
         /// </summary>
@@ -64,31 +58,10 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
+            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+
             SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
-
-            // first, update the record and table counts based on what are in the database
-
-            string result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(GetMySQLTableCountCommand, null, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
-
-            Match match = Regex.Match(result, "[1-9][0-9]*");
-
-            if (match.Success)
-            {
-                state.NumTables = Convert.ToInt32(match.Value); 
-
-                result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(GetMySQLRecordCountCommand, null, Environment.CurrentDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                match = Regex.Match(result, "[1-9][0-9]*|0");
-                state.RecordCount = match.Success ? Convert.ToInt32(match.Value) : -1;
-            }
-            else if (!match.Success)
-            {
-                state.NumTables = -1;
-                state.RecordCount = -1;
-            }
 
             // prepare the server for a specific scenario
 
