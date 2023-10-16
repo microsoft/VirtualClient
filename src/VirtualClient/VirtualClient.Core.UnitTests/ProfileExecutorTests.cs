@@ -747,8 +747,8 @@ namespace VirtualClient
 
         private class TestProfileExecutor : ProfileExecutor
         {
-            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, IDictionary<string, IConvertible> metadata = null, ILogger logger = null)
-                : base(profile, dependencies, scenarios, metadata, logger)
+            public TestProfileExecutor(ExecutionProfile profile, IServiceCollection dependencies, IEnumerable<string> scenarios = null, ILogger logger = null)
+                : base(profile, dependencies, scenarios, logger)
             {
             }
 
