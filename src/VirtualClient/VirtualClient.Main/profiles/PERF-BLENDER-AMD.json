@@ -7,8 +7,8 @@
   },
   "Parameters": {
     "BlenderVersion": "3.6.0",
-    "scenes": "monster junkshop classroom",
-    "device": "CPU, HIP"
+    "Scenes": "monster junkshop classroom",
+    "DeviceTypes": "CPU, HIP"
   },
   "Actions": [
     {

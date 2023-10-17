@@ -5,14 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Specialized;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -28,6 +27,7 @@ namespace VirtualClient.Actions
     [WindowsCompatible]
     public class BlenderExecutor : VirtualClientComponent
     {
+        private const string ResultFilePrefix = "blender_results";
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
 
@@ -44,29 +44,40 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The command line argument defined in the profile.
+        /// The Scenes that will be run by Blender.
         /// </summary>
-        public string GUIOption
+        public string Scenes
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.GUIOption));
+                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.Scenes));
             }
         }
 
         /// <summary>
-        /// The viewset that will be run by Blenderperf.
+        /// The Blender Version being used.
         /// </summary>
-        public string Viewset
+        public string BlenderVersion
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.Viewset));
+                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.BlenderVersion));
             }
         }
 
         /// <summary>
-        /// The path to the RunViewperf.exe.
+        /// The device types to be tested on.
+        /// </summary>
+        public string[] DeviceTypes
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.DeviceTypes)).Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            }
+        }        
+
+        /// <summary>
+        /// The path to the blender-benchmark-cli.exe.
         /// </summary>
         public string ExecutablePath { get; set; }
 
@@ -96,24 +107,26 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = new List<Metric>();
 
-            string commandArguments = this.GenerateCommandArguments();
+            string timeSuffix = DateTime.Now.ToString("yyyy-MM-ddTHHmm");
 
-            EventContext relatedContext = telemetryContext.Clone()
+            string[] commandArgumentsArray = this.GenerateCommandArgumentsArray(timeSuffix);
+
+            foreach (string commandArguments in commandArgumentsArray)
+            {
+                EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
                 .AddContext("commandArguments", commandArguments);
 
-            await this.SetUpEnvironmentVariable().ConfigureAwait(false);
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
-            {
-                if (!cancellationToken.IsCancellationRequested)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                    process.ThrowIfWorkloadFailed();
-                    this.CaptureMetrics(process, commandArguments, relatedContext);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        process.ThrowIfWorkloadFailed();
+                        this.CaptureMetrics(process, timeSuffix, commandArguments, relatedContext);
+                    }
                 }
-            }
-
+            }        
         }
 
         /// <summary>
@@ -128,7 +141,7 @@ namespace VirtualClient.Actions
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("Blenderperf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("Blender", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;
@@ -137,34 +150,29 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string timeSuffix, string commandArguments, EventContext telemetryContext)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-                    // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
-                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path, "results_*", SearchOption.TopDirectoryOnly);
-
-                    // Sort the "results_" subdirectories by creation time in descending order and take the first one
-                    string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
-                    if (resultsFileDir == null)
+                    string resultsFilePath = $"{ResultFilePrefix}_{timeSuffix}.json";
+                    if (resultsFilePath == null)
                     {
                         throw new WorkloadResultsException(
-                            $"The expected Blenderperf result directory was not found in '{this.Package.Path}'.",
+                            $"The expected Blender results file was not found in '{this.Package.Path}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
 
-                    string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
                     string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
-                    BlenderMetricsParser resultsParser = new(resultsContent);
+                    BlenderMetricsParser resultsParser = new BlenderMetricsParser(resultsContent);
                     IList<Metric> metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
                            this.Scenario,
                            workloadProcess.FullCommand(),
-                           toolVersion: "2020 v3.0");
+                           toolVersion: "3.1.0");
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
@@ -177,10 +185,6 @@ namespace VirtualClient.Actions
                         commandArguments,
                         this.Tags,
                         telemetryContext);
-
-                    // rename the result file to avoid confusions on future runs
-                    string historyResultsDir = this.PlatformSpecifics.Combine(this.Package.Path, "hist_" + Path.GetFileName(resultsFileDir));
-                    this.fileSystem.Directory.Move(resultsFileDir, historyResultsDir);
                 }
                 catch (SchemaException exc)
                 {
@@ -208,19 +212,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Generate the Blender Command Arguments
+        /// Generate the Blender Command Arguments in an array. Each entry is a different set of cmd args.
         /// </summary>
-        private string GenerateCommandArguments()
+        private string[] GenerateCommandArgumentsArray(string timeSuffix)
         {
-            return $"-viewset \"{this.Viewset}\" {this.GUIOption}";
-        }
+            string[] commandArgumentsArray = new string[this.DeviceTypes.Length];
+            string commandArgument;
+            for (int i = 0; i < this.DeviceTypes.Length; i++)
+            {
+                commandArgument = $"benchmark benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json > {ResultFilePrefix}_{timeSuffix}.json";
+                commandArgumentsArray[i] = commandArgument;
+            }
 
-        private async Task SetUpEnvironmentVariable()
-        {
-            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath visualStudioCRuntimePackage = await packageManager.GetPackageAsync(VisualStudioCRuntimePackageName, CancellationToken.None).ConfigureAwait(false);
-            string visualStudioCRuntimeDllPath = this.PlatformSpecifics.ToPlatformSpecificPath(visualStudioCRuntimePackage, this.Platform, this.CpuArchitecture).Path;
-            this.SetEnvironmentVariable(EnvironmentVariable.PATH, visualStudioCRuntimeDllPath, EnvironmentVariableTarget.Machine, append: true);
+            return commandArgumentsArray;
         }
     }
 }
