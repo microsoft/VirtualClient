@@ -10,10 +10,8 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -31,10 +29,22 @@ namespace VirtualClient.Actions
     {
         private const string VisualStudioCRuntimePackageName = "visualstudiocruntime";
         private const string RenamePrefix = "hist_";
+        private readonly IDictionary<string, string> viewsetLogFileNameMapping = new Dictionary<string, string>()
+        {
+        { "3dsmax", "3dsmax-07" },
+        { "catia", "catia-06" },
+        { "creo", "creo-03" },
+        { "energy", "energy-03" },
+        { "maya", "maya-06" },
+        { "medical", "medical-03" },
+        { "snx", "snx-04" },
+        { "sw", "solidworks-07" }
+        };
 
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private string historyResultsPath;
+        private string psExecPath;
 
         /// <summary>
         /// Constructor for <see cref="SpecViewExecutor"/>
@@ -72,6 +82,28 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Using PsExec to run specviewperf in session 1.
+        /// </summary>
+        public string PsExecPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.PsExecPackageName));
+            }
+        }
+
+        /// <summary>
+        /// PsExec session number
+        /// </summary>
+        public int PsExecSession
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(ThreeDMarkExecutor.PsExecSession));
+            }
+        }
+
+        /// <summary>
         /// The path to the RunViewperf.exe.
         /// </summary>
         public string ExecutablePath { get; set; }
@@ -81,6 +113,12 @@ namespace VirtualClient.Actions
         /// executable.
         /// </summary>
         protected DependencyPath Package { get; set; }
+
+        /// <summary>
+        /// Defines the path to the PsExec package that contains the workload
+        /// executable.
+        /// </summary>
+        protected DependencyPath PsExecPackage { get; set; }        
 
         /// <summary>
         /// Initializes the environment
@@ -93,6 +131,7 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+            this.psExecPath = this.PlatformSpecifics.Combine(this.PsExecPackage.Path, "PsExec.exe");
         }
 
         /// <summary>
@@ -102,7 +141,7 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = new List<Metric>();
 
-            string commandArguments = this.GenerateCommandArguments();
+            string commandArguments = this.GeneratePsExecCommandArguments();
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("executable", this.ExecutablePath)
@@ -110,9 +149,9 @@ namespace VirtualClient.Actions
 
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(this.psExecPath, commandArguments, this.PsExecPackage.Path, relatedContext, cancellationToken).ConfigureAwait(false))
             {
-                if (!cancellationToken.IsCancellationRequested)
+                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext);
                     process.ThrowIfWorkloadFailed();
@@ -130,11 +169,11 @@ namespace VirtualClient.Actions
                 foreach (string viewset in viewsetArray)
                 {
                     // log file is inside a folder that starts with the viewset name e.g. 3dsmax-07
-                    string? viewsetLogDir = this.fileSystem.Directory.GetDirectories(this.historyResultsPath, $"{viewset}*", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                    string? viewsetLogDir = this.PlatformSpecifics.Combine(this.historyResultsPath, this.viewsetLogFileNameMapping[viewset]);
                     if (viewsetLogDir == null)
                     {
                         throw new WorkloadResultsException(
-                            $"The expected SPECviewperf viewset log directory was not found in '{this.historyResultsPath}'.",
+                            $"The expected SPECviewperf viewset directory {viewset} was not found in '{this.historyResultsPath}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
 
@@ -235,16 +274,25 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
+
+                DependencyPath psExecPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PsExecPackageName, CancellationToken.None).
+                    ConfigureAwait(false) ?? throw new DependencyException(
+                        $"The expected package '{this.PsExecPackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+
                 this.Package = workloadPackage;
+                this.PsExecPackage = this.PlatformSpecifics.ToPlatformSpecificPath(psExecPackage, this.Platform, this.CpuArchitecture);
             }
         }
 
         /// <summary>
         /// Generate the SPECview Command Arguments
         /// </summary>
-        private string GenerateCommandArguments()
-        {      
-            return $"-viewset \"{this.Viewset}\" {this.GUIOption}";
+        private string GeneratePsExecCommandArguments()
+        {
+            string baseArg = @$"-s -i {this.PsExecSession} -w {this.Package.Path} -accepteula -nobanner";
+            string specViewPerfCmd = @$"{this.ExecutablePath} -viewset {this.Viewset} {this.GUIOption}";
+            return $"{baseArg} {specViewPerfCmd}";
         }
 
         private async Task SetUpEnvironmentVariable()

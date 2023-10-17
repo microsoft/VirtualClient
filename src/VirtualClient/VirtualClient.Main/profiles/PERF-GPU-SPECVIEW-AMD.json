@@ -17,6 +17,8 @@
         "Viewset": "$.Parameters.Viewset",
         "GUIOption": "-nogui",
         "PackageName": "specviewperf2020",
+        "PsExecPackageName": "pstools",
+        "PsExecSession": 2,
         "Tags": "GPU,SPECview,Gaming"
       }
     }
@@ -38,6 +40,16 @@
         "Scenario": "InstallAMDGPUDriver",
         "GpuModel": "$.Parameters.GpuModel",
         "PackageName": "amdgpudriver"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallPsToolsPackage",
+        "BlobContainer": "packages",
+        "BlobName": "pstools.2.51.zip",
+        "PackageName": "pstools",
+        "Extract": true
       }
     },
     {
