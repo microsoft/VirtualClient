@@ -15,7 +15,7 @@ namespace VirtualClient.Contracts
     /// <summary>
     /// Represents a Virtual Client instance (e.g. name, IP address, etc.)
     /// </summary>
-    [DebuggerDisplay("{Name}({Role}):{PrivateIPAddress}")]
+    [DebuggerDisplay("{Name}({Role}):{IPAddress}")]
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class ClientInstance : IEquatable<ClientInstance>
     {
