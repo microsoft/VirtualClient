@@ -3,19 +3,12 @@
 
 namespace VirtualClient.Actions
 {
-    using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.Globalization;
-    using System.IO;
     using System.Linq;
-    using System.Reflection.Metadata;
-    using System.Text;
-    using System.Text.RegularExpressions;
-    using System.Xml.Linq;
-    using System.Xml.Serialization;
+    using MathNet.Numerics;
     using Newtonsoft.Json;
-    using VirtualClient.Common.Contracts;
+    using VirtualClient.Actions.Blender;
     using VirtualClient.Contracts;
 
     /// <summary>
@@ -23,14 +16,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class BlenderMetricsParser : MetricsParser
     {
-        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
-        {
-            Converters = new List<JsonConverter>
-            {
-                new ParameterDictionaryJsonConverter()
-            }
-        };
-
         /// <summary>
         /// Parser for the Blender workload
         /// </summary>
@@ -49,14 +34,10 @@ namespace VirtualClient.Actions
             try
             {
                 List<Metric> metrics = new List<Metric>();
-                IDictionary<string, IConvertible> workloadResults = this.RawText.FromJson<IDictionary<string, IConvertible>>(BlenderMetricsParser.SerializerSettings);
-
-                if (workloadResults?.Any() == true)
+                List<BlenderResult> blenderResults = JsonConvert.DeserializeObject<List<BlenderResult>>(this.RawText);
+                foreach (BlenderResult blenderResult in blenderResults)
                 {
-                    foreach (var entry in workloadResults)
-                    {
-                        metrics.Add(new Metric(entry.Key, entry.Value.ToDouble(CultureInfo.InvariantCulture)));
-                    }
+                    metrics.Add(new Metric(blenderResult.Scene.Label, blenderResult.Stats.SamplesPerMinute, unit: "samples_per_minute"));
                 }
 
                 return metrics;
