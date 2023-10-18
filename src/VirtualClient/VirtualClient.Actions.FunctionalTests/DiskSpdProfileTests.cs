@@ -79,7 +79,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
-                if (arguments.Contains("--name=diskspd", StringComparison.OrdinalIgnoreCase))
+                if (arguments.Contains("diskspd", StringComparison.OrdinalIgnoreCase))
                 {
                     process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_DiskSpd.txt"));
                 }
