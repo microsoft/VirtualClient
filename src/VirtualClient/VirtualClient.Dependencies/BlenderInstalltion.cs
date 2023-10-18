@@ -65,6 +65,18 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// The name of the blender benchmark cli (e.g. benchmark-launcher-cli.exe)
+        /// </summary>
+        public string ExecutableName 
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(BlenderInstallation.ExecutableName));
+
+            }
+        }
+
+        /// <summary>
         /// A policy that defines how the component will retry when
         /// it experiences transient issues.
         /// </summary>
@@ -91,7 +103,7 @@ namespace VirtualClient.Dependencies
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, this.ExecutableName);
         }
 
         /// <summary>

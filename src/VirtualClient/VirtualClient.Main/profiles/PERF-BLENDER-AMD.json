@@ -6,16 +6,22 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
+    "GpuModel": "v620",
     "BlenderVersion": "3.6.0",
     "Scenes": "monster junkshop classroom",
-    "DeviceTypes": "CPU, HIP"
+    "DeviceTypes": "CPU, HIP",
+    "ExecutableName": "benchmark-launcher-cli.exe"
   },
   "Actions": [
     {
       "Type": "BlenderExecutor",
       "Parameters": {
         "Scenario": "MeasureGPU&CPUPerformance",
-        "PackageName": "blenderbenchmarkcli"
+        "PackageName": "blenderbenchmarkcli",
+        "BlenderVersion": "$.Parameters.BlenderVersion",
+        "Scenes": "$.Parameters.Scenes",
+        "DeviceTypes": "$.Parameters.DeviceTypes",
+        "ExecutableName": "$.Parameters.ExecutableName"
       }
     }
   ],
@@ -43,8 +49,9 @@
       "Parameters": {
         "Scenario": "InstallBlenderBenchmarkCliPackage",
         "BlobContainer": "packages",
-        "BlobName": "BlenderCli.zip",
+        "BlobName": "blendercli.zip",
         "PackageName": "blenderbenchmarkcli",
+        "ExecutableName": "$.Parameters.ExecutableName",
         "Extract": true
       }
     },
@@ -52,9 +59,10 @@
       "Type": "BlenderInstallation",
       "Parameters": {
         "Scenario": "InstallBlender",
-        "BlenderVersion": "3.6.0",
-        "scenes": "monster,junkshop,classroom",
-        "PackageName": "blenderbenchmarkcli"
+        "PackageName": "blenderbenchmarkcli",
+        "BlenderVersion": "$.Parameters.BlenderVersion",
+        "Scenes": "$.Parameters.Scenes",
+        "ExecutableName": "$.Parameters.ExecutableName"
       }
     }
   ]

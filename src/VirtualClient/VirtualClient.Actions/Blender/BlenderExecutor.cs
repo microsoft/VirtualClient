@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -74,7 +75,19 @@ namespace VirtualClient.Actions
             {
                 return this.Parameters.GetValue<string>(nameof(BlenderExecutor.DeviceTypes)).Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
-        }        
+        }
+
+        /// <summary>
+        /// The name of the blender benchmark cli (e.g. benchmark-launcher-cli.exe)
+        /// </summary>
+        public string ExecutableName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.ExecutableName));
+
+            }
+        }
 
         /// <summary>
         /// The path to the blender-benchmark-cli.exe.
@@ -97,7 +110,7 @@ namespace VirtualClient.Actions
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, this.ExecutableName);
         }
 
         /// <summary>
@@ -107,9 +120,7 @@ namespace VirtualClient.Actions
         {
             IList<Metric> metrics = new List<Metric>();
 
-            string timeSuffix = DateTime.Now.ToString("yyyy-MM-ddTHHmm");
-
-            string[] commandArgumentsArray = this.GenerateCommandArgumentsArray(timeSuffix);
+            string[] commandArgumentsArray = this.GenerateCommandArgumentsArray();
 
             foreach (string commandArguments in commandArgumentsArray)
             {
@@ -123,10 +134,10 @@ namespace VirtualClient.Actions
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext);
                         process.ThrowIfWorkloadFailed();
-                        this.CaptureMetrics(process, timeSuffix, commandArguments, relatedContext);
+                        this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString());
                     }
                 }
-            }        
+            }
         }
 
         /// <summary>
@@ -150,21 +161,18 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private void CaptureMetrics(IProcessProxy workloadProcess, string timeSuffix, string commandArguments, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, string resultsContent)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
-                    string resultsFilePath = $"{ResultFilePrefix}_{timeSuffix}.json";
-                    if (resultsFilePath == null)
+                    if (resultsContent == null)
                     {
                         throw new WorkloadResultsException(
-                            $"The expected Blender results file was not found in '{this.Package.Path}'.",
+                            "No results output from Blender Benchmark",
                             ErrorReason.WorkloadResultsNotFound);
-                    }
-
-                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
+                    } 
 
                     BlenderMetricsParser resultsParser = new BlenderMetricsParser(resultsContent);
                     IList<Metric> metrics = resultsParser.Parse();
@@ -214,13 +222,14 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Generate the Blender Command Arguments in an array. Each entry is a different set of cmd args.
         /// </summary>
-        private string[] GenerateCommandArgumentsArray(string timeSuffix)
+        private string[] GenerateCommandArgumentsArray()
         {
             string[] commandArgumentsArray = new string[this.DeviceTypes.Length];
             string commandArgument;
             for (int i = 0; i < this.DeviceTypes.Length; i++)
             {
-                commandArgument = $"benchmark benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json > {ResultFilePrefix}_{timeSuffix}.json";
+                // > {ResultFilePrefix}_{timeSuffix}_{this.DeviceTypes[i]}
+                commandArgument = $"benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json";
                 commandArgumentsArray[i] = commandArgument;
             }
 
