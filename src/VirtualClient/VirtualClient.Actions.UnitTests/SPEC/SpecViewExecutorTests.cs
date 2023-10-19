@@ -23,8 +23,7 @@ namespace VirtualClient.Actions
     public class SpecViewExecutorTests
     {
         private MockFixture mockFixture;
-        private DependencyPath mockSpecViewPackage;
-        private DependencyPath mockVisualStudioCRuntime;
+        private DependencyPath mockPstoolsPackage, mockSpecViewPackage, mockVisualStudioCRuntime;
         private string results;
 
         [SetUp]
@@ -102,10 +101,13 @@ namespace VirtualClient.Actions
                 int renamed = 0;
                 if (platform == PlatformID.Win32NT)
                 {
-                    string expectedSpecViewExecutablePath = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "RunViewperf.exe");
+                    string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockSpecViewPackage.Path} -accepteula -nobanner";
+                    string specViewExecutablePath = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "RunViewperf.exe");
                     string workingDir = this.mockSpecViewPackage.Path;
-                    string expectedGUIOption = this.mockFixture.Parameters["GUIOption"].ToString();
-                    string expectedCommandArguments = $"-viewset \"{viewsetArg}\" {expectedGUIOption}";
+                    string specViewPerfCmd = @$"{specViewExecutablePath} -viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
+                    string expectedCommandArguments =  $"{baseArg} {specViewPerfCmd}";
+                    string expectedPsExecPath = this.mockFixture.Combine(this.mockFixture.ToPlatformSpecificPath(this.mockPstoolsPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path, "PsExec.exe");
+
                     string mockResultDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "results_19991231T235959");
                     string mockResultFilePath = this.mockFixture.Combine(mockResultDir, "resultCSV.csv");
                     string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
@@ -115,7 +117,7 @@ namespace VirtualClient.Actions
                     mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
                     this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
-                        if (arguments == expectedCommandArguments && command == expectedSpecViewExecutablePath)
+                        if (arguments == expectedCommandArguments && command == expectedPsExecPath)
                         {
                             executed++;
                         }
@@ -145,18 +147,23 @@ namespace VirtualClient.Actions
                 { "Scenario", "SPECviewperf" },
                 { "PackageName", "specviewperf2020" },
                 { "GUIOption", "-nogui" },
-                { "Viewset", "3dsmax" }
+                { "Viewset", "3dsmax, catia" },
+                { "PsExecPackageName", "pstools" },
+                { "PsExecSession", 2 }
             };
 
-            this.mockSpecViewPackage = new DependencyPath("specviewperf", this.mockFixture.GetPackagePath("specviewperf"));
+            this.mockSpecViewPackage = new DependencyPath("specviewperf2020", this.mockFixture.GetPackagePath("specviewperf"));
+            this.mockPstoolsPackage = new DependencyPath("pstools", this.mockFixture.GetPackagePath("pstools2.51"));
+
             this.mockVisualStudioCRuntime = new DependencyPath("visualstudiocruntime", this.mockFixture.GetPackagePath("visualstudiocruntime"));
 
             this.mockFixture.PackageManager.OnGetPackage("specviewperf2020").ReturnsAsync(this.mockSpecViewPackage);
             this.mockFixture.PackageManager.OnGetPackage("visualstudiocruntime").ReturnsAsync(this.mockVisualStudioCRuntime);
+            this.mockFixture.PackageManager.OnGetPackage("pstools").ReturnsAsync(this.mockPstoolsPackage);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
-            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "SPECview", "resultCSV_multipleViewSets.csv"));
+            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "SPECview", "resultCSV.csv"));
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns(this.results);
         }
 

@@ -139,7 +139,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IList<Metric> metrics = new List<Metric>();
+            var metrics = new List<Metric>();
 
             string commandArguments = this.GeneratePsExecCommandArguments();
 
@@ -165,7 +165,7 @@ namespace VirtualClient.Actions
                 string[] viewsetArray = this.Viewset.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                 string specviewOriginalLogPath;
                 string specviewRenamedLogPath;
-                List<Task> tasks = new List<Task>();
+                var tasks = new List<Task>();
                 foreach (string viewset in viewsetArray)
                 {
                     // log file is inside a folder that starts with the viewset name e.g. 3dsmax-07
