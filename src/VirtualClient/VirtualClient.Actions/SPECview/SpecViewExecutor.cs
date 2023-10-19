@@ -124,12 +124,12 @@ namespace VirtualClient.Actions
         /// Defines the viewset to log file mapping.
         /// executable.
         /// </summary>
-        protected IDictionary<string, string> ViewsetLogFileNameMapping 
-        { 
-            get 
+        protected IDictionary<string, string> ViewsetLogFileNameMapping
+        {
+            get
             {
                 return this.viewsetLogFileNameMapping;
-            } 
+            }
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ namespace VirtualClient.Actions
 
             using (IProcessProxy process = await this.ExecuteCommandAsync(this.psExecPath, commandArguments, this.PsExecPackage.Path, relatedContext, cancellationToken).ConfigureAwait(false))
             {
-                 if (!cancellationToken.IsCancellationRequested)
+                if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext);
                     process.ThrowIfWorkloadFailed();
@@ -232,7 +232,7 @@ namespace VirtualClient.Actions
 
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
-                    if (resultsFileDir == null) 
+                    if (resultsFileDir == null)
                     {
                         throw new WorkloadResultsException(
                             $"The expected SPECviewperf result directory was not found in '{this.Package.Path}'.",

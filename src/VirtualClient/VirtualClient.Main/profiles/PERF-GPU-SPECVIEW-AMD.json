@@ -18,7 +18,7 @@
         "GUIOption": "-nogui",
         "PackageName": "specviewperf2020",
         "PsExecPackageName": "pstools",
-        "PsExecSession": 2,
+        "PsExecSession": 1,
         "Tags": "GPU,SPECview,Gaming"
       }
     }
