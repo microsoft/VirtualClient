@@ -15,7 +15,7 @@ Virtual Client is a self-contained .NET 6 application, so "Installation" really 
 [all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
 
 ### Debian / Ubuntu (deb)
-VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/local/bin/virtualclient`, which is typically in Linux `$PATH`.
+VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`, which is typically in Linux `$PATH`.
 
 ```bash
 # example: ubuntu
