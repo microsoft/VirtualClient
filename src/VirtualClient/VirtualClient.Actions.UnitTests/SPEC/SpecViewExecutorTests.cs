@@ -15,6 +15,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.Logging;
     using Moq;
     using NUnit.Framework;
+    using Serilog;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -94,11 +95,11 @@ namespace VirtualClient.Actions
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             this.mockFixture.Parameters["Viewset"] = viewsetArg;
+            var viewsets = viewsetArg.Split(",", StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries);
 
             using (TestSpecViewExecutor executor = new TestSpecViewExecutor(this.mockFixture))
             {
-                int executed = 0;
-                int renamed = 0;
+                int executed = 0, renamed = 0, uploaded = 0;
                 if (platform == PlatformID.Win32NT)
                 {
                     string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockSpecViewPackage.Path} -accepteula -nobanner";
@@ -115,6 +116,17 @@ namespace VirtualClient.Actions
                     // Test that the result is properly renamed
                     mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] {mockResultDir});
                     mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
+
+                    // Test that the log file is renamed and uploaded 
+                    string mockLogFilePath, renamedMockLogFilePath;
+                    foreach (var viewset in viewsets)
+                    {
+                        mockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"{executor.ViewsetLogFileNameMapping[viewset]}", "log.txt");
+                        renamedMockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"{executor.ViewsetLogFileNameMapping[viewset]}", $"{viewset}-log.txt");
+                        mockFixture.Directory.Setup(dir => dir.GetDirectories(mockHistoryResultsDir, "{executor.ViewsetLogFileNameMapping[viewSet]}", SearchOption.TopDirectoryOnly)).Returns(new[] { mockLogFilePath });
+                        mockFixture.Directory.Setup(dir => dir.Move(mockLogFilePath, renamedMockLogFilePath)).Callback(() => uploaded++);
+                    }
+
                     this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
                     {
                         if (arguments == expectedCommandArguments && command == expectedPsExecPath)
@@ -125,16 +137,12 @@ namespace VirtualClient.Actions
                         return this.mockFixture.Process;
                     };
 
-                    // Remove any mock blob managers so that we do not evaluate the code paths that
-                    // upload log files by default.
-                    this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
-                    this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
-
                     await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                 }
 
                 Assert.AreEqual(1, executed);
                 Assert.AreEqual(1, renamed);
+                Assert.AreEqual(viewsets.Length, uploaded);
             }
         }
 
@@ -174,6 +182,8 @@ namespace VirtualClient.Actions
             {
             }
             public new string ExecutablePath => base.ExecutablePath;
+
+            public new IDictionary<string, string> ViewsetLogFileNameMapping => base.ViewsetLogFileNameMapping;
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {

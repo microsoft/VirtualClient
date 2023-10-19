@@ -118,7 +118,19 @@ namespace VirtualClient.Actions
         /// Defines the path to the PsExec package that contains the workload
         /// executable.
         /// </summary>
-        protected DependencyPath PsExecPackage { get; set; }        
+        protected DependencyPath PsExecPackage { get; set; }
+
+        /// <summary>
+        /// Defines the viewset to log file mapping.
+        /// executable.
+        /// </summary>
+        protected IDictionary<string, string> ViewsetLogFileNameMapping 
+        { 
+            get 
+            {
+                return this.viewsetLogFileNameMapping;
+            } 
+        }
 
         /// <summary>
         /// Initializes the environment
@@ -166,6 +178,7 @@ namespace VirtualClient.Actions
                 string specviewOriginalLogPath;
                 string specviewRenamedLogPath;
                 var tasks = new List<Task>();
+
                 foreach (string viewset in viewsetArray)
                 {
                     // log file is inside a folder that starts with the viewset name e.g. 3dsmax-07
