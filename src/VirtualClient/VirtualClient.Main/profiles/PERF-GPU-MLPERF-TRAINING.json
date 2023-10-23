@@ -7,8 +7,8 @@
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size"
     },
     "Parameters": {
-        "Username": "",
-        "DiskFilter": "SizeGreaterThan:8000gb",
+        "Username": "azureuser",
+        "DiskFilter": "BiggestSize",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
         "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
@@ -26,7 +26,8 @@
                 "ContainerName": "language_model",
                 "DataPath": "mlperf-training-data-bert.1.0.0",
                 "GPUNum": "8",
-                "ConfigFile": "config_DGXA100_1x8x56x1.sh"
+                "ConfigFile": "config_DGXA100_1x8x56x1.sh",
+                "PackageName": "mlperftraining"
             }
         }
     ],
@@ -41,16 +42,18 @@
             "Type": "MountDisks",
             "Parameters": {
                 "Scenario": "MountDataDisk",
-                "MountPointName": "/mlperftraining",
+                "MountPointPrefix": "/mlperftraining",
                 "DiskFilter":  "BiggestSize"
             }
         },
         {
-            "Type": "GitRepoClone",
+            "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "CloneMLCommonsRepo",
-                "RepoUri": "https://github.com/mlcommons/training_results_v2.1.git",
-                "PackageName": "mlperf"
+                "Scenario": "InstallMLPerfTrainingPackage",
+                "BlobContainer": "packages",
+                "BlobName": "mlperftraining.2.1.zip",
+                "PackageName": "mlperftraining",
+                "Extract": true
             }
         },
         {
@@ -88,7 +91,8 @@
                 "BlobContainer": "packages",
                 "BlobName": "mlperf-training-data-bert.1.0.0.zip",
                 "PackageName": "mlperftrainingdata_bert",
-                "Extract": true
+                "Extract": true,
+                "InstallationPath": "/mlperftraining0"
             }
         }
     ]

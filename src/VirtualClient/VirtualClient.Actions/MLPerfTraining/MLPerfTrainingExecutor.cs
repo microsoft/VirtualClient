@@ -26,6 +26,7 @@ namespace VirtualClient.Actions
     {
         private const string AccuracySummary = nameof(MLPerfTrainingExecutor.AccuracySummary);
         private const string PerformanceSummary = nameof(MLPerfTrainingExecutor.PerformanceSummary);
+        private string executionPath; 
 
         private IStateManager stateManager;
         private ISystemManagement systemManager;
@@ -155,36 +156,19 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The NVIDIA implementation for the MLPerf Training Workload, which is a sub-directory in the repository home
-        /// </summary>
-        protected string NvidiaPath
-        {
-            get
-            {
-                return this.PlatformSpecifics.Combine(this.PlatformSpecifics.PackagesDirectory, "mlperf", "NVIDIA");
-            }
-        }
-
-        /// <summary>
-        /// The MLPerf Training Pytorch code directory.
-        /// </summary>
-        protected string ExecutionPath
-        {
-            get
-            {
-                return this.PlatformSpecifics.Combine(this.NvidiaPath, "benchmarks", this.Model, "implementations", this.Implementation);
-            }
-        }
-
-        /// <summary>
         /// Initializes the environment for execution of the MLPerf Training workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.InitializationStarted", telemetryContext);
 
-            await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken)
+            await this.LogIfUnixDistroNotSupportedAsync(cancellationToken)
                 .ConfigureAwait(false);
+
+            IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
+            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
+                .ConfigureAwait(false);
+            this.executionPath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NVIDIA", "benchmarks", this.Model, "implementations", this.Implementation);
 
             MLPerfTrainingState state = await this.stateManager.GetStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", cancellationToken)
                 ?? new MLPerfTrainingState();
@@ -205,13 +189,13 @@ namespace VirtualClient.Actions
         protected async Task SetupDocker(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // add user in docker group
-            await this.ExecuteCommandAsync("usermod", $"-aG docker {this.Username}", this.ExecutionPath, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("sudo", $"usermod -aG docker {this.Username}", this.executionPath, telemetryContext, cancellationToken);
 
             string dockerImageCommand = $"docker build --pull -t {this.GetContainerName()} .";
             string dockerRunCommand = $"docker run --runtime=nvidia {this.GetContainerName()}";
 
-            await this.ExecuteCommandAsync("sudo", dockerImageCommand, this.ExecutionPath, telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("sudo", dockerRunCommand, this.ExecutionPath, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("sudo", dockerImageCommand, this.executionPath, telemetryContext, cancellationToken);
+            await this.ExecuteCommandAsync("sudo", dockerRunCommand, this.executionPath, telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -244,13 +228,18 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
+                List<string> commands = new List<string>
+                {
+                    @"sudo chmod \+x ""/home/user/tools/VirtualClient/packages/hpcg/runhpcg.sh""",
+                    @"sudo bash /home/user/tools/VirtualClient/packages/hpcg/runhpcg.sh"
+                };
                 string execCommand = $"su -c \"source {this.ConfigFile}; " + 
                                      $"env BATCHSIZE={this.BatchSize} " +
                                      $"DGXNGPU={this.GPUCount} " + 
                                      $"CUDA_VISIBLE_DEVICES=\"{string.Join(',', Enumerable.Range(0, this.GPUCount).ToArray())}\" " + 
                                      $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.ExecutionPath, telemetryContext, cancellationToken))
+                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.executionPath, telemetryContext, cancellationToken))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -312,26 +301,12 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        ///  Filter the disks using the disk filter and return them
-        /// </summary>
-        /// <param name="disks"></param>
-        /// <param name="diskFilter"></param>
-        /// <returns></returns>
-        private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
-        {
-            diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
-            List<Disk> filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, PlatformID.Unix).ToList();
-
-            return filteredDisks;
-        }
-
-        /// <summary>
-        /// Unsupported Linux error handling
+        /// Unsupported Linux error handling.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
-        private async Task ThrowIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
+        private async Task LogIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)
             {
@@ -347,11 +322,8 @@ namespace VirtualClient.Actions
                     case LinuxDistribution.SUSE:
                         break;
                     default:
-                        throw new WorkloadException(
-                            $"The MLPerf Training benchmark workload is not supported on the current Linux distro - " +
-                            $"{linuxDistributionInfo.LinuxDistribution.ToString()}.  Supported distros include:" +
-                            $" Ubuntu, Debian, CentOD7, RHEL7, SUSE. ",
-                            ErrorReason.LinuxDistributionNotSupported);
+                        this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                        break;
                 }
             }
         }
