@@ -41,8 +41,8 @@ cp -r $BUILD_DIR/* \$RPM_BUILD_ROOT/opt/$PACKAGE_NAME
 /opt/$PACKAGE_NAME
 
 %post
-ln -s /opt/$PACKAGE_NAME/VirtualClient /usr/local/bin/VirtualClient
-ln -s /opt/$PACKAGE_NAME/VirtualClient /usr/local/bin/virtualclient
+ln -s /opt/$PACKAGE_NAME/VirtualClient /usr/bin/VirtualClient
+ln -s /opt/$PACKAGE_NAME/VirtualClient /usr/bin/virtualclient
 
 %clean
 
