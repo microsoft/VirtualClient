@@ -44,7 +44,6 @@ namespace VirtualClient.Actions
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private string historyResultsPath;
-        private string psExecPath;
 
         /// <summary>
         /// Constructor for <see cref="SpecViewExecutor"/>
@@ -99,20 +98,25 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(ThreeDMarkExecutor.PsExecSession));
+                return this.Parameters.GetValue<int>(nameof(SpecViewExecutor.PsExecSession));
             }
         }
 
         /// <summary>
         /// The path to the RunViewperf.exe.
         /// </summary>
-        public string ExecutablePath { get; set; }
+        protected string SpecviewExecutablePath { get; set; }
 
         /// <summary>
         /// Defines the path to the SPECview package that contains the workload
         /// executable.
         /// </summary>
-        protected DependencyPath Package { get; set; }
+        protected DependencyPath SpecviewPackage { get; set; }
+
+        /// <summary>
+        /// The path to the PsExec.exe.
+        /// </summary>
+        protected string PsExecExecutablePath { get; set; }
 
         /// <summary>
         /// Defines the path to the PsExec package that contains the workload
@@ -142,8 +146,8 @@ namespace VirtualClient.Actions
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
-            this.psExecPath = this.PlatformSpecifics.Combine(this.PsExecPackage.Path, "PsExec.exe");
+            this.SpecviewExecutablePath = this.PlatformSpecifics.Combine(this.SpecviewPackage.Path, "RunViewperf.exe");
+            this.PsExecExecutablePath = this.PlatformSpecifics.Combine(this.PsExecPackage.Path, "PsExec.exe");
         }
 
         /// <summary>
@@ -153,15 +157,17 @@ namespace VirtualClient.Actions
         {
             var metrics = new List<Metric>();
 
-            string commandArguments = this.GeneratePsExecCommandArguments();
+            string commandArguments = this.GenerateCommandArguments();
+            string executablePath = this.PsExecSession == -1 ? this.SpecviewExecutablePath : this.PsExecExecutablePath;
+            string workingDir = this.PsExecSession == -1 ? this.SpecviewPackage.Path : this.PsExecPackage.Path;
 
             EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath)
+                .AddContext("executable", this.SpecviewExecutablePath)
                 .AddContext("commandArguments", commandArguments);
 
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.psExecPath, commandArguments, this.PsExecPackage.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            using (IProcessProxy process = await this.ExecuteCommandAsync(executablePath, commandArguments, workingDir, relatedContext, cancellationToken).ConfigureAwait(false))
             {
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -228,14 +234,14 @@ namespace VirtualClient.Actions
                 try
                 {
                     // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
-                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path, "results_*", SearchOption.TopDirectoryOnly);
+                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.SpecviewPackage.Path, "results_*", SearchOption.TopDirectoryOnly);
 
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
                     if (resultsFileDir == null)
                     {
                         throw new WorkloadResultsException(
-                            $"The expected SPECviewperf result directory was not found in '{this.Package.Path}'.",
+                            $"The expected SPECviewperf result directory was not found in '{this.SpecviewPackage.Path}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
 
@@ -263,7 +269,7 @@ namespace VirtualClient.Actions
                         telemetryContext);
 
                     // rename the result file to avoid confusions on future runs
-                    this.historyResultsPath = this.PlatformSpecifics.Combine(this.Package.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
+                    this.historyResultsPath = this.PlatformSpecifics.Combine(this.SpecviewPackage.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
                     this.fileSystem.Directory.Move(resultsFileDir, this.historyResultsPath);
                 }
                 catch (SchemaException exc)
@@ -293,7 +299,7 @@ namespace VirtualClient.Actions
                         $"The expected package '{this.PsExecPackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
 
-                this.Package = workloadPackage;
+                this.SpecviewPackage = workloadPackage;
                 this.PsExecPackage = this.PlatformSpecifics.ToPlatformSpecificPath(psExecPackage, this.Platform, this.CpuArchitecture);
             }
         }
@@ -301,11 +307,21 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Generate the SPECview Command Arguments
         /// </summary>
-        private string GeneratePsExecCommandArguments()
+        private string GenerateCommandArguments()
         {
-            string baseArg = @$"-s -i {this.PsExecSession} -w {this.Package.Path} -accepteula -nobanner";
-            string specViewPerfCmd = @$"{this.ExecutablePath} -viewset {this.Viewset} {this.GUIOption}";
-            return $"{baseArg} {specViewPerfCmd}";
+            if (this.PsExecSession == -1)
+            {
+                // not using psexec - run specviewperf directly.
+                return $"-viewset {this.Viewset} {this.GUIOption}";
+            }
+            else
+            {
+                // using psexec and run specviewperf in the specified session.
+                string baseArg = @$"-s -i {this.PsExecSession} -w {this.SpecviewPackage.Path} -accepteula -nobanner";
+                string specViewPerfCmd = @$"{this.SpecviewExecutablePath} -viewset {this.Viewset} {this.GUIOption}";
+                return $"{baseArg} {specViewPerfCmd}";
+            }
+
         }
 
         private async Task SetUpEnvironmentVariable()

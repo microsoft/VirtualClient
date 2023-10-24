@@ -7,7 +7,8 @@
   },
   "Parameters": {
     "GpuModel": "v620",
-    "Viewset": "3dsmax,catia"
+    "Viewset": "3dsmax,catia",
+    "PsExecSession": -1
   },
   "Actions": [
     {
@@ -18,7 +19,7 @@
         "GUIOption": "-nogui",
         "PackageName": "specviewperf2020",
         "PsExecPackageName": "pstools",
-        "PsExecSession": 1,
+        "PsExecSession": "$.Parameters.PsExecSession",
         "Tags": "GPU,SPECview,Gaming"
       }
     }
