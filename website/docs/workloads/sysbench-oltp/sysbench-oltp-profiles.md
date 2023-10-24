@@ -80,7 +80,7 @@ It is highly recommended to use the default thread and record count values when 
     "Threads": "8",
     "NumTables": "16",
     "RecordCount": "500",
-    "DurationSecs": "1800",
+    "DurationSecs": "00:20:00",
     "Workload": "oltp_read_write",
     "PackageName": "sysbench"
   }
@@ -118,7 +118,6 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   | NumTables             | Not Required. Number of tables created in the database.                         | 10              |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |
   | Workload              | Required. Name of benchmark to run; options listed [here](./sysbench-oltp.md)                                          | N/A          |
-  | SkipInitialize              | Not Required. If true, skips the initialization of the tables and records in the database.  | True        |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
