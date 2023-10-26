@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
     using System.Text.RegularExpressions;
     using VirtualClient.Contracts;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
@@ -77,28 +78,31 @@ namespace VirtualClient.Actions
             this.ParseLatencyResult();
 
             List<Metric> metrics = new List<Metric>();
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[1].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[2].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.CpuUsage.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "percentage", namePrefix: $"cpu {this.CpuUsage.Columns[3].ColumnName.ToLower()} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
-            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"Total-{this.TotalIo.Columns[1].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"Total-{this.TotalIo.Columns[2].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"Total-{this.TotalIo.Columns[3].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"Total-{this.TotalIo.Columns[4].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"Total-{this.TotalIo.Columns[5].ColumnName}-", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"total {this.TotalIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"total {this.TotalIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"total {this.TotalIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"total {this.TotalIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.TotalIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"total {this.TotalIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
-            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"Read-{this.ReadIo.Columns[1].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"Read-{this.ReadIo.Columns[2].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"Read-{this.ReadIo.Columns[3].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"Read-{this.ReadIo.Columns[4].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"Read-{this.ReadIo.Columns[5].ColumnName}-", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"read {this.ReadIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"read {this.ReadIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"read {this.ReadIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"read {this.ReadIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.ReadIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"read {this.ReadIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
-            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"Write-{this.WriteIo.Columns[1].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"Write-{this.WriteIo.Columns[2].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"Write-{this.WriteIo.Columns[3].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"Write-{this.WriteIo.Columns[4].ColumnName}-", metricRelativity: MetricRelativity.HigherIsBetter));
-            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"Write-{this.WriteIo.Columns[5].ColumnName}-", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "bytes", namePrefix: $"write {this.WriteIo.Columns[1].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "I/Os", namePrefix: $"write {this.WriteIo.Columns[2].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "MiB/s", namePrefix: $"write {this.WriteIo.Columns[3].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 4, unit: "iops", namePrefix: $"write {this.WriteIo.Columns[4].ColumnName} ", metricRelativity: MetricRelativity.HigherIsBetter));
+            metrics.AddRange(this.WriteIo.GetMetrics(nameIndex: 0, valueIndex: 5, unit: "ms", namePrefix: $"write {this.WriteIo.Columns[5].ColumnName} ", metricRelativity: MetricRelativity.LowerIsBetter));
 
-            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "ms", namePrefix: "Read-Latency-", metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "ms", namePrefix: "Write-Latency-", metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "ms", namePrefix: "Total-Latency-", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 1, unit: "ms", namePrefix: "read latency ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 2, unit: "ms", namePrefix: "write latency ", metricRelativity: MetricRelativity.LowerIsBetter));
+            metrics.AddRange(this.Latency.GetMetrics(nameIndex: 0, valueIndex: 3, unit: "ms", namePrefix: "total latency ", metricRelativity: MetricRelativity.LowerIsBetter));
 
             return metrics;
         }
@@ -137,8 +141,29 @@ namespace VirtualClient.Actions
             // Change all the 'total:' to 'total|'
             this.PreprocessedText = this.PreprocessedText.Replace("total:", $"total|");
 
+            // Change all the 'avg:' to 'average'
+            this.PreprocessedText = this.PreprocessedText.Replace("avg.", $"average");
+
+            // change all 'I/O per s' to 'iops'
+            this.PreprocessedText = this.PreprocessedText.Replace("I/O per s", $"iops");
+
             // Removing % sign as it will be reflected in the unit.
             this.PreprocessedText = this.PreprocessedText.Replace("%", string.Empty);
+
+            // AvgLat -> latency average
+            this.PreprocessedText = this.PreprocessedText.Replace("AvgLat", "latency average");
+
+            // LatStdDev -> latency stdev
+            this.PreprocessedText = this.PreprocessedText.Replace("LatStdDev", "latency stdev");
+
+            // IopsStdDev -> iops stdev
+            this.PreprocessedText = this.PreprocessedText.Replace("IopsStdDev", "iops stdev");
+
+            // I/Os -> I/O operations
+            this.PreprocessedText = this.PreprocessedText.Replace("I/Os", "io operations");
+
+            // MiB/s -> throughput
+            this.PreprocessedText = this.PreprocessedText.Replace("MiB/s", "throughput");
         }
 
         private void ParseCPUResult()

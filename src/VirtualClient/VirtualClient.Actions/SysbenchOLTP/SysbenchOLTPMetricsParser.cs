@@ -59,11 +59,8 @@ namespace VirtualClient.Actions
 
             if (!string.IsNullOrEmpty(this.PreprocessedText))
             {
-                // Split Standard Output to only consider SQL statistics
-                string stats = Regex.Split(this.PreprocessedText, "SQL statistics:")[1];
-
                 // Get all ints and decimals
-                MatchCollection mc = Regex.Matches(stats, "-?\\d+(\\.\\d+)?");
+                MatchCollection mc = Regex.Matches(this.PreprocessedText, "-?\\d+(\\.\\d+)?");
 
                 // list of indices to skip in MatchCollection MC (Total Queries, Events/s, Total Number of Events, Thread Fairness averages and stddevs, and 95)
                 List<int> dropIndices = new List<int>()
@@ -101,7 +98,10 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void Preprocess()
         {
-            this.PreprocessedText = this.RawText;
+            const string MetricsStart = "SQL statistics:";
+            // Split Standard Output to only consider SQL statistics
+            Match match = Regex.Match(this.RawText, MetricsStart);
+            this.PreprocessedText = match.Success ? Regex.Split(this.RawText, MetricsStart)[1] : string.Empty;
         }
 
         // helper class that contains Metric Name, Unit, and Relativity

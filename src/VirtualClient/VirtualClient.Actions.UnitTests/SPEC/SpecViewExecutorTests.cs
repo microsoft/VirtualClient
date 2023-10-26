@@ -123,6 +123,11 @@ namespace VirtualClient.Actions
                         return this.mockFixture.Process;
                     };
 
+                    // Remove any mock blob managers so that we do not evaluate the code paths that
+                    // upload log files by default.
+                    this.mockFixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
+                    this.mockFixture.ProcessManager.OnGetProcess = (id) => null;
+
                     await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                 }
 
