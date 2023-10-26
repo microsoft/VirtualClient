@@ -3,18 +3,11 @@
 
 namespace VirtualClient.Actions
 {
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
-    using System.Text;
-    using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Framing;
-    using Microsoft.Identity.Client;
-    using NUnit.Framework;
-    using VirtualClient.Common;
     using VirtualClient.Contracts;
 
     [TestFixture]
@@ -45,7 +38,7 @@ namespace VirtualClient.Actions
 
         [Test]
         public void SpecViewMetricsParserTestsCorrectly_Metrics()
-        {            
+        {
             MetricAssert.Exists(this.metrics, "3dsmax-07", 50.87, "fps");
             MetricAssert.Exists(this.metrics, "3dsmax-07", 42.35, "fps");
             MetricAssert.Exists(this.metrics, "3dsmax-07", 147.76, "fps");

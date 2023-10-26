@@ -6,7 +6,7 @@
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
-    "GpuModel": "v620",
+    "GpuModel": "",
     "Viewset": "3dsmax,catia",
     "PsExecSession": -1
   },
@@ -16,7 +16,6 @@
       "Parameters": {
         "Scenario": "SPECviewperf",
         "Viewset": "$.Parameters.Viewset",
-        "GUIOption": "-nogui",
         "PackageName": "specviewperf2020",
         "PsExecPackageName": "pstools",
         "PsExecSession": "$.Parameters.PsExecSession",

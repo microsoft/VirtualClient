@@ -3,19 +3,14 @@
 
 namespace VirtualClient.Actions
 {
+    using Moq;
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.IO.Abstractions;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using AutoFixture;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Moq;
-    using NUnit.Framework;
-    using Serilog;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -92,7 +87,7 @@ namespace VirtualClient.Actions
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
-                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new string[] {});
+                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new string[] { });
                     return this.mockFixture.Process;
                 };
 
@@ -122,11 +117,13 @@ namespace VirtualClient.Actions
                     string specViewExecutablePath = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "RunViewperf.exe");
                     string workingDir = this.mockSpecViewPackage.Path;
 
-                    if (psExecSession == -1){
+                    if (psExecSession == -1)
+                    {
                         expectedCommandArguments = $"-viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
                         expectedExePath = specViewExecutablePath;
                     }
-                    else {
+                    else
+                    {
                         string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockSpecViewPackage.Path} -accepteula -nobanner";
                         string specViewPerfCmd = @$"{specViewExecutablePath} -viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
                         expectedCommandArguments = $"{baseArg} {specViewPerfCmd}";
@@ -134,7 +131,7 @@ namespace VirtualClient.Actions
                     }
 
                     // Test that the result is properly renamed
-                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] {mockResultDir});
+                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
                     mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
 
                     // Test that the log file is renamed and uploaded 
