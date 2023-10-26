@@ -11,8 +11,9 @@
     "ServerThreadCount": 4,
     "ServerInstances": "{LogicalCoreCount}",
     "ClientInstances": 1,
-    "IsTLSEnabled": "no", 
-    "Duration": "00:02:00"
+    "IsTLSEnabled": "no",
+    "Duration": "00:02:00",
+    "PerProcessMetric": false
   },
     "Actions": [
         {
@@ -36,10 +37,11 @@
             "Scenario": "warmup_32b_pool",
             "PackageName": "memtier",
             "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
-            "ClientInstances": 1,
+            "ClientInstances": "$.Parameters.ClientInstances",
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "RedisResourcesPackageName": "redisresources",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
             "Role": "Client"
           }
         },
@@ -49,7 +51,7 @@
             "Scenario": "warmup_1kb_pool",
             "PackageName": "memtier",
             "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 500000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
-            "ClientInstances": 1,
+            "ClientInstances": "$.Parameters.ClientInstances",
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "RedisResourcesPackageName": "redisresources",
@@ -62,7 +64,7 @@
             "Scenario": "warmup_10kb_pool",
             "PackageName": "memtier",
             "CommandLine": "--protocol redis --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 50000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
-            "ClientInstances": 1,
+            "ClientInstances": "$.Parameters.ClientInstances",
             "WarmUp": true,
             "IsTLSEnabled": "$.Parameters.IsTLSEnabled",
             "RedisResourcesPackageName": "redisresources",

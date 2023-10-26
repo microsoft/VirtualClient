@@ -6,6 +6,7 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
@@ -13,6 +14,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
@@ -20,6 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
+    using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
     /// <summary>
     /// Redis/Memcached Memtier Client Executor.
@@ -33,6 +36,8 @@ namespace VirtualClient.Actions
             new Regex(@"connection\s+dropped", RegexOptions.IgnoreCase | RegexOptions.Compiled),
             new Regex(@"connection\s+refused", RegexOptions.IgnoreCase | RegexOptions.Compiled)
         };
+
+        private List<Metric> aggregatedMetrics = new List<Metric>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierBenchmarkClientExecutor"/> class.
@@ -57,7 +62,7 @@ namespace VirtualClient.Actions
 
         /// <summary>
         /// Parameter defines the number of Memtier benchmark instances to execute against
-        /// each server instance. Default = # of logical cores/vCPUs on system.
+        /// each server instance. Default = 1.
         /// </summary>
         public int ClientInstances
         {
@@ -101,6 +106,18 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.WarmUp), false);
+            }
+        }
+
+        /// <summary>
+        /// Parameter defines true/false whether the client action should also emit metric per each server process separately.
+        /// Default value is false and collects only aggregate metrics across all the redis/memcached server processes running in the system.
+        /// </summary>
+        public bool PerProcessMetric
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.PerProcessMetric), false);
             }
         }
 
@@ -304,8 +321,8 @@ namespace VirtualClient.Actions
 
             return isSupported;
         }
-
-        private void CaptureMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        
+        private void AggregateAndCapturePerProcessMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -326,8 +343,11 @@ namespace VirtualClient.Actions
                     {
                         MemtierMetricsParser resultsParser = new MemtierMetricsParser(results);
                         IList<Metric> workloadMetrics = resultsParser.Parse();
+                        this.aggregatedMetrics.AddRange(workloadMetrics);
 
-                        this.Logger.LogMetrics(
+                        if (this.PerProcessMetric)
+                        {
+                            this.Logger.LogMetrics(
                             $"Memtier-{this.Benchmark}",
                             this.Scenario,
                             startTime,
@@ -337,11 +357,92 @@ namespace VirtualClient.Actions
                             commandArguments,
                             this.Tags,
                             telemetryContext);
+                        }
+
                     }
                 }
                 catch (SchemaException exc)
                 {
                     throw new WorkloadResultsException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadResultsParsingFailed);
+                }
+            }
+        }
+
+        private void CaptureAggregateMetrics(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    this.MetadataContract.AddForScenario(
+                        "Memtier",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
+                    Dictionary<string, List<double>> metricNameValueListDict = new Dictionary<string, List<double>>();
+                    Dictionary<string, List<Metric>> metricNameMetricsListDict = new Dictionary<string, List<Metric>>();
+
+                    foreach (var metric in this.aggregatedMetrics)
+                    {
+                        if (metricNameMetricsListDict.ContainsKey(metric.Name))
+                        {
+                            metricNameValueListDict[metric.Name].Add(metric.Value);
+                        }
+                        else
+                        {
+                            metricNameValueListDict.Add(metric.Name, new List<double>() { metric.Value });
+                        }
+
+                        if (metricNameMetricsListDict.ContainsKey(metric.Name))
+                        {
+                            metricNameMetricsListDict[metric.Name].Add(metric);
+                        }
+                        else
+                        {
+                            metricNameMetricsListDict.Add(metric.Name, new List<Metric>() { metric });
+                        }
+                    }
+
+                    List<Metric> newAggregateListOfMetrics = new List<Metric>();
+
+                    foreach (var metricKeyValuePair in metricNameValueListDict)
+                    {
+                        double avgValue = metricKeyValuePair.Value.Average();
+                        double minValue = metricKeyValuePair.Value.Min();
+                        double maxValue = metricKeyValuePair.Value.Max();
+                        double stdevValue = Math.Sqrt(metricKeyValuePair.Value.Select(x => Math.Pow(x - avgValue, 2)).Average());
+                        List<double> sortedValues = metricKeyValuePair.Value.OrderBy(x => x).ToList();
+                        double p80Value = sortedValues[(int)Math.Ceiling(sortedValues.Count * 0.8) - 1];
+
+                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Avg", avgValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Min", minValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Max", maxValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Stdev", stdevValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_P80", p80Value, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        if (metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit != MetricUnit.Milliseconds)
+                        {
+                            // For throughput and bandwidth related metrics only.
+                            double sumValue = metricKeyValuePair.Value.Sum();
+                            newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Sum", sumValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
+                        }                        
+                    }
+
+                    this.Logger.LogMetrics(
+                        $"Memtier-{this.Benchmark}",
+                        this.Scenario,
+                        startTime,
+                        endTime,
+                        newAggregateListOfMetrics,
+                        null,
+                        commandArguments,
+                        this.Tags,
+                        telemetryContext);
+                }
+                catch (SchemaException exc)
+                {
+                    throw new WorkloadResultsException($"Failed to aggregate workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
                 }
             }
         }
@@ -366,6 +467,9 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("workingDirectory", workingDirectory);
 
                     List<Task> workloadProcesses = new List<Task>();
+
+                    DateTime startTime = DateTime.UtcNow;
+
                     foreach (int serverPort in serverState.Ports)
                     {
                         for (int i = 0; i < this.ClientInstances; i++)
@@ -394,6 +498,9 @@ namespace VirtualClient.Actions
                     }
 
                     await Task.WhenAll(workloadProcesses);
+                    DateTime endTime = DateTime.UtcNow;
+
+                    this.CaptureAggregateMetrics(commandArguments, startTime, endTime, telemetryContext, cancellationToken);
                 }
             });
         }
@@ -432,7 +539,7 @@ namespace VirtualClient.Actions
                                 {
                                     string output = process.StandardOutput.ToString();
                                     string parsedCommandArguments = this.ParseCommand(process.FullCommand());
-                                    this.CaptureMetrics(output, parsedCommandArguments, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                    this.AggregateAndCapturePerProcessMetrics(output, parsedCommandArguments, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
                         }
