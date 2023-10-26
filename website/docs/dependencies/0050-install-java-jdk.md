@@ -3,7 +3,7 @@ The Java JDK Virtual Client uses is [Microsoft Build of OpenJDK](https://docs.mi
 versions of OpenJDK, you need to use your own package store.
 
 :::info
-This dependency does not download the JDK itself. The JDK package can be installed using the basic [`dependency package installation`](./0001-install-vc-packages.md).
+This dependency does not download the JDK itself. The JDK package can be installed using the basic [`dependency package installation`](./0001-install-vc-packages.md). Check example below.
 :::
 
 - [MSFT OpenJDK Installation Guide](https://docs.microsoft.com/en-us/java/openjdk/install)
@@ -15,6 +15,17 @@ This dependency does not download the JDK itself. The JDK package can be install
 * linux-arm64
 * win-x64
 * win-arm64
+
+## JDK version supported
+* microsoft-jdk-21.0.1
+* microsoft-jdk-17.0.9
+* microsoft-jdk-17.0.5
+* microsoft-jdk-17.0.3
+* microsoft-jdk-17.0.2
+* microsoft-jdk-16.0.2
+* microsoft-jdk-11.0.19
+
+The JDK packaging process is currently manual. Please reachout to `virtualclient@microsoft.com`, or raise a GitHub issue, to request a particular JDK build.
 
 ## Profile Component Parameters
 The following section describes the parameters used by the individual component in the profile.
@@ -29,7 +40,6 @@ The following section describes the parameters used by the individual component 
 
 * [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECJVM.json)
 
-  <div class="code-section">
 
   ```json
   {
@@ -50,4 +60,3 @@ The following section describes the parameters used by the individual component 
       }
   }
   ```
-  </div>
