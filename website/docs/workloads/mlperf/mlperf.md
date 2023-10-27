@@ -1,15 +1,19 @@
 ﻿# MLPerf
+
 MLPerf 2.0 is a consortium of AI leaders from academia, research labs, and industry whose mission is to “build fair and useful benchmarks” that provide unbiased evaluations of training and inference performance for hardware, software, and services—all conducted under prescribed conditions. To stay on the cutting edge of industry trends, MLPerf continues to evolve, holding new tests at regular intervals and adding new workloads that represent the state of the art in AI.
+
 * [MLPerf Training Documentation](https://github.com/mlcommons/training_results_v2.0/blob/main/MLPerf%E2%84%A2%20Training%20v2.0%20Results%20Discussion.pdf)  
 * [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v2.0)  
 * [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.0/tree/main/NVIDIA/benchmarks)
 * [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA)
 
 ## System Requirements
+
 This is a GPU-specific workload and requires high-performance graphic cards to run. It is recommended that the system-under-test have a high-performing Nvidia (e.g. M60 or higher) or AMD (e.g. MI25 or higher)
 graphics card.
 
 ## Supported Hardware Systems
+
 The following section defines the hardware systems/SKUs on which the MLPerf 2.0 workload will run effectively in cloud environments. These hardware systems contain
 GPU components for which the MLPerf workload is designed to test.
 
@@ -32,9 +36,19 @@ Additional details on whether a system is supported or not can be found in the d
 https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA
 
 ## What is Being Measured?
+
 GPU performance across a wide range of inference models. Work is planned for integrating support for training models as well.
 
-* ~~**Training Benchmarks** (not currently supported)~~
+* **Training Benchmarks**
+  * bert
+  * ~~dlrm (not supported yet)~~
+  * ~~maskrcnn (not supported yet)~~
+  * ~~minigo (not supported yet)~~
+  * ~~resnet (not supported yet)~~
+  * ~~rnnt (not supported yet)~~
+  * ~~ssd (not supported yet)~~
+  * ~~unet3 (not supported yet)~~
+
 
 * **Inference Benchmarks**  
   * bert
@@ -45,8 +59,9 @@ GPU performance across a wide range of inference models. Work is planned for int
   * ~~DLRM (not supported yet)~~
   * ~~3D UNET (not supported yet)~~
 
-## Workload Metrics
-The following metrics are examples of those captured by the Virtual Client when running the MLPerf workload
+## Workload Metrics MLPerf Inference
+
+The following metrics are examples of those captured by the Virtual Client when running the MLPerf Inference workload.
 
 |Scenario | Metric Name  | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
 |---------|--------------|---------------------|---------------------|---------------------|------|
@@ -86,3 +101,12 @@ The following metrics are examples of those captured by the Virtual Client when 
 | ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Offline-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
 | ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-AccuracyMode | 1.0 | 1.0 | 1.0 | PASS/FAIL |
 | ssd-resnet34 | DGX-A100_A100-SXM4-40GBx8_TRT_Triton-triton_k_99_MaxP-Server-PerformanceMode | 1.0 | 1.0 | 1.0 | VALID/INVALID |
+
+## Workload Metrics MLPerf Training
+| Scenario                                | Metric Name                    | Example Value (min)  | Example Value (max) | Example Value (avg) | Unit |
+|-----------------------------------------|--------------------------------|----------------------|---------------------|---------------------|------|
+| training-mlperf-bert-batchsize-45-gpu-8 | Accuracy                       | 0.650552854          | 0.672552854         | 0.662552854         | %    |
+| training-mlperf-bert-batchsize-45-gpu-8 | e2e_time	                     | 1071.040571          | 1078.040571         | 1074.040571         | s    |
+| training-mlperf-bert-batchsize-45-gpu-8 | training_sequences_per_second	 | 2288.463615          | 2300.463615         | 2295.463615         |      |
+| training-mlperf-bert-batchsize-45-gpu-8 | final_loss	                   | 0	                  | 0                   | 0                   |      |
+| training-mlperf-bert-batchsize-45-gpu-8 | raw_train_time	               | 1053.982237          | 1070.982237	        | 1063.982237         | s    |
