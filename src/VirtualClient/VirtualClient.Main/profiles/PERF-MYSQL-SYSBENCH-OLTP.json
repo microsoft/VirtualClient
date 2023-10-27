@@ -9,8 +9,6 @@
     "Parameters": {
         "DatabaseName": "sbtest",
         "DatabaseScenario": "Default",
-        "SkipDatabaseInitialize": true,
-        "SkipServerInitialize": false
     },
     "Actions": [
         {
@@ -31,8 +29,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_read_write",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -45,8 +42,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_read_only",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -59,8 +55,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_write_only",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -73,8 +68,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_delete",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -87,8 +81,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_insert",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -101,8 +94,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_update_index",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -115,8 +107,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "oltp_update_non_index",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -129,8 +120,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "select_random_points",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         },
         {
@@ -143,8 +133,7 @@
                 "Duration": "00:20:00",
                 "RecordCount": 10000,
                 "Workload": "select_random_ranges",
-                "PackageName": "sysbench",
-                "SkipInitialize": "$.Parameters.SkipDatabaseInitialize"
+                "PackageName": "sysbench"
             }
         }
     ],
@@ -182,7 +171,6 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "StartServer",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -192,7 +180,6 @@
                 "Scenario": "CreateMySQLDatabase",
                 "Action": "CreateDatabase",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -202,7 +189,6 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "RaisedStatementCount",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -212,7 +198,6 @@
                 "Scenario": "ConfigureMySQLServer",
                 "Action": "ConfigureNetwork",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },
@@ -222,7 +207,6 @@
                 "Scenario": "ConfigureMySQLDatabase",
                 "Action": "CreateUser",
                 "DatabaseName": "$.Parameters.DatabaseName",
-                "SkipInitialize": "$.Parameters.SkipServerInitialize",
                 "Role": "Server"
             }
         },

@@ -6,13 +6,12 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json.Linq;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -45,12 +44,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Client used to communicate with the locally self-hosted instance of the
-        /// Virtual Client API.
-        /// </summary>
-        public IApiClient LocalApiClient { get; private set; }
-
-        /// <summary>
         /// Provides access to the local state management facilities.
         /// </summary>
         protected IStateManager StateManager { get; }
@@ -64,13 +57,13 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.InitializeApiClients();
 
-            IApiClientManager clientManager = this.Dependencies.GetService<IApiClientManager>();
-            this.LocalApiClient = clientManager.GetOrCreateApiClient(IPAddress.Loopback.ToString(), IPAddress.Loopback);
+            await this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
 
             SysbenchOLTPState state = await this.StateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
                 ?? new SysbenchOLTPState();
+
+            // prepare the server for a specific scenario
 
             if (!state.DatabaseScenarioInitialized)
             {
@@ -95,13 +88,15 @@ namespace VirtualClient.Actions
                         break;
                 }
 
-                HttpResponseMessage response = await this.LocalApiClient.GetOrCreateStateAsync(nameof(SysbenchOLTPState), JObject.FromObject(state), cancellationToken)
+                Item<SysbenchOLTPState> stateUpdate = new Item<SysbenchOLTPState>(nameof(SysbenchOLTPState), state);
+
+                HttpResponseMessage response = await this.ServerApiClient.UpdateStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), stateUpdate, cancellationToken)
                     .ConfigureAwait(false);
 
                 response.ThrowOnError<WorkloadException>();
 
                 await this.StateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
             }
         }
 

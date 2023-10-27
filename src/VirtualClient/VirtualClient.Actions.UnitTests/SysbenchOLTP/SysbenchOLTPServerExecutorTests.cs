@@ -22,6 +22,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.SysbenchOLTPExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -60,7 +61,11 @@ namespace VirtualClient.Actions
             using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
             string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
-            
+
+            this.mockFixture.ApiClient.Setup(client => client.UpdateStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), It.IsAny<Item<SysbenchOLTPState>>(),
+                It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
+
             // Mocking 8GB of memory
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new MemoryInfo(1024 * 1024 * 8));
@@ -121,6 +126,10 @@ namespace VirtualClient.Actions
                 $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdd1")} " +
                 $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sde1")} " +
                 $"{Path.Combine(MockFixture.TestAssemblyDirectory, "vcmnt_dev_sdf1")}";
+
+            this.mockFixture.ApiClient.Setup(client => client.UpdateStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), It.IsAny<Item<SysbenchOLTPState>>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(HttpStatusCode.OK));
 
             string[] expectedCommands =
             {
