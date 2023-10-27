@@ -1,0 +1,61 @@
+{
+  "Description": "Kafka Benchmark",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "02:00:00",
+    "SupportedPlatforms": "linux-x64,win-x64",
+    "SupportedOperatingSystems": "Ubuntu, Windows"
+  },
+  "Parameters": {
+    "ServerPort": 9092,
+    "ServerInstances": 3,
+    "ClientInstances": 1,
+    "Duration": "00:02:00"
+  },
+  "Actions": [
+    {
+      "Type": "KafkaServerExecutor",
+      "Parameters": {
+        "Scenario": "kafka_server",
+        "PackageName": "kafka",
+        "Port": "$.Parameters.ServerPort",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "Role": "Server"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "DownloadKafkaPackage",
+        "BlobContainer": "packages",
+        "BlobName": "kafka_2.13-3.4.0.zip",
+        "PackageName": "kafka",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.5.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JavaDevelopmentKitInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDK",
+        "PackageName": "javadevelopmentkit"
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
+}

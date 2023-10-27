@@ -110,6 +110,40 @@ namespace VirtualClient
             string username = null,
             Action<IProcessProxy> beforeExecution = null)
         {
+            IProcessProxy process = component.ProcessCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await process.StartAndWaitAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return process;
+        }
+
+        /// <summary>
+        /// Process a command within an isolated process.
+        /// </summary>
+        /// <param name="component">The component that is executing the process/command.</param>
+        /// <param name="command">The command to execute within the process.</param>
+        /// <param name="commandArguments">The arguments to supply to the command.</param>
+        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
+        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
+        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
+        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
+        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
+        /// <returns>The process that executed the command.</returns>
+        public static IProcessProxy ProcessCommandAsync(
+            this VirtualClientComponent component,
+            string command,
+            string commandArguments,
+            string workingDirectory,
+            EventContext telemetryContext,
+            CancellationToken cancellationToken,
+            bool runElevated = false,
+            string username = null,
+            Action<IProcessProxy> beforeExecution = null)
+        {
             component.ThrowIfNull(nameof(component));
             command.ThrowIfNullOrWhiteSpace(nameof(command));
             telemetryContext.ThrowIfNull(nameof(telemetryContext));
@@ -151,8 +185,6 @@ namespace VirtualClient
                 component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
 
                 beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
             }
 
             return process;
