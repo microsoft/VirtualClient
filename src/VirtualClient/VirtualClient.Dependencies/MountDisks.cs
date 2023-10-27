@@ -35,6 +35,17 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
+        /// Disk filter string to filter disks to mount.
+        /// </summary>
+        public string DiskFilter
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.DiskFilter), "OSDisk:false");
+            }
+        }
+
+        /// <summary>
         /// User Defined Mount Point Name
         /// </summary>
         public string MountPointPrefix

@@ -74,7 +74,6 @@ namespace VirtualClient.Actions
         {
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(MLPerfTrainingExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
                 { nameof(MLPerfTrainingExecutor.Model), "bert" },
                 { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
@@ -133,7 +132,6 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehavior(PlatformID.Unix);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(MLPerfTrainingExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
                 { nameof(MLPerfTrainingExecutor.Model), "bert" },
                 { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
@@ -186,7 +184,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(MLPerfTrainingExecutor.DiskFilter), "BiggestSize" },
                 { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
                 { nameof(MLPerfTrainingExecutor.Model), "bert"}
             };

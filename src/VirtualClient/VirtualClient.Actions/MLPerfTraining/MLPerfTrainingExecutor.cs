@@ -44,24 +44,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Disk filter string to filter disks to format.
-        /// </summary>
-        public string DiskFilter
-        {
-            get
-            {
-                string filter = this.Parameters.GetValue<string>(nameof(MLPerfTrainingExecutor.DiskFilter), "SizeGreaterThan:1000gb");
-                filter = $"{filter}&OSDisk:false";
-                return filter;
-            }
-
-            set
-            {
-                this.Parameters[nameof(MLPerfTrainingExecutor.DiskFilter)] = value;
-            }
-        }
-
-        /// <summary>
         /// The MLPerf Training model name (e.g. bert, rnnt, ssd-mobilenet).
         /// </summary>
         public string Model

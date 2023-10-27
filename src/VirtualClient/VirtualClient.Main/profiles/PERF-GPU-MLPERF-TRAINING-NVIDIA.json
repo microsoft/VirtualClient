@@ -7,7 +7,7 @@
         "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size"
     },
     "Parameters": {
-        "Username": "azureuser",
+        "Username": "",
         "DiskFilter": "BiggestSize",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
