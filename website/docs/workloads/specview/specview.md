@@ -33,29 +33,29 @@ The following metrics are examples of those captured by the Virtual Client when 
 ### Example Metrics
 | MetricName      | MetricValue | MetricUnit |
 |---------------- |-------------|------------|
-| solidworks-07   |	10.23	    | fps        |
-| solidworks-07       | ...         | ...        |
-| 3dsmax-07       | 312.31         | fps       |
+| solidworks-07   |	10.23	    | fps          |
+| solidworks-07   | ...         | ...        |
+| 3dsmax-07       | 312.31      | fps        |
 | 3dsmax-07       | ...         | ...        |
 | 3dsmax-07       | ...         | ...        |
-| catia-06       | 31.31         | fps        |
-| catia-06       | ...         | ...        |
-| catia-06       | ...         | ...        |
-| creo-03       | 87.12        | fps        |
-| creo-03       | ...         | ...        |
-| creo-03       | ...         | ...        |
-| energy-03       | 78.54         | fps        |
+| catia-06        | 31.31       | fps        |
+| catia-06        | ...         | ...        |
+| catia-06        | ...         | ...        |
+| creo-03         | 87.12       | fps        |
+| creo-03         | ...         | ...        |
+| creo-03         | ...         | ...        |
+| energy-03       | 78.54       | fps        |
 | energy-03       | ...         | ...        |
 | energy-03       | ...         | ...        |
-| maya-06       | 790.21        | fps        |
-| maya-06       | ...         | ...        |
-| maya-06       | ...         | ...        |
-| medical-03       | 76.93         | fps        |
-| medical-03       | ...         | ...        |
-| medical-03       | ...         | ...        |
-| snx-04       | 87.12        | fps        |
-| snx-04       | ...         | ...        |
-| snx-04       | ...         | ...        |
+| maya-06         | 790.21      | fps        |
+| maya-06         | ...         | ...        |
+| maya-06         | ...         | ...        |
+| medical-03      | 76.93       | fps        |
+| medical-03      | ...         | ...        |
+| medical-03      | ...         | ...        |
+| snx-04          | 87.12       | fps        |
+| snx-04          | ...         | ...        |
+| snx-04          | ...         | ...        |
            
 ### Examples Metadata
 More information can be found at the metric's metadata
