@@ -204,7 +204,7 @@ namespace VirtualClient.Contracts
                 volumeMatchAccessPath = disk.Volumes.Any(v => v.AccessPaths.Any(ap => string.Equals(ap.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return matchDevicePath || volumeMatchAccessPath || volumeMatchAccessPath;
+            return matchDevicePath || volumeMatchDevicePath || volumeMatchAccessPath;
         }
     }
 }
