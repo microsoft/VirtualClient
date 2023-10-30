@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Unix);
 
             // The location of the Java (Java SDK) executable
-            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath("microsoft-jdk-17.0.5/linux-x64/bin/java");
+            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath("microsoft-jdk-17.0.9/linux-x64/bin/java");
             this.mockFixture.SetupFile(expectedJavaExecutablePath);
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))
@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(PlatformID.Win32NT);
 
             // The location of the Java (Java SDK) executable
-            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath(@"microsoft-jdk-17.0.5\win-x64\bin\java.exe");
+            string expectedJavaExecutablePath = this.mockFixture.GetPackagePath(@"microsoft-jdk-17.0.9\win-x64\bin\java.exe");
             this.mockFixture.SetupFile(expectedJavaExecutablePath);
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies, dependenciesOnly: true))

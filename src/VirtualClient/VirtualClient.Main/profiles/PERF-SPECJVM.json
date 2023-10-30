@@ -43,7 +43,7 @@
             "Parameters": {
                 "Scenario": "InstallJDKPackage",
                 "BlobContainer": "packages",
-                "BlobName": "microsoft-jdk-17.0.5.zip",
+                "BlobName": "microsoft-jdk-17.0.9.zip",
                 "PackageName": "javadevelopmentkit",
                 "Extract": true
             }
