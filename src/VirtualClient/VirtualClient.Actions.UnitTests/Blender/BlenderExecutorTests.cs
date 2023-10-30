@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
             this.mockBlenderPackage = new DependencyPath("blenderbenchmarkcli", this.mockFixture.GetPackagePath("blenderbenchmarkcli"));
             this.mockFixture.PackageManager.OnGetPackage("blenderbenchmarkcli").ReturnsAsync(this.mockBlenderPackage);
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
-            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "Blender", "results_example.txt"));
+            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "Blender", "results_example.json"));
             this.mockFixture.Process.StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results));
         }
 
