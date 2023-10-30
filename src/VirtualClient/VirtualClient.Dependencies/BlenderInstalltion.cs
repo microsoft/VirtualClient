@@ -20,10 +20,9 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class BlenderInstallation : VirtualClientComponent
     {
+        private const string BlenderExecutableName = "benchmark-launcher-cli.exe";
         private IPackageManager packageManager;
-        private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
-        private IStateManager stateManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BlenderInstallation"/> class.
@@ -36,13 +35,11 @@ namespace VirtualClient.Dependencies
             dependencies.ThrowIfNull(nameof(dependencies));
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManagement = dependencies.GetService<ISystemManagement>();
-            this.stateManager = this.systemManagement.StateManager;
-            this.fileSystem = this.systemManagement.FileSystem;
             this.packageManager = this.systemManagement.PackageManager;
         }
 
         /// <summary>
-        /// The blender version that will be used by the benchmark.
+        /// The blender version that will be installed and be used by the benchmark.
         /// </summary>
         public string BlenderVersion
         {
@@ -53,25 +50,13 @@ namespace VirtualClient.Dependencies
         }
 
         /// <summary>
-        /// The scenes to be run
+        /// The scenes to be installed.
         /// </summary>
         public string Scenes
         {
             get
             {
                 return this.Parameters.GetValue<string>(nameof(BlenderInstallation.Scenes));
-             
-            }
-        }
-
-        /// <summary>
-        /// The name of the blender benchmark cli (e.g. benchmark-launcher-cli.exe)
-        /// </summary>
-        public string ExecutableName 
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(BlenderInstallation.ExecutableName));
 
             }
         }
@@ -103,7 +88,7 @@ namespace VirtualClient.Dependencies
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, this.ExecutableName);
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, BlenderExecutableName);
         }
 
         /// <summary>
@@ -121,7 +106,6 @@ namespace VirtualClient.Dependencies
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            // TODO: do we need await in here?
             await this.DownloadBlenderAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
             await this.DownloadScenesAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
         }
@@ -137,10 +121,13 @@ namespace VirtualClient.Dependencies
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                this.Package = workloadPackage;
+                this.Package = this.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
             }
         }
 
+        /// <summary>
+        /// Download blender engine with the specified version.
+        /// </summary>
         private async Task DownloadBlenderAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string downloadBlenderCommandArguments = $"blender download {this.BlenderVersion}";
@@ -156,6 +143,9 @@ namespace VirtualClient.Dependencies
             }
         }
 
+        /// <summary>
+        /// Download the required scenes.
+        /// </summary>
         private async Task DownloadScenesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string downloadScenesCommandArguments = $"scenes download --blender-version {this.BlenderVersion} {this.Scenes}";

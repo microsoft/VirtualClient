@@ -8,11 +8,13 @@ namespace VirtualClient.Actions.DiskPerformance
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using NUnit.Framework;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -23,6 +25,7 @@ namespace VirtualClient.Actions.DiskPerformance
         private DependencyFixture fixture;
         private Dictionary<string, IConvertible> profileParameters;
         private IEnumerable<Disk> disks;
+        private string output;
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -40,6 +43,18 @@ namespace VirtualClient.Actions.DiskPerformance
                 { nameof(DiskSpdExecutor.CommandLine), "-c4G -b4K -r4K -t1 -o1 -w100" },
                 { nameof(DiskSpdExecutor.ProcessModel), WorkloadProcessModel.SingleProcess },
                 { nameof(DiskSpdExecutor.TestName), "diskspd_randwrite_4GB_direct" }
+            };
+
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-ReadWrite.txt");
+            this.output = File.ReadAllText(outputPath);
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
+                process.StandardOutput.Append(this.output);
+
+                return process;
             };
         }
 
@@ -300,6 +315,9 @@ namespace VirtualClient.Actions.DiskPerformance
                 OnStart = () => true,
                 OnHasExited = () => true
             };
+
+            process1.StandardOutput.Append(this.output);
+            process2.StandardOutput.Append(this.output);
 
             List<DiskWorkloadProcess> expectedWorkloads = new List<DiskWorkloadProcess>
             {

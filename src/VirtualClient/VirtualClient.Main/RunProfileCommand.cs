@@ -124,7 +124,7 @@ namespace VirtualClient
                 if (!string.IsNullOrWhiteSpace(this.ContentPathTemplate))
                 {
                     VirtualClientComponent.ContentPathTemplate = this.ContentPathTemplate;
-                }                
+                }
 
                 IEnumerable<string> profileNames = this.GetProfilePaths(dependencies);
                 this.SetGlobalTelemetryProperties(profileNames, dependencies);
@@ -726,7 +726,7 @@ namespace VirtualClient
             }
 
             // Only dependencies defined in the profile will be considered.
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
             {
                 profileExecutor.ExecuteActions = false;
                 profileExecutor.ExecuteMonitors = false;
@@ -797,7 +797,7 @@ namespace VirtualClient
 
             this.Validate(dependencies, profile);
 
-            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, this.Metadata, logger))
+            using (ProfileExecutor profileExecutor = new ProfileExecutor(profile, dependencies, this.Scenarios, logger))
             {
                 profileExecutor.RandomizationSeed = this.RandomizationSeed;
                 profileExecutor.ExitWait = this.ExitWait;

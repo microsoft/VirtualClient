@@ -5,17 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Specialized;
-    using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
     using VirtualClient.Common.Telemetry;
@@ -29,6 +25,7 @@ namespace VirtualClient.Actions
     public class BlenderExecutor : VirtualClientComponent
     {
         private const string ResultFilePrefix = "blender_results";
+        private const string BlenderExecutableName = "benchmark-launcher-cli.exe";
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
 
@@ -73,19 +70,8 @@ namespace VirtualClient.Actions
         {
             get
             {
+                // Trim and remove any whitespaces
                 return this.Parameters.GetValue<string>(nameof(BlenderExecutor.DeviceTypes)).Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            }
-        }
-
-        /// <summary>
-        /// The name of the blender benchmark cli (e.g. benchmark-launcher-cli.exe)
-        /// </summary>
-        public string ExecutableName
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.ExecutableName));
-
             }
         }
 
@@ -110,7 +96,7 @@ namespace VirtualClient.Actions
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, this.ExecutableName);
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, BlenderExecutableName);
         }
 
         /// <summary>
@@ -118,7 +104,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IList<Metric> metrics = new List<Metric>();
+            var metrics = new List<Metric>();
 
             string[] commandArgumentsArray = this.GenerateCommandArgumentsArray();
 
@@ -134,6 +120,8 @@ namespace VirtualClient.Actions
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext);
                         process.ThrowIfWorkloadFailed();
+
+                        // Blender benchmark's results are outputted to Stdout directly as a json.
                         this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString());
                     }
                 }
@@ -172,10 +160,10 @@ namespace VirtualClient.Actions
                         throw new WorkloadResultsException(
                             "No results output from Blender Benchmark",
                             ErrorReason.WorkloadResultsNotFound);
-                    } 
+                    }
 
                     BlenderMetricsParser resultsParser = new BlenderMetricsParser(resultsContent);
-                    IList<Metric> metrics = resultsParser.Parse();
+                    var metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
                            this.Scenario,
@@ -215,7 +203,7 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                this.Package = workloadPackage;
+                this.Package = this.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
             }
         }
 
@@ -226,10 +214,12 @@ namespace VirtualClient.Actions
         {
             string[] commandArgumentsArray = new string[this.DeviceTypes.Length];
             string commandArgument;
+
+            // Blender benchmark needs to run once for each device type.
             for (int i = 0; i < this.DeviceTypes.Length; i++)
             {
-                // > {ResultFilePrefix}_{timeSuffix}_{this.DeviceTypes[i]}
-                commandArgument = $"benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json";
+                // --verbosity 3 gives detailed error messsage if Blender fails to run
+                commandArgument = $"benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json --verbosity 3";
                 commandArgumentsArray[i] = commandArgument;
             }
 

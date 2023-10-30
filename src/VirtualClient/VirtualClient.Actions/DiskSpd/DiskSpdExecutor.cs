@@ -407,9 +407,7 @@ namespace VirtualClient.Actions
             this.MetadataContract.Apply(telemetryContext);
 
             string result = workload.StandardOutput.ToString();
-            IList<Metric> metrics = new List<Metric>()
-                .AddDiskIOMetrics(result)
-                .AddDiskIOPercentileMetrics(result);
+            IList<Metric> metrics = new DiskSpdMetricsParser(result).Parse();
 
             this.Logger.LogMetrics(
                 "DiskSpd",

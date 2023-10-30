@@ -1,16 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using VirtualClient.Actions.Blender;
+using VirtualClient.Contracts;
+
 namespace VirtualClient.Actions
 {
-    using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
-    using MathNet.Numerics;
-    using Newtonsoft.Json;
-    using VirtualClient.Actions.Blender;
-    using VirtualClient.Contracts;
-
     /// <summary>
     /// Parser for the Blender workload.
     /// </summary>
@@ -33,11 +31,27 @@ namespace VirtualClient.Actions
         {
             try
             {
-                List<Metric> metrics = new List<Metric>();
-                List<BlenderResult> blenderResults = JsonConvert.DeserializeObject<List<BlenderResult>>(this.RawText);
+                var metrics = new List<Metric>();
+                var blenderResults = JsonConvert.DeserializeObject<List<BlenderResult>>(this.RawText);
                 foreach (BlenderResult blenderResult in blenderResults)
                 {
-                    metrics.Add(new Metric(blenderResult.Scene.Label, blenderResult.Stats.SamplesPerMinute, unit: "samples_per_minute"));
+                    var metadata = new Dictionary<string, IConvertible>
+                    {
+                        { "blenderVersion", blenderResult.BlenderVersion.Version },
+                        { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label },
+                        { "scene", blenderResult.Scene.Label },
+                        // blender can only execute on one device(CPU/GPU) at a time
+                        { "deviceName", blenderResult.DeviceInfo.ComputeDevices[0].Name },
+                        { "deviceType", blenderResult.DeviceInfo.ComputeDevices[0].Type },
+                        { "timeLimit",  blenderResult.Stats.TimeLimit }
+                    };
+
+                    metrics.Add(new Metric("device_peak_memory", blenderResult.Stats.DevicePeakMemory, unit: "mb", metadata: metadata));
+                    metrics.Add(new Metric("number_of_samples", blenderResult.Stats.NumberOfSamples, unit: "sample", metadata: metadata));
+                    metrics.Add(new Metric($"time_for_samples", blenderResult.Stats.TimeForSamples, unit: "second", metadata: metadata));
+                    metrics.Add(new Metric($"samples_per_minute", blenderResult.Stats.SamplesPerMinute, unit: "samples_per_minute", metadata: metadata));
+                    metrics.Add(new Metric($"total_render_time", blenderResult.Stats.TotalRenderTime, unit: "second", metadata: metadata));
+                    metrics.Add(new Metric($"render_time_no_sync", blenderResult.Stats.RenderTimeNoSync, unit: "second", metadata: metadata));
                 }
 
                 return metrics;
