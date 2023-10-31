@@ -10,11 +10,12 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Scripting;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
+    using static VirtualClient.Actions.SysbenchOLTPExecutor;
 
     [TestFixture]
     [Category("Functional")]
@@ -54,8 +55,13 @@ namespace VirtualClient.Actions
         [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
         public async Task SysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
-            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(platform, architecture);
+            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false);
             this.SetupDefaultMockBehaviors(platform, architecture);
+
+            this.mockFixture.Setup(PlatformID.Unix, architecture, this.clientAgentId).SetupLayout(
+                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
+                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
             string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
@@ -86,44 +92,106 @@ namespace VirtualClient.Actions
             }
         }
 
-        private IEnumerable<string> GetProfileExpectedCommands(PlatformID platform, Architecture architecture)
+        [Test]
+        [TestCase("PERF-MYSQL-SYSBENCH-OLTP.json", PlatformID.Unix, Architecture.X64)]
+        public async Task SysbenchOLTPWorkloadProfileExecutesTheExpectedWorkloadsOnSingleVMUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
-            return new List<string>()
+            IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true);
+            this.SetupDefaultMockBehaviors(platform, architecture);
+
+            this.mockFixture.Setup(PlatformID.Unix, architecture, this.clientAgentId).SetupLayout(
+                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
+
+            this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
+
+            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbencholtp");
+
+            string balancedClientScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-client.sh");
+            string balancedServerScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "balanced-server.sh");
+            string inMemoryScript = this.mockFixture.PlatformSpecifics.Combine(scriptPath, "in-memory.sh");
+
+            this.mockFixture.SetupFile(balancedServerScript);
+            this.mockFixture.SetupFile(balancedClientScript);
+            this.mockFixture.SetupFile(inMemoryScript);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
-                "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_SysbenchOLTP.txt"));
+                }
 
-                "sudo ./autogen.sh",
-                "sudo ./configure",
-                "sudo make -j",
-                "sudo make install",
-
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 cleanup",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
-                $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
+                return process;
             };
+
+            using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.mockFixture.Dependencies))
+            {
+                await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None).ConfigureAwait(false);
+                WorkloadAssert.CommandsExecuted(this.mockFixture, expectedCommands.ToArray());
+            }
+        }
+
+        private IEnumerable<string> GetProfileExpectedCommands(bool singleVM)
+        {
+            if (singleVM) 
+            {
+                return new List<string>()
+                {
+                    "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
+
+                    "sudo ./autogen.sh",
+                    "sudo ./configure",
+                    "sudo make -j",
+                    "sudo make install",
+
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 cleanup",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 prepare",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=1200 run"
+                };
+            }
+            else 
+            { 
+                return new List<string>()
+                {
+                    "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
+
+                    "sudo ./autogen.sh",
+                    "sudo ./configure",
+                    "sudo make -j",
+                    "sudo make install",
+
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 cleanup",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_common --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 prepare",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=64 --tables=10 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run",
+                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=64 --tables=1 --table-size=10000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=1200 run"
+                };
+            }
         }
 
         private void SetupApiClient(string serverName, string serverIPAddress)
         {
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
-            IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
+            IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverIPAddress, ipAddress);
         }
 
         private void SetupDefaultMockBehaviors(PlatformID platform, Architecture architecture)
         {
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.SetupWorkloadPackage("sysbench", expectedFiles: "sysbench");
-            this.mockFixture.Setup(PlatformID.Unix, architecture, this.clientAgentId).SetupLayout(
-                new ClientInstance(this.clientAgentId, "1.2.3.4", "Client"),
-                new ClientInstance(this.serverAgentId, "1.2.3.5", "Server"));
-
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
         }

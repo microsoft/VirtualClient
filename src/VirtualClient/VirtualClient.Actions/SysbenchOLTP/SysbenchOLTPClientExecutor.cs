@@ -8,16 +8,14 @@ namespace VirtualClient.Actions
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
-    using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Newtonsoft.Json.Linq;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
     using VirtualClient.Contracts.Metadata;
@@ -142,17 +140,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Skips initialization of the tables and records in the database
-        /// </summary>
-        public bool SkipInitialize
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(SysbenchOLTPClientExecutor.SkipInitialize), true);
-            }
-        }
-
-        /// <summary>
         /// Number of threads.
         /// </summary>
         public int Threads
@@ -250,7 +237,6 @@ namespace VirtualClient.Actions
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.InitializeApiClients();
 
             // get sysbench workload path
 
@@ -363,9 +349,47 @@ namespace VirtualClient.Actions
 
         private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken);
+            int numTables = -1;
+            int recordCount = -1;
 
-            if (!this.SkipInitialize || this.NumTables > state.NumTables || this.RecordCount > state.RecordCount)
+            // use mysql-client tool to get table/record counts from the mysql server
+            // table count output is like so:
+            // +--------------+
+            // | FOUND_ROWS() |
+            // +--------------+
+            // |            0 |
+            // +--------------+
+            //
+            // record count output is like so:
+            // +----------+
+            // | COUNT(*) |
+            // +----------+
+            // |        0 |
+            // +----------+
+
+            string getMySQLTableCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SHOW tables; SELECT FOUND_ROWS();\"";
+
+            // note that sysbench standardizes table names; database name is up to the user, but each table name will always be "sbtest1, sbtest2, ..."
+            // if at least one table exists, we can take a look at its record count to reliably obtain the record counts for all tables
+            string getMySQLRecordCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SELECT COUNT(*) FROM sbtest1;\"";
+
+            string result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLTableCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
+
+            Match match = Regex.Match(result, "[1-9][0-9]*");
+
+            if (match.Success)
+            {
+                numTables = Convert.ToInt32(match.Value);
+
+                result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLRecordCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+                    .ConfigureAwait(false);
+
+                match = Regex.Match(result, "[1-9][0-9]*|0");
+                recordCount = match.Success ? Convert.ToInt32(match.Value) : -1;
+            }
+
+            if (this.NumTables > numTables || this.RecordCount > recordCount)
             {
                 // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
 
@@ -374,13 +398,6 @@ namespace VirtualClient.Actions
 
                 await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
                     .ConfigureAwait(false);
-
-                state.Properties[nameof(SysbenchOLTPState.NumTables)] = this.NumTables;
-                state.Properties[nameof(SysbenchOLTPState.RecordCount)] = this.RecordCount;
-
-                // save the updated state configuration
-
-                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
             }
 
             if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
@@ -395,7 +412,7 @@ namespace VirtualClient.Actions
 
                 SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
 
-                string diskPaths = serverState.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)].ToString();
+                string diskPaths = serverState.DiskPathsArgument;
 
                 await this.PrepareBalancedScenarioAsync(diskPaths, telemetryContext, cancellationToken);
             }
