@@ -244,65 +244,68 @@ namespace VirtualClient.Actions
                     }
                 }
 
-                // Run Workload
                 DateTime startTime = DateTime.UtcNow;
-                foreach (string definition in this.Definitions)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
-
-                    // Workload execution
-                    string arguments = this.GenerateCommandArguments(definition);
-                    string commandArguments = $"{baseArg} {this.ExecutablePath} {arguments}";
-
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
+                    // Run Workload
+                    foreach (string definition in this.Definitions)
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
+                        this.OutFileName = $"{DateTimeOffset.Now.ToUnixTimeSeconds()}.out";
 
-                        try
+                        // Workload execution
+                        string arguments = this.GenerateCommandArguments(definition);
+                        string commandArguments = $"{baseArg} {this.ExecutablePath} {arguments}";
+
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments, this.psexecDir))
                         {
-                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+                            this.CleanupTasks.Add(() => process.SafeKill());
 
-                            if (!cancellationToken.IsCancellationRequested)
+                            try
                             {
-                                await this.LogProcessDetailsAsync(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
 
-                            }
-                        }
-                        finally
-                        {
-                            if (!process.HasExited)
-                            {
-                                process.Kill();
-                            }
-                        }
-                    }
-
-                    // Result Preparation
-                    string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
-                    using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
-                    {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-
-                        try
-                        {
-                            await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                            if (!cancellationToken.IsCancellationRequested)
-                            {
-                                await this.LogProcessDetailsAsync(process, telemetryContext);
-                                process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                                foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
+                                if (!cancellationToken.IsCancellationRequested)
                                 {
-                                    metrics.Add(metric);
+                                    await this.LogProcessDetailsAsync(process, telemetryContext);
+                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+
+                                }
+                            }
+                            finally
+                            {
+                                if (!process.HasExited)
+                                {
+                                    process.Kill();
                                 }
                             }
                         }
-                        finally
+
+                        // Result Preparation
+                        string commandArguments2 = $"{baseArg} {this.ExecutablePath} --in={this.OutFileName} --export=result.xml";
+                        using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess(psexec, commandArguments2, this.psexecDir))
                         {
-                            if (!process.HasExited)
+                            this.CleanupTasks.Add(() => process.SafeKill());
+
+                            try
                             {
-                                process.Kill();
+                                await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
+
+                                if (!cancellationToken.IsCancellationRequested)
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext);
+                                    process.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                                    foreach (Metric metric in this.CaptureResults(process, commandArguments, definition, telemetryContext))
+                                    {
+                                        metrics.Add(metric);
+                                    }
+                                }
+                            }
+                            finally
+                            {
+                                if (!process.HasExited)
+                                {
+                                    process.Kill();
+                                }
                             }
                         }
                     }

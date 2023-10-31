@@ -296,98 +296,107 @@ namespace VirtualClient.Actions
 
         private async Task ExecuteDCGMIDiagnosticsSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = $"dcgmi diag -r {this.Level} -j";
-            DateTime startTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = $"dcgmi diag -r {this.Level} -j";
+                DateTime startTime = DateTime.UtcNow;
 
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIDiscoverySubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi discovery -l";
-            DateTime startTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = "dcgmi discovery -l";
+                DateTime startTime = DateTime.UtcNow;
 
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIFieldGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi fieldgroup -l";
-            DateTime startTime = DateTime.UtcNow;
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = "dcgmi fieldgroup -l";
+                DateTime startTime = DateTime.UtcNow;
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIGroupSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi group -l";
-            DateTime startTime = DateTime.UtcNow;
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = "dcgmi group -l";
+                DateTime startTime = DateTime.UtcNow;
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIHealthSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi health -c -j";
-            DateTime startTime = DateTime.UtcNow;
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = "dcgmi health -c -j";
+                DateTime startTime = DateTime.UtcNow;
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIModulesSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string command = "dcgmi modules -l";
-            DateTime startTime = DateTime.UtcNow;
-            string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false);
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                string command = "dcgmi modules -l";
+                DateTime startTime = DateTime.UtcNow;
+                string results = await this.ExecuteCommandAsync<DCGMIExecutor>(command, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false);
 
-            Console.WriteLine("results are " + results);
-
-            this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(results, command, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteDCGMIProfTesterSubsystemAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            List<Task<string>> tasksList = new List<Task<string>>();
-            string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
-            string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
-            DateTime startTime = DateTime.UtcNow;
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            {
+                List<Task<string>> tasksList = new List<Task<string>>();
+                string dcgmproftestercommand = $"/usr/bin/dcgmproftester11 --no-dcgm-validation -t {this.FieldIDProftester} -d 10";
+                string dmoncommand = $"dcgmi dmon -e {this.ListOfFieldIDsDmon} -c 15";
+                DateTime startTime = DateTime.UtcNow;
 
-            tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false)));
+                tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dcgmproftestercommand, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false)));
 
-            tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
-            .ConfigureAwait(false)));
+                tasksList.Add(Task.Run(async () => await this.ExecuteCommandAsync<DCGMIExecutor>(dmoncommand, Environment.CurrentDirectory, cancellationToken)
+                .ConfigureAwait(false)));
 
-            string[] outputresults = await Task.WhenAll<string>(tasksList);
+                string[] outputresults = await Task.WhenAll<string>(tasksList);
 
-            string dcgmiproftesterresults = outputresults[0];
-            string dcgmidmonresults = outputresults[1];
+                string dcgmiproftesterresults = outputresults[0];
+                string dcgmidmonresults = outputresults[1];
 
-            this.CaptureDmonResultsAsync(dcgmidmonresults, dmoncommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
-            this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, dcgmproftestercommand, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                this.CaptureDmonResultsAsync(dcgmidmonresults, dmoncommand, this.StartTime, DateTime.Now, telemetryContext, cancellationToken);
+                this.CaptureWorkloadResultsAsync(dcgmiproftesterresults, dcgmproftestercommand, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+            }
         }
 
         private void CaptureDmonResultsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)

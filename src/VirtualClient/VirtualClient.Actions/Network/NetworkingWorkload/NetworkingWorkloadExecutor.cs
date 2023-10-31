@@ -728,23 +728,23 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.Logger.LogTraceMessage($"{nameof(NetworkingWorkloadExecutor)}.Notification = {instructions}");
 
                             Item<State> notification = instructions.ToObject<Item<State>>();
-                            EventContext relatedContext = EventContext.Persisted();
 
                             if (notification.Definition.Properties.ContainsKey(nameof(NetworkingWorkloadState.Tool)))
                             {
                                 NetworkingWorkloadState serverInstructions = new NetworkingWorkloadState(notification.Definition.Properties);
+                                telemetryContext.AddClientRequestId(serverInstructions.ClientRequestId);
 
                                 if (serverInstructions.ToolState == NetworkingWorkloadToolState.Stop)
                                 {
                                     this.Logger.LogTraceMessage($"Synchronization: Stopping all workloads...");
-                                    this.StopServerTool(relatedContext);
-                                    this.DeleteWorkloadStateAsync(relatedContext, cancellationToken).GetAwaiter().GetResult();
+                                    this.StopServerTool(telemetryContext);
+                                    this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).GetAwaiter().GetResult();
                                 }
                                 else if (serverInstructions.ToolState == NetworkingWorkloadToolState.Start)
                                 {
                                     this.Logger.LogTraceMessage($"Synchronization: Starting {serverInstructions.Tool} workload...");
-                                    this.StopServerTool(relatedContext);
-                                    this.DeleteWorkloadStateAsync(relatedContext, cancellationToken).GetAwaiter().GetResult();
+                                    this.StopServerTool(telemetryContext);
+                                    this.DeleteWorkloadStateAsync(telemetryContext, cancellationToken).GetAwaiter().GetResult();
 
                                     // The client will pass the settings to the server side. The server side will need to be updated
                                     // to use those settings specified below. (e.g. communications protocol, concurrent threads, network buffer size).
@@ -778,10 +778,10 @@ namespace VirtualClient.Actions.NetworkPerformance
                                         NetworkingWorkloadExecutor.LocalApiClient,
                                         nameof(NetworkingWorkloadState),
                                         serverInstructions,
-                                        relatedContext,
+                                        telemetryContext,
                                         cancellationToken).GetAwaiter().GetResult();
 
-                                    this.StartServerTool(serverInstructions.Tool, relatedContext, cancellationToken);
+                                    this.StartServerTool(serverInstructions.Tool, serverInstructions.ClientRequestId, telemetryContext, cancellationToken);
                                 }
                             }
                         });
@@ -877,24 +877,25 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
+                        // The request ID enables correlation between client/server and server operations.
+                        Guid requestId = Guid.NewGuid();
+                        relatedContext.AddClientRequestId(requestId);
+
                         this.Logger.LogTraceMessage("Synchronization: Wait for server online...");
 
                         // 1) Confirm server is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger)
-                            .ConfigureAwait(false);
+                        await NetworkingWorkloadExecutor.ServerApiClient.PollForHeartbeatAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger);
 
                         // 2) Wait for the server to signal the eventing API is online.
                         // ===========================================================================
-                        await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger)
-                            .ConfigureAwait(false);
+                        await NetworkingWorkloadExecutor.ServerApiClient.PollForServerOnlineAsync(this.ServerOnlinePollingTimeout, cancellationToken, logger: this.Logger);
 
                         // 3) Request the server to stop ALL workload processes
                         // ===========================================================================
                         this.Logger.LogTraceMessage("Synchronization: Request server to stop all workloads...");
 
-                        await this.RequestStopAllWorkloadsAsync(telemetryContext, cancellationToken)
-                            .ConfigureAwait(false);
+                        await this.RequestStopAllWorkloadsAsync(relatedContext, cancellationToken);
 
                         // 4) Request the server start the next workload.
                         // ===========================================================================
@@ -924,7 +925,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                             this.ProfilingEnabled,
                             this.ProfilingScenario,
                             this.ProfilingPeriod.ToString(),
-                            this.ProfilingWarmUpPeriod.ToString());
+                            this.ProfilingWarmUpPeriod.ToString(),
+                            requestId);
 
                         Item<State> instructions = new Item<State>(nameof(NetworkingWorkloadState), workloadInstructions);
                         relatedContext.AddContext("instructions", instructions);
@@ -933,8 +935,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                         await NetworkingWorkloadExecutor.SendInstructionsAsync(
                             NetworkingWorkloadExecutor.ServerApiClient,
                             instructions,
-                            telemetryContext,
-                            cancellationToken).ConfigureAwait(false);
+                            relatedContext,
+                            cancellationToken);
 
                         // 5) Confirm the server has started the requested workload.
                         // ===========================================================================
@@ -947,7 +949,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     && serverState.ToolState == NetworkingWorkloadToolState.Running;
                             },
                             this.StateConfirmationPollingTimeout,
-                            cancellationToken).ConfigureAwait(false);
+                            cancellationToken);
 
                         this.Logger.LogTraceMessage("Synchronization: Server workload startup confirmed...");
                         this.Logger.LogTraceMessage("Synchronization: Start client workload...");
@@ -955,6 +957,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                         // 6) Execute the client workload.
                         // ===========================================================================
                         NetworkingWorkloadToolExecutor executor = this.CreateWorkloadExecutor(toolName);
+                        executor.ClientRequestId = requestId;
 
                         try
                         {
@@ -965,11 +968,8 @@ namespace VirtualClient.Actions.NetworkPerformance
                         {
                             this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
 
-                            await NetworkingWorkloadExecutor.PollUntilStateDeletedAsync(
-                                NetworkingWorkloadExecutor.ServerApiClient,
-                                nameof(NetworkingWorkloadState),
-                                this.StateConfirmationPollingTimeout,
-                                cancellationToken).ConfigureAwait(false);
+                            await this.RequestStopAllWorkloadsAsync(telemetryContext, cancellationToken)
+                                .ConfigureAwait(false);
                         }
                     }
 
@@ -1026,7 +1026,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             });
         }
 
-        private void StartServerTool(NetworkingWorkloadTool toolName, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void StartServerTool(NetworkingWorkloadTool toolName, Guid? clientRequestId, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -1037,6 +1037,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                 {
                     CancellationTokenSource cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     NetworkingWorkloadToolExecutor action = this.CreateWorkloadExecutor(toolName);
+                    action.ClientRequestId = clientRequestId;
 
                     this.backgroundWorkloadServer = new BackgroundWorkloadServer
                     {

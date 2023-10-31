@@ -110,13 +110,16 @@ namespace VirtualClient.Actions
 
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                if (!cancellationToken.IsCancellationRequested)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
                 {
-                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                    process.ThrowIfWorkloadFailed();
-                    this.CaptureMetrics(process, commandArguments, relatedContext);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        await this.LogProcessDetailsAsync(process, telemetryContext);
+                        process.ThrowIfWorkloadFailed();
+                        this.CaptureMetrics(process, commandArguments, relatedContext);
+                    }
                 }
             }
 
