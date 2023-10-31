@@ -69,16 +69,6 @@
         protected string KafkaPackagePath { get; set; }
 
         /// <summary>
-        /// Path to Kafka server executable.
-        /// </summary>
-        protected string KafkaScriptPath { get; set; }
-
-        /// <summary>
-        /// Path to zookeeper server package.
-        /// </summary>
-        protected string ZookeeperScriptPath { get; set; }
-
-        /// <summary>
         /// Command type to be used based on platform.
         /// </summary>
         protected string PlatformSpecificCommandType { get; set; }
@@ -119,14 +109,10 @@
             {
                 case PlatformID.Win32NT:
                     this.PlatformSpecificCommandType = "cmd";
-                    this.KafkaScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-server-start.bat");
-                    this.ZookeeperScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "zookeeper-server-start.bat");
                     break;
 
                 case PlatformID.Unix:
                     this.PlatformSpecificCommandType = "bash";
-                    this.KafkaScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-server-start.sh");
-                    this.ZookeeperScriptPath = this.Combine(this.KafkaPackagePath, "bin", "zookeeper-server-start.sh");
                     break;
 
                 default:

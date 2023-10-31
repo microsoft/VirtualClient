@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Net;
@@ -97,6 +98,26 @@ namespace VirtualClient.Actions.Kafka
         protected IAsyncPolicy ServerRetryPolicy { get; set; }
 
         /// <summary>
+        /// Path to Kafka server executable.
+        /// </summary>
+        protected string KafkaStartScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to Kafka server executable.
+        /// </summary>
+        protected string KafkaStopScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to zookeeper server package.
+        /// </summary>
+        protected string ZookeeperStartScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to zookeeper server package.
+        /// </summary>
+        protected string ZookeeperStopScriptPath { get; set; }
+
+        /// <summary>
         /// Disposes of resources used by the executor including shutting down any
         /// instances of Kafka server running.
         /// </summary>
@@ -110,11 +131,11 @@ namespace VirtualClient.Actions.Kafka
                     {
                         Console.WriteLine("Disposed");
                         // We MUST stop the server instances from running before VC exits or they will
-                        // continue running until explicitly stopped. This is a problem for running Redis
+                        // continue running until explicitly stopped. This is a problem for running Kafka
                         // workloads back to back because the requisite ports will be in use already on next
                         // VC startup.
-                        /*this.KillServerInstancesAsync(CancellationToken.None)
-                            .GetAwaiter().GetResult();*/
+                        this.KillServerInstancesAsync(CancellationToken.None)
+                            .GetAwaiter().GetResult();
                     }
                     catch
                     {
@@ -139,20 +160,16 @@ namespace VirtualClient.Actions.Kafka
                 {
                     this.SetServerOnline(false);
 
-                    if (this.ResetServer(telemetryContext))
-                    {
-                        await this.DeleteStateAsync(telemetryContext, cancellationToken);
-                        await this.KillServerInstancesAsync(cancellationToken);
-                        await this.StartServerInstances(telemetryContext, cancellationToken);
-                    }
-
+                    await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                    await this.KillServerInstancesAsync(cancellationToken);
+                    await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
                     await this.SaveStateAsync(telemetryContext, cancellationToken);
-                    this.SetServerOnline(true);
 
+                    this.SetServerOnline(true);
                     if (this.IsMultiRoleLayout())
                     {
-                        await Task.WhenAny(this.serverProcesses);
-
+                        await Task.WhenAll(this.serverProcesses);
+                        await this.StopServersAsync(telemetryContext, cancellationToken);
                         // A cancellation is request, then we allow each of the server instances
                         // to gracefully exit. If a cancellation was not requested, it means that one 
                         // or more of the server instances exited and we will want to allow the component
@@ -185,19 +202,46 @@ namespace VirtualClient.Actions.Kafka
         {
             await base.InitializeAsync(telemetryContext, cancellationToken);
 
-            if (!this.fileSystem.File.Exists(this.ZookeeperScriptPath))
+            switch (this.Platform)
+            {
+                case PlatformID.Win32NT:
+                    this.KafkaStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-server-start.bat");
+                    this.KafkaStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-server-stop.bat");
+                    this.ZookeeperStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "zookeeper-server-start.bat");
+                    this.ZookeeperStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "zookeeper-server-stop.bat");
+                    break;
+
+                case PlatformID.Unix:
+                    this.KafkaStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-server-start.sh");
+                    this.KafkaStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-server-stop.sh");
+                    this.ZookeeperStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "zookeeper-server-start.sh");
+                    this.ZookeeperStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "zookeeper-server-stop.sh");
+                    break;
+            }
+
+            if (!this.fileSystem.File.Exists(this.ZookeeperStartScriptPath))
             {
                 throw new DependencyException(
-                    $"Kafka executable not found at path '{this.ZookeeperScriptPath}'",
+                    $"Zookeeper executable not found at path '{this.ZookeeperStartScriptPath}'",
+                    ErrorReason.WorkloadDependencyMissing);
+            }
+
+            if (!this.fileSystem.File.Exists(this.KafkaStartScriptPath))
+            {
+                throw new DependencyException(
+                    $"Kafka executable not found at path '{this.KafkaStartScriptPath}'",
                     ErrorReason.WorkloadDependencyMissing);
             }
 
             await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
-            await this.OpenKafkaPorts(cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperStartScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperStopScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaStartScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaStopScriptPath, this.Platform, cancellationToken);
+            this.OpenKafkaPorts(cancellationToken);
         }
 
-        private Task StartServerInstances(EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task StartServerInstancesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.serverProcesses.Clear();
 
@@ -217,29 +261,27 @@ namespace VirtualClient.Actions.Kafka
                     relatedContext.AddContext("workingDir", workingDirectory);
 
                     // Start zookeeper server and wait for it start
-                    string zookeeperCommandArgs = this.GetCommandArguement(this.ZookeeperScriptPath, "zookeeper.properties");
+                    string zookeeperCommandArgs = this.GetCommandArguement(this.ZookeeperStartScriptPath, "zookeeper.properties");
                     commands.Add(zookeeperCommandArgs);
-                    Task zookeeperTask = this.StartZookeeperServerAsync(this.PlatformSpecificCommandType, zookeeperCommandArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+                    Task zookeeperTask = this.StartZookeeperServerAsync("INFO zookeeper.request_throttler", ZookeeperPort, this.PlatformSpecificCommandType, zookeeperCommandArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
                     this.serverProcesses.Add(zookeeperTask);
-                    await zookeeperTask.ConfigureAwait(false);
+                    await zookeeperTask;
 
                     List<IProcessProxy> kafkaProcesses = new List<IProcessProxy>();
                     // Start kafka servers once zookeeper server is started.
                     for (int i = 0; i < this.ServerInstances; i++)
                     {
                         int port = this.Port + i;
-                        string commandArguments = this.GetCommandArguement(this.KafkaScriptPath, $"server-{i}.properties");
-                        commands.Add(commandArguments);
-                        IProcessProxy kafkaProcess = this.ProcessCommandAsync(this.PlatformSpecificCommandType, commandArguments, workingDirectory, relatedContext, cancellationToken);
-                        kafkaProcess.Start();
-                        kafkaProcesses.Add(kafkaProcess);
-                    }
-
-                    foreach (var process in kafkaProcesses)
-                    {
-                        Task kafkaTask = process.WaitForExitAsync(cancellationToken);
-                        this.serverProcesses.Add(kafkaTask);
-                        await kafkaTask.ConfigureAwait(false);
+                        string commandArguments = this.GetCommandArguement(this.KafkaStartScriptPath, $"server-{i}.properties");
+                        commands.Add(commandArguments); 
+                        this.serverProcesses.Add(this.RunCommandAsync(
+                            $"Kafka server process exited (port = {port})...", 
+                            this.PlatformSpecificCommandType, 
+                            commandArguments, 
+                            workingDirectory, 
+                            relatedContext, 
+                            cancellationToken,
+                            "Kafka"));
                     }
                 }
                 catch (OperationCanceledException)
@@ -270,7 +312,7 @@ namespace VirtualClient.Actions.Kafka
             return commandArgs;
         }
 
-        private Task StartZookeeperServerAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task StartZookeeperServerAsync(string responseMessage, int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {
@@ -278,15 +320,12 @@ namespace VirtualClient.Actions.Kafka
                 {
                     using (IProcessProxy process = this.ProcessCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken))
                     {
-                        if (process.Start())
-                        {
-                            await process.WaitForResponseAsync("INFO Created server", cancellationToken, timeout: TimeSpan.FromSeconds(30)).ConfigureAwait(false);
-                        }
+                        process.Start();
+                        await process.WaitForResponseAsync(responseMessage, cancellationToken, timeout: TimeSpan.FromSeconds(30)).ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            ConsoleLogger.Default.LogMessage($"zookeeper server process exited (port = {ZookeeperPort})...", telemetryContext);
-                            // await this.LogProcessDetailsAsync(process, telemetryContext, "kafka", logToFile: true);
+                            ConsoleLogger.Default.LogMessage($"zookeeper server process exited (port = {port})...", telemetryContext);
                             process.ThrowIfWorkloadFailed();
                         }
                     }
@@ -307,7 +346,7 @@ namespace VirtualClient.Actions.Kafka
             });
         }
 
-        private Task StartKafkaServerAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task RunCommandAsync(string logMessage, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, string toolName = null)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {
@@ -317,13 +356,8 @@ namespace VirtualClient.Actions.Kafka
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            ConsoleLogger.Default.LogMessage($"Kafka server process exited (port = {port})...", telemetryContext);
-                            // await this.LogProcessDetailsAsync(process, telemetryContext, "Kafka");
-
-                            // Redis will give 137 if it thinks memory is constraint but will still accept connection, example:
-                            // WARNING overcommit_memory is set to 0! Background save may fail under low memory condition. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1'
-                            // for this to take effect.
-                            // Ready to accept connections
+                            ConsoleLogger.Default.LogMessage(logMessage, telemetryContext);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, toolName);
                             process.ThrowIfWorkloadFailed();
                         }
                     }
@@ -335,7 +369,7 @@ namespace VirtualClient.Actions.Kafka
                 catch (Exception exc)
                 {
                     this.Logger.LogMessage(
-                        $"{this.TypeName}.StartServerInstanceError",
+                        $"{this.TypeName}.RunCommandError",
                         LogLevel.Error,
                         telemetryContext.Clone().AddError(exc));
 
@@ -346,6 +380,9 @@ namespace VirtualClient.Actions.Kafka
 
         private async Task ConfigurePropertiesFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string logDir = Directory.GetDirectoryRoot(this.KafkaPackagePath).TrimEnd('\\') + "/tmp";
+            this.fileSystem.Directory.DeleteAsync(logDir);
+
             for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
             {
                 int port = this.Port + serverInstance;
@@ -357,9 +394,9 @@ namespace VirtualClient.Actions.Kafka
 
                 await this.fileSystem.File.ReplaceInFileAsync(
                         newServerProperties, @"broker.id *= *[^\n]*", $"broker.id = {serverInstance}", cancellationToken);
-
+                
                 await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"log.dirs *= *[^\n]*", $"log.dirs = /tmp/kafka-logs-{serverInstance}", cancellationToken);
+                        newServerProperties, @"log.dirs *= *[^\n]*", $"log.dirs = {logDir}/kafka-logs-{serverInstance}", cancellationToken);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
                         newServerProperties, @"#listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{port}", cancellationToken);
@@ -402,26 +439,35 @@ namespace VirtualClient.Actions.Kafka
             return this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
-        private bool ResetServer(EventContext telemetryContext)
+        private async Task StopServersAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            bool shouldReset = true;
-            if (this.serverProcesses?.Any() == true)
+            this.Logger.LogTraceMessage($"{this.TypeName}.StopServerInstances");
+            string zookeeperStopArgs = this.ZookeeperStopScriptPath;
+            string kafkaStopArgs = this.KafkaStopScriptPath;
+            if (this.Platform == PlatformID.Win32NT)
             {
-                // Depending upon how the server Task instances are created, the Task may be in a status
-                // of Running or WaitingForActivation. The server is running in either of these 2 states.
-                shouldReset = !this.serverProcesses.All(p => p.Status == TaskStatus.Running || p.Status == TaskStatus.WaitingForActivation);
+                zookeeperStopArgs = $"/c {this.ZookeeperStopScriptPath}";
+                kafkaStopArgs = $"/c {this.KafkaStopScriptPath}";
             }
+            
+            await this.RunCommandAsync(
+                            $"Stop Kafka servers...",
+                            this.PlatformSpecificCommandType,
+                            kafkaStopArgs,
+                            this.KafkaPackagePath,
+                            telemetryContext,
+                            cancellationToken,
+                            "Kafka");
+            await this.RunCommandAsync(
+                            $"Stop zookeeper server...",
+                            this.PlatformSpecificCommandType,
+                            zookeeperStopArgs,
+                            this.KafkaPackagePath,
+                            telemetryContext,
+                            cancellationToken,
+                            "Zookeeper");
 
-            if (shouldReset)
-            {
-                this.Logger.LogTraceMessage($"Restart Kafka Server(s)...", telemetryContext);
-            }
-            else
-            {
-                this.Logger.LogTraceMessage($"Kafka Server(s) Running...", telemetryContext);
-            }
-
-            return shouldReset;
+            this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
         }
 
         private Task SaveStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -449,57 +495,23 @@ namespace VirtualClient.Actions.Kafka
             });
         }
 
-        private Task StartServerInstanceAsync(int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void OpenKafkaPorts(CancellationToken cancellationToken)
         {
-            return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
-            {
-                try
-                {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            ConsoleLogger.Default.LogMessage($"Kafka server process exited (port = {port})...", telemetryContext);
-                            // await this.LogProcessDetailsAsync(process, telemetryContext, "kafka", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                }
-                catch (Exception exc)
-                {
-                    this.Logger.LogMessage(
-                        $"{this.TypeName}.StartServerInstanceError",
-                        LogLevel.Error,
-                        telemetryContext.Clone().AddError(exc));
-
-                    throw;
-                }
-            });
-        }
-
-        private async Task OpenKafkaPorts(CancellationToken cancellationToken)
-        {
+            List<int> ports = new List<int>();
             for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
             {
                 int port = this.Port + serverInstance;
-                await KafkaServerExecutor.OpenFirewallPortsAsync(port, this.systemManagement.FirewallManager, cancellationToken);
+                ports.Add(port);
             }
-        }
 
-        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
-        {
-            return firewallManager.EnableInboundConnectionsAsync(
+            this.systemManagement.FirewallManager.EnableInboundConnectionsAsync(
                 new List<FirewallEntry>
                 {
                     new FirewallEntry(
-                        "PostgreSQL: Allow Multiple Machines communications",
+                        "Kafka: Allow Multiple Machines communications",
                         "Allows individual machine instances to communicate with other machine in client-server scenario",
                         "tcp",
-                        new List<int> { port })
+                        new List<int>(ports))
                 },
                 cancellationToken);
         }

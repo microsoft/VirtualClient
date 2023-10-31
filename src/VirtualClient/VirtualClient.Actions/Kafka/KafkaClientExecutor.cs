@@ -1,25 +1,35 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Polly;
+using VirtualClient.Common;
 using VirtualClient.Common.Extensions;
 using VirtualClient.Common.Telemetry;
 using VirtualClient.Contracts;
 
 namespace VirtualClient.Actions.Kafka
 {
+    internal enum KafkaCommandType
+    {
+        Setup,
+        ProducerTest,
+        ConsumerTest
+    }
+
     /// <summary>
     /// Kafka client executor.
     /// </summary>
     public class KafkaClientExecutor : KafkaExecutor
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RedisBenchmarkClientExecutor"/> class.
+        /// Initializes a new instance of the <see cref="KafkaClientExecutor"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">An enumeration of key-value pairs that can control the execution of the component.</param>/param>
@@ -38,11 +48,16 @@ namespace VirtualClient.Actions.Kafka
         /// <summary>
         /// Parameter defines the kafka command line to execute.
         /// </summary>
-        public string CommandLine
+        public string CommandLine { get; set; }
+
+        /// <summary>
+        /// Port on which server runs.
+        /// </summary>
+        public int Port
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandLine));
+                return this.Parameters.GetValue<int>(nameof(this.Port));
             }
         }
 
@@ -64,7 +79,50 @@ namespace VirtualClient.Actions.Kafka
         protected TimeSpan PollingTimeout { get; set; }
 
         /// <summary>
-        /// Initializes the environment and dependencies for client of redis Benchmark workload.
+        /// Path to Kafka topic executable.
+        /// </summary>
+        protected string KafkaTopicScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to Kafka producer performance test executable.
+        /// </summary>
+        protected string KafkProducerPerfScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to Kafka consumer performance test executable.
+        /// </summary>
+        protected string KafkaConsumerPerfScriptPath { get; set; }
+
+        /// <summary>
+        /// Path to Kafka command executable.
+        /// </summary>
+        protected string KafkaCommandScriptPath { get; set; }
+
+        /// <summary>
+        /// Parameter defines the kafka command type to decide which exe to run.
+        /// </summary>
+        private string CommandType
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.CommandType));
+            }
+        }
+
+        /// <summary>
+        /// Validates the component definition for requirements.
+        /// </summary>
+        protected override void Validate()
+        {
+            base.Validate();
+            if (!Enum.IsDefined(typeof(KafkaCommandType), this.CommandType))
+            {
+                throw new ArgumentException($"Parameter CommandType should be one of ${KafkaCommandType.Setup}, ${KafkaCommandType.ProducerTest} or ${KafkaCommandType.ConsumerTest}");
+            }
+        }
+
+        /// <summary>
+        /// Initializes the environment and dependencies for client of kafka Benchmark workload.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
@@ -72,7 +130,41 @@ namespace VirtualClient.Actions.Kafka
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperScriptPath, this.Platform, cancellationToken);
+
+            switch (this.Platform)
+            {
+                case PlatformID.Win32NT:
+                    this.KafkaTopicScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-topics.bat");
+                    this.KafkProducerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-producer-perf-test.bat");
+                    this.KafkaConsumerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-consumer-perf-test.bat");
+                    break;
+
+                case PlatformID.Unix:
+                    this.KafkaTopicScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-topics.sh");
+                    this.KafkProducerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-producer-perf-test.sh");
+                    this.KafkaConsumerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-consumer-perf-test.bat");
+                    break;
+            }
+
+            this.CommandLine = this.Parameters.GetValue<string>(nameof(this.CommandLine));
+            Enum.TryParse(this.CommandType, out KafkaCommandType kafkaCommandType);
+
+            switch (kafkaCommandType)
+            {
+                case KafkaCommandType.Setup:
+                    this.KafkaCommandScriptPath = this.KafkaTopicScriptPath;
+                    break;
+                case KafkaCommandType.ProducerTest:
+                    this.KafkaCommandScriptPath = this.KafkProducerPerfScriptPath;
+                    break;
+                case KafkaCommandType.ConsumerTest:
+                    this.KafkaCommandScriptPath = this.KafkaConsumerPerfScriptPath;
+                    break;
+            }
+
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaTopicScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkProducerPerfScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaConsumerPerfScriptPath, this.Platform, cancellationToken);
         }
 
         /// <summary>
@@ -82,6 +174,7 @@ namespace VirtualClient.Actions.Kafka
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            IPAddress ipAddress;
             List<Task> clientWorkloadTasks = new List<Task>();
 
             if (this.IsMultiRoleLayout())
@@ -90,22 +183,24 @@ namespace VirtualClient.Actions.Kafka
 
                 foreach (ClientInstance server in targetServers)
                 {
+                    this.CommandLine = string.Format(this.CommandLine, server.IPAddress);
                     clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
+                            IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
                             // 1) Confirm server is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
 
-                            await this.ServerApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
+                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
                                 .ConfigureAwait(false);
 
                             // 2) Confirm the server-side application (e.g. web server) is online.
                             // ===========================================================================
                             this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
 
-                            await this.ServerApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
+                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
                                 .ConfigureAwait(false);
 
                             this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
@@ -113,7 +208,8 @@ namespace VirtualClient.Actions.Kafka
 
                             // 3) Execute the client workload.
                             // ===========================================================================
-                            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
+                            ipAddress = IPAddress.Parse(server.IPAddress);
+                            await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken)
                                 .ConfigureAwait(false);
                         }
                     }));
@@ -121,17 +217,88 @@ namespace VirtualClient.Actions.Kafka
             }
             else
             {
+                ipAddress = IPAddress.Loopback;
                 clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
                     }
                 }));
             }
 
             return Task.WhenAll(clientWorkloadTasks);
         }
+
+        private Task ExecuteWorkloadsAsync(IPAddress serverIPAddress, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            EventContext relatedContext = telemetryContext.Clone()
+                .AddContext("serverIPAddress", serverIPAddress.ToString());
+
+            return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkloads", relatedContext.Clone(), async () =>
+            {
+                List<string> commands = new List<string>();
+                relatedContext.AddContext("command", this.PlatformSpecificCommandType);
+                relatedContext.AddContext("commandArguments", commands);
+
+                List<Task> workloadProcesses = new List<Task>();
+                string commandArguments = $"/c \"{this.KafkaCommandScriptPath} {this.CommandLine}\"";
+                commands.Add($"{this.PlatformSpecificCommandType} {commandArguments}");
+
+                workloadProcesses.Add(this.ExecuteWorkloadAsync(this.PlatformSpecificCommandType, commandArguments, this.KafkaPackagePath, relatedContext, cancellationToken));
+
+                await Task.WhenAll(workloadProcesses);
+            });
+        }
+
+        private async Task ExecuteWorkloadAsync(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await (this.ClientRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
+                {
+                    try
+                    {
+                        DateTime startTime = DateTime.UtcNow;
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                ConsoleLogger.Default.LogMessage($"Kafka benchmark process exited (server port = {this.Port})...", telemetryContext);
+
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "Kafka", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+
+                                string output = process.StandardOutput.ToString();
+                                this.Logger.LogTraceMessage(output);
+                                // this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                            }
+                        }
+                    }
+                    catch (Exception exc)
+                    {
+                        this.Logger.LogMessage(
+                            $"{this.TypeName}.WorkloadStartError",
+                            LogLevel.Warning,
+                            telemetryContext.Clone().AddError(exc));
+
+                        throw;
+                    }
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+            }
+            catch (Exception exc)
+            {
+                this.Logger.LogMessage(
+                    $"{this.TypeName}.ExecuteWorkloadError",
+                    LogLevel.Error,
+                    telemetryContext.Clone().AddError(exc));
+
+                throw;
+            }
+        }
     }
 }
-*/
