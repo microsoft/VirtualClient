@@ -214,15 +214,9 @@ namespace VirtualClient
         public static ILoggerProvider CreateOcpFileLoggerProvider(string ocpLogDirectory)
         {
             ocpLogDirectory.ThrowIfNullOrWhiteSpace(nameof(ocpLogDirectory));
-
-            // 50MB
-            // General Sizing:
-            // Around 86,000 metrics will fit inside of a single CSV file at 50MB.
-            const long maxFileSizeBytes = 50000000;
-
             ILoggerProvider loggerProvider = null;
 
-            loggerProvider = new OcpFileLoggerProvider(ocpLogDirectory, maxFileSizeBytes);
+            loggerProvider = new OcpFileLoggerProvider(ocpLogDirectory);
             VirtualClientRuntime.CleanupTasks.Add(new Action_(() => loggerProvider.Dispose()));
             return loggerProvider;
         }

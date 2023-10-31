@@ -25,8 +25,6 @@ namespace VirtualClient.Logging
     /// </summary>
     public class MetricsCsvFileLogger : ILogger, IFlushableChannel, IDisposable
     {
-        private static readonly AssemblyName LoggingAssembly = Assembly.GetAssembly(typeof(EventHubTelemetryLogger)).GetName();
-        private static readonly AssemblyName ExecutingAssembly = Assembly.GetEntryAssembly().GetName();
         private static readonly Encoding ContentEncoding = Encoding.UTF8;
 
         private ConcurrentBuffer buffer;

@@ -50,7 +50,8 @@ namespace VirtualClient.Logging
             };
 
             // Order matters, so we are doing an explicit equality check here.
-            CollectionAssert.AreEqual(expectedColumnHeaders, EventContextLoggingExtensions.GetCsvHeaders());
+            string expectedHeaderString = string.Join(",", expectedColumnHeaders.Select(h => $"\"{h}\""));
+            Assert.AreEqual(expectedHeaderString, EventContextLoggingExtensions.GetCsvHeaders());
         }
 
         [Test]

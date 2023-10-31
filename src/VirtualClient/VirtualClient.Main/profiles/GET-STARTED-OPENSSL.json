@@ -10,7 +10,7 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA256",
-                "CommandArguments": "speed -elapsed -seconds 10 sha256",
+                "CommandArguments": "speed -elapsed -seconds 5 sha256",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }

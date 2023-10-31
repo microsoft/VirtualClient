@@ -48,7 +48,7 @@ namespace VirtualClient.Contracts
         };
 
         /// <summary>
-        /// 
+        /// Get csv header string
         /// </summary>
         /// <returns></returns>
         public static string GetCsvHeaders()
@@ -57,17 +57,17 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// 
+        /// Get one csv row.
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
         public static string ToCsvRow(this EventContext context)
         {
-            return string.Join(",", contextFields.Select(field => field.GetFieldValue(context)));
+            return string.Join(",", contextFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
         }
 
         /// <summary>
-        /// 
+        /// Get value of the property in eventContext.
         /// </summary>
         /// <param name="context"></param>
         /// <param name="fieldName"></param>
