@@ -115,8 +115,10 @@ namespace VirtualClient.Actions
 
                     if (this.IsMultiRoleLayout())
                     {
-                        await this.WaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
+                        using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                        {
+                            await this.WaitAsync(cancellationToken);
+                        }
                     }
                 }
             });

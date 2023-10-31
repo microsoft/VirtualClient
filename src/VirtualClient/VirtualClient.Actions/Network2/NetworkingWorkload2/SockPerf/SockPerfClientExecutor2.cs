@@ -209,6 +209,9 @@ namespace VirtualClient.Actions
 
         private Task ExecuteClientWorkloadAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            Guid requestId = Guid.NewGuid();
+            telemetryContext.AddClientRequestId(requestId);
+
             return this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteClientWorkload", telemetryContext, async () =>
             {
                 this.Logger.LogTraceMessage("Synchronization: Wait for server online...");
