@@ -124,6 +124,32 @@ namespace VirtualClient.Contracts
         public IList<Action> CleanupTasks { get; }
 
         /// <summary>
+        /// Defines a client request ID to associate with the component operations. This information
+        /// is used to correlate client-side operations with corresponding server-side operations
+        /// (e.g. network client/server scenarios).
+        /// </summary>
+        public Guid? ClientRequestId
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(this.ClientRequestId), out IConvertible clientRequestId);
+                return clientRequestId != null ? Guid.Parse(clientRequestId.ToString()) : null;
+            }
+
+            set
+            {
+                if (value == null)
+                {
+                    this.Parameters.Remove(nameof(this.ClientRequestId));
+                }
+                else
+                {
+                    this.Parameters[nameof(this.ClientRequestId)] = value.ToString();
+                }
+            }
+        }
+
+        /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
         /// </summary>
         public Architecture CpuArchitecture { get; }
@@ -517,6 +543,11 @@ namespace VirtualClient.Contracts
                 if (this.IsSupported())
                 {
                     EventContext telemetryContext = EventContext.Persisted();
+
+                    if (this.ClientRequestId != null)
+                    {
+                        telemetryContext.AddClientRequestId(this.ClientRequestId);
+                    }
 
                     if (!this.ParametersEvaluated)
                     {

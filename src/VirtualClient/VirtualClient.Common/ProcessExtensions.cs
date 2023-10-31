@@ -4,7 +4,6 @@
 namespace VirtualClient.Common
 {
     using System;
-    using System.Linq;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -38,11 +37,33 @@ namespace VirtualClient.Common
             {
                 try
                 {
-                    process.Kill();
+                    process.Kill(true);
                 }
-                catch
+                catch (Exception exc)
                 {
+                    int processId = -1;
+                    string processName = "Indeterminate";
+
+                    try
+                    {
+                        processId = process.Id;
+                    }
+                    catch
+                    {
+                        // Best effort here.
+                    }
+
+                    try
+                    {
+                        processName = process.Name;
+                    }
+                    catch
+                    {
+                        // Best effort here.
+                    }
+
                     // Best effort here.
+                    Console.WriteLine($"Process Cleanup Error: ID={processId}, Name={processName}, Error={exc.Message}");
                 }
             }
         }

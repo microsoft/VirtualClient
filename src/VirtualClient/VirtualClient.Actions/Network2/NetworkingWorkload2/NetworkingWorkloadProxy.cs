@@ -125,6 +125,7 @@ namespace VirtualClient.Actions
 
                             // Create WorkloadServerExecutor
                             VirtualClientComponent serverComponent = ComponentFactory.CreateComponent(workloadInstructions.Properties, workloadInstructions.Properties["Type"].ToString(), this.Dependencies);
+                            serverComponent.ClientRequestId = workloadInstructions.ClientRequestId;
 
                             await serverComponent.ExecuteAsync(cancellationToken)
                                 .ConfigureAwait(false);

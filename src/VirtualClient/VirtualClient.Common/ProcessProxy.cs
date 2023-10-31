@@ -234,6 +234,25 @@ namespace VirtualClient.Common
             return exitCode != null;
         }
 
+        /// <summary>
+        /// Gracefully closes the process and main window.
+        /// </summary>
+        public void Close()
+        {
+            try
+            {
+                this.UnderlyingProcess.Close();
+            }
+            catch
+            {
+                // Best Effort
+            }
+            finally
+            {
+                this.exitTime = DateTime.UtcNow;
+            }
+        }
+
         /// <inheritdoc />
         public void Dispose()
         {
@@ -244,15 +263,35 @@ namespace VirtualClient.Common
         /// <inheritdoc />
         public virtual void Kill()
         {
-            this.UnderlyingProcess.Kill(true);
-            this.exitTime = DateTime.UtcNow;
+            try
+            {
+                this.UnderlyingProcess.Kill(true);
+            }
+            catch
+            {
+                // Best effort.
+            }
+            finally
+            {
+                this.exitTime = DateTime.UtcNow;
+            }
         }
 
         /// <inheritdoc />
         public virtual void Kill(bool entireProcessTree)
         {
-            this.UnderlyingProcess.Kill(entireProcessTree);
-            this.exitTime = DateTime.UtcNow;
+            try
+            {
+                this.UnderlyingProcess.Kill(entireProcessTree);
+            }
+            catch
+            {
+                // Best effort.
+            }
+            finally
+            {
+                this.exitTime = DateTime.UtcNow;
+            }
         }
 
         /// <inheritdoc />
@@ -331,6 +370,7 @@ namespace VirtualClient.Common
             {
                 if (disposing)
                 {
+                    this.UnderlyingProcess.Close();
                     this.UnderlyingProcess.Dispose();
                 }
 
