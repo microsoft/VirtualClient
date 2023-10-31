@@ -379,7 +379,7 @@ namespace VirtualClient.Actions
                                     {
                                         // SockPerf must be explicitly terminated given the current implementation. If it is not,
                                         // the process will remain running in the background.
-                                        process.SafeKill();
+                                        process.SafeKill(this.Logger);
                                     }
                                 }
                             }

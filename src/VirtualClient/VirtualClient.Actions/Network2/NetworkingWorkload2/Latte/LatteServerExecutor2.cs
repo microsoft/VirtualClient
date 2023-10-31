@@ -376,7 +376,7 @@ namespace VirtualClient.Actions
                                         }
                                         finally
                                         {
-                                            process.SafeKill();
+                                            process.SafeKill(this.Logger);
                                         }
                                     }
                                 }
