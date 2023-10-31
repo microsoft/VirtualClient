@@ -134,5 +134,24 @@ namespace VirtualClient.Common.Telemetry
             context.Properties[key] = value;
             return context;
         }
+
+        /// <summary>
+        /// Add the client request ID to the original context.
+        /// </summary>
+        /// <param name="context">The <see cref="EventContext"/> object whose context properties should be added.</param>
+        /// <param name="requestId">The client request ID to add.</param>
+        /// <returns>
+        /// An <see cref="EventContext"/> object having the context properties added.
+        /// </returns>
+        public static EventContext AddClientRequestId(this EventContext context, Guid? requestId)
+        {
+            context.ThrowIfNull(nameof(context));
+            if (requestId != null)
+            {
+                context.Properties["clientRequestId"] = requestId.ToString();
+            }
+
+            return context;
+        }
     }
 }

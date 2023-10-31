@@ -95,9 +95,14 @@ namespace VirtualClient.Common
         ProcessStartInfo StartInfo { get; }
 
         /// <summary>
-        /// 
+        ///  Gets the start time for the underlying process.
         /// </summary>
         DateTime StartTime { get; }
+
+        /// <summary>
+        /// Gracefully closes the process and main window.
+        /// </summary>
+        void Close();
 
         /// <summary>
         /// Promptly terminates/kills the underlying process without waiting for a
@@ -109,7 +114,7 @@ namespace VirtualClient.Common
         /// Promptly terminates/kills the underlying process along with entire 
         /// processtree without waiting for a graceful exit.
         /// </summary>
-        void Kill(bool entireprocessTree);
+        void Kill(bool entireProcessTree);
 
         /// <summary>
         /// Starts the underlying process.

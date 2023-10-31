@@ -6,6 +6,7 @@ namespace VirtualClient.Actions.NetworkPerformance
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using Microsoft.AspNetCore.Http.Features;
     using Newtonsoft.Json;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -118,7 +119,8 @@ namespace VirtualClient.Actions.NetworkPerformance
             bool profilingEnabled = false,
             string profilingScenario = null,
             string profilingPeriod = null,
-            string profilingWarmUpPeriod = null)
+            string profilingWarmUpPeriod = null,
+            Guid? clientRequestId = null)
         {
             packageName.ThrowIfNull(nameof(packageName));
             scenario.ThrowIfNull(nameof(scenario));
@@ -151,6 +153,7 @@ namespace VirtualClient.Actions.NetworkPerformance
             this.Properties[nameof(this.ProfilingScenario)] = profilingScenario;
             this.Properties[nameof(this.ProfilingPeriod)] = profilingPeriod;
             this.Properties[nameof(this.ProfilingWarmUpPeriod)] = profilingWarmUpPeriod;
+            this.ClientRequestId = clientRequestId;
         }
 
         /// <summary>

@@ -56,19 +56,26 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
                                     process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
                                 }
+                                else
+                                {
+                                    try
+                                    {
+                                        await this.WaitAsync(cancellationToken);
+                                        process.Close();
 
-                                this.CleanupTasks.Add(() => process.SafeKill());
-
-                                // Run the server slightly longer than the test duration.
-                                TimeSpan serverWaitTime = TimeSpan.FromMilliseconds(this.Iterations * .5);
-                                await this.WaitAsync(serverWaitTime, cancellationToken);
-                                await this.LogProcessDetailsAsync(process, relatedContext, "Latte", logToFile: true);
+                                        await process.WaitForExitAsync(cancellationToken);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "Latte");
+                                    }
+                                    finally
+                                    {
+                                        process.SafeKill();
+                                    }
+                                }
                             }
                         }
                         catch (Exception exc)
                         {
                             this.Logger.LogMessage($"{this.TypeName}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                            process.SafeKill();
                             throw;
                         }
                     });
