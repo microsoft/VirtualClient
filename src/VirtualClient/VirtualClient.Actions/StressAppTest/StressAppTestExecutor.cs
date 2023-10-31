@@ -182,28 +182,31 @@ namespace VirtualClient.Actions
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                string commandLineArguments = this.CommandLine;
-                commandLineArguments += " -s " + this.TimeInSeconds;
-                if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    commandLineArguments += " -W";
-                }
-
-                // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
-                string resultsFileName = $"stressapptestLogs_{DateTime.UtcNow.ToString("yyyyMMddHHmmssffff")}.txt";
-                commandLineArguments += " -l " + resultsFileName;
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments.Trim(), this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
+                    string commandLineArguments = this.CommandLine;
+                    commandLineArguments += " -s " + this.TimeInSeconds;
+                    if (this.UseCpuStressfulMemoryCopy && !commandLineArguments.Contains("-W"))
                     {
-                        if (process.IsErrored())
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
-                            process.ThrowIfWorkloadFailed();
-                        }
+                        commandLineArguments += " -W";
+                    }
 
-                        await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
+                    // Example command with arguments: ./stressapptest -s 60 -l stressapptestLogs_202301131037407031.txt
+                    string resultsFileName = $"stressapptestLogs_{DateTime.UtcNow.ToString("yyyyMMddHHmmssffff")}.txt";
+                    commandLineArguments += " -l " + resultsFileName;
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableName, commandLineArguments.Trim(), this.PackageDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            if (process.IsErrored())
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "StressAppTest");
+                                process.ThrowIfWorkloadFailed();
+                            }
+
+                            await this.CaptureMetricsAsync(process, commandLineArguments, resultsFileName, telemetryContext, cancellationToken);
+                        }
                     }
                 }
             }

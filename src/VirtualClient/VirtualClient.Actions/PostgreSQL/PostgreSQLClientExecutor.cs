@@ -86,82 +86,85 @@ namespace VirtualClient.Actions
 
             await this.Logger.LogMessageAsync($"{this.TypeName}.ExecuteWorkload", telemetryContext, async () =>
             {
-                DateTime startTime = DateTime.UtcNow;
-
-                string results = string.Empty;
-                if (this.Platform == PlatformID.Unix)
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    string command = "bash";
-                    string commandArguments = $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.RunTransactionsTclName}\"";
+                    DateTime startTime = DateTime.UtcNow;
 
-                    this.MetadataContract.AddForScenario(
-                        "HammerDB",
-                        $"{command} {commandArguments}",
-                        toolVersion: null);
-
-                    this.MetadataContract.Apply(telemetryContext);
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command,
-                        commandArguments,
-                        this.HammerDBPackagePath,
-                        telemetryContext,
-                        cancellationToken))
+                    string results = string.Empty;
+                    if (this.Platform == PlatformID.Unix)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
+                        string command = "bash";
+                        string commandArguments = $"-c \"{this.Combine(this.HammerDBPackagePath, "hammerdbcli")} auto {PostgreSQLServerExecutor.RunTransactionsTclName}\"";
 
-                            results = process.StandardOutput.ToString();
+                        this.MetadataContract.AddForScenario(
+                            "HammerDB",
+                            $"{command} {commandArguments}",
+                            toolVersion: null);
+
+                        this.MetadataContract.Apply(telemetryContext);
+
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                            command,
+                            commandArguments,
+                            this.HammerDBPackagePath,
+                            telemetryContext,
+                            cancellationToken))
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
+
+                                results = process.StandardOutput.ToString();
+                            }
                         }
                     }
-                }
-                else if (this.Platform == PlatformID.Win32NT)
-                {
-                    Action<IProcessProxy> setEnvironmentVariables = (process) =>
+                    else if (this.Platform == PlatformID.Win32NT)
                     {
-                        string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
-
-                        process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH] = string.Join(';', new string[]
+                        Action<IProcessProxy> setEnvironmentVariables = (process) =>
                         {
+                            string existingPath = process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH];
+
+                            process.StartInfo.EnvironmentVariables[EnvironmentVariable.PATH] = string.Join(';', new string[]
+                            {
                                 this.Combine(this.HammerDBPackagePath, "bin"),
                                 this.Combine(this.PostgreSqlInstallationPath, "bin"),
                                 existingPath
-                        });
-                    };
+                            });
+                        };
 
-                    string command = this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat");
-                    string commandArguments = $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}";
+                        string command = this.Combine(this.HammerDBPackagePath, "hammerdbcli.bat");
+                        string commandArguments = $"auto {PostgreSQLServerExecutor.RunTransactionsTclName}";
 
-                    this.MetadataContract.AddForScenario(
-                        "HammerDB",
-                        $"{command} {commandArguments}",
-                        toolVersion: null);
+                        this.MetadataContract.AddForScenario(
+                            "HammerDB",
+                            $"{command} {commandArguments}",
+                            toolVersion: null);
 
-                    this.MetadataContract.Apply(telemetryContext);
+                        this.MetadataContract.Apply(telemetryContext);
 
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command,
-                        commandArguments,
-                        this.HammerDBPackagePath,
-                        telemetryContext,
-                        cancellationToken,
-                        beforeExecution: setEnvironmentVariables))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(
+                            command,
+                            commandArguments,
+                            this.HammerDBPackagePath,
+                            telemetryContext,
+                            cancellationToken,
+                            beforeExecution: setEnvironmentVariables))
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "PostgreSQL", logToFile: true);
+                                process.ThrowIfWorkloadFailed();
 
-                            results = process.StandardOutput.ToString();
+                                results = process.StandardOutput.ToString();
+                            }
                         }
                     }
-                }
 
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    this.CaptureMetricsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    if (!cancellationToken.IsCancellationRequested)
+                    {
+                        this.CaptureMetricsAsync(results, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                    }
                 }
             });
         }
