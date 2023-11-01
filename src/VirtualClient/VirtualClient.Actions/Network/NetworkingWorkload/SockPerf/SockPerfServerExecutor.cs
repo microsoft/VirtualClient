@@ -5,6 +5,7 @@ namespace VirtualClient.Actions.NetworkPerformance
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -61,19 +62,29 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     List<int> successCodes = new List<int>() { 0, 137 };
                                     process.ThrowIfErrored<WorkloadException>(successCodes, errorReason: ErrorReason.WorkloadFailed);
                                 }
+                                else
+                                {
+                                    try
+                                    {
+                                        // Wait until the cancellation token is signalled.
+                                        await this.WaitAsync(cancellationToken);
+                                        process.Close();
 
-                                this.CleanupTasks.Add(() => process.SafeKill());
-
-                                // Run the server slightly longer than the test duration.
-                                TimeSpan serverWaitTime = TimeSpan.FromSeconds(this.TestDuration + 10);
-                                await this.WaitAsync(serverWaitTime, cancellationToken);
-                                await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf", logToFile: true);
+                                        await process.WaitForExitAsync(cancellationToken);
+                                        await this.LogProcessDetailsAsync(process, relatedContext, "SockPerf");
+                                    }
+                                    finally
+                                    {
+                                        // SockPerf must be explicitly terminated given the current implementation. If it is not,
+                                        // the process will remain running in the background.
+                                        process.SafeKill(this.Logger);
+                                    }
+                                }
                             }
                         }
                         catch (Exception exc)
                         {
                             this.Logger.LogMessage($"{this.GetType().Name}.WorkloadStartupError", LogLevel.Warning, relatedContext.AddError(exc));
-                            process.SafeKill();
                             throw;
                         }
                     }).ConfigureAwait(false);
