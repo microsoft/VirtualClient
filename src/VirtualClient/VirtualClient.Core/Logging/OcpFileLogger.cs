@@ -6,6 +6,7 @@ namespace VirtualClient.Logging
     using System;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Diagnostics.Metrics;
     using System.IO;
     using System.IO.Abstractions;
@@ -15,10 +16,12 @@ namespace VirtualClient.Logging
     using System.Text.Json.Nodes;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using Polly;
+    using Serilog;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -100,10 +103,12 @@ namespace VirtualClient.Logging
                             break;
 
                         case (int)LogType.Trace:
-                            this.WriteError(eventContext);
+                        case (int)LogType.SystemEvent:
+                            this.WriteLog(eventContext, eventId, logLevel);
                             break;
 
-                        default: 
+                        default:
+                            Console.WriteLine(eventId.Id);
                             break;
                     }
 
@@ -141,6 +146,12 @@ namespace VirtualClient.Logging
             {
                 if (!this.disposed)
                 {
+                    while (!this.fileQueue.IsEmpty)
+                    {
+                        // block here until finished.
+                        Thread.Sleep(100);
+                    }
+
                     this.semaphore.Dispose();
                     this.disposed = true;
                 }
@@ -149,15 +160,11 @@ namespace VirtualClient.Logging
 
         private void WriteMeasurement(EventContext context)
         {
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
-
             Measurement measurement = new Measurement()
             {
                 Name = context.GetFieldValue("MetricName"),
                 Unit = context.GetFieldValue("MetricUnit"),
-                Value = context.GetFieldValue("MetricValue"),
-                Validators = new List<MeasurementValidator> { new MeasurementValidator() { } },
+                Value = context.GetFieldValue("MetricValue")
             };
 
             this.fileQueue.Enqueue((nameof(Measurement), JsonConvert.SerializeObject(measurement)));
@@ -165,8 +172,6 @@ namespace VirtualClient.Logging
 
         private void WriteError(EventContext context)
         {
-            StringBuilder messageBuilder = new StringBuilder();
-            messageBuilder.Append(Environment.NewLine);
             string errorText = context.GetFieldValue("errors");
             string stackTrace = context.GetFieldValue("errorCallstack");
             JArray jsonArray = JArray.Parse(errorText);
@@ -176,7 +181,7 @@ namespace VirtualClient.Logging
                 string errorType = obj.Value<string>("errorType");
                 string errorMessage = obj.Value<string>("errorMessage");
 
-                Error error = new Error()
+                Contracts.OpenComputeProject.Error error = new Contracts.OpenComputeProject.Error()
                 {
                     Message = errorMessage,
                     SourceLocation = new SourceLocation() { File = stackTrace },
@@ -184,6 +189,75 @@ namespace VirtualClient.Logging
                 };
 
                 this.fileQueue.Enqueue((nameof(Measurement), JsonConvert.SerializeObject(error)));
+            }
+        }
+
+        private void WriteLog(EventContext context, EventId eventId, LogLevel logLevel)
+        {
+            string message = eventId.Name;
+
+            switch (message)
+            {
+                case "ProfileExecutor.ExecuteActionsStart":
+                    MeasurementSeriesStart msStart = new MeasurementSeriesStart()
+                    {
+                        Name = message,
+                        MeasurementSeriesId = context.GetFieldValue("experimentId")
+                    };
+
+                    this.fileQueue.Enqueue((nameof(MeasurementSeriesStart), JsonConvert.SerializeObject(msStart)));
+                    break;
+
+                case "ProfileExecutor.ExecuteActionsStop":
+                    MeasurementSeriesEnd msEnd = new MeasurementSeriesEnd()
+                    {
+                        MeasurementSeriesId = context.GetFieldValue("experimentId"),
+                        TotalCount = Convert.ToInt32(context.GetFieldValue("iteration"))
+                    };
+
+                    this.fileQueue.Enqueue((nameof(MeasurementSeriesEnd), JsonConvert.SerializeObject(msEnd)));
+                    break;
+
+                default:
+                    if (message.Contains("Executor") && message.EndsWith("Start"))
+                    {
+                        TestStepStart testStepStart = new TestStepStart()
+                        {
+                            Name = message,
+                        };
+
+                        this.fileQueue.Enqueue((nameof(TestStepStart), JsonConvert.SerializeObject(testStepStart)));
+                    }
+                    else if (message.Contains("Executor") && message.EndsWith("Stop"))
+                    {
+                        TestStepEnd testStepEnd = new TestStepEnd()
+                        {
+                            Status = TestStatus.COMPLETE
+                        };
+
+                        this.fileQueue.Enqueue((nameof(TestStepEnd), JsonConvert.SerializeObject(testStepEnd)));
+                    }
+                    else if (message.Contains("Executor") && message.EndsWith("Error"))
+                    {
+                        TestStepEnd testStepEnd = new TestStepEnd()
+                        {
+                            Status = TestStatus.ERROR
+                        };
+
+                        this.fileQueue.Enqueue((nameof(TestStepEnd), JsonConvert.SerializeObject(testStepEnd)));
+                    }
+                    else
+                    {
+                        Contracts.OpenComputeProject.Log log = new Contracts.OpenComputeProject.Log()
+                        {
+                            Message = message,
+                            Severity = logLevel.ToString()
+                        };
+
+                        this.fileQueue.Enqueue((nameof(Contracts.OpenComputeProject.Log), JsonConvert.SerializeObject(log)));
+                    }
+
+                    break;
             }
         }
 

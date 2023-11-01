@@ -118,6 +118,8 @@ namespace VirtualClient
                 Console.Error.WriteLine(exc.StackTrace);
             }
 
+            Task.Delay(5000).GetAwaiter().GetResult();
+
             return exitCode;
          }
 

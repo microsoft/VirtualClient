@@ -74,7 +74,17 @@ namespace VirtualClient.Contracts
         /// <returns></returns>
         public static string GetFieldValue(this EventContext context, string fieldName)
         {
-            return contextFields.Where(field => field.ColumnName == fieldName).First().GetFieldValue(context);
+            string result = string.Empty;
+            if (contextFields.Any(f => f.ColumnName == fieldName))
+            {
+                result = contextFields.Where(field => field.ColumnName == fieldName).First().GetFieldValue(context);
+            }
+            else
+            {
+                result = context.Properties[fieldName].ToString();
+            }
+
+            return result;
         }
 
         internal class EventContextField

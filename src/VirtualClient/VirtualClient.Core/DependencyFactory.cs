@@ -295,8 +295,7 @@ namespace VirtualClient
                 loggerProviders.Add(metricsCsvLoggerProvider);
 
                 // Metrics/Results in CSV Format
-                ILoggerProvider ocpFileLoggerProvider = DependencyFactory.CreateOcpFileLoggerProvider(Path.Combine(logFileDirectory))
-                    .HandleMetricsEvents();
+                ILoggerProvider ocpFileLoggerProvider = DependencyFactory.CreateOcpFileLoggerProvider(Path.Combine(logFileDirectory));
 
                 VirtualClientRuntime.CleanupTasks.Add(new Action_(() => ocpFileLoggerProvider.Dispose()));
                 loggerProviders.Add(ocpFileLoggerProvider);
