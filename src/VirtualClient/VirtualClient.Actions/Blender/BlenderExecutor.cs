@@ -167,8 +167,7 @@ namespace VirtualClient.Actions
 
                     this.MetadataContract.AddForScenario(
                            this.Scenario,
-                           workloadProcess.FullCommand(),
-                           toolVersion: "3.1.0");
+                           workloadProcess.FullCommand());
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
@@ -180,7 +179,8 @@ namespace VirtualClient.Actions
                         null,
                         commandArguments,
                         this.Tags,
-                        telemetryContext);
+                        telemetryContext,
+                        toolVersion: this.Package.Version);
                 }
                 catch (SchemaException exc)
                 {
