@@ -57,7 +57,7 @@
       "Parameters": {
         "Scenario": "InstallSpecViewWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "specviewperf.zip",
+        "BlobName": "specviewperf2020v3.1.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
       }
