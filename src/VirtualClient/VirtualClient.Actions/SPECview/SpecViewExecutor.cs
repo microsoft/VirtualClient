@@ -158,7 +158,7 @@ namespace VirtualClient.Actions
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(this.SpecviewExecutablePath, commandArguments, this.SpecviewPackage.Path, relatedContext, cancellationToken).ConfigureAwait(false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
