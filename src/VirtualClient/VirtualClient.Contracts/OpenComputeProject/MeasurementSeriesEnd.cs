@@ -9,7 +9,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// MeasurementSeriesEnd class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/measurement_series_end.json
     /// </summary>
-    public class MeasurementSeriesEnd
+    public class MeasurementSeriesEnd : TestStepArtifact
     {
         /// <summary>
         /// Measurement Series Id associated with the measurement series end.

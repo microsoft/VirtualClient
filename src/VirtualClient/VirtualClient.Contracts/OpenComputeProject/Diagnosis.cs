@@ -33,7 +33,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// Dut Info class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/diagnosis.json
     /// </summary>
-    public class Diagnosis
+    public class Diagnosis : TestStepArtifact
     {
         /// <summary>
         /// Verdict

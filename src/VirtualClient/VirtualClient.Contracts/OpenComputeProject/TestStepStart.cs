@@ -9,7 +9,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// TestStepStart class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/test_step_start.json
     /// </summary>
-    public class TestStepStart
+    public class TestStepStart : TestStepArtifact
     {
         /// <summary>
         /// Name of the test step.

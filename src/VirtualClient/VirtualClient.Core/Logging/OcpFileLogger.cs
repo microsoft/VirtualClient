@@ -164,7 +164,8 @@ namespace VirtualClient.Logging
             {
                 Name = context.GetFieldValue("MetricName"),
                 Unit = context.GetFieldValue("MetricUnit"),
-                Value = context.GetFieldValue("MetricValue")
+                Value = context.GetFieldValue("MetricValue"),
+                Timestamp = DateTimeOffset.UtcNow.ToString("o")
             };
 
             this.fileQueue.Enqueue((nameof(Measurement), JsonConvert.SerializeObject(measurement)));
@@ -186,6 +187,7 @@ namespace VirtualClient.Logging
                     Message = errorMessage,
                     SourceLocation = new SourceLocation() { File = stackTrace },
                     Symptom = errorType,
+                    Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                 };
 
                 this.fileQueue.Enqueue((nameof(Measurement), JsonConvert.SerializeObject(error)));
@@ -202,7 +204,8 @@ namespace VirtualClient.Logging
                     MeasurementSeriesStart msStart = new MeasurementSeriesStart()
                     {
                         Name = message,
-                        MeasurementSeriesId = context.GetFieldValue("experimentId")
+                        MeasurementSeriesId = context.GetFieldValue("experimentId"),
+                        Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                     };
 
                     this.fileQueue.Enqueue((nameof(MeasurementSeriesStart), JsonConvert.SerializeObject(msStart)));
@@ -212,7 +215,8 @@ namespace VirtualClient.Logging
                     MeasurementSeriesEnd msEnd = new MeasurementSeriesEnd()
                     {
                         MeasurementSeriesId = context.GetFieldValue("experimentId"),
-                        TotalCount = Convert.ToInt32(context.GetFieldValue("iteration"))
+                        TotalCount = Convert.ToInt32(context.GetFieldValue("iteration")),
+                        Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                     };
 
                     this.fileQueue.Enqueue((nameof(MeasurementSeriesEnd), JsonConvert.SerializeObject(msEnd)));
@@ -224,6 +228,7 @@ namespace VirtualClient.Logging
                         TestStepStart testStepStart = new TestStepStart()
                         {
                             Name = message,
+                            Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                         };
 
                         this.fileQueue.Enqueue((nameof(TestStepStart), JsonConvert.SerializeObject(testStepStart)));
@@ -232,7 +237,8 @@ namespace VirtualClient.Logging
                     {
                         TestStepEnd testStepEnd = new TestStepEnd()
                         {
-                            Status = TestStatus.COMPLETE
+                            Status = TestStatus.COMPLETE,
+                            Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                         };
 
                         this.fileQueue.Enqueue((nameof(TestStepEnd), JsonConvert.SerializeObject(testStepEnd)));
@@ -241,7 +247,8 @@ namespace VirtualClient.Logging
                     {
                         TestStepEnd testStepEnd = new TestStepEnd()
                         {
-                            Status = TestStatus.ERROR
+                            Status = TestStatus.ERROR,
+                            Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                         };
 
                         this.fileQueue.Enqueue((nameof(TestStepEnd), JsonConvert.SerializeObject(testStepEnd)));
@@ -251,7 +258,8 @@ namespace VirtualClient.Logging
                         Contracts.OpenComputeProject.Log log = new Contracts.OpenComputeProject.Log()
                         {
                             Message = message,
-                            Severity = logLevel.ToString()
+                            Severity = logLevel.ToString(),
+                            Timestamp = DateTimeOffset.UtcNow.ToString("o"),
                         };
 
                         this.fileQueue.Enqueue((nameof(Contracts.OpenComputeProject.Log), JsonConvert.SerializeObject(log)));

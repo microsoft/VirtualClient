@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// Measurement class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/measurement.json
     /// </summary>
-    public class Measurement
+    public class Measurement : TestStepArtifact
     {
         /// <summary>
         /// Name of the measurement.

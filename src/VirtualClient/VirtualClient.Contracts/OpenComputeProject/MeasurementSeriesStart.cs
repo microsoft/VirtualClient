@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// MeasurementSeriesStart class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/measurement_series_start.json
     /// </summary>
-    public class MeasurementSeriesStart
+    public class MeasurementSeriesStart : TestStepArtifact
     {
         /// <summary>
         /// Name of the measurement series.

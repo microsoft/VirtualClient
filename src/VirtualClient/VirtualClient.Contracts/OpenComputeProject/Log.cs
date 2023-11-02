@@ -40,7 +40,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// Log class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/log.json
     /// </summary>
-    public class Log
+    public class Log : TestRunArtifact
     {
         /// <summary>
         /// Severity of the log message (e.g., INFO, DEBUG, WARNING, ERROR, FATAL).

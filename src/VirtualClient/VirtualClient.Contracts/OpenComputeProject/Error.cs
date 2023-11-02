@@ -10,7 +10,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// Error class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/error.json
     /// </summary>
-    public class Error
+    public class Error : TestRunArtifact
     {
         /// <summary>
         /// Symptom

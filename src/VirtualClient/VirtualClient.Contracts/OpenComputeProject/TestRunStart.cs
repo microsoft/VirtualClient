@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// TestRunStart class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/test_run_start.json
     /// </summary>
-    public class TestRunStart
+    public class TestRunStart : TestRunArtifact
     {
         /// <summary>
         /// The name of the test run.

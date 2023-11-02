@@ -11,7 +11,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// MeasurementSeriesElement class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/measurement_series_element.json
     /// </summary>
-    public class MeasurementSeriesElement
+    public class MeasurementSeriesElement : TestStepArtifact
     {
         /// <summary>
         /// Index of the measurement series element.
@@ -29,7 +29,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
         /// Timestamp associated with the measurement series element.
         /// </summary>
         [JsonProperty("timestamp", Required = Required.Always)]
-        public string Timestamp { get; set; }
+        public new string Timestamp { get; set; }
 
         /// <summary>
         /// Measurement Series Id associated with the measurement series element.

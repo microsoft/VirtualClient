@@ -30,7 +30,7 @@ namespace VirtualClient.Contracts.OpenComputeProject
     /// TestRunEnd class from OCP contract
     /// https://github.com/opencomputeproject/ocp-diag-core/blob/main/json_spec/output/test_run_end.json
     /// </summary>
-    public class TestRunEnd
+    public class TestRunEnd : TestRunArtifact
     {
         /// <summary>
         /// Status of the test run end.
