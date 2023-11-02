@@ -5,14 +5,12 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
     using VirtualClient.Common;
@@ -36,9 +34,9 @@ namespace VirtualClient.Actions
             new Regex(@"connection\s+refused", RegexOptions.IgnoreCase | RegexOptions.Compiled)
         };
 
-        private List<Metric> aggregatedMetrics = new List<Metric>();
-        private List<string> perProcessOutputList = new List<string>();
-        private List<string> perProcessCommandList = new List<string>();
+        private List<Metric> aggregatedMetrics;
+        private List<string> perProcessOutputList;
+        private List<string> perProcessCommandList;
         private int startingServerPort;
 
         /// <summary>
@@ -60,6 +58,9 @@ namespace VirtualClient.Actions
             // Ensure the duration is in integer (seconds) form.
             int duration = this.Duration;
             this.Parameters[nameof(this.Duration)] = duration;
+            this.aggregatedMetrics = new List<Metric>();
+            this.perProcessOutputList = new List<string>();
+            this.perProcessCommandList = new List<string>();
         }
 
         /// <summary>
@@ -359,7 +360,7 @@ namespace VirtualClient.Actions
                             metric.Value,
                             metric.Unit,
                             null,
-                            (string)metric.Metadata[commandline],
+                            metric.Metadata.ContainsKey(commandline) ? (string)metric.Metadata[commandline] : null,
                             this.Tags,
                             telemetryContext,
                             metric.Relativity);
@@ -426,7 +427,15 @@ namespace VirtualClient.Actions
                     await Task.WhenAll(workloadProcesses);
                     DateTime endTime = DateTime.UtcNow;
 
-                    this.CaptureMetrics(startTime, endTime, telemetryContext, cancellationToken);
+                    if (!this.WarmUp)
+                    {
+                        foreach (string output in this.perProcessOutputList)
+                        {
+                            Console.WriteLine($"output is : {output}");
+                        }
+
+                        this.CaptureMetrics(startTime, endTime, telemetryContext, cancellationToken);
+                    }
                 }
             });
         }
@@ -534,8 +543,7 @@ namespace VirtualClient.Actions
 
             command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
-            // get the port on which this command is running and 
-            command += @$"--VCpuID {serverPort - this.startingServerPort}";
+            command += @$" --VCpuID {serverPort - this.startingServerPort}";
             return command.Trim();
         }
     }

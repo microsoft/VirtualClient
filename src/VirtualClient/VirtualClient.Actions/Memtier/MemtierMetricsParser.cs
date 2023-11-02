@@ -18,7 +18,7 @@ namespace VirtualClient.Actions
     public class MemtierMetricsParser : MetricsParser
     {
         private const string SplitAtSpace = @"\s{1,}";
-        private const string ProcessResultSectionDelimiter = @"*{6}";
+        private const string ProcessResultSectionDelimiter = @"^\*{6}$";
 
         // ============================================================================================================================================================
         // Type Ops/sec Hits/sec Misses/sec Avg.Latency     p50 Latency     p90 Latency     p95 Latency     p99 Latency   p99.9 Latency KB/sec
@@ -37,8 +37,8 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierMetricsParser"/> class.
         /// </summary>
-        public MemtierMetricsParser(bool perProcessMetric, List<string> rawText, List<string> commandLines = null)
-            : base(string.Join(ProcessResultSectionDelimiter, rawText))
+        public MemtierMetricsParser(bool perProcessMetric, List<string> rawTextList, List<string> commandLines = null)
+            : base(string.Join(ProcessResultSectionDelimiter, rawTextList))
         {
             this.perProcessMetric = perProcessMetric;
             this.memtierCommandLines = commandLines;
@@ -54,9 +54,11 @@ namespace VirtualClient.Actions
                 List<Metric> combinedMetrics = new List<Metric>();
                 List<string> rawTextList = this.RawText.Split(ProcessResultSectionDelimiter).Select(s => s.Trim()).ToList();
 
+                Console.WriteLine($"rawTextListLength: {rawTextList.Count}");
                 for (int i = 0; i < rawTextList.Count; i++)
                 {
                     string rawText = rawTextList[i];
+                    Console.WriteLine($"rawText {i}: {rawText}");
                     // Example Format:
                     //
                     // ALL STATS

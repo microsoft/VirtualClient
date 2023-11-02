@@ -386,6 +386,49 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void MemtierMetricsParserParsesTheExpectedMetricsFromRedisForMoreThan1RedisServerInstancesResultsCorrectly_1()
+        {
+            List<string> resultsList = new List<string>();
+            string results1 = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Memtier\RedisResults_1.txt"));
+            resultsList.Add(results1);
+            string results2 = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Memtier\RedisResults_3.txt"));
+            resultsList.Add(results2);
+            var parser = new MemtierMetricsParser(false, resultsList);
+
+            IList<Metric> metrics = parser.Parse();
+
+            Assert.AreEqual(138, metrics.Count);
+            MetricAssert.Exists(metrics, "Throughput_Avg", 355987.03, MetricUnit.RequestsPerSec);
+            MetricAssert.Exists(metrics, "Bandwidth_Avg", 25860.83, MetricUnit.KilobytesPerSecond);
+            MetricAssert.Exists(metrics, "Hits/sec_Avg", 320388.28);
+            MetricAssert.Exists(metrics, "Misses/sec_Avg", 0);
+            MetricAssert.Exists(metrics, "Latency-Avg_Avg", 0.34301, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "Latency-P50_Avg", 0.33500, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "Latency-P90_Avg", 0.47900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "Latency-P95_Avg", 0.55900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "Latency-P99_Avg", 0.83900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "Latency-P99.9_Avg", 1.54300, MetricUnit.Milliseconds);
+
+            MetricAssert.Exists(metrics, "GET_Throughput_Avg", 320388.28, MetricUnit.RequestsPerSec);
+            MetricAssert.Exists(metrics, "GET_Bandwidth_Avg", 23118.30, MetricUnit.KilobytesPerSecond);
+            MetricAssert.Exists(metrics, "GET_Latency-Avg_Avg", 0.34300, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P50_Avg", 0.33500, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P90_Avg", 0.47900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P95_Avg", 0.55900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P99_Avg", 0.83900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "GET_Latency-P99.9_Avg", 1.54300, MetricUnit.Milliseconds);
+
+            MetricAssert.Exists(metrics, "SET_Throughput_Avg", 35598.74, MetricUnit.RequestsPerSec);
+            MetricAssert.Exists(metrics, "SET_Bandwidth_Avg", 2742.53, MetricUnit.KilobytesPerSecond);
+            MetricAssert.Exists(metrics, "SET_Latency-Avg_Avg", 0.34304, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P50_Avg", 0.33500, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P90_Avg", 0.47900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P95_Avg", 0.55900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P99_Avg", 0.83900, MetricUnit.Milliseconds);
+            MetricAssert.Exists(metrics, "SET_Latency-P99.9_Avg", 1.54300, MetricUnit.Milliseconds);
+        }
+
+        [Test]
         public void MemtierMetricsParserAssociatesTheCorrectRelativityToTheMetrics()
         {
             List<string> resultsList = new List<string>();

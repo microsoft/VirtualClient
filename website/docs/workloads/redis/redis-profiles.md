@@ -82,6 +82,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
   | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
   | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+  | PerProcessMetric          | Optional. "True" if we want to emit telemtry metrics for each client server combination.Aggregated metrics are always collected.| false |
 
 * **Component Parameters**  
   The following parameters describe the parameters within the profile components.
@@ -107,6 +108,7 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
   | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
+  | PerProcessMetric          | Optional. "True" if we want to emit telemtry metrics for each client server combination.Aggregated metrics are always collected.| false |
 
 
 * **Profile Runtimes**  
