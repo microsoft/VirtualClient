@@ -13,6 +13,7 @@ using VirtualClient.Common;
 using VirtualClient.Common.Extensions;
 using VirtualClient.Common.Telemetry;
 using VirtualClient.Contracts;
+using VirtualClient.Contracts.Metadata;
 
 namespace VirtualClient.Actions.Kafka
 {
@@ -28,6 +29,8 @@ namespace VirtualClient.Actions.Kafka
     /// </summary>
     public class KafkaClientExecutor : KafkaExecutor
     {
+        private readonly object lockObject = new object();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="KafkaClientExecutor"/> class.
         /// </summary>
@@ -270,8 +273,10 @@ namespace VirtualClient.Actions.Kafka
                                 process.ThrowIfWorkloadFailed();
 
                                 string output = process.StandardOutput.ToString();
-                                this.Logger.LogTraceMessage(output);
-                                // this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                if (this.CommandType != KafkaCommandType.Setup.ToString())
+                                {
+                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                }
                             }
                         }
                     }
@@ -298,6 +303,50 @@ namespace VirtualClient.Actions.Kafka
                     telemetryContext.Clone().AddError(exc));
 
                 throw;
+            }
+        }
+
+        private void CaptureMetrics(string output, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    this.MetadataContract.AddForScenario(
+                        "Kafka-Benchmark",
+                        commandArguments,
+                        toolVersion: null);
+
+                    this.MetadataContract.Apply(telemetryContext);
+
+                    // The Kafka workloads run multi-threaded. The lock is meant to ensure we do not have
+                    // race conditions that affect the parsing of the results.
+                    lock (this.lockObject)
+                    {
+                        MetricsParser kafkaMetricsParser = new KafkaProducerMetricsParser(output);
+                        if (this.CommandType == KafkaCommandType.ConsumerTest.ToString())
+                        {
+                            kafkaMetricsParser = new KafkaConsumerMetricsParser(output);
+                        }
+
+                        IList<Metric> workloadMetrics = kafkaMetricsParser.Parse();
+
+                        this.Logger.LogMetrics(
+                            "Kafka-Benchmark",
+                            scenarioName: this.Scenario,
+                            startTime,
+                            endTime,
+                            workloadMetrics,
+                            null,
+                            commandArguments,
+                            this.Tags,
+                            telemetryContext);
+                    }
+                }
+                catch (SchemaException exc)
+                {
+                    throw new WorkloadResultsException($"Failed to parse workload results.", exc, ErrorReason.WorkloadResultsParsingFailed);
+                }
             }
         }
     }
