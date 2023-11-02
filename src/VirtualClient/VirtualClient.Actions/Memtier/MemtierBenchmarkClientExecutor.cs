@@ -12,9 +12,8 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
@@ -38,6 +37,9 @@ namespace VirtualClient.Actions
         };
 
         private List<Metric> aggregatedMetrics = new List<Metric>();
+        private List<string> perProcessOutputList = new List<string>();
+        private List<string> perProcessCommandList = new List<string>();
+        private int startingServerPort;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierBenchmarkClientExecutor"/> class.
@@ -310,135 +312,58 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override bool IsSupported()
         {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
+            if (base.IsSupported())
+            {
+                bool isSupported = (this.Platform == PlatformID.Unix)
                 && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
 
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("MemtierBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
+                if (!isSupported)
+                {
+                    this.Logger.LogNotSupported("MemtierBenchmark", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                }
 
-            return isSupported;
+                return isSupported;
+            }
+            else
+            {
+                return false;
+            }
+            
         }
-        
-        private void AggregateAndCapturePerProcessMetrics(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+
+        private void CaptureMetrics(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                results.ThrowIfNullOrWhiteSpace(nameof(results));
-
                 try
                 {
                     this.MetadataContract.AddForScenario(
                         "Memtier",
-                        commandArguments,
+                        null,
                         toolVersion: null);
 
                     this.MetadataContract.Apply(telemetryContext);
 
-                    // The Memtier workloads run multi-threaded. The lock is meant to ensure we do not have
-                    // race conditions that affect the parsing of the results.
-                    lock (this.lockObject)
-                    {
-                        MemtierMetricsParser resultsParser = new MemtierMetricsParser(results);
-                        IList<Metric> workloadMetrics = resultsParser.Parse();
-                        this.aggregatedMetrics.AddRange(workloadMetrics);
+                    MemtierMetricsParser memtierMetricsAggregateParser = new MemtierMetricsParser(this.PerProcessMetric, this.perProcessOutputList, this.perProcessCommandList);
+                    IList<Metric> metrics = memtierMetricsAggregateParser.Parse();
+                    string commandline = "commandline";
 
-                        if (this.PerProcessMetric)
-                        {
-                            this.Logger.LogMetrics(
+                    foreach (Metric metric in metrics)
+                    {
+                        this.Logger.LogMetrics(
                             $"Memtier-{this.Benchmark}",
                             this.Scenario,
                             startTime,
                             endTime,
-                            workloadMetrics,
+                            metric.Name,
+                            metric.Value,
+                            metric.Unit,
                             null,
-                            commandArguments,
+                            (string)metric.Metadata[commandline],
                             this.Tags,
-                            telemetryContext);
-                        }
-
+                            telemetryContext,
+                            metric.Relativity);
                     }
-                }
-                catch (SchemaException exc)
-                {
-                    throw new WorkloadResultsException($"Failed to parse workload results file.", exc, ErrorReason.WorkloadResultsParsingFailed);
-                }
-            }
-        }
-
-        private void CaptureAggregateMetrics(string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    this.MetadataContract.AddForScenario(
-                        "Memtier",
-                        commandArguments,
-                        toolVersion: null);
-
-                    this.MetadataContract.Apply(telemetryContext);
-
-                    Dictionary<string, List<double>> metricNameValueListDict = new Dictionary<string, List<double>>();
-                    Dictionary<string, List<Metric>> metricNameMetricsListDict = new Dictionary<string, List<Metric>>();
-
-                    foreach (var metric in this.aggregatedMetrics)
-                    {
-                        if (metricNameMetricsListDict.ContainsKey(metric.Name))
-                        {
-                            metricNameValueListDict[metric.Name].Add(metric.Value);
-                        }
-                        else
-                        {
-                            metricNameValueListDict.Add(metric.Name, new List<double>() { metric.Value });
-                        }
-
-                        if (metricNameMetricsListDict.ContainsKey(metric.Name))
-                        {
-                            metricNameMetricsListDict[metric.Name].Add(metric);
-                        }
-                        else
-                        {
-                            metricNameMetricsListDict.Add(metric.Name, new List<Metric>() { metric });
-                        }
-                    }
-
-                    List<Metric> newAggregateListOfMetrics = new List<Metric>();
-
-                    foreach (var metricKeyValuePair in metricNameValueListDict)
-                    {
-                        double avgValue = metricKeyValuePair.Value.Average();
-                        double minValue = metricKeyValuePair.Value.Min();
-                        double maxValue = metricKeyValuePair.Value.Max();
-                        double stdevValue = Math.Sqrt(metricKeyValuePair.Value.Select(x => Math.Pow(x - avgValue, 2)).Average());
-                        List<double> sortedValues = metricKeyValuePair.Value.OrderBy(x => x).ToList();
-                        double p80Value = sortedValues[(int)Math.Ceiling(sortedValues.Count * 0.8) - 1];
-
-                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Avg", avgValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Min", minValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Max", maxValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Stdev", stdevValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_P80", p80Value, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        if (metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit != MetricUnit.Milliseconds)
-                        {
-                            // For throughput and bandwidth related metrics only.
-                            double sumValue = metricKeyValuePair.Value.Sum();
-                            newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Sum", sumValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                        }                        
-                    }
-
-                    this.Logger.LogMetrics(
-                        $"Memtier-{this.Benchmark}",
-                        this.Scenario,
-                        startTime,
-                        endTime,
-                        newAggregateListOfMetrics,
-                        null,
-                        commandArguments,
-                        this.Tags,
-                        telemetryContext);
                 }
                 catch (SchemaException exc)
                 {
@@ -470,8 +395,9 @@ namespace VirtualClient.Actions
 
                     DateTime startTime = DateTime.UtcNow;
 
+                    this.startingServerPort = serverState.Ports.First();
                     foreach (int serverPort in serverState.Ports)
-                    {
+                    { 
                         for (int i = 0; i < this.ClientInstances; i++)
                         {
                             // memtier_benchmark Documentation:
@@ -500,7 +426,7 @@ namespace VirtualClient.Actions
                     await Task.WhenAll(workloadProcesses);
                     DateTime endTime = DateTime.UtcNow;
 
-                    this.CaptureAggregateMetrics(commandArguments, startTime, endTime, telemetryContext, cancellationToken);
+                    this.CaptureMetrics(startTime, endTime, telemetryContext, cancellationToken);
                 }
             });
         }
@@ -538,8 +464,9 @@ namespace VirtualClient.Actions
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    string parsedCommandArguments = this.ParseCommand(process.FullCommand());
-                                    this.AggregateAndCapturePerProcessMetrics(output, parsedCommandArguments, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                    string parsedCommandArguments = this.ParseCommand(process.FullCommand(), serverPort);
+                                    this.perProcessOutputList.Add(output);
+                                    this.perProcessCommandList.Add(parsedCommandArguments);
                                 }
                             }
                         }
@@ -586,7 +513,7 @@ namespace VirtualClient.Actions
             return state.Definition;
         }
 
-        private string ParseCommand(string command)
+        private string ParseCommand(string command, int serverPort)
         {
             List<string> excludingRegexList = new List<string>
                 {
@@ -607,6 +534,8 @@ namespace VirtualClient.Actions
 
             command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
+            // get the port on which this command is running and 
+            command += @$"--VCpuID {serverPort - this.startingServerPort}";
             return command.Trim();
         }
     }

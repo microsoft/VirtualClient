@@ -386,8 +386,6 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"MPlib *=", $"MPlib =  /usr/lib/{architecture}-linux-gnu/openmpi/lib/libmpi.so", cancellationToken);
 
-                // /usr/lib/x86_64-linux-gnu/openmpi
-
                 await this.fileSystem.File.ReplaceInFileAsync(
                         makeFilePath, @"LAinc *=", $"LAinc = -I/usr/lib/{architecture}-linux-gnu", cancellationToken);
             }
