@@ -48,26 +48,26 @@ namespace VirtualClient.Actions.Wrathmark
         public string DotNetSdkPackageName => this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.DotNetSdkPackageName), "dotnetsdk");
 
         /// <summary>
-        /// The name of the package where the AspNetBench package is downloaded.
+        /// The target version of the .NET Framework
         /// </summary>
         public string TargetFramework =>
             // Lower case to prevent build path issue.
-            this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.TargetFramework)).ToLower();
+            this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.TargetFramework), "net7.0").ToLower();
+
+        /// <summary>
+        /// The arguments to pass to the wrathmark program
+        /// </summary>
+        public string WrathmarkArgs => this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.WrathmarkArgs), string.Empty);
+
+        /// <summary>
+        /// The name of the subfolder in the Git repo to use for the benchmark.
+        /// </summary>
+        public string Subfolder => this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.Subfolder), "wrath-sharp");
 
         /// <summary>
         /// Name of the tool.
         /// </summary>
         protected string ToolName => "Wrathmark";
-        
-        /// <summary>
-        /// Name of the workload executable.
-        /// </summary>
-        protected DependencyPath WorkloadPackage { get; }
-
-        /// <summary>
-        /// Path to the package containing the workload executable.
-        /// </summary>
-        protected string WorkloadExecutablePath { get; }
 
         /// <inheritdoc />
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -83,9 +83,6 @@ namespace VirtualClient.Actions.Wrathmark
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            const string RelativeBenchmarkPath = "wrath-sharp";
-            this.benchmarkDirectory = this.Combine(workloadPackage.Path, RelativeBenchmarkPath);
-
             DependencyPath dotnetSdkPackage = await this.packageManager.GetPackageAsync(
                     this.DotNetSdkPackageName,
                     cancellationToken)
@@ -100,11 +97,20 @@ namespace VirtualClient.Actions.Wrathmark
 
             this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
 
+            this.benchmarkDirectory = this.Combine(workloadPackage.Path, this.Subfolder);
+
+            if (!Directory.Exists(this.benchmarkDirectory))
+            {
+                throw new DependencyException(
+                    $"The expected benchmark directory '{this.benchmarkDirectory}' does not exist.",
+                    ErrorReason.WorkloadDependencyMissing);
+            }
+
             // Build the wrath sharp project
             // To make native libraries that can be used, enumerate the SupportedPlatforms metadata and call publish for each
             // Outputs
-            //    bin/Release/net6.0/linux-x64/wrath-sharp.dll
-            //    bin/Release/net6.0/linux-x64/publish/wrath-sharp.dll
+            //    bin/Release/net6.0/linux-x64/publish/wrath-sharp
+            //    bin/Release/net6.0/win-x64/publish/wrath-sharp.exe
             string publishArgument = $"publish -c Release -r {this.PlatformArchitectureName} -f {this.TargetFramework} /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true";
             await this.ExecuteCommandAsync(
                     this.dotnetExePath,
@@ -121,6 +127,10 @@ namespace VirtualClient.Actions.Wrathmark
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            this.Logger.LogTraceMessage(
+                $"{nameof(WrathmarkWorkloadExecutor)}.Starting",
+                telemetryContext);
+
             // Example: ./bin/Release/net6.0/linux-x64/publish
             string outputDirectory = Path.Combine(
                 this.benchmarkDirectory,
@@ -128,24 +138,35 @@ namespace VirtualClient.Actions.Wrathmark
                 "Release",
                 this.TargetFramework,
                 this.PlatformArchitectureName,
-                "Publish");
+                "publish");
 
-            this.Logger.LogTraceMessage(
-                $"{nameof(WrathmarkWorkloadExecutor)}.Starting",
-                telemetryContext);
+            string programName = this.Platform == PlatformID.Unix ? this.Subfolder : $"{this.Subfolder}.exe";
 
-            var startTime = DateTime.UtcNow;
+            string benchmarkPath = Path.Combine(outputDirectory, programName);
 
-            var results = await this.ExecuteWorkloadAsync(
-                this.dotnetExePath,
-                $"run {outputDirectory} --framework ${this.TargetFramework}",
-                this.benchmarkDirectory,
-                telemetryContext,
-                cancellationToken);
+            if (!File.Exists(benchmarkPath))
+            {
+                throw new DependencyException(
+                    $"The expected benchmark executable '{benchmarkPath}' does not exist.",
+                    ErrorReason.DependencyNotFound);
+            }
 
-            var endTime = DateTime.UtcNow;
-
-            await this.CaptureMetricsAsync(results, startTime, endTime, telemetryContext, cancellationToken);
+            DateTime startTime = DateTime.UtcNow;
+            string results = string.Empty;
+            try
+            {
+                results = await this.ExecuteWorkloadAsync(
+                    benchmarkPath,
+                    this.WrathmarkArgs,
+                    this.benchmarkDirectory,
+                    telemetryContext,
+                    cancellationToken);
+            }
+            finally
+            {
+                DateTime endTime = DateTime.UtcNow;
+                await this.CaptureMetricsAsync(results, startTime, endTime, telemetryContext, cancellationToken);
+            }
         }
 
         private async Task ExecuteCommandAsync(
