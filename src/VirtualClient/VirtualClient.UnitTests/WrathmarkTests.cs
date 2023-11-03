@@ -1,14 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using NUnit.Framework;
-using VirtualClient.Actions.Wrathmark;
-using VirtualClient.Contracts;
-
-namespace VirtualClient.UnitTests
+﻿namespace VirtualClient.UnitTests
 {
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using NUnit.Framework;
+    using VirtualClient.Actions.Wrathmark;
+    using VirtualClient.Contracts;
+
     [TestFixture]
     [Category("Unit")]
     public class WrathmarkResultParserTests
