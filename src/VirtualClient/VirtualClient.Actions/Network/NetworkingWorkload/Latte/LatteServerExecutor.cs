@@ -68,7 +68,7 @@ namespace VirtualClient.Actions.NetworkPerformance
                                     }
                                     finally
                                     {
-                                        process.SafeKill();
+                                        process.SafeKill(this.Logger);
                                     }
                                 }
                             }
