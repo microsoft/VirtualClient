@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
             string outputPath = Path.Combine(ExamplePath, "results_example.json");
             string rawText = File.ReadAllText(outputPath);
 
-            BlenderMetricsParser testParser = new BlenderMetricsParser(rawText);
+            BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             this.actualMetrics = testParser.Parse();
         }
 

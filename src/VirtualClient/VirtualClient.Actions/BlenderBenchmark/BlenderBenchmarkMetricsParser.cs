@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using VirtualClient.Actions.Blender;
 using VirtualClient.Contracts;
 
 namespace VirtualClient.Actions
@@ -12,13 +11,13 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Parser for the Blender workload.
     /// </summary>
-    public class BlenderMetricsParser : MetricsParser
+    public class BlenderBenchmarkMetricsParser : MetricsParser
     {
         /// <summary>
         /// Parser for the Blender workload
         /// </summary>
         /// <param name="rawText">The raw text from the Blender benchmark.</param>
-        public BlenderMetricsParser(string rawText)
+        public BlenderBenchmarkMetricsParser(string rawText)
             : base(rawText)
         {
         }
@@ -32,8 +31,8 @@ namespace VirtualClient.Actions
             try
             {
                 var metrics = new List<Metric>();
-                var blenderResults = JsonConvert.DeserializeObject<List<BlenderResult>>(this.RawText);
-                foreach (BlenderResult blenderResult in blenderResults)
+                var blenderResults = JsonConvert.DeserializeObject<List<BlenderBenchmarkResult>>(this.RawText);
+                foreach (BlenderBenchmarkResult blenderResult in blenderResults)
                 {
                     var metadata = new Dictionary<string, IConvertible>
                     {

@@ -114,7 +114,7 @@ namespace VirtualClient.Actions
             this.mockFixture.Process.StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results));
         }
 
-        private class TestBlenderExecutor : BlenderExecutor
+        private class TestBlenderExecutor : BlenderBenchmarkExecutor
         {
             public TestBlenderExecutor(MockFixture fixture)
                 : base(fixture.Dependencies, fixture.Parameters)

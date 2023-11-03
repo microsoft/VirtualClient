@@ -15,7 +15,7 @@
     {
       "Type": "BlenderExecutor",
       "Parameters": {
-        "Scenario": "BlenderCPU&GPUPerformance",
+        "Scenario": "BlenderCPUAndGPUPerformance",
         "PackageName": "blenderbenchmarkcli",
         "BlenderVersion": "$.Parameters.BlenderVersion",
         "Scenes": "$.Parameters.Scenes",
@@ -47,7 +47,7 @@
       "Parameters": {
         "Scenario": "InstallBlenderBenchmarkCliPackage",
         "BlobContainer": "packages",
-        "BlobName": "blendercli.zip",
+        "BlobName": "blenderbenchmarkcli-3.1.0.zip",
         "PackageName": "blenderbenchmarkcli",
         "Extract": true
       }

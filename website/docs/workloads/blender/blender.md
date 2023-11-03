@@ -43,6 +43,10 @@ The following metrics are examples of those captured by the Virtual Client when 
 | render_time_no_sync	   | 34.238	            | second             |
 | device_peak_memory	   | 4830.43	        | mb                 |
 
+The best way to measure your device's performance is through the samples_per_minute metric. The more samples rendered per minute, the better the device performance.
+
+number_of_samples = time_for_samples * samples_per_minute
+
 ### Example Metadata
 More information about the metrics can be found in the metric's metadata
 ```json
