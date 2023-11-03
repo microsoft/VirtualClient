@@ -8,14 +8,14 @@
   "Parameters": {
     "GpuModel": "",
     "BlenderVersion": "3.6.0",
-    "Scenes": "monster junkshop classroom",
-    "DeviceTypes": "CPU, HIP"
+    "Scenes": "monster,junkshop,classroom",
+    "DeviceTypes": "CPU,HIP"
   },
   "Actions": [
     {
       "Type": "BlenderExecutor",
       "Parameters": {
-        "Scenario": "MeasureGPU&CPUPerformance",
+        "Scenario": "BlenderCPU&GPUPerformance",
         "PackageName": "blenderbenchmarkcli",
         "BlenderVersion": "$.Parameters.BlenderVersion",
         "Scenes": "$.Parameters.Scenes",

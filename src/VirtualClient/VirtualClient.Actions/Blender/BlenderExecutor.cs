@@ -44,11 +44,12 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The Scenes that will be run by Blender.
         /// </summary>
-        public string Scenes
+        public string[] Scenes
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.Scenes));
+                // Trim and remove any whitespaces
+                return this.Parameters.GetValue<string>(nameof(BlenderExecutor.Scenes)).Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
         }
 
@@ -104,25 +105,28 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            var metrics = new List<Metric>();
-
-            string[] commandArgumentsArray = this.GenerateCommandArgumentsArray();
-
-            foreach (string commandArguments in commandArgumentsArray)
+            string commandArguments;
+            // Run blender benchmark over each scene and device type combination
+            foreach (string deviceType in this.DeviceTypes)
             {
-                EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
-
-                using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+                foreach (string scene in this.Scenes)
                 {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                        process.ThrowIfWorkloadFailed();
+                    commandArguments = this.GenerateCommandArgument(scene, deviceType);
 
-                        // Blender benchmark's results are outputted to Stdout directly as a json.
-                        this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString());
+                    EventContext relatedContext = telemetryContext.Clone()
+                    .AddContext("executable", this.ExecutablePath)
+                    .AddContext("commandArguments", commandArguments);
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+
+                            // Blender benchmark's results are outputted to Stdout directly as a json.
+                            this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString(), scene);
+                        }
                     }
                 }
             }
@@ -149,7 +153,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, string resultsContent)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, string resultsContent, string scenario)
         {
             if (workloadProcess.ExitCode == 0)
             {
@@ -166,13 +170,13 @@ namespace VirtualClient.Actions
                     var metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
-                           this.Scenario,
+                           scenario,
                            workloadProcess.FullCommand());
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
-                        "Blender",
-                        this.Scenario,
+                        "BlenderBenchmark",
+                        scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
                         metrics,
@@ -208,22 +212,12 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Generate the Blender Command Arguments in an array. Each entry is a different set of cmd args.
+        /// Generate the Blender Command Arguments for a specific scene and device type.
         /// </summary>
-        private string[] GenerateCommandArgumentsArray()
+        private string GenerateCommandArgument(string scene, string deviceType)
         {
-            string[] commandArgumentsArray = new string[this.DeviceTypes.Length];
-            string commandArgument;
-
-            // Blender benchmark needs to run once for each device type.
-            for (int i = 0; i < this.DeviceTypes.Length; i++)
-            {
-                // --verbosity 3 gives detailed error messsage if Blender fails to run
-                commandArgument = $"benchmark --blender-version {this.BlenderVersion} --device-type {this.DeviceTypes[i]} {this.Scenes} --json --verbosity 3";
-                commandArgumentsArray[i] = commandArgument;
-            }
-
-            return commandArgumentsArray;
+            // --verbosity 3 gives detailed error messsage if Blender fails to run
+            return $"benchmark --blender-version {this.BlenderVersion} --device-type {deviceType} {scene} --json --verbosity 3";
         }
     }
 }
