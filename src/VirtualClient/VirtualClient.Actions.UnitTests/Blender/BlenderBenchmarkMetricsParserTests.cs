@@ -12,7 +12,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class BlenderMetricsParserTests
+    public class BlenderBenchmarkMetricsParserTests
     {
         private string ExamplePath
         {

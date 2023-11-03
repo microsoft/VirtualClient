@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class BlenderExecutorTests
+    public class BlenderBenchmarkExecutorTests
     {
         private MockFixture mockFixture;
         private DependencyPath mockBlenderPackage;
