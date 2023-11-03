@@ -94,13 +94,13 @@ namespace VirtualClient.Actions
         {
             PlatformSpecifics.ThrowIfNotSupported(this.Platform);
 
-            await this.InitializeBlenderBenchmarkAsync(telemetryContext, cancellationToken).
-                ConfigureAwait(false);
-
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, BlenderBenchmarkExecutableName);
+
+            await this.InitializeBlenderBenchmarkAsync(telemetryContext, cancellationToken).
+                ConfigureAwait(false);
         }
 
         /// <summary>

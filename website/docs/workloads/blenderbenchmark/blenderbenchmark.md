@@ -1,12 +1,14 @@
 # Blender Benchmark
-Blender Benchmark, a new platform to collect and display the results of hardware and software performance tests. With this benchmark we aim at an optimal comparison between system hardware and installations, and to assist developers to track performance during Blender development.
+Blender Benchmark, a new platform to collect and display the results of hardware and software performance tests. This benchmark aims at an optimal comparison between system hardware and installations, and to assist developers to track performance during Blender development.
 
-The benchmark consists of two parts: a downloadable package which runs Blender and renders on several production files, and the Open Data portal on blender.org, where the results will be (optionally) uploaded.
-
-* [Blender benchmark] (https://www.blender.org/news/introducing-blender-benchmark/)
+* [Blender Benchmark] (https://www.blender.org/news/introducing-blender-benchmark/)
 
 ## What is Being Measured 
-The Blender benchmark Score is a measure of how quickly Cycles can render path tracing samples on one CPU or GPU device. The higher the number, the better. In particular it's the estimated number of samples per minute, summed for all benchmark scenes.
+The Blender Benchmark Score is a measure of how quickly cycles can render [path tracing samples](https://docs.blender.org/manual/en/latest/render/cycles/render_settings/sampling.html) on one CPU or GPU device.
+
+The Blender Benchmark firstly downloads the blender enginer and the scenes to be tested. The benchmark then tests how quickly these scenes can be rendered on one CPU or GPU device.
+
+The higher the number, the better. In particular it's the estimated number of samples per minute, summed for all benchmark scenes.
 
 ## System Requirements
 * Windows 8.1, 10, and 11
@@ -15,18 +17,9 @@ The Blender benchmark Score is a measure of how quickly Cycles can render path t
 * 2 GB VRAM Graphics Card that supports OpenGL 4.3
 
 ## Benchmark License
-Blender is released under the GNU General Public License (GPL, or “free software”).
+Blender Benchmark is released under the GNU General Public License (GPL, or “free software”).
 
-This license grants people a number of freedoms:
-
-* You are free to use Blender, for any purpose
-* You are free to distribute Blender
-* You can study how Blender works and change it
-* You can distribute changed versions of Blender
-
-The Blender benchmark also only uses free and open source software (GNU GPL), the testing content is public domain (CC0), and the test results are being shared anonymized as public domain data – free for anyone to download and to process further.
-
-Read more about licensing from [this page](https://www.blender.org/about/license/).
+Read more about licensing from [this page](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE).
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the Blender workload.
