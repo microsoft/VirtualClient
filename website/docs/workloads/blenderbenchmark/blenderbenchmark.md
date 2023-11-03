@@ -6,7 +6,7 @@ Blender Benchmark, a new platform to collect and display the results of hardware
 ## What is Being Measured 
 The Blender Benchmark Score is a measure of how quickly cycles can render [path tracing samples](https://docs.blender.org/manual/en/latest/render/cycles/render_settings/sampling.html) on one CPU or GPU device.
 
-The Blender Benchmark firstly downloads the blender enginer and the scenes to be tested. The benchmark then tests how quickly these scenes can be rendered on one CPU or GPU device.
+The Blender Benchmark firstly downloads the blender engine and the scenes to be tested. The benchmark then tests how quickly these scenes can be rendered on one CPU or GPU device.
 
 The higher the number, the better. In particular it's the estimated number of samples per minute, summed for all benchmark scenes.
 
