@@ -1,0 +1,18 @@
+{
+  "Description": "Wrathmark CPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "01:00:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {},
+  "Actions": [
+    {
+      "Type": "WrathmarkWorkloadExecutor",
+      "Parameters": {
+        "Scenario": "Othello",
+        "Tags": "CPU"
+      }
+    }
+  ]
+}

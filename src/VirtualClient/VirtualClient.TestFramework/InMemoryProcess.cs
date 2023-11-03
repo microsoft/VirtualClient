@@ -144,12 +144,6 @@ namespace VirtualClient
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 
-        /// 'Close' method is called.
-        /// </summary>
-        public Action OnClose { get; set; }
-
-        /// <summary>
-        /// Delegate allows user/test to define the logic to execute when the 
         /// 'Dispose' method is called.
         /// </summary>
         public Action OnDispose { get; set; }
@@ -188,25 +182,6 @@ namespace VirtualClient
         }
 
         /// <summary>
-        /// Closes the fake process.
-        /// </summary>
-        /// <returns></returns>
-        public void Close()
-        {
-            try
-            {
-                if (this.OnClose != null)
-                {
-                    this.OnClose.Invoke();
-                }
-            }
-            finally
-            {
-                this.exitTime = DateTime.UtcNow;
-            }
-        }
-
-        /// <summary>
         /// Dispose of resources.
         /// </summary>
         [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "This is a test/mock class with no real resources.")]
@@ -220,14 +195,7 @@ namespace VirtualClient
         /// </summary>
         public void Kill()
         {
-            try
-            {
-                this.OnKill?.Invoke();
-            }
-            finally
-            {
-                this.exitTime = DateTime.UtcNow;
-            }
+            this.OnKill?.Invoke();
         }
 
         /// <summary>
@@ -235,14 +203,7 @@ namespace VirtualClient
         /// </summary>
         public void Kill(bool entireProcessTree)
         {
-            try
-            {
-                this.OnKill?.Invoke();
-            }
-            finally
-            {
-                this.exitTime = DateTime.UtcNow;
-            }
+            this.OnKill?.Invoke();
         }
 
         /// <summary>
