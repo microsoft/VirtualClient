@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.UnitTests
+﻿namespace VirtualClient.Actions.Wrathmark.UnitTests
 {
     using System.Collections;
     using System.Collections.Generic;
@@ -15,7 +15,7 @@
     {
         private static readonly string ProfilesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(WrathmarkResultParserTests)).Location),
-            "TestData");
+            "Wrathmark");
 
         [Test]
         public void Parse_ValidInput_ReturnsMetrics()

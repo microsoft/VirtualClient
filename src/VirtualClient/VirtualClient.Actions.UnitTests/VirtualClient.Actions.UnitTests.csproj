@@ -13,6 +13,9 @@
       <Compile Remove="DiskPerformance\**" />
       <EmbeddedResource Remove="DiskPerformance\**" />
       <None Remove="DiskPerformance\**" />
+      <None Update="Wrathmark\TestWrathmark.txt">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
