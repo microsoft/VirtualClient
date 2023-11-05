@@ -47,7 +47,7 @@
       "Parameters": {
         "Scenario": "InstallPsToolsPackage",
         "BlobContainer": "packages",
-        "BlobName": "pstools.2.51.zip",
+        "BlobName": "pstools-2.51.zip",
         "PackageName": "pstools",
         "Extract": true
       }
@@ -57,7 +57,7 @@
       "Parameters": {
         "Scenario": "InstallSpecViewWorkloadPackage",
         "BlobContainer": "packages",
-        "BlobName": "specviewperf2020v3.1.zip",
+        "BlobName": "specviewperf2020-3.1.zip",
         "PackageName": "specviewperf2020",
         "Extract": true
       }
