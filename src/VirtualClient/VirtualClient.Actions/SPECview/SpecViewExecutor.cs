@@ -284,7 +284,7 @@ namespace VirtualClient.Actions
                         $"The expected package '{this.PsExecPackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
 
-                this.SpecviewPackage = workloadPackage;
+                this.SpecviewPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
                 this.PsExecPackage = this.PlatformSpecifics.ToPlatformSpecificPath(psExecPackage, this.Platform, this.CpuArchitecture);
             }
         }
