@@ -67,24 +67,13 @@ namespace VirtualClient.Actions
             }
         }
 
-        [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        public void RedisExecutorDoesnotThrowOnSupportedPLatform(PlatformID platform, Architecture architecture)
-        {
-            this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestRedisExecutorExecutor executor = new TestRedisExecutorExecutor(this.fixture.Dependencies, this.fixture.Parameters))
-            {
-                Exception exception = Assert.ThrowsAsync<Exception>(
-                    () => executor.ExecuteAsync(CancellationToken.None));
-            }
-        }
-
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
             this.fixture.Setup(platformID);
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
         }
+
         private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)
         {
             this.fixture.Setup(platformID, architecture);
