@@ -98,7 +98,7 @@ namespace VirtualClient.Contracts
         /// True/false whether the file should be deleted upon being successfully uploaded.
         /// </summary>
         [JsonProperty(PropertyName = "deleteOnUpload", Required = Required.Always)]
-        public bool DeleteOnUpload { get; set;  }
+        public bool DeleteOnUpload { get; set; }
 
         /// <summary>
         /// The full path to the file to upload.

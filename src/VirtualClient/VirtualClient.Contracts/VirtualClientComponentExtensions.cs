@@ -112,7 +112,7 @@ namespace VirtualClient.Contracts
             fileContext.ThrowIfNull(nameof(fileContext));
 
             IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
-            
+
             if (metadata?.Any() == true)
             {
                 effectiveMetadata.AddRange(metadata, true);
@@ -463,7 +463,7 @@ namespace VirtualClient.Contracts
             parameters.ThrowIfNull(nameof(parameters));
 
             if (!parameters.ContainsKey(key))
-            { 
+            {
                 parameters.Add(key, value);
             }
 

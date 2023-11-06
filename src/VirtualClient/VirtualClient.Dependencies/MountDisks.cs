@@ -75,7 +75,7 @@ namespace VirtualClient.Dependencies
                     ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
-            IEnumerable<Disk> filteredDisks = MountDisks.GetFilteredDisks(disks, this.DiskFilter);
+            IEnumerable<Disk> filteredDisks = this.GetFilteredDisks(disks, this.DiskFilter);
 
             if (filteredDisks?.Any() != true)
             {
@@ -93,7 +93,7 @@ namespace VirtualClient.Dependencies
 
                 IEnumerable<Disk> updatedDisks = await this.diskManager.GetDisksAsync(cancellationToken);
 
-                filteredDisks = MountDisks.GetFilteredDisks(updatedDisks, this.DiskFilter);
+                filteredDisks = this.GetFilteredDisks(updatedDisks, this.DiskFilter);
             }
 
             filteredDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(volume => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk.DevicePath},{volume.DevicePath},{volume.AccessPaths.First()}'")));
@@ -105,11 +105,11 @@ namespace VirtualClient.Dependencies
         /// <param name="disks"></param>
         /// <param name="diskFilter"></param>
         /// <returns></returns>
-        private static IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
+        private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)
         {
             List<Disk> filteredDisks = new List<Disk>();
             diskFilter = string.IsNullOrWhiteSpace(diskFilter) ? DiskFilters.DefaultDiskFilter : diskFilter;
-            filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, System.PlatformID.Unix).ToList();
+            filteredDisks = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
 
             return filteredDisks;
         }
