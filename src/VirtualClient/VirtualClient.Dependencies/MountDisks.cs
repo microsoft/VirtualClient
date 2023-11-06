@@ -75,7 +75,7 @@ namespace VirtualClient.Dependencies
                     ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
-            IEnumerable<Disk> filteredDisks = GetFilteredDisks(disks, this.DiskFilter);
+            IEnumerable<Disk> filteredDisks = MountDisks.GetFilteredDisks(disks, this.DiskFilter);
 
             if (filteredDisks?.Any() != true)
             {
@@ -91,10 +91,9 @@ namespace VirtualClient.Dependencies
                 // Refresh the disks to pickup the mount point changes.
                 await Task.Delay(1000).ConfigureAwait(false);
 
-                IEnumerable<Disk> updatedDisks = await this.diskManager.GetDisksAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                IEnumerable<Disk> updatedDisks = await this.diskManager.GetDisksAsync(cancellationToken);
 
-                filteredDisks = GetFilteredDisks(updatedDisks, this.DiskFilter);
+                filteredDisks = MountDisks.GetFilteredDisks(updatedDisks, this.DiskFilter);
             }
 
             filteredDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(volume => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk.DevicePath},{volume.DevicePath},{volume.AccessPaths.First()}'")));
