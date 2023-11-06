@@ -85,15 +85,32 @@ Runs the MLPerf benchmark workload to test GPU performance.
   | LinuxDriverVersion     | Optional. Version of GPU driver that needs to be installed. | 525  |
   | LinuxLocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run  |
 
+* **MLPerfTrainingExecutor Parameters**
+
+  | Parameter             | Purpose                                                                                           | Default Value |
+  |-----------------------|---------------------------------------------------------------------------------------------------|---------------|
+  | Model                 | Optional. The type of model to run for training supported models mentioned in mlperf.md           | bert          |
+  | Username              | Optional. Username for running the docker. On null it selects logged in user.                     | null          |
+  | BatchSize             | Optional. BatchSize for the datachunks in training model.                                         | 40            |
+  | Implementation        | Optional. Implementation present for a given model/benchmark. Example for bert [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks)                     | pytorch-22.09    |
+  | ContainerName         | Optional. Name for docker model.             |language_model |
+  | DataPath              | Optional. Folder name for training data. /mlperftraining0/{DataPath}             |mlperf-training-data-bert.1.0.0|
+  | GPUNum                | Optional. Number of GPUs to stress.               |8              |
+  | ConfigFile            | Optional. Configuration for running workload.              |config_DGXA100_1x8x56x1.sh|
+  | PackageName           | Required. Packname for mlperf training.               |               |
+
+* **MLPERF Trainging Changes**
+  * Changed "nvidia-docker" to "docker" inside run_with_docker.sh file.
+
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
-  number of system cores. 
+  number of system cores.
 
 * **Usage Examples**  
   The following section provides a few basic examples of how to use the workload profile.
 
   ```bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GPU-MLPERF.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-MLPERF-TRAINING.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```

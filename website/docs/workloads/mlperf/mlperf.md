@@ -1,10 +1,10 @@
 ﻿# MLPerf
 
-MLPerf 2.0 is a consortium of AI leaders from academia, research labs, and industry whose mission is to “build fair and useful benchmarks” that provide unbiased evaluations of training and inference performance for hardware, software, and services—all conducted under prescribed conditions. To stay on the cutting edge of industry trends, MLPerf continues to evolve, holding new tests at regular intervals and adding new workloads that represent the state of the art in AI.
+MLPerf is a consortium of AI leaders from academia, research labs, and industry whose mission is to “build fair and useful benchmarks” that provide unbiased evaluations of training and inference performance for hardware, software, and services—all conducted under prescribed conditions. To stay on the cutting edge of industry trends, MLPerf continues to evolve, holding new tests at regular intervals and adding new workloads that represent the state of the art in AI.
 
-* [MLPerf Training Documentation](https://github.com/mlcommons/training_results_v2.0/blob/main/MLPerf%E2%84%A2%20Training%20v2.0%20Results%20Discussion.pdf)  
+* [MLPerf Training Documentation](https://github.com/mlcommons/training_results_v2.1/blob/main/MLPerf%E2%84%A2%20Training%20v2.0%20Results%20Discussion.pdf)  
 * [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v2.0)  
-* [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.0/tree/main/NVIDIA/benchmarks)
+* [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks)
 * [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA)
 
 ## System Requirements
@@ -14,12 +14,12 @@ graphics card.
 
 ## Supported Hardware Systems
 
-The following section defines the hardware systems/SKUs on which the MLPerf 2.0 workload will run effectively in cloud environments. These hardware systems contain
+The following section defines the hardware systems/SKUs on which the MLPerf workload will run effectively in cloud environments. These hardware systems contain
 GPU components for which the MLPerf workload is designed to test.
 
 * **Datacenter systems**  
   * A100-SXM-80GBx8 (NVIDIA DGX A100, 80GB variant)
-  * A100-SXM-80GBx4 (NVIDIA DGX Station A100, "Red October", 80GB variant)
+  * A100-SXM-80GBx4 (NVIDIA DGX Station A100, "Red SEPTober", 80GB variant)
   * A100-PCIex8 (80GB variant)
   * A2x2
   * A30x8
@@ -33,7 +33,9 @@ GPU components for which the MLPerf workload is designed to test.
   * Xavier NX
 
 Additional details on whether a system is supported or not can be found in the documetation here: 
+https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks
 https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA
+
 
 ## What is Being Measured?
 

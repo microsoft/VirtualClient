@@ -9,7 +9,6 @@ namespace VirtualClient.Actions
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Amqp.Framing;
     using Microsoft.Extensions.DependencyInjection;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
@@ -62,6 +61,12 @@ namespace VirtualClient.Actions
             get
             {
                 string username = this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Username), string.Empty);
+
+                string sudoUser = Environment.GetEnvironmentVariable("SUDO_USER");
+                if (!string.IsNullOrEmpty(sudoUser))
+                {
+                    username = sudoUser;
+                }
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     username = Environment.UserName;

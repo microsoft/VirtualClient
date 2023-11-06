@@ -1,13 +1,15 @@
 {
     "Description": "MLPerf Training GPU Performance Workload",
-    "Metadata": {
-        "RecommendedMinimumExecutionTime": "10:00:00",
-        "SupportedPlatforms": "linux-x64",
-        "SupportedOperatingSystems": "Ubuntu",
-        "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size"
-    },
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "10:00:00",
+    "SupportedPlatforms": "linux-x64",
+    "SupportedOperatingSystems": "Ubuntu",
+    "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size",
+    "SupportedImplementations": "Visit the link https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks enter the implementation folder to see supported implementations.",
+    "SupportedConfigFiles": "Visit the link https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks/bert/implementations/pytorch-22.09 for each benchmark and implementation you can the supported "
+  },
     "Parameters": {
-        "Username": "",
+        "Username": null,
         "DiskFilter": "BiggestSize",
         "LinuxCudaVersion": "12.0",
         "LinuxDriverVersion": "525",
@@ -20,7 +22,6 @@
                 "Scenario": "training-mlperf-bert-batchsize-45-gpu-8",
                 "Model": "bert",
                 "Username": "$.Parameters.Username",
-                "DiskFilter": "$.Parameters.DiskFilter",
                 "BatchSize": "45",
                 "Implementation": "pytorch-22.09",
                 "ContainerName": "language_model",
