@@ -9,7 +9,7 @@
     "GpuModel": "",
     "BlenderVersion": "3.6.0",
     "Scenes": "monster,junkshop,classroom",
-    "DeviceTypes": "CPU,HIP"
+    "DeviceTypes": "CPU"
   },
   "Actions": [
     {

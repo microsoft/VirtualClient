@@ -4,17 +4,16 @@ Blender Benchmark, a new platform to collect and display the results of hardware
 * [Blender Benchmark] (https://www.blender.org/news/introducing-blender-benchmark/)
 
 ## What is Being Measured 
-The Blender Benchmark Score is a measure of how quickly cycles can render [path tracing samples](https://docs.blender.org/manual/en/latest/render/cycles/render_settings/sampling.html) on one CPU or GPU device.
+The Blender Benchmark Score is a measure of how quickly cycles can render [path tracing samples](https://docs.blender.org/manual/en/latest/render/cycles/render_settings/sampling.html) using only the device specified. (E.g. CPU or GPU).
 
-The Blender Benchmark firstly downloads the blender engine and the scenes to be tested. The benchmark then tests how quickly these scenes can be rendered on one CPU or GPU device.
+**Note**: Integrated GPU may not be detectable by blender and thus may not be used for benchmarking. 
+
+The Blender Benchmark firstly downloads the blender engine and the scenes to be tested. The benchmark then tests how quickly these scenes can be rendered using, and only using, the specified device.
 
 The higher the number, the better. In particular it's the estimated number of samples per minute, summed for all benchmark scenes.
 
 ## System Requirements
 * Windows 8.1, 10, and 11
-* 64-bit quad core CPU with SSE2 support
-* 8 GB RAM
-* 2 GB VRAM Graphics Card that supports OpenGL 4.3
 
 ## Benchmark License
 Blender Benchmark is released under the GNU General Public License (GPL, or “free software”).
@@ -42,6 +41,8 @@ number_of_samples = time_for_samples * samples_per_minute
 
 ### Example Metadata
 More information about the metrics can be found in the metric's metadata
+
+#### Example 1: CPU benchmark results metadata
 ```json
 {
 	"blender_version": "3.6.0",
@@ -50,5 +51,17 @@ More information about the metrics can be found in the metric's metadata
 	"device_name": "AMD EPYC 7763 64-Core Processor",
 	"device_type": "CPU",
 	"time_limit": 30
+}
+```
+
+#### Example 2: AMD GPU(HIP) benchmark results metadata
+```json 
+{
+	"blender_version": "3.5.0",
+    "benchmark_launcher": "3.1.0",
+    "scene": "classroom",
+    "device_name": "AMD Radeon Pro V620 MxGPU",
+    "device_type": "HIP",
+    "time_limit": 30
 }
 ```
