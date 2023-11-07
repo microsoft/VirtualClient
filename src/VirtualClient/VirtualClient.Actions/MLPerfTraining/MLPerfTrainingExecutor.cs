@@ -67,6 +67,7 @@ namespace VirtualClient.Actions
                 {
                     username = sudoUser;
                 }
+
                 if (string.IsNullOrWhiteSpace(username))
                 {
                     username = Environment.UserName;

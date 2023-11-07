@@ -1,27 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace VirtualClient
+namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Drawing;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net.Http;
+    using System.Runtime.InteropServices;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
-    using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
-    using VirtualClient.Contracts;
 
     /// <summary>
     /// Extension methods for common operations in <see cref="VirtualClientComponent"/> derived
@@ -29,546 +25,448 @@ namespace VirtualClient
     /// </summary>
     public static class VirtualClientComponentExtensions
     {
-        private static readonly IAsyncPolicy FileSystemAccessRetryPolicy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
+        // Example Format:
+        // fio_{IOType}_{BlockSize}_{FileSize}_thmax{MaxThreads}
+        private static readonly Regex ParameterReferenceExpression = new Regex(@"(\x7B[\x20-\x7A\x7C\x7D-\x7E]+\x7D)|(\x5B[\x20-\x5A\x5C\x5E-\x7E]+\x5D)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly IAsyncPolicy NotificationFileSystemAccessRetryPolicy = Policy.Handle<IOException>()
+            .WaitAndRetryAsync(10, (retries) => TimeSpan.FromSeconds(retries + 1));
 
         /// <summary>
-        /// Executes a command within an isolated process.
+        /// Applies the parameter value to any parameter references/placeholders within the text.
         /// </summary>
-        /// <param name="component">The component that is executing the process/command.</param>
-        /// <param name="command">The command to execute within the process.</param>
-        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
-        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
-        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
-        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
-        /// <returns>The process that executed the command.</returns>
-        public static Task<IProcessProxy> ExecuteCommandAsync(
-            this VirtualClientComponent component,
-            string command,
-            string workingDirectory,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken,
-            bool runElevated = false,
-            string username = null,
-            Action<IProcessProxy> beforeExecution = null)
-        {
-            return component.ExecuteCommandAsync(command, null, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
-        }
-
-        /// <summary>
-        /// Executes a command within an isolated process.
-        /// </summary>
-        /// <param name="component">The component that is executing the process/command.</param>
-        /// <param name="command">The command to execute within the process.</param>
-        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
-        /// <param name="cygwinPackageDirectory">Directory of cygwin package</param>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
-        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
-        /// <returns>The process that executed the command.</returns>
-        public static Task<IProcessProxy> ExecuteCygwinBashAsync(
-            this VirtualClientComponent component,
-            string command,
-            string workingDirectory,
-            string cygwinPackageDirectory,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken,
-            Action<IProcessProxy> beforeExecution = null)
-        {
-            string bashPath = component.PlatformSpecifics.Combine(cygwinPackageDirectory, "bin", "bash");
-            // Changing C:\packages\abc to /cygdrive/c/packages/abc . This is required for cygwin to work.
-            string packageDirectoryPath = Regex.Replace(workingDirectory, @"\\", "/");
-            packageDirectoryPath = Regex.Replace(packageDirectoryPath, @":", string.Empty);
-            string cygwinCommand = @$"--login -c 'cd /cygdrive/{packageDirectoryPath}; {command}'";
-
-            return component.ExecuteCommandAsync(bashPath, cygwinCommand, Environment.CurrentDirectory, telemetryContext, cancellationToken);
-        }
-
-        /// <summary>
-        /// Executes a command within an isolated process.
-        /// </summary>
-        /// <param name="component">The component that is executing the process/command.</param>
-        /// <param name="command">The command to execute within the process.</param>
-        /// <param name="commandArguments">The arguments to supply to the command.</param>
-        /// <param name="workingDirectory">The working directory from which the command should be executed.</param>
-        /// <param name="telemetryContext">Provides context information to include with telemetry events.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the process execution.</param>
-        /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
-        /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
-        /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
-        /// <returns>The process that executed the command.</returns>
-        public static async Task<IProcessProxy> ExecuteCommandAsync(
-            this VirtualClientComponent component,
-            string command,
-            string commandArguments,
-            string workingDirectory,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken,
-            bool runElevated = false,
-            string username = null,
-            Action<IProcessProxy> beforeExecution = null)
+        /// <param name="component">The component related to the parameters.</param>
+        /// <param name="text">The text containing references/placeholders to replace with values from the parameters.</param>
+        /// <param name="parameterName">The parameter whose value will be used to replace the references/placeholders in the text.</param>
+        /// <param name="value">The value to use when replacing the parameter reference/placeholder.</param>
+        /// <returns>The text having all of the parameter references replaced with matching values.</returns>
+        public static string ApplyParameter(this VirtualClientComponent component, string text, string parameterName, IConvertible value)
         {
             component.ThrowIfNull(nameof(component));
-            command.ThrowIfNullOrWhiteSpace(nameof(command));
-            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+            text.ThrowIfNull(nameof(text));
+            parameterName.ThrowIfNullOrWhiteSpace(nameof(parameterName));
+            value.ThrowIfNull(nameof(value));
 
-            if (!string.IsNullOrWhiteSpace(username))
+            string inlinedText = text.Replace($"{{{parameterName}}}", value.ToString(), StringComparison.OrdinalIgnoreCase);
+            inlinedText = inlinedText.Replace($"[{parameterName}]", value.ToString(), StringComparison.OrdinalIgnoreCase);
+
+            return inlinedText;
+        }
+
+        /// <summary>
+        /// Applies parameter values to any parameter references/placeholders within the text.
+        /// </summary>
+        /// <param name="component">The component related to the parameters.</param>
+        /// <param name="text">The text containing references/placeholders to replace with values from the parameters.</param>
+        /// <param name="parameters">The parameters whose values will be used to replace the references/placeholders in the text.</param>
+        /// <returns>The text having all of the parameter references replaced with matching values.</returns>
+        public static string ApplyParameters(this VirtualClientComponent component, string text, IDictionary<string, IConvertible> parameters)
+        {
+            component.ThrowIfNull(nameof(component));
+            text.ThrowIfNull(nameof(text));
+
+            string inlinedText = text;
+            if (parameters?.Any() == true)
             {
-                if (component.Platform != PlatformID.Unix)
+                MatchCollection parameterReferences = VirtualClientComponentExtensions.ParameterReferenceExpression.Matches(text);
+
+                if (parameterReferences?.Any() == true)
                 {
-                    throw new NotSupportedException($"The application of a username is not supported on '{component.Platform}' platform/architecture systems.");
-                }
-
-                if (!runElevated)
-                {
-                    throw new NotSupportedException($"The application of a username is not supported unless running elevated. Use the '{nameof(runElevated)}' parameter.");
-                }
-            }
-
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext(nameof(command), command)
-                .AddContext(nameof(commandArguments), commandArguments)
-                .AddContext(nameof(workingDirectory), workingDirectory)
-                .AddContext(nameof(runElevated), runElevated);
-
-            IProcessProxy process = null;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                ProcessManager processManager = component.Dependencies.GetService<ProcessManager>();
-
-                if (!runElevated)
-                {
-                    process = processManager.CreateProcess(command, commandArguments, workingDirectory);
-                }
-                else
-                {
-                    process = processManager.CreateElevatedProcess(component.Platform, command, commandArguments, workingDirectory, username);
-                }
-
-                component.CleanupTasks.Add(() => process.SafeKill());
-                component.Logger.LogTraceMessage($"Executing: {command} {SensitiveData.ObscureSecrets(commandArguments)}".Trim(), relatedContext);
-
-                beforeExecution?.Invoke(process);
-                await process.StartAndWaitAsync(cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
-            return process;
-        }
-
-        /// <summary>
-        /// Returns the value of the environment variable as defined for the current process.
-        /// </summary>
-        /// <param name="component">The component requesting the environment variable value.</param>
-        /// <param name="variableName">The name of the environment variable.</param>
-        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
-        /// <returns>The value of the environment variable</returns>
-        public static string GetEnvironmentVariable(this VirtualClientComponent component, string variableName, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process)
-        {
-            component.ThrowIfNull(nameof(component));
-            return component.PlatformSpecifics.GetEnvironmentVariable(variableName, target);
-        }
-
-        /// <summary>
-        /// Returns the package/dependency path information if it is registered.
-        /// </summary>
-        public static Task<DependencyPath> GetPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
-        {
-            component.ThrowIfNull(nameof(component));
-            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
-
-            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
-            return packageManager.GetPackageAsync(packageName, cancellationToken, throwIfNotfound);
-        }
-
-        /// <summary>
-        /// Returns the package/dependency path information if it is registered.
-        /// </summary>
-        public static Task<DependencyPath> GetPlatformSpecificPackageAsync(this VirtualClientComponent component, string packageName, CancellationToken cancellationToken, bool throwIfNotfound = true)
-        {
-            component.ThrowIfNull(nameof(component));
-            packageName.ThrowIfNullOrWhiteSpace(nameof(packageName));
-
-            IPackageManager packageManager = component.Dependencies.GetService<IPackageManager>();
-            return packageManager.GetPlatformSpecificPackageAsync(packageName, component.Platform, component.CpuArchitecture, cancellationToken, throwIfNotfound);
-        }
-
-        /// <summary>
-        /// Loads results from the file system for the file provided.
-        /// </summary>
-        /// <param name="component">The component that is loading the results.</param>
-        /// <param name="filePath">A paths to the results file to load.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        /// <returns>The contents of the results file.</returns>
-        public static async Task<string> LoadResultsAsync(this VirtualClientComponent component, string filePath, CancellationToken cancellationToken)
-        {
-            component.ThrowIfNull(nameof(component));
-            filePath.ThrowIfNullOrWhiteSpace(nameof(filePath));
-
-            string results = null;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
-                {
-                    throw new DependencyException(
-                        $"Missing file operations dependency. To load results requires a dependency of type '{typeof(IFileSystem).FullName}' to be provided to the component instances.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                if (!fileSystem.File.Exists(filePath))
-                {
-                    throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
-                }
-
-                results = await fileSystem.File.ReadAllTextAsync(filePath);
-            }
-
-            return results;
-        }
-
-        /// <summary>
-        /// Loads results from the file system for the files provided.
-        /// </summary>
-        /// <param name="component">The component that is loading the results.</param>
-        /// <param name="filePaths">A set of one or more paths to results files to load.</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
-        /// <returns>The contents of the results files.</returns>
-        public static async Task<IEnumerable<string>> LoadResultsAsync(this VirtualClientComponent component, IEnumerable<string> filePaths, CancellationToken cancellationToken)
-        {
-            component.ThrowIfNull(nameof(component));
-            filePaths.ThrowIfNullOrEmpty(nameof(filePaths));
-
-            List<string> results = null;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                if (!component.Dependencies.TryGetService<IFileSystem>(out IFileSystem fileSystem))
-                {
-                    throw new DependencyException(
-                        $"Missing file operations dependency. To load results requires a dependency of type '{typeof(IFileSystem).FullName}' to be provided to the component instances.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                results = new List<string>();
-                foreach (string filePath in filePaths)
-                {
-                    if (!cancellationToken.IsCancellationRequested)
+                    foreach (Match reference in parameterReferences)
                     {
-                        if (!fileSystem.File.Exists(filePath))
+                        string parameterName = reference.Value.Substring(1, reference.Value.Length - 2);
+                        if (parameters.TryGetValue(parameterName, out IConvertible parameterValue))
                         {
-                            throw new WorkloadResultsException($"Expected results file '{filePath}' not found.", ErrorReason.WorkloadResultsNotFound);
+                            inlinedText = inlinedText.Replace(reference.Value, parameterValue.ToString(), StringComparison.OrdinalIgnoreCase);
                         }
-
-                        results.Add(await fileSystem.File.ReadAllTextAsync(filePath));
                     }
                 }
             }
 
-            return results;
+            return inlinedText;
         }
 
         /// <summary>
-        /// Refresh Environment variables on command line.
+        /// Combines the path segments into a valid path for the OS platform.
         /// </summary>
-        /// <param name="component">The component requesting the refresh.</param>
-        /// <param name="cancellationToken">Token to cancel operation.</param>
-        /// <returns></returns>
-        public static async Task RefreshEnvironmentVariablesAsync(this VirtualClientComponent component, CancellationToken cancellationToken)
+        public static string Combine(this VirtualClientComponent component, params string[] pathSegments)
         {
-            string scriptPath = component.PlatformSpecifics.GetScriptPath("refreshenv");
-            if (component.Platform == PlatformID.Win32NT)
-            {
-                ProcessManager processManager = component.Dependencies.GetService<ProcessManager>();
-                using (IProcessProxy process = processManager.CreateElevatedProcess(component.Platform, "refreshenv.cmd", scriptPath))
-                {
-                    await process.StartAndWaitAsync(cancellationToken)
-                        .ConfigureAwait(false);
+            component.ThrowIfNull(nameof(component));
+            return component.PlatformSpecifics.Combine(pathSegments);
+        }
 
-                    if (!cancellationToken.IsCancellationRequested)
+        /// <summary>
+        /// Creates a descriptor that can be used to publish a request
+        /// </summary>
+        /// <param name="component">The component requesting the file upload descriptor.</param>
+        /// <param name="fileContext">Provides context about a file to be uploaded.</param>
+        /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
+        /// <param name="metadata">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
+        /// <param name="timestamped">
+        /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
+        /// file name is not desirable. Default = true (timestamped file names).
+        /// </param>
+        public static FileUploadDescriptor CreateFileUploadDescriptor(this VirtualClientComponent component, FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true)
+        {
+            component.ThrowIfNull(nameof(component));
+            fileContext.ThrowIfNull(nameof(fileContext));
+
+            IDictionary<string, IConvertible> effectiveMetadata = new Dictionary<string, IConvertible>(component.Metadata, StringComparer.OrdinalIgnoreCase);
+
+            if (metadata?.Any() == true)
+            {
+                effectiveMetadata.AddRange(metadata, true);
+            }
+
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(
+                fileContext,
+                parameters,
+                effectiveMetadata,
+                timestamped,
+                VirtualClientComponent.ContentPathTemplate);
+
+            return descriptor;
+        }
+
+        /// <summary>
+        /// Evaluates each of the parameters provided to the component to replace
+        /// supported placeholder expressions (e.g. {PackagePath:anytool} -> replace with path to 'anytool' package).
+        /// </summary>
+        /// <param name="component">The component whose parameters to evaluate.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        /// <param name="force">Forces the evaluation of the parameters for scenarios where re-evaluation is necessary after an initial pass. Default = false.</param>
+        public static async Task EvaluateParametersAsync(this VirtualClientComponent component, CancellationToken cancellationToken, bool force = false)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            if (!component.ParametersEvaluated || force)
+            {
+                if (component.Parameters?.Any() == true)
+                {
+                    if (component.Dependencies.TryGetService<IExpressionEvaluator>(out IExpressionEvaluator evaluator))
                     {
-                        process.ThrowIfErrored<DependencyException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.SystemOperationFailed);
+                        await evaluator.EvaluateAsync(component.Dependencies, component.Parameters, cancellationToken);
                     }
                 }
+
+                component.ParametersEvaluated = true;
             }
         }
 
         /// <summary>
-        /// Adds a cleanup task to the application that sends an exit notification to the target
-        /// Virtual Client instances via the API clients supplied. Note that the addition of this
-        /// application level exit task is idempotent and will be added to the set of tasks only once.
+        /// Returns the client instance defined in the environment layout provided to the Virtual Client
+        /// whose ID matches.
         /// </summary>
-        /// <param name="component">The component registering the exit notification sends.</param>
-        /// <param name="apiClients">The API clients to which to send notifications.</param>
-        /// <param name="taskId">An identifier that can be used to distinguish the registered notification task from others.</param>
-        public static void RegisterToSendExitNotifications(this VirtualClientComponent component, string taskId, params IApiClient[] apiClients)
+        /// <param name="component">The component with the environment layout.</param>
+        /// <param name="clientId">The ID of the agent/client to match in the environment layout. Default = the current agent ID.</param>
+        /// <param name="throwIfNotExists">True to throw an exception if the client instance does not exist.</param>
+        public static ClientInstance GetLayoutClientInstance(this VirtualClientComponent component, string clientId = null, bool throwIfNotExists = true)
         {
             component.ThrowIfNull(nameof(component));
-            apiClients.ThrowIfNullOrEmpty(nameof(apiClients));
-            taskId.ThrowIfNullOrWhiteSpace(nameof(taskId));
 
-            if (!VirtualClientRuntime.ExitTasks.Any(task => task.Id == taskId))
+            if (throwIfNotExists)
             {
-                // This logic executes just before the application exits fully allowing
-                // client role instances to request server role instances to exit.
-                VirtualClientRuntime.ExitTasks.Add(new Action_(taskId, () =>
-                {
-                    if (component.Dependencies.TryGetService<IApiClientManager>(out IApiClientManager clientManager))
-                    {
-                        ILogger logger = component.Logger;
-                        EventContext telemetryContext = EventContext.Persisted();
-
-                        Parallel.ForEach(apiClients, (client) =>
-                        {
-                            EventContext relatedContext = telemetryContext.Clone()
-                                .AddContext("clientUri", client.BaseUri.ToString());
-
-                            try
-                            {
-                                logger.LogMessage($"{component.TypeName}.SendExitNotification", relatedContext);
-
-                                using (HttpResponseMessage response = client.SendApplicationExitInstructionAsync(CancellationToken.None)
-                                    .GetAwaiter().GetResult())
-                                {
-                                    if (!response.IsSuccessStatusCode)
-                                    {
-                                        component.Logger.LogMessage(
-                                            $"{component.TypeName}.SendExitNotificationError",
-                                            LogLevel.Error,
-                                            relatedContext.Clone().AddResponseContext(response));
-                                    }
-                                }
-                            }
-                            catch (Exception exc)
-                            {
-                                logger.LogMessage(
-                                    $"{component.TypeName}.SendExitNotificationError",
-                                    LogLevel.Error,
-                                    relatedContext.Clone().AddError(exc));
-                            }
-                        });
-                    }
-                }));
+                component.ThrowIfLayoutNotDefined();
             }
-        }
 
-        /// <summary>
-        /// Requests a system reboot.
-        /// </summary>
-        public static void RequestReboot(this VirtualClientComponent component)
-        {
-            component.ThrowIfNull(nameof(component));
-            VirtualClientRuntime.IsRebootRequested = true;
-        }
+            string desiredAgentId = clientId ?? component.AgentId;
+            ClientInstance instance = component.Layout.GetClientInstance(desiredAgentId);
 
-        /// <summary>
-        /// Sets the value of the environment variable or appends a value to the end of it.
-        /// </summary>
-        /// <param name="component">The component setting the environment variable.</param>
-        /// <param name="name">The name of the environment variable to set.</param>
-        /// <param name="value">The value to which to set the environment variable or append to the end of the existing value.</param>
-        /// <param name="target">The environment variable scope (e.g. Machine, User, Process).</param>
-        /// <param name="append">True to append the value to the end of the existing environment variable value. False to replace the existing value.</param>
-        public static void SetEnvironmentVariable(this VirtualClientComponent component, string name, string value, EnvironmentVariableTarget target = EnvironmentVariableTarget.Process, bool append = false)
-        {
-            component.ThrowIfNull(nameof(component));
-            component.PlatformSpecifics.SetEnvironmentVariable(name, value, target, append);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the content blob store is defined and exists in the dependencies.
-        /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
-        /// <param name="store">The content blob store information if it exists.</param>
-        /// <returns>True if the content blob store is defined. False if not.</returns>
-        public static bool TryGetContentStoreManager(this IServiceCollection dependencies, out IBlobManager store)
-        {
-            dependencies.ThrowIfNull(nameof(dependencies));
-            return VirtualClientComponentExtensions.TryGetBlobStore(dependencies, DependencyStore.Content, out store);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the content blob store is defined and exists in the dependencies
-        /// for the component.
-        /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
-        /// <param name="store">The packages blob store information if it exists.</param>
-        /// <returns>True if the content blob store is defined. False if not.</returns>
-        public static bool TryGetContentStoreManager(this VirtualClientComponent component, out IBlobManager store)
-        {
-            component.ThrowIfNull(nameof(component));
-            return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Content, out store);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the packages blob store is defined and exists in the dependencies.
-        /// </summary>
-        /// <param name="dependencies">The dependencies to verify.</param>
-        /// <param name="store">The packages blob store information if it exists.</param>
-        /// <returns>True if the packages blob store is defined. False if not.</returns>
-        public static bool TryGetPackageStoreManager(this IServiceCollection dependencies, out IBlobManager store)
-        {
-            dependencies.ThrowIfNull(nameof(dependencies));
-            return VirtualClientComponentExtensions.TryGetBlobStore(dependencies, DependencyStore.Packages, out store);
-        }
-
-        /// <summary>
-        /// Returns true/false whether the packages blob store is defined and exists in the dependencies
-        /// for the component.
-        /// </summary>
-        /// <param name="component">The component with dependencies to verify.</param>
-        /// <param name="store">The packages blob store information if it exists.</param>
-        /// <returns>True if the packages blob store is defined. False if not.</returns>
-        public static bool TryGetPackageStoreManager(this VirtualClientComponent component, out IBlobManager store)
-        {
-            component.ThrowIfNull(nameof(component));
-            return VirtualClientComponentExtensions.TryGetBlobStore(component.Dependencies, DependencyStore.Packages, out store);
-        }
-
-        /// <summary>
-        /// Upload a single file with defined BlobDescriptor.
-        /// </summary>
-        /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
-        /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
-        /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="descriptor">The defined blob descriptor</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
-        /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
-        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
-        /// <returns></returns>
-        public static async Task UploadFileAsync(
-            this VirtualClientComponent component,
-            IBlobManager blobManager,
-            IFileSystem fileSystem,
-            FileUploadDescriptor descriptor,
-            CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
-            IAsyncPolicy retryPolicy = null,
-            EventContext telemetryContext = null)
-        {
-            /*
-             * Azure Storage blob naming limit
-             * https://docs.microsoft.com/en-us/rest/api/storageservices/naming-and-referencing-shares--directories--files--and-metadata
-             * 
-             * The following characters are not allowed: " \ / : | < > * ?
-             * Directory and file names are case-preserving and case-insensitive.
-             * A path name may be no more than 2,048 characters in length. Individual components in the path can be a maximum of 255 characters in length.
-             * The depth of subdirectories in the path cannot exceed 250.
-             * The same name cannot be used for a file and a directory that share the same parent directory.
-             */
-
-            try
+            if (throwIfNotExists && instance == null)
             {
-                bool uploaded = false;
-                IAsyncPolicy asyncPolicy = retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy;
+                throw new DependencyException(
+                    $"Client instance not found. A client instance does not exist in the environment layout " +
+                    $"provided to the Virtual Client for agent ID '{desiredAgentId}'.",
+                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+            }
 
-                await (retryPolicy ?? VirtualClientComponentExtensions.FileSystemAccessRetryPolicy).ExecuteAsync(async () =>
+            return instance;
+        }
+
+        /// <summary>
+        /// Returns the set of client instance(s) defined in the environment layout provided to the Virtual Client
+        /// whose role matches.
+        /// </summary>
+        /// <param name="component">The component with the environment layout.</param>
+        /// <param name="role">The role of the client instance (e.g. Server, Client etc..)</param>
+        /// <param name="throwIfNotExists">True to throw an exception if matching client instances do not exist.</param>
+        public static IEnumerable<ClientInstance> GetLayoutClientInstances(this VirtualClientComponent component, string role, bool throwIfNotExists = true)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            if (throwIfNotExists)
+            {
+                component.ThrowIfLayoutNotDefined();
+            }
+
+            IEnumerable<ClientInstance> clientInstances = component.Layout?.Clients.Where(
+                client => string.Equals(client.Role, role, StringComparison.OrdinalIgnoreCase));
+
+            if (throwIfNotExists && clientInstances?.Any() != true)
+            {
+                throw new DependencyException(
+                    $"Client instances not found. A set of client instances do not exist in the environment layout " +
+                    $"provided to the Virtual Client for the role '{role}'.",
+                    ErrorReason.EnvironmentLayoutClientInstancesNotFound);
+            }
+
+            return clientInstances;
+        }
+
+        /// <summary>
+        /// Combines the path segments into a valid default packages path.
+        /// </summary>
+        public static string GetPackagePath(this VirtualClientComponent component, params string[] pathSegments)
+        {
+            component.ThrowIfNull(nameof(component));
+            return component.PlatformSpecifics.GetPackagePath(pathSegments);
+        }
+
+        /// <summary>
+        /// Returns true/false whether an environment layout was supplied and it
+        /// defines more than 1 role for the client instances within.
+        /// </summary>
+        /// <returns>True if this is a multi-role scenario. False if not.</returns>
+        public static bool IsMultiRoleLayout(this VirtualClientComponent component)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            bool isMultiRole = false;
+            HashSet<string> distinctRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (component.Layout?.Clients?.Any() == true)
+            {
+                component.Layout.Clients.ToList().ForEach(client =>
                 {
-                    if (fileSystem.File.Exists(descriptor.FilePath))
+                    if (!string.IsNullOrWhiteSpace(client.Role))
                     {
-                        IFileInfo file = fileSystem.FileInfo.New(descriptor.FilePath);
-
-                        // Some processes creat the files up front before writing content to them. These files will
-                        // be 0 bytes in size.
-                        if (file.Length > 0)
-                        {
-                            using (var uploadStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                            {
-                                if (uploadStream.Length > 0)
-                                {
-                                    EventContext relatedContext = (telemetryContext != null ? telemetryContext.Clone() : EventContext.Persisted())
-                                        .AddContext("file", file.FullName)
-                                        .AddContext("blobContainer", descriptor.ContainerName)
-                                        .AddContext("blobName", descriptor.BlobName)
-                                        .AddContext("contentEncoding", descriptor.ContentEncoding)
-                                        .AddContext("contentType", descriptor.ContentType)
-                                        .AddContext("manifest", descriptor.Manifest);
-
-                                    await component.Logger.LogMessageAsync($"{component.TypeName}.UploadFile", relatedContext, async () =>
-                                    {
-                                        BlobDescriptor fileDescriptor = descriptor.ToBlobDescriptor();
-                                        await blobManager.UploadBlobAsync(fileDescriptor, uploadStream, cancellationToken);
-
-                                        if (uploadManifest && descriptor.Manifest?.Any() == true)
-                                        {
-                                            BlobDescriptor manifestDescriptor = descriptor.ToBlobManifestDescriptor(out Stream manifestStream);
-                                            using (manifestStream)
-                                            {
-                                                await blobManager.UploadBlobAsync(manifestDescriptor, manifestStream, cancellationToken);
-                                            }
-                                        }
-
-                                        uploaded = true;
-                                    });
-                                }
-                            }
-                        }
+                        distinctRoles.Add(client.Role);
                     }
                 });
 
-                // Delete ONLY if uploaded successfully. We DO use the cancellation token supplied to the method
-                // here to ensure we cycle around quickly to uploading files while Virtual Client is trying to shut
-                // down to have the best chance of getting them off the system.
-                if (deleteFile && uploaded)
-                {
-                    await fileSystem.File.DeleteAsync(descriptor.FilePath);
-                }
+                isMultiRole = distinctRoles.Count > 1;
             }
-            catch (IOException exc) when (exc.Message.Contains("being used by another process", StringComparison.OrdinalIgnoreCase))
+
+            return isMultiRole;
+        }
+
+        /// <summary>
+        /// Creates a file upload request on the system.
+        /// </summary>
+        /// <param name="component">The component that produced the file.</param>
+        /// <param name="descriptor">Provides information required to upload the file to storage.</param>
+        /// <param name="requestsDirectory">The directory to which the file upload request/notification should be written.</param>
+        /// <param name="retryPolicy">A retry policy to apply for handling transient issues.</param>
+        public static async Task RequestFileUploadAsync(this VirtualClientComponent component, FileUploadDescriptor descriptor, string requestsDirectory = null, IAsyncPolicy retryPolicy = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            descriptor.ThrowIfNull(nameof(descriptor));
+
+            try
             {
-                // The blob upload could fail often. We skip it and we will pick it up on next iteration.
+                PlatformSpecifics platformSpecifics = component.PlatformSpecifics;
+                IFileSystem fileSystem = component.Dependencies.GetService<IFileSystem>();
+
+                await (retryPolicy ?? VirtualClientComponentExtensions.NotificationFileSystemAccessRetryPolicy).ExecuteAsync(async () =>
+                {
+                    // e.g.
+                    // /home/user/VirtualClient/content/linux-x64/contentuploads/2022-05-21T09-23-32-23745Z-upload.json
+                    string targetDirectory = requestsDirectory ?? platformSpecifics.ContentUploadsDirectory;
+                    if (!fileSystem.Directory.Exists(targetDirectory))
+                    {
+                        fileSystem.Directory.CreateDirectory(targetDirectory);
+                    }
+
+                    string fileName = FileUploadDescriptor.GetFileName(FileUploadDescriptor.UploadDescriptorFileExtension, DateTime.UtcNow);
+                    string filePath = component.Combine(targetDirectory, fileName.ToLowerInvariant());
+
+                    await fileSystem.File.WriteAllTextAsync(filePath, descriptor.ToJson());
+                });
             }
             catch (Exception exc)
             {
-                // Do not crash the file upload thread if we hit issues trying to upload to the blob store or
-                // in accessing/deleting files on the file system. The logging logic will catch the details of
-                // the failures and they may be transient.
-                component.Logger.LogMessage($"{component.TypeName}.UploadFileFailure", LogLevel.Error, EventContext.Persisted().AddError(exc));
+                throw new DependencyException(
+                    $"File upload notification creation failed for file at path '{descriptor.FilePath}' after having exhausted all retries.",
+                    exc,
+                    ErrorReason.FileUploadNotificationCreationFailed);
             }
         }
 
         /// <summary>
-        /// Upload a list of files with the matching Blob descriptors.
+        /// Extension signals that the server-side is online and ready to receive requests from clients.
         /// </summary>
-        /// <param name="component">The Virtual Client component that is uploading the blob/file content.</param>
-        /// <param name="blobManager">Handles the upload of the blob/file content to the store.</param>
-        /// <param name="fileSystem">IFileSystem interface, required to distinguish paths between linux and windows. Provides access to the file system for reading the contents of the files.</param>
-        /// <param name="descriptors">A set of file path and descriptor pairs that each define a blob/file to upload and the target location in the store.</param>
-        /// <param name="cancellationToken">The cancellationToken.</param>
-        /// <param name="uploadManifest">True to upload a manifest alongside the file that contains metadata about the file. Default = true.</param>
-        /// <param name="deleteFile">Whether to delete file after upload. Default = false.</param>
-        /// <param name="retryPolicy">A retry policy to apply for handling transient upload issues.</param>
-        /// <param name="telemetryContext">Context to include with telemetry information related to files uploaded to the blob store.</param>
-        /// <returns></returns>
-        public static async Task UploadFilesAsync(
-            this VirtualClientComponent component,
-            IBlobManager blobManager,
-            IFileSystem fileSystem,
-            IEnumerable<FileUploadDescriptor> descriptors,
-            CancellationToken cancellationToken,
-            bool uploadManifest = true,
-            bool deleteFile = false,
-            IAsyncPolicy retryPolicy = null,
-            EventContext telemetryContext = null)
+        /// <param name="component">The component signalling server-side readiness.</param>
+        /// <param name="isOnline">True to signal the server-side is ready, false to signal it is not.</param>
+        public static void SetServerOnline(this VirtualClientComponent component, bool isOnline)
         {
-            foreach (FileUploadDescriptor descriptor in descriptors)
+            VirtualClientRuntime.SetEventingApiOnline(isOnline);
+        }
+
+        /// <summary>
+        /// Creates a background task that emits heartbeat notices/telemetry on an interval.
+        /// </summary>
+        /// <param name="component">The component requesting heartbeats.</param>
+        /// <param name="interval">The interval on which the heartbeat notices/telemetry should be emitted.</param>
+        /// <param name="telemetryContext">Provides context information to include with the heartbeat telemetry events.</param>
+        /// <param name="cancellationToken">A token that can be used to cancel the operations.</param>
+        public static Task StartHeartbeatTask(this VirtualClientComponent component, TimeSpan interval, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            component.ThrowIfNull(nameof(component));
+            interval.ThrowIfNull(nameof(interval));
+            telemetryContext.ThrowIfNull(nameof(telemetryContext));
+
+            return Task.Run(async () =>
             {
-                await component.UploadFileAsync(blobManager, fileSystem, descriptor, cancellationToken, uploadManifest, deleteFile, retryPolicy, telemetryContext);
+                DateTime nextHeartbeatTime = DateTime.UtcNow.AddMilliseconds(-5);
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        if (DateTime.UtcNow >= nextHeartbeatTime)
+                        {
+                            component.Logger.LogMessage($"{component.TypeName}.Heartbeat", LogLevel.Information, telemetryContext);
+                            nextHeartbeatTime = nextHeartbeatTime.Add(interval);
+                        }
+                    }
+                    catch (Exception exc)
+                    {
+                        component.Logger.LogErrorMessage(exc, telemetryContext.Clone().AddError(exc), LogLevel.Warning);
+                    }
+                    finally
+                    {
+                        await Task.Delay(10).ConfigureAwait(false);
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Checks to see if the component has the required parameter defined and throws an exception if
+        /// it is not.
+        /// </summary>
+        public static void ThrowIfParameterNotDefined(this VirtualClientComponent component, string parameterName, params IConvertible[] allowedValues)
+        {
+            component.ThrowIfNull(nameof(component));
+            parameterName.ThrowIfNullOrWhiteSpace(nameof(parameterName));
+            allowedValues.ThrowIfInvalid(nameof(allowedValues), val => val != null);
+
+            if (!component.Parameters.ContainsKey(parameterName))
+            {
+                throw new DependencyException(
+                    $"Missing required parameter. The '{component.TypeName}' component requires a parameter '{parameterName}' to be defined.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (allowedValues?.Any() == true)
+            {
+                bool isValid = false;
+                IConvertible parameterValue = component.Parameters[parameterName];
+                foreach (IConvertible allowable in allowedValues)
+                {
+                    if (parameterValue.ToString().Equals(allowable.ToString()))
+                    {
+                        isValid = true;
+                        break;
+                    }
+                }
+
+                if (!isValid)
+                {
+                    throw new DependencyException(
+                       $"Invalid parameter value. The parameter '{parameterName}' for component '{component.TypeName}' component supports the following allowed values: " +
+                       $"{string.Join(", ", allowedValues.Select(v => v?.ToString()))}.",
+                       ErrorReason.InvalidProfileDefinition);
+                }
             }
         }
 
-        private static bool TryGetBlobStore(IServiceCollection dependencies, string storeName, out IBlobManager store)
+        /// <summary>
+        /// Checks to see if the component has supported roles defined and throws an exception if
+        /// the role provided is not one of them.
+        /// </summary>
+        public static void ThrowIfRoleNotSupported(this VirtualClientComponent component, string role)
         {
-            store = null;
-            if (dependencies.TryGetService<IEnumerable<IBlobManager>>(out IEnumerable<IBlobManager> stores))
+            component.ThrowIfNull(nameof(component));
+            if (component.SupportedRoles?.Any() == true)
             {
-                store = stores.FirstOrDefault(s => string.Equals(s.StoreDescription.StoreName, storeName, StringComparison.OrdinalIgnoreCase));
+                if (!component.SupportedRoles.Contains(role, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new NotSupportedException(
+                        $"The role 'role' is not supported for this workload. Supported roles include: {string.Join(',', component.SupportedRoles)}.  " +
+                        $"Verify that the correct roles are supplied to the application in the environment layout for each of the client instances.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verifies an enviroment layout is defined and throws an exception if not.
+        /// </summary>
+        public static void ThrowIfLayoutNotDefined(this VirtualClientComponent component)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            if (component.Layout?.Clients?.Any() != true)
+            {
+                throw new DependencyException(
+                    "The environment layout is not defined. An environment layout must be provided to the " +
+                    "Virtual Client application on the command line.",
+                    ErrorReason.EnvironmentLayoutNotDefined);
+            }
+        }
+
+        /// <summary>
+        /// Verifies the IP address exists on the local system or throws an exception.
+        /// </summary>
+        /// <param name="component">The component checking the IP address.</param>
+        /// <param name="ipAddress">The IP address to verify on the local system.</param>
+        public static void ThrowIfLayoutClientIPAddressNotFound(this VirtualClientComponent component, string ipAddress)
+        {
+            component.ThrowIfNull(nameof(component));
+
+            ISystemInfo systemInfo = component.Dependencies.GetService<ISystemInfo>();
+            if (!systemInfo.IsLocalIPAddress(ipAddress))
+            {
+                throw new WorkloadException(
+                    $"The IP address defined in the environment layout for this agent " +
+                    $"instance '{ipAddress}' does not match with the IP addresses defined on the system.",
+                    ErrorReason.LayoutIPAddressDoesNotMatch);
+            }
+        }
+
+        /// <summary>
+        /// Returns the path for the dependency/package given a specific platform and CPU architecture.
+        /// </summary>
+        /// <param name="component">VC component.</param>
+        /// <param name="dependency">The dependency path.</param>
+        /// <param name="platform">The OS/system platform (e.g. Windows, Unix).</param>
+        /// <param name="architecture">The CPU architecture (e.g. x64, arm64).</param>
+        /// <returns>
+        /// The dependency/package path given the specific platform and CPU architecture
+        /// (e.g. /home/any/path/virtualclient/1.2.3.4/packages/geekbench5.1.0.0/linux-x64)
+        /// </returns>
+        public static DependencyPath ToPlatformSpecificPath(this VirtualClientComponent component, DependencyPath dependency, PlatformID platform, Architecture? architecture = null)
+        {
+            component.ThrowIfNull(nameof(component));
+            dependency.ThrowIfNull(nameof(dependency));
+
+            return component.PlatformSpecifics.ToPlatformSpecificPath(dependency, platform, architecture);
+        }
+
+        /// <summary>
+        /// Sets the value of the parameters not defined in the profile and add them to parameters Dictionary
+        /// </summary>
+        /// <param name="parameters"> Parameters defined in the profile or supplied on the command line..</param>
+        /// <param name="key">The name of the parameter.</param>
+        /// <param name="value">The value to be set for the parameter.</param>
+        public static void SetIfNotDefined(this IDictionary<string, IConvertible> parameters, string key, IConvertible value)
+        {
+            parameters.ThrowIfNull(nameof(parameters));
+
+            if (!parameters.ContainsKey(key))
+            {
+                parameters.Add(key, value);
             }
 
-            return store != null;
         }
     }
 }
