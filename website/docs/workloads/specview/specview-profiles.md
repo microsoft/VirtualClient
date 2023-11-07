@@ -10,7 +10,6 @@ Runs the stock SPECviewperf Workloads.
 
 * **Supported Platform/Architectures**
   * win-x64
-  * AMD v620 GPU, AMD mi25 GPU
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
