@@ -96,7 +96,14 @@ namespace VirtualClient.Dependencies
                 filteredDisks = this.GetFilteredDisks(updatedDisks, this.DiskFilter);
             }
 
-            filteredDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(volume => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk.DevicePath},{volume.DevicePath},{volume.AccessPaths.First()}'")));
+            try
+            {
+                filteredDisks.ToList().ForEach(disk => disk.Volumes.ToList().ForEach(volume => this.Logger.LogTraceMessage($"Disk Target to Mount: '{disk.DevicePath ?? string.Empty},{volume.DevicePath ?? string.Empty},{volume.AccessPaths?.First()}'")));
+            }
+            catch (Exception)
+            {
+                // Trying best to log
+            }
         }
 
         /// <summary>

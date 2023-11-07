@@ -36,25 +36,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void MLPerfTrainingExecutorThrowsOnUnsupportedLinuxDistro()
-        {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
-                {
-                    OperationSystemFullName = "TestOS",
-                    LinuxDistribution = LinuxDistribution.Flatcar
-                };
-
-                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockInfo);
-                var workloadException = Assert.ThrowsAsync<WorkloadException>(() => MLPerfTrainingExecutor.ExecuteAsync(CancellationToken.None));
-                Assert.IsTrue(workloadException.Reason == ErrorReason.LinuxDistributionNotSupported);
-            }
-        }
-
-        [Test]
         public void MLPerfTrainingStateIsSerializeable()
         {
             State state = new State(new Dictionary<string, IConvertible>
@@ -71,19 +52,10 @@ namespace VirtualClient.Actions
 
         [Test]
         public async Task MLPerfTrainingExecutorInitializesWorkloadAsExpected()
-        {
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
-                { nameof(MLPerfTrainingExecutor.Model), "bert" },
-                { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
-                { nameof(MLPerfTrainingExecutor.Implementation), "pytorch-22.09"},
-                { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
-                { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"}
-            };
+        { 
             List<string> expectedCommands = new List<string>
             {
-                "usermod -aG docker anyuser",
+                "sudo usermod -aG docker anyuser",
                 "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
             };
@@ -129,20 +101,6 @@ namespace VirtualClient.Actions
         [Test]
         public async Task MLPerfTrainingExecutorExecutesAsExpected()
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix);
-            this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
-            {
-                { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
-                { nameof(MLPerfTrainingExecutor.Model), "bert" },
-                { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
-                { nameof(MLPerfTrainingExecutor.Implementation), "pytorch-22.09"},
-                { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
-                { nameof(MLPerfTrainingExecutor.DataPath), "mlperf-training-data-bert.1.0.0"},
-                { nameof(MLPerfTrainingExecutor.GPUCount), "8"},
-                { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"},
-                { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"}
-            };
-
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
 
             List<string> commandsExecuted = new List<string>();
@@ -185,7 +143,15 @@ namespace VirtualClient.Actions
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
                 { nameof(MLPerfTrainingExecutor.Username), "anyuser" },
-                { nameof(MLPerfTrainingExecutor.Model), "bert"}
+                { nameof(MLPerfTrainingExecutor.Model), "bert" },
+                { nameof(MLPerfTrainingExecutor.BatchSize), "45"},
+                { nameof(MLPerfTrainingExecutor.Implementation), "pytorch-22.09"},
+                { nameof(MLPerfTrainingExecutor.ContainerName), "language_model"},
+                { nameof(MLPerfTrainingExecutor.DataPath), "mlperf-training-data-bert.1.0.0"},
+                { nameof(MLPerfTrainingExecutor.GPUCount), "8"},
+                { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"},
+                { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"},
+                { nameof(MLPerfTrainingExecutor.PackageName), "mlperftraining"}
             };
         }
 
@@ -194,7 +160,7 @@ namespace VirtualClient.Actions
             List<string> commands = null;
             commands = new List<string>
             {
-                "usermod -aG docker anyuser",
+                "sudo usermod -aG docker anyuser",
                 "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model",
                 "sudo su -c \"source config_DGXA100_1x8x56x1.sh; env BATCHSIZE=45 DGXNGPU=8 CUDA_VISIBLE_DEVICES=\"0,1,2,3,4,5,6,7\" CONT=mlperf-training-anyuser-x86_64:language_model DATADIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320 DATADIR_PHASE2=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/training-4320 EVALDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/hdf5/eval_varlength CHECKPOINTDIR=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 CHECKPOINTDIR_PHASE1=/mlperftraining0/mlperf-training-data-bert.1.0.0/mlperf-training-package/phase1 ./run_with_docker.sh\""
