@@ -24,7 +24,7 @@ Runs the stock SPECviewperf Workloads.
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |
   |---------------------------|---------------------------------------------------------------------------------------------------|---------------|
-  | GpuModel                  | Required. Specify which GPU driver should be installed. Currently supports [v620, mi25]            | None          |
+  | GpuModel                  | Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]            | None          |
   | Viewset                   | Optional. Specify which particular benchmarks should be run. See the list of viewsets in the [Workload Details](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-1/) section.                                                                                                                        | "3dsmax,catia"|
   | PsExecSession             | Optional. If specified, specviewperf will be started by PsExec in the specified session.          | -1, specviewperf runs in the current session without psExec.|
 
