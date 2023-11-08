@@ -19,7 +19,7 @@ namespace VirtualClient.Actions
     public class SpecViewExecutorTests
     {
         private MockFixture mockFixture;
-        private DependencyPath mockPstoolsPackage, mockSpecViewPackage, mockVisualStudioCRuntime;
+        private DependencyPath mockPlatformSpecificPstoolsPackage, mockPlatformSpecificSpecViewPackage, mockPlatformSpecificVisualStudioCRuntime;
         private string results;
 
         [SetUp]
@@ -41,11 +41,9 @@ namespace VirtualClient.Actions
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
-                string expectedSpecviewExecutablePath = this.mockFixture.PlatformSpecifics.Combine(
-                    this.mockSpecViewPackage.Path, "RunViewperf.exe");
+                string expectedSpecviewExecutablePath = this.mockFixture.PlatformSpecifics.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "RunViewperf.exe");
 
-                string expectedPsExecExecutablePath = this.mockFixture.PlatformSpecifics.Combine(
-                    this.mockFixture.ToPlatformSpecificPath(this.mockPstoolsPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path, "PsExec.exe");
+                string expectedPsExecExecutablePath = this.mockFixture.PlatformSpecifics.Combine(this.mockPlatformSpecificPstoolsPackage.Path, "PsExec.exe");
 
                 Assert.AreEqual(expectedSpecviewExecutablePath, executor.SpecviewExecutablePath);
                 Assert.AreEqual(expectedPsExecExecutablePath, executor.PsExecExecutablePath);
@@ -87,7 +85,7 @@ namespace VirtualClient.Actions
             {
                 this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
                 {
-                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new string[] { });
+                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockPlatformSpecificSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new string[] { });
                     return this.mockFixture.Process;
                 };
 
@@ -111,11 +109,10 @@ namespace VirtualClient.Actions
                 if (platform == PlatformID.Win32NT)
                 {
                     string expectedCommandArguments, expectedExePath;
-                    string mockResultDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "results_19991231T235959");
+                    string mockResultDir = this.mockFixture.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "results_19991231T235959");
                     string mockResultFilePath = this.mockFixture.Combine(mockResultDir, "resultCSV.csv");
-                    string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
-                    string specViewExecutablePath = this.mockFixture.Combine(this.mockSpecViewPackage.Path, "RunViewperf.exe");
-                    string workingDir = this.mockSpecViewPackage.Path;
+                    string mockHistoryResultsDir = this.mockFixture.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
+                    string specViewExecutablePath = this.mockFixture.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "RunViewperf.exe");
 
                     if (psExecSession == -1)
                     {
@@ -124,14 +121,14 @@ namespace VirtualClient.Actions
                     }
                     else
                     {
-                        string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockSpecViewPackage.Path} -accepteula -nobanner";
+                        string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockPlatformSpecificSpecViewPackage.Path} -accepteula -nobanner";
                         string specViewPerfCmd = @$"{specViewExecutablePath} -viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
                         expectedCommandArguments = $"{baseArg} {specViewPerfCmd}";
-                        expectedExePath = this.mockFixture.Combine(this.mockFixture.ToPlatformSpecificPath(this.mockPstoolsPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path, "PsExec.exe");
+                        expectedExePath = this.mockFixture.Combine(this.mockPlatformSpecificPstoolsPackage.Path, "PsExec.exe");
                     }
 
                     // Test that the result is properly renamed
-                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
+                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockPlatformSpecificSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
                     mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
 
                     // Test that the log file is renamed and uploaded 
@@ -177,14 +174,17 @@ namespace VirtualClient.Actions
                 { "PsExecSession", 2 }
             };
 
-            this.mockSpecViewPackage = new DependencyPath("specviewperf2020", this.mockFixture.GetPackagePath("specviewperf"));
-            this.mockPstoolsPackage = new DependencyPath("pstools", this.mockFixture.GetPackagePath("pstools2.51"));
+            DependencyPath mockSpecViewPackage = new DependencyPath("specviewperf2020", this.mockFixture.GetPackagePath("specviewperf"));
+            DependencyPath mockPstoolsPackage = new DependencyPath("pstools", this.mockFixture.GetPackagePath("pstools2.51"));
+            DependencyPath mockVisualStudioCRuntime = new DependencyPath("visualstudiocruntime", this.mockFixture.GetPackagePath("visualstudiocruntime"));
 
-            this.mockVisualStudioCRuntime = new DependencyPath("visualstudiocruntime", this.mockFixture.GetPackagePath("visualstudiocruntime"));
+            this.mockFixture.PackageManager.OnGetPackage("specviewperf2020").ReturnsAsync(mockSpecViewPackage);
+            this.mockFixture.PackageManager.OnGetPackage("visualstudiocruntime").ReturnsAsync(mockVisualStudioCRuntime);
+            this.mockFixture.PackageManager.OnGetPackage("pstools").ReturnsAsync(mockPstoolsPackage);
 
-            this.mockFixture.PackageManager.OnGetPackage("specviewperf2020").ReturnsAsync(this.mockSpecViewPackage);
-            this.mockFixture.PackageManager.OnGetPackage("visualstudiocruntime").ReturnsAsync(this.mockVisualStudioCRuntime);
-            this.mockFixture.PackageManager.OnGetPackage("pstools").ReturnsAsync(this.mockPstoolsPackage);
+            this.mockPlatformSpecificSpecViewPackage = this.mockFixture.ToPlatformSpecificPath(mockSpecViewPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+            this.mockPlatformSpecificPstoolsPackage = this.mockFixture.ToPlatformSpecificPath(mockPstoolsPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
+            this.mockPlatformSpecificVisualStudioCRuntime = this.mockFixture.ToPlatformSpecificPath(mockVisualStudioCRuntime, this.mockFixture.Platform, this.mockFixture.CpuArchitecture);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.mockFixture.Process;
 
