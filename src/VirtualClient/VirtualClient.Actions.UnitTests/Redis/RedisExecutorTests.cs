@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -73,14 +72,6 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
         }
-
-        private void SetupDefaultMockBehavior(PlatformID platformID, Architecture architecture)
-        {
-            this.fixture.Setup(platformID, architecture);
-            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.fixture.ProcessManager.OnCreateProcess = (cmd, args, wd) => this.fixture.Process;
-        }
-
 
         private class TestRedisExecutorExecutor : RedisExecutor
         {
