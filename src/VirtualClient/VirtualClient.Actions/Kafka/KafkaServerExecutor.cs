@@ -325,7 +325,7 @@ namespace VirtualClient.Actions.Kafka
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            ConsoleLogger.Default.LogMessage($"zookeeper server process exited (port = {port})...", telemetryContext);
+                            ConsoleLogger.Default.LogMessage($"zookeeper server process started (port = {port})...", telemetryContext);
                             process.ThrowIfWorkloadFailed();
                         }
                     }
@@ -398,11 +398,18 @@ namespace VirtualClient.Actions.Kafka
                 await this.fileSystem.File.ReplaceInFileAsync(
                         newServerProperties, @"log.dirs *= *[^\n]*", $"log.dirs = {logDir}/kafka-logs-{serverInstance}", cancellationToken);
 
-                await this.fileSystem.File.ReplaceInFileAsync(
+                if (this.IsMultiRoleLayout())
+                {
+                    await this.fileSystem.File.ReplaceInFileAsync(
                         newServerProperties, @"#listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{port}", cancellationToken);
-
-                await this.fileSystem.File.ReplaceInFileAsync(
+                    await this.fileSystem.File.ReplaceInFileAsync(
                         newServerProperties, @"zookeeper.connect *= *[^\n]*", $"zookeeper.connect={this.ServerIpAddress}:{ZookeeperPort}", cancellationToken);
+                }
+                else
+                {
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                        newServerProperties, @"#listeners *= *[^\n]*", $"listeners=PLAINTEXT://:{port}", cancellationToken);
+                }
 
             }
         }

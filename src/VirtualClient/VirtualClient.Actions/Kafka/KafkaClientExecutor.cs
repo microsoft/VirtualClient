@@ -65,6 +65,17 @@ namespace VirtualClient.Actions.Kafka
         }
 
         /// <summary>
+        /// Parameter defines true/false whether the action is meant to warm up the server.
+        /// </summary>
+        public bool WarmUp
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.WarmUp), false);
+            }
+        }
+
+        /// <summary>
         /// The retry policy to apply to the client-side execution workflow.
         /// </summary>
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
@@ -100,6 +111,11 @@ namespace VirtualClient.Actions.Kafka
         /// Path to Kafka command executable.
         /// </summary>
         protected string KafkaCommandScriptPath { get; set; }
+
+        /// <summary>
+        /// True/false whether the Producer test has ran once
+        /// </summary>
+        protected bool IsServerWarmedUp { get; set; }
 
         /// <summary>
         /// Parameter defines the kafka command type to decide which exe to run.
@@ -175,62 +191,71 @@ namespace VirtualClient.Actions.Kafka
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IPAddress ipAddress;
-            List<Task> clientWorkloadTasks = new List<Task>();
-
-            if (this.IsMultiRoleLayout())
+            if (!this.WarmUp || !this.IsServerWarmedUp)
             {
-                IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(ClientRole.Server);
+                IPAddress ipAddress;
+                List<Task> clientWorkloadTasks = new List<Task>();
 
-                foreach (ClientInstance server in targetServers)
+                if (this.IsMultiRoleLayout())
                 {
-                    this.CommandLine = string.Format(this.CommandLine, server.IPAddress);
+                    IEnumerable<ClientInstance> targetServers = this.GetLayoutClientInstances(ClientRole.Server);
+
+                    foreach (ClientInstance server in targetServers)
+                    {
+                        this.CommandLine = string.Format(this.CommandLine, server.IPAddress);
+                        clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
+                        {
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
+                                // 1) Confirm server is online.
+                                // ===========================================================================
+                                this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
+
+                                await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
+                                    .ConfigureAwait(false);
+
+                                // 2) Confirm the server-side application (e.g. web server) is online.
+                                // ===========================================================================
+                                this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
+
+                                await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
+                                    .ConfigureAwait(false);
+
+                                this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
+                                this.Logger.LogTraceMessage("Synchronization: Start client workload...");
+
+                                // 3) Execute the client workload.
+                                // ===========================================================================
+                                ipAddress = IPAddress.Parse(server.IPAddress);
+                                await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken)
+                                    .ConfigureAwait(false);
+                            }
+                        }));
+                    }
+                }
+                else
+                {
+                    ipAddress = IPAddress.Loopback;
+                    this.CommandLine = string.Format(this.CommandLine, "localhost");
                     clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            IApiClient serverApiClient = this.ApiClientManager.GetOrCreateApiClient(server.Name, server);
-                            // 1) Confirm server is online.
-                            // ===========================================================================
-                            this.Logger.LogTraceMessage("Synchronization: Poll server API for heartbeat...");
-
-                            await serverApiClient.PollForHeartbeatAsync(this.PollingTimeout, cancellationToken)
-                                .ConfigureAwait(false);
-
-                            // 2) Confirm the server-side application (e.g. web server) is online.
-                            // ===========================================================================
-                            this.Logger.LogTraceMessage("Synchronization: Poll server for online signal...");
-
-                            await serverApiClient.PollForServerOnlineAsync(TimeSpan.FromMinutes(10), cancellationToken)
-                                .ConfigureAwait(false);
-
-                            this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
-                            this.Logger.LogTraceMessage("Synchronization: Start client workload...");
-
-                            // 3) Execute the client workload.
-                            // ===========================================================================
-                            ipAddress = IPAddress.Parse(server.IPAddress);
-                            await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
+                            await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
                         }
                     }));
                 }
-            }
-            else
-            {
-                ipAddress = IPAddress.Loopback;
-                clientWorkloadTasks.Add(this.ClientFlowRetryPolicy.ExecuteAsync(async () =>
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.ExecuteWorkloadsAsync(ipAddress, telemetryContext, cancellationToken).ConfigureAwait(false);
-                    }
-                }));
-            }
 
-            return Task.WhenAll(clientWorkloadTasks);
+                await Task.WhenAll(clientWorkloadTasks);
+
+                if (this.WarmUp)
+                {
+                    this.IsServerWarmedUp = true;
+                }
+            }
         }
 
         private Task ExecuteWorkloadsAsync(IPAddress serverIPAddress, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -272,9 +297,9 @@ namespace VirtualClient.Actions.Kafka
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Kafka", logToFile: true);
                                 process.ThrowIfWorkloadFailed();
 
-                                string output = process.StandardOutput.ToString();
                                 if (this.CommandType != KafkaCommandType.Setup.ToString())
                                 {
+                                    string output = process.StandardOutput.ToString();
                                     this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
