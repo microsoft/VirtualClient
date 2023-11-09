@@ -51,6 +51,7 @@ for using them.
 |------------------------|--------------------|---------------------------------------|----------------|
 | [7zip](https://microsoft.github.io/VirtualClient/docs/workloads/compression/7zip) | Compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html) |
 | [AspNetBench](https://microsoft.github.io/VirtualClient/docs/workloads/aspnetbench/aspnetbench) | ASP.NET Web Server.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE) |
+| [BlenderBenchmark](https://microsoft.github.io/VirtualClient/docs/workloads/blenderbenchmark) | Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](https://microsoft.github.io/VirtualClient/docs/workloads/coremark/coremark) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CoreMark Pro](https://microsoft.github.io/VirtualClient/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
 | [CPS](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
