@@ -167,7 +167,6 @@ namespace VirtualClient.Dependencies
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess(compiler, "--version"))
                 {
                     this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
-                    Console.WriteLine(compiler + "1");
 
                     await process.StartAndWaitAsync(cancellationToken);
 
@@ -237,18 +236,44 @@ namespace VirtualClient.Dependencies
 
         private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            string[] compilers =
+            {
+                "g++",
+                "gcov",
+                "gcc-ar",
+                "gcc-ranlib",
+                "gfortran",
+                "cpp"
+            };
+
+            // due to the following error:
+            //      update-alternatives: error: alternative g++ can't be slave of gcc: it is a master alternative
+            // must remove alternatives from the VM to avoid errors, then set all of them together
+
+            foreach (string compiler in compilers)
+            {
+                try
+                {
+                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {compiler}", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                }
+                catch 
+                {
+                    // the message is:
+                    //      "error: no alternatives for g++"
+                    // so we can continue as normal; non-breaking
+                    continue;
+                }
+            }
+
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
                         $"--slave /usr/bin/g++ g++ /usr/bin/g++-{gccVersion} " +
                         $"--slave /usr/bin/gcov gcov /usr/bin/gcov-{gccVersion} " +
                         $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-{gccVersion} " +
                         $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-{gccVersion} " +
-                        $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
+                        $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion} " +
+                        $"--slave /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion}";
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
-
-            // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
-            string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
-            await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgumentCpp, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         private async Task InstallAoccAsync(string aoccVersion, EventContext telemetryContext, CancellationToken cancellationToken)

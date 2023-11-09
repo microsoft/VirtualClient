@@ -69,13 +69,19 @@ namespace VirtualClient.Dependencies
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-123 g++-123 gfortran-123 -y --quiet",
+                "sudo update-alternatives --remove-all g++",
+                "sudo update-alternatives --remove-all gcov",
+                "sudo update-alternatives --remove-all gcc-ar",
+                "sudo update-alternatives --remove-all gcc-ranlib",
+                "sudo update-alternatives --remove-all gfortran",
+                "sudo update-alternatives --remove-all cpp",
                 "sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-123 1230 " +
                     $"--slave /usr/bin/g++ g++ /usr/bin/g++-123 " +
                     $"--slave /usr/bin/gcov gcov /usr/bin/gcov-123 " +
                     $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-123 " +
                     $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-123 " +
-                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-123",
-                "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-123 1230",
+                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-123 " +
+                    $"--slave /usr/bin/cpp cpp /usr/bin/cpp-123",
             };
 
             int commandExecuted = 0;
@@ -107,7 +113,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, commandExecuted);
+            Assert.AreEqual(10, commandExecuted);
         }
 
         [Test]
@@ -242,13 +248,19 @@ namespace VirtualClient.Dependencies
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-10 g++-10 gfortran-10 -y --quiet",
+                "sudo update-alternatives --remove-all g++",
+                "sudo update-alternatives --remove-all gcov",
+                "sudo update-alternatives --remove-all gcc-ar",
+                "sudo update-alternatives --remove-all gcc-ranlib",
+                "sudo update-alternatives --remove-all gfortran",
+                "sudo update-alternatives --remove-all cpp",
                 "sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 " +
                     $"--slave /usr/bin/g++ g++ /usr/bin/g++-10 " +
                     $"--slave /usr/bin/gcov gcov /usr/bin/gcov-10 " +
                     $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 " +
                     $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 " +
-                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-10",
-                "sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100",
+                    $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-10 " +
+                    $"--slave /usr/bin/cpp cpp /usr/bin/cpp-10",
             };
 
             int commandExecuted = 0;
@@ -281,7 +293,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, commandExecuted);
+            Assert.AreEqual(10, commandExecuted);
         }
 
         [Test]
