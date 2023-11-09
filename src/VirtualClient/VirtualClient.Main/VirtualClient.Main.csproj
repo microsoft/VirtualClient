@@ -60,6 +60,7 @@
         <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
         <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
         <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
+        <WindowsProfiles Include="profiles\PERF-BLENDER-AMD.json" />
         <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
         <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
@@ -77,7 +78,7 @@
         <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK-PING.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK.json" />
-	    <WindowsProfiles Include="profiles\PERF-NETWORK-CTSTRAFFIC.json" />
+        <WindowsProfiles Include="profiles\PERF-NETWORK-CTSTRAFFIC.json" />
         <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
         <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
         <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
