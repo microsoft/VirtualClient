@@ -383,7 +383,7 @@ namespace VirtualClient.Actions
                             }
 
                             commands.Add(commandArguments);
-                            workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext, cancellationToken));
+                            workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
 
                             if (this.WarmUp)
                             {
