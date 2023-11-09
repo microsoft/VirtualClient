@@ -239,6 +239,7 @@ namespace VirtualClient.Dependencies
             string[] compilers =
             {
                 "gcc",
+                "cc",
                 "g++",
                 "gcov",
                 "gcc-ar",
@@ -262,7 +263,6 @@ namespace VirtualClient.Dependencies
                     // the message is:
                     //      "error: no alternatives for g++"
                     // so we can continue as normal; non-breaking
-                    continue;
                 }
             }
 
