@@ -65,7 +65,7 @@ VirtualClient.exe --profile=PERF-CPU-GEEKBENCH.json --timeout=03:00:00 --package
 
 ## Scenario: Instruct the Application to Fail Fast
 Virtual Client typically will continue to retry the execution of actions within a profile in the event that one of the actions fails
-for a non-terminal reason. Users may want to instruct the application to promptly exist on any errors regardless of the severity (terminal or not).
+for a non-terminal reason. Users may want to instruct the application to promptly exit on any errors regardless of the severity (terminal or not).
 Note that this generally refers to 'Actions' in the profile. The application always fails fast on the failure of 'Dependencies'. 'Monitors' are
 typically implemented to handle exceptions due to the requirement they continue to operate in the background even on failure.
 
