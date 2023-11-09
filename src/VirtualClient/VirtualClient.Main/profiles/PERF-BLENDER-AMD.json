@@ -1,0 +1,56 @@
+{
+  "Description": "Blender GPU/CPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:10:00",
+    "SupportedPlatforms": "win-x64",
+    "SupportedOperatingSystems": "Windows"
+  },
+  "Parameters": {
+    "GpuModel": "",
+    "BlenderVersion": "3.6.0",
+    "Scenes": "monster,junkshop,classroom",
+    "DeviceTypes": "CPU"
+  },
+  "Actions": [
+    {
+      "Type": "BlenderBenchmarkExecutor",
+      "Parameters": {
+        "Scenario": "BlenderCPUAndGPUPerformance",
+        "PackageName": "blenderbenchmarkcli",
+        "BlenderVersion": "$.Parameters.BlenderVersion",
+        "Scenes": "$.Parameters.Scenes",
+        "DeviceTypes": "$.Parameters.DeviceTypes"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriverPackage",
+        "BlobContainer": "packages",
+        "BlobName": "amdgpudriver.zip",
+        "PackageName": "amdgpudriver",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "AMDGPUDriverInstallation",
+      "Parameters": {
+        "Scenario": "InstallAMDGPUDriver",
+        "GpuModel": "$.Parameters.GpuModel",
+        "PackageName": "amdgpudriver"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallBlenderBenchmarkCliPackage",
+        "BlobContainer": "packages",
+        "BlobName": "blenderbenchmarkcli-3.1.0.zip",
+        "PackageName": "blenderbenchmarkcli",
+        "Extract": true
+      }
+    }
+  ]
+}
