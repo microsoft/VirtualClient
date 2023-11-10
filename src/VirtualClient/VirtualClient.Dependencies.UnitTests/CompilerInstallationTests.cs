@@ -69,6 +69,8 @@ namespace VirtualClient.Dependencies
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-123 g++-123 gfortran-123 -y --quiet",
+                "sudo update-alternatives --remove-all gcc",
+                "sudo update-alternatives --remove-all cc",
                 "sudo update-alternatives --remove-all g++",
                 "sudo update-alternatives --remove-all gcov",
                 "sudo update-alternatives --remove-all gcc-ar",
@@ -113,7 +115,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(10, commandExecuted);
+            Assert.AreEqual(12, commandExecuted);
         }
 
         [Test]
@@ -248,6 +250,8 @@ namespace VirtualClient.Dependencies
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-10 g++-10 gfortran-10 -y --quiet",
+                "sudo update-alternatives --remove-all gcc",
+                "sudo update-alternatives --remove-all cc",
                 "sudo update-alternatives --remove-all g++",
                 "sudo update-alternatives --remove-all gcov",
                 "sudo update-alternatives --remove-all gcc-ar",
@@ -293,7 +297,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(10, commandExecuted);
+            Assert.AreEqual(12, commandExecuted);
         }
 
         [Test]
