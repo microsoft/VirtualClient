@@ -30,17 +30,17 @@ call dotnet restore %PackagesProject% --force
 echo:
 echo [Create NuGet Package] VirtualClient %VCBuildVersion%
 echo --------------------------------------------------
-call dotnet pack %PackagesProject% --force --no-restore --no-build -c Debug -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.nuspec && echo: || Goto :Error
+call dotnet pack %PackagesProject% --force --no-restore --no-build -c Release -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.Framework %VCBuildVersion%
 echo --------------------------------------------------
-call dotnet pack %PackagesProject%  --force --no-restore --no-build -c Debug -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.Framework.nuspec && echo: || Goto :Error
+call dotnet pack %PackagesProject%  --force --no-restore --no-build -c Release -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.Framework.nuspec && echo: || Goto :Error
 
 echo:
 echo [Create NuGet Package] VirtualClient.TestFramework %VCBuildVersion%
 echo --------------------------------------------------
-call dotnet pack %PackagesProject%  --force --no-restore --no-build -c Debug -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
+call dotnet pack %PackagesProject%  --force --no-restore --no-build -c Release -p:Version=%VCBuildVersion% -p:NuspecFile=%PackageDir%\nuspec\VirtualClient.TestFramework.nuspec && echo: || Goto :Error
 Goto :End
 
 :Usage

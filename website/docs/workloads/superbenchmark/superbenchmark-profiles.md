@@ -3,7 +3,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 
 * [Workload Details](./superbenchmark.md)  
 
-:::warn
+:::warning
 *Note that at the moment, the Virtual Client ONLY has support for Nvidia GPU systems. Work is underway to finalize support for the installation of drivers required in order to support AMD GPU systems.*
 :::
 

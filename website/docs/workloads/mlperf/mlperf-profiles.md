@@ -6,7 +6,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 ## PERF-GPU-MLPERF.json
 Runs the MLPerf benchmark workload to test GPU performance. 
 
-:::warn
+:::warning
 *This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.*
 :::
 

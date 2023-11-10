@@ -60,7 +60,7 @@ You can find zip files in the latest [GitHub Releases](https://github.com/micros
 
   ```powershell
   # Example
-  PM> NuGet\Install-Package VirtualClient -Version 1.11.0
+  PM> NuGet\Install-Package VirtualClient -Version 1.12.0
   ```
 
 - If you are on a Windows system, you can download from the command line using the NuGet.exe:
@@ -68,7 +68,7 @@ You can find zip files in the latest [GitHub Releases](https://github.com/micros
 
   ``` bash
   # Example
-  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.11.0 -Source nuget.org
+  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.12.0 -Source nuget.org
   ```
 
 ### NuGet/Zip Package Contents
