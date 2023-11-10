@@ -586,7 +586,7 @@ This constructor takes in the following parameters:
   Provides all shared/common dependencies required by Virtual Client components (see section above). These core dependencies can be used to interoperate 
   with the Virtual Client core runtime platform as well as the system on which it is running.
 
-* **IDictionary< string, IConvertible >**  
+* **IDictionary\<string, IConvertible>**  
   Provides the parameters defined in the profile for the action, monitor or dependency handler step to the class instance.
 
 #### Component Code/Method Flow
@@ -815,7 +815,7 @@ euphoria. We typically use the Visual Studio IDE due to its robust support for d
       * Set the 'VirtualClient.Main' project as the 'Startup project'.
       * Right-click on this project and select 'Properties' from the menu.
       * In the 'Debug' section, put the following in for the 'Application arguments':
-        * --profile=EXAMPLE-WORKLOAD.json --timeout=1440 --packages={{YourBlobStoreSASUri}}
+        * --profile=EXAMPLE-WORKLOAD.json --timeout=1440 --packages=\<YourBlobStoreSASUri>
   
   * [Example Workload/Test Executor](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Actions/Examples/ExampleWorkloadExecutor.cs)  
     Provides a coded example for how to write a basic workload executor.

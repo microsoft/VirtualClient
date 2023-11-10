@@ -21,8 +21,8 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 * [Storage Account Support](../guides/0600-integration-blob-storage.md)
 
 ## Step 3: Create Parsers and Unit Tests
-* Create a parser class file with name < Workload_name >ResultsParser.cs(e.g. WebFundamentalsResultsParser.cs) in project VirtualClient.Parser.
-* Write unit tests for the parser created in project VirtualClient.Parser.UnitTests with the name < Workload_name >ResultsParserTests.cs(e.g. WebFundamentalsResultsParserTests.cs)
+* Create a parser class file with name \<Workload_name>ResultsParser.cs(e.g. WebFundamentalsResultsParser.cs) in project VirtualClient.Parser.
+* Write unit tests for the parser created in project VirtualClient.Parser.UnitTests with the name \<Workload_name>ResultsParserTests.cs(e.g. WebFundamentalsResultsParserTests.cs)
 * To store all the required input files for the tests, create a folder with the name of workload in the examples folder in VirtualClient.Parser.UnitTests project.
 * Update VirtualClient.Parser.UnitTests.csproj file with the details of example files.
 
@@ -43,7 +43,7 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 * Update PackageManagerTests.cs of project VirtualClient.Core.UnitTests to include the unit tests of the changes.
 
 ## Step 5: Profile Creation
-* Create json file with name PERF-< PERF_CRITERION >-< Workload_Name >.json (eg. PERF-WEB-WEBFUNDAMENTALS.json) in profiles folder of VirtualClient.Main project.
+* Create json file with name PERF-\<PERF_CRITERION>-\<Workload_Name>.json (eg. PERF-WEB-WEBFUNDAMENTALS.json) in profiles folder of VirtualClient.Main project.
 * This file contains all the dependencies that are required by the workload.
 * Dependencies are included in the project VortualClient.Dependencies.
 * Update VirtualClient.Main.csproj file and VirtualClient.Actions.FunctionalTests.csproj file with the json file created.
@@ -62,7 +62,7 @@ to packaging workloads and dependencies in easy-to-consume Virtual Client packag
 
 ## Step 7: Dependencies Creation
 * In case, Workload requires one time set-up on VM then that can be added as a dependency in the VC.
-* Add < Depency_Name >.cs(IISInstallation.cs) file in VirtualClient.Dependencies project.
+* Add \<Depency_Name>.cs(IISInstallation.cs) file in VirtualClient.Dependencies project.
 * Add its unit tests in project VirtualClient.Dependencies.UnitTests project.
 * This dependency can be added in profile file created for workload in VirtualClient.Main.
 
