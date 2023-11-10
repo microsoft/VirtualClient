@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[6823],{3744:e=>{e.exports=JSON.parse('{"permalink":"/VirtualClient/blog/tags/opencomputeproject","page":1,"postsPerPage":10,"totalPages":1,"totalCount":1,"blogDescription":"Blog","blogTitle":"Blog"}')}}]);

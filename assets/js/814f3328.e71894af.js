@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkvirtualclient=self.webpackChunkvirtualclient||[]).push([[2535],{5641:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"Releasing VirtualClient v0.0.1","permalink":"/VirtualClient/blog/release-0-0-1"}]}')}}]);
