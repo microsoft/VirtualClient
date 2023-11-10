@@ -11,12 +11,7 @@ The following example extensions repo can be used for reference to the details d
 * [CRC-VirtualClient-Examples Git Repo](https://msazure.visualstudio.com/One/_git/CRC-VirtualClient-Examples)
 
 ## Platform Libraries
-In order to develop extensions to the Virtual Client platform, the following libraries are required. These can be referenced or downloaded from the CRC
-team's NuGet feeds.
 
-* #### NuGet Feeds
-  * [Production Release NuGet Feed](https://msazure.visualstudio.com/One/_artifacts/feed/CRC)  
-  * [Pre-Release NuGet Feed](https://msazure.visualstudio.com/One/_artifacts/feed/CRC-Dev)
 
 * #### NuGet Packages/Libraries
   * **VirtualClient.Framework**  
