@@ -95,13 +95,6 @@
     <None Update="WLG\mockWlgProfile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-
-      <None Update="Wrathmark\TestWrathmark.txt">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Wrathmark\BenchWrathmark.txt">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
   </ItemGroup>
 
   <ItemGroup>

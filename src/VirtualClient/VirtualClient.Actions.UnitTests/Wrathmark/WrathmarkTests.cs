@@ -15,6 +15,7 @@
     {
         private static readonly string ProfilesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(WrathmarkResultParserTests)).Location),
+            "Examples",
             "Wrathmark");
 
         [Test]
