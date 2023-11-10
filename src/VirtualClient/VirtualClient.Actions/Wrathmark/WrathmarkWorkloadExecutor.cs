@@ -106,16 +106,23 @@ namespace VirtualClient.Actions.Wrathmark
                     ErrorReason.WorkloadDependencyMissing);
             }
 
+            string benchmarkProject = this.Combine(this.benchmarkDirectory, $"{this.Subfolder}.csproj");
+
             // Build the wrath sharp project
             // To make native libraries that can be used, enumerate the SupportedPlatforms metadata and call publish for each
             // Outputs
             //    bin/Release/net6.0/linux-x64/publish/wrath-sharp
             //    bin/Release/net6.0/win-x64/publish/wrath-sharp.exe
-            string publishArgument = $"publish -c Release -r {this.PlatformArchitectureName} -f {this.TargetFramework} /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true";
+            string publishArgument = $"publish {benchmarkProject} -c Release -r {this.PlatformArchitectureName} -f {this.TargetFramework} /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true";
             await this.ExecuteCommandAsync(
                     this.dotnetExePath,
                     publishArgument,
                     this.benchmarkDirectory,
+                    true,
+                    false,
+                    true,
+                    true,
+                    telemetryContext,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -155,10 +162,14 @@ namespace VirtualClient.Actions.Wrathmark
             string results = string.Empty;
             try
             {
-                results = await this.ExecuteWorkloadAsync(
+                results = await this.ExecuteCommandAsync(
                     benchmarkPath,
                     this.WrathmarkArgs,
                     this.benchmarkDirectory,
+                    false,
+                    true,
+                    true,
+                    true,
                     telemetryContext,
                     cancellationToken);
             }
@@ -169,93 +180,99 @@ namespace VirtualClient.Actions.Wrathmark
             }
         }
 
-        private async Task ExecuteCommandAsync(
-            string pathToExe,
-            string commandLineArguments,
+        private Task<string> ExecuteCommandAsync(
+            string command,
+            string arguments,
             string workingDirectory,
+            bool runElevated,
+            bool enableProfiling,
+            bool requireStandardOut,
+            bool failureIsCritical,
+            EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage(
-                    $"Executing process '{pathToExe}' '{commandLineArguments}' at directory '{workingDirectory}'.");
+            this.Logger.LogTraceMessage(
+                $"Executing process '{command}' '{arguments}' at directory '{workingDirectory}'.");
 
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("commandArguments", commandLineArguments);
-
-                using (IProcessProxy process =
-                       this.systemManagement.ProcessManager.CreateElevatedProcess(
-                           this.Platform,
-                           pathToExe,
-                           commandLineArguments,
-                           workingDirectory))
-                {
-                    this.CleanupTasks.Add(() => process.SafeKill());
-                    await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                    }
-                }
-            }
-        }
-
-        private Task<string> ExecuteWorkloadAsync(string command, string arguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("packageName", this.PackageName)
-                .AddContext("packagePath", workingDirectory)
-                .AddContext("command", command)
-                .AddContext("arguments", arguments)
+                .AddContext(nameof(workingDirectory), workingDirectory)
+                .AddContext(nameof(command), command)
+                .AddContext(nameof(arguments), arguments)
+                .AddContext(nameof(enableProfiling), enableProfiling)
+                .AddContext(nameof(requireStandardOut), requireStandardOut)
+                .AddContext(nameof(failureIsCritical), failureIsCritical)
                 ;
 
             return this.Logger.LogMessageAsync($"{nameof(WrathmarkWorkloadExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                // This example shows how to integrate with monitors that run "on-demand" to do background profiling
-                // work while the workload is running. To integrate with any one or more of these monitors (defined in monitor profiles),
-                // simply wrap the logic for running the workload in a 'BackgroundProfiling' block.
-                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                BackgroundOperations profiler = null;
+                if (enableProfiling)
+                {
+                    profiler = BackgroundOperations.BeginProfiling(this, cancellationToken);
+                }
+
+                try
                 {
                     // We create a operating system process to host the executing workload, start it and
                     // wait for it to exit.
-                    using (IProcessProxy workloadProcess = this.processManager.CreateProcess(command, arguments, workingDirectory))
-                    {
-                        this.CleanupTasks.Add(() => workloadProcess.SafeKill());
+                    IProcessProxy process = runElevated
+                        ? this.processManager.CreateElevatedProcess(this.Platform, command, arguments, workingDirectory)
+                        : this.processManager.CreateProcess(command, arguments, workingDirectory);
 
-                        await workloadProcess.StartAndWaitAsync(cancellationToken)
+                    try
+                    {
+                        this.CleanupTasks.Add(() => process.SafeKill());
+
+                        await process.StartAndWaitAsync(cancellationToken)
                             .ConfigureAwait(false);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             // ALWAYS log the details for the process. This helper method will ensure we capture the exit code, standard output, standard
                             // error etc... This is very helpful for triage/debugging.
-                            await this.LogProcessDetailsAsync(workloadProcess, telemetryContext, this.ToolName, logToFile: true)
+                            await this.LogProcessDetailsAsync(
+                                    process,
+                                    telemetryContext,
+                                    this.ToolName,
+                                    logToFile: true)
                                 .ConfigureAwait(false);
 
-                            // If the workload process returned a non-success exit code, we throw an exception typically. The ErrorReason used here
-                            // will NOT cause VC to crash.
-                            workloadProcess.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
+                            // If the workload process returned a non-success exit code, we throw an exception
+                            ErrorReason errorReason = failureIsCritical
+                                                        ? ErrorReason.CriticalWorkloadFailure
+                                                        : ErrorReason.WorkloadFailed;
 
-                            if (workloadProcess.StandardOutput.Length == 0)
+                            process.ThrowIfErrored<WorkloadException>(
+                                ProcessProxy.DefaultSuccessCodes,
+                                errorReason: errorReason);
+
+                            if (requireStandardOut && process.StandardOutput.Length == 0)
                             {
                                 throw new WorkloadException(
-                                    $"Unexpected workload results outcome. The workload did not produce any results to standard output.",
-                                    ErrorReason.WorkloadResultsNotFound);
+                                    "The command did not produce any results to standard output.",
+                                    errorReason);
                             }
                         }
 
-                        return workloadProcess.StandardOutput.ToString();
+                        return process.StandardOutput.ToString();
                     }
+                    finally
+                    {
+                        process?.Dispose();
+                    }
+                }
+                finally
+                {
+                    profiler?.Dispose();
                 }
             });
         }
 
         private Task CaptureMetricsAsync(
-            string results, 
-            DateTime start, 
-            DateTime end, 
+            string results,
+            DateTime start,
+            DateTime end,
             EventContext telemetryContext,
             CancellationToken cancellationToken)
         {
@@ -264,7 +281,7 @@ namespace VirtualClient.Actions.Wrathmark
                 results.ThrowIfNullOrWhiteSpace(nameof(results));
 
                 this.Logger.LogMessage(
-                    $"{nameof(WrathmarkWorkloadExecutor)}.CaptureMetrics", 
+                    $"{nameof(WrathmarkWorkloadExecutor)}.CaptureMetrics",
                     telemetryContext.Clone().AddContext("results", results));
 
                 // TODO: Seems weird to new this up here. Shouldn't this be injected?
@@ -277,10 +294,10 @@ namespace VirtualClient.Actions.Wrathmark
                     scenarioStartTime: start,
                     scenarioEndTime: end,
                     metrics: metrics,
-                    metricCategorization: null, 
-                    scenarioArguments: null, 
-                    this.Tags,               
-                    telemetryContext);       
+                    metricCategorization: null,
+                    scenarioArguments: null,
+                    this.Tags,
+                    telemetryContext);
             }
 
             return Task.CompletedTask;
