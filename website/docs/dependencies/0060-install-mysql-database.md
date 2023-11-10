@@ -28,7 +28,7 @@ The following section describes the different options for the 'Action' parameter
 | **Action**                 | **Description**                                                                                                 |
 |----------------------------|-----------------------------------------------------------------------------------------------------------------|
 | StartDatabaseServer        | Starts the MySQL server.                                                                                        |
-| CreateDatabase             | Creates a database under {Database Name} in the MySQL server.                                                   |
+| CreateDatabase             | Creates a database under < Database Name > in the MySQL server.                                                   |
 | RaisedStatementCount       | Increases number of statements MySQL can prepare (only recommended for larger VMs).                             |
 | ConfigureNetwork           | Modifies the configuration file to make MySQL server accessible to the private network of VMs.                  |
 | CreateUser                 | Creates user access to the server for each client VM in the provided environment layout.                        |

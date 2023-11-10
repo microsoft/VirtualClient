@@ -586,7 +586,7 @@ This constructor takes in the following parameters:
   Provides all shared/common dependencies required by Virtual Client components (see section above). These core dependencies can be used to interoperate 
   with the Virtual Client core runtime platform as well as the system on which it is running.
 
-* **IDictionary<string, IConvertible>**  
+* **IDictionary< string, IConvertible >**  
   Provides the parameters defined in the profile for the action, monitor or dependency handler step to the class instance.
 
 #### Component Code/Method Flow
