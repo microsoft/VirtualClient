@@ -11,7 +11,7 @@ echo [Running Tests]
 echo --------------------------------------------------
 
 for /f "tokens=*" %%f in ('dir /B /S %~dp0src\*Tests.csproj') do (
-    call dotnet test %%f --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal" && echo: || Goto :Error
+    call dotnet test -c Release %%f --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal" && echo: || Goto :Error
 )
 
 Goto :End
