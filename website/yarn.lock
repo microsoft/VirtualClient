@@ -6855,7 +6855,7 @@ react-router-dom@^5.3.4:
 
 react-router@5.3.4, react-router@^5.3.4:
   version "5.3.4"
-  resolved "https://registry.npmjs.org/react-router/-/react-router-5.3.4.tgz"
+  resolved "https://registry.yarnpkg.com/react-router/-/react-router-5.3.4.tgz#8ca252d70fcc37841e31473c7a151cf777887bb5"
   dependencies:
     "@babel/runtime" "^7.12.13"
     history "^4.9.0"
