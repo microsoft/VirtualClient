@@ -28,6 +28,8 @@ namespace VirtualClient.Contracts.Metadata
         /// </summary>
         private static IDictionary<string, IDictionary<string, object>> persistedMetadata = new ConcurrentDictionary<string, IDictionary<string, object>>(StringComparer.OrdinalIgnoreCase);
 
+        private readonly object lockObject = new object();
+
         /// <summary>
         /// Metadata properties for an instance of the metadata contract typically associated with
         /// an individual VC component lifetime.
@@ -169,11 +171,14 @@ namespace VirtualClient.Contracts.Metadata
         /// <param name="telemetryContext">The telemetry event context to which the metadata contract should be applied.</param>
         public void Apply(EventContext telemetryContext)
         {
-            MetadataContract.ApplyMetadata(telemetryContext, MetadataContract.persistedMetadata);
+            lock (this.lockObject)
+            {
+                MetadataContract.ApplyMetadata(telemetryContext, MetadataContract.persistedMetadata);
 
-            // Component-scope properties take precedence over global properties in the case that there
-            // is a conflict. Any existing global properties will be overridden in the case of a conflict.
-            MetadataContract.ApplyMetadata(telemetryContext, this.instanceMetadata);
+                // Component-scope properties take precedence over global properties in the case that there
+                // is a conflict. Any existing global properties will be overridden in the case of a conflict.
+                MetadataContract.ApplyMetadata(telemetryContext, this.instanceMetadata);
+            }
         }
 
         /// <summary>

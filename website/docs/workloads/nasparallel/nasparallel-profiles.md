@@ -26,7 +26,7 @@ For different benchmarks with NAS Parallel we have various recommendation on num
   A square number of processes (1, 4, 9, ...).
 
 * LU benchmark  
-  2D (n1 * n2) process grid where n1/2 <= n2 <= n1.
+  2D (n1 * n2) process grid where  n1/2 {'<='} n2 {'<='} n1 .
 
 * CG, FT, IS, MG benchmarks  
   a power-of-two number of processes (1, 2, 4, ...).

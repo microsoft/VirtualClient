@@ -1,7 +1,7 @@
 ﻿# Run Commercial Workloads: Bring Your Own Package
 Virtual Client supports running commercial workloads. However, we can not distribute the binary and licenses for the commercial workloads. In those cases, users need to "bring their own binary and license".
 
-:::warn
+:::warning
 *The Virtual Client team is currently working to define and document the process for integration of commercial workloads into the Virtual Client.
 The contents of this document are NOT complete and are meant only to illustrate the basic concepts. Please bear with us while we are figuring this
 process out.*

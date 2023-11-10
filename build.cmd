@@ -28,11 +28,11 @@ call %VCSolutionDir%\build-stage-packaging-tools.cmd && echo: || Goto :Error
 echo:
 echo [Building Source Code] VirtualClient %VCBuildVersion%
 echo -------------------------------------------------------
-call dotnet build "%VCSolutionDir%\VirtualClient.sln" -c Debug && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c Debug --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c Debug --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c Debug --self-contained %TrimFlag% && echo: || Goto :Error
-call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c Debug --self-contained %TrimFlag% && echo: || Goto :Error
+call dotnet build "%VCSolutionDir%\VirtualClient.sln" -c Release && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-x64 -c Release --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r linux-arm64 -c Release --self-contained -p:InvariantGlobalization=true %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-x64 -c Release --self-contained %TrimFlag% && echo: || Goto :Error
+call dotnet publish "%VCSolutionDir%\VirtualClient.Main\VirtualClient.Main.csproj" -r win-arm64 -c Release --self-contained %TrimFlag% && echo: || Goto :Error
 Goto :End
 
 :Usage

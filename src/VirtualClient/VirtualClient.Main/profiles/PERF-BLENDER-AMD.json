@@ -1,25 +1,25 @@
 {
-  "Description": "SPEC view GPU Performance Workload",
+  "Description": "Blender GPU/CPU Performance Workload",
   "Metadata": {
-    "RecommendedMinimumExecutionTime": "01:00:00",
+    "RecommendedMinimumExecutionTime": "00:10:00",
     "SupportedPlatforms": "win-x64",
     "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
     "GpuModel": "",
-    "Viewset": "3dsmax,catia",
-    "PsExecSession": -1
+    "BlenderVersion": "3.6.0",
+    "Scenes": "monster,junkshop,classroom",
+    "DeviceTypes": "CPU"
   },
   "Actions": [
     {
-      "Type": "SpecViewExecutor",
+      "Type": "BlenderBenchmarkExecutor",
       "Parameters": {
-        "Scenario": "SPECviewperf",
-        "Viewset": "$.Parameters.Viewset",
-        "PackageName": "specviewperf2020",
-        "PsExecPackageName": "pstools",
-        "PsExecSession": "$.Parameters.PsExecSession",
-        "Tags": "GPU,SPECview,Gaming"
+        "Scenario": "BlenderCPUAndGPUPerformance",
+        "PackageName": "blenderbenchmarkcli",
+        "BlenderVersion": "$.Parameters.BlenderVersion",
+        "Scenes": "$.Parameters.Scenes",
+        "DeviceTypes": "$.Parameters.DeviceTypes"
       }
     }
   ],
@@ -45,20 +45,10 @@
     {
       "Type": "DependencyPackageInstallation",
       "Parameters": {
-        "Scenario": "InstallPsToolsPackage",
+        "Scenario": "InstallBlenderBenchmarkCliPackage",
         "BlobContainer": "packages",
-        "BlobName": "pstools-2.51.zip",
-        "PackageName": "pstools",
-        "Extract": true
-      }
-    },
-    {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallSpecViewWorkloadPackage",
-        "BlobContainer": "packages",
-        "BlobName": "specviewperf2020-3.1.zip",
-        "PackageName": "specviewperf2020",
+        "BlobName": "blenderbenchmarkcli-3.1.0.zip",
+        "PackageName": "blenderbenchmarkcli",
         "Extract": true
       }
     }

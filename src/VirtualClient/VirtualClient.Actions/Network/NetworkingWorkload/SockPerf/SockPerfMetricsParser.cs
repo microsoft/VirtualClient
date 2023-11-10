@@ -121,7 +121,7 @@ namespace VirtualClient.Actions
             metrics.Add(new Metric("Latency-P99.9", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
             metrics.Add(new Metric("Latency-P99.99", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.0001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
             metrics.Add(new Metric("Latency-P99.999", Statistics.QuantileCustom(packetsLatencyValues, 1d - 0.00001d, QuantileDefinition.R3), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
-            metrics.Add(new Metric("Latency-Mad", Stats.MedianAbsoluteDeviation(packetsLatencyValues.ToArray()), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
+            metrics.Add(new Metric("Latency-Mad", Extreme.Statistics.Stats.MedianAbsoluteDeviation(packetsLatencyValues.ToArray()), MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
             metrics.Add(new Metric("Latency-StandardErrorMean", sem, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
             metrics.Add(new Metric("Latency-Stdev", sd, MetricUnit.Microseconds, MetricRelativity.LowerIsBetter));
             metrics.Add(new Metric("Latency-LowerCI", lowerCI));

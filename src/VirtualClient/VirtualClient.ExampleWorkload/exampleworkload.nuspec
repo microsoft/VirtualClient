@@ -21,7 +21,7 @@
           The path to the 'bin' directory in the repo 'out' folder (e.g. /repo/out/bin).
          
         - BinConfigDir
-          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Debug).
+          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Release).
           
         - PackagingSourceDir
           The directory to the/this project where the .nuspec files are contained.
