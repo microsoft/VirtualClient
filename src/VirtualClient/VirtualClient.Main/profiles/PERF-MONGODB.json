@@ -1,0 +1,66 @@
+{
+  "Description": "MongoDB Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+  },
+  "Parameters": {},
+  "Actions": [
+    {
+      "Type": "MongoDBExecutor",
+      "Parameters": {
+        "Scenario": "",
+        "PackageName": "mongodb",
+        "YCSBPackageName": "ycsb",
+        "JdkPackageName": "javadevelopmentkit",
+        "Tags": ""
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-11.0.19.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallYCSBPackage",
+        "BlobContainer": "packages",
+        "BlobName": "ycsb-0.5.0.zip",
+        "PackageName": "ycsb",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "Packages": "python3-pip"
+      }
+    },
+    {
+      "Type": "WgetPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallMongoDBPackage",
+        "PackageName": "mongodb",
+        "PackageUri": "http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-5.0.15.tgz",
+        "Notes": ""
+      }
+    },
+    {
+      "Type": "JavaDevelopmentKitInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDK",
+        "PackageName": "javadevelopmentkit"
+      }
+    }
+  ]
+}
