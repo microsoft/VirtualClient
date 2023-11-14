@@ -16,7 +16,7 @@
       "Type": "WrathmarkWorkloadExecutor",
       "Parameters": {
         "Scenario": "WrathmarkBenchmark",
-        "PackageName": "Wrathmark",
+        "PackageName": "wrathmark",
         "DotNetSdkPackageName": "dotnetsdk",
         "TargetFramework": "$.Parameters.TargetFramework",
         "Subfolder": "$.Parameters.Subfolder",
@@ -46,7 +46,7 @@
       "Parameters": {
         "Scenario": "CloneWrathOthelloRepo",
         "RepoUri": "https://github.com/ricomariani/wrath-othello.git",
-        "PackageName": "Wrathmark"
+        "PackageName": "wrathmark"
       }
     },
     {
