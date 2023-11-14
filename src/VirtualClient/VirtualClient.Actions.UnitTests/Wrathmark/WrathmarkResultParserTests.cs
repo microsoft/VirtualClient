@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Actions.Wrathmark.UnitTests
+﻿namespace VirtualClient.Actions
 {
     using System.Collections;
     using System.Collections.Generic;
