@@ -6,7 +6,7 @@
     "SupportedOperatingSystems": "CBL-Mariner,Ubuntu,Windows"
   },
   "Parameters": {
-    "DotNetVersion": "8.0.100-rc.2.23502.2",
+    "DotNetVersion": "8.0.100",
     "TargetFramework": "net8.0",
     "Subfolder": "wrath-sharp-std-arrays",
     "WrathmarkArgs": "xlt ..\\endgame.txt"
