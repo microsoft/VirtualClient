@@ -33,8 +33,8 @@
             Metric expected = new Metric("BoardsPerSecond", 7_760_880, MetricRelativity.HigherIsBetter);
             Metric actual = metrics[0];
 
-            Assert.AreEqual(expected.Name, actual.Name);
-            Assert.AreEqual(expected.Value, actual.Value);
+            MetricAssert.Exists(metrics, expected);
+
             Assert.AreEqual(expected.Relativity, actual.Relativity);
             Assert.AreEqual(expected, actual);
         }
