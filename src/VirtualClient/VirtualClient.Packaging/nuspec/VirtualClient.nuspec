@@ -11,7 +11,7 @@
         <tags>Microsoft Azure VirtualClient Workload Benchmark</tags>
 
         <dependencies>
-            <group targetFramework=".net6.0"></group>
+            <group targetFramework=".net8.0"></group>
         </dependencies>
     </metadata>
 
@@ -26,7 +26,7 @@
         win-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net6.0\win-x64\publish\**\*" target="content\win-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\win-x64\publish\**\*" target="content\win-x64" />
         <file src="$ToolsOutDir$\win-x64\visualstudiocruntime\**\*" target="content\win-x64\packages\visualstudiocruntime\win-x64" />
         <file src="$ToolsOutDir$\visualstudiocruntime.vcpkg" target="content\win-x64\packages\visualstudiocruntime" />
         <file src="$ToolsOutDir$\win-x64\lspci\**\*" target="content\win-x64\packages\lspci\win-x64" />
@@ -41,7 +41,7 @@
         =============================================================================================
         -->
 
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net6.0\win-arm64\publish\**\*" target="content\win-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\**\*" target="content\win-arm64" />
         <file src="$ToolsOutDir$\win-arm64\visualstudiocruntime\**\*" target="content\win-arm64\packages\visualstudiocruntime\win-arm64" />
         <file src="$ToolsOutDir$\visualstudiocruntime.vcpkg" target="content\win-arm64\packages\visualstudiocruntime" />
         <file src="$ToolsOutDir$\win-arm64\systemtools\**\*" target="content\win-arm64\packages\systemtools\win-arm64" />
@@ -53,7 +53,7 @@
         linux-x64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\x64\VirtualClient.Main\net6.0\linux-x64\publish\**\*" target="content\linux-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\publish\**\*" target="content\linux-x64" />
         <file src="$ToolsOutDir$\linux-x64\lshw\**\*" target="content\linux-x64\packages\lshw\linux-x64" />
         <file src="$ToolsOutDir$\lshw.vcpkg" target="content\linux-x64\packages\lshw" />
         <file src="$ToolsOutDir$\linux-x64\wget\**\*" target="content\linux-x64\packages\wget\linux-x64" />
@@ -63,7 +63,7 @@
         linux-arm64
         =============================================================================================
         -->
-        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net6.0\linux-arm64\publish\**\*" target="content\linux-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\**\*" target="content\linux-arm64" />
         <file src="$ToolsOutDir$\linux-arm64\wget\**\*" target="content\linux-arm64\packages\wget\linux-arm64" />
         <file src="$ToolsOutDir$\wget.vcpkg" target="content\linux-arm64\packages\wget" />
     </files>

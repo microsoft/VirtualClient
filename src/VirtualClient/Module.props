@@ -172,8 +172,8 @@
     between NuGet package restores and build.
     *****************************************************************************
     -->
-    <PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
-        <RuntimeFrameworkVersion>6.0.14</RuntimeFrameworkVersion>
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+        <RuntimeFrameworkVersion>8.0.0</RuntimeFrameworkVersion>
     </PropertyGroup>
 
     <!--

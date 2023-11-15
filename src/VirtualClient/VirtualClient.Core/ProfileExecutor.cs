@@ -269,7 +269,7 @@ namespace VirtualClient
                         }
 
                         // If we timeout or a reboot is requested, we will request all background processes to cancel/exit.
-                        tokenSource.Cancel();
+                        await tokenSource.CancelAsync();
 
                         // We allow the user to supply an instruction on the command line to force the application
                         // to wait for an explicit/longer period of time before exiting. This allows for actions, monitors

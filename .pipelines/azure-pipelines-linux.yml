@@ -33,7 +33,7 @@ stages:
       continueOnError: false
       inputs:
         packageType: 'sdk'
-        version: '6.0.406'
+        version: '8.0.0'
         useGlobalJson: false
         performMultiLevelLookup: true
         workingDirectory: '$(Build.SourcesDirectory)'

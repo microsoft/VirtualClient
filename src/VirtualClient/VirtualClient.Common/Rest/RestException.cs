@@ -40,16 +40,5 @@ namespace VirtualClient.Common.Rest
             : base(message, innerException)
         {
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RestException"/> class with
-        /// the provided serialization and context information.
-        /// </summary>
-        /// <param name="info">The serialization information.</param>
-        /// <param name="context">The streaming context.</param>
-        protected RestException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 }

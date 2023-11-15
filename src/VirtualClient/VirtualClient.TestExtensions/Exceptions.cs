@@ -38,16 +38,6 @@ namespace VirtualClient.TestExtensions
             : base(message, innerException)
         {
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EqualityAssertFailedException"/> class
-        /// </summary>
-        /// <param name="info">Serialized error properties</param>
-        /// <param name="context">The serialization streaming context</param>
-        protected EqualityAssertFailedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 
     /// <summary>
@@ -82,16 +72,6 @@ namespace VirtualClient.TestExtensions
             : base(message, innerException)
         {
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ExceptionAssertFailedException"/> class
-        /// </summary>
-        /// <param name="info">Serialized error properties</param>
-        /// <param name="context">The serialization streaming context</param>
-        protected ExceptionAssertFailedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 
     /// <summary>
@@ -124,16 +104,6 @@ namespace VirtualClient.TestExtensions
         /// <param name="innerException">A related or underlying error root cause exception</param>
         public SerializationAssertFailedException(string message, Exception innerException)
             : base(message, innerException)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializationAssertFailedException"/> class
-        /// </summary>
-        /// <param name="info">Serialized error properties</param>
-        /// <param name="context">The serialization streaming context</param>
-        protected SerializationAssertFailedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
         {
         }
     }
