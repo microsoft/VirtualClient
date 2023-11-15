@@ -20,7 +20,7 @@ if /i "%VCBuildVersion%" == "" (
 
 set VCSolutionDir=%~dp0src\VirtualClient
 
-set TrimFlag="-p:PublishTrimmed=true -p:TrimUnusedDependencies=true"
+set TrimFlag="-p:PublishTrimmed=true"
 if /i "%~1" == "noTrim" set TrimFlag=""
 
 call %VCSolutionDir%\build-stage-packaging-tools.cmd && echo: || Goto :Error
