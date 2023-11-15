@@ -1,9 +1,8 @@
-﻿using System.IO;
-
-namespace VirtualClient.Actions.Wrathmark
+﻿namespace VirtualClient.Actions.Wrathmark
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -99,7 +98,7 @@ namespace VirtualClient.Actions.Wrathmark
 
             this.benchmarkDirectory = this.Combine(workloadPackage.Path, this.Subfolder);
 
-            if (!Directory.Exists(this.benchmarkDirectory))
+            if (!this.systemManagement.FileSystem.Directory.Exists(this.benchmarkDirectory))
             {
                 throw new DependencyException(
                     $"The expected benchmark directory '{this.benchmarkDirectory}' does not exist.",
@@ -118,7 +117,7 @@ namespace VirtualClient.Actions.Wrathmark
                     this.dotnetExePath,
                     publishArgument,
                     this.benchmarkDirectory,
-                    true,
+                    false,
                     false,
                     true,
                     true,
@@ -139,7 +138,7 @@ namespace VirtualClient.Actions.Wrathmark
                 telemetryContext);
 
             // Example: ./bin/Release/net6.0/linux-x64/publish
-            string outputDirectory = Path.Combine(
+            string outputDirectory = this.Combine(
                 this.benchmarkDirectory,
                 "bin",
                 "Release",
@@ -149,9 +148,9 @@ namespace VirtualClient.Actions.Wrathmark
 
             string programName = this.Platform == PlatformID.Unix ? this.Subfolder : $"{this.Subfolder}.exe";
 
-            string benchmarkPath = Path.Combine(outputDirectory, programName);
+            string benchmarkPath = this.Combine(outputDirectory, programName);
 
-            if (!File.Exists(benchmarkPath))
+            if (!this.systemManagement.FileSystem.File.Exists(benchmarkPath))
             {
                 throw new DependencyException(
                     $"The expected benchmark executable '{benchmarkPath}' does not exist.",
@@ -176,7 +175,7 @@ namespace VirtualClient.Actions.Wrathmark
             finally
             {
                 DateTime endTime = DateTime.UtcNow;
-                await this.CaptureMetricsAsync(results, startTime, endTime, telemetryContext, cancellationToken);
+                this.CaptureMetrics(results, startTime, endTime, telemetryContext);
             }
         }
 
@@ -269,38 +268,37 @@ namespace VirtualClient.Actions.Wrathmark
             });
         }
 
-        private Task CaptureMetricsAsync(
+        private void CaptureMetrics(
             string results,
             DateTime start,
             DateTime end,
-            EventContext telemetryContext,
-            CancellationToken cancellationToken)
+            EventContext telemetryContext)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            this.Logger.LogMessage(
+                $"{nameof(WrathmarkWorkloadExecutor)}.CaptureMetrics",
+                telemetryContext.Clone().AddContext("results", results));
+
+            // TODO: Seems weird to new this up here. Shouldn't this be injected?
+            var resultsParser = new WrathmarkMetricsParser(results);
+            var metrics = resultsParser.Parse();
+
+            this.Logger.LogMetrics(
+                toolName: this.ToolName,
+                scenarioName: this.Scenario,
+                scenarioStartTime: start,
+                scenarioEndTime: end,
+                metrics: metrics,
+                metricCategorization: null,
+                scenarioArguments: null,
+                this.Tags,
+                telemetryContext);
+
+            if (!metrics.Any())
             {
-                results.ThrowIfNullOrWhiteSpace(nameof(results));
-
-                this.Logger.LogMessage(
-                    $"{nameof(WrathmarkWorkloadExecutor)}.CaptureMetrics",
-                    telemetryContext.Clone().AddContext("results", results));
-
-                // TODO: Seems weird to new this up here. Shouldn't this be injected?
-                var resultsParser = new WrathmarkMetricsParser(results);
-                var metrics = resultsParser.Parse();
-
-                this.Logger.LogMetrics(
-                    toolName: this.ToolName,
-                    scenarioName: this.Scenario,
-                    scenarioStartTime: start,
-                    scenarioEndTime: end,
-                    metrics: metrics,
-                    metricCategorization: null,
-                    scenarioArguments: null,
-                    this.Tags,
-                    telemetryContext);
+                throw new WorkloadException(
+                    $"{nameof(WrathmarkMetricsParser)} could not parse results.",
+                    ErrorReason.InvalidResults);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

@@ -9,20 +9,15 @@
     using VirtualClient.Actions.Wrathmark;
     using VirtualClient.Contracts;
 
-    [TestFixture]
-    [Category("Unit")]
-    public class WrathmarkResultParserTests
+    public class WrathmarkResultParserTests : WrathmarkTests
     {
-        private static readonly string ProfilesDirectory = Path.Combine(
-            Path.GetDirectoryName(Assembly.GetAssembly(typeof(WrathmarkResultParserTests)).Location),
-            "Examples",
-            "Wrathmark");
+
 
         [Test]
         public void Parse_Benchmark_SingleResult_ReturnsMetrics()
         {
             // Arrange
-            string results = File.ReadAllText(Path.Combine(ProfilesDirectory, "BenchWrathmark.txt"));
+            string results = File.ReadAllText(GetExampleFileForTests(Constants.BenchmarkResults));
             WrathmarkMetricsParser sut = new WrathmarkMetricsParser(results);
 
             // Act
