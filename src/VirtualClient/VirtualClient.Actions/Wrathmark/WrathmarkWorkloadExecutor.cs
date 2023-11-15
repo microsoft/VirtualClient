@@ -61,7 +61,7 @@
         /// <summary>
         /// The name of the subfolder in the Git repo to use for the benchmark.
         /// </summary>
-        public string Subfolder => this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.Subfolder), "wrath-sharp");
+        public string Subfolder => this.Parameters.GetValue<string>(nameof(WrathmarkWorkloadExecutor.Subfolder), "wrath-sharp-std-arrays");
 
         /// <summary>
         /// Name of the tool.
@@ -110,8 +110,8 @@
             // Build the wrath sharp project
             // To make native libraries that can be used, enumerate the SupportedPlatforms metadata and call publish for each
             // Outputs
-            //    bin/Release/net6.0/linux-x64/publish/wrath-sharp
-            //    bin/Release/net6.0/win-x64/publish/wrath-sharp.exe
+            //    bin/Release/net7.0/linux-x64/publish/wrath-sharp-std-arrays
+            //    bin/Release/net7.0/win-x64/publish/wrath-sharp-std-arrays.exe
             string publishArgument = $"publish {benchmarkProject} -c Release -r {this.PlatformArchitectureName} -f {this.TargetFramework} /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true";
             await this.ExecuteCommandAsync(
                     this.dotnetExePath,
@@ -137,7 +137,7 @@
                 $"{nameof(WrathmarkWorkloadExecutor)}.Starting",
                 telemetryContext);
 
-            // Example: ./bin/Release/net6.0/linux-x64/publish
+            // Example: ./bin/Release/net7.0/linux-x64/publish
             string outputDirectory = this.Combine(
                 this.benchmarkDirectory,
                 "bin",
