@@ -5,6 +5,7 @@ namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
@@ -201,7 +202,7 @@ namespace VirtualClient
         /// <param name="process">Represents a process running on the system.</param>
         /// <param name="errorMessage">An optional error message to use instead of the default.</param>
         /// <param name="errorReason">The reason/category of the error.</param>
-        public static void ThrowIfErrored<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
+        public static void ThrowIfErrored<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
@@ -216,7 +217,7 @@ namespace VirtualClient
         /// <param name="successCodes">The set of exit codes that indicate success.</param>
         /// <param name="errorMessage">An optional error message to use instead of the default.</param>
         /// <param name="errorReason">The reason/category of the error.</param>
-        public static void ThrowIfErrored<TError>(this IProcessProxy process, IEnumerable<int> successCodes, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
+        public static void ThrowIfErrored<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, IEnumerable<int> successCodes, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
@@ -290,7 +291,7 @@ namespace VirtualClient
         /// <param name="process">Represents a process running on the system.</param>
         /// <param name="errorMessage">Represents a process running on the system.</param>
         /// <param name="errorReason">Represents a process running on the system.</param>
-        public static void ThrowOnStandardError<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
+        public static void ThrowOnStandardError<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined)
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
@@ -317,7 +318,7 @@ namespace VirtualClient
         /// <param name="errorMessage">Represents a process running on the system.</param>
         /// <param name="errorReason">Represents a process running on the system.</param>
         /// <param name="expressions">A set of expressions to use for matching the contents of standard errors that represents failure cases.</param>
-        public static void ThrowOnStandardError<TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined, params Regex[] expressions)
+        public static void ThrowOnStandardError<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, string errorMessage = null, ErrorReason errorReason = ErrorReason.Undefined, params Regex[] expressions)
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
@@ -346,7 +347,7 @@ namespace VirtualClient
             }
         }
 
-        private static void ThrowErrored<TError>(this IProcessProxy process, string errorMessage, ErrorReason errorReason)
+        private static void ThrowErrored<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TError>(this IProcessProxy process, string errorMessage, ErrorReason errorReason)
             where TError : VirtualClientException
         {
             process.ThrowIfNull(nameof(process));
