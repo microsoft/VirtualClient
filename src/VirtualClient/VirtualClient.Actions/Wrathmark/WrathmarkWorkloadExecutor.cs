@@ -23,7 +23,6 @@
         private readonly IPackageManager packageManager;
 
         private string benchmarkDirectory;
-        private string dotnetExePath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WrathmarkWorkloadExecutor"/> class.
@@ -94,7 +93,7 @@
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
+            string dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
 
             this.benchmarkDirectory = this.Combine(workloadPackage.Path, this.Subfolder);
 
@@ -114,7 +113,7 @@
             //    bin/Release/net7.0/win-x64/publish/wrath-sharp-std-arrays.exe
             string publishArgument = $"publish {benchmarkProject} -c Release -r {this.PlatformArchitectureName} -f {this.TargetFramework} /p:UseSharedCompilation=false /p:BuildInParallel=false /m:1 /p:Deterministic=true /p:Optimize=true";
             await this.ExecuteCommandAsync(
-                    this.dotnetExePath,
+                    dotnetExePath,
                     publishArgument,
                     this.benchmarkDirectory,
                     false,
