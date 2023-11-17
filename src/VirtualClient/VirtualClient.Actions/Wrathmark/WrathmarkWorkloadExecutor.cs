@@ -116,7 +116,8 @@
                     dotnetExePath,
                     publishArgument,
                     this.benchmarkDirectory,
-                    false,
+                    // dotnet build must run elevated to avoid error MSB4018: The "CreateAppHost" task failed unexpectedly
+                    true,
                     false,
                     true,
                     true,

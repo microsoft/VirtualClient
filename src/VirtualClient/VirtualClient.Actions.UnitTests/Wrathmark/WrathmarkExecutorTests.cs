@@ -172,7 +172,8 @@
                     expectedDotNetPackageCommand = mockFixture.PlatformSpecifics.Combine(dotNetPackagePath, "dotnet.exe");
                     break;
                 case PlatformID.Unix:
-                    expectedDotNetPackageCommand = mockFixture.PlatformSpecifics.Combine(dotNetPackagePath, "dotnet");
+                    // Must run elevated to avoid error MSB4018: The "CreateAppHost" task failed unexpectedly
+                    expectedDotNetPackageCommand = "sudo " + mockFixture.PlatformSpecifics.Combine(dotNetPackagePath, "dotnet");
                     break;
             }
 
