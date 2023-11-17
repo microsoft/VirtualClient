@@ -137,6 +137,10 @@
                 $"{nameof(WrathmarkWorkloadExecutor)}.Starting",
                 telemetryContext);
 
+            DependencyPath workloadPackage = await this.packageManager.GetPackageAsync(
+                this.PackageName,
+                cancellationToken);
+
             // Example: ./bin/Release/net7.0/linux-x64/publish
             string outputDirectory = this.Combine(
                 this.benchmarkDirectory,
@@ -164,7 +168,7 @@
                 results = await this.ExecuteCommandAsync(
                     benchmarkPath,
                     this.WrathmarkArgs,
-                    this.benchmarkDirectory,
+                    workloadPackage.Path,
                     false,
                     true,
                     true,

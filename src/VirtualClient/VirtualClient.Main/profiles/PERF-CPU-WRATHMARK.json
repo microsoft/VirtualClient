@@ -9,7 +9,7 @@
     "DotNetVersion": "8.0.100",
     "TargetFramework": "net8.0",
     "Subfolder": "wrath-sharp-std-arrays",
-    "WrathmarkArgs": "xlt ..\\endgame.txt"
+    "WrathmarkArgs": "xlt endgame.txt"
   },
   "Actions": [
     {
