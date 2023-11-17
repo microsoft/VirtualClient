@@ -27,6 +27,7 @@ namespace VirtualClient.Actions
     {
         private const string BlenderBenchmarkExecutableName = "benchmark-launcher-cli.exe";
         private IFileSystem fileSystem;
+        private IStateManager stateManager;
         private ISystemManagement systemManagement;
 
         /// <summary>
@@ -39,6 +40,7 @@ namespace VirtualClient.Actions
         {
             this.fileSystem = dependencies.GetService<IFileSystem>();
             this.systemManagement = dependencies.GetService<ISystemManagement>();
+            this.stateManager = this.systemManagement.StateManager;
         }
 
         /// <summary>
@@ -201,8 +203,17 @@ namespace VirtualClient.Actions
 
         private async Task InitializeBlenderBenchmarkAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            await this.DownloadBlenderAsync(telemetryContext, cancellationToken);
-            await this.DownloadBlenderBenchmarkScenesAsync(telemetryContext, cancellationToken);
+            State installationState = await this.stateManager.GetStateAsync<State>(nameof(BlenderBenchmarkExecutor), cancellationToken)
+                .ConfigureAwait(false);
+
+            if (installationState == null)
+            {
+                await this.DownloadBlenderAsync(telemetryContext, cancellationToken);
+                await this.DownloadBlenderBenchmarkScenesAsync(telemetryContext, cancellationToken);
+                await this.stateManager.SaveStateAsync(nameof(BlenderBenchmarkExecutor), new State(), cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
         }
 
         /// <summary>

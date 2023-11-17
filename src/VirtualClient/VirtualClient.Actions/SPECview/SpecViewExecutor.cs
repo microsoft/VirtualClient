@@ -239,7 +239,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.AddForScenario(
                            this.Scenario,
                            workloadProcess.FullCommand(),
-                           toolVersion: "2020 v3.0");
+                           toolVersion: this.SpecviewPackage.Version);
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
