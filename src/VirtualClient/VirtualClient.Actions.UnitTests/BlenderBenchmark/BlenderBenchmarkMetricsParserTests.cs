@@ -28,11 +28,11 @@ namespace VirtualClient.Actions
         [OneTimeSetUp]
         public void Setup()
         {
-            string outputPath = Path.Combine(ExamplePath, "monster_cpu.json");
+            string outputPath = Path.Combine(ExamplePath, "results_example.json");
             string rawText = File.ReadAllText(outputPath);
 
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
-            this.actualMonsterMetrics = testParser.Parse();
+            this.actualMetrics = testParser.Parse();
         }
 
 
