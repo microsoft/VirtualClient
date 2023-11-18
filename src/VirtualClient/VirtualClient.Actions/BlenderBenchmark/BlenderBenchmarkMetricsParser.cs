@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
                     var metadata = new Dictionary<string, IConvertible>
                     {
                         { "blenderVersion", blenderResult.BlenderVersion.Version },
-                        { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label },
+                        { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label }
                         // blender can only execute on one device(CPU/GPU) at a time
                         { "deviceName", blenderResult.DeviceInfo.ComputeDevices[0].Name },
                         { "deviceType", blenderResult.DeviceInfo.ComputeDevices[0].Type },
