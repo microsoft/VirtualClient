@@ -6,7 +6,6 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Reflection;
     using VirtualClient.Contracts;
@@ -59,7 +58,7 @@ namespace VirtualClient.Actions
         public void BlenderMetricsParserTestsCorrectlyMonsterCPUMetadata()
         {
             BlenderMetricsParserTestsCorrectlyMetadata("AMD EPYC 7763 64-Core Processor", "CPU", "MonsterCPU.json");
-        }                    
+        }
 
         [Test]
         public void BlenderMetricsParserTestsCorrectlyJunkshopHIPMetadata()

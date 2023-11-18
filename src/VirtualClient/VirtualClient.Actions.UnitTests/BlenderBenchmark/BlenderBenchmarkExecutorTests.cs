@@ -36,10 +36,6 @@ namespace VirtualClient.Actions
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture))
             {
-                this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                {
-                    return this.mockFixture.Process;
-                };
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None)
                     .ConfigureAwait(false);
 
@@ -100,7 +96,6 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
-                {"Scenario", "BlenderbenchmarkUnitTest"},
                 {"PackageName", "blenderbenchmarkcli"},
                 {"BlenderVersion", "3.6.0"},
                 {"Scenes", "monster,junkshop,classroom"},
