@@ -38,7 +38,6 @@ namespace VirtualClient.Actions
                     {
                         { "blenderVersion", blenderResult.BlenderVersion.Version },
                         { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label },
-                        { "scene", blenderResult.Scene.Label },
                         // blender can only execute on one device(CPU/GPU) at a time
                         { "deviceName", blenderResult.DeviceInfo.ComputeDevices[0].Name },
                         { "deviceType", blenderResult.DeviceInfo.ComputeDevices[0].Type },
