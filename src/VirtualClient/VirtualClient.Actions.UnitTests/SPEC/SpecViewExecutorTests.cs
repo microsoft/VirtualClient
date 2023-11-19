@@ -13,6 +13,7 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using YamlDotNet.Core;
 
     [TestFixture]
     [Category("Unit")]
@@ -54,24 +55,21 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task SpecViewExecutorExecutesWorkloadAsExpectedOneViewsettPsExec(PlatformID platform, Architecture architecture)
         {
-            string viewsetArg = "3dsmax";
-            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, viewsetArg, 2);
+            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, 2);
         }
 
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task SpecViewExecutorExecutesWorkloadAsExpectedMultipleViewsetPsExec(PlatformID platform, Architecture architecture)
         {
-            string viewsetArg = "3dsmax,catia,creo,energy,maya,medical,snx,sw";
-            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, viewsetArg, 2);
+            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, 2);
         }
 
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task SpecViewExecutorExecutesWorkloadAsExpectedMultipleViewsetNoPsExec(PlatformID platform, Architecture architecture)
         {
-            string viewsetArg = "3dsmax,catia,creo,energy,maya,medical,snx,sw";
-            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, viewsetArg, -1);
+            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, -1);
         }
 
 
@@ -96,19 +94,18 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task SpecViewExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, string viewsetArg, int psExecSession = 2)
+        private async Task SpecViewExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, int psExecSession = -1)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             this.mockFixture.Parameters["PsExecSession"] = psExecSession;
-            this.mockFixture.Parameters["Viewset"] = viewsetArg;
-            var viewsets = viewsetArg.Split(",", StringSplitOptions.TrimEntries|StringSplitOptions.RemoveEmptyEntries);
+            string[] viewsets = this.mockFixture.Parameters["Viewsets"].ToString().Split(',', StringSplitOptions.TrimEntries);
 
             using (TestSpecViewExecutor executor = new TestSpecViewExecutor(this.mockFixture))
             {
                 int executed = 0, renamed = 0, uploaded = 0;
                 if (platform == PlatformID.Win32NT)
                 {
-                    string expectedCommandArguments, expectedExePath;
+                    string expectedCommandArgumentsFormat, expectedCommandArguments, expectedExePath;
                     string mockResultDir = this.mockFixture.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "results_19991231T235959");
                     string mockResultFilePath = this.mockFixture.Combine(mockResultDir, "resultCSV.csv");
                     string mockHistoryResultsDir = this.mockFixture.Combine(this.mockPlatformSpecificSpecViewPackage.Path, "hist_" + Path.GetFileName(mockResultDir));
@@ -116,40 +113,42 @@ namespace VirtualClient.Actions
 
                     if (psExecSession == -1)
                     {
-                        expectedCommandArguments = $"-viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
+                        expectedCommandArgumentsFormat = $"-viewset {0} -nogui";
                         expectedExePath = specViewExecutablePath;
                     }
                     else
                     {
-                        string baseArg = @$"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockPlatformSpecificSpecViewPackage.Path} -accepteula -nobanner";
-                        string specViewPerfCmd = @$"{specViewExecutablePath} -viewset {viewsetArg} {this.mockFixture.Parameters["GUIOption"]}";
-                        expectedCommandArguments = $"{baseArg} {specViewPerfCmd}";
+                        string baseArg = $"-s -i {this.mockFixture.Parameters["PsExecSession"]} -w {this.mockPlatformSpecificSpecViewPackage.Path} -accepteula -nobanner";
+                        string specViewPerfCmd = $"{specViewExecutablePath} -viewset {0} -nogui";
+                        expectedCommandArgumentsFormat = $"{baseArg} {specViewPerfCmd}";
                         expectedExePath = this.mockFixture.Combine(this.mockPlatformSpecificPstoolsPackage.Path, "PsExec.exe");
                     }
 
-                    // Test that the result is properly renamed
-                    mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockPlatformSpecificSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
-                    mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
-
-                    // Test that the log file is renamed and uploaded 
-                    string mockLogFilePath, renamedMockLogFilePath;
-                    foreach (var viewset in viewsets)
+                    foreach (string viewset in viewsets)
                     {
-                        mockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"{executor.ViewsetLogFileNameMapping[viewset]}", "log.txt");
-                        renamedMockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"{executor.ViewsetLogFileNameMapping[viewset]}", $"{viewset}-log.txt");
-                        mockFixture.Directory.Setup(dir => dir.GetDirectories(mockHistoryResultsDir, "{executor.ViewsetLogFileNameMapping[viewSet]}", SearchOption.TopDirectoryOnly)).Returns(new[] { mockLogFilePath });
+                        expectedCommandArguments = string.Format(expectedCommandArgumentsFormat, viewset);
+
+                        this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                        {
+                            if (arguments == expectedCommandArguments && command == expectedExePath)
+                            {
+                                executed++;
+                            }
+
+                            return this.mockFixture.Process;
+                        };
+
+                        // Test that the result is properly renamed
+                        mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockPlatformSpecificSpecViewPackage.Path, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
+                        mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => renamed++);
+
+                        // Test that the log file is renamed and uploaded 
+                        string mockLogFilePath, renamedMockLogFilePath;
+                        mockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"SomeViewset", "log.txt");
+                        renamedMockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, $"SomeViewset", $"{viewset}-log.txt");
+                        mockFixture.Directory.Setup(dir => dir.GetFiles(mockHistoryResultsDir, "log.txt", SearchOption.AllDirectories)).Returns(new[] { mockLogFilePath });
                         mockFixture.Directory.Setup(dir => dir.Move(mockLogFilePath, renamedMockLogFilePath)).Callback(() => uploaded++);
                     }
-
-                    this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-                    {
-                        if (arguments == expectedCommandArguments && command == expectedExePath)
-                        {
-                            executed++;
-                        }
-
-                        return this.mockFixture.Process;
-                    };
 
                     await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                 }
@@ -168,10 +167,9 @@ namespace VirtualClient.Actions
             {
                 { "Scenario", "SPECviewperf" },
                 { "PackageName", "specviewperf2020" },
-                { "GUIOption", "-nogui" },
-                { "Viewset", "3dsmax, catia" },
+                { "Viewsets", "3dsmax, catia" },
                 { "PsExecPackageName", "pstools" },
-                { "PsExecSession", 2 }
+                { "PsExecSession", -1 }
             };
 
             DependencyPath mockSpecViewPackage = new DependencyPath("specviewperf2020", this.mockFixture.GetPackagePath("specviewperf"));
@@ -202,7 +200,17 @@ namespace VirtualClient.Actions
 
             public new string PsExecExecutablePath => base.PsExecExecutablePath;
 
-            public new IDictionary<string, string> ViewsetLogFileNameMapping => base.ViewsetLogFileNameMapping;
+            //internal readonly IDictionary<string, string> viewsetLogFileNameMapping = new Dictionary<string, string>()
+            //{
+            //    { "3dsmax", "3dsmax-07" },
+            //    { "catia", "catia-06" },
+            //    { "creo", "creo-03" },
+            //    { "energy", "energy-03" },
+            //    { "maya", "maya-06" },
+            //    { "medical", "medical-03" },
+            //    { "snx", "snx-04" },
+            //    { "sw", "solidworks-07" }
+            //};
 
             public new Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
             {

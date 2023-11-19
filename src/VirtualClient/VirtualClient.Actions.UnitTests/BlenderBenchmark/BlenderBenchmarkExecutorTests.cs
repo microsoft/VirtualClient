@@ -80,10 +80,9 @@ namespace VirtualClient.Actions
 
                                 return this.mockFixture.Process;
                             };
-
-                            await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                         }
                     }
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
                 }
 
                 Assert.AreEqual(deviceTypes.Length*scenes.Length, executed);
