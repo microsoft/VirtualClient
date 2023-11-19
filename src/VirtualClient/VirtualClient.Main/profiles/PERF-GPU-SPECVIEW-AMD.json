@@ -7,7 +7,7 @@
   },
   "Parameters": {
     "GpuModel": "",
-    "Viewset": "3dsmax,catia",
+    "Viewsets": "3dsmax,catia",
     "PsExecSession": -1
   },
   "Actions": [

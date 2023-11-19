@@ -121,18 +121,21 @@ namespace VirtualClient.Actions
                     EventContext relatedContext = telemetryContext.Clone()
                     .AddContext("executable", this.ExecutablePath)
                     .AddContext("commandArguments", commandArguments);
-
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfWorkloadFailed();
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                await this.LogProcessDetailsAsync(process, telemetryContext);
+                                process.ThrowIfWorkloadFailed();
 
-                            // Blender Benchmark's results are outputted to Stdout directly as a json.
-                            this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString(), scene);
+                                // Blender Benchmark's results are outputted to Stdout directly as a json.
+                                this.CaptureMetrics(process, commandArguments, relatedContext, process.StandardOutput.ToString(), scene);
+                            }
                         }
                     }
+
                 }
             }
         }
