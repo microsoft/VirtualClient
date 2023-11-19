@@ -11,8 +11,8 @@ SHA256 algorithm.
 
 ## Installation
 
-Virtual Client is a self-contained .NET 6 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
-[all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
+Virtual Client is a self-contained .NET 8 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
+[all operating systems supported by .NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md).
 
 ### Debian / Ubuntu (deb)
 VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`, which is typically in Linux `$PATH`.
@@ -95,7 +95,7 @@ programs such as 'unzip' or '7zip'.
 If preferable, the Virtual Client source code can be built on your local system. This is useful for picking up the absolute latest changes
 to the source code and for testing changes locally. Before attempting to build the Virtual Client repo, ensure the fo
 
-- [Install the .NET SDK 8.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [Install the .NET SDK 8.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - Build artifacts are output to the following locations. The 'bin' directory is where all compiled binaries/executables are output. The 'obj' directory
   will contain intermediate files used during compilation. The 'packages' directory will contain any packages that are created during build + packaging 
   processes.

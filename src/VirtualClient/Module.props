@@ -69,19 +69,19 @@
         <Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>2.0.61</Microsoft_Diagnostics_Tracing_TraceEvent_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration -->
-        <Microsoft_Extensions_Configuration_PackageVersion>7.0.0</Microsoft_Extensions_Configuration_PackageVersion>
+        <Microsoft_Extensions_Configuration_PackageVersion>8.0.0</Microsoft_Extensions_Configuration_PackageVersion>
 
         <!-- Microsoft.Extensions.Configuration.Json -->
-        <Microsoft_Extensions_Configuration_Json_PackageVersion>7.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
+        <Microsoft_Extensions_Configuration_Json_PackageVersion>8.0.0</Microsoft_Extensions_Configuration_Json_PackageVersion>
 
         <!-- Microsoft.Extensions.DependencyInjection -->
-        <Microsoft_Extensions_DependencyInjection_PackageVersion>7.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
+        <Microsoft_Extensions_DependencyInjection_PackageVersion>8.0.0</Microsoft_Extensions_DependencyInjection_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging -->
-        <Microsoft_Extensions_Logging_PackageVersion>7.0.0</Microsoft_Extensions_Logging_PackageVersion>
+        <Microsoft_Extensions_Logging_PackageVersion>8.0.0</Microsoft_Extensions_Logging_PackageVersion>
 
         <!-- Microsoft.Extensions.Logging.Console -->
-        <Microsoft_Extensions_Logging_Console_PackageVersion>7.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
+        <Microsoft_Extensions_Logging_Console_PackageVersion>8.0.0</Microsoft_Extensions_Logging_Console_PackageVersion>
 
         <!-- Microsoft.NET.Test.Sdk -->
         <Microsoft_NET_Test_Sdk_PackageVersion>17.0.0</Microsoft_NET_Test_Sdk_PackageVersion>
@@ -156,7 +156,7 @@
         <System_Net_NameResolution_PackageVersion>4.3.0</System_Net_NameResolution_PackageVersion>
 
         <!-- System.Reflection.Metadata -->
-        <System_Reflection_Metadata_PackageVersion>6.0.0</System_Reflection_Metadata_PackageVersion>
+        <System_Reflection_Metadata_PackageVersion>8.0.0</System_Reflection_Metadata_PackageVersion>
 
         <!-- System.Security.Principal.Windows -->
         <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
@@ -164,16 +164,6 @@
         <!-- YamlDotNet -->
         <YamlDotNet_PackageVersion>13.3.1</YamlDotNet_PackageVersion>
 
-    </PropertyGroup>
-
-    <!--
-    *****************************************************************************
-    Ensure the target .NET Core runtime is explicitly defined to avoid issues
-    between NuGet package restores and build.
-    *****************************************************************************
-    -->
-    <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
-        <RuntimeFrameworkVersion>8.0.0</RuntimeFrameworkVersion>
     </PropertyGroup>
 
     <!--

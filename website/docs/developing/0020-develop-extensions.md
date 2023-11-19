@@ -37,7 +37,7 @@ The following example extensions repo can be used for reference to the details d
   ```
 
 ## Platform Requirements
-The Virtual Client is a .NET 6.0 application. Assemblies containing extensions to the Virtual Client must likewise be built against the .NET 6.0 framework
+The Virtual Client is a .NET 8.0 application. Assemblies containing extensions to the Virtual Client must likewise be built against the .NET 8.0 framework
 SDK. Assemblies compiled for the Virtual Client must have the term 'VirtualClient' in them. It is recommended that the following format be used when
 naming your assemblies. This will help to avoid any conflicts with extensions produced by other teams.
 
