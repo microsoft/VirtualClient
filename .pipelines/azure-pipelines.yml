@@ -35,7 +35,7 @@ steps:
   continueOnError: false
   inputs:
     packageType: 'sdk'
-    version: '8.0.0'
+    version: '8.0.x'
     useGlobalJson: false
     performMultiLevelLookup: true
     workingDirectory: '$(Build.SourcesDirectory)'
