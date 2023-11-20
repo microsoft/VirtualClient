@@ -5,6 +5,7 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -71,7 +72,7 @@ namespace VirtualClient.Contracts
         /// <returns>
         /// True if a matching component exists in the type cache.
         /// </returns>
-        public bool TryGetComponentType(string componentType, out Type type)
+        public bool TryGetComponentType(string componentType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] out Type type)
         {
             componentType.ThrowIfNullOrWhiteSpace(nameof(componentType));
             type = this.FirstOrDefault(type => type.FullName == componentType || type.Name == componentType)?.Type;
@@ -143,7 +144,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// Initializes a new instance of the <see cref="ComponentType"/> class.
         /// </summary>
-        public ComponentType(Type type)
+        public ComponentType([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
         {
             type.ThrowIfNull(nameof(type));
             this.Type = type;
@@ -174,6 +175,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The component type.
         /// </summary>
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
         public Type Type { get; }
     }
 }
