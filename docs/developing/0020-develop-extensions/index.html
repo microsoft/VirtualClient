@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.dd230462.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.be0b0853.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.4107d89a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -42,7 +42,7 @@ Before getting started, it is helpful to familiarize yourself with the Virtual C
 <pre><code class="language-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
 
   &lt;PropertyGroup&gt;
-      &lt;TargetFramework&gt;net6.0&lt;/TargetFramework&gt;
+      &lt;TargetFramework&gt;net8.0&lt;/TargetFramework&gt;
       &lt;RootNamespace&gt;CRC.VirtualClient.Extensions&lt;/RootNamespace&gt;
   &lt;/PropertyGroup&gt;
 
@@ -56,7 +56,7 @@ Before getting started, it is helpful to familiarize yourself with the Virtual C
 </li>
 </ul>
 <h2 id="platform-requirements">Platform Requirements</h2>
-<p>The Virtual Client is a .NET 6.0 application. Assemblies containing extensions to the Virtual Client must likewise be built against the .NET 6.0 framework
+<p>The Virtual Client is a .NET 8.0 application. Assemblies containing extensions to the Virtual Client must likewise be built against the .NET 8.0 framework
 SDK. Assemblies compiled for the Virtual Client must have the term &#x27;VirtualClient&#x27; in them. It is recommended that the following format be used when
 naming your assemblies. This will help to avoid any conflicts with extensions produced by other teams.</p>
 <pre><code># Format:
@@ -259,7 +259,7 @@ where the developer must provide the Visual Studio runtime with a hint as to whe
 the VirtualClient.exe on the system and supplying it with the location of the extensions binaries.</p>
 <p>Note that in this scenario, we are executing the debugging scenario from Visual Studio in the extensions project. It is a good idea (for consistency) to reference a
 &quot;just-built&quot; version of the Virtual Client runtime executable in many cases. This is typically done by cloning the Virtual Client platform repo, building it and referencing the
-VirtualClient.exe from the built output location (e.g. /{repoDir}/out/bin/Debug/x64/VirtualClient.Main/net6.0/VirtualClient.exe).</p>
+VirtualClient.exe from the built output location (e.g. /{repoDir}/out/bin/Debug/x64/VirtualClient.Main/net8.0/VirtualClient.exe).</p>
 <pre><code class="language-json"># A custom profile is created and placed on the file system somewhere (typically somewhere outside of the source directory). In this profile, the
 # custom action/executor component is added to the actions.
 {
@@ -296,7 +296,7 @@ to search for binaries that contain Virtual Client components. This environment 
 <pre><code>e.g.
 
 # Example output directory for extensions
-S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net6.0
+S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0
 </code></pre>
 </li>
 </ul>
@@ -309,11 +309,11 @@ S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensi
 <ul>
 <li>Launch = Executable</li>
 <li>Executable = {PathToVirtualClientExe}<br>
-<strong>(e.g. <code>S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net6.0\VirtualClient.exe</code>)</strong></li>
+<strong>(e.g. <code>S:\one\crc-air-workloads\out\bin\Debug\x64\VirtualClient.Main\net8.0\VirtualClient.exe</code>)</strong></li>
 <li>Application arguments = <strong><code>--profile={PathToCustomProfile} --profile=MONITORS.NONE.json --packages=&quot;{PackageStoreConnectionString|SASUri}&quot;</code></strong>.<br>
 <strong>(e.g. <code>--profile=S:\one\debugging\DEBUG-EXAMPLE-WORKLOAD.json --profile=MONITORS.NONE.json --packages=&quot;https://virtualclient...&quot;</code>)</strong></li>
 <li>Environment variables = <strong>Add the <code>VCDependenciesPath</code> variable and the path to your built extensions binaries</strong>.<br>
-<strong>(e.g. <code>VCDependenciesPath = S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net6.0</code>)</strong></li>
+<strong>(e.g. <code>VCDependenciesPath = S:\one\crc-virtualclient-examples\out\bin\Debug\AnyCPU\CRC.VirtualClient.Extensions.Actions\net8.0</code>)</strong></li>
 </ul>
 </li>
 <li>Place a breakpoint in the code where you like (e.g. in the InitializeAsync or ExecuteAsync methods of your component).</li>
