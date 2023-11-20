@@ -1,13 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <!-- **********************************************************************
-         Environment and Test targets
-     *********************************************************************** -->
-    <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets"
-            Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets') and '$(TestProject)' == 'true'" />
-
-
     <Target Name="CompileInProjectMetadata" BeforeTargets="CreateGeneratedAssemblyInfoInputsCacheFile" Condition="'$(GenerateProjectMetadata)' == 'true' and '$(GenerateAssemblyInfo)' == 'true'">
 
         <!-- 
