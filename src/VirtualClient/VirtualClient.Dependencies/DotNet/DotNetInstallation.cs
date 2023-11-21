@@ -53,7 +53,7 @@ namespace VirtualClient.Dependencies
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(DotNetInstallation.DotNetVersion), "6.0.100");
+                return this.Parameters.GetValue<string>(nameof(DotNetInstallation.DotNetVersion), "7.0.401");
             }
         }
 
@@ -90,7 +90,7 @@ namespace VirtualClient.Dependencies
         {
             string argument = string.Empty;
 
-            // --version 6.0.100 --install-dir /vc/packages/dotnet --architecture x64
+            // --version 7.0.401 --install-dir /vc/packages/dotnet --architecture x64
             // The powershell on Win11 ARM has a bug where it shows amd64 as Env:PROCESSOR_ARCHITECTURE, so enforcing the architecture to be explicit.
             if (this.Platform == PlatformID.Unix)
             {

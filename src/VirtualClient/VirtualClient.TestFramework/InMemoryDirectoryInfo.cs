@@ -237,6 +237,8 @@ namespace VirtualClient
 
         public string LinkTarget { get; }
 
+        UnixFileMode IFileSystemInfo.UnixFileMode { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
         /// <inheritdoc />
         public void Create()
         {

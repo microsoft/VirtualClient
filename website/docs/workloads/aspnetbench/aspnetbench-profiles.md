@@ -29,8 +29,8 @@ Runs the AspNetBench benchmark workload to assess the performance of an ASP.NET 
 
   | Parameter                 | Purpose                                                           | Default Value |
   |---------------------------|-------------------------------------------------------------------|---------------|
-  | DotNetVersion             | Optional. The version of the [.NET SDK to download and install](https://dotnet.microsoft.com/en-us/download/visual-studio-sdks). | 6.0.100       |
-  | TargetFramework           | Optional. The [.NET target framework](https://learn.microsoft.com/en-us/dotnet/standard/frameworks) to run (e.g. net6.0, net7.0). | net6.0        |
+  | DotNetVersion             | Optional. The version of the [.NET SDK to download and install](https://dotnet.microsoft.com/en-us/download/visual-studio-sdks). | 7.0.100       |
+  | TargetFramework           | Optional. The [.NET target framework](https://learn.microsoft.com/en-us/dotnet/standard/frameworks) to run (e.g. net6.0, net7.0). | net7.0        |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
@@ -45,5 +45,5 @@ Runs the AspNetBench benchmark workload to assess the performance of an ASP.NET 
   VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Override the profile default parameters to use a different .NET SDK version
-  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=6.0.307"
+  VirtualClient.exe --profile=PERF-ASPNETBENCH.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}" --parameters="DotNetVersion=7.0.307"
   ```

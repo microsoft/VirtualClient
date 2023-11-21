@@ -441,5 +441,15 @@ namespace VirtualClient
         {
             throw new NotImplementedException();
         }
+
+        IDirectoryInfo IDirectory.CreateDirectory(string path, UnixFileMode unixCreateMode)
+        {
+            throw new NotImplementedException();
+        }
+
+        IDirectoryInfo IDirectory.CreateTempSubdirectory(string prefix)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
