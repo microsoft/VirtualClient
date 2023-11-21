@@ -33,8 +33,6 @@
         <file src="$ToolsOutDir$\lspci.vcpkg" target="content\win-x64\packages\lspci" />
         <file src="$ToolsOutDir$\win-x64\systemtools\**\*" target="content\win-x64\packages\systemtools\win-x64" />
         <file src="$ToolsOutDir$\systemtools.vcpkg" target="content\win-x64\packages\systemtools" />
-        <file src="$ToolsOutDir$\win-x64\wget\**\*" target="content\win-x64\packages\wget\win-x64" />
-        <file src="$ToolsOutDir$\wget.vcpkg" target="content\win-x64\packages\wget" />
 
         <!-- 
         win-arm64
@@ -46,8 +44,6 @@
         <file src="$ToolsOutDir$\visualstudiocruntime.vcpkg" target="content\win-arm64\packages\visualstudiocruntime" />
         <file src="$ToolsOutDir$\win-arm64\systemtools\**\*" target="content\win-arm64\packages\systemtools\win-arm64" />
         <file src="$ToolsOutDir$\systemtools.vcpkg" target="content\win-arm64\packages\systemtools" />
-        <file src="$ToolsOutDir$\win-arm64\wget\**\*" target="content\win-arm64\packages\wget\win-arm64" />
-        <file src="$ToolsOutDir$\wget.vcpkg" target="content\win-arm64\packages\wget" />
 
         <!-- 
         linux-x64
@@ -56,15 +52,11 @@
         <file src="$BinConfigDir$\x64\VirtualClient.Main\net8.0\linux-x64\publish\**\*" target="content\linux-x64" />
         <file src="$ToolsOutDir$\linux-x64\lshw\**\*" target="content\linux-x64\packages\lshw\linux-x64" />
         <file src="$ToolsOutDir$\lshw.vcpkg" target="content\linux-x64\packages\lshw" />
-        <file src="$ToolsOutDir$\linux-x64\wget\**\*" target="content\linux-x64\packages\wget\linux-x64" />
-        <file src="$ToolsOutDir$\wget.vcpkg" target="content\linux-x64\packages\wget" />
 
         <!-- 
         linux-arm64
         =============================================================================================
         -->
         <file src="$BinConfigDir$\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\**\*" target="content\linux-arm64" />
-        <file src="$ToolsOutDir$\linux-arm64\wget\**\*" target="content\linux-arm64\packages\wget\linux-arm64" />
-        <file src="$ToolsOutDir$\wget.vcpkg" target="content\linux-arm64\packages\wget" />
     </files>
 </package>
