@@ -36,21 +36,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void MLPerfTrainingStateIsSerializeable()
-        {
-            State state = new State(new Dictionary<string, IConvertible>
-            {
-                ["Initialized"] = true
-            });
-
-            string serializedState = state.ToJson();
-            JObject deserializedState = JObject.Parse(serializedState);
-
-            MLPerfTrainingExecutor.MLPerfTrainingState result = deserializedState?.ToObject<MLPerfTrainingExecutor.MLPerfTrainingState>();
-            Assert.AreEqual(true, result.Initialized);
-        }
-
-        [Test]
         public async Task MLPerfTrainingExecutorInitializesWorkloadAsExpected()
         { 
             List<string> expectedCommands = new List<string>
@@ -73,29 +58,6 @@ namespace VirtualClient.Actions
             }
 
             CollectionAssert.AreEqual(expectedCommands, commandsExecuted);
-        }
-
-        [Test]
-        public async Task MLPerfTrainingExecutorSkipsInitializationOfTheWorkloadForExecutionAfterTheFirstRun()
-        {
-            bool initializationVerified = false;
-
-            this.mockFixture.StateManager.OnGetState()
-            .Callback<String, CancellationToken, IAsyncPolicy>((stateId, cancellationToken, policy) =>
-            {
-                initializationVerified = true;
-            })
-            .ReturnsAsync(JObject.FromObject(new MLPerfTrainingExecutor.MLPerfTrainingState()
-            {
-                Initialized = true
-            }));
-
-            using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.IsTrue(initializationVerified);
         }
 
         [Test]

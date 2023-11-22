@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
     {
         private const string AccuracySummary = nameof(MLPerfTrainingExecutor.AccuracySummary);
         private const string PerformanceSummary = nameof(MLPerfTrainingExecutor.PerformanceSummary);
-        private string executionPath; 
+        private string executionPath;
 
         private IStateManager stateManager;
         private ISystemManagement systemManager;
@@ -154,21 +154,10 @@ namespace VirtualClient.Actions
                 .ConfigureAwait(false);
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
-            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                .ConfigureAwait(false);
+            DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
             this.executionPath = this.PlatformSpecifics.Combine(workloadPackage.Path, "NVIDIA", "benchmarks", this.Model, "implementations", this.Implementation);
 
-            MLPerfTrainingState state = await this.stateManager.GetStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", cancellationToken)
-                ?? new MLPerfTrainingState();
-
-            if (!state.Initialized)
-            {
-                // Setup Environment
-                await this.SetupDocker(telemetryContext, cancellationToken);
-
-                state.Initialized = true;
-                await this.stateManager.SaveStateAsync<MLPerfTrainingState>($"{nameof(MLPerfTrainingState)}", state, cancellationToken);
-            }
+            await this.SetupDocker(telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -179,8 +168,9 @@ namespace VirtualClient.Actions
             // add user in docker group
             await this.ExecuteCommandAsync("sudo", $"usermod -aG docker {this.Username}", this.executionPath, telemetryContext, cancellationToken);
 
-            string dockerImageCommand = $"docker build --pull -t {this.GetContainerName()} .";
-            string dockerRunCommand = $"docker run --runtime=nvidia {this.GetContainerName()}";
+            string containerName = this.GetContainerName();
+            string dockerImageCommand = $"docker build --pull -t {containerName} .";
+            string dockerRunCommand = $"docker run --runtime=nvidia {containerName}";
 
             await this.ExecuteCommandAsync("sudo", dockerImageCommand, this.executionPath, telemetryContext, cancellationToken);
             await this.ExecuteCommandAsync("sudo", dockerRunCommand, this.executionPath, telemetryContext, cancellationToken);
@@ -213,30 +203,21 @@ namespace VirtualClient.Actions
             string shardsPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "training-4320");
             string evalPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "hdf5", "eval_varlength");
             string checkpointPath = this.PlatformSpecifics.Combine("/mlperftraining0", $"{this.DataPath}", "mlperf-training-package", "phase1");
+            string execCommand = $"su -c \"source {this.ConfigFile}; " +
+                                 $"env BATCHSIZE={this.BatchSize} " +
+                                 $"DGXNGPU={this.GPUCount} " +
+                                 $"CUDA_VISIBLE_DEVICES=\"{string.Join(',', Enumerable.Range(0, this.GPUCount).ToArray())}\" " +
+                                 $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
 
-            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+            using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.executionPath, telemetryContext, cancellationToken))
             {
-                List<string> commands = new List<string>
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    @"sudo chmod \+x ""/home/user/tools/VirtualClient/packages/hpcg/runhpcg.sh""",
-                    @"sudo bash /home/user/tools/VirtualClient/packages/hpcg/runhpcg.sh"
-                };
-                string execCommand = $"su -c \"source {this.ConfigFile}; " + 
-                                     $"env BATCHSIZE={this.BatchSize} " +
-                                     $"DGXNGPU={this.GPUCount} " + 
-                                     $"CUDA_VISIBLE_DEVICES=\"{string.Join(',', Enumerable.Range(0, this.GPUCount).ToArray())}\" " + 
-                                     $"CONT={this.GetContainerName()} DATADIR={shardsPath} DATADIR_PHASE2={shardsPath} EVALDIR={evalPath} CHECKPOINTDIR={checkpointPath} CHECKPOINTDIR_PHASE1={checkpointPath} ./run_with_docker.sh\"";
+                    await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync("sudo", execCommand, this.executionPath, telemetryContext, cancellationToken))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
+                    process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
 
-                        process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
-
-                        this.CaptureMetrics(process, telemetryContext, cancellationToken);
-                    }
+                    this.CaptureMetrics(process, telemetryContext, cancellationToken);
                 }
             }
         }
@@ -253,7 +234,7 @@ namespace VirtualClient.Actions
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("MLPerfTraining", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;
@@ -277,7 +258,7 @@ namespace VirtualClient.Actions
             IList<Metric> metrics = parser.Parse();
 
             this.Logger.LogMetrics(
-                "MLPerf Training",
+                "MLPerfTraining",
                 this.Scenario,
                 process.StartTime,
                 process.ExitTime,
@@ -312,27 +293,6 @@ namespace VirtualClient.Actions
                     default:
                         this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
                         break;
-                }
-            }
-        }
-
-        internal class MLPerfTrainingState : State
-        {
-            public MLPerfTrainingState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
-
-            public bool Initialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(MLPerfTrainingState.Initialized), false);
-                }
-
-                set
-                {
-                    this.Properties[nameof(MLPerfTrainingState.Initialized)] = value;
                 }
             }
         }

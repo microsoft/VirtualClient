@@ -150,6 +150,5 @@ namespace VirtualClient.Dependencies
 
             return mountPointsCreated;
         }
-
     }
 }
