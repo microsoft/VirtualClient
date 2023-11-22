@@ -169,7 +169,7 @@ namespace VirtualClient.Actions
             this.mockSpecViewExePath = this.mockFixture.Combine(this.mockSpecViewExeDir, "RunViewperf.exe");
             this.mockPstoolsExePath  = this.mockFixture.Combine(this.mockPstoolsExeDir, "PsExec.exe");
 
-            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "SPECview", "resultCSV.csv"));
+            this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "SPECview", "3dsmaxResultCSV.csv"));
             this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns(this.results);
         }
 

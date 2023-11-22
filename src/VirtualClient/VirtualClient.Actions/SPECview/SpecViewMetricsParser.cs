@@ -68,7 +68,7 @@ namespace VirtualClient.Actions
                 }
 
                 metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index } };
-                metrics.Add(new Metric($"{metricName}", fps, Unit, metadata: metadata));
+                metrics.Add(new Metric(metricName, fps, Unit, metadata: metadata));
             }
 
             return metrics;

@@ -121,6 +121,7 @@ namespace VirtualClient.Actions
             string executablePath = this.PsExecSession == -1 ? this.SpecviewExecutablePath : this.PsExecExecutablePath;
             string workingDir = this.PsExecSession == -1 ? this.SpecviewPackage.Path : this.PsExecPackage.Path;
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
+
             foreach (string viewset in this.Viewsets)
             {
                 string commandArguments = this.GenerateCommandArguments(viewset);
@@ -197,7 +198,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
-                        "SPECview",
+                        this.PackageName,
                         scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
