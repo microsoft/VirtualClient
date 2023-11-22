@@ -174,68 +174,68 @@
           }
         }
     ],
-  "Dependencies": [
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallLinuxPackages",
-        "Packages-Apt": "autoconf,automake,libpcre3-dev,libevent-dev,zlib1g-dev,libssl-dev,pkg-config,build-essential",
-        "Packages-Yum": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git",
-        "Packages-Dnf": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git"
-      }
-    },
-    {
-      "Type": "LinuxPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallLinuxPackages",
-        "Packages-Apt": "wget,tcl-dev,numactl",
-        "Packages-Yum": "wget,tcl-devel,numactl",
-        "Packages-Dnf": "wget,tcl-devel,numactl"
-      }
-    },
-    {
-      "Type": "WgetPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallMemcachedPackage",
-        "PackageName": "memcached",
-        "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
-        "SubPath": "memcached-1.6.17",
-        "Notes": "Example path to package -> /packages/memcached/memcached-1.6.17",
-        "Role": "Server"
-      }
-    },
-    {
-      "Type": "ExecuteCommand",
-      "Parameters": {
-        "Scenario": "CompileMemcached",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "Command": "bash -c './configure'&&make",
-        "WorkingDirectory": "{PackagePath:memcached}",
-        "Role": "Server"
-      }
-    },
-    {
-      "Type": "GitRepoClone",
-      "Parameters": {
-        "Scenario": "CloneMemtierRepo",
-        "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
-        "PackageName": "memtier"
-      }
-    },
-    {
-      "Type": "ExecuteCommand",
-      "Parameters": {
-        "Scenario": "CompileMemtier",
-        "SupportedPlatforms": "linux-x64,linux-arm64",
-        "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
-        "WorkingDirectory": "{PackagePath:memtier}"
-      }
-    },
-    {
-      "Type": "ApiServer",
-      "Parameters": {
-        "Scenario": "StartAPIServer"
-      }
-    }
-  ]
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "autoconf,automake,libpcre3-dev,libevent-dev,zlib1g-dev,libssl-dev,pkg-config,build-essential",
+                "Packages-Yum": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git",
+                "Packages-Dnf": "autoconf,automake,pcre-devel,libevent-devel,zlib-devel,openssl-devel,make,gcc-c++,git"
+            }
+        },
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages-Apt": "wget,tcl-dev,numactl",
+                "Packages-Yum": "wget,tcl-devel,numactl",
+                "Packages-Dnf": "wget,tcl-devel,numactl"
+            }
+        },
+        {
+            "Type": "WgetPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallMemcachedPackage",
+                "PackageName": "memcached",
+                "PackageUri": "https://memcached.org/files/memcached-1.6.17.tar.gz",
+                "SubPath": "memcached-1.6.17",
+                "Notes": "Example path to package -> /packages/memcached/memcached-1.6.17",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileMemcached",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "bash -c './configure'&&make",
+                "WorkingDirectory": "{PackagePath:memcached}",
+                "Role": "Server"
+            }
+        },
+        {
+            "Type": "GitRepoClone",
+            "Parameters": {
+                "Scenario": "CloneMemtierRepo",
+                "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
+                "PackageName": "memtier"
+            }
+        },
+        {
+            "Type": "ExecuteCommand",
+            "Parameters": {
+                "Scenario": "CompileMemtier",
+                "SupportedPlatforms": "linux-x64,linux-arm64",
+                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+                "WorkingDirectory": "{PackagePath:memtier}"
+            }
+        },
+        {
+            "Type": "ApiServer",
+            "Parameters": {
+                "Scenario": "StartAPIServer"
+            }
+        }
+    ]
 }
