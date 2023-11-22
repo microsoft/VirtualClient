@@ -176,15 +176,16 @@ namespace VirtualClient.Actions
 
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
-                    if (resultsFileDir == null)
+
+                    string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
+                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
+
+                    if (resultsContent == null)
                     {
                         throw new WorkloadResultsException(
                             $"The expected SPECviewperf result directory was not found in '{this.SpecviewPackage.Path}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
-
-                    string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
-                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
                     SpecViewMetricsParser resultsParser = new (resultsContent);
                     IList<Metric> metrics = resultsParser.Parse();

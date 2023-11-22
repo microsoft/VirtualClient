@@ -23,7 +23,6 @@ namespace VirtualClient.Actions
             }
         }
 
-
         [Test]
         public void BlenderMetricsParserTestsCorrectlyMonsterCPU()
         {
@@ -31,12 +30,12 @@ namespace VirtualClient.Actions
             string rawText = File.ReadAllText(outputPath);
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             IList<Metric> actualMetrics = testParser.Parse();
-            MetricAssert.Exists(actualMetrics, "device_peak_memory", 646.81, "mb");
-            MetricAssert.Exists(actualMetrics, "number_of_samples", 26, "sample");
-            MetricAssert.Exists(actualMetrics, "time_for_samples", 30.161805, "second");
-            MetricAssert.Exists(actualMetrics, "samples_per_minute", 51.72104255696899, "samples_per_minute");
-            MetricAssert.Exists(actualMetrics, "total_render_time", 31.6883, "second");
-            MetricAssert.Exists(actualMetrics, "render_time_no_sync", 30.1621, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.DevicePeakMemory), 646.81, "mb");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.NumberOfSamples), 26, "sample");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TimeForSamples), 30.161805, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.SamplesPerMinute), 51.72104255696899, "samples_per_minute");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TotalRenderTime), 31.6883, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.RenderTimeNoSync), 30.1621, "second");
         }
 
         [Test]
@@ -46,12 +45,12 @@ namespace VirtualClient.Actions
             string rawText = File.ReadAllText(outputPath);
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             IList<Metric> actualMetrics = testParser.Parse();
-            MetricAssert.Exists(actualMetrics, "device_peak_memory", 4881.3, "mb");
-            MetricAssert.Exists(actualMetrics, "number_of_samples", 67, "sample");
-            MetricAssert.Exists(actualMetrics, "time_for_samples", 30.440895, "second");
-            MetricAssert.Exists(actualMetrics, "samples_per_minute", 132.0591920835442, "samples_per_minute");
-            MetricAssert.Exists(actualMetrics, "total_render_time", 42.7055, "second");
-            MetricAssert.Exists(actualMetrics, "render_time_no_sync", 30.4413, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.DevicePeakMemory), 4881.3, "mb");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.NumberOfSamples), 67, "sample");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TimeForSamples), 30.440895, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.SamplesPerMinute), 132.0591920835442, "samples_per_minute");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TotalRenderTime), 42.7055, "second");
+            MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.RenderTimeNoSync), 30.4413, "second");
         }
 
         [Test]

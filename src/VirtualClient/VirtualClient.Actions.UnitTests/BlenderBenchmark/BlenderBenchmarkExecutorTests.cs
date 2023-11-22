@@ -4,14 +4,15 @@
 namespace VirtualClient.Actions
 {
     using Moq;
+    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using VirtualClient.Common.Telemetry;
@@ -23,12 +24,25 @@ namespace VirtualClient.Actions
     {
         private MockFixture mockFixture;
         private DependencyPath mockBlenderPackage;
+        private State mockState;
         private string results;
+        private string expectedExecutableDir;
+        private string expectedExecutablePath;
 
-        [SetUp]
-        public void SetUpTests()
+        private string[] deviceTypes
         {
-            this.mockFixture = new MockFixture();
+            get
+            {
+                return this.mockFixture.Parameters["DeviceTypes"].ToString().Split(',', StringSplitOptions.TrimEntries);
+            }
+        }
+
+        private string[] scenes
+        {
+            get
+            {
+                return this.mockFixture.Parameters["Scenes"].ToString().Split(',', StringSplitOptions.TrimEntries);
+            }
         }
 
         [Test]
@@ -36,78 +50,70 @@ namespace VirtualClient.Actions
         public async Task BlenderExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture))
-            {
-                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
-                    .ConfigureAwait(false);
+            
+            TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture);
+            await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                .ConfigureAwait(false);
 
-                string expectedExecutablePath = this.mockFixture.PlatformSpecifics.Combine(
-                    this.mockFixture.ToPlatformSpecificPath(this.mockBlenderPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path, "benchmark-launcher-cli.exe");
-
-                Assert.AreEqual(expectedExecutablePath, executor.ExecutablePath);
-            }
+            Assert.AreEqual(expectedExecutablePath, executor.ExecutablePath);
         }
-
-        //[Test]
-        //[TestCase(PlatformID.Win32NT, Architecture.X64)]
-        //public async Task BlenderDownloadsAsExpected(PlatformID platform, Architecture architecture)
-        //{
-        //    int blenderEnginerDownloaded = 0, blenderScenesDownloaded = 0;
-        //    this.SetupDefaultMockBehavior(platform, architecture);
-
-        //    using (TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture))
-        //    {
-        //        this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
-        //        {
-        //            if (arguments == expectedCommandArgument && command == expectedExecutablePath)
-        //            {
-        //                executed++;
-        //            }
-
-        //            return this.mockFixture.Process;
-        //        };
-        //    }
-        //}
-
-
 
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task BlenderExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
-            using (TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture))
+            TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture);
+            await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+            IList<string> commands = new List<string>();
+
+            // engine download cmd
+            commands.Add($"{expectedExecutablePath} blender download {this.mockFixture.Parameters["BlenderVersion"]}");
+            // scenes download cmd
+            commands.Add($"{expectedExecutablePath} scenes download --blender-version {this.mockFixture.Parameters["BlenderVersion"]} {string.Join(" ", this.scenes)}");
+
+            string expectedCommandArgument;
+            foreach (string deviceType in this.deviceTypes)
             {
-                await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
-
-                string[] deviceTypes = this.mockFixture.Parameters["DeviceTypes"].ToString().Split(',', StringSplitOptions.TrimEntries);
-                string[] scenes = this.mockFixture.Parameters["Scenes"].ToString().Split(',', StringSplitOptions.TrimEntries);
-
-                string expectedExecutablePath = this.mockFixture.PlatformSpecifics.Combine(
-                    this.mockFixture.ToPlatformSpecificPath(this.mockBlenderPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path, "benchmark-launcher-cli.exe");
-                string workingDir = this.mockBlenderPackage.Path;
-                IList<string> commands = new List<string>();
-
-                if (platform == PlatformID.Win32NT)
+                foreach (string scene in this.scenes)
                 {
-                    string expectedCommandArgument;
-                    foreach (string deviceType in deviceTypes)
-                    {
-                        foreach (string scene in scenes)
-                        {
-                            expectedCommandArgument = $"benchmark --blender-version {this.mockFixture.Parameters["BlenderVersion"]} --device-type {deviceType} {scene} --json --verbosity 3";
-                            commands.Add(@$"{expectedExecutablePath} {expectedCommandArgument}");
-                        }
-                    }
+                    expectedCommandArgument = $"benchmark --blender-version {this.mockFixture.Parameters["BlenderVersion"]} --device-type {deviceType} {scene} --json --verbosity 3";
+                    commands.Add($"{expectedExecutablePath} {expectedCommandArgument}");
                 }
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted(commands.ToArray<string>()));
+            }
+
+            Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecutedInWorkingDirectory(expectedExecutableDir, commands.ToArray<string>()));
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        public async Task BlenderExecutorDoesNotDownloadIfAlreadyDownloaded(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            this.mockFixture.StateManager.OnGetState(nameof(BlenderBenchmarkExecutor)).ReturnsAsync(JObject.FromObject(this.mockState));
+
+            // engine download cmd
+            string engineDownloadCmd = $"{expectedExecutablePath} blender download {this.mockFixture.Parameters["BlenderVersion"]}";
+            string scenesDownloadCmd = $"{expectedExecutablePath} scenes download --blender-version {this.mockFixture.Parameters["BlenderVersion"]} {string.Join(" ", this.scenes)}";
+
+            TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture);
+            await executor.ExecuteAsync(EventContext.None, CancellationToken.None);
+
+            try
+            {
+                Assert.IsFalse(this.mockFixture.ProcessManager.CommandsExecuted(engineDownloadCmd, scenesDownloadCmd));
+            }
+            catch (RegexParseException)
+            {
+                // Ignore Regex Exceptions since we are comparing raw strings
             }
         }
 
         private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Win32NT, Architecture architecture = Architecture.X64)
         {
+            this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
-
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>
             {
                 {"PackageName", "blenderbenchmarkcli"},
@@ -118,9 +124,14 @@ namespace VirtualClient.Actions
 
             this.mockBlenderPackage = new DependencyPath("blenderbenchmarkcli", this.mockFixture.GetPackagePath("blenderbenchmarkcli"));
             this.mockFixture.PackageManager.OnGetPackage("blenderbenchmarkcli").ReturnsAsync(this.mockBlenderPackage);
+            this.expectedExecutableDir = this.mockFixture.ToPlatformSpecificPath(this.mockBlenderPackage, this.mockFixture.Platform, this.mockFixture.CpuArchitecture).Path;
+            this.expectedExecutablePath = this.mockFixture.PlatformSpecifics.Combine(expectedExecutableDir, "benchmark-launcher-cli.exe");
+
             this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "BlenderBenchmark", "MonsterCPU.json"));
             this.mockFixture.Process.StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results));
-            this.mockFixture.ProcessManager.OnProcessCreated = (process) => { ((InMemoryProcess) process).StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results)); };
+            this.mockFixture.ProcessManager.OnProcessCreated = (process) => { ((InMemoryProcess)process).StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results)); };
+
+            this.mockState = new State();
         }
 
         private class TestBlenderExecutor : BlenderBenchmarkExecutor
