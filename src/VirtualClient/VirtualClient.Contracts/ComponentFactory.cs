@@ -5,7 +5,6 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
@@ -121,7 +120,7 @@ namespace VirtualClient.Contracts
             }
         }
 
-        private static VirtualClientComponent CreateComponent(ExecutionProfileElement componentDescription, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type, IServiceCollection dependencies, int? randomizationSeed = null)
+        private static VirtualClientComponent CreateComponent(ExecutionProfileElement componentDescription, Type type, IServiceCollection dependencies, int? randomizationSeed = null)
         {
             VirtualClientComponent component = null;
             if (componentDescription.Components?.Any() != true)

@@ -67,6 +67,33 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="VirtualClientException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected VirtualClientException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            if (info != null)
+            {
+                try
+                {
+                    ErrorReason reason;
+                    if (Enum.TryParse<ErrorReason>(info.GetString(nameof(this.Reason)), out reason))
+                    {
+                        this.Reason = reason;
+                    }
+                }
+                catch
+                {
+                    // If the properties were not added to the serialization info,
+                    // we handle the error and continue.
+                }
+            }
+        }
+
+        /// <summary>
         /// Defines the error reason/category.
         /// </summary>
         public ErrorReason Reason { get; internal set; }
@@ -129,6 +156,17 @@ namespace VirtualClient
             : base(message, innerException, reason)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApiException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected ApiException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
     }
 
     /// <summary>
@@ -186,6 +224,17 @@ namespace VirtualClient
         /// <param name="reason">The error reason/category.</param>
         public MonitorException(string message, Exception innerException, ErrorReason reason)
             : base(message, innerException, reason)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MonitorException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected MonitorException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
@@ -247,6 +296,17 @@ namespace VirtualClient
             : base(message, innerException, reason)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MonitorException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected EnvironmentSetupException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
     }
 
     /// <summary>
@@ -304,6 +364,17 @@ namespace VirtualClient
         /// <param name="reason">The error reason/category.</param>
         public WorkloadException(string message, Exception innerException, ErrorReason reason)
             : base(message, innerException, reason)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WorkloadException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected WorkloadException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
@@ -365,6 +436,17 @@ namespace VirtualClient
             : base(message, innerException, reason)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WorkloadResultsException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected WorkloadResultsException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
     }
 
     /// <summary>
@@ -422,6 +504,17 @@ namespace VirtualClient
         /// <param name="reason">The error reason/category.</param>
         public DependencyException(string message, Exception innerException, ErrorReason reason)
             : base(message, innerException, reason)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DependencyException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected DependencyException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
@@ -483,6 +576,17 @@ namespace VirtualClient
             : base(message, innerException, reason)
         {
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected ProcessException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
     }
 
     /// <summary>
@@ -517,6 +621,17 @@ namespace VirtualClient
         /// <param name="innerException">The inner exception.</param>
         public StartupException(string message, Exception innerException)
             : base(message, innerException)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProcessException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected StartupException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }
@@ -554,6 +669,17 @@ namespace VirtualClient
         /// <param name="innerException">The inner exception.</param>
         public SchemaException(string message, Exception innerException)
             : base(message, innerException)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SchemaException"/> class with
+        /// the provided serialization and context information.
+        /// </summary>
+        /// <param name="info">The serialization information.</param>
+        /// <param name="context">The streaming context.</param>
+        protected SchemaException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
     }

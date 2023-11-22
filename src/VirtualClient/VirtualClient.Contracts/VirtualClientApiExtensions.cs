@@ -4,7 +4,6 @@
 namespace VirtualClient.Contracts
 {
     using System;
-    using System.Diagnostics.CodeAnalysis;
     using System.Net.Http;
     using VirtualClient.Common.Extensions;
 
@@ -17,7 +16,7 @@ namespace VirtualClient.Contracts
         /// Extension throws an exception of the type specified if the response status code is unsuccessful.
         /// Note that the contents of the response is expected to be 
         /// </summary>
-        public static void ThrowOnError<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TException>(this HttpResponseMessage response, ErrorReason? reason = null)
+        public static void ThrowOnError<TException>(this HttpResponseMessage response, ErrorReason? reason = null)
             where TException : VirtualClientException
         {
             response.ThrowIfNull(nameof(response));
