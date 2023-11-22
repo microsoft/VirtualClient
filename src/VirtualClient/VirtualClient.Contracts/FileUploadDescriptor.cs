@@ -21,6 +21,11 @@ namespace VirtualClient.Contracts
     public class FileUploadDescriptor
     {
         /// <summary>
+        /// The default template to use for defining blob paths with file uploads.
+        /// </summary>
+        public const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
+
+        /// <summary>
         /// The default extension for the file uploads.
         /// </summary>
         public const string UploadDescriptorFileExtension = "upload.json";
@@ -98,7 +103,7 @@ namespace VirtualClient.Contracts
         /// True/false whether the file should be deleted upon being successfully uploaded.
         /// </summary>
         [JsonProperty(PropertyName = "deleteOnUpload", Required = Required.Always)]
-        public bool DeleteOnUpload { get; set; }
+        public bool DeleteOnUpload { get; set;  }
 
         /// <summary>
         /// The full path to the file to upload.

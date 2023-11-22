@@ -198,13 +198,13 @@ namespace VirtualClient.Contracts
             bool volumeMatchDevicePath = false;
             bool volumeMatchAccessPath = false;
 
-            if (disk.Volumes?.Any() == true)
+            if (disk.Volumes.Any())
             {
-                volumeMatchDevicePath = disk.Volumes.Any(v => string.Equals(v.DevicePath?.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase));
+                volumeMatchDevicePath = disk.Volumes.Any(v => string.Equals(v.DevicePath.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase));
                 volumeMatchAccessPath = disk.Volumes.Any(v => v.AccessPaths.Any(ap => string.Equals(ap.TrimEnd('/', '\\', ':'), path, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return matchDevicePath || volumeMatchDevicePath || volumeMatchAccessPath;
+            return matchDevicePath || volumeMatchAccessPath || volumeMatchAccessPath;
         }
     }
 }

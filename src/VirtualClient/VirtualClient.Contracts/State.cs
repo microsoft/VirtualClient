@@ -41,31 +41,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// A request ID to associate with the state for use in client/server communications
-        /// in order to correlate client operations with server operations.
-        /// </summary>
-        public Guid? ClientRequestId
-        {
-            get
-            {
-                this.Properties.TryGetValue(nameof(this.ClientRequestId), out IConvertible requestId);
-                return requestId != null ? Guid.Parse(requestId.ToString()) : null;
-            }
-
-            set
-            {
-                if (value != null)
-                {
-                    this.Properties[nameof(this.ClientRequestId)] = value.ToString();
-                }
-                else
-                {
-                    this.Properties.Remove(nameof(this.ClientRequestId));
-                }
-            }
-        }
-
-        /// <summary>
         /// Metadata properties associated with the state.
         /// </summary>
         [JsonProperty(PropertyName = "properties", Required = Required.Default)]

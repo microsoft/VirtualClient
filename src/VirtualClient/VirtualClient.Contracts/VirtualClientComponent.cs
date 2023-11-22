@@ -37,7 +37,6 @@ namespace VirtualClient.Contracts
         /// </summary>
         public static readonly Assembly ExecutingAssembly = Assembly.GetExecutingAssembly();
 
-        private const string Role = "Role";
         private ISystemInfo systemInfo;
 
         /// <summary>
@@ -61,23 +60,10 @@ namespace VirtualClient.Contracts
                 this.Parameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             }
 
-            this.systemInfo = dependencies.GetService<ISystemInfo>();
-            this.AgentId = this.systemInfo.AgentId;
-            this.CpuArchitecture = this.systemInfo.CpuArchitecture;
-            this.Dependencies = dependencies;
-            this.ExperimentId = this.systemInfo.ExperimentId;
-            this.Logger = NullLogger.Instance;
             this.Metadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase);
             this.MetadataContract = new MetadataContract();
-            this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
-            this.Platform = this.systemInfo.Platform;
-            this.SupportingExecutables = new List<string>();
-            this.CleanupTasks = new List<Action>();
-
-            if (VirtualClientRuntime.Metadata?.Any() == true)
-            {
-                this.Metadata.AddRange(VirtualClientRuntime.Metadata, true);
-            }
+            this.Dependencies = dependencies;
+            this.Logger = NullLogger.Instance;
 
             if (dependencies.TryGetService<ILogger>(out ILogger logger))
             {
@@ -87,19 +73,16 @@ namespace VirtualClient.Contracts
             if (dependencies.TryGetService<EnvironmentLayout>(out EnvironmentLayout layout))
             {
                 this.Layout = layout;
-
-                if (this.Roles?.Any() != true)
-                {
-                    // Backwards Compatibility:
-                    // Add in the roles from the layout if they are defined within it.
-                    ClientInstance clientInstance = this.GetLayoutClientInstance(throwIfNotExists: false);
-
-                    if (clientInstance != null && !string.IsNullOrWhiteSpace(clientInstance.Role))
-                    {
-                        this.Parameters[VirtualClientComponent.Role] = clientInstance.Role;
-                    }
-                }
             }
+
+            this.systemInfo = this.Dependencies.GetService<ISystemInfo>();
+            this.AgentId = this.systemInfo.AgentId;
+            this.ExperimentId = this.systemInfo.ExperimentId;
+            this.PlatformSpecifics = this.systemInfo.PlatformSpecifics;
+            this.Platform = this.systemInfo.Platform;
+            this.CpuArchitecture = this.systemInfo.CpuArchitecture;
+            this.SupportingExecutables = new List<string>();
+            this.CleanupTasks = new List<Action>();
         }
 
         /// <summary>
@@ -122,32 +105,6 @@ namespace VirtualClient.Contracts
         /// Cleanup tasks to execute when the component operations complete.
         /// </summary>
         public IList<Action> CleanupTasks { get; }
-
-        /// <summary>
-        /// Defines a client request ID to associate with the component operations. This information
-        /// is used to correlate client-side operations with corresponding server-side operations
-        /// (e.g. network client/server scenarios).
-        /// </summary>
-        public Guid? ClientRequestId
-        {
-            get
-            {
-                this.Parameters.TryGetValue(nameof(this.ClientRequestId), out IConvertible clientRequestId);
-                return clientRequestId != null ? Guid.Parse(clientRequestId.ToString()) : null;
-            }
-
-            set
-            {
-                if (value == null)
-                {
-                    this.Parameters.Remove(nameof(this.ClientRequestId));
-                }
-                else
-                {
-                    this.Parameters[nameof(this.ClientRequestId)] = value.ToString();
-                }
-            }
-        }
 
         /// <summary>
         /// The CPU/processor architecture (e.g. amd64, arm).
@@ -418,9 +375,7 @@ namespace VirtualClient.Contracts
             get
             {
                 IEnumerable<string> rolesList = null;
-                IConvertible roles;
-
-                if (this.Parameters.TryGetValue("Role", out roles) || this.Parameters.TryGetValue(nameof(this.Roles), out roles))
+                if (this.Parameters.TryGetValue("Role", out IConvertible roles))
                 {
                     rolesList = roles?.ToString().Split(VirtualClientComponent.CommonDelimiters, StringSplitOptions.None);
                 }
@@ -543,11 +498,6 @@ namespace VirtualClient.Contracts
                 if (this.IsSupported())
                 {
                     EventContext telemetryContext = EventContext.Persisted();
-
-                    if (this.ClientRequestId != null)
-                    {
-                        telemetryContext.AddClientRequestId(this.ClientRequestId);
-                    }
 
                     if (!this.ParametersEvaluated)
                     {

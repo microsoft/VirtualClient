@@ -8,7 +8,6 @@ namespace VirtualClient.Contracts
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using Microsoft.CodeAnalysis;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -16,10 +15,6 @@ namespace VirtualClient.Contracts
     /// </summary>
     public static class FileUploadDescriptorFactory
     {
-        private const string DefaultContentPathTemplate = "{experimentId}/{agentId}/{toolName}/{role}/{scenario}";
-
-        private static readonly Regex TemplatePlaceholderExpression = new Regex(@"\{(.*?)\}", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
         /// <summary>
         /// Creates a descriptor that represents the path location and content information for a file 
         /// to upload to a blob store.
@@ -47,15 +42,16 @@ namespace VirtualClient.Contracts
         /// </summary>
         /// <param name="fileContext">Provides context about a file to be uploaded.</param>
         /// <param name="parameters">Parameters related to the component that produced the file (e.g. the parameters from the component).</param>
-        /// <param name="metadata">Additional metadata related to the blob/file to include in the descriptor with the default manifest information.</param>
+        /// <param name="manifest">Additional information and metadata related to the blob/file to include in the descriptor alongside the default manifest information.</param>
         /// <param name="timestamped">
         /// True to to include the file creation time in the file name (e.g. 2023-05-21t09-23-30-23813z-file.log). This is explicit to allow for cases where modification of the 
         /// file name is not desirable. Default = true (timestamped file names).
         /// </param>
         /// <param name="pathTemplate">Content path template to use when uploading content to target storage resources.</param>
-        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> metadata = null, bool timestamped = true, string pathTemplate = null)
+        public static FileUploadDescriptor CreateDescriptor(FileContext fileContext, IDictionary<string, IConvertible> parameters = null, IDictionary<string, IConvertible> manifest = null, bool timestamped = true, string pathTemplate = null)
         {
             fileContext.ThrowIfNull(nameof(fileContext));
+            pathTemplate.ThrowIfNullOrWhiteSpace(nameof(pathTemplate));
 
             string blobName = Path.GetFileName(fileContext.File.Name);
 
@@ -64,67 +60,16 @@ namespace VirtualClient.Contracts
                 blobName = FileUploadDescriptor.GetFileName(blobName, fileContext.File.CreationTimeUtc);
             }
 
-            // The caller of this factory method makes the determination on the runtime parameters that are 
-            IDictionary<string, IConvertible> runtimeParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "experimentId", fileContext.ExperimentId },
-                { "agentId", fileContext.AgentId },
-                { "toolName", fileContext.ToolName },
-                { "role", fileContext.Role },
-                { "scenario", fileContext.Scenario }
-            };
-
-            string effectivePathTemplate = pathTemplate;
-
-            // Backwards Compatibility
-            // We originally supported defining the content path template in the metadata (and even in the parameters). For the sake
-            // of consistency, we will support this for a bit longer.
-            if (effectivePathTemplate == null)
-            {
-                IConvertible template;
-                if (metadata?.TryGetValue(nameof(VirtualClientComponent.ContentPathTemplate), out template) == true)
-                {
-                    // e.g.
-                    // --metadata="ContentPathTemplate={ExperimentId}/{AgentId}..."
-                    effectivePathTemplate = template?.ToString();
-                }
-                else if (parameters?.TryGetValue(nameof(VirtualClientComponent.ContentPathTemplate), out template) == true)
-                {
-                    // e.g.
-                    // --parameters="ContentPathTemplate={ExperimentId}/{AgentId}..."
-                    effectivePathTemplate = template?.ToString();
-                }
-            }
-
-            effectivePathTemplate = effectivePathTemplate ?? FileUploadDescriptorFactory.DefaultContentPathTemplate;
-            string resolvedTemplate = FileUploadDescriptorFactory.ResolveContentPathTemplateParts(effectivePathTemplate, runtimeParameters, parameters, metadata);
-
-            string[] resolvedTemplateParts = resolvedTemplate?.Split("/", StringSplitOptions.RemoveEmptyEntries);
-            if (resolvedTemplateParts?.Any() != true)
-            {
-                // This is not expected ever but we perform the check in case of issues caused by
-                // future refactorings.
-                throw new SchemaException(
-                    $"Invalid content path template. The content path template supplied '{effectivePathTemplate}' is not a valid path template.");
-            }
-
-            string blobContainer = resolvedTemplateParts.ElementAt(0)?.Trim().ToLowerInvariant();
+            string blobContainer = GetInlinedContentArgumentValue(fileContext, pathTemplate.Split('/')[0]);
             if (string.IsNullOrWhiteSpace(blobContainer))
             {
-                throw new SchemaException($"The container name in the content path template '{effectivePathTemplate}' cannot be empty string.");
+                throw new ArgumentException("The containerName in blob cannot be empty string.", pathTemplate);
             }
 
-            string blobPath = null;
-            if (resolvedTemplateParts.Count() > 1)
-            {
-                blobPath = $"{BlobDescriptor.SanitizeBlobPath($"/{string.Join('/', resolvedTemplateParts.Skip(1))}").ToLowerInvariant()}/{blobName}";
-            }
-            else
-            {
-                blobPath = $"/{blobName}";
-            }
-
-            IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, metadata);
+            string blobPath = FileUploadDescriptorFactory.CreateBlobPath(fileContext, pathTemplate, blobName);
+            
+            // Create the default manifest information.
+            IDictionary<string, IConvertible> fileManifest = FileUploadDescriptor.CreateManifest(fileContext, blobContainer, blobPath, parameters, manifest);
 
             FileUploadDescriptor descriptor = new FileUploadDescriptor(
                 blobPath,
@@ -137,55 +82,65 @@ namespace VirtualClient.Contracts
             return descriptor;
         }
 
-        private static string ResolveContentPathTemplateParts(
-            string pathTemplate,
-            IDictionary<string, IConvertible> runtimeMetadata,
-            IDictionary<string, IConvertible> parameters,
-            IDictionary<string, IConvertible> metadata)
+        private static string CreateBlobPath(FileContext fileContext, string pathTemplate, string blobName)
         {
-            string resolvedTemplate = pathTemplate;
-            MatchCollection matches = FileUploadDescriptorFactory.TemplatePlaceholderExpression.Matches(pathTemplate);
+            string blobPath = null;
+            List<string> pathSegments = new List<string>();
 
-            if (matches?.Any() == true)
+            int i = 0;
+            foreach (string element in pathTemplate.Split('/'))
             {
-                string resolvedValue;
-                foreach (Match match in matches)
+                if (i == 0)
                 {
-                    // Order of placeholder resolution:
-                    // 1) Metadata known by the VC runtime is applied first because it is definitive.
-                    // 2) Component metadata supplied to the factory.
-                    // 3) Component parameters supplied to the factory.
-                    if (FileUploadDescriptorFactory.TryResolvePlaceholder(runtimeMetadata, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (metadata?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(metadata, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else if (parameters?.Any() == true && FileUploadDescriptorFactory.TryResolvePlaceholder(parameters, match.Groups[1].Value, out resolvedValue))
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, resolvedValue);
-                    }
-                    else
-                    {
-                        resolvedTemplate = resolvedTemplate.Replace(match.Value, string.Empty);
-                    }
+                    i++;
+                    continue;
                 }
+
+                string segment = GetInlinedContentArgumentValue(fileContext, element);
+
+                if (!string.IsNullOrWhiteSpace(segment))
+                {
+                    pathSegments.Add(segment);
+                }
+
+                i++;
             }
 
-            return resolvedTemplate.Replace("//", "/");
+            if (pathSegments.Any())
+            {
+                blobPath = $"{BlobDescriptor.SanitizeBlobPath($"/{string.Join('/', pathSegments)}").ToLowerInvariant()}/{blobName}";
+            }
+            else
+            {
+                blobPath = $"/{blobName}";
+            }
+
+            return blobPath;
         }
 
-        private static bool TryResolvePlaceholder(IDictionary<string, IConvertible> metadata, string propertyName, out string resolvedValue)
+        private static string GetInlinedContentArgumentValue(FileContext fileContext, string contentArgumentName)
         {
-            resolvedValue = null;
-            if (!string.IsNullOrWhiteSpace(propertyName) && metadata.TryGetValue(propertyName, out IConvertible propertyValue) && propertyValue != null)
+            IDictionary<string, IConvertible> fileContextDictionary = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
             {
-                resolvedValue = propertyValue.ToString();
-            }
+                { "experimentId", fileContext.ExperimentId },
+                { "agentId", fileContext.AgentId },
+                { "toolName", fileContext.ToolName },
+                { "role", fileContext.Role },
+                { "scenario", fileContext.Scenario }
+            };
 
-            return resolvedValue != null;
+            string inlinedArgument = Regex.Replace(contentArgumentName, @"\{(.*?)\}", match =>
+            {
+                string paramName = match.Groups[1].Value;
+                if (fileContextDictionary.ContainsKey(paramName))
+                {
+                    return fileContextDictionary.GetValue<string>(paramName, string.Empty);
+                }
+
+                return string.Empty;
+            });
+
+            return inlinedArgument;
         }
     }
 }
