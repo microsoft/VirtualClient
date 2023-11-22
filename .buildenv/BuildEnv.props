@@ -278,7 +278,7 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
         <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
+        <DebugType>pdbonly</DebugType>
         <Optimize>false</Optimize>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
     </PropertyGroup>

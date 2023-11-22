@@ -33,7 +33,7 @@ namespace VirtualClient.Common.Telemetry
             if (objectType != null && !objectType.IsPrimitive && objectType.IsGenericType)
             {
                 canConvert = objectType == ContextPropertiesJsonConverter.supportedType
-                    || objectType.GetInterfaces().Contains(ContextPropertiesJsonConverter.supportedType);
+                    || ContextPropertiesJsonConverter.supportedType.IsAssignableFrom(objectType);
             }
 
             return canConvert;

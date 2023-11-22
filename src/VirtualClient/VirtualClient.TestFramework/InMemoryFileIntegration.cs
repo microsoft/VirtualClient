@@ -12,6 +12,7 @@ namespace VirtualClient
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Win32.SafeHandles;
     using VirtualClient.Common.Extensions;
 
     /// <summary>
@@ -594,6 +595,106 @@ namespace VirtualClient
         {
             this.WriteAllText(path, contents, encoding);
             return Task.CompletedTask;
+        }
+
+        FileAttributes IFile.GetAttributes(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetCreationTime(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetCreationTimeUtc(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetLastAccessTime(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetLastAccessTimeUtc(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetLastWriteTime(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        DateTime IFile.GetLastWriteTimeUtc(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        UnixFileMode IFile.GetUnixFileMode(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        UnixFileMode IFile.GetUnixFileMode(SafeFileHandle fileHandle)
+        {
+            throw new NotImplementedException();
+        }
+
+        IAsyncEnumerable<string> IFile.ReadLinesAsync(string path, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        IAsyncEnumerable<string> IFile.ReadLinesAsync(string path, Encoding encoding, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetAttributes(SafeFileHandle fileHandle, FileAttributes fileAttributes)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetCreationTime(SafeFileHandle fileHandle, DateTime creationTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetCreationTimeUtc(SafeFileHandle fileHandle, DateTime creationTimeUtc)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetLastAccessTime(SafeFileHandle fileHandle, DateTime lastAccessTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetLastAccessTimeUtc(SafeFileHandle fileHandle, DateTime lastAccessTimeUtc)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetLastWriteTime(SafeFileHandle fileHandle, DateTime lastWriteTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetLastWriteTimeUtc(SafeFileHandle fileHandle, DateTime lastWriteTimeUtc)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetUnixFileMode(string path, UnixFileMode mode)
+        {
+            throw new NotImplementedException();
+        }
+
+        void IFile.SetUnixFileMode(SafeFileHandle fileHandle, UnixFileMode mode)
+        {
+            throw new NotImplementedException();
         }
     }
 }

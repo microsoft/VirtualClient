@@ -4,10 +4,10 @@ id: design
 
 # Platform Design
 The following sections cover important design aspects of the Virtual Client platform application. This document is written for engineers and technical roles who
-are interested in how the Virtual Client platform and application is designed. The application itself is a .NET 6.0 command line application written in C# that 
+are interested in how the Virtual Client platform and application is designed. The application itself is a .NET 8.0 command line application written in C# that 
 is has both cross-platform and multi-architecture support. It is compiled to support both Windows and Linux operating system platforms as well as x64 and arm64 
 architectures. The choice to implement the application using managed code was made to enable a foundation for ease-of-rapid feature development at the same time 
-as meeting all of the requirements for cross-platform + architecture support. Additionally, the .NET 6.0 framework integrates all of the performance and runtime 
+as meeting all of the requirements for cross-platform + architecture support. Additionally, the .NET 8.0 framework integrates all of the performance and runtime 
 efficiency work done by the .NET Core team over the past 5 years into a unified platform.
 
 ## Application Concepts

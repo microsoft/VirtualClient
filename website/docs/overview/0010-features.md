@@ -8,7 +8,7 @@ The platform supports a wide range of different industry standard/benchmark work
 The platform additionally provides the ability to capture important performance and reliability measurements from the underlying system. In Azure, the platform supports all business-critical 
 environments including guest/VM systems, host/blade systems and on-site lab systems.
 
-The platform runtime application itself is a .NET 6.0 command line application written in C# that has both cross-platform and multi-architecture support. As such, the application can run on both 
+The platform runtime application itself is a .NET 8.0 command line application written in C# that has both cross-platform and multi-architecture support. As such, the application can run on both 
 Windows and Linux operating system platforms as well as x64 and arm64 architectures. The Virtual Client is the defacto standard workload provider for cloud-scale 
 experiments on VMs (guest scenario) and physical blades across the Azure fleet for firmware/hardware net impact analysis.
 
