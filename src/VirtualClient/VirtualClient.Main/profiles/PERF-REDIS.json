@@ -230,16 +230,6 @@
       }
     },
     {
-      "Type": "DependencyPackageInstallation",
-      "Parameters": {
-        "Scenario": "InstallWgetFromBlob",
-        "BlobContainer": "packages",
-        "BlobName": "wget.2.0.1.zip",
-        "PackageName": "wget",
-        "Extract": true
-      }
-    },
-    {
       "Type": "WgetPackageInstallation",
       "Parameters": {
         "Scenario": "InstallRedisPackage",
