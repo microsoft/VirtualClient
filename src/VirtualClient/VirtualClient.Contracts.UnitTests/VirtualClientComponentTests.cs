@@ -35,13 +35,9 @@ namespace VirtualClient.Contracts
         [Test]
         public void VirtualClientComponentConstructorsSetPropertiesToExpectedValues()
         {
-            // The existence of the layout causes the 'Role' parameter to be added automatically.
-            // We want to do a pure parameter comparison.
-            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
             VirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
             Assert.IsTrue(object.ReferenceEquals(this.mockFixture.Dependencies, component.Dependencies));
-
             CollectionAssert.AreEquivalent(
                 this.mockFixture.Parameters.Select(p => $"{p.Key}={p.Value}"),
                 component.Parameters.Select(p => $"{p.Key}={p.Value}"));
@@ -66,43 +62,6 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(mergedTags);
             Assert.IsTrue(mergedTags.Count == 1);
             Assert.IsTrue(mergedTags.First() == "AnyOtherTag");
-        }
-
-        [Test]
-        [TestCase("Client", "Client")]
-        [TestCase("Client,User", "Client,User")]
-        [TestCase("Client;User", "Client,User")]
-        public void VirtualClientComponentRolesMatchThoseDefinedInTheParameters(string roles, string expectedRoles)
-        {
-            // Both 'Role' and 'Roles' are supported parameters.
-            this.mockFixture.Parameters["Role"] = roles;
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
-
-            this.mockFixture.Parameters["Roles"] = roles;
-            component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-            Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
-        }
-
-        [Test]
-        [TestCase("Client", "Client")]
-        [TestCase("Client,User", "Client,User")]
-        [TestCase("Client;User", "Client,User")]
-        public void VirtualClientComponentRolesMatchThoseDefinedInTheEnvironmentLayoutWhenTheyAreNotDefinedInTheParameters(string roles, string expectedRoles)
-        {
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
-            {
-                new ClientInstance(Environment.MachineName, "1.2.3.4", roles),
-                new ClientInstance("AnyOtherClientInstance", "1.2.3.5", "Server")
-            });
-
-            // Ensure there are no parameters that define the role.
-            this.mockFixture.Parameters.Remove("Role");
-            this.mockFixture.Parameters.Remove("Roles");
-
-            TestVirtualClientComponent component = new TestVirtualClientComponent(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-
-            Assert.AreEqual(expectedRoles, string.Join(",", component.Roles));
         }
 
         [Test]

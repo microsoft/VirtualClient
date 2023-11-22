@@ -126,442 +126,70 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_1()
+        [TestCase("customContainer/{experimentId}/{agentId}/fixedFolder/{toolName}/{role}/{scenario}", 0)]
+        [TestCase("customContainer/expt_{experimentId}/{agentId}/fixedFolder/{toolName}/{role}_{scenario}", 1)]
+        [TestCase("customContainer/expt_{experimentId}_agent_{agentId}/fixedFolder/{toolName}/{role}/{scenario}", 2)]
+        [TestCase("customContainer/stringValue1/{experimentId}/{agentId}/fixedFolder,stringValue2/{toolName}/{role}/{scenario}", 3)]
+        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomTemplate(string pathTemplate, int testCase)
         {
-            //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{scenario}
             this.SetupDefaults();
 
             string expectedExperimentId = Guid.NewGuid().ToString();
-            string expectedAgentId = "Agent01";
-            string expectedToolName = "Toolkit";
-            string expectedScenario = "Cycle-VegaServer";
             string expectedContentType = HttpContentType.PlainText;
             string expectedContentEncoding = Encoding.UTF8.WebName;
             string expectedFilePath = this.mockFile.Object.FullName;
             string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-            string expectedBlobPath = string.Join('/', (new string[]
+
+            string expectedBlobPath = string.Empty;
+
+            switch (testCase)
             {
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario
-            })
-            .Where(i => i != null))
-            .ToLowerInvariant();
+                case 0:
+                    expectedBlobPath = string.Join('/', (new string[] { expectedExperimentId, "AgentIdA", "fixedFolder", "ToolA", "RoleA", "ScenarioA" })
+                        .Where(i => i != null))
+                        .ToLowerInvariant();
+                    break;
+                case 1:
+                    expectedBlobPath = string.Join('/', (new string[] { $"expt_{expectedExperimentId}", "AgentIdA", "fixedFolder", "ToolA", "RoleA_ScenarioA" })
+                        .Where(i => i != null))
+                        .ToLowerInvariant();
+                    break;
+                case 2:
+                    expectedBlobPath = string.Join('/', (new string[] { $"expt_{expectedExperimentId}_agent_AgentIdA", "fixedFolder", "ToolA", "RoleA", "ScenarioA" })
+                        .Where(i => i != null))
+                        .ToLowerInvariant();
+                    break;
+                case 3:
+                    expectedBlobPath = string.Join('/', (new string[] { "stringValue1", expectedExperimentId, "AgentIdA", "fixedFolder,stringValue2", "ToolA", "RoleA", "ScenarioA" })
+                        .Where(i => i != null))
+                        .ToLowerInvariant();
+                    break;
+            }
 
             // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"/{expectedBlobPath}/{expectedFileName}";
+            expectedBlobPath = !string.IsNullOrWhiteSpace(expectedBlobPath)
+                ? $"/{expectedBlobPath}/{expectedFileName}"
+                : $"/{expectedFileName}";
 
             FileContext context = new FileContext(
                 this.mockFile.Object,
                 expectedContentType,
                 expectedContentEncoding,
                 expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario);
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true);
-
-            Assert.AreEqual(expectedExperimentId, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithDefaultContentPathTemplate_Scenario_2()
-        {
-            //  Default Template:
-            //  {experimentId}/{agentId}/{toolName}/{role}/{scenario}
-            this.SetupDefaults();
-
-            string expectedExperimentId = Guid.NewGuid().ToString();
-            string expectedAgentId = "Agent01";
-            string expectedToolName = "Toolkit";
-            string expectedRole = "Client";
-            string expectedScenario = "Cycle-VegaServer";
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-            string expectedBlobPath = string.Join('/', (new string[]
-            {
-                expectedAgentId,
-                expectedToolName,
-                expectedRole,
-                expectedScenario
-            })
-            .Where(i => i != null))
-            .ToLowerInvariant();
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"/{expectedBlobPath}/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario,
-                role: expectedRole);
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true);
-
-            Assert.AreEqual(expectedExperimentId, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase
-        (
-            "customcontainer",
-            "customcontainer",
-            "/"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentId}",
-            "customcontainer",
-            "/cfad01a9-8F5c-4210-841e-63210ed6a85d"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId}/{Scenario}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d/cycle-vegaserver"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{Scenario}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d,revision01/cycle-vegaserver"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver/client"
-        )]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplates(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
-        {
-            this.SetupDefaults();
-
-            string expectedExperimentName = "Test_Experiment";
-            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
-            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
-            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
-            string expectedRevision = "Revision01";
-            string expectedToolName = "Toolkit";
-            string expectedScenario = "Cycle-VegaServer";
-            string expectedRole = "Client";
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario,
+                "AgentIdA",
+                "ToolA",
+                "ScenarioA",
                 null,
-                expectedRole);
+                "RoleA");
 
-            IDictionary<string, IConvertible> componentMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "Revision", expectedRevision },
-                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
-                { "ExperimentName", expectedExperimentName }
-            };
+            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true, pathTemplate: pathTemplate);
 
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, metadata: componentMetadata, timestamped: true, pathTemplate: contentPathTemplate);
-
-            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
+            Assert.AreEqual("customContainer", descriptor.ContainerName);
             Assert.AreEqual(expectedFileName, descriptor.BlobName);
             Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
             Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
             Assert.AreEqual(expectedContentType, descriptor.ContentType);
             Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase
-        (
-            "customcontainer",
-            "customcontainer",
-            "/"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentId}",
-            "customcontainer",
-            "/cfad01a9-8F5c-4210-841e-63210ed6a85d"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver/client"
-        )]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
-        {
-            this.SetupDefaults();
-
-            string expectedExperimentName = "Test_Experiment";
-            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
-            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
-            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
-            string expectedRevision = "Revision01";
-            string expectedToolName = "Toolkit";
-            string expectedScenario = "Cycle-VegaServer";
-            string expectedRole = "Client";
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario,
-                null,
-                expectedRole);
-
-            IDictionary<string, IConvertible> componentMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "Revision", expectedRevision },
-                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
-                { "ExperimentName", expectedExperimentName },
-                { "ContentPathTemplate", contentPathTemplate }
-            };
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, metadata: componentMetadata, timestamped: true);
-
-            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase("contentpathtemplate")]
-        [TestCase("CONTENTPATHTEMPLATE")]
-        [TestCase("ContentPathTemplate")]
-        [TestCase("contentPathTemplate")]
-        public void FileUploadDescriptorFactoryIsNotCaseSensitiveOnContentPathTemplatesDefinedInCommandLineMetadata(string contentPathTemplateParameterName)
-        {
-            this.SetupDefaults();
-
-            string expectedContentPathTemplate = "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}";
-            string expectedExperimentName = "Test_Experiment";
-            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
-            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
-            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
-            string expectedRevision = "Revision01";
-            string expectedToolName = "Toolkit";
-            string expectedScenario = "Cycle-VegaServer";
-            string expectedRole = "Client";
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            string expectedContainer = "customcontainer";
-            string expectedBlobPath = $"/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8f5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver/client/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario,
-                null,
-                expectedRole);
-
-            IDictionary<string, IConvertible> componentMetadata = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "Revision", expectedRevision },
-                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
-                { "ExperimentName", expectedExperimentName },
-                { contentPathTemplateParameterName, expectedContentPathTemplate }
-            };
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, metadata: componentMetadata, timestamped: true);
-
-            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase
-        (
-            "customcontainer",
-            "customcontainer",
-            "/"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentId}",
-            "customcontainer",
-            "/cfad01a9-8F5c-4210-841e-63210ed6a85d"
-        )]
-        [TestCase
-        (
-            "customcontainer/{ExperimentDefinitionId}/{ExperimentName}/{ExperimentId},{Revision}/{AgentId}/{Scenario}/{Role}",
-            "customcontainer",
-            "/645f6639-98c6-41ee-a853-b0a3ab8ce0a3/test_experiment/cfad01a9-8F5c-4210-841e-63210ed6a85d,revision01/642,042728166da7,37,192.168.2.155/cycle-vegaserver/client"
-        )]
-        public void FileUploadDescriptorFactoryCreatesTheExpectedDescriptorWithCustomContentPathTemplatesDefinedInComponentParameters(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
-        {
-            this.SetupDefaults();
-
-            string expectedExperimentName = "Test_Experiment";
-            string expectedExperimentId = "cfad01a9-8F5c-4210-841e-63210ed6a85d";
-            string expectedExperimentDefinitionId = "645f6639-98c6-41ee-a853-b0a3ab8ce0a3";
-            string expectedAgentId = "642,042728166da7,37,192.168.2.155";
-            string expectedRevision = "Revision01";
-            string expectedToolName = "Toolkit";
-            string expectedScenario = "Cycle-VegaServer";
-            string expectedRole = "Client";
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                expectedExperimentId,
-                expectedAgentId,
-                expectedToolName,
-                expectedScenario,
-                null,
-                expectedRole);
-
-            IDictionary<string, IConvertible> componentParameters = new Dictionary<string, IConvertible>(StringComparer.OrdinalIgnoreCase)
-            {
-                { "Revision", expectedRevision },
-                { "ExperimentDefinitionId", expectedExperimentDefinitionId },
-                { "ExperimentName", expectedExperimentName },
-                { "ContentPathTemplate", contentPathTemplate }
-            };
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, parameters: componentParameters, timestamped: true);
-
-            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase
-        (
-            "CUSTOMCONTAINER",
-            "customcontainer",
-            "/"
-        )]
-        [TestCase
-        (
-            "CustomContainer/ANY/other/pAtH/WiTH/MIXed/CAsinG",
-            "customcontainer",
-            "/any/other/path/with/mixed/casing"
-        )]
-        public void FileUploadDescriptorFactoryCreatesBlobPathsWithTheExpectedCasing(string contentPathTemplate, string expectedContainer, string expectedBlobPath)
-        {
-            this.SetupDefaults();
-
-            string expectedContentType = HttpContentType.PlainText;
-            string expectedContentEncoding = Encoding.UTF8.WebName;
-            string expectedFilePath = this.mockFile.Object.FullName;
-            string expectedFileName = $"{this.mockFile.Object.CreationTimeUtc.ToString("yyyy-MM-ddTHH-mm-ss-fffffZ")}-{this.mockFile.Object.Name}";
-
-            // The blob path itself is lower-cased. However, the file name casing is NOT modified.
-            expectedBlobPath = $"{expectedBlobPath.ToLowerInvariant().TrimEnd('/')}/{expectedFileName}";
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                expectedContentType,
-                expectedContentEncoding,
-                "AnyExperimentId",
-                "AnyAgentId",
-                "AnyToolName",
-                "AnyScenario",
-                "AnyCommandLine",
-                "AnyRole");
-
-            FileUploadDescriptor descriptor = FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true, pathTemplate: contentPathTemplate);
-
-            Assert.AreEqual(expectedContainer, descriptor.ContainerName);
-            Assert.AreEqual(expectedFileName, descriptor.BlobName);
-            Assert.AreEqual(expectedBlobPath, descriptor.BlobPath);
-            Assert.AreEqual(expectedContentEncoding, descriptor.ContentEncoding);
-            Assert.AreEqual(expectedContentType, descriptor.ContentType);
-            Assert.AreEqual(expectedFilePath, descriptor.FilePath);
-        }
-
-        [Test]
-        [TestCase("/")]
-        [TestCase("{ThisDoesNotExist}")]
-        public void FileUploadDescriptorFactoryValidatesTheContentPath(string invalidContentPathTemplate)
-        {
-            this.SetupDefaults();
-
-            FileContext context = new FileContext(
-                this.mockFile.Object,
-                HttpContentType.PlainText,
-                Encoding.UTF8.WebName,
-                "AnyExperimentId",
-                "AnyAgentId",
-                "AnyToolName",
-                "AnyScenario",
-                "AnyCommandLine",
-                "AnyRole");
-
-            Assert.Throws<SchemaException>(() => FileUploadDescriptorFactory.CreateDescriptor(context, timestamped: true, pathTemplate: invalidContentPathTemplate));
         }
     }
 }
