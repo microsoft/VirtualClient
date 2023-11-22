@@ -122,7 +122,8 @@ namespace VirtualClient
             foreach (string command in commands)
             {
                 IProcessProxy matchingProcess = processManager.Processes.FirstOrDefault(
-                    proc => (proc.FullCommand() == command));
+                    proc => (proc.FullCommand() == command 
+                    && proc.StartInfo.WorkingDirectory == workingDir));
 
                 matchingProcess ??= processManager.Processes.FirstOrDefault(
                     proc => Regex.IsMatch(proc.FullCommand(), command, RegexOptions.IgnoreCase)
