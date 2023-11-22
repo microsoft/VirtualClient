@@ -213,6 +213,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
                     // default to 10
+                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     gccVersion = (string.IsNullOrEmpty(gccVersion)) ? "10" : gccVersion;
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -224,6 +225,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
                 case LinuxDistribution.Mariner:
+                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
 
@@ -234,18 +236,16 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string[] compilers =
             {
                 "gcc",
-                "cc",
                 "g++",
                 "gcov",
                 "gcc-ar",
                 "gcc-ranlib",
-                "gfortran",
-                "cpp"
+                "gfortran"
             };
 
             // due to the following error:
@@ -258,23 +258,30 @@ namespace VirtualClient.Dependencies
                 {
                     await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {compiler}", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                 }
-                catch 
+                catch
                 {
                     // the message is:
                     //      "error: no alternatives for g++"
                     // so we can continue as normal; non-breaking
                 }
             }
+        }
 
+        private async Task SetGccPriorityAsync(string gccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
+        {
             string updateAlternativeArgument = $"--install /usr/bin/gcc gcc /usr/bin/gcc-{gccVersion} {gccVersion}0 " +
                         $"--slave /usr/bin/g++ g++ /usr/bin/g++-{gccVersion} " +
                         $"--slave /usr/bin/gcov gcov /usr/bin/gcov-{gccVersion} " +
                         $"--slave /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-{gccVersion} " +
                         $"--slave /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-{gccVersion} " +
-                        $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion} " +
-                        $"--slave /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion}";
+                        $"--slave /usr/bin/gfortran gfortran /usr/bin/gfortran-{gccVersion}";
 
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgument, Environment.CurrentDirectory, telemetryContext, cancellationToken);
+
+            // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
+            string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
+
+            await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgumentCpp, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 
         private async Task InstallAoccAsync(string aoccVersion, EventContext telemetryContext, CancellationToken cancellationToken)
