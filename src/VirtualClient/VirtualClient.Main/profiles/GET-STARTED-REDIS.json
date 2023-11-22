@@ -35,66 +35,76 @@
             }
         }
     ],
-    "Dependencies": [
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
-                "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
-                "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
-            }
-        },
-        {
-            "Type": "LinuxPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallLinuxPackages",
-                "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
-                "Packages-Yum": "wget,numactl,tcl-devel",
-                "Packages-Dnf": "wget,numactl,tcl-devel"
-            }
-        },
-        {
-            "Type": "WgetPackageInstallation",
-            "Parameters": {
-                "Scenario": "InstallRedisPackage",
-                "PackageName": "redis",
-                "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
-                "SubPath": "redis-6.2.1",
-                "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
-            }
-        },
-        {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CompileRedis",
-                "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "make",
-                "WorkingDirectory": "{PackagePath:redis}"
-            }
-        },
-        {
-            "Type": "GitRepoClone",
-            "Parameters": {
-                "Scenario": "CloneMemtierRepo",
-                "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
-                "PackageName": "memtier"
-            }
-        },
-        {
-            "Type": "ExecuteCommand",
-            "Parameters": {
-                "Scenario": "CompileMemtier",
-                "SupportedPlatforms": "linux-x64,linux-arm64",
-                "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
-                "WorkingDirectory": "{PackagePath:memtier}"
-            }
-        },
-        {
-            "Type": "ApiServer",
-            "Parameters": {
-                "Scenario": "StartAPIServer"
-            }
-        }
-    ]
+  "Dependencies": [
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "Packages-Apt": "build-essential,libevent-dev,pkg-config,zlib1g-dev,libssl-dev,autoconf,automake,libpcre3-dev",
+        "Packages-Yum": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake",
+        "Packages-Dnf": "zlib-devel,pcre-devel,libevent-devel,openssl-devel,git,gcc-c++,make,autoconf,automake"
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "Packages-Apt": "wget,build-essential,tcl-dev,numactl",
+        "Packages-Yum": "wget,numactl,tcl-devel",
+        "Packages-Dnf": "wget,numactl,tcl-devel"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallWgetFromBlob",
+        "BlobContainer": "packages",
+        "BlobName": "wget.2.0.1.zip",
+        "PackageName": "wget",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "WgetPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallRedisPackage",
+        "PackageName": "redis",
+        "PackageUri": "https://github.com/redis/redis/archive/refs/tags/6.2.1.tar.gz",
+        "SubPath": "redis-6.2.1",
+        "Notes": "Example path to package -> /packages/redis/redis-6.2.1"
+      }
+    },
+    {
+      "Type": "ExecuteCommand",
+      "Parameters": {
+        "Scenario": "CompileRedis",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "Command": "make",
+        "WorkingDirectory": "{PackagePath:redis}"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneMemtierRepo",
+        "RepoUri": "https://github.com/RedisLabs/memtier_benchmark",
+        "PackageName": "memtier"
+      }
+    },
+    {
+      "Type": "ExecuteCommand",
+      "Parameters": {
+        "Scenario": "CompileMemtier",
+        "SupportedPlatforms": "linux-x64,linux-arm64",
+        "Command": "git checkout 1.4.0&&autoreconf -ivf&&bash -c './configure'&&make",
+        "WorkingDirectory": "{PackagePath:memtier}"
+      }
+    },
+    {
+      "Type": "ApiServer",
+      "Parameters": {
+        "Scenario": "StartAPIServer"
+      }
+    }
+  ]
 }
