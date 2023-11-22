@@ -166,13 +166,13 @@ namespace VirtualClient.Actions
 
             this.dotnetExePath = this.Combine(dotnetSdkPackage.Path, this.Platform == PlatformID.Unix ? "dotnet" : "dotnet.exe");
 
-            // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net6.0
+            // ~/vc/packages/dotnet/dotnet build -c Release -p:BenchmarksTargetFramework=net8.0
             // Build the aspnetbenchmark project
             string buildArgument = $"build -c Release -p:BenchmarksTargetFramework={this.TargetFramework}";
             await this.ExecuteCommandAsync(this.dotnetExePath, buildArgument, this.aspnetBenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
 
-            // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net6.0\Benchmarks.dll"
+            // "C:\Users\vcvmadmin\Benchmarks\src\Benchmarks\bin\Release\net8.0\Benchmarks.dll"
             this.aspnetBenchDllPath = this.Combine(
                 this.aspnetBenchDirectory, 
                 "bin", 

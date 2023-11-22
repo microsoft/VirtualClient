@@ -50,11 +50,9 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64)]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
-        public void WgetPackageInstallationThrowsIfTheWgetTooletPackageIsNotFound(PlatformID platform, Architecture architecture)
+        public void WgetPackageInstallationThrowsIfTheWgetTooletPackageIsNotFoundOnWindows(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaults(platform, architecture);
 

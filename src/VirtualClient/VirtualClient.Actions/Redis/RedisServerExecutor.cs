@@ -184,6 +184,8 @@ namespace VirtualClient.Actions
                 {
                     this.SetServerOnline(false);
 
+                    await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
+
                     if (this.ResetServer(telemetryContext))
                     {
                         await this.DeleteStateAsync(telemetryContext, cancellationToken);

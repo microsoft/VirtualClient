@@ -2,12 +2,12 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>VirtualClient</AssemblyName>
         <RootNamespace>VirtualClient</RootNamespace>
         <RuntimeIdentifiers>win-x64;linux-x64;win-arm64;linux-arm64</RuntimeIdentifiers>
         <RunAnalyzers>false</RunAnalyzers>
-        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118,NU5110,NU5111</NoWarn>
+        <NoWarn>CA1416,NU5100,NU5118,NU5128,SA1118,NU5110,NU5111,IL2026,IL2104,IL2072</NoWarn>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     </PropertyGroup>
 

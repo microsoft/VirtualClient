@@ -27,7 +27,7 @@ ltsc2022: Pulling from windows/nanoserver
 Digest: sha256:79fb1372fc5b3aeeca73603d5eadd0a8fb7d4f0b77bd29498696c03bb6de1fdf
 Status: Downloaded newer image for mcr.microsoft.com/windows/nanoserver:ltsc2022
  ---> 0db1879370e5
-Step 3/3 : COPY out/bin/Debug/x64/VirtualClient.Main/net6.0/win-x64/publish/ C:/VirtualClient/
+Step 3/3 : COPY out/bin/Debug/x64/VirtualClient.Main/net8.0/win-x64/publish/ C:/VirtualClient/
  ---> 7c2fe2466138
 Successfully built 7c2fe2466138
 Successfully tagged test-win-x64:1.0.1.3

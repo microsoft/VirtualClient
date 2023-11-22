@@ -94,16 +94,16 @@ At a high level, all files associated with a given experiment are contained toge
 
 The virtual path of uploaded logs in blob storage is controlled by a VirtualClient Command Line Option parameter "--contentPathTemplate".
 
-Example: --contentPathTemplate="any-value1/{standardProperty1}any-value2{standardProperty2}/{standardProperty3}/any-value3/{standardProperty4}".
+Example: --contentPathTemplate="any-value1/\<standardProperty1>any-value2\<standardProperty2>/\<standardProperty3>/any-value3/\<standardProperty4>".
 
 In above example, the virtual blob folder structure will have sub-folders corresponding to each element separated by a '/' in the 
 ContentPathTemplate. The inlined values that are enclosed within brackets "{}", like "standaradProperty1" and "standaradProperty2", 
 needs to be one among the 5 defined standard properties of Virtual Client (ExperimentId, AgentId, ToolName, Role, Scenario).
 
 The first component of ContentPathTemplate (any-value1 in above example) will be taken up as the name of Blob storage Container where all files will be uploaded.
-The next component ({standardProperty1} in above example) will be the root folder within the container and so on for the complete virtual folder structure within the blob storage.
+The next component (\<standardProperty1> in above example) will be the root folder within the container and so on for the complete virtual folder structure within the blob storage.
 
-The default value of "ContentPathTemplate" is "{experimentId}/{agentId}/{toolName}/{role}/{scenario}". In the default template, each element 
+The default value of "ContentPathTemplate" is `{experimentId}/{agentId}/{toolName}/{role}/{scenario}`. In the default template, each element 
 is a standard property identified by Virtual Client.
 
 * **Experiment ID**  

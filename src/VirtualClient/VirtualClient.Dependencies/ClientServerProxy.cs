@@ -271,7 +271,7 @@ namespace VirtualClient.Dependencies
                 {
                     try
                     {
-                        entry.Value.Item2.Cancel();
+                        await entry.Value.Item2.CancelAsync();
                         await this.DeleteRequestStateAsync(entry.Key, cancellationToken)
                             .ConfigureAwait(false);
                     }

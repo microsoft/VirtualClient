@@ -18,9 +18,9 @@ use in profiles.
 * linux-arm64
 
 ## .NET Supported Linux Distributions
-VirtualClient runs on .NET 6. It should run on any distribution supported by .NET 6.
+VirtualClient runs on .NET 8. It should run on any distribution supported by .NET 8.
 
-* [Supported Distros](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md)
+* [Supported Distros](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md)
 
 ## Supported Package Managers and Distros
 The following table shows the list of package managers and the Linux distros on which they are typically supported by default. Note that this list does not infer that 

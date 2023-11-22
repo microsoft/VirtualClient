@@ -145,16 +145,22 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override bool IsSupported()
         {
-            bool isSupported = base.IsSupported()
-                && (this.Platform == PlatformID.Unix)
+            if (base.IsSupported())
+            {
+                bool isSupported = (this.Platform == PlatformID.Unix)
                 && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
 
-            if (!isSupported)
-            {
-                this.Logger.LogNotSupported("Redis", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
+                if (!isSupported)
+                {
+                    this.Logger.LogNotSupported("Redis", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                }
 
-            return isSupported;
+                return isSupported;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

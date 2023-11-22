@@ -1,7 +1,7 @@
 # Blender Workload Profiles
 The following profile runs the Blender benchmark Workloads.
 
-* [Workload Details](./blender.md)  
+* [Workload Details](./blenderbenchmark.md)  
 
 ## PERF-BLENDER-AMD.json
 Runs the Blender Workloads.

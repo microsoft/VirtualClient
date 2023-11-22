@@ -250,8 +250,7 @@ namespace VirtualClient
         {
             if (!string.IsNullOrWhiteSpace(eventHubConnectionString))
             {
-                EventHubLogSettings settings = new EventHubLogSettings();
-                configuration.Bind(nameof(EventHubLogSettings), settings);
+                EventHubLogSettings settings = configuration.GetSection(nameof(EventHubLogSettings)).Get<EventHubLogSettings>();
 
                 if (settings.IsEnabled)
                 {
@@ -266,8 +265,7 @@ namespace VirtualClient
 
         private static void AddFileLogging(List<ILoggerProvider> loggingProviders, IConfiguration configuration)
         {
-            FileLogSettings settings = new FileLogSettings();
-            configuration.Bind(nameof(FileLogSettings), settings);
+            FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
 
             if (settings.IsEnabled)
             {

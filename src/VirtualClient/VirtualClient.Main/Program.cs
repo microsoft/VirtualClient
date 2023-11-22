@@ -23,6 +23,7 @@ namespace VirtualClient
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
     using VirtualClient.Common;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Configuration;
@@ -359,12 +360,9 @@ namespace VirtualClient
             loggerProviders.Add(new VirtualClient.ConsoleLoggerProvider(LogLevel.Trace));
 
             IConfiguration configuration = Program.LoadAppSettings();
-
             if (configuration != null)
             {
-                FileLogSettings settings = new FileLogSettings();
-                configuration.Bind(nameof(FileLogSettings), settings);
-
+                FileLogSettings settings = configuration.GetSection(nameof(FileLogSettings)).Get<FileLogSettings>();
                 PlatformSpecifics platformSpecifics = new PlatformSpecifics(Environment.OSVersion.Platform, RuntimeInformation.ProcessArchitecture);
                 loggerProviders.AddRange(DependencyFactory.CreateFileLoggerProviders(platformSpecifics.LogsDirectory, settings));
             }
