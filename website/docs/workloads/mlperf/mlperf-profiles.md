@@ -112,5 +112,5 @@ Runs the MLPerf benchmark workload to test GPU performance.
 
   ```bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GPU-MLPERF-TRAINING.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
+  sudo ./VirtualClient --profile=PERF-GPU-MLPERF-TRAINING.json --system=Demo --timeout=1440 --packageStore="{BlobConnectionString|SAS Uri}"
   ```
