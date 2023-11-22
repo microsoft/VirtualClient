@@ -19,95 +19,144 @@ and gives percentile latency distributions and throughput.
 The following metrics are examples of those captured by the Virtual Client when running the Memtier workload against a
 Memcached server.
 
-| Scenario Name   | Metric Name | Example Value (min) | Example Value (max) | Example Value (avg) | Unit |
-|-----------------|-------------|---------------------|---------------------|---------------------|------|
-| Memtier_4t_1c | p50lat | 0.159 | 4.095 | 0.2965735294117649 | milliseconds |
-| Memtier_4t_1c | p90lat | 2.799 | 7.807 | 3.6170735294117639 | milliseconds |
-| Memtier_4t_1c | p95lat | 3.743 | 9.535 | 4.346150735294118 | milliseconds |
-| Memtier_4t_1c | p99.9lat | 11.519 | 61.951 | 16.81158823529412 | milliseconds |
-| Memtier_4t_1c | p99lat | 5.023 | 16.319 | 6.137676470588234 | milliseconds |
-| Memtier_4t_1c | throughput | 58417.19 | 815710.22 | 235439.3486305147 | operations/sec |
-| Memtier_4t_1c | throughput_1 | 29092.65 | 203673.3 | 111331.60009650735 | operations/sec |
-| Memtier_4t_1c | throughput_2 | 29315.66 | 206249.97 | 113622.22872585096 | operations/sec |
-| Memtier_4t_1c | throughput_3 | 176794.47 | 206504.79 | 193725.01733333333 | operations/sec |
-| Memtier_4t_1c | throughput_4 | 179516.37 | 203843.86 | 190337.24200000004 | operations/sec |
-| Memtier_4t_2c | p50lat | 0.335 | 4.415 | 1.52554930875576 | milliseconds |
-| Memtier_4t_2c | p90lat | 3.951 | 18.943 | 4.581628571428574 | milliseconds |
-| Memtier_4t_2c | p95lat | 4.223 | 21.759 | 5.332559447004607 | milliseconds |
-| Memtier_4t_2c | p99.9lat | 12.671 | 72.703 | 19.31950875576037 | milliseconds |
-| Memtier_4t_2c | p99lat | 5.439 | 29.439 | 7.0393244239631349 | milliseconds |
-| Memtier_4t_2c | throughput | 65999.11 | 797961.14 | 245532.84887788018 | operations/sec |
-| Memtier_4t_2c | throughput_1 | 32380.33 | 202134.5 | 119005.53673041475 | operations/sec |
-| Memtier_4t_2c | throughput_2 | 33331.74 | 204258.16 | 117608.7032130384 | operations/sec |
-| Memtier_4t_2c | throughput_3 | 169854.02 | 200916.3 | 185826.25166666663 | operations/sec |
-| Memtier_4t_2c | throughput_4 | 167405.91 | 194783.81 | 180833.36850000005 | operations/sec |
-| Memtier_4t_4c | p50lat | 1.183 | 15.359 | 2.7599138090824835 | milliseconds |
-| Memtier_4t_4c | p90lat | 4.799 | 26.367 | 11.749524559777568 | milliseconds |
-| Memtier_4t_4c | p95lat | 5.215 | 30.719 | 13.026113994439293 | milliseconds |
-| Memtier_4t_4c | p99.9lat | 20.735 | 83.967 | 33.21849953660797 | milliseconds |
-| Memtier_4t_4c | p99lat | 6.335 | 41.471 | 18.379381835032434 | milliseconds |
-| Memtier_4t_4c | throughput | 68264.98 | 817778.44 | 255551.02398053756 | operations/sec |
-| Memtier_4t_4c | throughput_1 | 32987.04 | 210675.5 | 122982.00023864689 | operations/sec |
-| Memtier_4t_4c | throughput_2 | 34447.69 | 206027.13 | 121898.65999073001 | operations/sec |
-| Memtier_4t_4c | throughput_3 | 176203.54 | 209177.93 | 193846.44791666664 | operations/sec |
-| Memtier_4t_4c | throughput_4 | 172918.81 | 203408.28 | 190946.7905 | operations/sec |
-| Memtier_8t_2c | p50lat | 0.631 | 15.487 | 1.052861552853134 | milliseconds |
-| Memtier_8t_2c | p90lat | 5.503 | 50.943 | 13.044298409728715 | milliseconds |
-| Memtier_8t_2c | p95lat | 13.055 | 59.647 | 14.339385406922359 | milliseconds |
-| Memtier_8t_2c | p99.9lat | 28.671 | 180.223 | 36.93806339181287 | milliseconds |
-| Memtier_8t_2c | p99lat | 17.535 | 91.135 | 22.5084705332086 | milliseconds |
-| Memtier_8t_2c | throughput | 57703.76 | 827385.88 | 257429.3466534144 | operations/sec |
-| Memtier_8t_2c | throughput_1 | 32527.37 | 209887.17 | 124380.40026426566 | operations/sec |
-| Memtier_8t_2c | throughput_2 | 23625.1 | 212309.54 | 122170.78199344877 | operations/sec |
-| Memtier_8t_2c | throughput_3 | 181544.04 | 212802.62 | 197401.76108333336 | operations/sec |
-| Memtier_8t_2c | throughput_4 | 179479.72 | 207057.14 | 192259.67658333336 | operations/sec |
-| Memtier_8t_4c | p50lat | 1.231 | 30.463 | 7.030075523202911 | milliseconds |
-| Memtier_8t_4c | p90lat | 14.143 | 59.391 | 16.208703366697 | milliseconds |
-| Memtier_8t_4c | p95lat | 17.791 | 101.375 | 19.43780133454656 | milliseconds |
-| Memtier_8t_4c | p99.9lat | 32.767 | 251.903 | 43.959487716105559 | milliseconds |
-| Memtier_8t_4c | p99lat | 25.727 | 160.767 | 28.69444919623901 | milliseconds |
-| Memtier_8t_4c | throughput | 60685.85 | 842329.67 | 265907.298343949 | operations/sec |
-| Memtier_8t_4c | throughput_1 | 28006.45 | 215109.34 | 127300.9799454049 | operations/sec |
-| Memtier_8t_4c | throughput_2 | 32502.93 | 217147.87 | 124150.41247801029 | operations/sec |
-| Memtier_8t_4c | throughput_3 | 184452.87 | 211285.71 | 197710.7305 | operations/sec |
-| Memtier_8t_4c | throughput_4 | 186077.54 | 213718.07 | 199465.28466666668 | operations/sec |
-| Memtier_8t_8c | p50lat | 2.383 | 57.343 | 15.538551766138858 | milliseconds |
-| Memtier_8t_8c | p90lat | 19.455 | 96.255 | 24.308904993909864 | milliseconds |
-| Memtier_8t_8c | p95lat | 23.039 | 132.095 | 29.86248355663824 | milliseconds |
-| Memtier_8t_8c | p99.9lat | 38.399 | 258.047 | 60.335019488428759 | milliseconds |
-| Memtier_8t_8c | p99lat | 31.743 | 186.367 | 43.09107308160779 | milliseconds |
-| Memtier_8t_8c | throughput | 64212.8 | 888657.03 | 270229.023270402 | operations/sec |
-| Memtier_8t_8c | throughput_1 | 31641.23 | 230826.34 | 127721.14527405605 | operations/sec |
-| Memtier_8t_8c | throughput_2 | 32303.92 | 227859.12 | 127505.81609584858 | operations/sec |
-| Memtier_8t_8c | throughput_3 | 194345.26 | 221087.21 | 207721.54641666666 | operations/sec |
-| Memtier_8t_8c | throughput_4 | 195513.22 | 224525.73 | 211335.26866666668 | operations/sec |
-| Memtier_16t_4c | p50lat | 2.479 | 63.999 | 15.867709396390792 | milliseconds |
-| Memtier_16t_4c | p90lat | 19.583 | 109.055 | 25.70262663347853 | milliseconds |
-| Memtier_16t_4c | p95lat | 23.807 | 128.511 | 29.745658369632858 | milliseconds |
-| Memtier_16t_4c | p99.9lat | 38.655 | 309.247 | 62.71748662103298 | milliseconds |
-| Memtier_16t_4c | p99lat | 31.871 | 179.199 | 43.3985668948351 | milliseconds |
-| Memtier_16t_4c | throughput | 58580.34 | 845621.72 | 253393.12167081517 | operations/sec |
-| Memtier_16t_4c | throughput_1 | 28743.1 | 215014.62 | 121465.76731176104 | operations/sec |
-| Memtier_16t_4c | throughput_2 | 29794.02 | 216446.78 | 124715.36404115996 | operations/sec |
-| Memtier_16t_4c | throughput_3 | 183022.18 | 215183.61 | 199985.7881666667 | operations/sec |
-| Memtier_16t_4c | throughput_4 | 188305.88 | 214475.28 | 200886.619 | operations/sec |
-| Memtier_16t_8c | p50lat | 20.607 | 133.119 | 32.126001871490959 | milliseconds |
-| Memtier_16t_8c | p90lat | 32.767 | 233.471 | 47.07609045539612 | milliseconds |
-| Memtier_16t_8c | p95lat | 33.279 | 268.287 | 55.38091890205864 | milliseconds |
-| Memtier_16t_8c | p99.9lat | 49.407 | 622.591 | 112.8486868371803 | milliseconds |
-| Memtier_16t_8c | p99lat | 42.239 | 317.439 | 78.94473674360575 | milliseconds |
-| Memtier_16t_8c | throughput | 55016.71 | 887996.49 | 250613.5241048035 | operations/sec |
-| Memtier_16t_8c | throughput_1 | 27740.86 | 224915.68 | 122564.99112913289 | operations/sec |
-| Memtier_16t_8c | throughput_2 | 27275.85 | 224914.49 | 120324.29177756951 | operations/sec |
-| Memtier_16t_8c | throughput_3 | 199133.29 | 220958.03 | 209582.30199999998 | operations/sec |
-| Memtier_16t_8c | throughput_4 | 198042.78 | 224867.07 | 213176.67700000006 | operations/sec |
-| Memtier_16t_16c | p50lat | 33.535 | 344.063 | 64.34645722344094 | milliseconds |
-| Memtier_16t_16c | p90lat | 52.991 | 518.143 | 91.89321247257914 | milliseconds |
-| Memtier_16t_16c | p95lat | 57.343 | 557.055 | 111.11832309620807 | milliseconds |
-| Memtier_16t_16c | p99.9lat | 69.631 | 978.943 | 204.75744312127865 | milliseconds |
-| Memtier_16t_16c | p99lat | 62.975 | 724.991 | 151.58678063303038 | milliseconds |
-| Memtier_16t_16c | throughput | 45402.08 | 903296.37 | 248871.23561892825 | operations/sec |
-| Memtier_16t_16c | throughput_1 | 22297.41 | 230097.93 | 120755.43762770292 | operations/sec |
-| Memtier_16t_16c | throughput_2 | 23104.67 | 231646.96 | 120205.79481632651 | operations/sec |
-| Memtier_16t_16c | throughput_3 | 204582.28 | 230185.17 | 217630.71233333337 | operations/sec |
-| Memtier_16t_16c | throughput_4 | 200293.43 | 232077.36 | 215070.2026666667 | operations/sec |
+
+| ScenarioName          | Metric Name  | Example Value  | Unit |
+|-------------------------|--------------|---------------|-------|
+|memtier_16t_16c_1kb_r1:1|Throughput_Avg	| 96143.676666666681|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput_Max	|99310.66	        | requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput_Min	|93126.7	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput_Stdev|	1756.3137622699699|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput_P80	|98123.77	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Throughput_Sum	|1153724.12	        |requests/sec|
+|memtier_16t_16c_1kb_r1:1|Hits/sec_Avg	|48070.774999999994	|             |
+|memtier_16t_16c_1kb_r1:1|Hits/sec_Max	|49654.27	|                     |
+|memtier_16t_16c_1kb_r1:1|Hits/sec_Min	|46562.29	|                      |
+|memtier_16t_16c_1kb_r1:1|Hits/sec_Stdev	|878.156472669686   |	           |
+|memtier_16t_16c_1kb_r1:1|Hits/sec_P80	|49060.82	        |              |
+|memtier_16t_16c_1kb_r1:1|Hits/sec_Sum	|576849.29999999993	|               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec_Avg	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec_Min	|0	                |               |   
+|memtier_16t_16c_1kb_r1:1|Misses/sec_Max	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec_Stdev|	0	            |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec_P80	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Misses/sec_Sum	|0	                |               |
+|memtier_16t_16c_1kb_r1:1|Latency-Avg_Avg	|265.929245	        |milliseconds|             
+|memtier_16t_16c_1kb_r1:1|Latency-Avg_Min	|257.37339	        |milliseconds|         
+|memtier_16t_16c_1kb_r1:1|Latency-Avg_Max	|274.49494	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-Avg_Stdev|	4.8649509314371953	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-Avg_P80	|268.37573	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50_Avg	|258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50_Min	|252.927	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50_Max	|266.239	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P50_P80	 |260.095	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90_Min	 |331.775	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90_Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90_P80	 |339.967	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90_Max	 |348.159	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95_Min	 |346.111	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95_Avg	 |354.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95_Max	 |364.543	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95_Stdev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P95_P80	 |356.351	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99_Avg	 |385.36433333333338|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99_Min	 |376.831	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99_Max	 |397.311	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99_Stdev|	5.3427117542394855|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99_P80	 |389.119	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Avg|	442.02566666666667|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Min|	411.647	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Max|	532.479	        |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9_Stdev	|32.01080706400402|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|Latency-P99.9_P80	|452.607	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_Avg	 |99831.145833333328|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_Min	 |96698.49	        |   kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_Stdev	 |1823.6575402628735|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_Max	 |103119.55	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_P80	 |101887.18	        |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_Avg|	48070.774999999994|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|Bandwidth_Sum	 |1197973.75    	|kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_Min|	46562.29	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_Max|	49654.27	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_P80|	49060.82	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_Stdev|	878.156472669686	|requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Throughput_Sum	|576849.29999999993	|requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Avg	|265.9334425	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Min	|257.37776	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_P80	|268.38027	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Max	|274.49896	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-Avg_Stdev|	4.8649389483855519|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Avg	 |258.4736666666667	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Min	 |252.927	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Max	 |266.239	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Min	 |331.775	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_Max	 |348.159	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P50_P80	 |260.095	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P90_P80	 |339.967	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Avg	 |354.81500000000005|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Min	 |346.111	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Max	 |364.543	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_Stdev|	5.0252567430265076|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P95_P80	|356.351	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Avg	|386.047	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Min	|376.831	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Max	|397.311	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_Stdev|	5.3208600808515767|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99_P80	 |391.167	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Avg|	442.87900000000008|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Min|	411.647	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Max|	532.479	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_Stdev|	31.706816932640848|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Latency-P99.9_P80	|454.655	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Avg	 |49797.129166666673|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Stdev	 |909.68510072129129|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Min	 |48234.48	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Max	 |51437.47	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_P80	 |50822.73	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_Avg	 |48072.902499999989|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|GET_Bandwidth_Sum	 |597565.55	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_Min	 |46564.42	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_Max	 |49656.39	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_P80	 |49062.95	    |requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_Stdev	|878.15536932182385|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Throughput_Sum	 |576874.82999999984|	requests/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Avg	 |265.92504749999995|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Min	 |257.36902	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Max	 |274.49091	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_P80	 |268.37118	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Avg	 |258.4736666666667|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-Avg_Stdev|	4.8649615272924267|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Min	 |252.927	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Max	 |266.239	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_P80	 |260.095	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Avg	 |337.74833333333333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P50_Stdev|	3.9095334191634046|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Min	 |331.775	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Max	 |348.159	    |milli0seconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_Stdev|	4.6894529413236388|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P90_P80	 |339.967	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Avg	 |354.30299999999994|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Min	 |346.111	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Max	 |364.543	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_Stdev|	4.8029857380591956|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P95_P80	 |356.351	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Stdev|	5.1850095039021333|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Min	 |374.783	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Avg	 |384.85233333333332|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_P80	 |389.119	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99_Max	 |395.263	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Avg|	441.17233333333337|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Min|	409.599 	|milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Max|	536.575	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_Stdev	|33.438038432632723|	milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Avg	 |50034.015833333331|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Latency-P99.9_P80|	450.559	    |milliseconds|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Min	 |48464.01	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_P80	 |51064.45	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Stdev	 |913.97098802841549|	kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Sum	 |600408.19	    |kilobytes/sec|
+|memtier_16t_16c_1kb_r1:1|SET_Bandwidth_Max	 |51682.07	    |kilobytes/sec|
