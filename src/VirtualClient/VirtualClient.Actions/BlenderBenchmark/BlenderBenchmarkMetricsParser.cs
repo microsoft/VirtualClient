@@ -38,6 +38,7 @@ namespace VirtualClient.Actions
                     {
                         { "blenderVersion", blenderResult.BlenderVersion.Version },
                         { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label },
+
                         // The deviceName and deviceType section contains the device that was tested.
                         { "deviceName", blenderResult.DeviceInfo.ComputeDevices[0].Name },
                         { "deviceType", blenderResult.DeviceInfo.ComputeDevices[0].Type },

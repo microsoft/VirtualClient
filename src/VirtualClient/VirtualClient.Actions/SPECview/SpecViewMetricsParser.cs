@@ -12,8 +12,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SpecViewMetricsParser : MetricsParser
     {
-        private const string Unit = "fps";
-
         /// <summary>
         /// Constructor for <see cref="SpecViewMetricsParser"/>
         /// </summary>
@@ -68,7 +66,7 @@ namespace VirtualClient.Actions
                 }
 
                 metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index } };
-                metrics.Add(new Metric(metricName, fps, Unit, metadata: metadata));
+                metrics.Add(new Metric(metricName, value: fps, unit: "fps", metadata: metadata));
             }
 
             return metrics;

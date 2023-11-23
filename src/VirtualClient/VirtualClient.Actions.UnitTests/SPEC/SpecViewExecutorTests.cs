@@ -48,14 +48,14 @@ namespace VirtualClient.Actions
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task SpecViewExecutorExecutesWorkloadAsExpectedWithPsExec(PlatformID platform, Architecture architecture)
         {
-            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, 2);
+            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, psExecSession: 2);
         }
 
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
         public async Task SpecViewExecutorExecutesWorkloadAsExpectedWithoutPsExec(PlatformID platform, Architecture architecture)
         {
-            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, -1);
+            await this.SpecViewExecutorExecutesWorkloadAsExpected(platform, architecture, psExecSession: -1);
         }
 
 
@@ -64,7 +64,7 @@ namespace VirtualClient.Actions
         public void SpecViewExecutorThrowsWhenTheResultsDirIsNotFoundAfterExecuting(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior();
-            this.mockFixture.FileSystem.Setup(rt => rt.File.ReadAllText(It.IsAny<string>())).Returns<String>(null);
+            this.mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewExeDir, "results_*", SearchOption.TopDirectoryOnly)).Returns(new string[] { });
 
             TestSpecViewExecutor executor = new TestSpecViewExecutor(this.mockFixture);
 
@@ -83,13 +83,20 @@ namespace VirtualClient.Actions
             // Test that the result directories are renamed
             string mockResultDir = this.mockFixture.Combine(this.mockSpecViewExeDir, "results_19991231T235959");
             string mockHistoryResultsDir = this.mockFixture.Combine(this.mockSpecViewExeDir, "hist_" + Path.GetFileName(mockResultDir));
+
+            // Set up the mock directory to return the mock result dir when the test executor tries to find a dir that starts wth "results_"
             mockFixture.Directory.Setup(dir => dir.GetDirectories(this.mockSpecViewExeDir, "results_*", SearchOption.TopDirectoryOnly)).Returns(new[] { mockResultDir });
+
+            // Set up the mock directory to increment resultRenamed by 1 when the test executor tries to rename the result directory
             mockFixture.Directory.Setup(dir => dir.Move(mockResultDir, mockHistoryResultsDir)).Callback(() => resultRenamed++);
 
             // Test that the log files are renamed
             string mockLogFilePath = this.mockFixture.Combine(mockHistoryResultsDir, "SomeViewset", "log.txt");
+
+            // Set up the mock directory to return the mock log file when the test executor tries to find a file called "log.txt"
             mockFixture.Directory.Setup(dir => dir.GetFiles(mockHistoryResultsDir, "log.txt", SearchOption.AllDirectories)).Returns(new[] { mockLogFilePath });
 
+            // Set up the mock directory to increment logRenamed by 1 when the mock log file is renamed to {viewset}-log.txt
             string renamedMockLogFilePath;
             foreach (string viewset in this.viewsets)
             {
@@ -116,14 +123,17 @@ namespace VirtualClient.Actions
 
             string expectedCommandArgumentsFormat, expectedCommandArguments, expectedExePath, expectedWorkingDir;
             string specViewPerfCmd = "-viewset {0} -nogui";
+
             if (psExecSession == -1)
             {
+                // Execute SPECviewperf directly
                 expectedCommandArgumentsFormat = specViewPerfCmd;
                 expectedExePath = this.mockSpecViewExePath;
                 expectedWorkingDir = this.mockSpecViewExeDir;
             }
             else
             {
+                // Use PsExec to execute SPECviewperf
                 string baseArg = $"-s -i {psExecSession} -w {this.mockSpecViewExeDir} -accepteula -nobanner";
                 expectedCommandArgumentsFormat = $"{baseArg} {this.mockSpecViewExePath} {specViewPerfCmd}";
                 expectedExePath = this.mockPstoolsExePath;

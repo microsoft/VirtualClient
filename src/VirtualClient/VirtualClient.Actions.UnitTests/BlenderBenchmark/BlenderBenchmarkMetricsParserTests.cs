@@ -28,8 +28,10 @@ namespace VirtualClient.Actions
         {
             string outputPath = Path.Combine(ExamplePath, "MonsterCPU.json");
             string rawText = File.ReadAllText(outputPath);
+
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             IList<Metric> actualMetrics = testParser.Parse();
+
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.DevicePeakMemory), 646.81, "mb");
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.NumberOfSamples), 26, "sample");
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TimeForSamples), 30.161805, "second");
@@ -43,8 +45,10 @@ namespace VirtualClient.Actions
         {
             string outputPath = Path.Combine(ExamplePath, "JunkshopHIP.json");
             string rawText = File.ReadAllText(outputPath);
+
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             IList<Metric> actualMetrics = testParser.Parse();
+
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.DevicePeakMemory), 4881.3, "mb");
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.NumberOfSamples), 67, "sample");
             MetricAssert.Exists(actualMetrics, nameof(BlenderBenchmarkResult.Stats.TimeForSamples), 30.440895, "second");
@@ -78,8 +82,10 @@ namespace VirtualClient.Actions
 
             string outputPath = Path.Combine(ExamplePath, exampleResultsFilePath);
             string rawText = File.ReadAllText(outputPath);
+
             BlenderBenchmarkMetricsParser testParser = new BlenderBenchmarkMetricsParser(rawText);
             IList<Metric> actualMetrics = testParser.Parse();
+
             foreach (Metric actualMetric in actualMetrics)
             {
                 Assert.AreEqual(expectedMetadata, actualMetric.Metadata);

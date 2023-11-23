@@ -178,15 +178,15 @@ namespace VirtualClient.Actions
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
 
-                    string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
-                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
-
-                    if (resultsContent == null)
+                    if (resultsFileDir == null)
                     {
                         throw new WorkloadResultsException(
                             $"The expected SPECviewperf result directory was not found in '{this.SpecviewPackage.Path}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
+
+                    string resultsFilePath = this.PlatformSpecifics.Combine(resultsFileDir, "resultCSV.csv");
+                    string resultsContent = this.fileSystem.File.ReadAllText(resultsFilePath);
 
                     SpecViewMetricsParser resultsParser = new (resultsContent);
                     IList<Metric> metrics = resultsParser.Parse();
@@ -212,11 +212,13 @@ namespace VirtualClient.Actions
                     string historyResultsPath = this.PlatformSpecifics.Combine(this.SpecviewPackage.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
                     this.fileSystem.Directory.Move(resultsFileDir, historyResultsPath);
 
+                    // upload the SPECviewperf log files if a content manager is specified. These logs can be useful for debugging SPECviewperf issues.
                     if (this.TryGetContentStoreManager(out IBlobManager blobManager))
                     {
                         string specviewOriginalLogPath = this.fileSystem.Directory.GetFiles(historyResultsPath, "log.txt", SearchOption.AllDirectories).FirstOrDefault();
                         string specviewRenamedLogPath = this.PlatformSpecifics.Combine(Path.GetDirectoryName(specviewOriginalLogPath), scenario + "-" + "log.txt");
                         this.fileSystem.Directory.Move(specviewOriginalLogPath, specviewRenamedLogPath);
+
                         // other viewsets can start while the previous viewset's log file is uploading.
                         this.UploadSpecviewLogAsync(blobManager, specviewRenamedLogPath, DateTime.UtcNow, cancellationToken);
                     }
@@ -273,6 +275,10 @@ namespace VirtualClient.Actions
 
         }
 
+        /// <summary>
+        /// Add vcruntime140.dll to the system environment variable. 
+        /// This dll is required in order to run SPECviewperf properly.
+        /// </summary>
         private async Task SetUpEnvironmentVariable()
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();

@@ -44,7 +44,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The Scenes that will be run by Blender Benchmark.
+        /// The scenes that will be run by Blender Benchmark.
         /// </summary>
         public string[] Scenes
         {
@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The Blender Version being used by the blender benchmark.
+        /// The blender version being used by the Blender benchmark.
         /// </summary>
         public string BlenderVersion
         {
@@ -111,6 +111,7 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string commandArguments;
+
             // Run blender Benchmark over each scene and device type combination
             foreach (string deviceType in this.DeviceTypes)
             {
@@ -135,7 +136,6 @@ namespace VirtualClient.Actions
                             }
                         }
                     }
-
                 }
             }
         }
@@ -204,6 +204,9 @@ namespace VirtualClient.Actions
             }
         }
 
+        /// <summary>
+        /// Download the required Blender engine and the scenes that will be used by Blender benchmark.
+        /// </summary>
         private async Task InitializeBlenderBenchmarkAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             State installationState = await this.stateManager.GetStateAsync<State>(nameof(BlenderBenchmarkExecutor), cancellationToken)
@@ -216,11 +219,10 @@ namespace VirtualClient.Actions
                 await this.stateManager.SaveStateAsync(nameof(BlenderBenchmarkExecutor), new State(), cancellationToken)
                     .ConfigureAwait(false);
             }
-
         }
 
         /// <summary>
-        /// Download Blender engine with the specified version for Blender Benchmark
+        /// Download Blender engine with the specified version for Blender benchmark.
         /// </summary>
         private async Task DownloadBlenderAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

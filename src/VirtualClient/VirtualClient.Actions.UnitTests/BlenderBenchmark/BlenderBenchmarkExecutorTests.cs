@@ -70,6 +70,7 @@ namespace VirtualClient.Actions
 
             // engine download cmd
             commands.Add($"{expectedExecutablePath} blender download {this.mockFixture.Parameters["BlenderVersion"]}");
+
             // scenes download cmd
             commands.Add($"{expectedExecutablePath} scenes download --blender-version {this.mockFixture.Parameters["BlenderVersion"]} {string.Join(" ", this.scenes)}");
 
@@ -95,6 +96,8 @@ namespace VirtualClient.Actions
 
             // engine download cmd
             string engineDownloadCmd = $"{expectedExecutablePath} blender download {this.mockFixture.Parameters["BlenderVersion"]}";
+
+            // scene download cmd
             string scenesDownloadCmd = $"{expectedExecutablePath} scenes download --blender-version {this.mockFixture.Parameters["BlenderVersion"]} {string.Join(" ", this.scenes)}";
 
             TestBlenderExecutor executor = new TestBlenderExecutor(this.mockFixture);
@@ -129,6 +132,8 @@ namespace VirtualClient.Actions
 
             this.results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "BlenderBenchmark", "MonsterCPU.json"));
             this.mockFixture.Process.StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results));
+
+            // Set up the process's standard output to be the mock blender metrics result as the parser reads the results from the std out.
             this.mockFixture.ProcessManager.OnProcessCreated = (process) => { ((InMemoryProcess)process).StandardOutput = new Common.ConcurrentBuffer(new StringBuilder(this.results)); };
 
             this.mockState = new State();
