@@ -12,7 +12,7 @@ namespace VirtualClient.Actions
     using DataTableExtensions = global::VirtualClient.Contracts.DataTableExtensions;
 
     /// <summary>
-    /// Parser for geekbench output document
+    /// Parser for Hadoop output document
     /// </summary>
     public class HadoopMetricsParser : MetricsParser
     {
@@ -22,9 +22,24 @@ namespace VirtualClient.Actions
         private static readonly Regex HadoopSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// Separate the column values by 2 or more spaces, so that "N-Body Physics" will not be separated into two cells.
+        /// Separate the column values using the equals to delimeter.
         /// </summary>
         private static readonly Regex HadoopDataTableDelimiter = new Regex(@"=", RegexOptions.ExplicitCapture);
+
+        /// <summary>
+        /// To separate value/unit like '1.86 GB/sec'. This regex looks forward for digit and backward for word.
+        /// </summary>
+        private static readonly Regex ValueUnitSplitRegex = new Regex(@"(\S.*?)\s*\(([^)]*)\)*", RegexOptions.None);
+
+        /// <summary>
+        /// Column Values in the Hadoop output.
+        /// </summary>
+        private IList<string> columnNames = new List<string> { "Name", "Value" };
+
+        /// <summary>
+        /// Split Column Values to find the unit in the Hadoop output.
+        /// </summary>
+        private IList<string> splitColumnNames = new List<string> { "RowName", "Unit" };
 
         /// <summary>
         /// Constructor for <see cref="HadoopMetricsParser"/>
@@ -36,17 +51,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Single core result.
+        /// File System Counters result.
         /// </summary>
         public DataTable FileSystemCounters { get; set; }
 
         /// <summary>
-        /// Multi core result.
+        /// Job Counters result.
         /// </summary>
         public DataTable JobCounters { get; set; }
 
         /// <summary>
-        /// Multi core result.
+        /// Map Reduce Framework result.
         /// </summary>
         public DataTable MapReduceFrameworkCounters { get; set; }
 
@@ -59,10 +74,12 @@ namespace VirtualClient.Actions
             this.ParseJobCounters();
             this.ParseMapReduceFrameworkCounters();
 
-            List<Metric> metrics = new List<Metric>();
-
-            metrics.AddRange(this.FileSystemCounters.GetMetrics(nameIndex: 0, valueIndex: 1, metricRelativity: MetricRelativity.LowerIsBetter));
-            metrics.AddRange(this.JobCounters.GetMetrics(nameIndex: 0, valueIndex: 1, metricRelativity: MetricRelativity.HigherIsBetter));
+            List<Metric> metrics =
+            [
+                .. this.FileSystemCounters.GetMetrics(nameIndex: 0, valueIndex: 1, metricRelativity: MetricRelativity.LowerIsBetter),
+                .. this.JobCounters.GetMetrics(nameIndex: 0, valueIndex: 1, metricRelativity: MetricRelativity.HigherIsBetter),
+                .. this.MapReduceFrameworkCounters.GetMetrics(nameIndex: 0, valueIndex: 1, metricRelativity: MetricRelativity.HigherIsBetter),
+            ];
 
             return metrics;
         }
@@ -78,25 +95,23 @@ namespace VirtualClient.Actions
         private void ParseFileSystemCounters()
         {
             string sectionName = "File System Counters";
-            IList<string> columnNames = new List<string> { "Name", "Value" };
+            
             this.FileSystemCounters = DataTableExtensions.ConvertToDataTable(
-                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, columnNames);
+                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
         }
 
         private void ParseJobCounters()
         {
             string sectionName = "Job Counters";
-            IList<string> columnNames = new List<string> { "Name", "Value" };
             this.JobCounters = DataTableExtensions.ConvertToDataTable(
-                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, columnNames);
+                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
         }
 
         private void ParseMapReduceFrameworkCounters()
         {
             string sectionName = "Map-Reduce Framework";
-            IList<string> columnNames = new List<string> { "Name", "Value" };
             this.MapReduceFrameworkCounters = DataTableExtensions.ConvertToDataTable(
-                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, columnNames);
+                this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
         }
     }
 }

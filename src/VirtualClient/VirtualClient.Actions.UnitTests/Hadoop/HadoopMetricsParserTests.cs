@@ -15,25 +15,37 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class HadoopParserUnitTests
     {
-        private string rawText;
-        private HadoopMetricsParser testParser;
+        private string teragentResultRawText;
+        private string terasortResultRawText;
+        private HadoopMetricsParser teragenTestParser;
+        private HadoopMetricsParser terasortTestParser;
+
 
         [SetUp]
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Hadoop\HadoopTeragenExample.txt");
-            this.rawText = File.ReadAllText(outputPath);
-            this.testParser = new HadoopMetricsParser(this.rawText);
-            this.testParser.Parse();
+            string teragenOutputPath = Path.Combine(workingDirectory, @"Examples\Hadoop\HadoopTeragenExample.txt");
+            string terasortOutputPath = Path.Combine(workingDirectory, @"Examples\Hadoop\HadoopTerasortExample.txt");
+
+            this.teragentResultRawText = File.ReadAllText(teragenOutputPath);
+            this.terasortResultRawText = File.ReadAllText(terasortOutputPath);
+
+            this.teragenTestParser = new HadoopMetricsParser(this.teragentResultRawText);
+            this.terasortTestParser = new HadoopMetricsParser(this.terasortResultRawText);
+
+            this.teragenTestParser.Parse();
+            this.terasortTestParser.Parse();
         }
 
         [Test]
         public void HadoopTerasortParserVerifySingleCoreResult()
         {
-            this.testParser.FileSystemCounters.PrintDataTableFormatted();
+            this.teragenTestParser.JobCounters.PrintDataTableFormatted();
+            this.terasortTestParser.JobCounters.PrintDataTableFormatted();
 
-            Assert.AreEqual(4, this.testParser.FileSystemCounters.Columns.Count);
+            Assert.AreEqual(2, this.teragenTestParser.JobCounters.Columns.Count);
+            Assert.AreEqual(2, this.terasortTestParser.JobCounters.Columns.Count);
         }
     }
 }

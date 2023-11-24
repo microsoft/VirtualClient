@@ -6,7 +6,7 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
     "Parameters": {
-        "RowNumber": 100000
+        "RowCount": 100000
     },
     "Actions": [
         {
@@ -15,7 +15,7 @@
             "Scenario": "HadoopTerasortWorkload",
             "PackageName": "hadoop-3.3.5",
             "JdkPackageName": "javadevelopmentkit",
-            "Rows": "$.Parameters.RowNumber"
+            "RowCount": "$.Parameters.RowCount"
           }
         }
     ],

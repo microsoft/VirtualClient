@@ -30,6 +30,8 @@ namespace VirtualClient.Actions
         private IPackageManager packageManager;
         private ISystemManagement systemManagement;
         private IStateManager stateManager;
+        private HadoopExecutorState state;
+        private bool disposed;
 
         /// <summary>
         /// Constructor for <see cref="HadoopTerasortExecutor"/>
@@ -66,16 +68,16 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The Row Number count defined in the profile.
         /// </summary>
-        public int RowNumber
+        public int RowCount
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.RowNumber), 1000);
+                return this.Parameters.GetValue<int>(nameof(this.RowCount), 100000);
             }
 
             set
             {
-                this.Parameters[nameof(this.RowNumber)] = value;
+                this.Parameters[nameof(this.RowCount)] = value;
             }
         }
 
@@ -104,7 +106,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            HadoopExecutorState state = await this.stateManager.GetStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", cancellationToken)
+            this.state = await this.stateManager.GetStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", cancellationToken)
                 ?? new HadoopExecutorState();
 
             DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(
@@ -131,7 +133,7 @@ namespace VirtualClient.Actions
                         ErrorReason.PlatformNotSupported);
             }
 
-            if (!state.HadoopExecutorStateInitialized)
+            if (!this.state.HadoopExecutorStateInitialized)
             {
                 this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, this.JavaPackageDirectory, EnvironmentVariableTarget.Process);
 
@@ -141,14 +143,21 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("bash", $"-c \"echo y | ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"chmod 0600 ~/.ssh/authorized_keys\"", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs namenode -format\"", this.PackageDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("bash", $"-c \"echo y | bin/hdfs namenode -format\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs dfs -mkdir /user\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs dfs -mkdir /user/azureuser\"", this.PackageDirectory, telemetryContext, cancellationToken);
-
-                state.HadoopExecutorStateInitialized = true;
+                this.state.HadoopExecutorStateInitialized = true;
             }
 
-            await this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", state, cancellationToken);
+            if (!this.state.HadoopExecutorServicesStarted)
+            {
+                await this.ExecuteCommandAsync("bash", $"-c sbin/start-dfs.sh", this.PackageDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("bash", $"-c sbin/start-yarn.sh", this.PackageDirectory, telemetryContext, cancellationToken);
+                this.state.HadoopExecutorServicesStarted = true;
+                await Task.Delay(30000); // Delay during the safe mode of the name node to verify the status of replicated nodes.
+            }
+
+            await this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", this.state, cancellationToken);
         }
 
         /// <summary>
@@ -157,12 +166,8 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string timestamp = DateTime.Now.ToString("ddMMyyHHmmss");
-            Task.Delay(10000, cancellationToken);
 
-            await this.ExecuteCommandAsync("bash", $"-c sbin/start-dfs.sh", this.PackageDirectory, telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("bash", $"-c sbin/start-yarn.sh", this.PackageDirectory, telemetryContext, cancellationToken);
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"-c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen {this.RowNumber} /inp-{timestamp}\"", this.PackageDirectory, telemetryContext, cancellationToken))
+            using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"-c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen {this.RowCount} /inp-{timestamp}\"", this.PackageDirectory, telemetryContext, cancellationToken))
              {
                if (!cancellationToken.IsCancellationRequested)
                {
@@ -172,9 +177,7 @@ namespace VirtualClient.Actions
 
                    if (process.StandardError == null)
                    {
-                        throw new WorkloadResultsException(
-                                            $"Hadoop Terageen results data not found in the process details",
-                                            ErrorReason.WorkloadResultsNotFound);
+                        throw new WorkloadResultsException($"Hadoop Terageen results data not found in the process details", ErrorReason.WorkloadResultsNotFound);
                    }
 
                    this.CaptureMetrics(process, "Hadoop Teragen", telemetryContext, cancellationToken);
@@ -191,17 +194,41 @@ namespace VirtualClient.Actions
 
                     if (process.StandardError == null)
                     {
-                        throw new WorkloadResultsException(
-                                            $"Hadoop Terageen results data not found in the process details",
-                                            ErrorReason.WorkloadResultsNotFound);
+                        throw new WorkloadResultsException($"Hadoop Terageen results data not found in the process details", ErrorReason.WorkloadResultsNotFound);
                     }
 
                     this.CaptureMetrics(process, "Hadoop Terasort", telemetryContext, cancellationToken);
                 }
             }
 
-            await this.ExecuteCommandAsync("bash", $"-c sbin/stop-dfs.sh", this.PackageDirectory, telemetryContext, cancellationToken);
-            await this.ExecuteCommandAsync("bash", $"-c sbin/stop-yarn.sh", this.PackageDirectory, telemetryContext, cancellationToken);
+        }
+
+        /// <summary>
+        /// Disposes of resources used by the class instance.
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing && !this.disposed)
+            {
+                EventContext telemetryContext = EventContext.Persisted()
+                        .AddContext("DisposeServices", "HadoopExecutor");
+
+                Task.Run(async () =>
+                {
+                    await this.Logger.LogMessageAsync($"{nameof(HadoopTerasortExecutor)}.DisposeServices", telemetryContext, async () =>
+                    {
+                        this.state.HadoopExecutorServicesStarted = false;
+
+                        await Task.WhenAll(
+                            this.ExecuteCommandAsync("bash", $"-c sbin/stop-dfs.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
+                            this.ExecuteCommandAsync("bash", $"-c sbin/stop-yarn.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
+                            this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", this.state, CancellationToken.None));
+                    });
+                }).GetAwaiter().GetResult(); // Ensure Task.Run completes before continuing
+
+                this.disposed = true;
+            }
         }
 
         private void ConfigurationFilesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -334,6 +361,19 @@ namespace VirtualClient.Actions
                 set
                 {
                     this.Properties[nameof(HadoopExecutorState.HadoopExecutorStateInitialized)] = value;
+                }
+            }
+
+            public bool HadoopExecutorServicesStarted
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(HadoopExecutorState.HadoopExecutorServicesStarted), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(HadoopExecutorState.HadoopExecutorServicesStarted)] = value;
                 }
             }
         }

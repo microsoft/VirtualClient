@@ -157,7 +157,7 @@ namespace VirtualClient.Actions
                 { nameof(HadoopTerasortExecutor.PackageName), "hadoop-3.3.5" },
                 { nameof(HadoopTerasortExecutor.JdkPackageName), "javadevelopmentkit" },
                 { nameof(HadoopTerasortExecutor.Scenario), "HadoopTerasortWorkload" },
-                { nameof(HadoopTerasortExecutor.RowNumber), "10000" }
+                { nameof(HadoopTerasortExecutor.RowCount), "10000" }
             };
 
             string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
