@@ -17,6 +17,7 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Installation component for AMD GPU Drivers
@@ -347,6 +348,12 @@ namespace VirtualClient.Dependencies
                     $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                     ErrorReason.WorkloadDependencyMissing);
             }
+
+            this.MetadataContract.AddForScenario(
+                this.PackageName,
+                null,
+                amdDriverInstallerPackage.Version);
+            this.MetadataContract.Apply(telemetryContext);
 
             switch (this.GpuModel)
             {
