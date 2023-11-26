@@ -127,6 +127,7 @@ namespace VirtualClient
 
                 matchingProcess ??= processManager.Processes.FirstOrDefault(
                     proc => Regex.IsMatch(proc.FullCommand(), command, RegexOptions.IgnoreCase)
+                    && proc.StartInfo.WorkingDirectory == workingDir
                     && !processesConfirmed.Any(otherProc => object.ReferenceEquals(proc, otherProc)));
 
                 if (matchingProcess == null)
