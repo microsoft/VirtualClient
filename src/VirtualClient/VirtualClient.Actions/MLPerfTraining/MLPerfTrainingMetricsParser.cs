@@ -40,13 +40,13 @@ namespace VirtualClient.Actions
             Metric metricAccuracy = this.AccuracyParsing(stringsAccuracy);
             this.Metrics.Add(metricAccuracy);
 
-            string patternDelimiterE2E = @"'e2e_time':\s*([^,}]+)";
-            string patternDelimiterTrainingPerSec = @"'training_sequences_per_second':\s*([^,}]+)";
-            string patternDelimiterFinalLoss = @"'final_loss':\s*([^,}]+)";
-            string patternDelimiterRawTrainTime = @"'raw_train_time':\s*([^,}]+)";
+            string patternDelimiterE2E = $@"'e2e_time':\s*{TextParsingExtensions.DoubleTypeRegex}";
+            string patternDelimiterTrainingPerSec = $@"'training_sequences_per_second':\s*{TextParsingExtensions.DoubleTypeRegex}";
+            string patternDelimiterFinalLoss = $@"'final_loss':\s*{TextParsingExtensions.DoubleTypeRegex}";
+            string patternDelimiterRawTrainTime = $@"'raw_train_time':\s*{TextParsingExtensions.DoubleTypeRegex}";
 
             string metricName = string.Empty;
-            double metricValue = 0;
+            double metricValue = double.NaN;
             string metricUnit = string.Empty;
             MetricRelativity relativity = MetricRelativity.LowerIsBetter;
 

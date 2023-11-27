@@ -150,8 +150,7 @@ namespace VirtualClient.Actions
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.InitializationStarted", telemetryContext);
 
-            await this.LogIfUnixDistroNotSupportedAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await this.ThrowIfUnixDistroNotSupportedAsync(cancellationToken);
 
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath workloadPackage = await packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
@@ -275,12 +274,11 @@ namespace VirtualClient.Actions
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         /// <exception cref="WorkloadException"></exception>
-        private async Task LogIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
+        private async Task ThrowIfUnixDistroNotSupportedAsync(CancellationToken cancellationToken)
         {
             if (this.Platform == PlatformID.Unix)
             {
-                var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);
+                var linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
 
                 switch (linuxDistributionInfo.LinuxDistribution)
                 {
@@ -291,8 +289,11 @@ namespace VirtualClient.Actions
                     case LinuxDistribution.SUSE:
                         break;
                     default:
-                        this.Logger.LogNotSupported("MLPerf", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-                        break;
+                        throw new WorkloadException(
+                            $"The MLPerf Training benchmark workload is not supported on the current Linux distro - " +
+                            $"{linuxDistributionInfo.LinuxDistribution.ToString()}.  Supported distros include:" +
+                            $" Ubuntu, Debian, CentOD7, RHEL7, SUSE. ",
+                            ErrorReason.LinuxDistributionNotSupported);
                 }
             }
         }
