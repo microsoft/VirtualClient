@@ -6,13 +6,14 @@
         "SupportedOperatingSystems": "Ubuntu",
         "Notes_ConnectionLimits": "Each Memtier benchmark action will establish (--threads x --clients) connections against the Memcached server for each client instance/process. Ensure that the server-side OS does not place a limit on connections that might exceed this (e.g. ulimit -Sn on Linux)."
     },
-    "Parameters": {
-        "ServerPort": 6379,
-        "ServerMaxConnections": 16384,
-        "ClientInstances": 8,
-        "Duration": "00:02:00",
-        "Username": null
-    },
+  "Parameters": {
+    "ServerPort": 6379,
+    "ServerMaxConnections": 16384,
+    "ClientInstances": 8,
+    "Duration": "00:02:00",
+    "Username": null,
+    "PerProcessMetric": false
+  },
     "Actions": [
         {
             "Type": "MemcachedServerExecutor",
@@ -30,135 +31,147 @@
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_32b_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": 1,
-                "WarmUp": true,
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_32b_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 32 --pipeline 32 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": 1,
+            "WarmUp": true,
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_1kb_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": 1,
-                "WarmUp": true,
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_1kb_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 1024 --pipeline 32 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": 1,
+            "WarmUp": true,
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "warmup_10kb_pool",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
-                "ClientInstances": 1,
-                "WarmUp": true,
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "warmup_10kb_pool",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 1 --clients 1 --ratio 1:0 --data-size 10240 --pipeline 32 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern S:S --run-count 1 --requests=allkeys",
+            "ClientInstances": 1,
+            "WarmUp": true,
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_8t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_8t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 8 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_16t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_16t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 16 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_32b_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_32b_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 32 --pipeline 100 --key-minimum 1 --key-maximum 10000000 --key-prefix sm --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_1kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_1kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 1024 --pipeline 100 --key-minimum 1 --key-maximum 1000000 --key-prefix med --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         },
         {
             "Type": "MemtierBenchmarkClientExecutor",
-            "Parameters": {
-                "Scenario": "memtier_32t_16c_10kb_r1:1",
-                "PackageName": "memtier",
-                "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
-                "ClientInstances": "$.Parameters.ClientInstances",
-                "Duration": "$.Parameters.Duration",
-                "Role": "Client"
-            }
+          "Parameters": {
+            "Scenario": "memtier_32t_16c_10kb_r1:1",
+            "PackageName": "memtier",
+            "CommandLine": "--protocol memcache_text --threads 32 --clients 16 --ratio 1:1 --data-size 10240 --pipeline 100 --key-minimum 1 --key-maximum 100000 --key-prefix lg --key-pattern R:R --run-count 1 --print-percentiles 50,90,95,99,99.9 --random-data --test-time {Duration}",
+            "ClientInstances": "$.Parameters.ClientInstances",
+            "Duration": "$.Parameters.Duration",
+            "PerProcessMetric": "$.Parameters.PerProcessMetric",
+            "Role": "Client"
+          }
         }
     ],
     "Dependencies": [
