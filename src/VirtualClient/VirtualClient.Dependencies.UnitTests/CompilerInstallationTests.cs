@@ -109,7 +109,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(11, commandExecuted);
+            Assert.AreEqual(7, commandExecuted);
         }
 
         [Test]
@@ -285,7 +285,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(11, commandExecuted);
+            Assert.AreEqual(7, commandExecuted);
         }
 
         [Test]
