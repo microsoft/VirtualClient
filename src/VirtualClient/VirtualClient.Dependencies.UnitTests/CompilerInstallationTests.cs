@@ -67,10 +67,6 @@ namespace VirtualClient.Dependencies
             List<string> expectedCommands = new List<string>()
             {
                 "sudo update-alternatives --remove-all gcc",
-                "sudo update-alternatives --remove-all g++",
-                "sudo update-alternatives --remove-all gcov",
-                "sudo update-alternatives --remove-all gcc-ar",
-                "sudo update-alternatives --remove-all gcc-ranlib",
                 "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
@@ -246,10 +242,6 @@ namespace VirtualClient.Dependencies
             List<string> expectedCommands = new List<string>()
             {
                 "sudo update-alternatives --remove-all gcc",
-                "sudo update-alternatives --remove-all g++",
-                "sudo update-alternatives --remove-all gcov",
-                "sudo update-alternatives --remove-all gcc-ar",
-                "sudo update-alternatives --remove-all gcc-ranlib",
                 "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",

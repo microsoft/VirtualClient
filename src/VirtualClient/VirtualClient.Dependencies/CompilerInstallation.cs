@@ -241,10 +241,6 @@ namespace VirtualClient.Dependencies
             string[] compilers =
             {
                 "gcc",
-                "g++",
-                "gcov",
-                "gcc-ar",
-                "gcc-ranlib",
                 "gfortran"
             };
 
