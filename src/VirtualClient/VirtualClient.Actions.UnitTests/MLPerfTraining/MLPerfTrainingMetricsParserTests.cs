@@ -28,27 +28,30 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase("Example_bert_real_output.txt")]
-        public void MLPerfTrainingParserVerifyRealResults_1(string exampleFile)
+        public void MLPerfTrainingMetricsParserParsesCorrectMetricsFromRawText(string exampleFile)
         {
             string outputPath = Path.Combine(this.ExamplePath, exampleFile);
             this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new MLPerfTrainingMetricsParser(this.rawText);
+            IList<Metric> metrics = this.testParser.Parse();
 
-            if (rawText.Contains("time_ms"))
-            {
-                this.testParser = new MLPerfTrainingMetricsParser(this.rawText);
-                IList<Metric> metrics = this.testParser.Parse();
+            Assert.AreEqual(5, metrics.Count);
+            MetricAssert.Exists(metrics, "eval_mlm_accuracy", 0.71472860574722286);
+            MetricAssert.Exists(metrics, "e2e_time", 596.53150777816768, "s");
+            MetricAssert.Exists(metrics, "training_sequences_per_second", 1855.6555448898107);
+            MetricAssert.Exists(metrics, "final_loss", 0);
+            MetricAssert.Exists(metrics, "raw_train_time", 577.98435058593748, "s");
+        }
 
-                Assert.AreEqual(5, metrics.Count);
-                MetricAssert.Exists(metrics, "Accuracy", 0.71505482494831085, "%");
-                MetricAssert.Exists(metrics, "e2e_time", 595.89423966407776, "s");
-                MetricAssert.Exists(metrics, "training_sequences_per_second", 1855.5367415584262, "");
-                MetricAssert.Exists(metrics, "final_loss", 0, "");
-                MetricAssert.Exists(metrics, "raw_train_time", 577.73040866851807, "s");
-            }
-            else
-            {
-                // Do nothing as there are no valid metrics
-            }
+        [Test]
+        [TestCase("Example_bert_incorrect_output.txt")]
+        public void MLPerfTrainingMetricsParserThrowsOnIncorrectRawText(string exampleFile)
+        {
+            string outputPath = Path.Combine(this.ExamplePath, exampleFile);
+            this.rawText = File.ReadAllText(outputPath);
+            this.testParser = new MLPerfTrainingMetricsParser(this.rawText);
+            SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
+            StringAssert.Contains("The MlPerf Training output file has incorrect format for parsing", exception.Message);
         }
     }
 }
