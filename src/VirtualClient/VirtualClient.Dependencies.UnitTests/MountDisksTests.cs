@@ -19,20 +19,18 @@ namespace VirtualClient.Dependencies
     {
         private MockFixture mockFixture;
         private IEnumerable<Disk> disks;
-        private int diskVolumeCount = 0;
+        private List<DiskVolume> diskVolumes;
 
         [SetUp]
         public void SetupTest()
         {
             this.mockFixture = new MockFixture();
-            this.mockFixture.SetupMocks();
-            this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
         }
 
         [Test]
-        public async Task MountDisksMountsTheExpectedNumberOfDisks()
+        public async Task MountDisksMountsOnExpectedPathForUnix()
         {
-            this.SetupDefaultMockBehaviors();
+            this.SetupDefaultMockBehaviors(PlatformID.Unix);
 
             List<Disk> disksMounted = new List<Disk>();
 
@@ -40,16 +38,57 @@ namespace VirtualClient.Dependencies
             {
                 await diskMounter.ExecuteAsync(CancellationToken.None);
 
+                int index = 0;
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, $"{this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)]}{index}", It.IsAny<CancellationToken>()));
+                    index++;
+                }
+
                 this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
                    It.IsAny<DiskVolume>(),
                    It.IsAny<string>(),
                    It.IsAny<CancellationToken>()),
-                   Times.Exactly(this.diskVolumeCount));
+                   Times.Exactly(this.diskVolumes.Count));
             }
         }
 
-        private void SetupDefaultMockBehaviors()
+        [Test]
+        public async Task MountDisksMountsOnExpectedPathForWindows()
         {
+            this.SetupDefaultMockBehaviors(PlatformID.Win32NT);
+            this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)] = "C:\\mockmountpath";
+
+            List<Disk> disksMounted = new List<Disk>();
+
+            using (MountDisks diskMounter = new MountDisks(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await diskMounter.ExecuteAsync(CancellationToken.None);
+
+                int index = 0;
+
+                foreach (DiskVolume diskVolume in this.diskVolumes)
+                {
+                    this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(diskVolume, $"{this.mockFixture.Parameters[nameof(MountDisks.MountPointPrefix)]}{index}", It.IsAny<CancellationToken>()));
+                    index++;
+                }
+
+                this.mockFixture.DiskManager.Verify(mgr => mgr.CreateMountPointAsync(
+                   It.IsAny<DiskVolume>(),
+                   It.IsAny<string>(),
+                   It.IsAny<CancellationToken>()),
+                   Times.Exactly(this.diskVolumes.Count));
+            }
+        }
+
+        private void SetupDefaultMockBehaviors(PlatformID platformID)
+        {
+            this.diskVolumes = new List<DiskVolume>();
+
+            this.mockFixture.Setup(platformID);
+            this.disks = this.mockFixture.CreateDisks(platformID, true);
+
             this.disks.ToList().ForEach(disk =>
             {
                 if (!disk.IsOperatingSystem())
@@ -57,7 +96,7 @@ namespace VirtualClient.Dependencies
                     // (disk.Volumes as ICollection<DiskVolume>).Clear();
                     disk.Volumes.ToList().ForEach(volume =>
                         volume.AccessPaths = new List<string>());
-                    this.diskVolumeCount += disk.Volumes.Count();
+                    this.diskVolumes.AddRange(disk.Volumes);
                 }
             });
 
