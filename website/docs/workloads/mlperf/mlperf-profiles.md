@@ -66,6 +66,10 @@ Runs the MLPerf benchmark workload to test GPU performance.
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
 
+* **Storage Requirements**
+  * Min OS Disk Size : 256GB
+  * Min Data Disk Size : 8TB (1 Disk)
+
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
