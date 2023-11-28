@@ -4,7 +4,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Workload Details](./mlperf.md)  
 
 ## PERF-GPU-MLPERF.json
-Runs the MLPerf benchmark workload to test GPU performance. 
+Runs the MLPerf benchmark workload to test GPU performance.
 
 :::warning
 *This workload is supported ONLY for systems that contain Nvidia GPU hardware components. See the documentation above for more specifics.*
@@ -100,7 +100,7 @@ Runs the MLPerf benchmark workload to test GPU performance.
   | ContainerName         | Optional. Name for docker model.             |language_model |
   | DataPath              | Optional. Folder name for training data. /mlperftraining0/{DataPath}             |mlperf-training-data-bert.1.0.0|
   | GPUNum                | Optional. Number of GPUs to stress.               |8              |
-  | ConfigFile            | Optional. Configuration for running workload. Visit the implementation for a model [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks).             |config_DGXA100_1x8x56x1.sh|
+  | ConfigFile            | Optional. Configuration for running workload. Visit the implementation for a model for all supported config files. [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks).             |config_DGXA100_1x8x56x1.sh|
   | PackageName           | Required. Packname for mlperf training.               |               |
 
 * **MLPERF Trainging Changes**
