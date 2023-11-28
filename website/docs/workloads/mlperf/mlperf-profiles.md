@@ -2,6 +2,7 @@
 The following profiles run customer-representative or benchmarking scenarios using the MLPerf workload.
 
 * [Workload Details](./mlperf.md)  
+* [MLPerf Training Bert Preprocessing Data](./mlperf-trainining-bert-preprocessing-data.md)
 
 ## PERF-GPU-MLPERF.json
 Runs the MLPerf benchmark workload to test GPU performance.

@@ -6,6 +6,7 @@ MLPerf is a consortium of AI leaders from academia, research labs, and industry 
 * [MLPerf Inference Documentation](https://github.com/mlcommons/inference_results_v2.0)  
 * [MLPerf Training Benchmarks](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks)
 * [MLPerf Inference Benchmarks](https://github.com/mlcommons/inference_results_v2.0/tree/master/closed/NVIDIA)
+* [MLPerf Training Bert Preprocessing Data](./mlperf-trainining-bert-preprocessing-data.md)
 
 ## System Requirements
 
@@ -117,7 +118,7 @@ The following metrics are examples of those captured by the Virtual Client when 
 ## Workload Metrics MLPerf Training
 | Scenario                                | Metric Name                    | Example Value (min)  | Example Value (max) | Example Value (avg) | Unit |
 |-----------------------------------------|--------------------------------|----------------------|---------------------|---------------------|------|
-| training-mlperf-bert-batchsize-45-gpu-8 | Accuracy                       | 0.650552854          | 0.672552854         | 0.662552854         | %    |
+| training-mlperf-bert-batchsize-45-gpu-8 | eval_mlm_accuracy                       | 0.650552854          | 0.672552854         | 0.662552854         | %    |
 | training-mlperf-bert-batchsize-45-gpu-8 | e2e_time	                     | 1071.040571          | 1078.040571         | 1074.040571         | s    |
 | training-mlperf-bert-batchsize-45-gpu-8 | training_sequences_per_second	 | 2288.463615          | 2300.463615         | 2295.463615         |      |
 | training-mlperf-bert-batchsize-45-gpu-8 | final_loss	                   | 0	                  | 0                   | 0                   |      |
