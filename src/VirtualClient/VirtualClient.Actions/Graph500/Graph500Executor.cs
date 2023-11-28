@@ -66,6 +66,18 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The commandline arguments that are used for make command in compiling Graph500.
+        /// </summary>
+        public string CommandArguments
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(Graph500Executor.CommandArguments), out IConvertible commandArguments);
+                return commandArguments?.ToString();
+            }
+        }
+
+        /// <summary>
         /// The path to the Graph500 executable file.
         /// </summary>
         protected string ExecutableFilePath { get; set; }
@@ -95,7 +107,7 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                await this.ExecuteCommandAsync("make", null, this.PackageDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("make", this.CommandArguments, this.PackageDirectory, cancellationToken);
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken))
                 {

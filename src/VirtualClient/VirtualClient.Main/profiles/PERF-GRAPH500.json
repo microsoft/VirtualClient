@@ -5,10 +5,11 @@
         "SupportedPlatforms": "linux-x64,linux-arm64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
     },
-    "Parameters": {
-        "Scale": "10",
-        "EdgeFactor": "16"
-    },
+  "Parameters": {
+    "Scale": "10",
+    "EdgeFactor": "16",
+    "CommandArguments": "LDFLAGS=\"-lpthread -fcommon\""
+  },
     "Actions": [
         {
             "Type": "Graph500Executor",
@@ -16,7 +17,8 @@
                 "Scenario": "GraphAlgorithms",
                 "PackageName": "graph500",
                 "Scale": "$.Parameters.Scale",
-                "EdgeFactor": "$.Parameters.EdgeFactor"
+                "EdgeFactor": "$.Parameters.EdgeFactor",
+                "CommandArguments": "$.Parameters.CommandArguments"
             }
         }
     ],
