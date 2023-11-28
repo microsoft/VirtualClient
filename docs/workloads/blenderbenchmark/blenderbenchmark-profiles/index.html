@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.a91966c0.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.b9897d84.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.4107d89a.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -49,7 +49,7 @@
 </li>
 <li>
 <p><strong>Profile Parameters</strong></p>
-<table><thead><tr><th>Parameter</th><th>Purpose</th><th>Default Value</th></tr></thead><tbody><tr><td>GpuModel</td><td>Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]</td><td>None</td></tr><tr><td>BlenderVersion</td><td>Optional. Specify which blender version the benchmark should use. Currently supported versions: [3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.1]</td><td>3.6.0</td></tr><tr><td>Scenes</td><td>Optional. Specify which scene(s) the benchmark should run. Default action is to run all scenes</td><td>monster junkshop classroom</td></tr><tr><td>DeviceTypes</td><td>Optional. Specify what devices the benchmark should run on. For example, DeviceTypes=CPU,HIP means Blender will first run benchmark on CPU only and then on HIP(AMD GPU) only. HIP means AMD GPU. See the full list of <a href="https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html">rendering technologies</a></td><td>CPU</td></tr></tbody></table>
+<table><thead><tr><th>Parameter</th><th>Purpose</th><th>Default Value</th></tr></thead><tbody><tr><td>GpuModel</td><td>Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]</td><td>None</td></tr><tr><td>BlenderVersion</td><td>Optional. Specify which version of the <em>blender engine</em> the <em>blender benchmark</em> should use. Currently supported versions: [3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.1]</td><td>3.6.0</td></tr><tr><td>Scenes</td><td>Optional. Specify which scene(s) the <em>blender benchmark</em> should run. Default action is to run all scenes</td><td>monster junkshop classroom</td></tr><tr><td>DeviceTypes</td><td>Optional. Specify what devices the <em>blender benchmark</em> should run on. When multiple devices are specified, <em>blender benchmark</em> will test each individual device on its own. Common devices: CPU, HIP (AMD GPU), CUDA (Nvidia GPU). See the full list of <a href="https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html">rendering technologies</a></td><td>CPU</td></tr></tbody></table>
 </li>
 <li>
 <p><strong>Profile Runtimes</strong></p>
