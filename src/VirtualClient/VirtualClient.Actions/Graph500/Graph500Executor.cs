@@ -66,14 +66,15 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The commandline arguments that are used for make command in compiling Graph500.
+        /// The compilerFlags that are used for make command in compiling Graph500 using mpicc compiler.
+        /// Mpich installs a specific version of mpicc compiler by default.
         /// </summary>
-        public string CommandArguments
+        public string CompilerFlags
         {
             get
             {
-                this.Parameters.TryGetValue(nameof(Graph500Executor.CommandArguments), out IConvertible commandArguments);
-                return commandArguments?.ToString();
+                this.Parameters.TryGetValue(nameof(Graph500Executor.CompilerFlags), out IConvertible compilerFlags);
+                return compilerFlags?.ToString();
             }
         }
 
@@ -107,7 +108,7 @@ namespace VirtualClient.Actions
         {
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                await this.ExecuteCommandAsync("make", this.CommandArguments, this.PackageDirectory, cancellationToken);
+                await this.ExecuteCommandAsync("make", this.CompilerFlags, this.PackageDirectory, cancellationToken);
 
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutableFilePath, this.Scale + " " + this.EdgeFactor, this.PackageDirectory, telemetryContext, cancellationToken))
                 {

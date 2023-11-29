@@ -8,18 +8,18 @@
   "Parameters": {
     "Scale": "10",
     "EdgeFactor": "16",
-    "CommandArguments": "LDFLAGS=\"-lpthread -fcommon\""
+    "CompilerFlags": "LDFLAGS=\"-lpthread -fcommon\""
   },
     "Actions": [
         {
             "Type": "Graph500Executor",
-            "Parameters": {
-                "Scenario": "GraphAlgorithms",
-                "PackageName": "graph500",
-                "Scale": "$.Parameters.Scale",
-                "EdgeFactor": "$.Parameters.EdgeFactor",
-                "CommandArguments": "$.Parameters.CommandArguments"
-            }
+          "Parameters": {
+            "Scenario": "GraphAlgorithms",
+            "PackageName": "graph500",
+            "Scale": "$.Parameters.Scale",
+            "EdgeFactor": "$.Parameters.EdgeFactor",
+            "CompilerFlags": "$.Parameters.CompilerFlags"
+          }
         }
     ],
     "Dependencies": [
