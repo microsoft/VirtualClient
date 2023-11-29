@@ -7,7 +7,7 @@
   },
   "Parameters": {
     "GpuModel": "",
-    "Viewset": "3dsmax,catia",
+    "Viewsets": "3dsmax,catia",
     "PsExecSession": -1
   },
   "Actions": [
@@ -15,7 +15,7 @@
       "Type": "SpecViewExecutor",
       "Parameters": {
         "Scenario": "SPECviewperf",
-        "Viewset": "$.Parameters.Viewset",
+        "Viewsets": "$.Parameters.Viewsets",
         "PackageName": "specviewperf2020",
         "PsExecPackageName": "pstools",
         "PsExecSession": "$.Parameters.PsExecSession",

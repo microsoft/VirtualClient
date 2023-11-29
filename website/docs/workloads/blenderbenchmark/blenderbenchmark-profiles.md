@@ -25,9 +25,9 @@ Runs the Blender Workloads.
   | Parameter                 | Purpose                                                                                           | Default Value |
   |---------------------------|---------------------------------------------------------------------------------------------------|---------------|
   | GpuModel                  | Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]   | None          |
-  | BlenderVersion            | Optional. Specify which blender version the benchmark should use. Currently supported versions: [3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.1]  | 3.6.0         |
-  | Scenes                    | Optional. Specify which scene(s) the benchmark should run. Default action is to run all scenes    | monster junkshop classroom |
-  | DeviceTypes               | Optional. Specify what devices the benchmark should run on. For example, DeviceTypes=CPU,HIP means Blender will first run benchmark on CPU only and then on HIP(AMD GPU) only. HIP means AMD GPU. See the full list of [rendering technologies](https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html)        | CPU |
+  | BlenderVersion            | Optional. Specify which version of the *blender engine* the *blender benchmark* should use. Currently supported versions: [3.6.0, 3.5.0, 3.4.0, 3.3.0, 3.2.1]  | 3.6.0         |
+  | Scenes                    | Optional. Specify which scene(s) the *blender benchmark* should run. Default action is to run all scenes    | monster junkshop classroom |
+  | DeviceTypes               | Optional. Specify what devices the *blender benchmark* should run on. When multiple devices are specified, *blender benchmark* will test each individual device on its own. Common devices: CPU, HIP (AMD GPU), CUDA (Nvidia GPU). See the full list of [rendering technologies](https://docs.blender.org/manual/en/latest/render/cycles/gpu_rendering.html)        | CPU |
 
 
 
