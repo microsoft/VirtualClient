@@ -12,7 +12,7 @@
             "Parameters": {
                 "Scenario": "ExecuteGeekBench6Benchmark",
                 "CommandLine": "--no-upload",
-                "PackageName": "geekbench6"
+                "PackageName": "geekbench5"
             }
         }
     ],
@@ -22,8 +22,8 @@
             "Parameters": {
                 "Scenario": "InstallGeekBench6Package",
                 "BlobContainer": "packages",
-                "BlobName": "geekbench6.2.2.zip",
-                "PackageName": "geekbench6",
+                "BlobName": "geekbench5.1.0.0.zip",
+                "PackageName": "geekbench5",
                 "Extract": true
             }
         }
