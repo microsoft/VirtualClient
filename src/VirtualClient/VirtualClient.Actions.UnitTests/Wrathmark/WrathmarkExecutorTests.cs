@@ -16,7 +16,7 @@
     using VirtualClient.Contracts;
 
 
-    public class WrathmarkExecutorTests : WrathmarkTests
+    public class WrathmarkExecutorTests : WrathmarkTestBase
     {
         [Test]
         public void ThrowsIfWrathmarkDependencyNotFound(

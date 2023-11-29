@@ -9,7 +9,7 @@
     using VirtualClient.Actions.Wrathmark;
     using VirtualClient.Contracts;
 
-    public class WrathmarkResultParserTests : WrathmarkTests
+    public class WrathmarkResultParserTests : WrathmarkTestBase
     {
 
 
