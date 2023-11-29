@@ -1,4 +1,7 @@
-﻿namespace VirtualClient.Actions
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Actions
 {
     using System.Diagnostics;
     using System.IO;
