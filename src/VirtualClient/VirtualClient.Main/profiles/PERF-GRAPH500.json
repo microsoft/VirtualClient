@@ -7,8 +7,7 @@
     },
   "Parameters": {
     "Scale": "10",
-    "EdgeFactor": "16",
-    "CompilerFlags": "LDFLAGS=\"-lpthread -fcommon\""
+    "EdgeFactor": "16"
   },
     "Actions": [
         {
@@ -18,7 +17,7 @@
             "PackageName": "graph500",
             "Scale": "$.Parameters.Scale",
             "EdgeFactor": "$.Parameters.EdgeFactor",
-            "CompilerFlags": "$.Parameters.CompilerFlags"
+            "CompilerFlags": "LDFLAGS=\"-lpthread -fcommon\""
           }
         }
     ],
