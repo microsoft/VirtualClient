@@ -5,12 +5,9 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.IO.Abstractions;
-    using System.Linq;
     using System.Runtime.InteropServices;
-    using System.Security.Cryptography.Xml;
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -21,7 +18,6 @@ namespace VirtualClient.Actions
     using global::VirtualClient.Common.Telemetry;
     using global::VirtualClient.Contracts;
     using global::VirtualClient.Contracts.Metadata;
-    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
