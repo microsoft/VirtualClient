@@ -1,29 +1,30 @@
-﻿using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using VirtualClient.Contracts;
-
-namespace VirtualClient.Actions.Wrathmark;
-
-internal class WrathmarkMetricsParser : MetricsParser
+﻿namespace VirtualClient.Actions
 {
-    public WrathmarkMetricsParser(string results) 
-        : base(results)
+    using System.Collections.Generic;
+    using System.Text.RegularExpressions;
+    using VirtualClient.Contracts;
+
+    internal class WrathmarkMetricsParser : MetricsParser
     {
-    }
-
-    public override IList<Metric> Parse()
-    {
-        const string pattern = @"Evaluated ([\d,]+) boards in [\d:.]+ ([\d,]+(\.\d+)?) boards/sec";
-        Regex regex = new Regex(pattern);
-
-        List<Metric> metrics = new List<Metric>(64);
-
-        foreach (Match match in regex.Matches(this.RawText))
+        public WrathmarkMetricsParser(string results)
+            : base(results)
         {
-            double boardsPerSec = double.Parse(match.Groups[2].Value);
-            metrics.Add(new Metric("BoardsPerSecond", boardsPerSec, MetricRelativity.HigherIsBetter));
         }
 
-        return metrics;
+        public override IList<Metric> Parse()
+        {
+            const string pattern = @"Evaluated ([\d,]+) boards in [\d:.]+ ([\d,]+(\.\d+)?) boards/sec";
+            Regex regex = new Regex(pattern);
+
+            List<Metric> metrics = new List<Metric>(64);
+
+            foreach (Match match in regex.Matches(this.RawText))
+            {
+                double boardsPerSec = double.Parse(match.Groups[2].Value);
+                metrics.Add(new Metric("BoardsPerSecond", boardsPerSec, MetricRelativity.HigherIsBetter));
+            }
+
+            return metrics;
+        }
     }
 }

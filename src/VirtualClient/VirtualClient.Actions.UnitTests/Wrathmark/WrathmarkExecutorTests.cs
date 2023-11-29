@@ -2,7 +2,6 @@
 {
     using NUnit.Framework;
     using Moq;
-
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -10,11 +9,8 @@
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-
-    using VirtualClient.Actions.Wrathmark;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
-
 
     public class WrathmarkExecutorTests : WrathmarkTestBase
     {

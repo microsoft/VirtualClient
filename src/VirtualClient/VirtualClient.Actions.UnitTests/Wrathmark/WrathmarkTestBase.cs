@@ -3,11 +3,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Reflection;
-
     using NUnit.Framework;
-
-    using VirtualClient.Actions.Wrathmark;
-
 
     /// <summary>
     /// Base class for Wrathmark unit tests.

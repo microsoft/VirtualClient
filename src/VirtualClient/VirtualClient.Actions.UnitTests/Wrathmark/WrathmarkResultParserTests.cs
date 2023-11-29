@@ -1,18 +1,13 @@
 ﻿namespace VirtualClient.Actions
 {
-    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using NUnit.Framework;
-    using VirtualClient.Actions.Wrathmark;
     using VirtualClient.Contracts;
 
     public class WrathmarkResultParserTests : WrathmarkTestBase
     {
-
-
         [Test]
         public void Parse_Benchmark_SingleResult_ReturnsMetrics()
         {
