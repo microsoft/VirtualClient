@@ -198,7 +198,7 @@ namespace VirtualClient.Actions
                 {
                     this.Logger.LogMetrics(
                         this.PackageName,
-                        null, // result.Key,
+                        this.Scenario,
                         process.StartTime,
                         process.ExitTime,
                         metric.Name,
