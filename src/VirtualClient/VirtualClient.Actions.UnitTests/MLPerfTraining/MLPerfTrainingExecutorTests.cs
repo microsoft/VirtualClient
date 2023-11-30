@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace VirtualClient.Actions
     using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Polly;
+    using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
@@ -24,14 +26,16 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class MLPerfTrainingExecutorTests
     {
-        private MockFixture mockFixture;
+        private DependencyFixture mockFixture;
         private DependencyPath mockPackage;
         private IEnumerable<Disk> disks;
+        private string output;
+        private List<string> commandsExecuted = new List<string>();
 
         [SetUp]
         public void SetupTests()
         {
-            this.mockFixture = new MockFixture();
+            this.mockFixture = new DependencyFixture();
             this.SetupDefaultMockBehavior(PlatformID.Unix);
         }
 
@@ -43,13 +47,6 @@ namespace VirtualClient.Actions
                 "sudo usermod -aG docker anyuser",
                 "sudo docker build --pull -t mlperf-training-anyuser-x86_64:language_model .",
                 "sudo docker run --runtime=nvidia mlperf-training-anyuser-x86_64:language_model"
-            };
-
-            List<string> commandsExecuted = new List<string>();
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-            {
-                commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
             };
 
             using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
@@ -64,15 +61,7 @@ namespace VirtualClient.Actions
         public async Task MLPerfTrainingExecutorExecutesAsExpected()
         {
             IEnumerable<string> expectedCommands = this.GetExpectedCommands();
-
-            List<string> commandsExecuted = new List<string>();
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (file, arguments, workingDirectory) =>
-            {
-                commandsExecuted.Add($"{file} {arguments}".Trim());
-                return this.mockFixture.Process;
-            };
-
+            
             using (TestMLPerfTrainingExecutor MLPerfTrainingExecutor = new TestMLPerfTrainingExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 await MLPerfTrainingExecutor.InitializeAsync(EventContext.None, CancellationToken.None).ConfigureAwait(false);
@@ -84,23 +73,14 @@ namespace VirtualClient.Actions
 
         private void SetupDefaultMockBehavior(PlatformID platformID)
         {
-            this.mockFixture = new MockFixture();
+            this.commandsExecuted = new List<string>();
+            this.mockFixture = new DependencyFixture();
             this.mockFixture.Setup(platformID);
             this.mockPackage = new DependencyPath("MLPerfTraining", this.mockFixture.PlatformSpecifics.GetPackagePath("mlperf"));
 
-            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
-            this.mockFixture.File.Reset();
-
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-            this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
-                .Returns(true);
-
-            this.mockFixture.FileSystem.SetupGet(fs => fs.File).Returns(this.mockFixture.File.Object);
             this.disks = this.mockFixture.CreateDisks(PlatformID.Unix, true);
-
-            this.mockFixture.DiskManager.Setup(dm => dm.GetDisksAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(this.disks);
+            this.mockFixture.DiskManager.AddRange(this.disks);
+            this.mockFixture.SetupWorkloadPackage("mlperftraining", expectedFiles: @"win-x64\diskspd.exe");
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -114,6 +94,19 @@ namespace VirtualClient.Actions
                 { nameof(MLPerfTrainingExecutor.Scenario), "training-mlperf-bert-batchsize-45-gpu-8"},
                 { nameof(MLPerfTrainingExecutor.ConfigFile), "config_DGXA100_1x8x56x1.sh"},
                 { nameof(MLPerfTrainingExecutor.PackageName), "mlperftraining"}
+            };
+
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, @"Examples\MLPerfTraining\Example_bert_real_output.txt");
+            this.output = File.ReadAllText(outputPath);
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);
+                this.commandsExecuted.Add($"{command} {arguments}".Trim());
+                process.StandardOutput.Append(this.output);
+
+                return process;
             };
         }
 
