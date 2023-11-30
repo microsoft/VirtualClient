@@ -1,0 +1,16 @@
+08:32:27.881 [cluster-ClusterId{value='654b468a9bbaa7610f22769c', description='null'}-localhost:27017] DEBUG org.mongodb.driver.connection - Closing connection connectionId{localValue:1, serverValue:1}
+[OVERALL], RunTime(ms), 273802.0
+[OVERALL], Throughput(ops/sec), 3652.274271188669
+[CLEANUP], Operations, 16.0
+[CLEANUP], AverageLatency(us), 1170.75
+[CLEANUP], MinLatency(us), 2.0
+[CLEANUP], MaxLatency(us), 18671.0
+[CLEANUP], 95thPercentileLatency(us), 36.0
+[CLEANUP], 99thPercentileLatency(us), 18671.0
+[INSERT], Operations, 1000000.0
+[INSERT], AverageLatency(us), 4326.729145
+[INSERT], MinLatency(us), 264.0
+[INSERT], MaxLatency(us), 829439.0
+[INSERT], 95thPercentileLatency(us), 8567.0
+[INSERT], 99thPercentileLatency(us), 14039.0
+[INSERT], Return=OK, 1000000
