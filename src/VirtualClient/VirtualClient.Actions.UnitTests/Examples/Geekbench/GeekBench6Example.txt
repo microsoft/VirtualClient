@@ -1,0 +1,67 @@
+Geekbench 6.2.2 Corporate : https://www.geekbench.com/
+
+System Information
+  Operating System              Microsoft Windows 11 Enterprise (64-bit)
+  Operating System              2009
+  Model                         LENOVO 20Y0S4HP00
+  Motherboard                   LENOVO 20Y0S4HP00
+  BIOS                          LENOVO N32ET75W (1.51 )
+
+CPU Information
+  Name                          Intel Core i7-1185G7
+  Topology                      1 Processor, 4 Cores, 8 Threads
+  Identifier                    GenuineIntel Family 6 Model 140 Stepping 1
+  Base Frequency                3.00 GHz
+  Maximum Frequency             0 MHz
+  L1 Instruction Cache          32.0 KB x 4
+  L1 Data Cache                 48.0 KB x 4
+  L2 Cache                      1.25 MB x 4
+  L3 Cache                      12.0 MB
+
+Memory Information
+  Size                          32.0 GB
+
+
+Single-Core
+  File Compression               1734             249.1 MB/sec
+  Navigation                     1807          10.9 routes/sec
+  HTML5 Browser                  1859           38.1 pages/sec
+  PDF Renderer                    719         16.6 Mpixels/sec
+  Photo Library                   680          9.23 images/sec
+  Clang                           675          3.32 Klines/sec
+  Text Processing                 669           53.6 pages/sec
+  Asset Compression              1208              37.4 MB/sec
+  Object Detection               1946          58.2 images/sec
+  Background Blur                2278          9.43 images/sec
+  Horizon Detection              2515         78.3 Mpixels/sec
+  Object Remover                 1468        112.9 Mpixels/sec
+  HDR                            1847         54.2 Mpixels/sec
+  Photo Filter                   2384          23.7 images/sec
+  Ray Tracer                     1570         1.52 Mpixels/sec
+  Structure from Motion          2122         67.2 Kpixels/sec
+
+Multi-Core
+  File Compression               5375             771.9 MB/sec
+  Navigation                     7496          45.2 routes/sec
+  HTML5 Browser                  7139          146.1 pages/sec
+  PDF Renderer                   7515        173.3 Mpixels/sec
+  Photo Library                  7629         103.5 images/sec
+  Clang                          7305          36.0 Klines/sec
+  Text Processing                2295          183.8 pages/sec
+  Asset Compression              8125             251.8 MB/sec
+  Object Detection               5007         149.8 images/sec
+  Background Blur                6874          28.4 images/sec
+  Horizon Detection              9322        290.1 Mpixels/sec
+  Object Remover                 5420        416.7 Mpixels/sec
+  HDR                            6835        200.6 Mpixels/sec
+  Photo Filter                   7673          76.1 images/sec
+  Ray Tracer                     7243         7.01 Mpixels/sec
+  Structure from Motion          7565        239.5 Kpixels/sec
+
+Benchmark Summary
+  Single-Core Score             1378
+    Integer Score                 1131
+    Floating Point Score          1990
+  Multi-Core Score              6445
+    Integer Score                 6074
+    Floating Point Score          7195

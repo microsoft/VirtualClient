@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Geekbench\GeekBenchExample.txt");
+            string outputPath = Path.Combine(workingDirectory, @"Examples\Geekbench\GeekBench6Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new GeekBenchMetricsParser(this.rawText);
             this.testParser.Parse();
