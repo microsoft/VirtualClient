@@ -4,6 +4,7 @@
 namespace VirtualClient.Actions
 {
     using System;
+    using System.CodeDom;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
@@ -172,22 +173,14 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, string standardOutput, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (!this.fileSystem.File.Exists(resultsFilePath))
+                if (string.IsNullOrEmpty(standardOutput))
                 {
                     throw new WorkloadException(
-                        $"The GeekBench results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
-                }
-
-                string resultsJson = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath);
-                if (!GeekbenchResult.TryParseGeekbenchResult(resultsJson, out GeekbenchResult geekbenchResult))
-                {
-                    throw new WorkloadException(
-                        $"The content of the GeekBench results file at path '{resultsFilePath}' content could not be parsed as valid JSON.",
+                        $"GeekBench did not write metrics to console.",
                         ErrorReason.WorkloadFailed);
                 }
 
@@ -199,13 +192,13 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 // using workload name as testName
-                IDictionary<string, Metric> metrics = geekbenchResult.GetResults();
-                foreach (KeyValuePair<string, Metric> result in metrics)
+                GeekBenchMetricsParser geekbenchMetricsParser = new GeekBenchMetricsParser(standardOutput);
+                IList<Metric> metrics = geekbenchMetricsParser.Parse();
+                foreach (Metric metric in metrics)
                 {
-                    Metric metric = result.Value;
                     this.Logger.LogMetrics(
                         this.PackageName,
-                        result.Key,
+                        null, // result.Key,
                         process.StartTime,
                         process.ExitTime,
                         metric.Name,
@@ -243,9 +236,9 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(GeekbenchExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
+                try
                 {
-                    try
+                    using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
                     {
                         await process.StartAndWaitAsync(cancellationToken);
 
@@ -254,23 +247,40 @@ namespace VirtualClient.Actions
                             await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
 
                             process.ThrowIfWorkloadFailed();
-                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, commandLineArguments, telemetryContext, cancellationToken);
+
+                            if (process.StandardError.Length > 0)
+                            {
+                                process.ThrowOnStandardError<WorkloadException>(
+                                    errorReason: ErrorReason.WorkloadFailed);
+                            }
+
+                            string standardOutput = process.StandardOutput.ToString();
+                            this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
-                    finally
-                    {
-                        // GeekBench runs a secondary process on both Windows and Linux systems. When we
-                        // kill the parent process, it does not kill the processes the parent spun off. This
-                        // ensures that all of the process are stopped/killed.
-                        this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
-                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WorkloadStartError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
+
+                    throw;
+                }
+                finally
+                {
+                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
+                    // kill the parent process, it does not kill the processes the parent spun off. This
+                    // ensures that all of the process are stopped/killed.
+                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             });
         }
 
         private string GetCommandLineArguments()
         {
-            return string.Format("{0} --export-json \"{1}\"", this.CommandLine, this.ResultsFilePath);
+            return $"{this.CommandLine}";
         }
     }
 }
