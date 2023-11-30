@@ -1,25 +1,25 @@
 Geekbench 6.2.2 Corporate : https://www.geekbench.com/
 
 System Information
-  Operating System              Microsoft Windows 11 Enterprise (64-bit)
-  Operating System              2009
-  Model                         LENOVO 20Y0S4HP00
-  Motherboard                   LENOVO 20Y0S4HP00
-  BIOS                          LENOVO N32ET75W (1.51 )
+  Operating System              Microsoft Windows Server 2016 Datacenter (64-bit)
+  Operating System              1607
+  Model                         Microsoft Corporation Virtual Machine
+  Motherboard                   Microsoft Corporation Virtual Machine
+  BIOS                          American Megatrends Inc. 090008
 
-CPU Information
-  Name                          Intel Core i7-1185G7
-  Topology                      1 Processor, 4 Cores, 8 Threads
-  Identifier                    GenuineIntel Family 6 Model 140 Stepping 1
-  Base Frequency                3.00 GHz
-  Maximum Frequency             0 MHz
-  L1 Instruction Cache          32.0 KB x 4
-  L1 Data Cache                 48.0 KB x 4
-  L2 Cache                      1.25 MB x 4
-  L3 Cache                      12.0 MB
+Processor Information
+  Name                          Intel(R) Xeon(R) Platinum 8171M CPU @ 2.60GHz
+  Topology                      2 Processors, 32 Cores, 64 Threads
+  Identifier                    GenuineIntel Family 6 Model 85 Stepping 4
+  Base Frequency                2.50 GHz
+  Maximum Frequency             3.58 GHz
+  L1 Instruction Cache          32.0 KB x 16
+  L1 Data Cache                 32.0 KB x 16
+  L2 Cache                      1.00 MB x 16
+  L3 Cache                      35.8 MB
 
 Memory Information
-  Size                          32.0 GB
+  Size                          256 GB
 
 
 Single-Core
@@ -59,9 +59,9 @@ Multi-Core
   Structure from Motion          7565        239.5 Kpixels/sec
 
 Benchmark Summary
-  Single-Core Score             1378
-    Integer Score                 1131
-    Floating Point Score          1990
-  Multi-Core Score              6445
-    Integer Score                 6074
-    Floating Point Score          7195
+  Single-Core Score              888
+    Integer Score                  777
+    Floating Point Score           901
+  Multi-Core Score             12345
+    Integer Score                10518
+    Floating Point Score         14544
