@@ -14,6 +14,17 @@ namespace VirtualClient
     public static class MetricAssert
     {
         /// <summary>
+        /// Asserts the <paramref name="metric"/> exists in the <paramref name="results"/>.
+        /// </summary>
+        public static void Exists(
+            IList<Metric> results,
+            Metric metric,
+            List<string> expectedTags = null)
+        {
+            Exists(results, metric.Name, metric.Value, metric.Unit, expectedTags);
+        }
+
+        /// <summary>
         /// Asserts the metric exists in the given list of results
         /// </summary>
         public static void Exists(IList<Metric> results, string expectedMetric, double expectedMetricValue, string expectedMetricUnit = null, List<string> expectedTags = null)
@@ -42,6 +53,6 @@ namespace VirtualClient
                     $"The metric '{expectedMetric}', value '{expectedMetricValue}', unit '{expectedMetricUnit}' exists but none with tag '{string.Join(",", expectedTags)}'.");
             }
         }
-        
+
     }
 }
