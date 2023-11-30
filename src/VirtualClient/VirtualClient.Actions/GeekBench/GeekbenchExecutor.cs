@@ -101,7 +101,7 @@ namespace VirtualClient.Actions
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.PackageName + ".exe");
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}.exe");
 
                     this.SupportingExecutables.Add(this.ExecutablePath);
                     this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe"));
@@ -126,7 +126,7 @@ namespace VirtualClient.Actions
                     break;
             }
 
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, this.PackageName + "-output.txt");
+            this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}-output.txt");
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
             {
@@ -148,7 +148,7 @@ namespace VirtualClient.Actions
 
                 string licenseKey = Regex.Match(preferences, TextParsingExtensions.GUIDRegex).Groups[0].Value;
 
-                using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, "--unlock geekbench@microsoft.com " + licenseKey))
+                using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock geekbench@microsoft.com {licenseKey}"))
                 {
                     try
                     {
