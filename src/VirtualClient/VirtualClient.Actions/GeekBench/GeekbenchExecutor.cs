@@ -110,7 +110,7 @@ namespace VirtualClient.Actions
                     break;
 
                 case PlatformID.Unix:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "this.PackageName");
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}");
 
                     this.SupportingExecutables.Add(this.ExecutablePath);
                     this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64"));
