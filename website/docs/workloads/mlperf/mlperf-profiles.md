@@ -99,7 +99,7 @@ Runs the MLPerf benchmark workload to test GPU performance.
   | BatchSize             | Optional. BatchSize for the datachunks in training model.                                         | 40            |
   | Implementation        | Optional. Implementation present for a given model/benchmark. Example for bert [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks)                     | pytorch-22.09    |
   | ContainerName         | Optional. Name for docker model.             |language_model |
-  | DataPath              | Optional. Folder name for training data. /mlperftraining0/{DataPath}             |mlperf-training-data-bert.1.0.0|
+  | DataPath              | Optional. Folder name for training data. /mlperftraining0/\{DataPath}             |mlperf-training-data-bert.1.0.0|
   | GPUNum                | Optional. Number of GPUs to stress.               |8              |
   | ConfigFile            | Optional. Configuration for running workload. Visit the implementation for a model for all supported config files. [link](https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks).             |config_DGXA100_1x8x56x1.sh|
   | PackageName           | Required. Packname for mlperf training.               |               |

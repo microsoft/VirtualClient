@@ -33,7 +33,7 @@ GPU components for which the MLPerf workload is designed to test.
   * Orin
   * Xavier NX
 
-* **Supported Config Files for MlPerf Bert Training (config_{nodes}x{gpus per node}x{local batch size}x{gradien accumulation}.sh)**
+* **Supported Config Files for MlPerf Bert Training (config_\{nodes}x\{gpus per node}x\{local batch size}x\{gradien accumulation}.sh)**
   * config_A30_1x2x224x14.sh
   * config_DGXA100_1x4x56x2.sh
   * config_DGXA100_1x8x56x1.sh
