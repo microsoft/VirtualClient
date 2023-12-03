@@ -1,35 +1,30 @@
-﻿// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
-namespace VirtualClient
+﻿namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
+    using System.IO;
+    using System.Linq;
     using Renci.SshNet;
     using VirtualClient.Common;
 
     /// <summary>
-    /// Represents a fake ssh client.
+    /// Represents a fake sftp client.
     /// </summary>
     [SuppressMessage("Design", "CA1063:Implement IDisposable Correctly", Justification = "This is a test/mock class with no real resources.")]
-    public class InMemorySshClient : Dictionary<string, IConvertible>, ISshClientProxy
+    public class InMemorySftpClient : Dictionary<string, IConvertible>, ISftpClientProxy
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="InMemorySshClient"/>
+        /// Initializes a new instance of the <see cref="InMemorySftpClient"/>
         /// </summary>
-        public InMemorySshClient()
+        public InMemorySftpClient()
         {
-            this.SshCommands = new List<ISshCommandProxy>();
+            this.UploadPaths = new List<string>();
+            this.DownloadPaths = new List<string>();
         }
 
         /// <inheritdoc />
         public ConnectionInfo ConnectionInfo { get; set; }
-
-        /// <summary>
-        /// The set of ssh commands created by Ssh Client.
-        /// </summary>
-        public IEnumerable<ISshCommandProxy> SshCommands { get; }
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 
@@ -51,10 +46,27 @@ namespace VirtualClient
 
         /// <summary>
         /// Delegate allows user/test to define the logic to execute when the 
-        /// 'CreateCommand' method is called.
+        /// 'UploadFile' method is called.
         /// </summary>
-        public Func<string, ISshCommandProxy> OnCreateCommand { get; set; }
+        public Action<Stream, string> OnUploadFile { get; set; }
 
+        /// <summary>
+        /// Delegate allows user/test to define the logic to execute when the 
+        /// 'DownloadFile' method is called.
+        /// </summary>
+        public Action<string, Stream> OnDownloadFile { get; set; }
+
+        /// <summary>
+        /// The set of upload paths by Sftp Client.
+        /// </summary>
+        public IEnumerable<string> UploadPaths { get; }
+
+        /// <summary>
+        /// The set of download paths by Sftp Client.
+        /// </summary>
+        public IEnumerable<string> DownloadPaths { get; }
+
+        /// <inheritdoc />
         public void Connect()
         {
             if (this.OnConnect != null)
@@ -63,26 +75,29 @@ namespace VirtualClient
             }
         }
 
-        public ISshCommandProxy CreateCommand(string commandText)
+        /// <inheritdoc />
+        public void UploadFile(Stream input, string path)
         {
-            ISshCommandProxy sshCommand = null;
-            if (this.OnCreateCommand != null)
+            if (this.OnUploadFile != null)
             {
-                sshCommand = this.OnCreateCommand?.Invoke(commandText);
-            }
-            else
-            {
-                sshCommand = new InMemorySshCommand
-                {
-                    CommandText = commandText
-                };
+                this.OnUploadFile?.Invoke(input, path);
             }
 
-            (this.SshCommands as List<ISshCommandProxy>).Add(sshCommand);
-
-            return sshCommand;
+            this.UploadPaths.Append(path);
         }
 
+        /// <inheritdoc />
+        public void DownloadFile(string path, Stream output)
+        {
+            if (this.OnDownloadFile != null)
+            {
+                this.OnDownloadFile?.Invoke(path, output);
+            }
+
+            this.DownloadPaths?.Append(path);
+        }
+
+        /// <inheritdoc />
         public void Disconnect()
         {
             if (this.OnDisconnect != null)

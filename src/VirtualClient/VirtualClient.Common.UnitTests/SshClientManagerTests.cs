@@ -27,5 +27,19 @@
                 Assert.IsTrue(client.ConnectionInfo.Username.Equals(mockUserName));
             }
         }
+
+        [Test]
+        public void SshClientManagerCreatesExpectedSftpClient()
+        {
+            string mockHost = "mockHost";
+            string mockUserName = "username";
+            string mockPassword = "password";
+
+            using (ISftpClientProxy client = this.sshClientManager.CreateSftpClient(mockHost, mockUserName, mockPassword))
+            {
+                Assert.IsTrue(client.ConnectionInfo.Host.Equals(mockHost));
+                Assert.IsTrue(client.ConnectionInfo.Username.Equals(mockUserName));
+            }
+        }
     }
 }
