@@ -148,8 +148,9 @@ namespace VirtualClient.Actions
                 }
 
                 string licenseKey = Regex.Match(preferences, TextParsingExtensions.GUIDRegex).Groups[0].Value;
+                string email = Regex.Match(preferences, TextParsingExtensions.EmailRegex).Groups[0].Value;
 
-                using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock geekbench@microsoft.com {licenseKey}"))
+                using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
                 {
                     try
                     {
