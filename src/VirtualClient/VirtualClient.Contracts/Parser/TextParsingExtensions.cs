@@ -57,12 +57,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         public static readonly string EmailRegex = @"[\w\-\.]+@([\w -]+\.)+[\w-]{2,}";
 
-    /// <summary>
-    /// Remove rows that matches the regex.
-    /// </summary>
-    /// <param name="text">Raw text.</param>
-    /// <param name="delimiter">Regex for the rows that should be removed.</param>
-    public static string RemoveRows(string text, Regex delimiter)
+        /// <summary>
+        /// Remove rows that matches the regex.
+        /// </summary>
+        /// <param name="text">Raw text.</param>
+        /// <param name="delimiter">Regex for the rows that should be removed.</param>
+        public static string RemoveRows(string text, Regex delimiter)
         {
             List<string> result = new List<string>();
             List<string> rows = text.Split(Environment.NewLine, StringSplitOptions.None).ToList();
