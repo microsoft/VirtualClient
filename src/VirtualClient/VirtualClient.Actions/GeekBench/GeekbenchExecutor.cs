@@ -150,9 +150,9 @@ namespace VirtualClient.Actions
                 string licenseKey = Regex.Match(preferences, TextParsingExtensions.GUIDRegex).Groups[0].Value;
                 string email = Regex.Match(preferences, TextParsingExtensions.EmailRegex).Groups[0].Value;
 
-                using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
+                try
                 {
-                    try
+                    using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
                     {
                         await process.StartAndWaitAsync(cancellationToken);
 
@@ -163,13 +163,22 @@ namespace VirtualClient.Actions
                             process.ThrowIfDependencyInstallationFailed();
                         }
                     }
-                    finally
-                    {
-                        // GeekBench runs a secondary process on both Windows and Linux systems. When we
-                        // kill the parent process, it does not kill the processes the parent spun off. This
-                        // ensures that all of the process are stopped/killed.
-                        this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
-                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WorkloadStartError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
+
+                    throw;
+                }
+                finally
+                {
+                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
+                    // kill the parent process, it does not kill the processes the parent spun off. This
+                    // ensures that all of the process are stopped/killed.
+                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             }
         }
