@@ -1,4 +1,7 @@
-﻿namespace VirtualClient.Common
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient.Common
 {
     using System;
     using System.IO;
@@ -6,7 +9,7 @@
     using VirtualClient.Common.Extensions;
 
     /// <summary>
-    /// Acts as a limited proxy to provide information about a SFTP Client.
+    /// Proxy for a SFTP Client..
     /// </summary>
     public class SftpClientProxy : ISftpClientProxy
     {

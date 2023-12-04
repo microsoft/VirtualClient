@@ -1,4 +1,7 @@
-﻿namespace VirtualClient
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+namespace VirtualClient
 {
     using System;
     using System.Collections.Generic;
