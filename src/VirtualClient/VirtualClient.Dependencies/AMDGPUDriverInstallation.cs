@@ -1,24 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace VirtualClient.Dependencies
+namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics.CodeAnalysis;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
-    using VirtualClient.Common.Rest;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
@@ -146,13 +142,13 @@
 
                         switch (this.linuxDistributionInfo.LinuxDistribution)
                         {
-                            case LinuxDistribution.Ubuntu:                            
+                            case LinuxDistribution.Ubuntu:
                                 break;
 
                             default:
                                 // different distro installation to be addded.
                                 this.Logger.LogMessage(
-                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{this.linuxDistributionInfo.LinuxDistribution}'.", 
+                                    $"AMD GPU driver installation is not supported by Virtual Client on the current Linux distro '{this.linuxDistributionInfo.LinuxDistribution}'.",
                                     telemetryContext);
 
                                 break;
@@ -187,7 +183,7 @@
             if (this.Platform == PlatformID.Unix)
             {
                 this.linuxDistributionInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken)
-                    .ConfigureAwait(false);                
+                    .ConfigureAwait(false);
             }
         }
 
@@ -372,7 +368,7 @@
                     {
                         throw new NotSupportedException($"GpuModel '{this.GpuModel}' is not supported.");
                     }
-            }            
+            }
         }
 
         private async Task InstallAMDGPUDriverOnMi25(string driverPackagePath, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -380,7 +376,7 @@
             string installationFile = this.Combine(driverPackagePath, this.GpuModel, AMDGPUDriverInstallation.Mi25ExeName);
 
             if (!this.fileSystem.File.Exists(installationFile))
-            { 
+            {
                 throw new DependencyException($"The installer file was not found in the directory {driverPackagePath}", ErrorReason.DependencyNotFound);
             }
 

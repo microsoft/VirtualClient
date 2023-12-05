@@ -38,19 +38,19 @@ namespace VirtualClient.Actions
                     {
                         { "blenderVersion", blenderResult.BlenderVersion.Version },
                         { "benchmarkLauncher", blenderResult.BenchmarkLauncher.Label },
-                        { "scene", blenderResult.Scene.Label },
-                        // blender can only execute on one device(CPU/GPU) at a time
+
+                        // The deviceName and deviceType section contains the device that was tested.
                         { "deviceName", blenderResult.DeviceInfo.ComputeDevices[0].Name },
                         { "deviceType", blenderResult.DeviceInfo.ComputeDevices[0].Type },
                         { "timeLimit",  blenderResult.Stats.TimeLimit }
                     };
 
-                    metrics.Add(new Metric("device_peak_memory", blenderResult.Stats.DevicePeakMemory, unit: "mb", metadata: metadata));
-                    metrics.Add(new Metric("number_of_samples", blenderResult.Stats.NumberOfSamples, unit: "sample", metadata: metadata));
-                    metrics.Add(new Metric($"time_for_samples", blenderResult.Stats.TimeForSamples, unit: "second", metadata: metadata));
-                    metrics.Add(new Metric($"samples_per_minute", blenderResult.Stats.SamplesPerMinute, unit: "samples_per_minute", metadata: metadata));
-                    metrics.Add(new Metric($"total_render_time", blenderResult.Stats.TotalRenderTime, unit: "second", metadata: metadata));
-                    metrics.Add(new Metric($"render_time_no_sync", blenderResult.Stats.RenderTimeNoSync, unit: "second", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.DevicePeakMemory), blenderResult.Stats.DevicePeakMemory, unit: "mb", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.NumberOfSamples), blenderResult.Stats.NumberOfSamples, unit: "sample", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.TimeForSamples), blenderResult.Stats.TimeForSamples, unit: "second", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.SamplesPerMinute), blenderResult.Stats.SamplesPerMinute, unit: "samples_per_minute", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.TotalRenderTime), blenderResult.Stats.TotalRenderTime, unit: "second", metadata: metadata));
+                    metrics.Add(new Metric(nameof(blenderResult.Stats.RenderTimeNoSync), blenderResult.Stats.RenderTimeNoSync, unit: "second", metadata: metadata));
                 }
 
                 return metrics;

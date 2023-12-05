@@ -5,7 +5,7 @@ superbench:
   - kernel-launch
   - gemm-flops
   - cublaslt-gemm
-  - cublas-function
+  # cublas-function
   - matmul
   - gpu-burn
   # microbenchmark - communication
@@ -67,7 +67,7 @@ superbench:
       timeout: *default_timeout
     gemm-flops:
       <<: *default_local_mode
-      timeout: 1800
+      timeout: 3600
     cublaslt-gemm:
       <<: *default_local_mode
       timeout: *default_timeout
@@ -83,7 +83,7 @@ superbench:
         - 12608,3072,1024
     cublas-function:
       <<: *default_local_mode
-      timeout: *default_timeout
+      timeout: 1200
     matmul:
       <<: *default_local_mode
       timeout: *default_timeout
@@ -167,7 +167,7 @@ superbench:
         seq_len: 224
     model-benchmarks:bert:
       <<: *default_pytorch_mode
-      timeout: 2400
+      timeout: 4800
       models:
       - bert-base
       - bert-large

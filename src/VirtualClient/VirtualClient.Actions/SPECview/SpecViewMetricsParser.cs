@@ -12,8 +12,6 @@ namespace VirtualClient.Actions
     /// </summary>
     public class SpecViewMetricsParser : MetricsParser
     {
-        private const string Unit = "fps";
-
         /// <summary>
         /// Constructor for <see cref="SpecViewMetricsParser"/>
         /// </summary>
@@ -27,10 +25,9 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             var metrics = new List<Metric>();
-            string viewset;
             int index;
             double weight, fps;
-            bool isCompositeScore;
+            string metricName;
             IDictionary<string, IConvertible> metadata;
 
             string[] lines = this.RawText.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -45,8 +42,6 @@ namespace VirtualClient.Actions
 
                 string[] parts = line.Split(',');
 
-                viewset = parts[0];
-
                 // Check if the line is a composite row - only two items
                 if (parts.Length == 2)
                 {
@@ -54,7 +49,7 @@ namespace VirtualClient.Actions
                     index = -1;
                     weight = 100;
                     fps = double.Parse(parts[1]);
-                    isCompositeScore = true;
+                    metricName = "compositeScore";
                 }
 
                 // Parsing individual test scores
@@ -63,15 +58,15 @@ namespace VirtualClient.Actions
                     index = int.Parse(parts[1]);
                     weight = double.Parse(parts[3]);
                     fps = double.Parse(parts[4]);
-                    isCompositeScore = false;
+                    metricName = "individualScore";
                 }
                 else
                 {
                     throw new WorkloadException($"Exceptions occurred when trying to parse the workload result of 'SPEcviewperf'.", ErrorReason.WorkloadFailed);
                 }
 
-                metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index }, { "isCompositeScore", isCompositeScore } };
-                metrics.Add(new Metric($"{viewset}", fps, Unit, metadata: metadata));
+                metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index } };
+                metrics.Add(new Metric(metricName, value: fps, unit: "fps", metadata: metadata));
             }
 
             return metrics;

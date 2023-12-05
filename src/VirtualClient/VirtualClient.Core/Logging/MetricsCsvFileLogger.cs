@@ -169,7 +169,7 @@ namespace VirtualClient.Logging
         {
             StringBuilder messageBuilder = new StringBuilder();
             messageBuilder.Append(Environment.NewLine);
-            messageBuilder.AppendJoin(',', MetricsCsvFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)}\""));
+            messageBuilder.AppendJoin(',', MetricsCsvFileLogger.CsvFields.Select(field => $"\"{field.GetFieldValue(context)?.Replace("\"", "\"\"")}\""));
 
             return messageBuilder.ToString();
         }
