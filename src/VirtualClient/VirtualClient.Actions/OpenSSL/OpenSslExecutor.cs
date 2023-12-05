@@ -119,7 +119,7 @@ namespace VirtualClient.Actions
                 try
                 {
                     this.MetadataContract.AddForScenario(
-                       "OpenSSL Speed",
+                       this.Scenario,
                        workloadProcess.FullCommand(),
                        toolVersion: null);
 
@@ -130,7 +130,7 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMetrics(
                         "OpenSSL",
-                        "OpenSSL Speed",
+                        this.Scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
                         metrics,
