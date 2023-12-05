@@ -122,8 +122,6 @@ namespace VirtualClient.Actions
                     break;
             }
 
-            Console.WriteLine(workloadPackage.Path);
-
             this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}-output.txt");
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
