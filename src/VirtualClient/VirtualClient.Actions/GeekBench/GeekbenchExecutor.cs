@@ -4,10 +4,12 @@
 namespace VirtualClient.Actions
 {
     using System;
+    using System.CodeDom;
     using System.Collections.Generic;
     using System.IO;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using global::VirtualClient;
@@ -21,7 +23,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.Logging;
 
     /// <summary>
-    /// The Geekbench5 executor.
+    /// The Geekbench executor.
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
@@ -97,35 +99,30 @@ namespace VirtualClient.Actions
 
             workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
 
-            switch (this.Platform)
+            switch (this.PlatformArchitectureName)
             {
-                case PlatformID.Win32NT:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench5.exe");
-
-                    this.SupportingExecutables.Add(this.ExecutablePath);
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe"));
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe"));
+                case "win-x64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe");
                     break;
 
-                case PlatformID.Unix:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench5");
+                case "win-arm64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe");
+                    break;
 
-                    this.SupportingExecutables.Add(this.ExecutablePath);
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64"));
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64"));
+                case "linux-x64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64");
+                    await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
-                    foreach (string path in this.SupportingExecutables)
-                    {
-                        if (this.fileSystem.File.Exists(path))
-                        {
-                            await this.systemManagement.MakeFileExecutableAsync(path, this.Platform, CancellationToken.None);
-                        }
-                    }
+                    break;
+
+                case "linux-arm64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64");
+                    await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;
             }
 
-            this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench5-output.txt");
+            this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}-output.txt");
 
             if (!this.fileSystem.File.Exists(this.ExecutablePath))
             {
@@ -133,61 +130,80 @@ namespace VirtualClient.Actions
                     $"Geekbench executable not found at path '{this.ExecutablePath}'",
                     ErrorReason.WorkloadDependencyMissing);
             }
-        }
 
-        /// <summary>
-        /// Returns true/false whether the component is supported on the current
-        /// OS platform and CPU architecture.
-        /// </summary>
-        protected override bool IsSupported()
-        {
-            bool isSupported = base.IsSupported()
-                && 
-                ((this.Platform == PlatformID.Win32NT && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64))
-                || (this.Platform == PlatformID.Unix && this.CpuArchitecture == Architecture.X64));
+            string preferences;
 
-            if (!isSupported)
+            if (this.PackageName == "geekbench6")
             {
-                this.Logger.LogNotSupported("Geekbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
-            }
+                string preferencesPath = Path.Combine(workloadPackage.Path, "Geekbench_6.preferences");
+                using (StreamReader sr = new StreamReader(preferencesPath))
+                {
+                    // Read the first line from the file
+                    preferences = await sr.ReadLineAsync();
+                }
 
-            return isSupported;
+                string licenseKey = Regex.Match(preferences, TextParsingExtensions.GUIDRegex).Groups[0].Value;
+                string email = Regex.Match(preferences, TextParsingExtensions.EmailRegex).Groups[0].Value;
+
+                try
+                {
+                    using (IProcessProxy process = this.processManager.CreateProcess(this.ExecutablePath, $"--unlock {email} {licenseKey}"))
+                    {
+                        await process.StartAndWaitAsync(cancellationToken);
+
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
+
+                            process.ThrowIfDependencyInstallationFailed();
+                        }
+                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WorkloadStartError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
+
+                    throw;
+                }
+                finally
+                {
+                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
+                    // kill the parent process, it does not kill the processes the parent spun off. This
+                    // ensures that all of the process are stopped/killed.
+                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
+                }
+            }
         }
 
-        private async Task CaptureMetricsAsync(IProcessProxy process, string resultsFilePath, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(IProcessProxy process, string standardOutput, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (!this.fileSystem.File.Exists(resultsFilePath))
+                if (string.IsNullOrEmpty(standardOutput))
                 {
                     throw new WorkloadException(
-                        $"The GeekBench results file was not found at path '{resultsFilePath}'.",
-                        ErrorReason.WorkloadFailed);
-                }
-
-                string resultsJson = await this.fileSystem.File.ReadAllTextAsync(resultsFilePath);
-                if (!GeekbenchResult.TryParseGeekbenchResult(resultsJson, out GeekbenchResult geekbenchResult))
-                {
-                    throw new WorkloadException(
-                        $"The content of the GeekBench results file at path '{resultsFilePath}' content could not be parsed as valid JSON.",
+                        $"GeekBench did not write metrics to console.",
                         ErrorReason.WorkloadFailed);
                 }
 
                 this.MetadataContract.AddForScenario(
-                    "Geekbench5",
+                    this.PackageName,
                     commandArguments,
                     toolVersion: null);
 
                 this.MetadataContract.Apply(telemetryContext);
 
                 // using workload name as testName
-                IDictionary<string, Metric> metrics = geekbenchResult.GetResults();
-                foreach (KeyValuePair<string, Metric> result in metrics)
+                GeekBenchMetricsParser geekbenchMetricsParser = new GeekBenchMetricsParser(standardOutput);
+                IList<Metric> metrics = geekbenchMetricsParser.Parse();
+                foreach (Metric metric in metrics)
                 {
-                    Metric metric = result.Value;
                     this.Logger.LogMetrics(
-                        "Geekbench5",
-                        result.Key,
+                        this.PackageName,
+                        this.Scenario,
                         process.StartTime,
                         process.ExitTime,
                         metric.Name,
@@ -225,34 +241,51 @@ namespace VirtualClient.Actions
 
             return this.Logger.LogMessageAsync($"{nameof(GeekbenchExecutor)}.ExecuteWorkload", relatedContext, async () =>
             {
-                using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
+                try
                 {
-                    try
+                    using (IProcessProxy process = this.processManager.CreateProcess(pathToExe, commandLineArguments))
                     {
                         await process.StartAndWaitAsync(cancellationToken);
 
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "Geekbench5", logToFile: true);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, this.PackageName, logToFile: true);
 
                             process.ThrowIfWorkloadFailed();
-                            await this.CaptureMetricsAsync(process, this.ResultsFilePath, commandLineArguments, telemetryContext, cancellationToken);
+
+                            if (process.StandardError.Length > 0)
+                            {
+                                process.ThrowOnStandardError<WorkloadException>(
+                                    errorReason: ErrorReason.WorkloadFailed);
+                            }
+
+                            string standardOutput = process.StandardOutput.ToString();
+                            this.CaptureMetrics(process, standardOutput, commandLineArguments, telemetryContext, cancellationToken);
                         }
                     }
-                    finally
-                    {
-                        // GeekBench runs a secondary process on both Windows and Linux systems. When we
-                        // kill the parent process, it does not kill the processes the parent spun off. This
-                        // ensures that all of the process are stopped/killed.
-                        this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
-                    }
+                }
+                catch (Exception exc)
+                {
+                    this.Logger.LogMessage(
+                        $"{this.TypeName}.WorkloadStartError",
+                        LogLevel.Warning,
+                        telemetryContext.Clone().AddError(exc));
+
+                    throw;
+                }
+                finally
+                {
+                    // GeekBench runs a secondary process on both Windows and Linux systems. When we
+                    // kill the parent process, it does not kill the processes the parent spun off. This
+                    // ensures that all of the process are stopped/killed.
+                    this.processManager.SafeKill(this.SupportingExecutables.ToArray(), this.Logger);
                 }
             });
         }
 
         private string GetCommandLineArguments()
         {
-            return string.Format("{0} --export-json \"{1}\"", this.CommandLine, this.ResultsFilePath);
+            return $"{this.CommandLine}";
         }
     }
 }
