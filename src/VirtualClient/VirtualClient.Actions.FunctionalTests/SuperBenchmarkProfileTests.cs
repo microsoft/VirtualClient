@@ -126,9 +126,9 @@ namespace VirtualClient.Actions
                 $"sudo apt-get install -y nvidia-docker2",
                 $"sudo systemctl restart docker",
                 $"sudo chmod -R 2777 \"/home/user/tools/VirtualClient\"",
-                $"sudo git clone -b v0.8.0 https://github.com/microsoft/superbenchmark",
+                $"sudo git clone -b v0.9.0 https://github.com/microsoft/superbenchmark",
                 $"sudo bash initialize.sh",
-                $"sb deploy --host-list localhost -i superbench/superbench:v0.8.0-cuda11.1.1",
+                $"sb deploy --host-list localhost -i superbench/superbench:v0.9.0-cuda12.1",
                 $"sb run --host-list localhost -c default.yaml"
             };
         }
