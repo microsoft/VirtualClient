@@ -99,33 +99,30 @@ namespace VirtualClient.Actions
 
             workloadPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
 
-            switch (this.Platform)
+            switch (this.PlatformArchitectureName)
             {
-                case PlatformID.Win32NT:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}.exe");
-
-                    this.SupportingExecutables.Add(this.ExecutablePath);
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe"));
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe"));
+                case "win-x64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64.exe");
                     break;
 
-                case PlatformID.Unix:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}");
+                case "win-arm64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64.exe");
+                    break;
 
-                    this.SupportingExecutables.Add(this.ExecutablePath);
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64"));
-                    this.SupportingExecutables.Add(this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64"));
+                case "linux-x64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_x86_64");
+                    await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
-                    foreach (string path in this.SupportingExecutables)
-                    {
-                        if (this.fileSystem.File.Exists(path))
-                        {
-                            await this.systemManagement.MakeFileExecutableAsync(path, this.Platform, CancellationToken.None);
-                        }
-                    }
+                    break;
+
+                case "linux-arm64":
+                    this.ExecutablePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "geekbench_aarch64");
+                    await this.systemManagement.MakeFilesExecutableAsync(workloadPackage.Path, this.Platform, CancellationToken.None);
 
                     break;
             }
+
+            Console.WriteLine(workloadPackage.Path);
 
             this.ResultsFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, $"{this.PackageName}-output.txt");
 
