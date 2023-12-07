@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.17847507.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.e45c1521.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.33e7f672.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -57,7 +57,7 @@ set. This helps to ensure the purpose and consistency of the profile operations 
 designers of profiles to be as expressive as possible with intentions. One of the express goals of the Virtual Client team with regards to profile design is
 to have profiles be as clear and self-describing as possible. It helps users to establish context into the purpose of the profile and what it will do when running on
 the system. The following table describes the set of well-known parameters that can be used in profiles.</p>
-<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>LogicalCoreCount</td><td>Represents the number of logical cores/vCPUs on the system.</td></tr><tr><td>PhysicalCoreCount</td><td>Represents the number of physical cores on the system.</td></tr><tr><td>PackagePath:{package_name}</td><td>Represents the path to a package that is installed on the system by one of the dependency components (e.g. {PackagePath:openssl} ...resolving to /home/users/virtualclient/packages/openssl).</td></tr><tr><td>PackagePath/Platform:{package_name}</td><td>Represents the &quot;platform-specific&quot; path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. {PackagePath/Platform<!-- -->:openssl<!-- -->} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64).</td></tr></tbody></table>
+<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>LogicalCoreCount</td><td>Represents the number of logical cores/vCPUs on the system.</td></tr><tr><td>PhysicalCoreCount</td><td>Represents the number of physical cores on the system.</td></tr><tr><td>PackagePath:{package_name}</td><td>Represents the path to a package that is installed on the system by one of the dependency components (e.g. {PackagePath:openssl} ...resolving to /home/users/virtualclient/packages/openssl).</td></tr><tr><td>PackagePath/Platform:{package_name}</td><td>Represents the &quot;platform-specific&quot; path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. {PackagePath/Platform<!-- -->:openssl<!-- -->} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64).</td></tr><tr><td>SystemMemoryBytes</td><td>Represents the total memory/RAM (in bytes) on the system.</td></tr><tr><td>SystemMemoryKilobytes</td><td>Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes).</td></tr><tr><td>SystemMemoryMegabytes</td><td>Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes).</td></tr><tr><td>SystemMemoryGigabytes</td><td>Represents the total memory/RAM (in gigabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 gigabyte = 1024 megabytes or 1024 x 1024 kilobytes or 1024 x 1024 x 1024 bytes).</td></tr></tbody></table>
 <pre><code class="language-json">&quot;Actions&quot;: [
     {
         &quot;Type&quot;: &quot;RedisServerExecutor&quot;,
@@ -114,6 +114,25 @@ the system. The following table describes the set of well-known parameters that 
             &quot;Platforms&quot;: &quot;linux-x64,linux-arm64&quot;,
             &quot;Command&quot;: &quot;bash -c &#x27;./configure&#x27;&amp;&amp;make&quot;,
             &quot;WorkingDirectory&quot;: &quot;{PackagePath/Platform:memcached}&quot;
+        }
+    }
+]
+</code></pre>
+<br>
+<pre><code class="language-json">&quot;Actions&quot;: [
+    {
+        &quot;Type&quot;: &quot;MemcachedServerExecutor&quot;,
+        &quot;Parameters&quot;: {
+            &quot;Scenario&quot;: &quot;Server&quot;,
+            &quot;PackageName&quot;: &quot;memcached&quot;,
+            &quot;CommandLine&quot;: &quot;-p {Port} -t 4 -m {ServerMemory} -c {ServerMaxConnections}&quot;,
+            &quot;BindToCores&quot;: true,
+            &quot;Port&quot;: &quot;$.Parameters.ServerPort&quot;,
+            &quot;Username&quot;: &quot;$.Parameters.Username&quot;,
+            &quot;ServerThreadCount&quot;: 4,
+            &quot;ServerMaxConnections&quot;: &quot;$.Parameters.ServerMaxConnections&quot;,
+            &quot;ServerMemory&quot;: &quot;{calculate({SystemMemoryMegabytes} / 2)}&quot;,
+            &quot;Role&quot;: &quot;Server&quot;
         }
     }
 ]
@@ -194,7 +213,7 @@ Virtual Client required. However, the user can typical determine if a profile su
 <p>Time span parameters are very common in profiles (e.g. Duration: 00:30:00) and are often used to describe a time ranges or timeouts for executing operations.
 It is sometimes beneficial to be able to reference a duration as different units of time. The table below describes the different units of time that are supported for
 time span parameter references in Virtual Client profiles.</p>
-<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>{ParameterName}.TotalDays</td><td>Given a parameter with a value formatted as a time span (e.g. 11.00:00:00) in a set of profile parameters, this represents the total number of days for the range of time defined by the time span value (e.g. 11.00:00:00 -&gt; 11 days).</td></tr><tr><td>{ParameterName}.TotalHours</td><td>Given a parameter with a value formatted as a time span (e.g. 05:00:00) in a set of profile parameters, this represents the total number of hours for the range of time defined by the time span value (e.g. 05:00:00 -&gt; 5 hours).</td></tr><tr><td>{ParameterName}.TotalMilliseconds</td><td>Given a parameter with a value formatted as a time span (e.g. 00:02:00) in a set of profile parameters, this represents the total number of milliseconds for the range of time defined by the time span value (e.g. 00:02:00 -&gt; 120000 milliseconds).</td></tr><tr><td>{ParameterName}.TotalMinutes</td><td>Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of minutes for the range of time defined by the time span value (e.g. 00:30:00 -&gt; 30 minutes).</td></tr><tr><td>{ParameterName}.TotalSeconds</td><td>Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of seconds for the range of time defined by the time span value (e.g. 00:01:00 -&gt; 60 seconds).</td></tr></tbody></table>
+<table><thead><tr><th>Parameter</th><th>Description</th></tr></thead><tbody><tr><td>{ParameterName.TotalDays}</td><td>Given a parameter with a value formatted as a time span (e.g. 11.00:00:00) in a set of profile parameters, this represents the total number of days for the range of time defined by the time span value (e.g. 11.00:00:00 -&gt; 11 days).</td></tr><tr><td>{ParameterName.TotalHours}</td><td>Given a parameter with a value formatted as a time span (e.g. 05:00:00) in a set of profile parameters, this represents the total number of hours for the range of time defined by the time span value (e.g. 05:00:00 -&gt; 5 hours).</td></tr><tr><td>{ParameterName.TotalMilliseconds}</td><td>Given a parameter with a value formatted as a time span (e.g. 00:02:00) in a set of profile parameters, this represents the total number of milliseconds for the range of time defined by the time span value (e.g. 00:02:00 -&gt; 120000 milliseconds).</td></tr><tr><td>{ParameterName.TotalMinutes}</td><td>Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of minutes for the range of time defined by the time span value (e.g. 00:30:00 -&gt; 30 minutes).</td></tr><tr><td>{ParameterName.TotalSeconds}</td><td>Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of seconds for the range of time defined by the time span value (e.g. 00:01:00 -&gt; 60 seconds).</td></tr></tbody></table>
 <pre><code class="language-json">&quot;Actions&quot;: [
     {
         &quot;Type&quot;: &quot;DiskSpdExecutor&quot;,
