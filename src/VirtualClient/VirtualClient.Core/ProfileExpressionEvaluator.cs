@@ -63,6 +63,15 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {SystemMemoryBytes}
+        // {SystemMemoryKilobytes}
+        // {SystemMemoryMegabytes}
+        // {SystemMemoryGigabytes}
+        private static readonly Regex SystemMemoryInBytesExpression = new Regex(
+            @"\{SystemMemoryBytes\}|\{SystemMemoryKilobytes\}|\{SystemMemoryMegabytes\}|\{SystemMemoryGigabytes\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {Duration.TotalDays}
         // {Duration.TotalHours}
         // {Duration.TotalMilliseconds}
@@ -276,7 +285,7 @@ namespace VirtualClient
 
                     foreach (Match match in matches)
                     {
-                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, cpuInfo.LogicalCoreCount.ToString());
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, cpuInfo.LogicalProcessorCount.ToString());
                     }
                 }
 
@@ -303,6 +312,55 @@ namespace VirtualClient
                     foreach (Match match in matches)
                     {
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, cpuInfo.PhysicalCoreCount.ToString());
+                    }
+                }
+
+                return new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                };
+            }),
+            // Expression: {SystemMemoryBytes}
+            // Expression: {SystemMemoryKilobytes}
+            // Expression: {SystemMemoryMegabytes}
+            // Expression: {SystemMemoryGigabytes}
+            // Resolves to the total system memory/RAM (in kilobytes).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>(async (dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.SystemMemoryInBytesExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemInfo systemInfo = dependencies.GetService<ISystemInfo>();
+                    MemoryInfo memoryInfo = await systemInfo.GetMemoryInfoAsync(CancellationToken.None);
+
+                    foreach (Match match in matches)
+                    {
+                        // Memory in kilobytes (using 1024 bytes as a kilobyte for memory standard). This is sometimes
+                        // called a kibibyte, but no one uses this term as it was an after thought in the earlier days
+                        // of defining what a kilobyte actually means (i.e. 1024 bytes).
+                        long memory = memoryInfo.TotalMemory;
+
+                        switch (match.Value.ToLowerInvariant())
+                        {
+                            case "{systemmemorybytes}":
+                                memory = memory * 1024; // bytes = kilobytes * 1024
+                                break;
+
+                            case "{systemmemorymegabytes}":
+                                memory = memory / 1024; // megabytes = kilobytes / 2014
+                                break;
+
+                            case "{systemmemorygigabytes}":
+                                memory = (memory / 1024) / 1024; // gigabytes = (kilobytes / 1024) / 2014
+                                break;
+                        }
+
+                        evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, memory.ToString());
                     }
                 }
 

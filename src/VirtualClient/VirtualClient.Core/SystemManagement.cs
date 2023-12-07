@@ -427,7 +427,9 @@ namespace VirtualClient
                     break;
 
                 case PlatformID.Unix:
-                    using (IProcessProxy free = this.ProcessManager.CreateProcess("free"))
+                    // Note that for the Linux 'free' command, the kibibyte (--kibi) uses the original standard
+                    // for a kilobyte == 1024 bytes.
+                    using (IProcessProxy free = this.ProcessManager.CreateProcess("free", "--kibi"))
                     {
                         free.StartAndWaitAsync(CancellationToken.None).GetAwaiter().GetResult();
                         free.ThrowIfErrored<DependencyException>(
