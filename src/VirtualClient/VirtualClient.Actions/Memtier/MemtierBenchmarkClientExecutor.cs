@@ -37,6 +37,7 @@ namespace VirtualClient.Actions
         private List<Metric> aggregatedMetrics;
         private List<string> perProcessOutputList;
         private List<string> perProcessCommandList;
+        private string commonAggregateMetricCommandArguments;
         private int startingServerPort;
 
         /// <summary>
@@ -347,6 +348,7 @@ namespace VirtualClient.Actions
 
                     MemtierMetricsParser memtierMetricsAggregateParser = new MemtierMetricsParser(this.PerProcessMetric, this.perProcessOutputList, this.perProcessCommandList);
                     IList<Metric> metrics = memtierMetricsAggregateParser.Parse();
+
                     string commandline = "commandline";
 
                     foreach (Metric metric in metrics)
@@ -360,7 +362,7 @@ namespace VirtualClient.Actions
                             metric.Value,
                             metric.Unit,
                             null,
-                            metric.Metadata.ContainsKey(commandline) ? (string)metric.Metadata[commandline] : null,
+                            metric.Metadata.ContainsKey(commandline) ? (string)metric.Metadata[commandline] : this.commonAggregateMetricCommandArguments,
                             this.Tags,
                             telemetryContext,
                             metric.Relativity);
@@ -429,11 +431,6 @@ namespace VirtualClient.Actions
 
                     if (!this.WarmUp)
                     {
-                        foreach (string output in this.perProcessOutputList)
-                        {
-                            Console.WriteLine($"output is : {output}");
-                        }
-
                         this.CaptureMetrics(startTime, endTime, telemetryContext, cancellationToken);
                     }
                 }
@@ -473,7 +470,8 @@ namespace VirtualClient.Actions
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    string parsedCommandArguments = this.ParseCommand(process.FullCommand(), serverPort);
+                                    this.commonAggregateMetricCommandArguments = this.ParseCommand(process.FullCommand());
+                                    string parsedCommandArguments = (this.commonAggregateMetricCommandArguments + @$" --VCpuID {serverPort - this.startingServerPort}").Trim();
                                     this.perProcessOutputList.Add(output);
                                     this.perProcessCommandList.Add(parsedCommandArguments);
                                 }
@@ -522,7 +520,7 @@ namespace VirtualClient.Actions
             return state.Definition;
         }
 
-        private string ParseCommand(string command, int serverPort)
+        private string ParseCommand(string command)
         {
             List<string> excludingRegexList = new List<string>
                 {
@@ -543,7 +541,6 @@ namespace VirtualClient.Actions
 
             command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
-            command += @$" --VCpuID {serverPort - this.startingServerPort}";
             return command.Trim();
         }
     }

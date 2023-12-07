@@ -44,6 +44,20 @@ namespace VirtualClient.Contracts
         public static readonly string ScientificNotationRegex = @"(((-?)(0|([1-9]\d*))(\.\d+)?)([Ee][+-]?[0-9]+)?)";
 
         /// <summary>
+        /// Regex expression for capturing GUIDS.
+        /// Valid: 324DFKWJFNSFie-nfjeKFNKLJNF332-enfeljkwenf3, 08f12e24-629b-45f7-a1a3-7e843b6d1840
+        /// Invalid: abC3-1dD3, lp@gx-45d1E-apdD2
+        /// </summary>
+        public static readonly string GUIDRegex = @"(?i)[{(]?[0-9A-Z]+[-]+(?:[0-9A-Z]+[-]+)+[0-9A-Z]+[)}]?";
+
+        /// <summary>
+        /// Regex expression for capturing emails.
+        /// Valid: johndoe@gmail.com, john3.doe@gmail.com, john.joe53@apple.co.id
+        /// Invalid: johndoe_at_gmail.com, jogndoe@gmail
+        /// </summary>
+        public static readonly string EmailRegex = @"[\w\-\.]+@([\w -]+\.)+[\w-]{2,}";
+
+        /// <summary>
         /// Remove rows that matches the regex.
         /// </summary>
         /// <param name="text">Raw text.</param>

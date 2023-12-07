@@ -51,126 +51,16 @@
         <None Update="profiles\*.json" CopyToOutputDirectory="Always" CopyToPublishDirectory="Never" />
     </ItemGroup>
 
-    <ItemGroup>
-        <!--
-        Windows-specific Profiles
-        The following profiles run on Windows and will be published to the VirtualClient
-        NuGet package in the /content/win-x64|win-arm64/profiles folder
-        -->
-        <WindowsProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
-        <WindowsProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
-        <WindowsProfiles Include="profiles\PERF-ASPNETBENCH.json" />
-        <WindowsProfiles Include="profiles\PERF-BLENDER-AMD.json" />
-        <WindowsProfiles Include="profiles\PERF-COMPRESSION.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-COREMARK.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
-        <WindowsProfiles Include="profiles\PERF-GPU-3DMARK-AMD.json" />
-        <WindowsProfiles Include="profiles\PERF-GPU-SPECVIEW-AMD.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-LAPACK.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
-        <WindowsProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
-        <WindowsProfiles Include="profiles\PERF-CPU-PRIME95.json" />
-        <WindowsProfiles Include="profiles\PERF-IO-DISKSPD.json" />
-        <WindowsProfiles Include="profiles\PERF-IO-DISKSPD-2.json" />
-        <WindowsProfiles Include="profiles\PERF-IO-FIO.json" />
-        <WindowsProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
-        <WindowsProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
-        <WindowsProfiles Include="profiles\PERF-NETWORK-PING.json" />
-        <WindowsProfiles Include="profiles\PERF-NETWORK.json" />
-        <WindowsProfiles Include="profiles\PERF-NETWORK-CTSTRAFFIC.json" />
-        <WindowsProfiles Include="profiles\PERF-NETWORK-2.json" />
-        <WindowsProfiles Include="profiles\PERF-OPENFOAM.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECJVM.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECJBB.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECCPU-FPSPEED.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECCPU-FPRATE.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECCPU-INTSPEED.json" />
-        <WindowsProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
-        <WindowsProfiles Include="profiles\POWER-SPEC30.json" />
-        <WindowsProfiles Include="profiles\POWER-SPEC50.json" />
-        <WindowsProfiles Include="profiles\POWER-SPEC70.json" />
-        <WindowsProfiles Include="profiles\POWER-SPEC100.json" />
-	<WindowsProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <!--
-        Linux-specific Profiles
-        The following profiles run on Linux and will be published to the VirtualClient
-        NuGet package in the /content/linux-x64|linux-arm64/profiles folder.
-        -->
-        <LinuxProfiles Include="profiles\GET-STARTED-OPENSSL.json" />
-        <LinuxProfiles Include="profiles\GET-STARTED-REDIS.json" />
-        <LinuxProfiles Include="profiles\BOOTSTRAP-DEPENDENCIES.json" />
-        <LinuxProfiles Include="profiles\PERF-ASPNETBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-COMPRESSION.json" />
-        <LinuxProfiles Include="profiles\PERF-COMPRESSION-LZBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-COREMARK.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-COREMARKPRO.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-HPCG.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-HPLINPACK.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-GEEKBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-OPENSSL.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-PRIME95.json" />
-        <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-GPU-SUPERBENCH-NVIDIA.json" />
-        <LinuxProfiles Include="profiles\PERF-GPU-MLPERF.json" />
-        <LinuxProfiles Include="profiles\PERF-GPU-MLPERF-NVIDIA.json" />
-        <LinuxProfiles Include="profiles\PERF-GRAPH500.json" />
-        <LinuxProfiles Include="profiles\PERF-HPC-NASPARALLELBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-IO-FIO.json" />
-        <LinuxProfiles Include="profiles\PERF-IO-FIO-DISCOVERY.json" />
-        <LinuxProfiles Include="profiles\PERF-IO-FIO-MULTITHROUGHPUT.json" />
-        <LinuxProfiles Include="profiles\PERF-CPU-LAPACK.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECCPU-FPSPEED.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECCPU-FPRATE.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECCPU-INTSPEED.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECCPU-INTRATE.json" />
-        <LinuxProfiles Include="profiles\PERF-STRESSNG.json" />
-        <LinuxProfiles Include="profiles\PERF-MEM-LMBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-MEM-STRESSAPPTEST.json" />
-        <LinuxProfiles Include="profiles\PERF-SQL-POSTGRESQL.json" />
-        <LinuxProfiles Include="profiles\PERF-MYSQL-SYSBENCH-OLTP.json" />
-        <LinuxProfiles Include="profiles\PERF-REDIS.json" />
-        <LinuxProfiles Include="profiles\PERF-MEMCACHED.json" />
-        <LinuxProfiles Include="profiles\PERF-NETWORK-PING.json" />
-        <LinuxProfiles Include="profiles\PERF-NETWORK.json" />
-        <LinuxProfiles Include="profiles\PERF-NETWORK-DEATHSTARBENCH.json" />
-        <LinuxProfiles Include="profiles\PERF-NETWORK-2.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECJBB.json" />
-        <LinuxProfiles Include="profiles\PERF-SPECJVM.json" />
-        <LinuxProfiles Include="profiles\PERF-OPENFOAM.json" />
-        <LinuxProfiles Include="profiles\POWER-SPEC30.json" />
-        <LinuxProfiles Include="profiles\POWER-SPEC50.json" />
-        <LinuxProfiles Include="profiles\POWER-SPEC70.json" />
-        <LinuxProfiles Include="profiles\POWER-SPEC100.json" />
-	    <LinuxProfiles Include="profiles\SETUP-AMD-GPU-DRIVER.json" />
-        <LinuxProfiles Include="profiles\QUAL-GPU-DCGMI.json" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <MonitorProfiles Include="profiles\MONITORS-DEFAULT.json" />
-        <MonitorProfiles Include="profiles\MONITORS-FILE-UPLOAD.json" />
-        <MonitorProfiles Include="profiles\MONITORS-GPU-NVIDIA.json" />
-        <MonitorProfiles Include="profiles\MONITORS-NONE.json" />
-    </ItemGroup>
-
+    
     <ItemGroup>
         <Folder Include="Properties\" />
     </ItemGroup>
 
     <Target Name="PublishProfiles" AfterTargets="Publish">
-        <Message Importance="high" Text="RuntimeIdentifier = $(RuntimeIdentifier)" />
-
-        <!-- Windows-supported workload profiles -->
-        <Copy Condition="'$(RuntimeIdentifier)' == 'win-x64' or '$(RuntimeIdentifier)' == 'win-arm64'" SourceFiles="@(WindowsProfiles)" DestinationFiles="@(WindowsProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
-
-        <!-- Linux-supported workload profiles -->
-        <Copy Condition="'$(RuntimeIdentifier)' == 'linux-x64' or '$(RuntimeIdentifier)' == 'linux-arm64'" SourceFiles="@(LinuxProfiles)" DestinationFiles="@(LinuxProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
-
-        <!-- Monitoring profiles -->
-        <Copy SourceFiles="@(MonitorProfiles)" DestinationFiles="@(MonitorProfiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
+        <ItemGroup>
+            <ProfileFiles Include="profiles\*.json" />
+        </ItemGroup>
+        <Copy SourceFiles="@(ProfileFiles)" DestinationFiles="@(ProfileFiles->'$(OutputPath)publish\profiles\%(Filename)%(Extension)')" />
     </Target>
 
     <!--

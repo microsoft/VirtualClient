@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
         // Totals      48271.29     43444.12         0.00         2.62213         2.75100         3.90300         4.41500         7.42300        29.31100      4053.46
         private static readonly Regex GetsExpression = new Regex(@"(?<=Gets).*(?=\n)", RegexOptions.IgnoreCase);
         private static readonly Regex SetsExpression = new Regex(@"(?<=Sets).*(?=\n)", RegexOptions.IgnoreCase);
-        private static readonly Regex TotalsExpression = new Regex(@"(?<=Totals).*(?=\n)", RegexOptions.IgnoreCase);
+        private static readonly Regex TotalsExpression = new Regex(@"(?<=Totals).*", RegexOptions.IgnoreCase);
 
         private bool perProcessMetric = false;
         private List<string> memtierCommandLines = new List<string>();
@@ -54,11 +54,9 @@ namespace VirtualClient.Actions
                 List<Metric> combinedMetrics = new List<Metric>();
                 List<string> rawTextList = this.RawText.Split(ProcessResultSectionDelimiter).Select(s => s.Trim()).ToList();
 
-                Console.WriteLine($"rawTextListLength: {rawTextList.Count}");
                 for (int i = 0; i < rawTextList.Count; i++)
                 {
                     string rawText = rawTextList[i];
-                    Console.WriteLine($"rawText {i}: {rawText}");
                     // Example Format:
                     //
                     // ALL STATS

@@ -1,0 +1,98 @@
++ : mlperf-nvidia:language_model
++ : DGXA100_1x8x56x1
++ : 1
+++ date +%y%m%d%H%M%S%N
++ : 230306191015611751926
+++ pwd
++ : /home/azureuser/mlperf/training_results_v2.0/NVIDIA/benchmarks/bert/implementations/pytorch/results
++ : constants.BERT
++ : 5
++ : ./config_DGXA100_1x8x56x1.sh
++ : /home/azureuser/mlperf/training_results_v2.0/NVIDIA/benchmarks/bert/implementations/pytorch/results/230306191015611751926
++ : language_model
++ : 0,1,2,3,4,5,6,7
++ readonly docker_image=mlperf-nvidia:language_model
++ docker_image=mlperf-nvidia:language_model
++++ func_update_file_path_for_ci mounts.txt /home/azureuser/mlperf/training_results_v2.0/NVIDIA/benchmarks/bert/implementations/pytorch/language_model/pytorch
++++ declare new_path
++++ '[' -f mounts.txt ']'
++++ new_path=mounts.txt
++++ '[' '!' -f mounts.txt ']'
++++ echo mounts.txt
+++ func_get_container_mounts mounts.txt
++++ envsubst
+++++ sed '/^$/d' mounts.txt
+++++ sed '/^#/d'
+++++ sed 's/^[ ]*\(.*\)[ ]*/--volume=\1 /'
+++++ tr '\n' ' '
+++ echo --volume=/datadrive/bert/hdf5/training-4320/hdf5_4320_shards_varlength:/workspace/data --volume=/datadrive/bert/hdf5/training-4320/hdf5_4320_shards_varlength:/workspace/data_phase2 --volume=/datadrive/bert/phase1:/workspace/phase1 --volume=/datadrive/bert/hdf5/eval_varlength:/workspace/evaldata --volume=/lustre/fsw/mlperf/mlperft-bert/unit_test:/workspace/unit_test_data
++ CONT_MOUNTS='--volume=/datadrive/bert/hdf5/training-4320/hdf5_4320_shards_varlength:/workspace/data --volume=/datadrive/bert/hdf5/training-4320/hdf5_4320_shards_varlength:/workspace/data_phase2 --volume=/datadrive/bert/phase1:/workspace/phase1 --volume=/datadrive/bert/hdf5/eval_varlength:/workspace/evaldata --volume=/lustre/fsw/mlperf/mlperft-bert/unit_test:/workspace/unit_test_data'
++ mkdir -p /home/azureuser/mlperf/training_results_v2.0/NVIDIA/benchmarks/bert/implementations/pytorch/results
++ mapfile -t _config_env
+++ env -i bash -c '. ./config_DGXA100_1x8x56x1.sh && compgen -e'
+++ grep -E -v '^(PWD|SHLVL)'
++ _config_env+=(SEED)
++ mapfile -t _config_env
+++ for v in "${_config_env[@]}"
+++ echo --env=BATCHSIZE
+++ for v in "${_config_env[@]}"
+++ echo --env=CHECKPOINTDIR
+++ for v in "${_config_env[@]}"
+++ echo --env=CHECKPOINTDIR_PHASE1
+++ for v in "${_config_env[@]}"
+++ echo --env=DATADIR
+++ for v in "${_config_env[@]}"
+++ echo --env=DATADIR_PHASE2
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXHT
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXNGPU
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXNNODES
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXNSOCKET
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXSOCKETCORES
+++ for v in "${_config_env[@]}"
+++ echo --env=DGXSYSTEM
+++ for v in "${_config_env[@]}"
+++ echo --env=EVALDIR
+++ for v in "${_config_env[@]}"
+++ echo --env=EVAL_ITER_SAMPLES
+++ for v in "${_config_env[@]}"
+++ echo --env=EVAL_ITER_START_SAMPLES
+++ for v in "${_config_env[@]}"
+++ echo --env=EXTRA_PARAMS
+++ for v in "${_config_env[@]}"
+++ echo --env=GRADIENT_STEPS
+++ for v in "${_config_env[@]}"
+++ echo --env=LR
+++ for v in "${_config_env[@]}"
+++ echo --env=MAX_SAMPLES_TERMINATION
+++ for v in "${_config_env[@]}"
+++ echo --env=MAX_STEPS
+++ for v in "${_config_env[@]}"
+++ echo --env=OPT_LAMB_BETA_1
+++ for v in "${_config_env[@]}"
+++ echo --env=OPT_LAMB_BETA_2
+++ for v in "${_config_env[@]}"
+++ echo --env=PHASE
+++ for v in "${_config_env[@]}"
+++ echo --env=RESULTSDIR
+++ for v in "${_config_env[@]}"
+++ echo --env=SLURM_NTASKS
+++ for v in "${_config_env[@]}"
+++ echo --env=START_WARMUP_STEP
+++ for v in "${_config_env[@]}"
+++ echo --env=UNITTESTDIR
+++ for v in "${_config_env[@]}"
+++ echo --env=WALLTIME
+++ for v in "${_config_env[@]}"
+++ echo --env=WARMUP_PROPORTION
+++ for v in "${_config_env[@]}"
+++ echo --env=WEIGHT_DECAY_RATE
+++ for v in "${_config_env[@]}"
+++ echo --env=SEED
++ cleanup_docker
++ docker container rm -f language_model
+Error response from daemon: No such container

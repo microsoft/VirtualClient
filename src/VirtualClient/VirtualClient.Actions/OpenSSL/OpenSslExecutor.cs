@@ -130,7 +130,7 @@ namespace VirtualClient.Actions
 
                     this.Logger.LogMetrics(
                         "OpenSSL",
-                        "OpenSSL Speed",
+                        this.MetricScenario ?? this.Scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
                         metrics,

@@ -1,0 +1,12 @@
+Composites
+catia-06,43.3
+
+viewset,index,name,weight,fps
+catia-06,1,catiaV5test1,14.28,34.01
+catia-06,2,catiaV5test2,14.28,44.3
+catia-06,3,catiaV5test3,0,424.59
+catia-06,4,catiaV5test4,14.28,158.01
+catia-06,5,CATIA_3DX_repEngine,14.29,15.86
+catia-06,6,CATIA_3DX_loftJet,14.29,26.73
+catia-06,7,CATIA_3DX_car,14.29,46.68
+catia-06,8,CATIA_3DX_Multi_car,14.29,60.68

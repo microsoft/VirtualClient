@@ -69,7 +69,7 @@ namespace VirtualClient.Actions
             {
                 // Default to system logical core count, but overwritable with parameters.
                 CpuInfo cpuInfo = this.systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                int threadCount = cpuInfo.LogicalCoreCount;
+                int threadCount = cpuInfo.LogicalProcessorCount;
 
                 if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
                 {

@@ -1067,9 +1067,9 @@ namespace VirtualClient.Contracts
             string effectiveScenarioName = scenarioName;
             string effectiveToolName = toolName;
 
-            if (string.IsNullOrWhiteSpace(scenarioName) && !string.IsNullOrWhiteSpace(component.Scenario))
+            if (string.IsNullOrWhiteSpace(scenarioName) && (!string.IsNullOrWhiteSpace(component.MetricScenario) || !string.IsNullOrWhiteSpace(component.Scenario)))
             {
-                effectiveScenarioName = component.Scenario;
+                effectiveScenarioName = component.MetricScenario ?? component.Scenario;
             }
 
             effectiveScenarioName = !string.IsNullOrWhiteSpace(effectiveScenarioName) ? effectiveScenarioName : "Outcome";

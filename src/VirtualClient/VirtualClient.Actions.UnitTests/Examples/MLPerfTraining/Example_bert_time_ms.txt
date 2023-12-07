@@ -1,0 +1,1 @@
+{"namespace": "", "time_ms": 1652749508549, "event_type": "POINT_IN_TIME", "key": "cache_clear", "value": true, "metadata": {"file": "<string>", "lineno": 3}}

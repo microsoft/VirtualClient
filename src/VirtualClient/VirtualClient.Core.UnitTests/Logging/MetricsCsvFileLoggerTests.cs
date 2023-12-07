@@ -76,7 +76,7 @@ namespace VirtualClient.Logging
                 { "metricValue", 123.45 },
                 { "metricUnit", "milliseconds" },
                 { "metricCategorization", "Latency" },
-                { "metricDescription", "The average latency (in milliseconds)." },
+                { "metricDescription", "The average \"latency\" (in milliseconds)." },
                 { "metricRelativity", MetricRelativity.LowerIsBetter },
                 { "toolName", "ToolA" },
                 { "tags", "Tag1,Tag2,Tag3" }
@@ -101,7 +101,7 @@ namespace VirtualClient.Logging
                 $",\"avg. latency\"" +
                 $",\"123.45\"" +
                 $",\"milliseconds\"" +
-                $",\"The average latency (in milliseconds).\"" +
+                $",\"The average \"\"latency\"\" (in milliseconds).\"" +
                 $",\"LowerIsBetter\"" +
                 $",\"Test\"" +
                 $",\"Unix\"" +
