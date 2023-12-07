@@ -23,7 +23,8 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(info);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
-            Assert.AreEqual(4, info.LogicalCoreCount);
+            Assert.AreEqual(4, info.LogicalProcessorCount);
+            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -62,7 +63,8 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(info);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
-            Assert.AreEqual(2, info.LogicalCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCount);
+            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -101,7 +103,8 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(info);
             Assert.AreEqual("Neoverse-N1", info.Name);
             Assert.AreEqual("Neoverse-N1 Model 1 Stepping r3p1, ARM", info.Description);
-            Assert.AreEqual(2, info.LogicalCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCount);
+            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -130,6 +133,45 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void LscpuParserParsesTheExpectedResultsFromAmpereSystems_Scenario2()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results_ampere_2.txt"));
+            LscpuParser parser = new LscpuParser(results);
+            CpuInfo info = parser.Parse();
+
+            Assert.IsNotNull(info);
+            Assert.AreEqual("Neoverse-N1", info.Name);
+            Assert.AreEqual("Neoverse-N1 Model 1 Stepping r3p1, ARM", info.Description);
+            Assert.AreEqual(64, info.LogicalProcessorCount);
+            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(64, info.PhysicalCoreCount);
+            Assert.AreEqual(1, info.SocketCount);
+            Assert.AreEqual(1, info.NumaNodeCount);
+            Assert.IsFalse(info.IsHyperthreadingEnabled);
+            Assert.AreEqual(double.NaN, info.MaxFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.MinFrequencyMHz);
+            Assert.AreEqual(double.NaN, info.FrequencyMHz);
+
+            Assert.AreEqual(6, info.Flags.Count);
+            Assert.AreEqual("aarch64", info.Flags["Architecture"]);
+            Assert.AreEqual("32-bit, 64-bit", info.Flags["CPU op-mode(s)"]);
+            Assert.AreEqual("Little Endian", info.Flags["Byte Order"]);
+            Assert.AreEqual("0-63", info.Flags["NUMA node0 CPU(s)"]);
+            Assert.AreEqual("0-63", info.Flags["On-line CPU(s) list"]);
+            Assert.AreEqual("50", info.Flags["BogoMIPS"]);
+
+            IConvertible cacheMemory = 0;
+            Assert.IsNotEmpty(info.Caches);
+
+            Assert.IsTrue(info.Caches.Count() == 5);
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1" && cache.SizeInBytes == 8388608));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1d" && cache.SizeInBytes == 4194304));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1i" && cache.SizeInBytes == 4194304));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L2" && cache.SizeInBytes == 67108864));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L3" && cache.SizeInBytes == 33554432));
+        }
+
+        [Test]
         public void LscpuParserParsesTheExpectedResultsFromAWSSystems_Scenario3()
         {
             string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lscpu", "lscpu_results_intel_3.txt"));
@@ -139,7 +181,8 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(info);
             Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Name);
             Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Description);
-            Assert.AreEqual(2, info.LogicalCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCount);
+            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -177,7 +220,8 @@ namespace VirtualClient.Contracts
             Assert.IsNotNull(info);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C Family 6 Model 143 Stepping 8, GenuineIntel", info.Description);
-            Assert.AreEqual(28, info.LogicalCoreCount);
+            Assert.AreEqual(28, info.LogicalProcessorCount);
+            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
             Assert.AreEqual(14, info.PhysicalCoreCount);
             Assert.AreEqual(2, info.SocketCount);
             Assert.AreEqual(2, info.NumaNodeCount);

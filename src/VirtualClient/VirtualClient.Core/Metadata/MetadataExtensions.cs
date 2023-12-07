@@ -251,8 +251,8 @@ namespace VirtualClient.Metadata
                     metadata.Add("cpuSockets", cpuInfo.SocketCount);
                     metadata.Add("cpuPhysicalCores", cpuInfo.PhysicalCoreCount);
                     metadata.Add("cpuPhysicalCoresPerSocket", cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount);
-                    metadata.Add("cpuLogicalProcessors", cpuInfo.LogicalCoreCount);
-                    metadata.Add("cpuLogicalProcessorsPerCore", cpuInfo.LogicalCoreCount / cpuInfo.SocketCount);
+                    metadata.Add("cpuLogicalProcessors", cpuInfo.LogicalProcessorCount);
+                    metadata.Add("cpuLogicalProcessorsPerCore", cpuInfo.LogicalProcessorsPerCoreCount);
 
                     IEnumerable<CpuCacheInfo> cpuCaches = cpuInfo.Caches;
                     if (cpuCaches?.Any() == true)
