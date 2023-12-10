@@ -158,6 +158,8 @@ namespace VirtualClient.Actions
                     numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
                 }
 
+                numThreads = Math.Min(numThreads, 64);
+
                 return numThreads;
             }
         }
