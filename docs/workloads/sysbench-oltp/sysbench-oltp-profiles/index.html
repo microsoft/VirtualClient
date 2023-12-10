@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.cd67f477.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.086d095c.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.33e7f672.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -128,7 +128,7 @@ I/O usage.</li>
 <li>
 <p><strong>Profile Parameters</strong><br>
 <!-- -->The following parameters can be optionally supplied on the command line to modify the behaviors of the workload. See the &#x27;Usage Scenarios/Examples&#x27; above for examples on how to supply parameters to Virtual Client profiles.</p>
-<table><thead><tr><th>Parameter</th><th>Purpose</th><th>Default</th></tr></thead><tbody><tr><td>DatabaseName</td><td>Not Required. Configure the name of database under test.</td><td>sbtest</td></tr><tr><td>DatabaseScenario</td><td>Not Required. Configures the scenario in which to stress the database.</td><td>Default</td></tr><tr><td>Threads</td><td>Not Required. Number of threads to use during workload execution.</td><td>vCPU * 8</td></tr><tr><td>RecordCount</td><td>Not Required. Number of records per table in the database.</td><td>10^(vCPU + 2)</td></tr><tr><td>NumTables</td><td>Not Required. Number of tables created in the database.</td><td>10</td></tr><tr><td>Duration</td><td>Required. Timespan duration of the workload.</td><td>N/A</td></tr><tr><td>Workload</td><td>Required. Name of benchmark to run; options listed <a href="/VirtualClient/docs/workloads/sysbench-oltp/">here</a></td><td>N/A</td></tr></tbody></table>
+<table><thead><tr><th>Parameter</th><th>Purpose</th><th>Default</th></tr></thead><tbody><tr><td>DatabaseName</td><td>Not Required. Configure the name of database under test.</td><td>sbtest</td></tr><tr><td>DatabaseScenario</td><td>Not Required. Configures the scenario in which to stress the database.</td><td>Default</td></tr><tr><td>Threads</td><td>Not Required. Number of threads to use during workload execution.</td><td>vCPU * 8, max 64</td></tr><tr><td>RecordCount</td><td>Not Required. Number of records per table in the database.</td><td>10^(vCPU + 2)</td></tr><tr><td>NumTables</td><td>Not Required. Number of tables created in the database.</td><td>10</td></tr><tr><td>Duration</td><td>Required. Timespan duration of the workload.</td><td>N/A</td></tr><tr><td>Workload</td><td>Required. Name of benchmark to run; options listed <a href="/VirtualClient/docs/workloads/sysbench-oltp/">here</a></td><td>N/A</td></tr></tbody></table>
 </li>
 <li>
 <p><strong>Profile Runtimes</strong><br>
