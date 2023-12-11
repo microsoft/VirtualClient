@@ -281,31 +281,6 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
-        /// Split one data column into multiple columns based on the regex. The extra columns will be inserted right to the index column.
-        /// </summary>
-        /// <param name="dataTable">Original datatable.</param>
-        /// <param name="columnIndex">Column to split.</param>
-        /// <param name="splitRegex">Regex to split the column.</param>
-        /// <param name="columnNames">Names for the new column.</param>
-        public static void SplitDataColumnMatch(this DataTable dataTable, int columnIndex, Regex splitRegex, IList<string> columnNames)
-        {
-            for (int columnCount = 0; columnCount < columnNames.Count; columnCount++)
-            {
-                DataColumn newColumn = dataTable.Columns.Add(columnNames[columnCount]);
-                newColumn.SetOrdinal(columnIndex + columnCount + 1);
-            }
-
-            for (int rowCount = 0; rowCount < dataTable.Rows.Count; rowCount++)
-            {
-                Match splitResult = Regex.Match((string)dataTable.Rows[rowCount][columnIndex], splitRegex.ToString(), splitRegex.Options);
-                for (int columnCount = 0; columnCount < columnNames.Count; columnCount++)
-                {
-                    dataTable.Rows[rowCount][columnIndex + columnCount + 1] = splitResult.Groups[columnCount + 1].Value.Trim() ?? string.Empty;
-                }
-            }
-        }
-
-        /// <summary>
         /// Merge two columns into one
         /// </summary>
         /// <param name="dataTable">Original datatable</param>
@@ -325,27 +300,6 @@ namespace VirtualClient.Contracts
 
             dataTable.Columns.RemoveAt(columnIndex2);
         }
-
-/*
-        /// <summary>
-        /// Replace empty cell with a string replacement. Default to fill with 0.
-        /// </summary>
-        /// <param name="dataTable">Original datatable.</param>
-        /// <param name="replacement">Replacement string on empty cells</param>
-        public static void FindUnitFromName(this DataTable dataTable, string replacement = "0")
-        {
-            for (int rowCount = 0; rowCount < dataTable.Rows.Count; rowCount++)
-            {
-                *//*for (int columnCount = 0; columnCount < dataTable.Columns.Count; columnCount++)
-                {
-                    if (string.IsNullOrWhiteSpace(Convert.ToString(dataTable.Rows[rowCount][columnCount])))
-                    {
-                        dataTable.Rows[rowCount][columnCount] = replacement;
-                    }
-                }*//*
-                dataTable.Rows[rowCount][0].Contains(replacement)
-            }
-        }*/
 
         /// <summary>
         /// Translate the unit of numbers in data cells. Example: 1K->1000 and 1M->1000000.

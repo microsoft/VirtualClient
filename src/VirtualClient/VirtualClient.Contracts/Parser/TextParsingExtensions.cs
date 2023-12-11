@@ -92,7 +92,7 @@ namespace VirtualClient.Contracts
             {
                 if (!string.IsNullOrWhiteSpace(section))
                 {
-                    List<string> rows = section.Split("\n", StringSplitOptions.RemoveEmptyEntries).ToList();
+                    List<string> rows = section.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).ToList();
                     string sectionName = rows.FirstOrDefault().Trim();
                     rows.RemoveAt(0);
 
