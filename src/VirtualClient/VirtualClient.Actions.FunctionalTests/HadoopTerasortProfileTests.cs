@@ -51,7 +51,15 @@ namespace VirtualClient.Actions
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
-                process.StandardError.Append(TestDependencies.GetResourceFileContents("Results_HadoopTerasort.txt"));
+
+                if (arguments.Contains("teragen", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardError.Append(TestDependencies.GetResourceFileContents("Results_HadoopTeragen.txt"));
+                } 
+                else if (arguments.Contains("terasort", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardError.Append(TestDependencies.GetResourceFileContents("Results_HadoopTerasort.txt"));
+                }
 
                 return process;
             };
