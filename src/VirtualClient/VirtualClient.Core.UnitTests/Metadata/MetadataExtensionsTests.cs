@@ -174,8 +174,8 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("cpuSockets", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCores", out value) && value.ToString() == cpuInfo.PhysicalCoreCount.ToString());
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCoresPerSocket", out value) && value.ToString() == (cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount).ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalCoreCount.ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalCoreCount / cpuInfo.SocketCount).ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalProcessorCount.ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalProcessorsPerCoreCount).ToString());
             Assert.IsTrue(metadata.TryGetValue("numaNodes", out value) && value.ToString() == "1");
 
             // Memory Metadata
@@ -230,8 +230,8 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("cpuSockets", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCores", out value) && value.ToString() == cpuInfo.PhysicalCoreCount.ToString());
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCoresPerSocket", out value) && value.ToString() == (cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount).ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalCoreCount.ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalCoreCount / cpuInfo.SocketCount).ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalProcessorCount.ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalProcessorsPerCoreCount).ToString());
             Assert.IsTrue(metadata.TryGetValue("numaNodes", out value) && value.ToString() == "1");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L1", out value) && value.ToString() == "100000");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L1d", out value) && value.ToString() == "60000");
@@ -290,8 +290,8 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("cpuSockets", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCores", out value) && value.ToString() == cpuInfo.PhysicalCoreCount.ToString());
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCoresPerSocket", out value) && value.ToString() == (cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount).ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalCoreCount.ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalCoreCount / cpuInfo.SocketCount).ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalProcessorCount.ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalProcessorsPerCoreCount).ToString());
             Assert.IsTrue(metadata.TryGetValue("numaNodes", out value) && value.ToString() == "1");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L1", out value) && value.ToString() == "100000");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L2", out value) && value.ToString() == "10000000");
@@ -344,8 +344,8 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("cpuSockets", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCores", out value) && value.ToString() == cpuInfo.PhysicalCoreCount.ToString());
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCoresPerSocket", out value) && value.ToString() == (cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount).ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalCoreCount.ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalCoreCount / cpuInfo.SocketCount).ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalProcessorCount.ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalProcessorsPerCoreCount).ToString());
             Assert.IsTrue(metadata.TryGetValue("numaNodes", out value) && value.ToString() == "1");
 
             // Memory Metadata
@@ -396,8 +396,8 @@ namespace VirtualClient.Metadata
             Assert.IsTrue(metadata.TryGetValue("cpuSockets", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCores", out value) && value.ToString() == cpuInfo.PhysicalCoreCount.ToString());
             Assert.IsTrue(metadata.TryGetValue("cpuPhysicalCoresPerSocket", out value) && value.ToString() == (cpuInfo.PhysicalCoreCount / cpuInfo.SocketCount).ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalCoreCount.ToString());
-            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalCoreCount / cpuInfo.SocketCount).ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessors", out value) && value.ToString() == cpuInfo.LogicalProcessorCount.ToString());
+            Assert.IsTrue(metadata.TryGetValue("cpuLogicalProcessorsPerCore", out value) && value.ToString() == (cpuInfo.LogicalProcessorsPerCoreCount).ToString());
             Assert.IsTrue(metadata.TryGetValue("numaNodes", out value) && value.ToString() == "2");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L1", out value) && value.ToString() == "100000");
             Assert.IsTrue(metadata.TryGetValue("cpuCacheBytes_L2", out value) && value.ToString() == "10000000");

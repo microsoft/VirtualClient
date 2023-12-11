@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalCoreCount);
+                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalProcessorCount);
             }
         }
 
@@ -168,7 +168,7 @@ namespace VirtualClient.Actions
             await this.EvaluateParametersAsync(cancellationToken);
             this.ThrowIfPlatformIsNotSupported();
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
-            this.coreCount = this.cpuInfo.LogicalCoreCount;
+            this.coreCount = this.cpuInfo.LogicalProcessorCount;
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
             this.totalMemoryKiloBytes = memoryInfo.TotalMemory;

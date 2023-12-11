@@ -1,0 +1,33 @@
+﻿Architecture:                       aarch64
+CPU op-mode(s):                     32-bit, 64-bit
+Byte Order:                         Little Endian
+CPU(s):                             64
+On-line CPU(s) list:                0-63
+Thread(s) per core:                 1
+Core(s) per socket:                 64
+Socket(s):                          1
+NUMA node(s):                       1
+Vendor ID:                          ARM
+Model:                              1
+Model name:                         Neoverse-N1
+Stepping:                           r3p1
+BogoMIPS:                           50.00
+L1d cache:                          4 MiB
+L1i cache:                          4 MiB
+L2 cache:                           64 MiB
+L3 cache:                           32 MiB
+NUMA node0 CPU(s):                  0-63
+Vulnerability Gather data sampling: Not affected
+Vulnerability Itlb multihit:        Not affected
+Vulnerability L1tf:                 Not affected
+Vulnerability Mds:                  Not affected
+Vulnerability Meltdown:             Mitigation; PTI
+Vulnerability Mmio stale data:      Not affected
+Vulnerability Retbleed:             Not affected
+Vulnerability Spec rstack overflow: Not affected
+Vulnerability Spec store bypass:    Not affected
+Vulnerability Spectre v1:           Mitigation; __user pointer sanitization
+Vulnerability Spectre v2:           Mitigation; CSV2, BHB
+Vulnerability Srbds:                Not affected
+Vulnerability Tsx async abort:      Not affected
+Flags:                              fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
