@@ -28,15 +28,9 @@ namespace VirtualClient.Actions
         private static readonly Regex HadoopDataTableDelimiter = new Regex(@"=", RegexOptions.ExplicitCapture);
 
         /// <summary>
-        /// To separate value/unit like '1.86 GB/sec'. This regex looks forward for digit and backward for word.
+        /// To separate value/unit like '7863 ms'. This regex looks forward for digit and backward for word with a space between them.
         /// </summary>
-        // private static readonly Regex ValueUnitSplitRegex = new Regex(@"^(.*?)(?:\(([^)]*)\))?$", RegexOptions.None);
-        private static readonly Regex ValueUnitSplitRegex = new Regex(@"^(.*?)(?:\s*\(([^)]*)\)\s*(.*))?$", RegexOptions.None);
-
-        /// <summary>
-        /// To separate value/unit like '1.86 GB/sec'. This regex looks forward for digit and backward for word.
-        /// </summary>
-        private static readonly Regex ValueUnitSplitRegexNew = new Regex(@"(?<=\d)( )(?=\w)", RegexOptions.ExplicitCapture);
+        private static readonly Regex ValueUnitSplitRegex = new Regex(@"(?<=\d)( )(?=\w)", RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Column Values in the Hadoop output.
@@ -46,7 +40,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Split Column Values to find the unit in the Hadoop output.
         /// </summary>
-        private IList<string> splitColumnNames = new List<string> { "Value", "Unit" };
+        private IList<string> measurementSplitColumnNames = new List<string> { "Value", "Unit" };
 
         /// <summary>
         /// Constructor for <see cref="HadoopMetricsParser"/>
@@ -73,7 +67,7 @@ namespace VirtualClient.Actions
         public DataTable MapReduceFrameworkCounters { get; set; }
 
         /// <summary>
-        /// 
+        /// Combined metrics of all the sections.
         /// </summary>
         public List<Metric> Metrics { get; set; }
 
@@ -99,7 +93,6 @@ namespace VirtualClient.Actions
         /// <inheritdoc/>
         protected override void Preprocess()
         {
-            // Remove all the rows that don't have column sign.
             List<string> result = new List<string>();
 
             this.PreprocessedText = this.RawText.Replace("File System Counters", $"{Environment.NewLine}File System Counters");
@@ -116,7 +109,6 @@ namespace VirtualClient.Actions
             foreach (string row in rows)
             {
                 string rownew = row;
-                // Remove all dashline and all star lines.
                 if (row.Contains("bytes", StringComparison.OrdinalIgnoreCase))
                 {
                     rownew = row + " bytes";
@@ -138,7 +130,7 @@ namespace VirtualClient.Actions
             string sectionName = "File System Counters";
             this.FileSystemCounters = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
-            this.FileSystemCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegexNew, this.splitColumnNames);
+            this.FileSystemCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegex, this.measurementSplitColumnNames);
             this.FileSystemCounters.ReplaceEmptyCell("count");
         }
 
@@ -147,7 +139,7 @@ namespace VirtualClient.Actions
             string sectionName = "Job Counters";
             this.JobCounters = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
-            this.JobCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegexNew, this.splitColumnNames);
+            this.JobCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegex, this.measurementSplitColumnNames);
             this.JobCounters.ReplaceEmptyCell("count");
         }
 
@@ -156,7 +148,7 @@ namespace VirtualClient.Actions
             string sectionName = "Map-Reduce Framework";
             this.MapReduceFrameworkCounters = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
-            this.MapReduceFrameworkCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegexNew, this.splitColumnNames);
+            this.MapReduceFrameworkCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegex, this.measurementSplitColumnNames);
             this.MapReduceFrameworkCounters.ReplaceEmptyCell("count");
         }
     }

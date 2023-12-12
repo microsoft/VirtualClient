@@ -34,8 +34,6 @@ namespace VirtualClient.Actions
 
             this.teragenTestParser = new HadoopMetricsParser(this.teragentResultRawText);
             this.terasortTestParser = new HadoopMetricsParser(this.terasortResultRawText);
-
-            
         }
 
         [Test]
