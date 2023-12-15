@@ -117,12 +117,18 @@ namespace VirtualClient.Actions
                 {
                     await this.Logger.LogMessageAsync($"{nameof(HadoopTerasortExecutor)}.DisposeServices", telemetryContext, async () =>
                     {
-                        this.state.HadoopExecutorServicesStarted = false;
+                        this.state = await this.stateManager.GetStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", CancellationToken.None)
+                                    ?? new HadoopExecutorState();
 
-                        await Task.WhenAll(
-                            this.ExecuteCommandAsync("bash", $"-c sbin/stop-dfs.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
-                            this.ExecuteCommandAsync("bash", $"-c sbin/stop-yarn.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
-                            this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", this.state, CancellationToken.None));
+                        if (this.state.HadoopExecutorStateInitialized)
+                        {
+                            this.state.HadoopExecutorServicesStarted = false;
+
+                            await Task.WhenAll(
+                                this.ExecuteCommandAsync("bash", $"-c sbin/stop-dfs.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
+                                this.ExecuteCommandAsync("bash", $"-c sbin/stop-yarn.sh", this.PackageDirectory, telemetryContext, CancellationToken.None),
+                                this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", this.state, CancellationToken.None));
+                        }
                     });
                 }).GetAwaiter().GetResult(); // Ensure Task.Run completes before continuing
 
@@ -136,11 +142,11 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             string timestamp = DateTime.Now.ToString("ddMMyyHHmmss");
-            string teragenCommmand = $"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen {this.RowCount} /inp-{timestamp}";
-            string terasortCommand = $"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-{timestamp} /out-{timestamp}";
+            string teragenCommmand = $"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen {this.RowCount} /inp-{timestamp}-{this.ProfileIteration}";
+            string terasortCommand = $"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-{timestamp}-{this.ProfileIteration} /out-{timestamp}-{this.ProfileIteration}";
 
-            await this.ExecutedDataCommands(teragenCommmand, "Hadoop Teragen", telemetryContext, cancellationToken);
-            await this.ExecutedDataCommands(terasortCommand, "Hadoop Terasort", telemetryContext, cancellationToken);
+            await this.RunSortingOperationsAsync(teragenCommmand, "Hadoop Teragen", telemetryContext, cancellationToken);
+            await this.RunSortingOperationsAsync(terasortCommand, "Hadoop Terasort", telemetryContext, cancellationToken);
         }
 
         /// <summary>
@@ -161,19 +167,7 @@ namespace VirtualClient.Actions
             this.JavaPackageDirectory = javaPackage.Path;
 
             this.JavaExecutablePath = this.PlatformSpecifics.Combine(this.JavaPackageDirectory, "bin", "java");
-
-            switch (this.Platform)
-            {
-                case PlatformID.Unix:
-                    this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "bin", "hadoop");
-                    break;
-
-                default:
-                    throw new WorkloadException(
-                        $"The Hadoop workload is not supported on the current platform/architecture " +
-                        $"{PlatformSpecifics.GetPlatformArchitectureName(this.Platform, this.CpuArchitecture)}.",
-                        ErrorReason.PlatformNotSupported);
-            }
+            this.ExecutablePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "bin", "hadoop");
 
             if (!this.state.HadoopExecutorStateInitialized)
             {
@@ -214,7 +208,7 @@ namespace VirtualClient.Actions
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("Hadoop", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("Hadoop Terasort", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;
@@ -337,7 +331,7 @@ namespace VirtualClient.Actions
             telemetryContext.AddContext(nameof(this.ExecutableFilesAsync), "Execution permission successful to use the files.");
         }
 
-        private async Task ExecutedDataCommands(string command, string operation, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task RunSortingOperationsAsync(string command, string operation, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             using (IProcessProxy process = await this.ExecuteCommandAsync("bash", $"-c \"{command}\"", this.PackageDirectory, telemetryContext, cancellationToken))
             {

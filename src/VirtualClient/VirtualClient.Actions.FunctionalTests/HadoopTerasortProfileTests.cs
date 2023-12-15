@@ -40,6 +40,8 @@ namespace VirtualClient.Actions
         [TestCase("PERF-CPU-TERASORT.json", PlatformID.Unix)]
         public async Task HadoopTerasortWorkloadProfileExecutesTheExpectedWorkloads(string profile, PlatformID platform)
         {
+            string timestamp = DateTime.Now.ToString("ddMMyyHHmmss");
+
             this.SetupDefaultMockBehaviors(platform);
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(platform);
 
@@ -68,7 +70,7 @@ namespace VirtualClient.Actions
             {
                 await executor.ExecuteAsync(ProfileTiming.OneIteration(), CancellationToken.None)
                     .ConfigureAwait(false);
-
+                executor.Dispose();
                 WorkloadAssert.CommandsExecuted(this.fixture, expectedCommands.ToArray());
             }
         }
@@ -84,13 +86,13 @@ namespace VirtualClient.Actions
                         $"bash -c \"echo y | ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa\"",
                         $"bash -c \"cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\"",
                         $"bash -c \"chmod 0600 ~/.ssh/authorized_keys\"",
-                        $"bash -c \"bin/hdfs namenode -format\"",
+                        $"bash -c \"echo y | bin/hdfs namenode -format\"",
                         $"bash -c \"bin/hdfs dfs -mkdir /user\"",
                         $"bash -c \"bin/hdfs dfs -mkdir /user/azureuser\"",
                         $"bash -c sbin/start-dfs.sh",
                         $"bash -c sbin/start-yarn.sh",
-                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen 1000 / inp-1 \"",
-                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-1 /out-1\"",
+                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen 100000 /inp-1234-1\"",
+                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-1234-1 /out-1234-1\"",
                         $"bash -c sbin/stop-dfs.sh",
                         $"bash -c sbin/stop-yarn.sh"
                     };
@@ -103,9 +105,22 @@ namespace VirtualClient.Actions
         private void SetupDefaultMockBehaviors(PlatformID platform = PlatformID.Unix)
         {
             this.fixture.Setup(platform);
+
             if (platform == PlatformID.Unix)
             {
-                this.fixture.SetupFile("hadoop-3.3.5", @"linux-x64/results.txt", TestDependencies.GetResourceFileContents("Results_HadoopTerasort.txt"));
+                string[] paths =
+                {
+                    "linux-x64/bin/hadoop",
+                    "linux-x64/bin/hdfs",
+                    "linux-x64/sbin/start-dfs.sh",
+                    "linux-x64/sbin/stop-dfs.sh",
+                    "linux-x64/bin/yarn",
+                    "linux-x64/sbin/start-yarn.sh",
+                    "linux-x64/sbin/stop-yarn.sh"
+                };
+                
+                this.fixture.SetupWorkloadPackage("hadoop-3.3.5", expectedFiles: paths);
+                this.fixture.SetupWorkloadPackage("microsoft-jdk-11.0.19", expectedFiles: "linux-x64/bin/java");
             }
         }
     }
