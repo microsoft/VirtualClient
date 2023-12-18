@@ -228,6 +228,7 @@ namespace VirtualClient.Actions
 
                 this.MetadataContract.Apply(telemetryContext);
 
+                // Hadoop workload produces metrics in standard 
                 HadoopMetricsParser parser = new HadoopMetricsParser(process.StandardError.ToString());
                 IList<Metric> workloadMetrics = parser.Parse();
 
@@ -246,8 +247,6 @@ namespace VirtualClient.Actions
 
         private void ConfigurationFilesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            ConsoleLogger.Default.LogInformation($"ConfigurationFilesAsync");
-
             IDictionary<string, string> coreSite = new Dictionary<string, string>
             {
                 { "fs.defaultFS", "hdfs://localhost:9000" }
@@ -286,11 +285,7 @@ namespace VirtualClient.Actions
         private void CreateHTMLValue(string fileName, IDictionary<string, string> value, CancellationToken cancellationToken)
         {
             string makeFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "etc", "hadoop");
-            ConsoleLogger.Default.LogInformation($"makeFilePath: {makeFilePath}");
-
             string filePath = this.PlatformSpecifics.Combine(makeFilePath, fileName);
-            ConsoleLogger.Default.LogInformation($"filePath: {filePath}");
-
             string replaceStatement = @"<configuration>([\s\S]*?)<\/configuration>";
             string replacedStatement = "<configuration>";
 
@@ -301,8 +296,6 @@ namespace VirtualClient.Actions
             }
 
             replacedStatement += "</configuration>";
-            ConsoleLogger.Default.LogInformation($"replacedStatement: {replacedStatement}");
-
             this.fileSystem.File.ReplaceInFileAsync(
                     filePath, replaceStatement, replacedStatement, cancellationToken);
         }
@@ -341,6 +334,7 @@ namespace VirtualClient.Actions
 
                     process.ThrowIfWorkloadFailed();
 
+                    // Hadoop workload produces metrics in standard error
                     if (process.StandardError == null)
                     {
                         throw new WorkloadResultsException($"{operation} results data not found in the process details", ErrorReason.WorkloadResultsNotFound);
