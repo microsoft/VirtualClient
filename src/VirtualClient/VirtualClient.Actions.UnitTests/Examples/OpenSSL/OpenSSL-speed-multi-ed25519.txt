@@ -1,0 +1,39 @@
+Forked child 0
+Forked child 1
+Forked child 2
+Forked child 3
+Forked child 4
+Forked child 5
+Forked child 6
+Forked child 7
+Forked child 8
+Forked child 9
+Forked child 10
+Forked child 11
+Forked child 12
+Forked child 13
+Forked child 14
+Forked child 15
+Got: +F6:0:253:Ed25519:16489.200000:5105.600000 from 0
+Got: +F6:0:253:Ed25519:16327.400000:4928.400000 from 1
+Got: +F6:0:253:Ed25519:16509.400000:4777.200000 from 2
+Got: +F6:0:253:Ed25519:16471.257485:4928.600000 from 3
+Got: +F6:0:253:Ed25519:16538.600000:4936.600000 from 4
+Got: +F6:0:253:Ed25519:16152.800000:4873.000000 from 5
+Got: +F6:0:253:Ed25519:16498.400000:4752.400000 from 6
+Got: +F6:0:253:Ed25519:15695.800000:4706.000000 from 7
+Got: +F6:0:253:Ed25519:16496.000000:4926.746507 from 8
+Got: +F6:0:253:Ed25519:15967.600000:4884.231537 from 9
+Got: +F6:0:253:Ed25519:16496.200000:4911.800000 from 10
+Got: +F6:0:253:Ed25519:16526.400000:4882.600000 from 11
+Got: +F6:0:253:Ed25519:16437.325349:4779.800000 from 12
+Got: +F6:0:253:Ed25519:16442.600000:4889.800000 from 13
+Got: +F6:0:253:Ed25519:16186.600000:4914.600000 from 14
+Got: +F6:0:253:Ed25519:15880.600000:4805.800000 from 15
+version: 3.0.0-beta3-dev
+built on: built on: Thu Aug  5 18:45:56 2021 UTC
+options:bn(64,64) 
+compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
+CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
+                              sign    verify    sign/s verify/s
+ 253 bits EdDSA (Ed25519)   0.0000s   0.0000s 261116.2  78003.2
