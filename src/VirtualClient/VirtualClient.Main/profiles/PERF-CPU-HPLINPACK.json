@@ -43,7 +43,7 @@
       "Parameters": {
         "Scenario": "InstallRequiredLinuxPackagesForHPL",
         "Repositories-Apt": "ppa:ubuntu-toolchain-r/test",
-        "Packages": "build-essential,linux-generic,libmpich-dev,libopenmpi-dev,libatlas-base-dev"
+        "Packages": "build-essential,libmpich-dev,libopenmpi-dev,libatlas-base-dev"
       }
     },
     {
