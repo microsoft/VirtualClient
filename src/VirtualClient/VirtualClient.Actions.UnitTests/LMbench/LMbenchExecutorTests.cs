@@ -35,6 +35,8 @@ namespace VirtualClient.Actions
             // workload is compiled using Make and has a build step that runs the memory test. This uses commands in the
             // 'scripts' folder.
             this.fixture.SetupWorkloadPackage("lmbench", expectedFiles: "linux-x64/scripts/allmem");
+            this.fixture.SetupWorkloadPackage("lmbench", expectedFiles: "linux-x64/scripts/build");
+
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
