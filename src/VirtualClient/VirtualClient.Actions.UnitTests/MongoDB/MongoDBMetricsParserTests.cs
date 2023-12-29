@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Actions.MongoDB
+﻿namespace VirtualClient.Actions
 {
     using NUnit.Framework;
     using System;

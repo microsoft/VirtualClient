@@ -55,8 +55,6 @@
 
                     metrics.Add(new Metric(entry.Key, entry.Value.Item2, entry.Value.Item1, metricRelativity));
 
-                    Console.WriteLine($"metric {metrics.ToString()}");
-
                 }
 
                 return metrics;
@@ -82,7 +80,6 @@
             this.PreprocessedText = rgx.Replace(this.PreprocessedText, newSection, 1);
 
             this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, MongoDBSectionDelimiter);
-            Console.WriteLine("Sections {this.Sections}");
             if (!this.Sections.ContainsKey("Metrics") || string.IsNullOrWhiteSpace(this.Sections["Metrics"]))
             {
                 throw new WorkloadException(

@@ -141,47 +141,43 @@ namespace VirtualClient.Actions
             {
                 string ycsbPath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "bin", "ycsb");
                 string javaExecutablePath = this.PlatformSpecifics.Combine(this.JDKPackagePath, "bin", "java");
-                string file_to_make_executablePath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "bin");
+                string ycsbExecutablePath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "bin");
 
-                string loadArguments = this.GetCommandLineArguments("load");
-                string runArguments = this.GetCommandLineArguments("run");
-                string file_to_make_executable = "ycsb";
-
-                Console.WriteLine($"javaExecutablePath - {javaExecutablePath}");
-                Console.WriteLine($"mountPath - {this.DBPath}");
-                Console.WriteLine($"ycsbPath - {ycsbPath}");
-                Console.WriteLine($"ycsbPath1 - {this.YcsbPackagePath}");
-                Console.WriteLine($"created  db location ");
+                string convertToExeArgument = this.GetCommandLineArguments("convertExecutable");
+                string createDBArgument = this.GetCommandLineArguments("createDB");
+                string createLogArgument = this.GetCommandLineArguments("createLog");
+                string runMongoArgument = this.GetCommandLineArguments("runMongo");
+                string insertDataArgument = this.GetCommandLineArguments("insertData");
+                string updateDataArgument = this.GetCommandLineArguments("updateData");
 
                 this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, javaExecutablePath, EnvironmentVariableTarget.Process);
 
-                await this.ExecuteCommandAsync("chmod", $"+x {file_to_make_executable}", file_to_make_executablePath, telemetryContext, cancellationToken).ConfigureAwait(false);
-                await this.ExecuteCommandAsync("mkdir", " -p /tmp/mongodb", this.MongoDBPackagePath, telemetryContext, cancellationToken)
+                await this.ExecuteCommandAsync("chmod", convertToExeArgument, ycsbExecutablePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+                await this.ExecuteCommandAsync("mkdir", createDBArgument, this.MongoDBPackagePath, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
-                await this.ExecuteCommandAsync($"{this.DBPath}", " --fork --dbpath /tmp/mongodb --logpath /tmp/mongod.log", this.MongoDBPackagePath, telemetryContext, cancellationToken)
+                await this.ExecuteCommandAsync("mkdir", createLogArgument, this.MongoDBPackagePath, telemetryContext, cancellationToken)
+                .ConfigureAwait(false);
+                await this.ExecuteCommandAsync($"{this.DBPath}", runMongoArgument, this.MongoDBPackagePath, telemetryContext, cancellationToken)
                            .ConfigureAwait(false);
 
                 /* ./ycsb load mongodb -s -P /home/azureuser/vc/content/linux-x64/packages/ycsb/ycsb-0.5.0/workloads/workloada -p recordcount=1000000 -threads 16
                 */
                 DateTime loadStartTime = DateTime.UtcNow;
-                var loadOutput = await this.ExecuteCommandAsync($"{ycsbPath}", loadArguments, this.YcsbPackagePath, telemetryContext, cancellationToken)
+                var loadOutput = await this.ExecuteCommandAsync($"{ycsbPath}", insertDataArgument, this.YcsbPackagePath, telemetryContext, cancellationToken)
                          .ConfigureAwait(false);
                 DateTime loadFinishTime = DateTime.UtcNow;
-                Console.WriteLine($"loadOutput - {loadOutput}");
 
-                await this.CaptureMetricsAsync(loadOutput, loadArguments, loadStartTime, loadFinishTime, telemetryContext, cancellationToken)
+                await this.CaptureMetricsAsync(loadOutput, insertDataArgument, loadStartTime, loadFinishTime, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 /*./ycsb run mongodb -s -P /home/azureuser/vc/content/linux-x64/packages/ycsb/ycsb-0.5.0/workloads/workloada -p operationcount=1000000 -p recordcount=1000000 -threads 16
                 */
                 DateTime runStartTime = DateTime.UtcNow;
-                var runOutput = await this.ExecuteCommandAsync($"{ycsbPath}", runArguments, this.YcsbPackagePath, telemetryContext, cancellationToken)
+                var runOutput = await this.ExecuteCommandAsync($"{ycsbPath}", updateDataArgument, this.YcsbPackagePath, telemetryContext, cancellationToken)
                          .ConfigureAwait(false);
                 DateTime runFinishTime = DateTime.UtcNow;
 
-                Console.WriteLine($"runOutput - {runOutput}");
-
-                await this.CaptureMetricsAsync(runOutput, runArguments, runStartTime, runFinishTime, telemetryContext, cancellationToken)
+                await this.CaptureMetricsAsync(runOutput, updateDataArgument, runStartTime, runFinishTime, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 await this.ShutDownMongoDB(telemetryContext, cancellationToken);
@@ -223,13 +219,39 @@ namespace VirtualClient.Actions
         private string GetCommandLineArguments(string commandType)
         {
             string workloadPath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "workloads", "workloada");
-            if (commandType == "load")
+            string mongoDBPath = "/tmp/mongod";
+            string mongoLogFilePath = "/tmp/mongolog";
+            string deleteFilePath = "/tmp/mong*";
+
+            switch (commandType)
             {
-                return $"load mongodb -s -P {workloadPath} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
-            }
-            else
-            {
-                return $"run mongodb -s -P {workloadPath} -p operationcount={this.Parameters["OperationCount"]} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
+                case "convertExecutable":
+                    return "+x ycsb";
+
+                case "createDB":
+                    return $"-p {mongoDBPath}";
+
+                case "createLog":
+                    return $"-p {mongoLogFilePath}";
+
+                case "runMongo":
+                    return $"--fork --dbpath {mongoDBPath} --logpath {mongoLogFilePath}/mongod.log";
+
+                case "shutdown":
+                    return $"--dbpath {mongoDBPath} --shutdown";
+
+                case "insertData":
+                    return $"load mongodb -s -P {workloadPath} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
+
+                case "updateData":
+                    return $"run mongodb -s -P {workloadPath} -p operationcount={this.Parameters["OperationCount"]} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
+
+                case "deleteFiles":
+                    return $"-rf {deleteFilePath}";
+
+                default:
+                    return string.Empty;
+
             }
         }
 
@@ -252,10 +274,6 @@ namespace VirtualClient.Actions
 
                     MongoDBMetricsParser resultsParser = new MongoDBMetricsParser(results);
                     IList<Metric> workloadMetrics = resultsParser.Parse();
-                    foreach (Metric metric in workloadMetrics)
-                    {
-                        Console.WriteLine($"metric Name {metric.Name}, unit {metric.Unit} value {metric.Value} {metric.Description} {metric.Relativity}");
-                    }
 
                     this.Logger.LogMetrics(
                         toolName: nameof(MongoDBExecutor),
@@ -282,9 +300,12 @@ namespace VirtualClient.Actions
         {
             /*  sudo /home/azureuser/vc/content/linux-x64/packages/mongodb/mongodb-linux-x86_64-ubuntu2004-5.0.15/bin/mongod--dbpath /tmp/mongodb--shutdown
                 */
-            await this.ExecuteCommandAsync($"{this.DBPath}", "--dbpath /tmp/mongodb --shutdown", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+            string shutMongoArgument = this.GetCommandLineArguments("shutdown");
+            string deleteDBFilesArgument = this.GetCommandLineArguments("deleteFiles");
+            string deleteFilePath = "/tmp";
+            await this.ExecuteCommandAsync($"{this.DBPath}", shutMongoArgument, this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("rm", "-rf /tmp/*", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.ExecuteCommandAsync("rm", deleteDBFilesArgument, deleteFilePath, telemetryContext, cancellationToken).ConfigureAwait(false);
 
             /* Adding delay of 1minute for graceful shutdown of mongodb */
             await Task.Delay(60000).ConfigureAwait(false);

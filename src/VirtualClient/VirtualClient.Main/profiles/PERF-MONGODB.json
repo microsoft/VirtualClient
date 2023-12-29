@@ -21,7 +21,7 @@
         "OperationCount": "$.Parameters.OperationCount",
         "RecordCount": "$.Parameters.RecordCount",
         "ThreadCount": "$.Parameters.ThreadCount",
-        "Tags": ""
+        "Tags": "MongoDB, YCSB, Update heavy workload"
       }
     }
   ],
@@ -66,7 +66,6 @@
         "Scenario": "InstallMongoDBPackage",
         "PackageName": "mongodb",
         "PackageUri": "http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-5.0.15.tgz",
-        "Notes": ""
       }
     }
   ]
