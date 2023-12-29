@@ -15,7 +15,7 @@
         /// <summary>
         /// Sectionize by one or more empty lines.
         /// </summary>
-        private static readonly Regex MongoDBSectionDelimiter = new(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
+        private static readonly Regex MongoDBSectionDelimiter = new (@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MongoDBMetricsParser"/> class.
@@ -55,7 +55,7 @@
 
                     metrics.Add(new Metric(entry.Key, entry.Value.Item2, entry.Value.Item1, metricRelativity));
 
-                    Console.WriteLine(metrics.ToString());
+                    Console.WriteLine($"metric {metrics.ToString()}");
 
                 }
 
@@ -81,9 +81,8 @@
             Regex rgx = new Regex(pattern);
             this.PreprocessedText = rgx.Replace(this.PreprocessedText, newSection, 1);
 
-            Console.WriteLine(this.PreprocessedText);
-
             this.Sections = TextParsingExtensions.Sectionize(this.PreprocessedText, MongoDBSectionDelimiter);
+            Console.WriteLine("Sections {this.Sections}");
             if (!this.Sections.ContainsKey("Metrics") || string.IsNullOrWhiteSpace(this.Sections["Metrics"]))
             {
                 throw new WorkloadException(
@@ -106,6 +105,7 @@
                 .Replace("[INSERT], 95thPercentileLatency", "INSERT-95thPercentileLatency")
                 .Replace("[INSERT], 99thPercentileLatency", "INSERT-99thPercentileLatency")
                 .Replace("[INSERT], Return=OK", "INSERT-Count")
+                .Replace("[INSERT], Return=ERROR", "INSERT-Error-Count")
                 .Replace("[READ], Operations", "SELECT-Operations")
                 .Replace("[READ], AverageLatency", "SELECT-AverageLatency")
                 .Replace("[READ], MinLatency", "SELECT-MinLatency")
@@ -113,13 +113,15 @@
                 .Replace("[READ], 95thPercentileLatency", "SELECT-95thPercentileLatency")
                 .Replace("[READ], 99thPercentileLatency", "SELECT-99thPercentileLatency")
                 .Replace("[READ], Return=OK", "SELECT-Count")
+                .Replace("[READ], Return=NOT_FOUND", "READ-NotFound-Count")
                 .Replace("[UPDATE], Operations", "UPDATE-Operations")
                 .Replace("[UPDATE], AverageLatency", "UPDATE-AverageLatency")
                 .Replace("[UPDATE], MinLatency", "UPDATE-MinLatency")
                 .Replace("[UPDATE], MaxLatency", "UPDATE-MaxLatency")
                 .Replace("[UPDATE], 95thPercentileLatency", "UPDATE-95thPercentileLatency")
                 .Replace("[UPDATE], 99thPercentileLatency", "UPDATE-99thPercentileLatency")
-                .Replace("[UPDATE], Return=OK", "UPDATE-Count");
+                .Replace("[UPDATE], Return=OK", "UPDATE-Count")
+                .Replace("[UPDATE], Return=NOT_FOUND", "UPDATE-NotFound-Count");
         }
 
         private static Dictionary<string, Tuple<string, double>> GetMetricsMap(string metrics)

@@ -17,18 +17,18 @@
 04:56:24.574 [Thread-16] DEBUG org.mongodb.driver.protocol.update - Updating documents in namespace ycsb.usertable on connection [connectionId{localValue:17, serverValue:34}] to server localhost:27017
 04:56:24.575 [Thread-16] DEBUG org.mongodb.driver.protocol.update - Update completed
 08:32:27.881 [cluster-ClusterId{value='654b468a9bbaa7610f22769c', description='null'}-localhost:27017] DEBUG org.mongodb.driver.connection - Closing connection connectionId{localValue:1, serverValue:1}
-[OVERALL], RunTime(ms), 273802.0
-[OVERALL], Throughput(ops/sec), 3652.274271188669
+[OVERALL], RunTime(ms), 188018.0
+[OVERALL], Throughput(ops/sec), 5318.639704709123
 [CLEANUP], Operations, 16.0
-[CLEANUP], AverageLatency(us), 1170.75
-[CLEANUP], MinLatency(us), 2.0
-[CLEANUP], MaxLatency(us), 18671.0
-[CLEANUP], 95thPercentileLatency(us), 36.0
-[CLEANUP], 99thPercentileLatency(us), 18671.0
+[CLEANUP], AverageLatency(us), 628.3125
+[CLEANUP], MinLatency(us), 1.0
+[CLEANUP], MaxLatency(us), 10031.0
+[CLEANUP], 95thPercentileLatency(us), 5.0
+[CLEANUP], 99thPercentileLatency(us), 10031.0
 [INSERT], Operations, 1000000.0
-[INSERT], AverageLatency(us), 4326.729145
-[INSERT], MinLatency(us), 264.0
-[INSERT], MaxLatency(us), 829439.0
-[INSERT], 95thPercentileLatency(us), 8567.0
-[INSERT], 99thPercentileLatency(us), 14039.0
+[INSERT], AverageLatency(us), 2962.514545
+[INSERT], MinLatency(us), 176.0
+[INSERT], MaxLatency(us), 659967.0
+[INSERT], 95thPercentileLatency(us), 5859.0
+[INSERT], 99thPercentileLatency(us), 9199.0
 [INSERT], Return=OK, 1000000

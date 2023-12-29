@@ -2,18 +2,25 @@
   "Description": "MongoDB Workload",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "00:05:00",
-    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
-    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
+    "SupportedPlatforms": "linux-x64",
+    "SupportedOperatingSystems": "Ubuntu"
   },
-  "Parameters": {},
+  "Parameters": {
+    "OperationCount": 100,
+    "RecordCount": 100,
+    "ThreadCount": "{calculate({LogicalCoreCount}/2)}"
+  },
   "Actions": [
     {
       "Type": "MongoDBExecutor",
       "Parameters": {
-        "Scenario": "",
+        "Scenario": "SingleClientMongoDB",
         "PackageName": "mongodb",
         "YCSBPackageName": "ycsb",
         "JdkPackageName": "javadevelopmentkit",
+        "OperationCount": "$.Parameters.OperationCount",
+        "RecordCount": "$.Parameters.RecordCount",
+        "ThreadCount": "$.Parameters.ThreadCount",
         "Tags": ""
       }
     }
@@ -24,9 +31,16 @@
       "Parameters": {
         "Scenario": "InstallJDKPackage",
         "BlobContainer": "packages",
-        "BlobName": "microsoft-jdk-11.0.19.zip",
+        "BlobName": "microsoft-jdk-17.0.9.zip",
         "PackageName": "javadevelopmentkit",
         "Extract": true
+      }
+    },
+    {
+      "Type": "JavaDevelopmentKitInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDK",
+        "PackageName": "javadevelopmentkit"
       }
     },
     {
@@ -53,13 +67,6 @@
         "PackageName": "mongodb",
         "PackageUri": "http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-5.0.15.tgz",
         "Notes": ""
-      }
-    },
-    {
-      "Type": "JavaDevelopmentKitInstallation",
-      "Parameters": {
-        "Scenario": "InstallJDK",
-        "PackageName": "javadevelopmentkit"
       }
     }
   ]

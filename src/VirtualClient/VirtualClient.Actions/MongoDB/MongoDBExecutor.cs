@@ -11,14 +11,16 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Identity.Client;
     using Polly;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// The Prime95 workload executor.
+    /// The MongoDB workload executor.
     /// </summary>
     public class MongoDBExecutor : VirtualClientComponent
     {
@@ -56,20 +58,52 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The file path where logs will be written.
+        /// Java Development Kit package name.
+        /// </summary>
+        public string JdkPackageName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(MongoDBExecutor.JdkPackageName));
+            }
+        }
+
+        /// <summary>
+        /// The file path for YCSB workloads.
         /// </summary>
         protected string YcsbPackagePath { get; set; }
 
         /// <summary>
-        /// Workload package path.
+        /// The file path for MongoDB
         /// </summary>
         protected string MongoDBPackagePath { get; set; }
+
+        /// <summary>
+        /// The file path for YCSB workloads.
+        /// </summary>
+        protected string JDKPackagePath { get; set; }
+
+        /// <summary>
+        /// MongoDB mount path
+        /// </summary>
+        protected string DBPath { get; set; }
 
         /// <summary>
         /// Initializes the environment for execution of the MongoDB YCSB workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            DependencyPath javaPackage = await this.GetPackageAsync(
+               this.JdkPackageName, cancellationToken);
+            if (javaPackage == null)
+            {
+                throw new DependencyException(
+                   $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
+                   ErrorReason.WorkloadDependencyMissing);
+            }
+
+            this.JDKPackagePath = javaPackage.Path; 
+
             DependencyPath mongoDBPackage = await this.packageManager.GetPackageAsync(this.PackageName, CancellationToken.None);
 
             if (mongoDBPackage == null)
@@ -101,54 +135,60 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string mountPath = this.PlatformSpecifics.Combine(this.MongoDBPackagePath, "mongodb-linux-x86_64-ubuntu2004-5.0.15", "bin", "mongod");
+            this.DBPath = this.PlatformSpecifics.Combine(this.MongoDBPackagePath, "mongodb-linux-x86_64-ubuntu2004-5.0.15", "bin", "mongod");
 
             try
             {
                 string ycsbPath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "bin", "ycsb");
+                string javaExecutablePath = this.PlatformSpecifics.Combine(this.JDKPackagePath, "bin", "java");
+                string file_to_make_executablePath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "bin");
+
                 string loadArguments = this.GetCommandLineArguments("load");
                 string runArguments = this.GetCommandLineArguments("run");
+                string file_to_make_executable = "ycsb";
 
-                Console.WriteLine($"mountPath - {mountPath}");
+                Console.WriteLine($"javaExecutablePath - {javaExecutablePath}");
+                Console.WriteLine($"mountPath - {this.DBPath}");
                 Console.WriteLine($"ycsbPath - {ycsbPath}");
+                Console.WriteLine($"ycsbPath1 - {this.YcsbPackagePath}");
                 Console.WriteLine($"created  db location ");
 
+                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, javaExecutablePath, EnvironmentVariableTarget.Process);
+
+                await this.ExecuteCommandAsync("chmod", $"+x {file_to_make_executable}", file_to_make_executablePath, telemetryContext, cancellationToken).ConfigureAwait(false);
                 await this.ExecuteCommandAsync("mkdir", " -p /tmp/mongodb", this.MongoDBPackagePath, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
-
-                Console.WriteLine($"executing mongo process");
-                await this.ExecuteCommandAsync($"{mountPath}", " --fork --dbpath /tmp/mongodb --logpath /tmp/mongod.log", this.MongoDBPackagePath, telemetryContext, cancellationToken)
+                await this.ExecuteCommandAsync($"{this.DBPath}", " --fork --dbpath /tmp/mongodb --logpath /tmp/mongod.log", this.MongoDBPackagePath, telemetryContext, cancellationToken)
                            .ConfigureAwait(false);
 
-                Console.WriteLine($"executed mongo process");
                 /* ./ycsb load mongodb -s -P /home/azureuser/vc/content/linux-x64/packages/ycsb/ycsb-0.5.0/workloads/workloada -p recordcount=1000000 -threads 16
                 */
-                DateTime startTime = DateTime.UtcNow;
+                DateTime loadStartTime = DateTime.UtcNow;
                 var loadOutput = await this.ExecuteCommandAsync($"{ycsbPath}", loadArguments, this.YcsbPackagePath, telemetryContext, cancellationToken)
                          .ConfigureAwait(false);
-                DateTime finishTime = DateTime.UtcNow;
+                DateTime loadFinishTime = DateTime.UtcNow;
                 Console.WriteLine($"loadOutput - {loadOutput}");
 
-                await this.CaptureMetricsAsync(loadOutput, loadArguments, startTime, finishTime, telemetryContext, cancellationToken)
+                await this.CaptureMetricsAsync(loadOutput, loadArguments, loadStartTime, loadFinishTime, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
                 /*./ycsb run mongodb -s -P /home/azureuser/vc/content/linux-x64/packages/ycsb/ycsb-0.5.0/workloads/workloada -p operationcount=1000000 -p recordcount=1000000 -threads 16
                 */
-                startTime = DateTime.UtcNow;
+                DateTime runStartTime = DateTime.UtcNow;
                 var runOutput = await this.ExecuteCommandAsync($"{ycsbPath}", runArguments, this.YcsbPackagePath, telemetryContext, cancellationToken)
                          .ConfigureAwait(false);
-                finishTime = DateTime.UtcNow;
+                DateTime runFinishTime = DateTime.UtcNow;
 
                 Console.WriteLine($"runOutput - {runOutput}");
 
-                await this.CaptureMetricsAsync(runOutput, runArguments, startTime, finishTime, telemetryContext, cancellationToken)
+                await this.CaptureMetricsAsync(runOutput, runArguments, runStartTime, runFinishTime, telemetryContext, cancellationToken)
                     .ConfigureAwait(false);
 
-                await this.ShutDownMongoDB(mountPath, telemetryContext, cancellationToken);
+                await this.ShutDownMongoDB(telemetryContext, cancellationToken);
             }
             catch (OperationCanceledException ex)
             {
-                await this.ShutDownMongoDB(mountPath, telemetryContext, cancellationToken);
+                await this.ShutDownMongoDB(telemetryContext, cancellationToken);
                 telemetryContext.AddError(ex);
                 this.Logger.LogTraceMessage($"{nameof(ExampleWorkloadExecutor)}.Exception", telemetryContext);
             }
@@ -185,47 +225,66 @@ namespace VirtualClient.Actions
             string workloadPath = this.PlatformSpecifics.Combine(this.YcsbPackagePath, "ycsb-0.5.0", "workloads", "workloada");
             if (commandType == "load")
             {
-                return $"load mongodb -s -P {workloadPath} -p recordcount=1000000 -threads 16";
+                return $"load mongodb -s -P {workloadPath} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
             }
             else
             {
-                return $"run mongodb -s -P {workloadPath} -p operationcount=1000000 -p recordcount=1000000 -threads 16";
+                return $"run mongodb -s -P {workloadPath} -p operationcount={this.Parameters["OperationCount"]} -p recordcount={this.Parameters["RecordCount"]} -threads {this.Parameters["ThreadCount"]}";
             }
         }
 
-        private Task CaptureMetricsAsync(string results, string commandArguments, DateTime startTime, DateTime endtime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task CaptureMetricsAsync(string results, string commandArguments, DateTime startTime, DateTime endtime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
-                results.ThrowIfNullOrWhiteSpace(nameof(results));
-                this.Logger.LogMessage($"{nameof(MongoDBExecutor)}.CaptureMetrics", telemetryContext.Clone()
-                    .AddContext("results", results));
+                try
+                {
+                    this.MetadataContract.AddForScenario(
+                     "MongoDB",
+                     commandArguments,
+                     toolVersion: null);
 
-                MongoDBMetricsParser resultsParser = new MongoDBMetricsParser(results);
-                IList<Metric> workloadMetrics = resultsParser.Parse();
+                    this.MetadataContract.Apply(telemetryContext);
 
-                this.Logger.LogMetrics(
-                    toolName: nameof(MongoDBExecutor),
-                    scenarioName: this.Scenario,
-                    scenarioStartTime: startTime,
-                    scenarioEndTime: endtime,
-                    metrics: workloadMetrics,
-                    metricCategorization: null,
-                    scenarioArguments: commandArguments,
-                    this.Tags,
-                    telemetryContext);
+                    results.ThrowIfNullOrWhiteSpace(nameof(results));
+                    this.Logger.LogMessage($"{nameof(MongoDBExecutor)}.CaptureMetrics", telemetryContext.Clone()
+                        .AddContext("results", results));
+
+                    MongoDBMetricsParser resultsParser = new MongoDBMetricsParser(results);
+                    IList<Metric> workloadMetrics = resultsParser.Parse();
+                    foreach (Metric metric in workloadMetrics)
+                    {
+                        Console.WriteLine($"metric Name {metric.Name}, unit {metric.Unit} value {metric.Value} {metric.Description} {metric.Relativity}");
+                    }
+
+                    this.Logger.LogMetrics(
+                        toolName: nameof(MongoDBExecutor),
+                        scenarioName: this.Scenario,
+                        scenarioStartTime: startTime,
+                        scenarioEndTime: endtime,
+                        metrics: workloadMetrics,
+                        metricCategorization: null,
+                        scenarioArguments: commandArguments,
+                        this.Tags,
+                        telemetryContext);
+                }
+                catch (SchemaException ex)
+                {
+                    await this.ShutDownMongoDB(telemetryContext, cancellationToken);
+                    telemetryContext.AddError(ex);
+                    throw new WorkloadResultsException($"Failed to parse workload results.", ex, ErrorReason.WorkloadResultsParsingFailed);
+                }
+
             }
-
-            return Task.CompletedTask;
         }
 
-        private async Task ShutDownMongoDB(string mountPath, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ShutDownMongoDB(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             /*  sudo /home/azureuser/vc/content/linux-x64/packages/mongodb/mongodb-linux-x86_64-ubuntu2004-5.0.15/bin/mongod--dbpath /tmp/mongodb--shutdown
                 */
-            await this.ExecuteCommandAsync($"{mountPath}", "--dbpath /tmp/mongodb --shutdown", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.ExecuteCommandAsync($"{this.DBPath}", "--dbpath /tmp/mongodb --shutdown", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            await this.ExecuteCommandAsync("rm", "-rf /tmp/mongo*", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
+            await this.ExecuteCommandAsync("rm", "-rf /tmp/*", this.MongoDBPackagePath, telemetryContext, cancellationToken).ConfigureAwait(false);
 
             /* Adding delay of 1minute for graceful shutdown of mongodb */
             await Task.Delay(60000).ConfigureAwait(false);

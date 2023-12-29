@@ -18,7 +18,7 @@
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\MongoDB\MongoInsertData01.txt");
+            string outputPath = Path.Combine(workingDirectory, @"Examples\MongoDB\MongoOperationsData03.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new MongoDBMetricsParser(this.rawText);
         }
