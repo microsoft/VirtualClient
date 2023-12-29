@@ -63,6 +63,10 @@ the system. The following table describes the set of well-known parameters that 
 | PhysicalCoreCount                     | Represents the number of physical cores on the system. |
 | PackagePath:\{package_name\}          | Represents the path to a package that is installed on the system by one of the dependency components (e.g. \{PackagePath\:openssl} ...resolving to /home/users/virtualclient/packages/openssl). |
 | PackagePath/Platform:\{package_name\} | Represents the "platform-specific" path to a package that is installed on the system by one of the dependency components. Platform-specific paths are a Virtual Client concept. They represent paths within a given package that contain toolsets and scripts for different OS platforms and CPU architectures  (e.g. \{PackagePath/Platform:openssl\} ...resolving to /home/users/virtualclient/packages/openssl/linux-x64, /home/users/virtualclient/packages/openssl/win-arm64). |
+| SystemMemoryBytes                     | Represents the total memory/RAM (in bytes) on the system. |
+| SystemMemoryKilobytes                 | Represents the total memory/RAM (in kilobytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 kilobyte = 1024 bytes). |
+| SystemMemoryMegabytes                 | Represents the total memory/RAM (in megabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 megabyte = 1024 kilobytes or 1024 x 1024 bytes). |
+| SystemMemoryGigabytes                 | Represents the total memory/RAM (in gigabytes) on the system. Note that industry standard memory unit definitions are used (e.g. 1 gigabyte = 1024 megabytes or 1024 x 1024 kilobytes or 1024 x 1024 x 1024 bytes). |
 
 ``` json
 "Actions": [
@@ -121,6 +125,28 @@ the system. The following table describes the set of well-known parameters that 
             "Platforms": "linux-x64,linux-arm64",
             "Command": "bash -c './configure'&&make",
             "WorkingDirectory": "{PackagePath/Platform:memcached}"
+        }
+    }
+]
+```
+
+<br/>
+
+``` json
+"Actions": [
+    {
+        "Type": "MemcachedServerExecutor",
+        "Parameters": {
+            "Scenario": "Server",
+            "PackageName": "memcached",
+            "CommandLine": "-p {Port} -t 4 -m {ServerMemory} -c {ServerMaxConnections}",
+            "BindToCores": true,
+            "Port": "$.Parameters.ServerPort",
+            "Username": "$.Parameters.Username",
+            "ServerThreadCount": 4,
+            "ServerMaxConnections": "$.Parameters.ServerMaxConnections",
+            "ServerMemory": "{calculate({SystemMemoryMegabytes} / 2)}",
+            "Role": "Server"
         }
     }
 ]
@@ -207,11 +233,11 @@ time span parameter references in Virtual Client profiles.
 
 | Parameter                             | Description |
 |---------------------------------------|-------------|
-| \{ParameterName\}.TotalDays           | Given a parameter with a value formatted as a time span (e.g. 11.00:00:00) in a set of profile parameters, this represents the total number of days for the range of time defined by the time span value (e.g. 11.00:00:00 -> 11 days). |
-| \{ParameterName\}.TotalHours          | Given a parameter with a value formatted as a time span (e.g. 05:00:00) in a set of profile parameters, this represents the total number of hours for the range of time defined by the time span value (e.g. 05:00:00 -> 5 hours). |
-| \{ParameterName\}.TotalMilliseconds   | Given a parameter with a value formatted as a time span (e.g. 00:02:00) in a set of profile parameters, this represents the total number of milliseconds for the range of time defined by the time span value (e.g. 00:02:00 -> 120000 milliseconds). |
-| \{ParameterName\}.TotalMinutes        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of minutes for the range of time defined by the time span value (e.g. 00:30:00 -> 30 minutes). |
-| \{ParameterName\}.TotalSeconds        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of seconds for the range of time defined by the time span value (e.g. 00:01:00 -> 60 seconds). |
+| \{ParameterName.TotalDays\}           | Given a parameter with a value formatted as a time span (e.g. 11.00:00:00) in a set of profile parameters, this represents the total number of days for the range of time defined by the time span value (e.g. 11.00:00:00 -> 11 days). |
+| \{ParameterName.TotalHours\}          | Given a parameter with a value formatted as a time span (e.g. 05:00:00) in a set of profile parameters, this represents the total number of hours for the range of time defined by the time span value (e.g. 05:00:00 -> 5 hours). |
+| \{ParameterName.TotalMilliseconds\}   | Given a parameter with a value formatted as a time span (e.g. 00:02:00) in a set of profile parameters, this represents the total number of milliseconds for the range of time defined by the time span value (e.g. 00:02:00 -> 120000 milliseconds). |
+| \{ParameterName.TotalMinutes\}        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of minutes for the range of time defined by the time span value (e.g. 00:30:00 -> 30 minutes). |
+| \{ParameterName.TotalSeconds\}        | Given a parameter with a value formatted as a time span (e.g. 00:30:00) in a set of profile parameters, this represents the total number of seconds for the range of time defined by the time span value (e.g. 00:01:00 -> 60 seconds). |
 
 ``` json
 "Actions": [

@@ -14,7 +14,7 @@ parameter (see below) by default.
 Additonally this profile is designed to auto-scale to the number of cores on the system on which it runs. It uses a simple algorithm to determine 2 key
 aspects of the workload execution.
 
-* Total number of jobs/threads = {# of logical cores} / 2  
+* Total number of jobs/threads = \<# of logical cores> / 2  
 
   ``` script
   Examples:
@@ -24,7 +24,7 @@ aspects of the workload execution.
   For a 64-core system:
   64/2 = 32 concurrent jobs/threads per DiskSpd execution (i.e. # threads to run I/O operations against the test file concurrently).
   ```
-* Total I/O depth =  512 / {Total number of jobs/threads}  
+* Total I/O depth =  512 / < Total number of jobs/threads>  
 
   ``` script
   Examples:

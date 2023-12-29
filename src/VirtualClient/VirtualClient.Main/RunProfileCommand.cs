@@ -447,9 +447,16 @@ namespace VirtualClient
                     string profileFullPath = null;
                     if (path.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                     {
+                        // The profile downloaded from internet will live in /profiles/downloaded/ directory and not interfere with the ones in the repo.
                         var profileUri = new Uri(path);
                         string profileName = Path.GetFileName(profileUri.AbsolutePath);
-                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(profileName);
+                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath("downloaded", profileName);
+
+                        string downloadDirectory = Path.GetDirectoryName(profileFullPath);
+                        if (!fileSystem.Directory.Exists(downloadDirectory))
+                        {
+                            fileSystem.Directory.CreateDirectory(downloadDirectory);
+                        }
 
                         if (!pathsOnly)
                         {
@@ -458,7 +465,7 @@ namespace VirtualClient
                                 await Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries * 2)).ExecuteAsync(async () =>
                                 {
                                     var response = await client.GetAsync(profileUri);
-                                    using (var fs = new FileStream(profileFullPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Write))
+                                    using (var fs = new FileStream(profileFullPath, FileMode.Create, FileAccess.Write, FileShare.Write))
                                     {
                                         await response.Content.CopyToAsync(fs);
                                     }

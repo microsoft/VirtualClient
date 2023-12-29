@@ -5,7 +5,7 @@ Copyright (C) Microsoft Corporation. All rights reserved.
 /home/anyuser/vc/packages/aspnetbenchmarks/src/Benchmarks/Benchmarks.csproj : warning NU1604: Project dependency Microsoft.AspNetCore.Mvc.NewtonsoftJson does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.
   Restored /home/anyuser/vc/packages/aspnetbenchmarks/src/Benchmarks/Benchmarks.csproj (in 837 ms).
 /home/anyuser/vc/packages/aspnetbenchmarks/src/Benchmarks/Benchmarks.csproj : warning NU1604: Project dependency Microsoft.AspNetCore.Mvc.NewtonsoftJson does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.
-  Benchmarks -> /home/anyuser/vc/packages/aspnetbenchmarks/src/Benchmarks/bin/Release/net6.0/Benchmarks.dll
+  Benchmarks -> /home/anyuser/vc/packages/aspnetbenchmarks/src/Benchmarks/bin/Release/net8.0/Benchmarks.dll
 
 Build succeeded.
 

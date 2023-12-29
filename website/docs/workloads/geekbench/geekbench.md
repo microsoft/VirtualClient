@@ -17,12 +17,6 @@ GeekBench5 is a commercial workload. VirtualClient cannot distribute the license
   geekbench-5.1.0
   ├───geekbench5.vcpkg
   │
-  ├───linux-arm64/
-  │       Geekbench 5.preferences
-  │       geekbench.plar
-  │       geekbench5
-  │       geekbench_aarch64
-  │
   ├───linux-x64/
   │       Geekbench 5.preferences
   │       geekbench.plar
@@ -52,7 +46,7 @@ GeekBench5 is a commercial workload. VirtualClient cannot distribute the license
   ```bash
   cd geekbench-5.1.0; zip -r ../geekbench-5.1.0.zip *
   ```
-5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
+5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH5.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
 
 
 ## What is Being Measured?
@@ -194,3 +188,175 @@ The following metrics are examples of those captured by the Virtual Client when 
 | Text Rendering (Single-Core) | Raw Value | 128.8 | 268.0 | 251.43379478827428 | KB/sec |
 | Text Rendering Score (Multi-Core) | Test Score | 447.0 | 869.0 | 823.4541259500543 | score |
 | Text Rendering Score (Single-Core) | Test Score | 404.0 | 841.0 | 789.1682953311618 | score |
+
+# GeekBench6
+Geekbench6 is a third party tool that runs its own, pre-defined set of workloads to measure CPU performance. GeekBench6 is often used to compare cloud 
+performance, so it's valuable to see how our changes impact GeekBench6 results.
+
+* [GeekBench Documentation](https://www.geekbench.com/)
+* [GeekBench Workloads](https://www.geekbench.com/doc/geekbench6-compute-workloads.pdf)
+
+
+## How to package GeekBench6
+:::info
+GeekBench6 is a commercial workload. VirtualClient cannot distribute the license and binary. You need to follow the following steps to package this workload and make it available locally or in a storage that you own.
+:::
+1. GeekBench can be downloaded here https://www.geekbench.com/download/.
+2. You need to purchase a license for it to run properly https://www.primatelabs.com/store/.
+3. `Geekbench 5.preferences` is the license file you get after purchasing. Package the binaries and license in this structure. You only need to pack the runtimes you are going to run. (You don't need "win-arm64, win-x64" if you don't plan on running on Windows).
+  ```treeview
+  geekbench-5.1.0
+  ├───geekbench6.vcpkg
+  │
+  ├───linux-arm64/
+  │       Geekbench 6.preferences
+  │       geekbench.plar
+  │       geekbench6
+  │       geekbench_aarch64
+  │
+  ├───linux-x64/
+  │       Geekbench 6.preferences
+  │       geekbench.plar
+  │       geekbench6
+  │       geekbench_x86_64
+  │
+  ├───win-arm64/
+  │       Geekbench 6.preferences
+  │       geekbench.plar
+  │       geekbench6.exe
+  │       geekbench_aarch64.exe
+  │
+  └───win-x64/
+          amd_ags_x64.dll
+          cpuidsdk64.dll
+          Geekbench 6.preferences
+          geekbench.plar
+          geekbench6.exe
+          geekbench_x86_64.exe
+          pl_opencl_x86_64.dll
+  ```
+4. Zip the geekbench-6.2.2 directory into `geekbench-6.2.2.zip`, make sure the runtimes folders are the top level after extraction, and no extra `/geekbench-6.2.2/` top directory is created.
+  ```bash
+  7z a geekbench-6.2.2.zip ./geekbench-6.2.2/*
+  ```
+    or 
+  ```bash
+  cd geekbench-6.2.2; zip -r ../geekbench-6.2.2.zip *
+  ```
+5. Modify the [GeekBench profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-CPU-GEEKBENCH.json) as needed. If you are using your own blob storage, you can use the profile as is. If you are copying the zip file locally under `vc/packages`, you can simply remove the DependencyPackageInstallation step.
+
+
+## What is Being Measured?
+Geekbench6 reports four different types of scores, a value that's calculated by comparing the device's performance against a baseline. The baseline score 
+is 1000, with higher numbers being better and double the score indicating double the performance.
+
+1. Geekbench score. This is the overall score, calculated using the single-core and multi-core scores.
+
+2. Single-core and multi-core score. This is calculated using the corresponding single-core and multi-core scores from the two subsections detailed below.
+
+3. Subsection score. The workloads are grouped by how the workload exercise the system, and are calculated using the individual workload scores. The subsections are Integer,
+   and Floating-Point workloads.
+
+4. Workload score. Each individual workload reports a score. Additionally, each individual workload reports the numerical result of 
+  the workload - 5 GB/sec, 35 images/sec, etc.
+
+Geekbench runs a corresponding single-core and multi-core version for each of the following common CPU-intensive algorithms. 
+
+| Name                  | Description                                                                                                                                  |
+|-----------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| File Copmression      | Compresses and decompresses files using the LZ4 and ZSTD compression codecs																   |
+| Text Compression      | Compresses and decompresses text using the LZMA compression algorithm                                                                        |
+| Image Compression     | Compresses and decompresses a photograph using libjpeg-turbo for JPEG and libpng for PNG                                                     |
+| Navigation            | Computes driving directions with approximated times using Dijkstra's algorithm                                                               |
+| HTML5                 | Models DOM creation from both server-side and client-side rendered HTML5 documents                                                           |
+| PDF Rendering         | Parses and renders a PDF using the PDFium library                                                                                            |
+| Photo Library         | Runs image classification to categorize and tag photos based on the objects they contain													   |
+| Clang                 | Compiles a C source file using AArch64 as the target architecture                                                                            |
+| Text Processing       | Loads files, parses them with regex, stores metadata in SQLite databse, and exports content to different format							   |
+| Asset Compression     | Compresses 3D textural and geometric assets using a variety of popular compression codecs (ASTC, BC7, DXT5)								   |
+| Object Detection      | Uses CNN to detect and classify objects in photo and then highlights them in photo														   |
+| Background Blur       | Separates background from foreground in a video stream and blurs the background															   |
+| Image Editing         | Measures how well you CPU handles making simple and complex image edits																	   |
+| Object Remover        | Removes an object from a photo and automatically fills in the gap left behind																   |
+| Horizon Detection     | Searches for the horizon line in an image and rotates the image to make horizon line level if found                                          |
+| Photo Filter          | Applies filters to photos to enhance their appearance																						   |
+| HDR                   | Takes four SDR images and produces an HDR image                                                                                              |
+| Image Synthesis       | Measures how well your CPU handles creating artificial images																				   |
+| Ray Tracer            | Generates an image by tracing the path of light through an image plane and simulating the effects of its encounters with virtual objects     |
+| Structure from Motion | Takes two 2D images of the same scene and constructs an estimate of the 3D coordinates of the points visible in both images                  |
+
+## Workload Metrics
+The following metrics are examples of those captured by the Virtual Client when running the GeekBench6 workload.
+
+| MetricName                                | MetricValue | MetricUnit    |
+|-------------------------------------------|-------------|---------------|
+| SingleCore-File Compression               | 269.8       | MB/sec        |
+| SingleCore-Navigation                     | 11.5        | routes/sec    |
+| SingleCore-HTML5 Browser                  | 41.7        | pages/sec     |
+| SingleCore-PDF Renderer                   | 47.7        | Mpixels/sec   |
+| SingleCore-Photo Library                  | 27          | images/sec    |
+| SingleCore-Clang                          | 9.71        | Klines/sec    |
+| SingleCore-Text Processing                | 152.4       | pages/sec     |
+| SingleCore-Asset Compression              | 62.3        | MB/sec        |
+| SingleCore-Object Detection               | 59.1        | images/sec    |
+| SingleCore-Background Blur                | 9.76        | images/sec    |
+| SingleCore-Horizon Detection              | 84.5        | Mpixels/sec   |
+| SingleCore-Object Remover                 | 123.2       | Mpixels/sec   |
+| SingleCore-HDR                            | 55.8        | Mpixels/sec   |
+| SingleCore-Photo Filter                   | 25.3        | images/sec    |
+| SingleCore-Ray Tracer                     | 1.5         | Mpixels/sec   |
+| SingleCore-Structure from Motion          | 68.7        | Kpixels/sec   |
+| SingleCoreScore-File Compression          | 1878        | Score         |
+| SingleCoreScore-Navigation                | 1901        | Score         |
+| SingleCoreScore-HTML5 Browser             | 2038        | Score         |
+| SingleCoreScore-PDF Renderer              | 2069        | Score         |
+| SingleCoreScore-Photo Library             | 1988        | Score         |
+| SingleCoreScore-Clang                     | 1971        | Score         |
+| SingleCoreScore-Text Processing           | 1903        | Score         |
+| SingleCoreScore-Asset Compression         | 2012        | Score         |
+| SingleCoreScore-Object Detection          | 1976        | Score         |
+| SingleCoreScore-Background Blur           | 2358        | Score         |
+| SingleCoreScore-Horizon Detection         | 2714        | Score         |
+| SingleCoreScore-Object Remover            | 1602        | Score         |
+| SingleCoreScore-HDR                       | 1900        | Score         |
+| SingleCoreScore-Photo Filter              | 2546        | Score         |
+| SingleCoreScore-Ray Tracer                | 1550        | Score         |
+| SingleCoreScore-Structure from Motion     | 2170        | Score         |
+| MultiCore-File Compression                | 774         | MB/sec        |
+| MultiCore-Navigation                      | 44.2        | routes/sec    |
+| MultiCore-HTML5 Browser                   | 134.8       | pages/sec     |
+| MultiCore-PDF Renderer                    | 114.8       | Mpixels/sec   |
+| MultiCore-Photo Library                   | 46.2        | images/sec    |
+| MultiCore-Clang                           | 17.8        | Klines/sec    |
+| MultiCore-Text Processing                 | 145.2       | pages/sec     |
+| MultiCore-Asset Compression               | 127.7       | MB/sec        |
+| MultiCore-Object Detection                | 75.5        | images/sec    |
+| MultiCore-Background Blur                 | 13.8        | images/sec    |
+| MultiCore-Horizon Detection               | 158         | Mpixels/sec   |
+| MultiCore-Object Remover                  | 248.5       | Mpixels/sec   |
+| MultiCore-HDR                             | 157.5       | Mpixels/sec   |
+| MultiCore-Photo Filter                    | 63.2        | images/sec    |
+| MultiCore-Ray Tracer                      | 4.91        | Mpixels/sec   |
+| MultiCore-Structure from Motion           | 198         | Kpixels/sec   |
+| MultiCoreScore-File Compression           | 5390        | Score         |
+| MultiCoreScore-Navigation                 | 7332        | Score         |
+| MultiCoreScore-HTML5 Browser              | 6586        | Score         |
+| MultiCoreScore-PDF Renderer               | 4978        | Score         |
+| MultiCoreScore-Photo Library              | 3401        | Score         |
+| MultiCoreScore-Clang                      | 3615        | Score         |
+| MultiCoreScore-Text Processing            | 1813        | Score         |
+| MultiCoreScore-Asset Compression          | 4122        | Score         |
+| MultiCoreScore-Object Detection           | 2524        | Score         |
+| MultiCoreScore-Background Blur            | 3339        | Score         |
+| MultiCoreScore-Horizon Detection          | 5076        | Score         |
+| MultiCoreScore-Object Remover             | 3232        | Score         |
+| MultiCoreScore-HDR                        | 5368        | Score         |
+| MultiCoreScore-Photo Filter               | 6371        | Score         |
+| MultiCoreScore-Ray Tracer                 | 5073        | Score         |
+| MultiCoreScore-Structure from Motion      | 6254        | Score         |
+| SingleCoreSummary-Single-Core Score       | 2007        | Score         |
+| SingleCoreSummary-Integer Score           | 1970        | Score         |
+| SingleCoreSummary-Floating Point Score    | 2077        | Score         |
+| MultiCoreSummary-Multi-Core Score         | 4308        | Score         |
+| MultiCoreSummary-Integer Score            | 4061        | Score         |
+| MultiCoreSummary-Floating Point Score     | 4808        | Score         |

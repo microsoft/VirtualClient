@@ -10,7 +10,6 @@ Runs the stock SPECviewperf Workloads.
 
 * **Supported Platform/Architectures**
   * win-x64
-  * AMD v620 GPU
 
 * **Supports Disconnected Scenarios**  
   * No. Internet connection required.
@@ -25,7 +24,9 @@ Runs the stock SPECviewperf Workloads.
 * **Profile Parameters**  
   | Parameter                 | Purpose                                                                                           | Default Value |
   |---------------------------|---------------------------------------------------------------------------------------------------|---------------|
-  | Viewset                   | Optional. Specify which particular benchmarks should be run. See the list of viewsets in the [Workload Details](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-0/) section.                                                                                                                        | "3dsmax,catia"
+  | GpuModel                  | Required. Specify which GPU driver should be installed. Currently supports [AMD v620, AMD mi25]            | None          |
+  | Viewsets                  | Optional. Specify which particular benchmarks should be run. See the list of viewsets in the [Workload Details](https://gwpg.spec.org/benchmarks/benchmark/specviewperf-2020-v3-1/) section.                                                                                                                        | "3dsmax,catia"|
+  | PsExecSession             | Optional. If specified, specviewperf will be started by PsExec in the specified session.          | -1, specviewperf runs in the current session without psExec.|
 
 * **Profile Runtimes**  
   * The SPECviewperf package zip file is around 30GB. Downloading and extracting this file take about 30 minutes to complete. 
@@ -37,8 +38,8 @@ Runs the stock SPECviewperf Workloads.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="GpuModel=v620" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
 
   # Override the profile default parameters to include all viewsets
-  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="Viewset=3dsmax,catia,creo,energy,maya,medical,snx,sw" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
+  VirtualClient.exe --profile=PERF-GPU-SPECVIEW-AMD.json --pm="GpuModel=v620,,,Viewset=3dsmax,catia,creo,energy,maya,medical,snx,sw" --system=Demo --packageStore="{BlobConnectionString|SAS Uri}"
   ```

@@ -50,17 +50,17 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.IsTrue(metrics.Count() == 6);
+            Assert.AreEqual(6, metrics.Count());
             Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond));
 
-            OpenSslMetricsParserTests.AssertMetricsMatch("aes-256-cbc", metrics, new Dictionary<string, double>
+            OpenSslMetricsParserTests.AssertMetricsMatch("AES-256-CBC", metrics, new Dictionary<string, double>
             {
-                { "aes-256-cbc 16-byte", 1109022.36 },
-                { "aes-256-cbc 64-byte", 1209391.13 },
-                { "aes-256-cbc 256-byte", 1232451.87 },
-                { "aes-256-cbc 1024-byte", 1237247.28 },
-                { "aes-256-cbc 8192-byte", 1239375.05 },
-                { "aes-256-cbc 16384-byte", 1239090.79 },
+                { "AES-256-CBC 16-byte", 1109022.36 },
+                { "AES-256-CBC 64-byte", 1209391.13 },
+                { "AES-256-CBC 256-byte", 1232451.87 },
+                { "AES-256-CBC 1024-byte", 1237247.28 },
+                { "AES-256-CBC 8192-byte", 1239375.05 },
+                { "AES-256-CBC 16384-byte", 1239090.79 },
             });
         }
 
@@ -195,6 +195,34 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void OpenSslParserParsesResultsCorrectly_ed25519_Scenario()
+        {
+            /* In this scenario, we are evaluating a single cipher as well as all byte buffer sizes.
+             
+               Example:
+                                              sign    verify    sign/s verify/s
+                 253 bits EdDSA (Ed25519)   0.0000s   0.0000s 261116.2  78003.2
+             */
+
+            OpenSslMetricsParser parser = new OpenSslMetricsParser(
+                File.ReadAllText(Path.Combine(OpenSslMetricsParserTests.examplesDir, "OpenSSL-speed-multi-ed25519.txt")),
+                "speed -multi 16 -seconds 5 ed25519");
+
+            IEnumerable<Metric> metrics = parser.Parse();
+
+            Assert.IsNotNull(metrics);
+            Assert.AreEqual(4, metrics.Count());
+
+            OpenSslMetricsParserTests.AssertMetricsMatch("253 bits EdDSA (Ed25519)", metrics, new Dictionary<string, double>
+            {
+                { "253 bits EdDSA (Ed25519) sign", 0 },
+                { "253 bits EdDSA (Ed25519) verify", 0 },
+                { "253 bits EdDSA (Ed25519) sign/s", 261116.2 },
+                { "253 bits EdDSA (Ed25519) verify/s", 78003.2 }
+            });
+        }
+
+        [Test]
         public void OpenSslParserParsesResultsCorrectly_AllCiphers_Scenario()
         {
             /* In this scenario, we are evaluating all ciphers as well as all byte buffer sizes.
@@ -213,7 +241,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.IsTrue(metrics.Count() == 112);
+            Assert.AreEqual(224, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
@@ -432,7 +460,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.IsTrue(metrics.Count() == 42);
+            Assert.AreEqual(154, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
@@ -526,7 +554,7 @@ namespace VirtualClient.Actions
             IEnumerable<Metric> metrics = parser.Parse();
 
             Assert.IsNotNull(metrics);
-            Assert.IsTrue(metrics.Count() == 94);
+            Assert.AreEqual(206, metrics.Count());
             // Assert.IsTrue(metrics.All(m => m.Unit == MetricUnit.KilobytesPerSecond)); --> changed with inclusion of RSA coverage
 
             OpenSslMetricsParserTests.AssertMetricsMatch("md5", metrics, new Dictionary<string, double>
@@ -649,6 +677,22 @@ namespace VirtualClient.Actions
                 { "rand 256-byte", 196501.89 },
                 { "rand 1024-byte", 1062619.07 },
                 { "rand 8192-byte", 4221050.33 }
+            });
+
+            OpenSslMetricsParserTests.AssertMetricsMatch("rsa  512", metrics, new Dictionary<string, double>
+            {
+                { "rsa  512 bits sign", 0.000038 },
+                { "rsa  512 bits verify", 0.000002 },
+                { "rsa  512 bits sign/s", 26538.8 },
+                { "rsa  512 bits verify/s", 432400.4 }
+            });
+
+            OpenSslMetricsParserTests.AssertMetricsMatch("256 bits SM2 (CurveSM2)", metrics, new Dictionary<string, double>
+            {
+                { "256 bits SM2 (CurveSM2) sign", 0.0003 },
+                { "256 bits SM2 (CurveSM2) verify", 0.0003 },
+                { "256 bits SM2 (CurveSM2) sign/s", 2862.3 },
+                { "256 bits SM2 (CurveSM2) verify/s", 3079.5 }
             });
         }
 

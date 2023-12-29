@@ -22,6 +22,7 @@ namespace VirtualClient.Dependencies
     /// </summary>
     public class WgetPackageInstallation : VirtualClientComponent
     {
+        private static readonly string WgetPackageName = "wget";
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private ISystemManagement systemManagement;
@@ -88,20 +89,23 @@ namespace VirtualClient.Dependencies
                 {
                     DependencyPath wgetPackage = null;
 
-                    try
+                    if (this.Platform == PlatformID.Win32NT)
                     {
-                        wgetPackage = await this.GetPlatformSpecificPackageAsync(PackageManager.BuiltInWgetPackageName, cancellationToken);
-                    }
-                    catch (DependencyException exc)
-                    {
-                        throw new DependencyException(
-                            $"Missing required package. The '{PackageManager.BuiltInWgetPackageName}' package does not exist. This package is expected " +
-                            $"to be included with the Virtual Client. It may be necessary to use a newer version of the Virtual Client.",
-                            exc,
-                            ErrorReason.DependencyNotFound);
-                    }
+                        try
+                        {
+                            wgetPackage = await this.GetPlatformSpecificPackageAsync(WgetPackageInstallation.WgetPackageName, cancellationToken);
+                        }
+                        catch (DependencyException exc)
+                        {
+                            throw new DependencyException(
+                                $"Missing required package. The '{WgetPackageInstallation.WgetPackageName}' package does not exist. This package is expected " +
+                                $"to be included with the Virtual Client. It may be necessary to use a newer version of the Virtual Client.",
+                                exc,
+                                ErrorReason.DependencyNotFound);
+                        }
 
-                    telemetryContext.AddContext("wgetPackagePath", wgetPackage.Path);
+                        telemetryContext.AddContext("wgetPackagePath", wgetPackage.Path);
+                    }
 
                     // For windows we are using the wget we download. In Linux we are using wget from the package managers.
                     string wgetExe = this.Platform == PlatformID.Unix ? "wget" : this.Combine(wgetPackage.Path, "wget.exe");

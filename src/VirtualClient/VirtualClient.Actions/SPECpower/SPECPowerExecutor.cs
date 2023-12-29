@@ -232,86 +232,89 @@ namespace VirtualClient.Actions
         /// </summary>
         private async Task MonitorProcessesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // VC will be running SpecPower at a constant load at extended duration. Typically a day.
-            const int testTimeoutMinutes = 1440;
-
-            ImmutableList<IProcessProxy> allProcesses = this.GetAllProcesses();
-
-            bool testTimedOut = false;
-            bool foundErrorOutput = false;
-            while (!allProcesses.Any(process => process.HasExited) && !testTimedOut)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                if (cancellationToken.IsCancellationRequested)
+                // VC will be running SpecPower at a constant load at extended duration. Typically a day.
+                const int testTimeoutMinutes = 1440;
+
+                ImmutableList<IProcessProxy> allProcesses = this.GetAllProcesses();
+
+                bool testTimedOut = false;
+                bool foundErrorOutput = false;
+                while (!allProcesses.Any(process => process.HasExited) && !testTimedOut)
                 {
-                    break;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    // This is reported as a metric so SPEC Power shows up on the dashboard
+                    this.Logger.LogMetrics(
+                        "SPECpower",
+                        "MonitorProcess",
+                        this.StartTime,
+                        DateTime.UtcNow,
+                        "Heartbeat",
+                        1.0,
+                        string.Empty,
+                        string.Empty,
+                        string.Empty,
+                        this.Tags,
+                        telemetryContext,
+                        MetricRelativity.HigherIsBetter);
+
+                    await Task.Delay(30000, cancellationToken).ConfigureAwait(false);
+
+                    // If the test hasn't changed in 30 minutes, assume it has failed.
+                    testTimedOut = (DateTime.UtcNow - this.serverComponent.LastTestStartTime).TotalMinutes >= testTimeoutMinutes;
+                    foundErrorOutput = allProcesses.Any(process => !string.IsNullOrEmpty(process.StandardError.ToString()));
                 }
 
-                // This is reported as a metric so SPEC Power shows up on the dashboard
-                this.Logger.LogMetrics(
-                    "SPECpower",
-                    "MonitorProcess",
-                    this.StartTime,
-                    DateTime.UtcNow,
-                    "Heartbeat",
-                    1.0,
-                    string.Empty,
-                    string.Empty,
-                    string.Empty,
-                    this.Tags,
-                    telemetryContext,
-                    MetricRelativity.HigherIsBetter);
-
-                await Task.Delay(30000, cancellationToken).ConfigureAwait(false);
-
-                // If the test hasn't changed in 30 minutes, assume it has failed.
-                testTimedOut = (DateTime.UtcNow - this.serverComponent.LastTestStartTime).TotalMinutes >= testTimeoutMinutes;
-                foundErrorOutput = allProcesses.Any(process => !string.IsNullOrEmpty(process.StandardError.ToString()));
-            }
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                // Ensure if the programs are going to exit, they do so of their own accord.
-                await Task.Delay(10000, cancellationToken);
-
-                // Kill any which didn't shutdown themselves.
-                allProcesses.ForEach(process => process.Kill());
-                await Task.Delay(TimeSpan.FromSeconds(1));
-
-                if (foundErrorOutput)
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    allProcesses.ForEach(process => this.Logger.LogMessage(
-                        $"{this.TypeName}.ProcessOutput",
-                        telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
+                    // Ensure if the programs are going to exit, they do so of their own accord.
+                    await Task.Delay(10000, cancellationToken);
 
-                    allProcesses.Where(p => !string.IsNullOrEmpty(p.StandardError.ToString())).ToList()
-                        .ForEach(process => this.Logger.LogMessage(
-                        $"{this.TypeName}.ProcessError",
-                        telemetryContext.Clone().AddContext("processError", process.StandardError.ToString())));
+                    // Kill any which didn't shutdown themselves.
+                    allProcesses.ForEach(process => process.Kill());
+                    await Task.Delay(TimeSpan.FromSeconds(1));
 
-                    string processNames = string.Join(',', allProcesses.Where(process => !string.IsNullOrEmpty(process.StandardError.ToString())).Select(process => process.Name));
-                    throw new WorkloadException($"SPEC Process(es) '{processNames}' encountered an error.", ErrorReason.WorkloadFailed);
+                    if (foundErrorOutput)
+                    {
+                        allProcesses.ForEach(process => this.Logger.LogMessage(
+                            $"{this.TypeName}.ProcessOutput",
+                            telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
+
+                        allProcesses.Where(p => !string.IsNullOrEmpty(p.StandardError.ToString())).ToList()
+                            .ForEach(process => this.Logger.LogMessage(
+                            $"{this.TypeName}.ProcessError",
+                            telemetryContext.Clone().AddContext("processError", process.StandardError.ToString())));
+
+                        string processNames = string.Join(',', allProcesses.Where(process => !string.IsNullOrEmpty(process.StandardError.ToString())).Select(process => process.Name));
+                        throw new WorkloadException($"SPEC Process(es) '{processNames}' encountered an error.", ErrorReason.WorkloadFailed);
+                    }
+                    else if (testTimedOut)
+                    {
+                        allProcesses.ForEach(process => this.Logger.LogMessage(
+                            $"{this.TypeName}.ProcessOutput",
+                            telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
+
+                        throw new WorkloadException(
+                            $"Benchmark '{this.serverComponent.CurrentTestName}' has not completed in {testTimeoutMinutes} minutes. Assuming something has gone wrong.",
+                            ErrorReason.WorkloadFailed);
+                    }
+                    else if (allProcesses.Any(process => process.ExitCode != 0))
+                    {
+                        allProcesses.ForEach(process => this.Logger.LogMessage(
+                            $"{this.TypeName}.ProcessOutput",
+                            telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
+
+                        allProcesses.ForEach(process => Console.WriteLine(process.StandardOutput.ToString()));
+                        throw new WorkloadException("One or more processes failed with a non-zero exit code!", ErrorReason.WorkloadFailed);
+                    }
+
+                    this.Logger.LogTraceMessage("SPEC Power Completed Successfully.");
                 }
-                else if (testTimedOut)
-                {
-                    allProcesses.ForEach(process => this.Logger.LogMessage(
-                        $"{this.TypeName}.ProcessOutput",
-                        telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
-
-                    throw new WorkloadException(
-                        $"Benchmark '{this.serverComponent.CurrentTestName}' has not completed in {testTimeoutMinutes} minutes. Assuming something has gone wrong.",
-                        ErrorReason.WorkloadFailed);
-                }
-                else if (allProcesses.Any(process => process.ExitCode != 0))
-                {
-                    allProcesses.ForEach(process => this.Logger.LogMessage(
-                        $"{this.TypeName}.ProcessOutput",
-                        telemetryContext.Clone().AddContext("output", process.StandardOutput.ToString())));
-
-                    allProcesses.ForEach(process => Console.WriteLine(process.StandardOutput.ToString()));
-                    throw new WorkloadException("One or more processes failed with a non-zero exit code!", ErrorReason.WorkloadFailed);
-                }
-
-                this.Logger.LogTraceMessage("SPEC Power Completed Successfully.");
             }
         }
     }

@@ -69,7 +69,7 @@ namespace VirtualClient.Actions
             {
                 // Default to system logical core count, but overwritable with parameters.
                 CpuInfo cpuInfo = this.systemManagement.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                int threadCount = cpuInfo.LogicalCoreCount;
+                int threadCount = cpuInfo.LogicalProcessorCount;
 
                 if (this.Parameters.TryGetValue(nameof(this.ThreadCount), out IConvertible value) && value != null)
                 {
@@ -100,46 +100,49 @@ namespace VirtualClient.Actions
             DateTime startTime = DateTime.UtcNow;
             string output = string.Empty;
 
-            switch (this.Platform)
+            using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
-                case PlatformID.Unix:
-                    using (IProcessProxy process = await this.ExecuteCommandAsync("make", commandArguments, this.CoreMarkProDirectory, telemetryContext, cancellationToken))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
+                switch (this.Platform)
+                {
+                    case PlatformID.Unix:
+                        using (IProcessProxy process = await this.ExecuteCommandAsync("make", commandArguments, this.CoreMarkProDirectory, telemetryContext, cancellationToken))
                         {
-                            if (process.IsErrored())
+                            if (!cancellationToken.IsCancellationRequested)
                             {
+                                if (process.IsErrored())
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                                    process.ThrowIfWorkloadFailed();
+                                }
+
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
+                                output = process.StandardOutput.ToString();
                             }
-
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                            output = process.StandardOutput.ToString();
                         }
-                    }
 
-                    break;
+                        break;
 
-                case PlatformID.Win32NT:
-                    DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
-                        .ConfigureAwait(false);
+                    case PlatformID.Win32NT:
+                        DependencyPath cygwinPackage = await this.packageManager.GetPackageAsync("cygwin", CancellationToken.None)
+                            .ConfigureAwait(false);
 
-                    using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {commandArguments}", this.CoreMarkProDirectory, cygwinPackage.Path, telemetryContext, cancellationToken))
-                    {
-                        if (!cancellationToken.IsCancellationRequested)
+                        using (IProcessProxy process = await this.ExecuteCygwinBashAsync($"make {commandArguments}", this.CoreMarkProDirectory, cygwinPackage.Path, telemetryContext, cancellationToken))
                         {
-                            if (process.IsErrored())
+                            if (!cancellationToken.IsCancellationRequested)
                             {
+                                if (process.IsErrored())
+                                {
+                                    await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
+                                    process.ThrowIfWorkloadFailed();
+                                }
+
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                                process.ThrowIfWorkloadFailed();
+                                output = process.StandardOutput.ToString();
                             }
-
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "CoreMark Pro", logToFile: true);
-                            output = process.StandardOutput.ToString();
                         }
-                    }
 
-                    break;
+                        break;
+                }
             }
 
             this.MetadataContract.AddForScenario(

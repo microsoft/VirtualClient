@@ -170,6 +170,8 @@ namespace VirtualClient.Actions
                 {
                     this.SetServerOnline(false);
 
+                    await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
+
                     if (this.ResetServer(telemetryContext))
                     {
                         await this.DeleteStateAsync(telemetryContext, cancellationToken);
@@ -182,15 +184,18 @@ namespace VirtualClient.Actions
 
                     if (this.IsMultiRoleLayout())
                     {
-                        await Task.WhenAny(this.serverProcesses);
-
-                        // A cancellation is request, then we allow each of the server instances
-                        // to gracefully exit. If a cancellation was not requested, it means that one 
-                        // or more of the server instances exited and we will want to allow the component
-                        // to start over restarting the servers.
-                        if (cancellationToken.IsCancellationRequested)
+                        using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                         {
-                            await Task.WhenAll(this.serverProcesses);
+                            await Task.WhenAny(this.serverProcesses);
+
+                            // A cancellation is request, then we allow each of the server instances
+                            // to gracefully exit. If a cancellation was not requested, it means that one 
+                            // or more of the server instances exited and we will want to allow the component
+                            // to start over restarting the servers.
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                await Task.WhenAll(this.serverProcesses);
+                            }
                         }
                     }
                 }

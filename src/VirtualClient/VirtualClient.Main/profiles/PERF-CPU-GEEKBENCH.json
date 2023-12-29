@@ -10,9 +10,9 @@
         {
             "Type": "GeekbenchExecutor",
             "Parameters": {
-                "Scenario": "ExecuteGeekBench5Benchmark",
+                "Scenario": "ExecuteGeekBench6Benchmark",
                 "CommandLine": "--no-upload",
-                "PackageName": "geekbench5"
+                "PackageName": "geekbench6"
             }
         }
     ],
@@ -20,10 +20,10 @@
         {
             "Type": "DependencyPackageInstallation",
             "Parameters": {
-                "Scenario": "InstallGeekBench5Package",
+                "Scenario": "InstallGeekBench6Package",
                 "BlobContainer": "packages",
-                "BlobName": "geekbench5.1.0.0.zip",
-                "PackageName": "geekbench5",
+                "BlobName": "geekbench6.2.2.zip",
+                "PackageName": "geekbench6",
                 "Extract": true
             }
         }

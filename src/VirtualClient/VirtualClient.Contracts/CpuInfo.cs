@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Contracts
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using VirtualClient.Common.Extensions;
@@ -38,7 +39,7 @@ namespace VirtualClient.Contracts
 
             this.Name = name;
             this.Description = description;
-            this.LogicalCoreCount = logicalCoreCount;
+            this.LogicalProcessorCount = logicalCoreCount;
             this.PhysicalCoreCount = physicalCoreCount;
             this.NumaNodeCount = numaNodeCount;
             this.SocketCount = socketCount;
@@ -86,9 +87,21 @@ namespace VirtualClient.Contracts
         public bool IsHyperthreadingEnabled { get; }
 
         /// <summary>
-        /// The number of logical cores/vCPUs on the system.
+        /// The number of logical processors/vCPUs on the system.
         /// </summary>
-        public int LogicalCoreCount { get; }
+        public int LogicalProcessorCount { get; }
+
+        /// <summary>
+        /// The number of logical processors/vCPUs per physical core/CPU.
+        /// </summary>
+        public int LogicalProcessorsPerCoreCount
+        {
+            get
+            {
+                int processorsPerCore = this.LogicalProcessorCount / this.PhysicalCoreCount;
+                return processorsPerCore <= 0 ? 1 : processorsPerCore;
+            }
+        }
 
         /// <summary>
         /// The name of the CPU (e.g. Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz, Ampere(R) Altra(R) Processor).

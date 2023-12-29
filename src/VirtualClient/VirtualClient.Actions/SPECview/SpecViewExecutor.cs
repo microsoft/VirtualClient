@@ -10,10 +10,8 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.AspNetCore.Authentication;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -31,10 +29,8 @@ namespace VirtualClient.Actions
     {
         private const string VisualStudioCRuntimePackageName = "visualstudiocruntime";
         private const string RenamePrefix = "hist_";
-
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
-        private string historyResultsPath;
 
         /// <summary>
         /// Constructor for <see cref="SpecViewExecutor"/>
@@ -49,38 +45,59 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The command line argument defined in the profile.
+        /// The viewsets that will be run by SPECviewperf.
         /// </summary>
-        public string GUIOption
+        public string[] Viewsets
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.GUIOption));
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.Viewsets)).Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             }
         }
 
         /// <summary>
-        /// The viewset that will be run by SPECviewperf.
+        /// Using PsExec to run specviewperf in session 1.
         /// </summary>
-        public string Viewset
+        public string PsExecPackageName
         {
             get
             {
-                // Remove whitespaces in the argument (e.g. "3dsmax, catia" -> "3dsmax,catia")
-                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.Viewset)).Replace(" ", string.Empty);
+                return this.Parameters.GetValue<string>(nameof(SpecViewExecutor.PsExecPackageName));
+            }
+        }
+
+        /// <summary>
+        /// PsExec session number
+        /// </summary>
+        public int PsExecSession
+        {
+            get
+            {
+                return this.Parameters.GetValue<int>(nameof(SpecViewExecutor.PsExecSession));
             }
         }
 
         /// <summary>
         /// The path to the RunViewperf.exe.
         /// </summary>
-        public string ExecutablePath { get; set; }
+        protected string SpecviewExecutablePath { get; set; }
 
         /// <summary>
         /// Defines the path to the SPECview package that contains the workload
         /// executable.
         /// </summary>
-        protected DependencyPath Package { get; set; }
+        protected DependencyPath SpecviewPackage { get; set; }
+
+        /// <summary>
+        /// The path to the PsExec.exe.
+        /// </summary>
+        protected string PsExecExecutablePath { get; set; }
+
+        /// <summary>
+        /// Defines the path to the PsExec package that contains the workload
+        /// executable.
+        /// </summary>
+        protected DependencyPath PsExecPackage { get; set; }
 
         /// <summary>
         /// Initializes the environment
@@ -92,7 +109,8 @@ namespace VirtualClient.Actions
             await this.InitializePackageLocationAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            this.ExecutablePath = this.PlatformSpecifics.Combine(this.Package.Path, "RunViewperf.exe");
+            this.SpecviewExecutablePath = this.PlatformSpecifics.Combine(this.SpecviewPackage.Path, "RunViewperf.exe");
+            this.PsExecExecutablePath = this.PlatformSpecifics.Combine(this.PsExecPackage.Path, "PsExec.exe");
         }
 
         /// <summary>
@@ -100,52 +118,31 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            IList<Metric> metrics = new List<Metric>();
-
-            string commandArguments = this.GenerateCommandArguments();
-
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("executable", this.ExecutablePath)
-                .AddContext("commandArguments", commandArguments);
-
+            string executablePath = this.PsExecSession == -1 ? this.SpecviewExecutablePath : this.PsExecExecutablePath;
+            string workingDir = this.PsExecSession == -1 ? this.SpecviewPackage.Path : this.PsExecPackage.Path;
             await this.SetUpEnvironmentVariable().ConfigureAwait(false);
 
-            using (IProcessProxy process = await this.ExecuteCommandAsync(this.ExecutablePath, commandArguments, this.Package.Path, relatedContext, cancellationToken).ConfigureAwait(false))
+            foreach (string viewset in this.Viewsets)
             {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext);
-                    process.ThrowIfWorkloadFailed();
-                    this.CaptureMetrics(process, commandArguments, relatedContext);
-                }
-            }
+                string commandArguments = this.GenerateCommandArguments(viewset);
 
-            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-            {
-                // specview logs are distributed in subdirectories corresponding to the viewsets
-                string[] viewsetArray = this.Viewset.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-                string specviewOriginalLogPath;
-                string specviewRenamedLogPath;
-                List<Task> tasks = new List<Task>();
-                foreach (string viewset in viewsetArray)
+                EventContext relatedContext = telemetryContext.Clone()
+                    .AddContext("executable", this.SpecviewExecutablePath)
+                    .AddContext("commandArguments", commandArguments);
+
+                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    // log file is inside a folder that starts with the viewset name e.g. 3dsmax-07
-                    string? viewsetLogDir = this.fileSystem.Directory.GetDirectories(this.historyResultsPath, $"{viewset}*", SearchOption.TopDirectoryOnly).FirstOrDefault();
-                    if (viewsetLogDir == null)
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(executablePath, commandArguments, workingDir, relatedContext, cancellationToken).ConfigureAwait(false))
                     {
-                        throw new WorkloadResultsException(
-                            $"The expected SPECviewperf viewset log directory was not found in '{this.historyResultsPath}'.",
-                            ErrorReason.WorkloadResultsNotFound);
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfWorkloadFailed();
+                            this.CaptureMetrics(process, commandArguments, relatedContext, cancellationToken, viewset);
+                        }
                     }
-
-                    specviewOriginalLogPath = this.PlatformSpecifics.Combine(viewsetLogDir, "log.txt");
-                    specviewRenamedLogPath = this.PlatformSpecifics.Combine(viewsetLogDir, viewset + "-" + Path.GetFileName(specviewOriginalLogPath));
-                    this.fileSystem.Directory.Move(specviewOriginalLogPath, specviewRenamedLogPath);
-                    tasks.Add(this.UploadSpecviewLogAsync(blobManager, specviewRenamedLogPath, DateTime.UtcNow, cancellationToken));
                 }
-
-                await Task.WhenAll(tasks);
-            }
+            }          
         }
 
         /// <summary>
@@ -169,21 +166,22 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Processes benchmark results
         /// </summary>
-        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext)
+        private void CaptureMetrics(IProcessProxy workloadProcess, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken, string scenario)
         {
             if (workloadProcess.ExitCode == 0)
             {
                 try
                 {
                     // SPEC VIEW does not seem to support customized output folder. Results are outputted to a folder in the format of "results_20230913T052028"
-                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.Package.Path, "results_*", SearchOption.TopDirectoryOnly);
+                    string[] subdirectories = this.fileSystem.Directory.GetDirectories(this.SpecviewPackage.Path, "results_*", SearchOption.TopDirectoryOnly);
 
                     // Sort the "results_" subdirectories by creation time in descending order and take the first one
                     string resultsFileDir = subdirectories.OrderByDescending(d => this.fileSystem.Directory.GetCreationTime(d)).FirstOrDefault();
-                    if (resultsFileDir == null) 
+
+                    if (resultsFileDir == null)
                     {
                         throw new WorkloadResultsException(
-                            $"The expected SPECviewperf result directory was not found in '{this.Package.Path}'.",
+                            $"The expected SPECviewperf result directory was not found in '{this.SpecviewPackage.Path}'.",
                             ErrorReason.WorkloadResultsNotFound);
                     }
 
@@ -194,14 +192,14 @@ namespace VirtualClient.Actions
                     IList<Metric> metrics = resultsParser.Parse();
 
                     this.MetadataContract.AddForScenario(
-                           this.Scenario,
+                           scenario,
                            workloadProcess.FullCommand(),
-                           toolVersion: "2020 v3.0");
+                           toolVersion: this.SpecviewPackage.Version);
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
-                        "SPECview",
-                        this.Scenario,
+                        this.PackageName,
+                        scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
                         metrics,
@@ -211,8 +209,19 @@ namespace VirtualClient.Actions
                         telemetryContext);
 
                     // rename the result file to avoid confusions on future runs
-                    this.historyResultsPath = this.PlatformSpecifics.Combine(this.Package.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
-                    this.fileSystem.Directory.Move(resultsFileDir, this.historyResultsPath);
+                    string historyResultsPath = this.PlatformSpecifics.Combine(this.SpecviewPackage.Path, RenamePrefix + Path.GetFileName(resultsFileDir));
+                    this.fileSystem.Directory.Move(resultsFileDir, historyResultsPath);
+
+                    // upload the SPECviewperf log files if a content manager is specified. These logs can be useful for debugging SPECviewperf issues.
+                    if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+                    {
+                        string specviewOriginalLogPath = this.fileSystem.Directory.GetFiles(historyResultsPath, "log.txt", SearchOption.AllDirectories).FirstOrDefault();
+                        string specviewRenamedLogPath = this.PlatformSpecifics.Combine(Path.GetDirectoryName(specviewOriginalLogPath), scenario + "-" + "log.txt");
+                        this.fileSystem.Directory.Move(specviewOriginalLogPath, specviewRenamedLogPath);
+
+                        // other viewsets can start while the previous viewset's log file is uploading.
+                        this.UploadSpecviewLogAsync(blobManager, specviewRenamedLogPath, DateTime.UtcNow, cancellationToken);
+                    }
                 }
                 catch (SchemaException exc)
                 {
@@ -235,18 +244,41 @@ namespace VirtualClient.Actions
                     .ConfigureAwait(false) ?? throw new DependencyException(
                         $"The expected package '{this.PackageName}' does not exist on the system or is not registered.",
                         ErrorReason.WorkloadDependencyMissing);
-                this.Package = workloadPackage;
+
+                DependencyPath psExecPackage = await this.systemManagement.PackageManager.GetPackageAsync(this.PsExecPackageName, CancellationToken.None).
+                    ConfigureAwait(false) ?? throw new DependencyException(
+                        $"The expected package '{this.PsExecPackageName}' does not exist on the system or is not registered.",
+                        ErrorReason.WorkloadDependencyMissing);
+
+                this.SpecviewPackage = this.PlatformSpecifics.ToPlatformSpecificPath(workloadPackage, this.Platform, this.CpuArchitecture);
+                this.PsExecPackage = this.PlatformSpecifics.ToPlatformSpecificPath(psExecPackage, this.Platform, this.CpuArchitecture);
             }
         }
 
         /// <summary>
         /// Generate the SPECview Command Arguments
         /// </summary>
-        private string GenerateCommandArguments()
-        {      
-            return $"-viewset \"{this.Viewset}\" {this.GUIOption}";
+        private string GenerateCommandArguments(string viewset)
+        {
+            if (this.PsExecSession == -1)
+            {
+                // not using psexec - run specviewperf directly.
+                return $"-viewset {viewset} -nogui";
+            }
+            else
+            {
+                // using psexec and run specviewperf in the specified session.
+                string baseArg = @$"-s -i {this.PsExecSession} -w {this.SpecviewPackage.Path} -accepteula -nobanner";
+                string specViewPerfCmd = @$"{this.SpecviewExecutablePath} -viewset {viewset} -nogui";
+                return $"{baseArg} {specViewPerfCmd}";
+            }
+
         }
 
+        /// <summary>
+        /// Add vcruntime140.dll to the system environment variable. 
+        /// This dll is required in order to run SPECviewperf properly.
+        /// </summary>
         private async Task SetUpEnvironmentVariable()
         {
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
@@ -270,7 +302,6 @@ namespace VirtualClient.Actions
                     this.Scenario,
                     null,
                     this.Roles?.FirstOrDefault()));
-
             return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
         }
     }

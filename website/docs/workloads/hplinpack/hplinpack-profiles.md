@@ -53,7 +53,7 @@ This profile is designed to identify general/broad regressions when compared aga
   These values are machine dependent and are calculated by 3 rules
       
       * P * Q = No. of processors
-      * P <= Q 
+      * P {'<='} Q 
       * Q-P to be the minimum possible value 
 
   * [Resources for above input parameters(ProblemSizeN,BlockSizeNB) configuration setting](https://netlib.org/utk/people/JackDongarra/faq-linpack.html#_For_HPL_What_problem%20size%20N%20should)

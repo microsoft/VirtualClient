@@ -95,7 +95,7 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalCoreCount);
+                return this.Parameters.GetValue<int>(nameof(this.NumberOfProcesses), this.cpuInfo.LogicalProcessorCount);
             }
         }
 
@@ -167,31 +167,24 @@ namespace VirtualClient.Actions
         {
             await this.EvaluateParametersAsync(cancellationToken);
             this.ThrowIfPlatformIsNotSupported();
-            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-            this.coreCount = this.cpuInfo.LogicalCoreCount;
+            await this.CheckDistroSupportAsync(telemetryContext, cancellationToken);
+            this.coreCount = this.cpuInfo.LogicalProcessorCount;
 
             MemoryInfo memoryInfo = await this.systemManagement.GetMemoryInfoAsync(CancellationToken.None);
             this.totalMemoryKiloBytes = memoryInfo.TotalMemory;
 
             this.ValidateParameters();
 
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken)
-                                                    .ConfigureAwait(false);
+            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, cancellationToken);
 
             this.HPLDirectory = workloadPackage.Path;
 
-            await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken).ConfigureAwait(false);
-           
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName))
-                .ConfigureAwait(false);
-
-            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName))
-                .ConfigureAwait(false);
+            await this.ConfigurePerformanceLibrary(telemetryContext, cancellationToken);
+            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, this.makeFileName));
+            await this.DeleteFileAsync(this.PlatformSpecifics.Combine(this.HPLDirectory, "setup", this.makeFileName));
 
             await this.ExecuteCommandAsync("bash", "-c \"source make_generic\"", this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup"), telemetryContext, cancellationToken, runElevated: true);
-
-            await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
-
+            await this.ConfigureMakeFileAsync(telemetryContext, cancellationToken);
             await this.ExecuteCommandAsync("ln", $"-s {this.PlatformSpecifics.Combine(this.HPLDirectory, $"setup", this.makeFileName)} {this.makeFileName}", this.HPLDirectory, telemetryContext, cancellationToken);
 
         }

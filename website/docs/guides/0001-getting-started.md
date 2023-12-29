@@ -11,8 +11,8 @@ SHA256 algorithm.
 
 ## Installation
 
-Virtual Client is a self-contained .NET 6 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
-[all operating systems supported by .NET 6](https://github.com/dotnet/core/blob/main/release-notes/6.0/supported-os.md).
+Virtual Client is a self-contained .NET 8 application, so "Installation" really just means copying the Virtual Client package onto your system. It runs out-of-box on 
+[all operating systems supported by .NET 8](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md).
 
 ### Debian / Ubuntu (deb)
 VirtualClient is published to Microsoft package store. Use the following command to install. You can then call VirtualClient from this path `/usr/bin/virtualclient`, which is typically in Linux `$PATH`.
@@ -60,7 +60,7 @@ You can find zip files in the latest [GitHub Releases](https://github.com/micros
 
   ```powershell
   # Example
-  PM> NuGet\Install-Package VirtualClient -Version 1.11.0
+  PM> NuGet\Install-Package VirtualClient -Version 1.12.0
   ```
 
 - If you are on a Windows system, you can download from the command line using the NuGet.exe:
@@ -68,7 +68,7 @@ You can find zip files in the latest [GitHub Releases](https://github.com/micros
 
   ``` bash
   # Example
-  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.11.0 -Source nuget.org
+  C:\Users\Any> NuGet.exe Install VirtualClient -OutputDirectory C:\Users\Any\nuget\packages -NoCache -Version 1.12.0 -Source nuget.org
   ```
 
 ### NuGet/Zip Package Contents
@@ -95,7 +95,7 @@ programs such as 'unzip' or '7zip'.
 If preferable, the Virtual Client source code can be built on your local system. This is useful for picking up the absolute latest changes
 to the source code and for testing changes locally. Before attempting to build the Virtual Client repo, ensure the fo
 
-- [Install the .NET SDK 6.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- [Install the .NET SDK 8.0.X](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - Build artifacts are output to the following locations. The 'bin' directory is where all compiled binaries/executables are output. The 'obj' directory
   will contain intermediate files used during compilation. The 'packages' directory will contain any packages that are created during build + packaging 
   processes.
@@ -128,10 +128,10 @@ The following section provides instructions for building on Windows systems.
 - The build process will create ready-to-run builds of the Virtual Client for all supported platforms and architectures. Virtual Client executable and binaries can be found in the repo 'out' directory in corresponding architecture/runtimes folder locations. 
 
   ```bash
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\linux-arm64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net6.0\win-arm64\publish\VirtualClient.exe
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net6.0\linux-x64\publish\VirtualClient
-  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net6.0\win-x64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\linux-arm64\publish\VirtualClient
+  {rootdir}\out\bin\Debug\ARM64\VirtualClient.Main\net8.0\win-arm64\publish\VirtualClient.exe
+  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\linux-x64\publish\VirtualClient
+  {rootdir}\out\bin\Debug\x64\VirtualClient.Main\net8.0\win-x64\publish\VirtualClient.exe
   ```
 - VirtualClient is a self-contained .NET application. The application can be run from the build output locations noted above or copied to another
   system. When simply copy the contents of the `/publish/` folder specific to the platform/architecture to the system on which you want to run. 

@@ -21,7 +21,7 @@
           The path to the 'bin' directory in the repo 'out' folder (e.g. /repo/out/bin).
          
         - BinConfigDir
-          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Debug).
+          The path to the build configuration directory in the 'bin' directory (e.g. /repo/out/bin/Release).
           
         - PackagingSourceDir
           The directory to the/this project where the .nuspec files are contained.
@@ -31,9 +31,9 @@
           which NuGet packages are created (e.g. /repo/out/tools).
         -->
         <file src="$PackagingSourceDir$\exampleworkload.vcpkg" target="." />
-        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net6.0\win-x64\publish\**\*.*" target="win-x64" />
-        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net6.0\linux-x64\publish\**\*.*" target="linux-x64" />
-        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net6.0\win-arm64\publish\**\*.*" target="win-arm64" />
-        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net6.0\linux-arm64\publish\**\*.*" target="linux-arm64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net8.0\win-x64\publish\**\*.*" target="win-x64" />
+        <file src="$BinConfigDir$\x64\VirtualClient.ExampleWorkload\net8.0\linux-x64\publish\**\*.*" target="linux-x64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net8.0\win-arm64\publish\**\*.*" target="win-arm64" />
+        <file src="$BinConfigDir$\ARM64\VirtualClient.ExampleWorkload\net8.0\linux-arm64\publish\**\*.*" target="linux-arm64" />
     </files>
 </package>

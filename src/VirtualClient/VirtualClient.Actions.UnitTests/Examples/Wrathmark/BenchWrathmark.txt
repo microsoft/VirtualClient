@@ -1,0 +1,32 @@
+﻿Framework Version: 8.0.0
+Building general lookup tables
+Building edge table
+Computation complete
+Picking up where we left off... Black to play
+                                8 - - B B - W - -
+                                7 B - B B B B - B
+                                6 B B W W W W B B
+                                5 B W B W W B W B
+                                4 - W W B B W W -
+                                3 W W W W W W W W
+                                2 - - - W B B - -
+                                1 - - W - B B - -
+                                  a b c d e f g h
+                                                    Score: W23 B=22
+Seeking to end of board
+
+20: d1=33  h2<33  g2<33  b2<33  a2<33  c2<33  h4<33  a4<33  g7=34  b7<34
+
+Evaluated 1,474,559,545 boards in 3:09.998 7,760,880 boards/sec  Total time used: 3:09.998
+best move for B is at g7 (score 34)
+                                8 - - B B - W - -
+                                7 B - B B B B B B
+                                6 B B W W W B B B
+                                5 B W B W B B W B
+                                4 - W W B B W W -
+                                3 W W W W W W W W
+                                2 - - - W B B - -
+                                1 - - W - B B - -
+                                  a b c d e f g h
+                                                    Score: W21 B=25
+test complete

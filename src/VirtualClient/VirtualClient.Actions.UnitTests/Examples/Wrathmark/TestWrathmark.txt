@@ -1,0 +1,1070 @@
+﻿Framework Version: 8.0.0
+Building general lookup tables
+Building edge table
+Computation complete
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B W - - - 
+				3 - - - - - - - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W2 B=2
+ 2: d3=0  c4<0  f5<0  e6<0  
+ 4: d3=1  c4<1  f5<1  e6<1  
+ 6: d3=1  c4<1  f5<1  e6<1  
+ 8: d3=0  c4<0  f5<0  e6<0  
+10: d3=-1  c4<-1  f5<-1  e6<-1  
+12: d3=-5  c4<-5  f5<-5  e6<-5  
+14: d3=
+Evaluated 10,074,865 boards in 0:02.003 5,029,887 boards/sec  Total time used: 0:02.003
+best move for W is at d3 (score -5)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - W W - - - 
+				3 - - - W - - - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W4 B=1
+ 2: e3=-2  c3=-1  c5<-1  
+ 4: c3=-1  c5<-1  e3<-1  
+ 6: c3=0  c5<0  e3<0  
+ 8: c3=0  c5<0  e3<0  
+10: c3=0  c5<0  e3<0  
+12: c3=0  c5<0  e3<0  
+14: c3=
+Evaluated 11,040,031 boards in 0:02.009 5,492,552 boards/sec  Total time used: 0:04.012
+best move for B is at c3 (score 0)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B W - - - 
+				3 - - B W - - - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W3 B=3
+ 2: b3=-1  c4=0  f5=1  e6<1  
+ 4: f5=1  e6<1  c4<1  b3<1  
+ 6: f5=-5  e6<-5  c4=0  b3<0  
+ 8: c4=-1  b3<-1  f5<-1  e6<-1  
+10: c4=-5  b3<-5  f5<-5  e6<-5  
+12: c4=-18  b3=-17  f5<-17  e6<-17  
+14: b3=
+Evaluated 11,124,759 boards in 0:02.000 5,559,599 boards/sec  Total time used: 0:06.013
+best move for W is at b3 (score -17)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B W - - - 
+				3 - W W W - - - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W5 B=2
+ 2: d2=-20  b2<-36  e3=-1  f4<-1  c5<-1  d6<-1  
+ 4: e3=-1  f4<-1  c5=0  d6<0  d2<0  b2<0  
+ 6: c5=-1  d6=0  d2<0  b2<0  e3<0  f4<0  
+ 8: d6=-1  d2<-1  b2<-1  e3<-1  f4=0  c5<0  
+10: f4=-14  c5=-1  d6<-1  d2<-1  b2<-1  e3=0  
+12: e3=0  c5<0  d6<0  d2<0  b2<0  f4<0  
+14: e3=
+Evaluated 11,012,023 boards in 0:02.004 5,492,280 boards/sec  Total time used: 0:08.018
+best move for B is at e3 (score 0)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B B - - - 
+				3 - W W W B - - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W4 B=4
+ 2: f3=0  f5<-23  f6<-23  
+ 4: f3=-20  f5<-20  f6<-20  
+ 6: f3=-1  f5<-1  f6<-1  
+ 8: f3=-14  f5<-14  f6<-14  
+10: f3=-14  f5<-14  f6<-14  
+12: f3=-19  f5<-19  f6<-19  
+14: f3=
+Evaluated 11,583,192 boards in 0:02.000 5,791,596 boards/sec  Total time used: 0:10.018
+best move for W is at f3 (score -19)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B W - - - 
+				3 - W W W W W - - 
+				2 - - - - - - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W7 B=2
+ 2: f2=-24  e2=-23  d2<-24  b2<-36  f4=-2  c5=-1  d6<-1  
+ 4: c5=-6  d6<-6  f4=-3  e2=-1  f2<-1  d2<-1  b2<-1  
+ 6: e2=-1  f2<-1  d2<-1  b2<-1  f4<-1  c5<-1  d6<-1  
+ 8: e2=0  f2<0  d2<0  b2<0  f4<0  c5<0  d6<0  
+10: e2=0  f2<0  d2<0  b2<0  f4<0  c5<0  d6<0  
+12: e2=0  f2<0  d2<0  b2<0  f4<0  c5
+Evaluated 10,494,141 boards in 0:02.007 5,228,769 boards/sec  Total time used: 0:12.025
+best move for B is at e2 (score 0)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W B - - - 
+				4 - - - B B - - - 
+				3 - W W W B W - - 
+				2 - - - - B - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W5 B=5
+ 2: f1=-17  d1=-8  f5<-22  f6<-22  
+ 4: d1=-23  f1=0  f5<0  f6<0  
+ 6: f1=-16  f5=-14  f6<-14  d1<-14  
+ 8: f5=-21  f6=-14  d1<-14  f1<-14  
+10: f6=-20  d1<-20  f1<-20  f5=-19  
+12: f5=
+Evaluated 11,979,306 boards in 0:02.008 5,962,820 boards/sec  Total time used: 0:14.034
+best move for W is at f5 (score -19)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W W W - - 
+				4 - - - B W - - - 
+				3 - W W W B W - - 
+				2 - - - - B - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W8 B=3
+ 2: d2=-20  b2<-29  g3<-25  a3=5  g4<-25  c4<-18  f4<-23  f6<-23  e6<-22  d6<-23  
+ 4: a3=16  c4<16  d2<16  e6<16  f4<16  f6<16  d6<16  g3<16  g4<16  b2<16  
+ 6: a3=23  c4<23  d2<23  e6<23  f4<23  f6<23  d6<23  g3<23  g4<23  b2<23  
+ 8: a3=7  c4=67  d2<67  e6<67  f4<67  f6<67  d6<67  g3<67  g4<67  b2<67  
+10: c4=77  d2<77  e6<77  f4<77  f6<77  d6<77  g3<77  g4<77  b2<77  a3<77  
+12: c4=27  d2<27  e6
+Evaluated 10,891,310 boards in 0:02.004 5,434,785 boards/sec  Total time used: 0:16.038
+best move for B is at c4 (score 27)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W W W - - 
+				4 - - B B W - - - 
+				3 - W W B B W - - 
+				2 - - - - B - - - 
+				1 - - - - - - - - 
+				  a b c d e f g h 
+						    Score: W7 B=5
+ 2: e1=-15  d1<-16  d2<-20  c2<-22  b4<-21  c5<-20  
+ 4: e1=-14  d1<-14  d2<-14  c5<-14  b4<-14  c2<-14  
+ 6: e1=-16  d1<-16  d2<-16  c5=-12  b4<-12  c2<-12  
+ 8: c5=-20  b4<-20  c2<-20  e1=-18  d1<-18  d2<-18  
+10: e1=-27  d1<-27  d2<-27  c5<-27  b4<-27  c2<-27  
+12: e1=
+Evaluated 11,688,178 boards in 0:02.004 5,832,424 boards/sec  Total time used: 0:18.042
+best move for W is at e1 (score -27)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W W W - - 
+				4 - - B B W - - - 
+				3 - W W B W W - - 
+				2 - - - - W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W10 B=3
+ 2: f1=-210  f2=-86  c2=-77  b2<-1079  a2=-66  g3=-43  a3=4  f4<-18  g6=237  f6<-18  e6<-17  d6<-17  
+ 4: g6=178  a3<178  e6<178  d6<178  f4<178  f6<178  g3<178  a2<178  c2<178  f2<178  f1<178  b2<178  
+ 6: g6=164  a3<164  e6<164  d6<164  f4<164  f6<164  g3<164  a2<164  c2<164  f2<164  f1<164  b2<164  
+ 8: g6=21  a3=77  e6<77  d6<77  f4<77  f6<77  g3<77  a2<77  c2<77  f2<77  f1<77  b2<77  
+10: a3=27  e6<27  d6<27  f4<27  f6<27  g3<27  a2<27  c2<27  f2<27  f1<27  b2<27  g6<27  
+12: a3=8  e6
+Evaluated 10,899,683 boards in 0:02.004 5,438,963 boards/sec  Total time used: 0:20.047
+best move for B is at a3 (score 8)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - - W W W - - 
+				4 - - B B W - - - 
+				3 B B B B W W - - 
+				2 - - - - W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W8 B=6
+ 2: d2=-6  c2<-21  b2<-6  a2<-27  b4=-5  c5=-4  b5<-4  
+ 4: c5=-7  b5<-7  b4<-7  d2<-7  b2<-7  c2<-7  a2<-7  
+ 6: c5=-18  b5<-18  b4<-18  d2<-18  b2<-18  c2<-18  a2<-18  
+ 8: c5=-27  b5<-27  b4<-27  d2<-27  b2<-27  c2<-27  a2<-27  
+10: c5=-39  b5<-39  b4<-39  d2<-39  b2<-39  c2<-39  a2<-39  
+12: c5=
+Evaluated 11,323,652 boards in 0:02.008 5,639,268 boards/sec  Total time used: 0:22.054
+best move for W is at c5 (score -39)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - - - - - - - 
+				5 - - W W W W - - 
+				4 - - B W W - - - 
+				3 B B B B W W - - 
+				2 - - - - W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W10 B=5
+ 2: f1=-187  g3=3  f4=6  g6=260  f6<6  e6<6  d6<6  c6<6  
+ 4: g6=223  f4<223  f6<223  e6<223  d6<223  c6<223  g3<223  f1<223  
+ 6: g6=108  f4<108  f6<108  e6<108  d6<108  c6<108  g3<108  f1<108  
+ 8: g6=76  f4<76  f6<76  e6<76  d6<76  c6<76  g3<76  f1<76  
+10: g6=0  f4=8  f6<8  e6<8  d6<8  c6=21  g3<21  f1<21  
+12: c6=
+Evaluated 22,165,130 boards in 0:04.011 5,524,708 boards/sec  Total time used: 0:26.067
+best move for B is at c6 (score 21)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B - - - - - 
+				5 - - B W W W - - 
+				4 - - B W W - - - 
+				3 B B B B W W - - 
+				2 - - - - W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W9 B=7
+ 2: d2=-6  c2<-20  b2<-6  a2<-26  b4<-6  b5<-63  b6<-16  b7<-6  
+ 4: d2=-20  b2<-20  b4=-18  b7<-18  b6<-18  c2<-18  a2<-18  b5<-18  
+ 6: b4=-65  b7<-65  b6=-38  c2<-38  a2<-38  b5<-38  d2=-27  b2<-27  
+ 8: d2=-39  b2<-39  b6<-39  c2<-39  a2<-39  b5<-39  b4<-39  b7<-39  
+10: d2=-53  b2<-53  b6<-53  c2<-53  a2<-53  b5<-53  b4<-53  b7<-53  
+12: d2=
+Evaluated 22,330,351 boards in 0:04.009 5,568,666 boards/sec  Total time used: 0:30.076
+best move for W is at d2 (score -53)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B - - - - - 
+				5 - - B W W W - - 
+				4 - - B W W - - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W11 B=6
+ 2: f1=-185  g2=1  f2<-61  g3=5  f4=7  g5<7  f6<7  e6<5  
+ 4: f4=8  g5<8  f6<8  g3<8  e6<8  g2<8  f2<8  f1<8  
+ 6: f4=21  g5<21  f6<21  g3<21  e6<21  g2<21  f2<21  f1<21  
+ 8: f4=21  g5<21  f6<21  g3<21  e6<21  g2<21  f2<21  f1<21  
+10: f4=21  g5<21  f6<21  g3<21  e6<21  g2<21  f2<21  f1<21  
+12: f4=
+Evaluated 21,756,175 boards in 0:04.014 5,420,073 boards/sec  Total time used: 0:34.091
+best move for B is at f4 (score 21)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B - - - - - 
+				5 - - B W W W - - 
+				4 - - B B B B - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W9 B=9
+ 2: b2=-34  a2<-47  g3=-31  b4<-67  g5=-25  b5<-25  b6=-17  b7<-27  
+ 4: b6=-38  g5=-28  b5<-28  b7<-28  g3<-28  b2<-28  a2<-28  b4=-27  
+ 6: b4=-90  g5=-39  b5<-39  b7<-39  g3<-39  b2<-39  a2<-39  b6<-39  
+ 8: g5=-53  b5<-53  b7<-53  g3<-53  b2<-53  a2<-53  b6<-53  b4<-53  
+10: g5=-71  b5<-71  b7<-71  g3<-71  b2<-71  a2<-71  b6<-71  b4<-71  
+12: g5=
+Evaluated 22,740,400 boards in 0:04.011 5,669,508 boards/sec  Total time used: 0:38.102
+best move for W is at g5 (score -71)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B - - - - - 
+				5 - - B W W W W - 
+				4 - - B B B W - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W11 B=8
+ 2: f1=-183  d1=-136  g2<-1057  f2=-60  c2=-18  g3<-25  g4=-15  h5=25  g6<6  f6<8  e6<7  d6<7  
+ 4: h5=24  f6<24  e6<24  d6<24  g6<24  g4<24  c2<24  g3<24  f2<24  d1<24  f1<24  g2<24  
+ 6: h5=5  f6=12  e6=20  d6=21  g6<21  g4<21  c2<21  g3<21  f2<21  d1<21  f1<21  g2<21  
+ 8: d6=17  g6<17  g4<17  c2<17  g3<17  f2<17  d1<17  f1<17  g2<17  e6<17  f6=21  h5<21  
+10: f6=16  h5<16  d6=59  g6<59  g4<59  c2<59  g3<59  f2
+Evaluated 22,066,891 boards in 0:04.003 5,511,211 boards/sec  Total time used: 0:42.106
+best move for B is at d6 (score 59)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B B - - - - 
+				5 - - B B W W W - 
+				4 - - B B B W - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W10 B=10
+ 2: b2=-35  b4=-22  b5<-22  b6=-18  d7<-24  c7<-24  b7<-26  
+ 4: b6=-34  b4=-32  b5<-32  d7<-32  c7<-32  b7<-32  b2<-32  
+ 6: b4=-53  b5<-53  d7<-53  c7<-53  b7<-53  b2<-53  b6<-53  
+ 8: b4=-81  b5=-72  d7<-72  c7<-72  b7<-72  b2<-72  b6=-71  
+10: b6=-106  b5=-93  d7<-93  c7<-93  b7<-93  b2<-93  b4<-93  
+12: b5=
+Evaluated 24,330,818 boards in 0:04.006 6,072,078 boards/sec  Total time used: 0:46.112
+best move for W is at b5 (score -93)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B B - - - - 
+				5 - W W W W W W - 
+				4 - - W B B W - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W14 B=7
+ 2: d1=-137  g2<-1058  f2=-61  c2=-19  g3=7  a4<1  g4<-16  b4<-35  g6<6  f6<7  e6<7  b6<7  
+ 4: g3=1  f6=7  e6=22  b6<22  g6<22  a4=48  g4<48  c2<48  b4<48  f2<48  d1<48  g2<48  
+ 6: a4=63  g4<63  c2<63  b4<63  f2<63  d1<63  g2<63  e6<63  b6<63  g6<63  f6<63  g3<63  
+ 8: a4=63  g4<63  c2<63  b4<63  f2<63  d1<63  g2<63  e6<63  b6<63  g6<63  f6<63  g3<63  
+10: a4=73  g4<73  c2<73  b4<73  f2<73  d1<73  g2<73  e6=131  b6<131  g6<131  f6<131  g3
+Evaluated 21,485,506 boards in 0:04.009 5,359,318 boards/sec  Total time used: 0:50.121
+best move for B is at e6 (score 131)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B B B - - - 
+				5 - W W B B W W - 
+				4 - - B B B W - - 
+				3 B B B W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W11 B=11
+ 2: c2=-68  b4=-66  e7<-66  d7=-21  c7<-23  b7<-27  
+ 4: d7=-40  c7<-40  b7<-40  b4<-40  e7<-40  c2<-40  
+ 6: d7=-82  c7=-61  b7<-61  b4<-61  e7<-61  c2<-61  
+ 8: c7=-102  b7<-102  b4=-82  e7<-82  c2<-82  d7<-82  
+10: b4=-91  e7<-91  c2<-91  d7<-91  c7<-91  b7<-91  
+12: b4=
+Evaluated 23,538,078 boards in 0:04.008 5,872,773 boards/sec  Total time used: 0:54.130
+best move for W is at b4 (score -91)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B B B - - - 
+				5 - W W B B W W - 
+				4 - W W W W W - - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W16 B=7
+ 2: d1=-136  g2=0  c2<-15  b2<-15  g3=7  g4=246  a4<70  h5<26  a5<9  b6<220  
+ 4: g4=218  b6<218  a4<218  h5<218  a5<218  g3<218  g2<218  c2<218  b2<218  d1<218  
+ 6: g4=139  b6<139  a4<139  h5<139  a5<139  g3<139  g2<139  c2<139  b2<139  d1<139  
+ 8: g4=110  b6<110  a4=131  h5<131  a5<131  g3<131  g2<131  c2<131  b2<131  d1<131  
+10: a4=93  h5=181  a5<181  g3<181  g2<181  c2<181  b2<181  d1<181  g4<181  b6<181  
+12: h5=
+Evaluated 21,694,707 boards in 0:04.011 5,407,454 boards/sec  Total time used: 0:58.142
+best move for B is at h5 (score 181)
+				8 - - - - - - - - 
+				7 - - - - - - - - 
+				6 - - B B B - - - 
+				5 - W W B B B B B 
+				4 - W W W W W - - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W14 B=10
+ 2: b2=-1059  a2<-1518  h6=-84  g6=-21  f6<-38  f7<-41  e7<-39  d7<-42  c7<-39  b7<-45  
+ 4: g6=-43  f6<-43  e7<-43  c7<-43  f7<-43  d7<-43  b7<-43  h6<-43  b2<-43  a2<-43  
+ 6: g6=-20  f6<-20  e7<-20  c7<-20  f7<-20  d7<-20  b7<-20  h6<-20  b2<-20  a2<-20  
+ 8: g6=-91  f6<-91  e7<-91  c7<-91  f7<-91  d7<-91  b7<-91  h6<-91  b2<-91  a2<-91  
+10: g6=-188  f6<-188  e7=-182  c7<-182  f7<-182  d7=-166  b7<-166  h6<-166  b2<-166  a2<-166  
+12: d7=
+Evaluated 23,066,868 boards in 0:04.008 5,755,206 boards/sec  Total time used: 1:02.150
+best move for W is at d7 (score -166)
+				8 - - - - - - - - 
+				7 - - - W - - - - 
+				6 - - W W B - - - 
+				5 - W W W B B B B 
+				4 - W W W W W - - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W18 B=7
+ 2: c1=-4  f2=17  c2=18  b2<0  g3<-6  a5=25  b6=237  e7<24  c7<23  c8<46  
+ 4: b6=27  c8=220  a5<220  e7<220  c7<220  c2<220  f2<220  b2<220  c1<220  g3<220  
+ 6: c8=109  a5<109  e7<109  c7<109  c2<109  f2<109  b2<109  c1<109  g3<109  b6<109  
+ 8: c8=188  a5<188  e7<188  c7<188  c2<188  f2<188  b2<188  c1<188  g3<188  b6<188  
+10: c8=194  a5
+Evaluated 23,131,719 boards in 0:04.011 5,765,632 boards/sec  Total time used: 1:06.162
+best move for B is at c8 (score 194)
+				8 - - B - - - - - 
+				7 - - - B - - - - 
+				6 - - W W B - - - 
+				5 - W W W B B B B 
+				4 - W W W W W - - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W17 B=9
+ 2: b2=-1080  a2<-1539  h6=-235  g6=-106  f6=-102  f7<-106  e7<-105  e8=-45  d8<-183  
+ 4: e8=-85  f6<-85  e7<-85  g6<-85  f7<-85  d8<-85  h6<-85  b2<-85  a2<-85  
+ 6: e8=-105  f6<-105  e7<-105  g6<-105  f7<-105  d8<-105  h6<-105  b2<-105  a2<-105  
+ 8: e8=-118  f6=-116  e7<-116  g6<-116  f7<-116  d8<-116  h6<-116  b2<-116  a2<-116  
+10: f6=-162  e7<-162  g6
+Evaluated 24,446,809 boards in 0:04.001 6,110,174 boards/sec  Total time used: 1:10.163
+best move for W is at f6 (score -162)
+				8 - - B - - - - - 
+				7 - - - B - - - - 
+				6 - - W W W W - - 
+				5 - W W W W W B B 
+				4 - W W W W W - - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W21 B=6
+ 2: d1=-99  c1=48  g3<28  g4=283  a4=362  a5<47  b6=768  f7<45  e7<45  
+ 4: b6=216  a4<216  g4=324  c1<324  a5<324  f7<324  e7<324  g3<324  d1<324  
+ 6: g4=354  c1<354  a5<354  f7<354  e7<354  g3<354  d1<354  b6<354  a4<354  
+ 8: g4=261  c1<261  a5<261  f7<261  e7<261  g3<261  d1<261  b6<261  a4<261  
+10: g4=218  c1<218  a5<218  f7<218  e7<218  g3
+Evaluated 22,523,282 boards in 0:04.001 5,629,413 boards/sec  Total time used: 1:14.164
+best move for B is at g4 (score 218)
+				8 - - B - - - - - 
+				7 - - - B - - - - 
+				6 - - W W B W - - 
+				5 - W W W W B B B 
+				4 - W W W W W B - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W19 B=9
+ 2: b2=-141  a2<-1537  h4<-187  h6<-233  g6=-110  f7=-107  e7<-107  e8=-87  d8<-181  
+ 4: e8=-69  f7<-69  e7<-69  g6<-69  b2<-69  d8<-69  h4<-69  h6<-69  a2<-69  
+ 6: e8=-76  f7<-76  e7<-76  g6<-76  b2<-76  d8<-76  h4<-76  h6<-76  a2<-76  
+ 8: e8=-91  f7<-91  e7<-91  g6<-91  b2<-91  d8<-91  h4<-91  h6<-91  a2<-91  
+10: e8=-205  f7=-199  e7
+Evaluated 24,376,445 boards in 0:04.009 6,080,430 boards/sec  Total time used: 1:18.173
+best move for W is at f7 (score -199)
+				8 - - B - - - - - 
+				7 - - - B - W - - 
+				6 - - W W W W - - 
+				5 - W W W W B B B 
+				4 - W W W W W B - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W21 B=8
+ 2: d1=-99  c1=16  f2<3  c2<3  g3=29  a4=297  a5<280  b6=530  e7<301  g8<81  f8<314  
+ 4: b6=280  f8=339  e7=354  a4<354  a5<354  g8<354  g3<354  c1<354  f2<354  c2<354  d1<354  
+ 6: e7=274  a4<274  a5<274  g8<274  g3<274  c1<274  f2<274  c2<274  d1<274  f8=357  b6<357  
+ 8: f8=218  b6<218  e7<218  a4<218  a5<218  g8<218  g3<218  c1<218  f2<218  c2<218  d1<218  
+10: f8=
+Evaluated 24,075,026 boards in 0:04.014 5,997,764 boards/sec  Total time used: 1:22.187
+best move for B is at f8 (score 218)
+				8 - - B - - B - - 
+				7 - - - B - B - - 
+				6 - - W W W B - - 
+				5 - W W W W B B B 
+				4 - W W W W W B - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W19 B=11
+ 2: b2=-1093  a2<-1551  h3=-96  h4<-200  h6<-121  g6<-120  g7<-125  g8<-126  e8<-289  d8<-289  
+ 4: h3=-125  g6=-104  h6<-104  g7<-104  g8<-104  h4<-104  e8<-104  d8<-104  b2<-104  a2<-104  
+ 6: g6=-118  h6<-118  g7<-118  g8<-118  h4<-118  e8<-118  d8<-118  b2<-118  a2<-118  h3<-118  
+ 8: g6=-145  h6<-145  g7<-145  g8<-145  h4<-145  e8<-145  d8<-145  b2<-145  a2<-145  h3<-145  
+10: g6=-267  h6<-267  g7<-267  g8<-267  h4<-267  e8
+Evaluated 62,829,760 boards in 0:10.000 6,282,976 boards/sec  Total time used: 1:32.187
+best move for W is at g6 (score -267)
+				8 - - B - - B - - 
+				7 - - - B - B - - 
+				6 - - W W W W W - 
+				5 - W W W W W B B 
+				4 - W W W W W B - 
+				3 B B W W W W - - 
+				2 - - - W W - - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W22 B=9
+ 2: d1=-86  c1=61  f2<52  g3<60  a4=380  a5<316  b6=788  g7<545  e7<314  
+ 4: b6=364  g7<364  a4<364  a5<364  e7<364  c1<364  g3<364  f2<364  d1<364  
+ 6: b6=179  g7<179  a4=285  a5<285  e7=287  c1<287  g3<287  f2<287  d1<287  
+ 8: e7=85  c1=195  g3<195  f2=298  d1<298  a4<298  a5<298  b6<298  g7<298  
+10: f2=
+Evaluated 59,221,579 boards in 0:10.007 5,917,423 boards/sec  Total time used: 1:42.195
+best move for B is at f2 (score 298)
+				8 - - B - - B - - 
+				7 - - - B - B - - 
+				6 - - W W W B W - 
+				5 - W W W W B B B 
+				4 - W W W W B B - 
+				3 B B W W W B - - 
+				2 - - - W W B - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W18 B=14
+ 2: g1=-341  b2<-1096  a2<-1554  g2=-131  h3=-102  g3<-119  h4<-202  h6<-123  g7<-127  g8<-128  e8<-293  d8<-292  
+ 4: h3=-103  g3<-103  h6<-103  g7<-103  g8<-103  g2<-103  h4<-103  d8<-103  e8<-103  g1<-103  b2<-103  a2<-103  
+ 6: h3=-145  g3<-145  h6<-145  g7<-145  g8<-145  g2<-145  h4<-145  d8<-145  e8<-145  g1<-145  b2<-145  a2<-145  
+ 8: h3=-338  g3<-338  h6=-267  g7<-267  g8<-267  g2<-267  h4<-267  d8<-267  e8<-267  g1<-267  b2<-267  a2<-267  
+10: h6=-267  g7<-267  g8<-267  g2<-267  h4<-267  d8
+Evaluated 62,126,324 boards in 0:10.013 6,203,946 boards/sec  Total time used: 1:52.209
+best move for W is at h6 (score -267)
+				8 - - B - - B - - 
+				7 - - - B - B - - 
+				6 - - W W W B W W 
+				5 - W W W W B W B 
+				4 - W W W W W B - 
+				3 B B W W W B - - 
+				2 - - - W W B - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W21 B=12
+ 2: d1=-102  b2<-124  c2<-123  h4=24  a4<-57  a5<-119  b6<-119  h7=81  g7<-129  e7=134  b7<50  
+ 4: e7=-119  h7=318  b7<318  h4<318  a4<318  d1<318  a5<318  b6<318  c2<318  b2<318  g7<318  
+ 6: h7=343  b7<343  h4<343  a4<343  d1<343  a5<343  b6<343  c2<343  b2<343  g7<343  e7<343  
+ 8: h7=315  b7<315  h4<315  a4<315  d1<315  a5<315  b6<315  c2<315  b2<315  g7<315  e7<315  
+10: h7=315  b7<315  h4<315  a4<315  d1<315  a5<315  b6<315  c2<315  b2<315  g7<315  e7<315  
+12: h7=
+Evaluated 57,030,231 boards in 0:10.012 5,695,618 boards/sec  Total time used: 2:02.222
+best move for B is at h7 (score 315)
+				8 - - B - - B - - 
+				7 - - - B - B - B 
+				6 - - W W W B B B 
+				5 - W W W W B W B 
+				4 - W W W W W B - 
+				3 B B W W W B - - 
+				2 - - - W W B - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W19 B=15
+ 2: g1=-531  f1=-290  b2<-1286  a2<-293  g2<-364  h3=-275  g3<-275  h4<-517  g7<-319  e7<-314  g8<-318  e8<-278  d8<-278  
+ 4: h3=-273  g3<-273  e8<-273  d8<-273  f1<-273  a2<-273  e7<-273  g8<-273  g7<-273  g2<-273  h4<-273  g1<-273  b2<-273  
+ 6: h3=-267  g3<-267  e8<-267  d8<-267  f1<-267  a2<-267  e7<-267  g8<-267  g7<-267  g2<-267  h4<-267  g1<-267  b2<-267  
+ 8: h3=-466  g3<-466  e8<-466  d8<-466  f1<-466  a2<-466  e7=-267  g8<-267  g7<-267  g2<-267  h4<-267  g1<-267  b2<-267  
+10: e7=-383  g8<-383  g7<-383  g2<-383  h4<-383  g1<-383  b2<-383  h3<-383  g3<-383  e8<-383  d8<-383  f1<-383  a2<-383  
+12: e7=
+Evaluated 57,908,411 boards in 0:10.000 5,790,262 boards/sec  Total time used: 2:12.223
+best move for W is at e7 (score -383)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - - W W W W B B 
+				5 - W W W W B W B 
+				4 - W W W W W B - 
+				3 B B W W W B - - 
+				2 - - - W W B - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W21 B=14
+ 2: d1=100  c1=358  c2<335  a4<308  a5<339  b6<84  b7<240  
+ 4: c1=343  a5<343  c2<343  a4<343  b7<343  d1<343  b6<343  
+ 6: c1=334  a5<334  c2<334  a4<334  b7<334  d1<334  b6<334  
+ 8: c1=315  a5<315  c2<315  a4<315  b7<315  d1<315  b6<315  
+10: c1=75  a5=83  c2<83  a4=182  b7<182  d1<182  b6=200  
+12: b6=
+Evaluated 60,080,615 boards in 0:10.007 6,003,258 boards/sec  Total time used: 2:22.231
+best move for B is at b6 (score 200)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - B B B B B B B 
+				5 - B B W W B W B 
+				4 - B W B W W B - 
+				3 B B W W B B - - 
+				2 - - - W W B - - 
+				1 - - - - W - - - 
+				  a b c d e f g h 
+						    Score: W12 B=24
+ 2: f1=-295  a2<-295  g2<-1266  g3<-317  h4<-522  a4<-323  a5<-344  a6<-340  b7<-368  g7<-1398  c7<-363  g8<-303  d8<-484  
+ 4: f1=-340  a2<-340  g8<-340  g3<-340  a4<-340  a6<-340  a5<-340  c7<-340  b7<-340  d8<-340  h4<-340  g2<-340  g7<-340  
+ 6: f1=-249  a2<-249  g8<-249  g3<-249  a4<-249  a6<-249  a5<-249  c7<-249  b7<-249  d8<-249  h4<-249  g2<-249  g7<-249  
+ 8: f1=-383  a2<-383  g8<-383  g3<-383  a4<-383  a6<-383  a5<-383  c7<-383  b7<-383  d8<-383  h4<-383  g2<-383  g7<-383  
+10: f1=-445  a2<-445  g8
+Evaluated 63,774,001 boards in 0:10.002 6,376,124 boards/sec  Total time used: 2:32.233
+best move for W is at f1 (score -445)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - B B B B B B B 
+				5 - B B W W B W B 
+				4 - B W B W W B - 
+				3 B B W W B W - - 
+				2 - - - W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W15 B=22
+ 2: g1=-1122  d1=85  c1<38  g2<13  c2<18  b2<-635  g3<17  h4=256  e8<244  d8<244  
+ 4: h4=277  e8<277  d8<277  d1<277  c1<277  c2<277  g3<277  g2<277  b2<277  g1<277  
+ 6: h4=290  e8<290  d8<290  d1<290  c1<290  c2<290  g3<290  g2<290  b2<290  g1<290  
+ 8: h4=257  e8<257  d8<257  d1<257  c1<257  c2<257  g3<257  g2<257  b2<257  g1<257  
+10: h4=279  e8<279  d8<279  d1<279  c1<279  c2=321  g3<321  g2<321  b2<321  g1<321  
+12: c2=
+Evaluated 59,376,914 boards in 0:10.007 5,932,945 boards/sec  Total time used: 2:42.241
+best move for B is at c2 (score 321)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - B B B B B B B 
+				5 - B B W W B W B 
+				4 - B B B B W B - 
+				3 B B B B B W - - 
+				2 - - B W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W11 B=27
+ 2: a2=-1660  b2=-1201  g3=-301  h4<-457  a4<-324  a5=-278  a6=-273  b7<-303  a7=-248  g7<-262  c7<-257  g8<-305  d8<-419  
+ 4: a7=-181  c7<-181  g7<-181  a6<-181  a5<-181  g3<-181  b7<-181  g8<-181  a4<-181  d8<-181  h4<-181  b2<-181  a2<-181  
+ 6: a7=-386  c7<-386  g7<-386  a6<-386  a5<-386  g3=-341  b7<-341  g8<-341  a4<-341  d8<-341  h4<-341  b2<-341  a2<-341  
+ 8: g3=-595  b7<-595  g8<-595  a4=-490  d8<-490  h4<-490  b2<-490  a2<-490  a7<-490  c7<-490  g7<-490  a6=-435  a5<-435  
+10: a6=-472  a5<-472  a4=-466  d8<-466  h4<-466  b2<-466  a2<-466  a7<-466  c7<-466  g7<-466  g3<-466  b7<-466  g8
+Evaluated 61,285,360 boards in 0:10.000 6,128,536 boards/sec  Total time used: 2:52.241
+best move for W is at a4 (score -466)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - B B B B B B B 
+				5 - B B W W B W B 
+				4 W W W W W W B - 
+				3 B B B B B W - - 
+				2 - - B W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W16 B=23
+ 2: g1=-1162  d1=44  c1<-2  g2<16  g3<-46  h4=321  a5=411  e8<385  d8<385  
+ 4: a5=513  e8<513  d8<513  h4<513  d1<513  g2<513  c1<513  g3<513  g1<513  
+ 6: a5=418  e8<418  d8<418  h4<418  d1<418  g2<418  c1<418  g3<418  g1<418  
+ 8: a5=576  e8<576  d8<576  h4<576  d1<576  g2<576  c1<576  g3<576  g1<576  
+10: a5=448  e8<448  d8<448  h4<448  d1<448  g2<448  c1<448  g3<448  g1<448  
+12: a5=
+Evaluated 58,984,035 boards in 0:10.007 5,893,688 boards/sec  Total time used: 3:02.249
+best move for B is at a5 (score 448)
+				8 - - B - - B - - 
+				7 - - - B W B - B 
+				6 - B B B B B B B 
+				5 B B B W W B W B 
+				4 B B W W W W B - 
+				3 B B B B B W - - 
+				2 - - B W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W14 B=26
+ 2: c1=-578  b1=-416  a2<-2077  b2<-1367  g3<-440  h4<-593  a6<-640  b7<-439  a7=-329  g7<-398  c7<-391  g8<-369  d8<-353  
+ 4: a7=-403  d8<-403  g8<-403  c7<-403  g7<-403  b1<-403  b7<-403  g3<-403  c1<-403  h4<-403  a6<-403  b2<-403  a2<-403  
+ 6: a7=-594  d8<-594  g8<-594  c7=-490  g7<-490  b1<-490  b7<-490  g3<-490  c1<-490  h4<-490  a6<-490  b2<-490  a2<-490  
+ 8: c7=-466  g7<-466  b1<-466  b7<-466  g3<-466  c1<-466  h4<-466  a6<-466  b2<-466  a2<-466  a7<-466  d8<-466  g8<-466  
+10: c7=-611  g7<-611  b1<-611  b7<-611  g3<-611  c1<-611  h4<-611  a6<-611  b2<-611  a2<-611  a7<-611  d8<-611  g8<-611  
+12: c7=-590  g7<-590  b1
+Evaluated 58,010,434 boards in 0:10.015 5,792,354 boards/sec  Total time used: 3:12.264
+best move for W is at c7 (score -590)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B W B 
+				4 B B W W W W B - 
+				3 B B B B B W - - 
+				2 - - B W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W19 B=22
+ 2: g1=-984  d1=392  c1=432  g2<-400  g3<410  h4=601  b7<557  e8<469  d8<383  
+ 4: h4=625  b7<625  e8<625  c1<625  g3<625  d1<625  d8<625  g2<625  g1<625  
+ 6: h4=592  b7<592  e8<592  c1<592  g3<592  d1<592  d8<592  g2<592  g1<592  
+ 8: h4=448  b7<448  e8<448  c1<448  g3<448  d1<448  d8<448  g2<448  g1<448  
+10: h4=264  b7<264  e8<264  c1<264  g3<264  d1<264  d8<264  g2<264  g1<264  
+12: h4=5  b7<5  e8<5  c1<5  g3<5  d1<5  d8<5  g2<5  g1<5  
+14: h4=
+Evaluated 58,500,355 boards in 0:10.013 5,841,856 boards/sec  Total time used: 3:22.278
+best move for B is at h4 (score 5)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B B B B W - - 
+				2 - - B W W W - - 
+				1 - - - - W W - - 
+				  a b c d e f g h 
+						    Score: W18 B=24
+ 2: c1=-688  b1=-524  a2<-2187  b2<-1477  h3<-878  a6<-752  a7=-479  g7<-507  g8<-479  
+ 4: a7=-876  g8<-876  g7<-876  b1=-490  c1<-490  a6<-490  h3<-490  b2<-490  a2<-490  
+ 6: b1=-466  c1<-466  a6<-466  h3<-466  b2<-466  a2<-466  a7<-466  g8<-466  g7<-466  
+ 8: b1=-611  c1<-611  a6<-611  h3<-611  b2<-611  a2<-611  a7<-611  g8<-611  g7<-611  
+10: b1=-590  c1<-590  a6<-590  h3<-590  b2<-590  a2<-590  a7<-590  g8<-590  g7<-590  
+12: b1=-627  c1<-627  a6<-627  h3<-627  b2<-627  a2<-627  a7<-627  g8
+Evaluated 58,629,540 boards in 0:10.003 5,861,195 boards/sec  Total time used: 3:32.281
+best move for W is at b1 (score -627)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B B W B W - - 
+				2 - - W W W W - - 
+				1 - W - - W W - - 
+				  a b c d e f g h 
+						    Score: W21 B=22
+ 2: g1=-622  d1=554  c1<554  g3=566  b7<558  e8=625  d8<625  
+ 4: e8=357  d8=481  g3=592  b7<592  d1<592  c1<592  g1<592  
+ 6: g3=448  b7<448  d1<448  c1<448  g1<448  d8<448  e8<448  
+ 8: g3=92  b7<92  d1=264  c1<264  g1<264  d8<264  e8<264  
+10: d1=-66  c1<-66  g1<-66  d8<-66  e8<-66  g3=5  b7<5  
+12: g3=-146  b7<-146  d1<-146  c1<-146  g1<-146  d8<-146  e8<-146  
+14: g3=
+Evaluated 58,878,696 boards in 0:10.012 5,880,225 boards/sec  Total time used: 3:42.294
+best move for B is at g3 (score -146)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B B W B B B - 
+				2 - - W W W W - - 
+				1 - W - - W W - - 
+				  a b c d e f g h 
+						    Score: W20 B=24
+ 2: h2=-490  g2<-529  b2<-528  a2<-490  h3<-841  a6<-716  a7<-501  g7<-529  g8<-573  
+ 4: h2=-466  a2<-466  a7<-466  b2<-466  g2<-466  g7<-466  g8<-466  a6<-466  h3<-466  
+ 6: h2=-472  a2<-472  a7<-472  b2<-472  g2<-472  g7<-472  g8<-472  a6<-472  h3<-472  
+ 8: h2=-543  a2<-543  a7<-543  b2<-543  g2<-543  g7<-543  g8<-543  a6<-543  h3<-543  
+10: h2=-655  a2<-655  a7=-290  b2<-290  g2<-290  g7<-290  g8<-290  a6<-290  h3<-290  
+12: a7=-507  b2<-507  g2<-507  g7<-507  g8<-507  a6<-507  h3<-507  h2=-218  a2<-218  
+14: h2=35  a2<35  a7<35  b2<35  g2<35  g7<35  g8
+Evaluated 58,328,542 boards in 0:10.007 5,828,191 boards/sec  Total time used: 3:52.302
+best move for W is at h2 (score 35)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B B W B B W - 
+				2 - - W W W W - W 
+				1 - W - - W W - - 
+				  a b c d e f g h 
+						    Score: W22 B=23
+Seeking to end of board
+
+20: g1=14  d1=26  c1<26  g2<26  h3<26  b7<26  e8<26  d8<26  
+
+Evaluated 1,205,266,003 boards in 1:52.641 10,700,064 boards/sec  Total time used: 5:44.943
+best move for B is at d1 (score 26)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B B W B B W - 
+				2 - - B W B W - W 
+				1 - W - B W W - - 
+				  a b c d e f g h 
+						    Score: W20 B=26
+Seeking to end of board
+
+18: c1=38  g2<38  a2<38  b2<38  h3<38  a6<38  a7<38  g7<38  g8<38  
+
+Evaluated 89,021,291 boards in 0:10.627 8,376,897 boards/sec  Total time used: 5:55.570
+best move for W is at c1 (score 38)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W W B B B 
+				4 B B W W W W B B 
+				3 B B W W B B W - 
+				2 - - W W B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W24 B=23
+Seeking to end of board
+
+18: g1=19  g2<19  b2=26  h3<26  b7<26  e8<26  d8<26  
+
+Evaluated 54,573,169 boards in 0:05.091 10,719,538 boards/sec  Total time used: 6:00.661
+best move for B is at b2 (score 26)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 - B W W B B B B 
+				5 B B W W B B B B 
+				4 B B W B W W B B 
+				3 B B B W B B W - 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W19 B=29
+Seeking to end of board
+
+16: g2=32  a2<32  h3<32  a6=38  b7<38  a7<38  g7<38  g8<38  
+
+Evaluated 7,948,439 boards in 0:00.970 8,194,267 boards/sec  Total time used: 6:01.631
+best move for W is at a6 (score 38)
+				8 - - B - - B - - 
+				7 - - W W W B - B 
+				6 W W W W B B B B 
+				5 B W W W B B B B 
+				4 B B W B W W B B 
+				3 B B B W B B W - 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W22 B=27
+Seeking to end of board
+
+16: g1=19  g2<19  h3=24  a7=26  b7<26  e8<26  d8<26  b8<26  
+
+Evaluated 4,895,900 boards in 0:00.462 10,597,186 boards/sec  Total time used: 6:02.093
+best move for B is at a7 (score 26)
+				8 - - B - - B - - 
+				7 B - W W W B - B 
+				6 B B W W B B B B 
+				5 B W B W B B B B 
+				4 B B W B W W B B 
+				3 B B B W B B W - 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W19 B=31
+Seeking to end of board
+
+14: g2=32  a2<32  h3<32  b7=38  g7<38  g8<38  
+
+Evaluated 723,741 boards in 0:00.088 8,224,329 boards/sec  Total time used: 6:02.181
+best move for W is at b7 (score 38)
+				8 - - B - - B - - 
+				7 B W W W W B - B 
+				6 B W W W B B B B 
+				5 B W B W B B B B 
+				4 B B W B W W B B 
+				3 B B B W B B W - 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W21 B=30
+Seeking to end of board
+
+14: g1=24  g2<24  h3=26  e8<26  d8<26  b8<26  a8<26  
+
+Evaluated 728,909 boards in 0:00.068 10,719,250 boards/sec  Total time used: 6:02.249
+best move for B is at h3 (score 26)
+				8 - - B - - B - - 
+				7 B W W W W B - B 
+				6 B W W W B B B B 
+				5 B W B W B B B B 
+				4 B B W B W W B B 
+				3 B B B W B B B B 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W20 B=32
+Seeking to end of board
+
+12: g2=19  a2<19  g7<19  h8=38  g8<38  
+
+Evaluated 83,126 boards in 0:00.010 8,312,600 boards/sec  Total time used: 6:02.259
+best move for W is at h8 (score 38)
+				8 - - B - - B - W 
+				7 B W W W W B - W 
+				6 B W W W B B B W 
+				5 B W B W B B B W 
+				4 B B W B W W B W 
+				3 B B B W B B B W 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W26 B=27
+Seeking to end of board
+
+12: g1=23  g2<23  e8=25  d8<25  b8<25  a8=26  
+
+Evaluated 81,221 boards in 0:00.007 11,603,000 boards/sec  Total time used: 6:02.266
+best move for B is at a8 (score 26)
+				8 B - B - - B - W 
+				7 B B W W W B - W 
+				6 B W B W B B B W 
+				5 B W B B B B B W 
+				4 B B W B B W B W 
+				3 B B B W B B B W 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W22 B=32
+Seeking to end of board
+
+10: a2=23  g7=32  g8=36  e8<36  b8=38  
+
+Evaluated 20,089 boards in 0:00.002 10,044,500 boards/sec  Total time used: 6:02.268
+best move for W is at b8 (score 38)
+				8 B W B - - B - W 
+				7 B W W W W B - W 
+				6 B W B W B B B W 
+				5 B W B B B B B W 
+				4 B B W B B W B W 
+				3 B B B W B B B W 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W24 B=31
+Seeking to end of board
+
+10: g1=23  g2<23  e8<23  d8=26  
+
+Evaluated 7,725 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for B is at d8 (score 26)
+				8 B W B B - B - W 
+				7 B W B B B B - W 
+				6 B B B B B B B W 
+				5 B W B B B B B W 
+				4 B B W B B W B W 
+				3 B B B W B B B W 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W19 B=37
+Seeking to end of board
+
+ 8: g2=30  a2<30  g7=38  g8<38  e8<38  
+
+Evaluated 1,854 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for W is at g7 (score 38)
+				8 B W B B - B - W 
+				7 B W W W W W W W 
+				6 B B B B B B B W 
+				5 B W B B B B B W 
+				4 B B W B B W B W 
+				3 B B B W B B B W 
+				2 - B B B B W - W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W24 B=33
+Seeking to end of board
+
+ 8: g1=21  g2=26  g8<26  e8<26  
+
+Evaluated 1,243 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for B is at g2 (score 26)
+				8 B W B B - B - W 
+				7 B W W W W W W W 
+				6 B B B B B B B W 
+				5 B W B B B B B W 
+				4 B B W B B W B W 
+				3 B B B W B B B W 
+				2 - B B B B B B W 
+				1 - W W W W W - - 
+				  a b c d e f g h 
+						    Score: W23 B=35
+Seeking to end of board
+
+ 6: h1=35  g1<35  a1=38  a2<38  e8<38  
+
+Evaluated 235 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for W is at a1 (score 38)
+				8 B W B B - B - W 
+				7 B W W W W W W W 
+				6 B B B B B W B W 
+				5 B W B B W B B W 
+				4 B B W W B W B W 
+				3 B B W W B B B W 
+				2 - W B B B B B W 
+				1 W W W W W W - - 
+				  a b c d e f g h 
+						    Score: W29 B=30
+Seeking to end of board
+
+ 6: a2=26  g8<26  e8<26  
+
+Evaluated 171 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for B is at a2 (score 26)
+				8 B W B B - B - W 
+				7 B W W W W W W W 
+				6 B B B B B W B W 
+				5 B W B B W B B W 
+				4 B B W W B W B W 
+				3 B B W W B B B W 
+				2 B B B B B B B W 
+				1 W W W W W W - - 
+				  a b c d e f g h 
+						    Score: W28 B=32
+Seeking to end of board
+
+ 4: h1=34  g1<34  e8=38  
+
+Evaluated 28 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for W is at e8 (score 38)
+				8 B W W W W B - W 
+				7 B W W W W W W W 
+				6 B B B B B W B W 
+				5 B W B B W B B W 
+				4 B B W W B W B W 
+				3 B B W W B B B W 
+				2 B B B B B B B W 
+				1 W W W W W W - - 
+				  a b c d e f g h 
+						    Score: W31 B=30
+Seeking to end of board
+
+ 4: g8=26  
+
+Evaluated 9 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for B is at g8 (score 26)
+				8 B W W W W B B W 
+				7 B W W W W B B W 
+				6 B B B B B W B W 
+				5 B W B B W B B W 
+				4 B B W W B W B W 
+				3 B B W W B B B W 
+				2 B B B B B B B W 
+				1 W W W W W W - - 
+				  a b c d e f g h 
+						    Score: W29 B=33
+Seeking to end of board
+
+ 2: h1=34  g1=38  
+
+Evaluated 8 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for W is at g1 (score 38)
+				8 B W W W W B B W 
+				7 B W W W W B B W 
+				6 B B B B B W B W 
+				5 B W B B W B B W 
+				4 B B W W B W B W 
+				3 B B W W W B B W 
+				2 B B B B B W B W 
+				1 W W W W W W W - 
+				  a b c d e f g h 
+						    Score: W32 B=31
+Seeking to end of board
+
+
+Evaluated 0 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+B has to pass.
+						    Score: W32 B=31
+Seeking to end of board
+
+ 2: h1=38  
+
+Evaluated 4 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+best move for W is at h1 (score 38)
+				8 B W W W W B B W 
+				7 B W W W W B B W 
+				6 B B W B B W B W 
+				5 B W B W W B B W 
+				4 B B W W W W B W 
+				3 B B W W W W B W 
+				2 B B B B B W W W 
+				1 W W W W W W W W 
+				  a b c d e f g h 
+						    Score: W38 B=26
+Seeking to end of board
+
+
+Evaluated 0 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+B has to pass.
+						    Score: W38 B=26
+Seeking to end of board
+
+
+Evaluated 0 boards in 0:00.000 -2,147,483,648 boards/sec  Total time used: 6:02.268
+W has to pass.
+						    Score: W38 B=26

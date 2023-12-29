@@ -5,13 +5,17 @@
         "SupportedPlatforms": "linux-x64,linux-arm64,win-x64",
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
-    "Parameters": { },
+    "Parameters": {
+        "Duration": "00:01:40"
+    },
     "Actions": [
         {
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "MD5",
-                "CommandArguments": "speed -elapsed -seconds 100 md5",
+                "MetricScenario": "md5",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} md5",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -20,7 +24,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA1",
-                "CommandArguments": "speed -elapsed -seconds 100 sha1",
+                "MetricScenario": "sha1",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} sha1",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -29,7 +35,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA256",
-                "CommandArguments": "speed -elapsed -seconds 100 sha256",
+                "MetricScenario": "sha256",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} sha256",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -38,7 +46,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "SHA512",
-                "CommandArguments": "speed -elapsed -seconds 100 sha512",
+                "MetricScenario": "sha512",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} sha512",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -47,7 +57,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "DES-EDE3",
-                "CommandArguments": "speed -elapsed -seconds 100 des-ede3",
+                "MetricScenario": "des-ede3",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} des-ede3",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -56,7 +68,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-128-cbc",
+                "MetricScenario": "aes-128-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} aes-128-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -65,7 +79,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-192-cbc",
+                "MetricScenario": "aes-192-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} aes-192-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -74,7 +90,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "AES-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 aes-256-cbc",
+                "MetricScenario": "aes-256-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} aes-256-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -83,7 +101,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-128-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-128-cbc",
+                "MetricScenario": "camellia-128-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} camellia-128-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -92,7 +112,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-192-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-192-cbc",
+                "MetricScenario": "camellia-192-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} camellia-192-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -101,7 +123,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "CAMELLIA-256-CBC",
-                "CommandArguments": "speed -elapsed -seconds 100 camellia-256-cbc",
+                "MetricScenario": "camellia-256-cbc",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} camellia-256-cbc",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -110,7 +134,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "RSA2048",
-                "CommandArguments": "speed -elapsed -seconds 100 rsa2048",
+                "MetricScenario": "rsa2048",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} rsa2048",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }
@@ -119,7 +145,9 @@
             "Type": "OpenSslExecutor",
             "Parameters": {
                 "Scenario": "RSA4096",
-                "CommandArguments": "speed -elapsed -seconds 100 rsa4096",
+                "MetricScenario": "rsa4096",
+                "CommandArguments": "speed -elapsed -seconds {Duration.TotalSeconds} rsa4096",
+                "Duration": "$.Parameters.Duration",
                 "PackageName": "openssl",
                 "Tags": "CPU,OpenSSL,Cryptography"
             }

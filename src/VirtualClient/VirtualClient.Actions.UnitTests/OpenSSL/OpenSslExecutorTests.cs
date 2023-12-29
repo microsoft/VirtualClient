@@ -185,7 +185,8 @@ namespace VirtualClient.Actions.CpuPerformance
                 Assert.IsNotEmpty(messages);
                 Assert.True(messages.Count() == 6);
                 Assert.IsTrue(messages.All(msg => msg.Item3 as EventContext != null));
-                Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["ScenarioName"].ToString() == "OpenSSL Speed"));
+                Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["ToolName"].ToString() == "OpenSSL"));
+                Assert.IsTrue(messages.All(msg => (msg.Item3 as EventContext).Properties["ScenarioName"].ToString() == "aes-256-cbc"));
             }
         }
 
@@ -235,6 +236,8 @@ namespace VirtualClient.Actions.CpuPerformance
             // Profile parameters.
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
+                { "Scenario", "AES-256-CBC" },
+                { "MetricScenario", "aes-256-cbc" },
                 { "CommandArguments", "speed -elapsed -seconds 100 aes-256-cbc" },
                 { "PackageName", "OpenSSL" },
                 { "Tags", "CPU,OpenSSL,Cryptography" }

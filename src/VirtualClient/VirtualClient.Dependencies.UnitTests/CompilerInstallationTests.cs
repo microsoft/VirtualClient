@@ -66,6 +66,8 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
+                "sudo update-alternatives --remove-all gcc",
+                "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-123 g++-123 gfortran-123 -y --quiet",
@@ -107,7 +109,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, commandExecuted);
+            Assert.AreEqual(7, commandExecuted);
         }
 
         [Test]
@@ -239,6 +241,8 @@ namespace VirtualClient.Dependencies
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
             List<string> expectedCommands = new List<string>()
             {
+                "sudo update-alternatives --remove-all gcc",
+                "sudo update-alternatives --remove-all gfortran",
                 "sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y",
                 "sudo apt update",
                 "sudo apt install build-essential gcc-10 g++-10 gfortran-10 -y --quiet",
@@ -281,7 +285,7 @@ namespace VirtualClient.Dependencies
                 await compilerInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
             }
 
-            Assert.AreEqual(5, commandExecuted);
+            Assert.AreEqual(7, commandExecuted);
         }
 
         [Test]

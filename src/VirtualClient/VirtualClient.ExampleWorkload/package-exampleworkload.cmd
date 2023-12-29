@@ -10,7 +10,7 @@ call dotnet restore %~dp0VirtualClient.ExampleWorkload.csproj --force
 echo:
 echo [Creating Package: Example Workload]
 echo --------------------------------------------------
-call dotnet pack %~dp0VirtualClient.ExampleWorkload.csproj --force --no-restore --no-build -c Debug -p:NuspecFile=%~dp0\exampleworkload.nuspec && echo: || Goto :Error
+call dotnet pack %~dp0VirtualClient.ExampleWorkload.csproj --force --no-restore --no-build -c Release -p:NuspecFile=%~dp0\exampleworkload.nuspec && echo: || Goto :Error
 
 Goto :End
 

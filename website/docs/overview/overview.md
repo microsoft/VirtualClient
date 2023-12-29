@@ -51,6 +51,7 @@ for using them.
 |------------------------|--------------------|---------------------------------------|----------------|
 | [7zip](https://microsoft.github.io/VirtualClient/docs/workloads/compression/7zip) | Compression | linux-x64, linux-arm64 | [GNU LGPL](https://www.7-zip.org/faq.html) |
 | [AspNetBench](https://microsoft.github.io/VirtualClient/docs/workloads/aspnetbench/aspnetbench) | ASP.NET Web Server.  | linux-x64, linux-arm64, win-x64, win-arm64 | [MIT (ASP.NET)](https://github.com/dotnet/aspnetcore/blob/main/LICENSE.txt)<br/>[MIT (Bombardier)](https://github.com/codesenberg/bombardier/blob/master/LICENSE) |
+| [BlenderBenchmark](https://microsoft.github.io/VirtualClient/docs/workloads/blenderbenchmark) | Graphics Rendering Performance | win-x64 | [GNU LGPL](https://projects.blender.org/infrastructure/blender-open-data/src/branch/main/LICENSE) |
 | [CoreMark](https://microsoft.github.io/VirtualClient/docs/workloads/coremark/coremark) | CPU Performance | linux-x64, linux-arm64 | [Apache+Custom](https://github.com/eembc/coremark/blob/main/LICENSE.md)  |
 | [CoreMark Pro](https://microsoft.github.io/VirtualClient/docs/workloads/coremark) | Precision CPU | linux-x64, linux-arm64, win-x64, win-arm64 | [Apache+Custom](https://github.com/eembc/coremark-pro/blob/main/LICENSE.md) |
 | [CPS](https://microsoft.github.io/VirtualClient/docs/workloads/network-suite/network-suite.md) | Network Connection Reliability | linux-x64, linux-arm64, win-x64, win-arm64 | Microsoft-Developed  |
@@ -91,6 +92,7 @@ for using them.
 | [Stress-ng](https://microsoft.github.io/VirtualClient/docs/workloads/stress-ng/stress-ng.md) | Fault Tolerance | linux-x64, linux-arm64 | [GPL-2.0](https://github.com/ColinIanKing/stress-ng/blob/master/COPYING)  |
 | [SuperBench](https://microsoft.github.io/VirtualClient/docs/workloads/superbenchmark/superbenchmark.md) | Machine Learning | linux-x64 | [MIT](https://github.com/microsoft/superbenchmark/blob/main/LICENSE)  |
 | [Sysbench OLTP w/MySQL](https://microsoft.github.io/VirtualClient/docs/workloads/sysbench-oltp/sysbench-oltp.md) | Relational Database Performance | linux-x64, linux-arm64 | [GPL-2.0 (Sysbench)](https://github.com/akopytov/sysbench/blob/master/COPYING)<br/>[GPL-2.0 (MySQL)](https://www.mysql.com/about/legal/licensing/oem/) |
+| [Wrath Othello](https://github.com/ricomariani/wrath-othello) | CPU Performance | linux-x64, linux-arm64, win-x64, win-arm64 | [Public Domain](https://github.com/ricomariani/wrath-othello/blob/main/LICENSE.md) |
 
 ## Supported System Monitoring Facilities
 The platform supports capturing information from the system in the background while workloads are running. The following list of monitoring facilities are available in the Virtual Client.

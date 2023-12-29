@@ -38,11 +38,6 @@ namespace VirtualClient
         public const string BuiltInSystemToolsPackageName = "systemtools";
 
         /// <summary>
-        /// The name of the built-in package containing the wget/wget2 toolset.
-        /// </summary>
-        public const string BuiltInWgetPackageName = "wget";
-
-        /// <summary>
         /// The environment variable that can be used by the user to define the location of
         /// VC packages.
         /// </summary>

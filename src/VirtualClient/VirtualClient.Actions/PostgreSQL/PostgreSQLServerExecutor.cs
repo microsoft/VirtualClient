@@ -181,9 +181,12 @@ namespace VirtualClient.Actions
                 // server is running on a system separate from the client system.
                 if (this.IsMultiRoleLayout())
                 {
-                    this.Logger.LogMessage($"{this.TypeName}.KeepServerAlive", telemetryContext);
-                    await this.WaitAsync(cancellationToken);
-                    this.SetServerOnline(false);
+                    using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
+                    {
+                        this.Logger.LogMessage($"{this.TypeName}.KeepServerAlive", telemetryContext);
+                        await this.WaitAsync(cancellationToken);
+                        this.SetServerOnline(false);
+                    }
                 }
             }
             catch

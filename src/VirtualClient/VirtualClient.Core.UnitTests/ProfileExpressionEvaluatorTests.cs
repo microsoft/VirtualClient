@@ -498,6 +498,109 @@ namespace VirtualClient
         }
 
         [Test]
+        public async Task ProfileExpressionEvaluatorSupportsSystemMemoryBytesReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            long expectedKilobytes = 16777216;
+            long expectedBytes = expectedKilobytes * 1024;
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{SystemMemoryBytes}", expectedBytes.ToString() },
+                { "--max-memory={SystemMemoryBytes}", $"--max-memory={expectedBytes}" },
+                { "--min-memory={SystemMemoryBytes} --someFlag --max-memory={SystemMemoryBytes}", $"--min-memory={expectedBytes} --someFlag --max-memory={expectedBytes}" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsSystemMemoryKilobytesReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            long expectedKilobytes = 16777216;
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{SystemMemoryKilobytes}", expectedKilobytes.ToString() },
+                { "--max-memory={SystemMemoryKilobytes}", $"--max-memory={expectedKilobytes}" },
+                { "--min-memory={SystemMemoryKilobytes} --someFlag --max-memory={SystemMemoryKilobytes}", $"--min-memory={expectedKilobytes} --someFlag --max-memory={expectedKilobytes}" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsSystemMemoryMegabytesReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            long expectedKilobytes = 16777216;
+            long expectedMegabytes = expectedKilobytes / 1024;
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{SystemMemoryMegabytes}", expectedMegabytes.ToString() },
+                { "--max-memory={SystemMemoryMegabytes}", $"--max-memory={expectedMegabytes}" },
+                { "--min-memory={SystemMemoryMegabytes} --someFlag --max-memory={SystemMemoryMegabytes}", $"--min-memory={expectedMegabytes} --someFlag --max-memory={expectedMegabytes}" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorSupportsSystemMemoryGigabytesReferences()
+        {
+            this.SetupDefaults(PlatformID.Win32NT);
+
+            long expectedKilobytes = 16777216;
+            long expectedGigabytes = (expectedKilobytes / 1024) / 1024;
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{SystemMemoryGigabytes}", expectedGigabytes.ToString() },
+                { "--max-memory={SystemMemoryGigabytes}", $"--max-memory={expectedGigabytes}" },
+                { "--min-memory={SystemMemoryGigabytes} --someFlag --max-memory={SystemMemoryGigabytes}", $"--min-memory={expectedGigabytes} --someFlag --max-memory={expectedGigabytes}" }
+            };
+
+            this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new MemoryInfo(totalSystemMemoryKb: expectedKilobytes));
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public async Task ProfileExpressionEvaluatorSupportsFunctionReferences()
         {
             this.SetupDefaults(PlatformID.Win32NT);

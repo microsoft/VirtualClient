@@ -167,7 +167,6 @@ namespace VirtualClient.Dependencies
                 using (IProcessProxy process = this.systemManager.ProcessManager.CreateProcess(compiler, "--version"))
                 {
                     this.Logger.LogTraceMessage($"Confirming expected compiler version installed...");
-                    Console.WriteLine(compiler + "1");
 
                     await process.StartAndWaitAsync(cancellationToken);
 
@@ -214,6 +213,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.Ubuntu:
                 case LinuxDistribution.Debian:
                     // default to 10
+                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     gccVersion = (string.IsNullOrEmpty(gccVersion)) ? "10" : gccVersion;
                     await this.ExecuteCommandAsync("add-apt-repository", $"ppa:ubuntu-toolchain-r/test -y", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("apt", $"update", Environment.CurrentDirectory, telemetryContext, cancellationToken);
@@ -225,6 +225,7 @@ namespace VirtualClient.Dependencies
                 case LinuxDistribution.CentOS8:
                 case LinuxDistribution.RHEL8:
                 case LinuxDistribution.Mariner:
+                    await this.RemoveAlternativesAsync(telemetryContext, cancellationToken);
                     await this.ExecuteCommandAsync("dnf", @$"install make gcc-toolset-{gccVersion} gcc-toolset-{gccVersion}-gcc-gfortran -y --quiet", Environment.CurrentDirectory, telemetryContext, cancellationToken);
                     await this.SetGccPriorityAsync(gccVersion, telemetryContext, cancellationToken);
 
@@ -232,6 +233,33 @@ namespace VirtualClient.Dependencies
 
                 default:
                     throw new PlatformNotSupportedException($"This Linux distribution '{distro}' is not supported for this profile.");
+            }
+        }
+
+        private async Task RemoveAlternativesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        {
+            string[] compilers =
+            {
+                "gcc",
+                "gfortran"
+            };
+
+            // due to the following error:
+            //      update-alternatives: error: alternative g++ can't be slave of gcc: it is a master alternative
+            // must remove alternatives from the VM to avoid errors, then set all of them together
+
+            foreach (string compiler in compilers)
+            {
+                try
+                {
+                    await this.ExecuteCommandAsync("update-alternatives", $"--remove-all {compiler}", Environment.CurrentDirectory, telemetryContext, cancellationToken);
+                }
+                catch
+                {
+                    // the message is:
+                    //      "error: no alternatives for g++"
+                    // so we can continue as normal; non-breaking
+                }
             }
         }
 
@@ -248,6 +276,7 @@ namespace VirtualClient.Dependencies
 
             // For some update path, the cpp can't be update-alternative by a gcc, so needs a separate call.
             string updateAlternativeArgumentCpp = $"--install /usr/bin/cpp cpp /usr/bin/cpp-{gccVersion} {gccVersion}0";
+
             await this.ExecuteCommandAsync("update-alternatives", updateAlternativeArgumentCpp, Environment.CurrentDirectory, telemetryContext, cancellationToken);
         }
 

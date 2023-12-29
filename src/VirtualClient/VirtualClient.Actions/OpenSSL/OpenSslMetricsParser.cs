@@ -116,7 +116,7 @@ namespace VirtualClient.Actions
                 this.CipherResults = cipherResults;
             }
 
-            if (this.TryParseRSAPerformanceResults(out DataTable rsaResults))
+            if (this.TryParseSignVerifyPerformanceResults(out DataTable rsaResults))
             {
                 rsaResultsValid = true;
                 this.RSAResults = rsaResults;
@@ -135,7 +135,7 @@ namespace VirtualClient.Actions
                 foreach (DataRow row in this.CipherResults.Rows)
                 {
                     // Ex: aes-256-cbc (8192 bytes)
-                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnBytes]}-byte".ToLowerInvariant();
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnBytes]}-byte";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnKilobytesPerSec];
 
                     // There is an anomaly that sometimes happens where the result is a negative number. It indicates
@@ -156,14 +156,14 @@ namespace VirtualClient.Actions
             {
                 foreach (DataRow row in this.RSAResults.Rows)
                 {
-                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}".ToLowerInvariant();
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
 
                     if (metricValue >= 0)
                     {
                         if (metricName.Contains("/"))
                         {
-                            metrics.Add(new Metric(metricName, metricValue, $"row[OpenSslMetricsParser.ColumnUnit]", MetricRelativity.HigherIsBetter));
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
                         }
                         else
                         {
@@ -274,7 +274,7 @@ namespace VirtualClient.Actions
             return parsedSuccessfully;
         }
 
-        private bool TryParseRSAPerformanceResults(out DataTable results)
+        private bool TryParseSignVerifyPerformanceResults(out DataTable results)
         {
             results = null;
             bool parsedSuccessfully = false;
@@ -290,7 +290,7 @@ namespace VirtualClient.Actions
             // Example:
             //                    sign verify    sign/s verify/s
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
-            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"(rsa\s*[0-9\.]+\s*bits)(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase);
+            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
             if (rsaPerformanceResults?.Any() == true)
             {
                 // return datatable with rsa name, column, value per row

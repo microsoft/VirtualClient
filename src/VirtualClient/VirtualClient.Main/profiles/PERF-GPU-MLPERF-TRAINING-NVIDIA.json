@@ -1,0 +1,100 @@
+{
+  "Description": "MLPerf Training GPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "10:00:00",
+    "SupportedPlatforms": "linux-x64",
+    "SupportedOperatingSystems": "Ubuntu",
+    "SpecialRequirements": "This is an Nvidia GPU-specialized workload. It depends upon the system having an Nvidia GPU card/chip. Requires an OSDisk of >=256GB size and Data disk of >=8TB size",
+    "SupportedImplementations": "Visit the link https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks enter the implementation folder to see supported implementations.",
+    "SupportedConfigFiles": "Visit the link https://github.com/mlcommons/training_results_v2.1/tree/main/NVIDIA/benchmarks/bert/implementations/pytorch-22.09 for each benchmark and implementation you can the supported "
+  },
+  "Parameters": {
+    "Username": null,
+    "DiskFilter": "BiggestSize",
+    "LinuxCudaVersion": "12.0",
+    "LinuxDriverVersion": "525",
+    "LinuxLocalRunFile": "https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run"
+  },
+  "Actions": [
+    {
+      "Type": "MLPerfTrainingExecutor",
+      "Parameters": {
+        "Scenario": "training-mlperf-bert-batchsize-45-gpu-8",
+        "Model": "bert",
+        "Username": "$.Parameters.Username",
+        "BatchSize": "45",
+        "Implementation": "pytorch-22.09",
+        "ContainerName": "language_model",
+        "DataPath": "mlperf-training-data-bert.1.0.0",
+        "GPUNum": "8",
+        "ConfigFile": "config_DGXA100_1x8x56x1.sh",
+        "PackageName": "mlperftraining"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "FormatDisks",
+      "Parameters": {
+        "Scenario": "InitializeDisks"
+      }
+    },
+    {
+      "Type": "MountDisks",
+      "Parameters": {
+        "Scenario": "MountDataDisk",
+        "MountPointPrefix": "/mlperftraining",
+        "DiskFilter": "BiggestSize"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallMLPerfTrainingPackage",
+        "BlobContainer": "packages",
+        "BlobName": "mlperftraining.2.1.zip",
+        "PackageName": "mlperftraining",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "NvidiaCudaInstallation",
+      "Parameters": {
+        "Scenario": "InstallNvidiaCuda",
+        "LinuxCudaVersion": "$.Parameters.LinuxCudaVersion",
+        "LinuxDriverVersion": "$.Parameters.LinuxDriverVersion",
+        "Username": "$.Parameters.Username",
+        "LinuxLocalRunFile": "$.Parameters.LinuxLocalRunFile"
+      }
+    },
+    {
+      "Type": "DockerInstallation",
+      "Parameters": {
+        "Scenario": "InstallDocker"
+      }
+    },
+    {
+      "Type": "NvidiaContainerToolkitInstallation",
+      "Parameters": {
+        "Scenario": "InstallNvidiaContainerToolkit"
+      }
+    },
+    {
+      "Type": "DCGMIInstallation",
+      "Parameters": {
+        "Scenario": "InstallDCGMI"
+      }
+    },
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallMLPerfTrainingDataPackage",
+        "BlobContainer": "packages",
+        "BlobName": "mlperf-training-data-bert.1.0.0.zip",
+        "PackageName": "mlperftrainingdata_bert",
+        "Extract": true,
+        "InstallationPath": "/mlperftraining0"
+      }
+    }
+  ]
+}

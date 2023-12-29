@@ -75,7 +75,7 @@ the server between applications in a Docker swarm environment.
   The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
 
   :::caution
-  > The value for parameter 'ConnectionCount' should be greater than or equals to the value for parameter 'ThreadCount'.
+ > The value for parameter 'ConnectionCount' should be greater than or equals to the value for parameter 'ThreadCount'.
   :::
 
   | Parameter                 | Purpose                                                                         | Default value |

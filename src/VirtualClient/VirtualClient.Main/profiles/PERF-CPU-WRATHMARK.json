@@ -1,0 +1,61 @@
+{
+  "Description": "Wrathmark CPU Performance Workload",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "CBL-Mariner,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "DotNetVersion": "8.0.100",
+    "TargetFramework": "net8.0",
+    "Subfolder": "wrath-sharp-std-arrays",
+    "WrathmarkArgs": "xlt endgame.txt"
+  },
+  "Actions": [
+    {
+      "Type": "WrathmarkWorkloadExecutor",
+      "Parameters": {
+        "Scenario": "WrathmarkBenchmark",
+        "PackageName": "wrathmark",
+        "DotNetSdkPackageName": "dotnetsdk",
+        "TargetFramework": "$.Parameters.TargetFramework",
+        "Subfolder": "$.Parameters.Subfolder",
+        "WrathmarkArgs": "$.Parameters.WrathmarkArgs",
+        "Tags": "CPU"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "ChocolateyInstallation",
+      "Parameters": {
+        "Scenario": "InstallChocolatey",
+        "PackageName": "chocolatey"
+      }
+    },
+    {
+      "Type": "ChocolateyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallGit",
+        "PackageName": "chocolatey",
+        "Packages": "git"
+      }
+    },
+    {
+      "Type": "GitRepoClone",
+      "Parameters": {
+        "Scenario": "CloneWrathOthelloRepo",
+        "RepoUri": "https://github.com/ricomariani/wrath-othello.git",
+        "PackageName": "wrathmark"
+      }
+    },
+    {
+      "Type": "DotNetInstallation",
+      "Parameters": {
+        "Scenario": "InstallDotNetSdk",
+        "DotNetVersion": "$.Parameters.DotNetVersion",
+        "PackageName": "dotnetsdk"
+      }
+    }
+  ]
+}
