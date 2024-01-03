@@ -291,15 +291,18 @@ namespace VirtualClient.Actions
             //                    sign verify    sign/s verify/s
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
 
+            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+           
             IEnumerable<string> ecdhColumns = new List<string>()
             {
                 "op",
                 "op/s"
             };
-            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
             // Example:
             //                           op      op/s
             // 448 bits ecdh(X448)   0.0000s  42896.0
+
             if (rsaPerformanceResults?.Any() == false)
             {
                 rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
@@ -316,28 +319,9 @@ namespace VirtualClient.Actions
                     new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
                 });
 
-                // Match results for op, op/s
                 foreach (Match match in rsaPerformanceResults)
                 {
-                    if (match.Groups.Count == 4
-                       && match.Groups[2].Captures?.Any() == true)
-                    {
-                        int typeIndex = 0;
-                        string rsaAlgorithm = match.Groups[1].Value.Trim();
-                        for (int i = 2; i < 4; i++)
-                        {
-                            Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
-                            if (numericMatch.Success)
-                            {
-                                parsedSuccessfully = true;
-                                double value = double.Parse(numericMatch.Value.Trim());
-                                rsaResults.Rows.Add(rsaAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
-                            }
-
-                            typeIndex++;
-                        }
-                    } 
-
+                    // Match results for sign, verify, sign/s, verify/s
                     if (match.Groups.Count == 6
                         && match.Groups[2].Captures?.Any() == true)
                     {
@@ -351,6 +335,26 @@ namespace VirtualClient.Actions
                                 parsedSuccessfully = true;
                                 double value = double.Parse(numericMatch.Value.Trim());
                                 rsaResults.Rows.Add(rsaAlgorithm, rsaColumns.ElementAt(typeIndex), value);
+                            }
+
+                            typeIndex++;
+                        }
+                    }
+
+                    // Match results for op, op/s
+                    if (match.Groups.Count == 4
+                       && match.Groups[2].Captures?.Any() == true)
+                    {
+                        int typeIndex = 0;
+                        string rsaAlgorithm = match.Groups[1].Value.Trim();
+                        for (int i = 2; i < 4; i++)
+                        {
+                            Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
+                            if (numericMatch.Success)
+                            {
+                                parsedSuccessfully = true;
+                                double value = double.Parse(numericMatch.Value.Trim());
+                                rsaResults.Rows.Add(rsaAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
                             }
 
                             typeIndex++;
