@@ -292,21 +292,6 @@ namespace VirtualClient.Actions
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
 
             MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-           
-            IEnumerable<string> ecdhColumns = new List<string>()
-            {
-                "op",
-                "op/s"
-            };
-
-            // Example:
-            //                           op      op/s
-            // 448 bits ecdh(X448)   0.0000s  42896.0
-
-            if (rsaPerformanceResults?.Any() == false)
-            {
-                rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-            }
 
             if (rsaPerformanceResults?.Any() == true)
             {
@@ -340,13 +325,53 @@ namespace VirtualClient.Actions
                             typeIndex++;
                         }
                     }
+                }
 
+                if (parsedSuccessfully)
+                {
+                    results = rsaResults;
+                }
+            }
+
+            return parsedSuccessfully;
+        }
+
+        private bool TryParseOpsPerformanceResults(out DataTable results)
+        {
+            results = null;
+            bool parsedSuccessfully = false;
+
+            IEnumerable<string> ecdhColumns = new List<string>()
+            {
+                "op",
+                "op/s"
+            };
+
+            // Example:
+            //                           op      op/s
+            // 448 bits ecdh(X448)   0.0000s  42896.0
+
+            MatchCollection opsPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (opsPerformanceResults?.Any() == true)
+            {
+                // return datatable with rsa name, column, value per row
+                DataTable opsResults = new DataTable();
+                opsResults.Columns.AddRange(new DataColumn[]
+                {
+                    new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
+                });
+
+                foreach (Match match in opsPerformanceResults)
+                {
                     // Match results for op, op/s
                     if (match.Groups.Count == 4
                        && match.Groups[2].Captures?.Any() == true)
                     {
                         int typeIndex = 0;
-                        string rsaAlgorithm = match.Groups[1].Value.Trim();
+                        string opsAlgorithm = match.Groups[1].Value.Trim();
                         for (int i = 2; i < 4; i++)
                         {
                             Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
@@ -354,7 +379,7 @@ namespace VirtualClient.Actions
                             {
                                 parsedSuccessfully = true;
                                 double value = double.Parse(numericMatch.Value.Trim());
-                                rsaResults.Rows.Add(rsaAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
+                                opsResults.Rows.Add(opsAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
                             }
 
                             typeIndex++;
@@ -364,7 +389,7 @@ namespace VirtualClient.Actions
 
                 if (parsedSuccessfully)
                 {
-                    results = rsaResults;
+                    results = opsResults;
                 }
             }
 
