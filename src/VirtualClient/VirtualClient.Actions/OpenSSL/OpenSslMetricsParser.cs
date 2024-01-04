@@ -128,7 +128,7 @@ namespace VirtualClient.Actions
                 this.RSAResults = rsaResults;
             }
 
-            if (this.TryParseOpsPerformanceResults(out DataTable opsResults))
+            if (!rsaResultsValid & this.TryParseOpsPerformanceResults(out DataTable opsResults))
             {
                 opsResultsValid = true;
                 this.OPSResults = opsResults;
