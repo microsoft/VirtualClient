@@ -54,6 +54,11 @@ namespace VirtualClient.Actions
         protected DataTable RSAResults { get; private set; }
 
         /// <summary>
+        /// The parsed results of the ops performance output.
+        /// </summary>
+        protected DataTable OPSResults { get; private set; }
+
+        /// <summary>
         /// True if the results have been parsed.
         /// </summary>
         protected bool IsParsed
@@ -108,6 +113,7 @@ namespace VirtualClient.Actions
         {
             bool cipherResultsValid = false;
             bool rsaResultsValid = false;
+            bool opsResultsValid = false;
 
             IEnumerable<int> bufferByteSizes = this.GetCipherBufferByteSizes();
             if (this.TryParseCipherPerformanceResults(bufferByteSizes, out DataTable cipherResults))
@@ -122,7 +128,13 @@ namespace VirtualClient.Actions
                 this.RSAResults = rsaResults;
             }
 
-            if (!cipherResultsValid && !rsaResultsValid)
+            if (this.TryParseOpsPerformanceResults(out DataTable opsResults))
+            {
+                opsResultsValid = true;
+                this.OPSResults = opsResults;
+            }
+
+            if (!cipherResultsValid && !rsaResultsValid && !opsResultsValid)
             {
                 throw new SchemaException(
                     $"Invalid results format. The results provided to the parser are not valid/complete OpenSSL speed workload results. Results: {Environment.NewLine}" +
@@ -155,6 +167,27 @@ namespace VirtualClient.Actions
             if (rsaResultsValid)
             {
                 foreach (DataRow row in this.RSAResults.Rows)
+                {
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
+                    double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
+
+                    if (metricValue >= 0)
+                    {
+                        if (metricName.Contains("/"))
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
+                        }
+                        else
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter));
+                        }
+                    }
+                }
+            }
+
+            if (opsResultsValid)
+            {
+                foreach (DataRow row in this.OPSResults.Rows)
                 {
                     string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
