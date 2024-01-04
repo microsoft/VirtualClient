@@ -300,6 +300,7 @@ namespace VirtualClient.Actions.Kafka
                                 if (this.CommandType != KafkaCommandType.Setup.ToString())
                                 {
                                     string output = process.StandardOutput.ToString();
+                                    telemetryContext.AddContext(this.CommandType, output);
                                     this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }

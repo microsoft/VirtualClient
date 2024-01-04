@@ -188,11 +188,6 @@
                     return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
                 }
             }
-
-            /// <summary>
-            /// The port on which the Zookeeper server are running.
-            /// </summary>
-            public int ZookeeperPort { get; set; }
         }
     }
 }

@@ -98,6 +98,10 @@ namespace VirtualClient
         /// <param name="runElevated">True to run the process with elevated privileges. Default = false</param>
         /// <param name="username">The username to use for executing the command. Note that this is applied ONLY for Unix/Linux scenarios.</param>
         /// <param name="beforeExecution">Optional delegate/action allows the user to configure the process after creation but before execution.</param>
+        /// <param name="timeout">
+        /// An absolute timeout to apply for the case that the process does not finish in the amount of time expected. If the
+        /// timeout is reached a <see cref="TimeoutException"/> exception will be thrown.
+        /// </param>
         /// <returns>The process that executed the command.</returns>
         public static async Task<IProcessProxy> ExecuteCommandAsync(
             this VirtualClientComponent component,
@@ -108,12 +112,13 @@ namespace VirtualClient
             CancellationToken cancellationToken,
             bool runElevated = false,
             string username = null,
-            Action<IProcessProxy> beforeExecution = null)
+            Action<IProcessProxy> beforeExecution = null,
+            TimeSpan? timeout = null)
         {
             IProcessProxy process = component.ProcessCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated, username, beforeExecution);
             if (!cancellationToken.IsCancellationRequested)
             {
-                await process.StartAndWaitAsync(cancellationToken)
+                await process.StartAndWaitAsync(cancellationToken, timeout)
                     .ConfigureAwait(false);
             }
 

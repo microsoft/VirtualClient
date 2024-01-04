@@ -52,86 +52,89 @@ namespace VirtualClient.Actions
                     .Select(item => Regex.Replace(item, "\\s(.*)", string.Empty))
                     .ToList();
 
-                // The metric values are read in the order at which they exist within the Kafka Producer
-                // benchmark CSV output.
-                if (double.TryParse(values[0], out double totalRecordsSent))
+                if (values.Count > 7)
                 {
-                    metrics.Add(new Metric(
-                        "Total_Records_Sent",
-                        totalRecordsSent,
-                        MetricUnit.Operations,
-                        relativity: MetricRelativity.Undefined,
-                        description: "Total records sent."));
-                }
+                    // The metric values are read in the order at which they exist within the Kafka Producer
+                    // benchmark CSV output.
+                    if (double.TryParse(values[0], out double totalRecordsSent))
+                    {
+                        metrics.Add(new Metric(
+                            "Total_Records_Sent",
+                            totalRecordsSent,
+                            MetricUnit.Operations,
+                            relativity: MetricRelativity.Undefined,
+                            description: "Total records sent."));
+                    }
 
-                if (double.TryParse(values[1], out double recordsPerSec))
-                {
-                    metrics.Add(new Metric(
-                        "Records_Per_Sec",
-                        recordsPerSec,
-                        MetricUnit.OperationsPerSec,
-                        relativity: MetricRelativity.HigherIsBetter,
-                        description: "Records sent per second."));
-                }
+                    if (double.TryParse(values[1], out double recordsPerSec))
+                    {
+                        metrics.Add(new Metric(
+                            "Records_Per_Sec",
+                            recordsPerSec,
+                            MetricUnit.OperationsPerSec,
+                            relativity: MetricRelativity.HigherIsBetter,
+                            description: "Records sent per second."));
+                    }
 
-                if (double.TryParse(values[2], out double latencyAvg))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-Avg",
-                        latencyAvg,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "Average latency for requests/operations during the period of time."));
-                }
+                    if (double.TryParse(values[2], out double latencyAvg))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-Avg",
+                            latencyAvg,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "Average latency for requests/operations during the period of time."));
+                    }
 
-                if (double.TryParse(values[3], out double latencyMax))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-Max",
-                        latencyMax,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "Maximum latency for requests/operations during the period of time."));
-                }
+                    if (double.TryParse(values[3], out double latencyMax))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-Max",
+                            latencyMax,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "Maximum latency for requests/operations during the period of time."));
+                    }
 
-                if (double.TryParse(values[4], out double latencyP50))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-P50",
-                        latencyP50,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "The latency for 50% of all requests was at or under this value."));
-                }
+                    if (double.TryParse(values[4], out double latencyP50))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-P50",
+                            latencyP50,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "The latency for 50% of all requests was at or under this value."));
+                    }
 
-                if (double.TryParse(values[5], out double latencyP95))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-P95",
-                        latencyP95,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "The latency for 95% of all requests was at or under this value."));
-                }
+                    if (double.TryParse(values[5], out double latencyP95))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-P95",
+                            latencyP95,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "The latency for 95% of all requests was at or under this value."));
+                    }
 
-                if (double.TryParse(values[6], out double latencyP99))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-P99",
-                        latencyP99,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "The latency for 99% of all requests was at or under this value."));
-                }
+                    if (double.TryParse(values[6], out double latencyP99))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-P99",
+                            latencyP99,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "The latency for 99% of all requests was at or under this value."));
+                    }
 
-                if (double.TryParse(values[7], out double latencyP99_9))
-                {
-                    metrics.Add(new Metric(
-                        "Latency-P99.9",
-                        latencyP99_9,
-                        MetricUnit.Milliseconds,
-                        relativity: MetricRelativity.LowerIsBetter,
-                        description: "The latency for 99.9% of all requests was at or under this value."));
+                    if (double.TryParse(values[7], out double latencyP99_9))
+                    {
+                        metrics.Add(new Metric(
+                            "Latency-P99.9",
+                            latencyP99_9,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "The latency for 99.9% of all requests was at or under this value."));
+                    }
                 }
             }
         }
