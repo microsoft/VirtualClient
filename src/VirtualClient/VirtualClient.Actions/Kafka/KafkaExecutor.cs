@@ -146,6 +146,20 @@
             }
         }
 
+        /// <summary>
+        /// Returns platform specific formatted command string
+        /// </summary>
+        protected string GetPlatformFormattedCommandArguement(string scriptPath, string scriptArgs)
+        {
+            string commandArgs = $"{scriptPath} {scriptArgs}";
+            if (this.Platform == PlatformID.Win32NT)
+            {
+                commandArgs = $"/c {scriptPath} {scriptArgs}";
+            }
+
+            return commandArgs;
+        }
+
         internal class KafkaServerState : State
         {
             [JsonConstructor]

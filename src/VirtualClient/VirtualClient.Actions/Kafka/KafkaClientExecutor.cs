@@ -270,7 +270,7 @@ namespace VirtualClient.Actions.Kafka
                 relatedContext.AddContext("commandArguments", commands);
 
                 List<Task> workloadProcesses = new List<Task>();
-                string commandArguments = $"/c \"{this.KafkaCommandScriptPath} {this.CommandLine}\"";
+                string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaCommandScriptPath, this.CommandLine);
                 commands.Add($"{this.PlatformSpecificCommandType} {commandArguments}");
 
                 workloadProcesses.Add(this.ExecuteWorkloadAsync(this.PlatformSpecificCommandType, commandArguments, this.KafkaPackagePath, relatedContext, cancellationToken));
@@ -288,7 +288,7 @@ namespace VirtualClient.Actions.Kafka
                     try
                     {
                         DateTime startTime = DateTime.UtcNow;
-                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
