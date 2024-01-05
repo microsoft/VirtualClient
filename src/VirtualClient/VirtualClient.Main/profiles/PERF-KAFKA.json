@@ -41,7 +41,8 @@
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
         "WarmUp": true,
-        "CommandLine": "--create --topic sync-test-rep-three --partitions 6 --replication-factor 3 --bootstrap-server {0}:{Port}",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "CommandLine": "--create --topic sync-test-rep-{ServerInstances} --partitions 6 --replication-factor {ServerInstances} --bootstrap-server {0}:{Port}",
         "Role": "Client",
         "CommandType": "Setup"
       }
@@ -91,7 +92,8 @@
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
-            "CommandLine": "--create --topic async-test-rep-three --partitions 6 --replication-factor 3 --bootstrap-server {0}:{Port}",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "CommandLine": "--create --topic async-test-rep-{ServerInstances} --partitions 6 --replication-factor {ServerInstances} --bootstrap-server {0}:{Port}",
             "Role": "Client",
             "CommandType": "Setup"
           }
