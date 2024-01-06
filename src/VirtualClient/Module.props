@@ -125,9 +125,6 @@
         <!-- SSH.Net -->
         <SSH_Net_PackageVersion>2020.0.2</SSH_Net_PackageVersion>
 
-        <!-- Swashbuckle.AspNetCore -->
-        <Swashbuckle_AspNetCore_PackageVersion>6.1.1</Swashbuckle_AspNetCore_PackageVersion>
-
         <!-- System.CommandLine -->
         <System_CommandLine_PackageVersion>2.0.0-beta1.21308.1</System_CommandLine_PackageVersion>
 
