@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The parsed results of the ops performance output.
         /// </summary>
-        protected DataTable OPSResults { get; private set; }
+        protected DataTable OpsResults { get; private set; }
 
         /// <summary>
         /// True if the results have been parsed.
@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
             if (!signVerifyResultsValid & this.TryParseOpsPerformanceResults(out DataTable opsResults))
             {
                 opsResultsValid = true;
-                this.OPSResults = opsResults;
+                this.OpsResults = opsResults;
             }
 
             if (!cipherResultsValid && !signVerifyResultsValid && !opsResultsValid)
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
 
             if (opsResultsValid)
             {
-                foreach (DataRow row in this.OPSResults.Rows)
+                foreach (DataRow row in this.OpsResults.Rows)
                 {
                     string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
