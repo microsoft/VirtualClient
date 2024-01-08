@@ -8,6 +8,7 @@ namespace VirtualClient.Actions
     using System.Data;
     using System.Linq;
     using System.Text.RegularExpressions;
+    using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
     using DataTableExtensions = VirtualClient.Contracts.DataTableExtensions;
 
@@ -121,9 +122,23 @@ namespace VirtualClient.Actions
              * To:
              * CPU
              * CPU |  Usage |  User  |  Kernel |  Idle
+             * 
+             * Convert:
+             * Group | CPU |  Usage |  User  |  Kernel |  Idle
+             * 
+             * To:
+             * CPU
+             * Group | CPU |  Usage |  User  |  Kernel |  Idle
              */
 
-            this.PreprocessedText = this.PreprocessedText.Replace("CPU", $"CPU{Environment.NewLine}CPU");
+            if (this.PreprocessedText.Contains("Group"))
+            {
+                this.PreprocessedText = this.PreprocessedText.Replace("Group", $"CPU{Environment.NewLine}Group");
+            }
+            else
+            {
+                this.PreprocessedText = this.PreprocessedText.Replace("CPU", $"CPU{Environment.NewLine}CPU");
+            }
 
             /*
              * Replace total: to it's actual TableName "Latency"
@@ -169,6 +184,12 @@ namespace VirtualClient.Actions
         private void ParseCPUResult()
         {
             string sectionName = "CPU";
+
+            if (this.Sections[sectionName].Contains("Group"))
+            {
+                this.Sections[sectionName] = this.ProcessAndUpdateString(this.Sections[sectionName]);
+            }
+
             this.CpuUsage = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
         }
@@ -199,6 +220,25 @@ namespace VirtualClient.Actions
             string sectionName = "Latency";
             this.Latency = DataTableExtensions.ConvertToDataTable(
                 this.Sections[sectionName], DiskSpdMetricsParser.DiskSpdDataTableDelimiter, sectionName, columnNames: null);
+        }
+
+        private string ProcessAndUpdateString(string input)
+        {
+            string[] lines = input.Split('\n');
+
+            lines[0] = lines[0].Replace("Group | CPU", "CPU");
+
+            for (int i = 1; i < lines.Length; i++)
+            {
+                string[] columns = lines[i].Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+                if (columns.Length >= 2 && int.TryParse(columns[0].Trim(), out int group) && int.TryParse(columns[1].Trim(), out int cpu))
+                {
+                    lines[i] = Regex.Replace(lines[i], @$"\b{group}\s*\|\s*{cpu}\b", $"{(64 * group) + cpu}");
+                }
+            }
+
+            return string.Join('\n', lines);
         }
     }
 }
