@@ -51,7 +51,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The parsed results of the rsa algorithm performance output.
         /// </summary>
-        protected DataTable RSAResults { get; private set; }
+        protected DataTable SignVerifyResults { get; private set; }
 
         /// <summary>
         /// The parsed results of the ops performance output.
@@ -112,7 +112,7 @@ namespace VirtualClient.Actions
         public override IList<Metric> Parse()
         {
             bool cipherResultsValid = false;
-            bool rsaResultsValid = false;
+            bool signVerifyResultsValid = false;
             bool opsResultsValid = false;
 
             IEnumerable<int> bufferByteSizes = this.GetCipherBufferByteSizes();
@@ -122,19 +122,19 @@ namespace VirtualClient.Actions
                 this.CipherResults = cipherResults;
             }
 
-            if (this.TryParseSignVerifyPerformanceResults(out DataTable rsaResults))
+            if (this.TryParseSignVerifyPerformanceResults(out DataTable signVerifyResults))
             {
-                rsaResultsValid = true;
-                this.RSAResults = rsaResults;
+                signVerifyResultsValid = true;
+                this.SignVerifyResults = signVerifyResults;
             }
 
-            if (!rsaResultsValid & this.TryParseOpsPerformanceResults(out DataTable opsResults))
+            if (!signVerifyResultsValid & this.TryParseOpsPerformanceResults(out DataTable opsResults))
             {
                 opsResultsValid = true;
                 this.OPSResults = opsResults;
             }
 
-            if (!cipherResultsValid && !rsaResultsValid && !opsResultsValid)
+            if (!cipherResultsValid && !signVerifyResultsValid && !opsResultsValid)
             {
                 throw new SchemaException(
                     $"Invalid results format. The results provided to the parser are not valid/complete OpenSSL speed workload results. Results: {Environment.NewLine}" +
@@ -164,9 +164,9 @@ namespace VirtualClient.Actions
                 }
             }
 
-            if (rsaResultsValid)
+            if (signVerifyResultsValid)
             {
-                foreach (DataRow row in this.RSAResults.Rows)
+                foreach (DataRow row in this.SignVerifyResults.Rows)
                 {
                     string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
@@ -312,7 +312,7 @@ namespace VirtualClient.Actions
             results = null;
             bool parsedSuccessfully = false;
 
-            IEnumerable<string> rsaColumns = new List<string>()
+            IEnumerable<string> columns = new List<string>()
             {
                 "sign",
                 "verify",
@@ -323,28 +323,26 @@ namespace VirtualClient.Actions
             // Example:
             //                    sign verify    sign/s verify/s
             //  rsa 2048 bits 0.000820s 0.000024s   1219.7  41003.9
-
-            MatchCollection rsaPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-            if (rsaPerformanceResults?.Any() == true)
+            MatchCollection signVerifyPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+s)(\s*[0-9\.]+)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+            if (signVerifyPerformanceResults?.Any() == true)
             {
                 // return datatable with rsa name, column, value per row
-                DataTable rsaResults = new DataTable();
-                rsaResults.Columns.AddRange(new DataColumn[]
+                DataTable svResults = new DataTable();
+                svResults.Columns.AddRange(new DataColumn[]
                 {
                     new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
                     new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
                     new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
                 });
 
-                foreach (Match match in rsaPerformanceResults)
+                foreach (Match match in signVerifyPerformanceResults)
                 {
                     // Match results for sign, verify, sign/s, verify/s
                     if (match.Groups.Count == 6
                         && match.Groups[2].Captures?.Any() == true)
                     {
                         int typeIndex = 0;
-                        string rsaAlgorithm = match.Groups[1].Value.Trim();
+                        string algorithm = match.Groups[1].Value.Trim();
                         for (int i = 2; i < 6; i++)
                         {
                             Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
@@ -352,7 +350,7 @@ namespace VirtualClient.Actions
                             {
                                 parsedSuccessfully = true;
                                 double value = double.Parse(numericMatch.Value.Trim());
-                                rsaResults.Rows.Add(rsaAlgorithm, rsaColumns.ElementAt(typeIndex), value);
+                                svResults.Rows.Add(algorithm, columns.ElementAt(typeIndex), value);
                             }
 
                             typeIndex++;
@@ -362,7 +360,7 @@ namespace VirtualClient.Actions
 
                 if (parsedSuccessfully)
                 {
-                    results = rsaResults;
+                    results = svResults;
                 }
             }
 

@@ -3,7 +3,6 @@
 
 namespace VirtualClient
 {
-    using System;
     using System.Collections.Generic;
     using System.IO.Abstractions;
     using System.Reflection;
@@ -15,8 +14,6 @@ namespace VirtualClient
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Microsoft.OpenApi.Models;
-    using Swashbuckle.AspNetCore.SwaggerUI;
     using VirtualClient.Api;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Contracts;
@@ -63,21 +60,6 @@ namespace VirtualClient
         {
             hostBuilder.Configure(apiService =>
             {
-                // Enable middleware to serve generated Swagger as a JSON endpoint.
-                apiService.UseSwagger();
-
-                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-                // specifying the Swagger JSON endpoint.
-                apiService.UseSwaggerUI(doc =>
-                {
-                    doc.SwaggerEndpoint("/swagger/v1/swagger.json", "Virtual Client API (v1)");
-
-                    // "Try it Out" only for GET methods.
-                    doc.SupportedSubmitMethods(SubmitMethod.Delete, SubmitMethod.Get, SubmitMethod.Head, SubmitMethod.Post, SubmitMethod.Put);
-                    doc.RoutePrefix = string.Empty;
-                    doc.ConfigObject.DefaultModelRendering = ModelRendering.Example;
-                });
-
                 apiService.UseApiVersioning();
                 apiService.UseMiddleware<ApiExceptionMiddleware>(dependencies.GetService<ILogger>());
                 apiService.UseMvc();
@@ -146,34 +128,6 @@ namespace VirtualClient
                     options.ReportApiVersions = true;
                     options.AssumeDefaultVersionWhenUnspecified = true;
                     options.DefaultApiVersion = new ApiVersion(1, 0);
-                });
-
-                // Add OpenAPI/Swagger definition.
-                // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio
-                // https://github.com/domaindrivendev/Swashbuckle.AspNetCore
-                // https://idratherbewriting.com/learnapidoc
-                services.AddSwaggerGen(doc =>
-                {
-                    doc.SwaggerDoc("v1", new OpenApiInfo
-                    {
-                        Version = "v1",
-                        Title = "Virtual Client API",
-                        Description = "Virtual Client REST API/service.",
-                        Contact = new OpenApiContact()
-                        {
-                            Name = "Virtual Client Team",
-                            Email = "crc_vc_fte@microsoft.com",
-                            Url = new Uri("https://microsoft.github.io/VirtualClient/")
-                        },
-                        License = new OpenApiLicense
-                        {
-                            Name = "API License",
-                            Url = new Uri("https://github.com/microsoft/VirtualClient/blob/main/LICENSE")
-                        },
-                    });
-
-                    // All JSON input and output objects are expected to be in camel-case.
-                    doc.DescribeAllParametersInCamelCase();
                 });
             });
         }

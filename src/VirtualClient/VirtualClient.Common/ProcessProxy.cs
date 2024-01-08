@@ -348,15 +348,22 @@ namespace VirtualClient.Common
         /// </summary>
         public virtual async Task WaitForExitAsync(CancellationToken cancellationToken, TimeSpan? timeout = null)
         {
-            if (timeout == null)
+            try
             {
-                await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                this.exitTime = DateTime.UtcNow;
+                if (timeout == null)
+                {
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                    this.exitTime = DateTime.UtcNow;
+                }
+                else
+                {
+                    await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
+                    this.exitTime = DateTime.UtcNow;
+                }
             }
-            else
+            catch (OperationCanceledException)
             {
-                await this.UnderlyingProcess.WaitForExitAsync(cancellationToken).WaitAsync(timeout.Value).ConfigureAwait(false);
-                this.exitTime = DateTime.UtcNow;
+                // Expected whenever the CancellationToken receives a cancellation request.
             }
         }
 
