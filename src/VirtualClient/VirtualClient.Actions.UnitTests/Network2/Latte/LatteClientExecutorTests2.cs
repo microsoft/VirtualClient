@@ -49,7 +49,6 @@ namespace VirtualClient.Actions
                     Item<Instructions> stateItem = obj.ToObject<Item<Instructions>>();
                     if (stateItem.Definition.Type == InstructionsType.ClientServerReset)
                     {
-                        // Assert.AreEqual(sendInstructionsExecuted, 0);
                         sendInstructionsExecuted++;
                     }
 
