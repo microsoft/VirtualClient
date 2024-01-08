@@ -9,10 +9,13 @@ namespace VirtualClient.Actions
     using System.IO.Abstractions;
     using System.Linq;
     using System.Runtime.InteropServices;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.FileSystemGlobbing.Internal;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -29,6 +32,7 @@ namespace VirtualClient.Actions
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private string resultsDirectory;
+        private string buildFilePath;
 
         /// <summary>
         /// Constructor
@@ -58,6 +62,30 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// The compilerFlags that are used for make command in compiling LMbench.
+        /// </summary>
+        public string CompilerFlags
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(LMbenchExecutor.CompilerFlags), out IConvertible compilerFlags);
+                return compilerFlags?.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Libraries that should be linked with a program during the linking phase of compilation of lmbench.
+        /// </summary>
+        public string LDLIBS
+        {
+            get
+            {
+                this.Parameters.TryGetValue(nameof(LMbenchExecutor.LDLIBS), out IConvertible ldlibs);
+                return ldlibs?.ToString();
+            }
+        }
+
+        /// <summary>
         /// Executes LMbench
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -65,7 +93,7 @@ namespace VirtualClient.Actions
             try
             {
                 this.Cleanup();
-                await this.ExecuteWorkloadAsync("make", "results", telemetryContext, cancellationToken).ConfigureAwait();
+                await this.ExecuteWorkloadAsync("make", $"results {this.CompilerFlags}", telemetryContext, cancellationToken).ConfigureAwait();
 
                 using (IProcessProxy process = this.systemManagement.ProcessManager.CreateProcess("make", "see", this.LMbenchDirectory))
                 {
@@ -118,6 +146,8 @@ namespace VirtualClient.Actions
 
             this.LMbenchDirectory = workloadPackage.Path;
             this.resultsDirectory = this.PlatformSpecifics.Combine(this.LMbenchDirectory, "results");
+            this.buildFilePath = this.PlatformSpecifics.Combine(workloadPackage.Path, "scripts", "build");
+            await this.ConfigureBuild(this.buildFilePath, cancellationToken);
         }
 
         /// <summary>
@@ -136,6 +166,23 @@ namespace VirtualClient.Actions
             }
 
             return isSupported;
+        }
+
+        private async Task ConfigureBuild(string buildFilePath, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                FileSystemExtensions.ThrowIfFileDoesNotExist(this.fileSystem.File, buildFilePath);
+                string fileContent = await this.fileSystem.File.ReadAllTextAsync(buildFilePath, cancellationToken)
+                .ConfigureAwait(false);
+
+                Regex regexPattern = new Regex(@"LDLIBS=(.*)");
+
+                fileContent = regexPattern.Replace(fileContent, $"LDLIBS=\"{this.LDLIBS}\"", 1);
+
+                await this.fileSystem.File.WriteAllTextAsync(buildFilePath, fileContent, cancellationToken)
+                    .ConfigureAwait(false);
+            }   
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
