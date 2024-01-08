@@ -6,6 +6,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Services.Description;
@@ -25,7 +26,6 @@ namespace VirtualClient.Actions.Kafka
     /// </summary>
     public class KafkaServerExecutor : KafkaExecutor
     {
-        private const int ZookeeperPort = 2181;
         private IFileSystem fileSystem;
         private ISystemManagement systemManagement;
         private List<Task> serverProcesses;
@@ -108,14 +108,14 @@ namespace VirtualClient.Actions.Kafka
         protected string KafkaStopScriptPath { get; set; }
 
         /// <summary>
-        /// Path to zookeeper server package.
+        /// Path to Kafka storage package.
         /// </summary>
-        protected string ZookeeperStartScriptPath { get; set; }
+        protected string KafkaStorageScriptPath { get; set; }
 
         /// <summary>
-        /// Path to zookeeper server package.
+        /// Path to Kafka kraft folder.
         /// </summary>
-        protected string ZookeeperStopScriptPath { get; set; }
+        protected string KafkaKraftDirectoryPath { get; set; }
 
         /// <summary>
         /// Disposes of resources used by the executor including shutting down any
@@ -160,15 +160,22 @@ namespace VirtualClient.Actions.Kafka
                 {
                     this.SetServerOnline(false);
 
-                    await this.DeleteStateAsync(telemetryContext, cancellationToken);
-                    await this.KillServerInstancesAsync(cancellationToken);
-                    await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
-                    await this.SaveStateAsync(telemetryContext, cancellationToken);
+                    await this.ServerApiClient.PollForHeartbeatAsync(TimeSpan.FromMinutes(5), cancellationToken);
 
+                    if (this.ResetServer(telemetryContext))
+                    {
+                        await this.DeleteStateAsync(telemetryContext, cancellationToken);
+                        await this.KillServerInstancesAsync(cancellationToken);
+                        await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
+                        await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
+                    }
+
+                    await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
+
                     if (this.IsMultiRoleLayout())
                     {
-                        await Task.WhenAll(this.serverProcesses);
+                        await Task.WhenAny(this.serverProcesses);
                         await this.StopServersAsync(telemetryContext, cancellationToken);
                         // A cancellation is request, then we allow each of the server instances
                         // to gracefully exit. If a cancellation was not requested, it means that one 
@@ -201,29 +208,20 @@ namespace VirtualClient.Actions.Kafka
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await base.InitializeAsync(telemetryContext, cancellationToken);
-
+            this.KafkaKraftDirectoryPath = this.Combine(this.KafkaPackagePath, "config", "kraft");
             switch (this.Platform)
             {
                 case PlatformID.Win32NT:
                     this.KafkaStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-server-start.bat");
                     this.KafkaStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-server-stop.bat");
-                    this.ZookeeperStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "zookeeper-server-start.bat");
-                    this.ZookeeperStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "zookeeper-server-stop.bat");
+                    this.KafkaStorageScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-storage.bat");
                     break;
 
                 case PlatformID.Unix:
                     this.KafkaStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-server-start.sh");
                     this.KafkaStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-server-stop.sh");
-                    this.ZookeeperStartScriptPath = this.Combine(this.KafkaPackagePath, "bin", "zookeeper-server-start.sh");
-                    this.ZookeeperStopScriptPath = this.Combine(this.KafkaPackagePath, "bin", "zookeeper-server-stop.sh");
+                    this.KafkaStorageScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-storage.sh");
                     break;
-            }
-
-            if (!this.fileSystem.File.Exists(this.ZookeeperStartScriptPath))
-            {
-                throw new DependencyException(
-                    $"Zookeeper executable not found at path '{this.ZookeeperStartScriptPath}'",
-                    ErrorReason.WorkloadDependencyMissing);
             }
 
             if (!this.fileSystem.File.Exists(this.KafkaStartScriptPath))
@@ -233,9 +231,7 @@ namespace VirtualClient.Actions.Kafka
                     ErrorReason.WorkloadDependencyMissing);
             }
 
-            await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperStartScriptPath, this.Platform, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.ZookeeperStopScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaStorageScriptPath, this.Platform, cancellationToken);
             await this.SystemManagement.MakeFileExecutableAsync(this.KafkaStartScriptPath, this.Platform, cancellationToken);
             await this.SystemManagement.MakeFileExecutableAsync(this.KafkaStopScriptPath, this.Platform, cancellationToken);
             this.OpenKafkaPorts(cancellationToken);
@@ -253,36 +249,45 @@ namespace VirtualClient.Actions.Kafka
             {
                 try
                 {
-                    string workingDirectory = this.KafkaPackagePath;
                     List<string> commands = new List<string>();
 
                     relatedContext.AddContext("command", this.PlatformSpecificCommandType);
                     relatedContext.AddContext("commandArguments", commands);
-                    relatedContext.AddContext("workingDir", workingDirectory);
+                    relatedContext.AddContext("workingDir", this.KafkaPackagePath);
 
-                    // Start zookeeper server and wait for it start
-                    string zookeeperCommandArgs = this.GetCommandArguement(this.ZookeeperStartScriptPath, "zookeeper.properties");
-                    commands.Add(zookeeperCommandArgs);
-                    Task zookeeperTask = this.StartZookeeperServerAsync("INFO zookeeper.request_throttler", ZookeeperPort, this.PlatformSpecificCommandType, zookeeperCommandArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
-                    this.serverProcesses.Add(zookeeperTask);
-                    await zookeeperTask;
+                    // Get Cluster Id
+                    string clusterIdCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, "random-uuid");
+                    commands.Add(clusterIdCmdArgs);
+                    string clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, clusterIdCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+                    clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
 
-                    List<IProcessProxy> kafkaProcesses = new List<IProcessProxy>();
                     // Start kafka servers once zookeeper server is started.
                     for (int i = 0; i < this.ServerInstances; i++)
                     {
+                        string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{i + 1}.properties");
+
+                        // Format log directories
+                        string formatLogDirCmdArgs = $"format -t {clusterId} -c {propertiesFilePath}";
+                        formatLogDirCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, formatLogDirCmdArgs);
+                        commands.Add(formatLogDirCmdArgs);
+                        await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+
+                        // Start kafka servers
                         int port = this.Port + i;
-                        string commandArguments = this.GetCommandArguement(this.KafkaStartScriptPath, $"server-{i}.properties");
-                        commands.Add(commandArguments); 
-                        this.serverProcesses.Add(this.RunCommandAsync(
-                            $"Kafka server process exited (port = {port})...", 
-                            this.PlatformSpecificCommandType, 
-                            commandArguments, 
-                            workingDirectory, 
-                            relatedContext, 
+                        string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaStartScriptPath, propertiesFilePath);
+                        commands.Add(commandArguments);
+                        this.serverProcesses.Add(this.StartServerAndWaitForExitAsync(
+                            $"Kafka server process exited (port = {port})...",
+                            this.PlatformSpecificCommandType,
+                            commandArguments,
+                            this.KafkaPackagePath,
+                            relatedContext,
                             cancellationToken,
-                            "Kafka"));
+                            "Kafka",
+                            addCleanupTasks: false));
                     }
+
+                    await Task.Delay(10000);
                 }
                 catch (OperationCanceledException)
                 {
@@ -300,59 +305,49 @@ namespace VirtualClient.Actions.Kafka
             });
         }
 
-        private string GetCommandArguement(string scriptPath, string propertiesFile)
+        private async Task<string> GetClusterId(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaPackagePath, "config", propertiesFile);
-            string commandArgs = $"{scriptPath} {propertiesFilePath}";
-            if (this.Platform == PlatformID.Win32NT)
+            try
             {
-                commandArgs = $"/c {scriptPath} {propertiesFilePath}";
-            }
-
-            return commandArgs;
-        }
-
-        private Task StartZookeeperServerAsync(string responseMessage, int port, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
-            {
-                try
+                DateTime startTime = DateTime.UtcNow;
+                string output;
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
                 {
-                    using (IProcessProxy process = this.ProcessCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken))
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        process.Start();
-                        await process.WaitForResponseAsync(responseMessage, cancellationToken, timeout: TimeSpan.FromSeconds(30)).ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            ConsoleLogger.Default.LogMessage($"zookeeper server process started (port = {port})...", telemetryContext);
-                            process.ThrowIfWorkloadFailed();
-                        }
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "ClusterId");
+                        process.ThrowIfWorkloadFailed();
                     }
-                }
-                catch (OperationCanceledException)
-                {
-                    // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
-                }
-                catch (Exception exc)
-                {
-                    this.Logger.LogMessage(
-                        $"{this.TypeName}.StartServerInstanceError",
-                        LogLevel.Error,
-                        telemetryContext.Clone().AddError(exc));
 
-                    throw;
+                    output = process.StandardOutput.ToString();
+                    ConsoleLogger.Default.LogMessage($"Cluster Id - {output}", telemetryContext);
                 }
-            });
+
+                return output;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected whenever certain operations (e.g. Task.Delay) are cancelled.
+                return null;
+            }
+            catch (Exception exc)
+            {
+                this.Logger.LogMessage(
+                    $"{this.TypeName}.GetClusterIdError",
+                    LogLevel.Error,
+                    telemetryContext.Clone().AddError(exc));
+
+                throw;
+            }
         }
 
-        private Task RunCommandAsync(string logMessage, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, string toolName = null)
+        private Task StartServerAndWaitForExitAsync(string logMessage, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken, string toolName = null, bool addCleanupTasks = true)
         {
             return (this.ServerRetryPolicy ?? Policy.NoOpAsync()).ExecuteAsync(async () =>
             {
                 try
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, addCleanupTasks: addCleanupTasks))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
@@ -380,35 +375,36 @@ namespace VirtualClient.Actions.Kafka
 
         private async Task ConfigurePropertiesFileAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string logDir = Directory.GetDirectoryRoot(this.KafkaPackagePath).TrimEnd('\\') + "/tmp";
+            string logDir = "/tmp";
             this.fileSystem.Directory.DeleteAsync(logDir);
 
-            for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
+            for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
-                int port = this.Port + serverInstance;
+                int port = this.Port + ((serverInstance - 1) * 2);
 
-                string configDirectoryPath = this.PlatformSpecifics.Combine(this.KafkaPackagePath, "config");
-                string oldServerProperties = this.PlatformSpecifics.Combine(configDirectoryPath, "server.properties");
-                string newServerProperties = this.PlatformSpecifics.Combine(configDirectoryPath, $"server-{serverInstance}.properties");
+                string oldServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, "server.properties");
+                string newServerProperties = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{serverInstance}.properties");
                 this.fileSystem.File.Copy(oldServerProperties, newServerProperties, true);
 
                 await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"broker.id *= *[^\n]*", $"broker.id = {serverInstance}", cancellationToken);
-                
+                        newServerProperties, @"node.id *= *[^\n]*", $"node.id={serverInstance}", cancellationToken);
+
                 await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"log.dirs *= *[^\n]*", $"log.dirs = {logDir}/kafka-logs-{serverInstance}", cancellationToken);
+                        newServerProperties, @"log.dirs *= *[^\n]*", $"log.dirs={logDir}/kraft-combined-logs-{serverInstance}", cancellationToken);
 
                 if (this.IsMultiRoleLayout())
                 {
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"#listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{port}", cancellationToken);
+                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://{this.ServerIpAddress}:{port},CONTROLLER://{this.ServerIpAddress}:{port + 1}", cancellationToken);
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"zookeeper.connect *= *[^\n]*", $"zookeeper.connect={this.ServerIpAddress}:{ZookeeperPort}", cancellationToken);
+                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={serverInstance}@{this.ServerIpAddress}:{port + 1}", cancellationToken);
                 }
                 else
                 {
                     await this.fileSystem.File.ReplaceInFileAsync(
-                        newServerProperties, @"#listeners *= *[^\n]*", $"listeners=PLAINTEXT://:{port}", cancellationToken);
+                        newServerProperties, @"listeners *= *[^\n]*", $"listeners=PLAINTEXT://:{port},CONTROLLER://:{port + 1}", cancellationToken);
+                    await this.fileSystem.File.ReplaceInFileAsync(
+                        newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={serverInstance}@localhost:{port + 1}", cancellationToken);
                 }
 
             }
@@ -449,15 +445,13 @@ namespace VirtualClient.Actions.Kafka
         private async Task StopServersAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.StopServerInstances");
-            string zookeeperStopArgs = this.ZookeeperStopScriptPath;
             string kafkaStopArgs = this.KafkaStopScriptPath;
             if (this.Platform == PlatformID.Win32NT)
             {
-                zookeeperStopArgs = $"/c {this.ZookeeperStopScriptPath}";
                 kafkaStopArgs = $"/c {this.KafkaStopScriptPath}";
             }
             
-            await this.RunCommandAsync(
+            await this.StartServerAndWaitForExitAsync(
                             $"Stop Kafka servers...",
                             this.PlatformSpecificCommandType,
                             kafkaStopArgs,
@@ -465,16 +459,30 @@ namespace VirtualClient.Actions.Kafka
                             telemetryContext,
                             cancellationToken,
                             "Kafka");
-            await this.RunCommandAsync(
-                            $"Stop zookeeper server...",
-                            this.PlatformSpecificCommandType,
-                            zookeeperStopArgs,
-                            this.KafkaPackagePath,
-                            telemetryContext,
-                            cancellationToken,
-                            "Zookeeper");
 
             this.WaitAsync(TimeSpan.FromSeconds(3), cancellationToken);
+        }
+
+        private bool ResetServer(EventContext telemetryContext)
+        {
+            bool shouldReset = true;
+            if (this.serverProcesses?.Any() == true)
+            {
+                // Depending upon how the server Task instances are created, the Task may be in a status
+                // of Running or WaitingForActivation. The server is running in either of these 2 states.
+                shouldReset = !this.serverProcesses.All(p => p.Status == TaskStatus.Running || p.Status == TaskStatus.WaitingForActivation);
+            }
+
+            if (shouldReset)
+            {
+                this.Logger.LogTraceMessage($"Restart Kafka Server(s)...", telemetryContext);
+            }
+            else
+            {
+                this.Logger.LogTraceMessage($"Kafka Server(s) Running...", telemetryContext);
+            }
+
+            return shouldReset;
         }
 
         private Task SaveStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -483,15 +491,16 @@ namespace VirtualClient.Actions.Kafka
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
                 List<int> ports = new List<int>();
-                for (int i = 0; i < this.ServerInstances; i++)
+                for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
                 {
-                    ports.Add(this.Port + i);
+                    int port = this.Port + ((serverInstance - 1) * 2);
+                    ports.Add(port);
+                    ports.Add(port + 1);
                 }
 
                 var state = new Item<KafkaServerState>(nameof(KafkaServerState), new KafkaServerState(new Dictionary<string, IConvertible>
                 {
-                    [nameof(KafkaServerState.Ports)] = string.Join(",", ports),
-                    [nameof(KafkaServerState.ZookeeperPort)] = ZookeeperPort
+                    [nameof(KafkaServerState.Ports)] = string.Join(",", ports)
                 }));
 
                 using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(KafkaServerState), state, cancellationToken))
@@ -505,10 +514,11 @@ namespace VirtualClient.Actions.Kafka
         private void OpenKafkaPorts(CancellationToken cancellationToken)
         {
             List<int> ports = new List<int>();
-            for (int serverInstance = 0; serverInstance < this.ServerInstances; serverInstance++)
+            for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
-                int port = this.Port + serverInstance;
+                int port = this.Port + ((serverInstance - 1) * 2);
                 ports.Add(port);
+                ports.Add(port + 1);
             }
 
             this.systemManagement.FirewallManager.EnableInboundConnectionsAsync(
