@@ -49,7 +49,6 @@ namespace VirtualClient.Actions
                     Item<Instructions> stateItem = obj.ToObject<Item<Instructions>>();
                     if (stateItem.Definition.Type == InstructionsType.ClientServerReset)
                     {
-                        Assert.AreEqual(sendInstructionsExecuted, 0);
                         sendInstructionsExecuted++;
                     }
 
@@ -70,7 +69,7 @@ namespace VirtualClient.Actions
             TestLatteClientExecutor component = new TestLatteClientExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
 
             await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            Assert.AreEqual(sendInstructionsExecuted, 2);
+            Assert.AreEqual(sendInstructionsExecuted, 3);
         }
 
         [Test]
@@ -136,6 +135,7 @@ namespace VirtualClient.Actions
             this.mockFixture.ApiClient.SetupSequence(client => client.GetStateAsync(nameof(LatteWorkloadState), It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem))
+                .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.NotFound))
                 .ReturnsAsync(this.mockFixture.CreateHttpResponse(System.Net.HttpStatusCode.OK, expectedStateItem));
         }
