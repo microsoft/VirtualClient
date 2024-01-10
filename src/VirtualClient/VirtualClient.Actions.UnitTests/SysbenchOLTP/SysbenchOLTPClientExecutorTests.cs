@@ -51,6 +51,7 @@ namespace VirtualClient.Actions
                 { nameof(SysbenchOLTPClientExecutor.Duration), "00:00:10" },
                 { nameof(SysbenchOLTPClientExecutor.Workload), "oltp_read_write" },
                 { nameof(SysbenchOLTPClientExecutor.PackageName), "sysbench" },
+                { nameof(SysbenchOLTPClientExecutor.Scenario), "oltp_read_write_testing" }
             };
 
             string agentId = $"{Environment.MachineName}";
