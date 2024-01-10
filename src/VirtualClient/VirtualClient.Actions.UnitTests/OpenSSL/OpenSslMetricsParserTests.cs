@@ -223,6 +223,32 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        public void OpenSslParserParsesResultsCorrectly_ecdhx448_Scenario()
+        {
+            /* In this scenario, we are evaluating a single cipher as well as all byte buffer sizes.
+             
+               Example:
+                                           op      op/s
+                 448 bits ecdh (X448)   0.0000s  42896.0
+             */
+
+            OpenSslMetricsParser parser = new OpenSslMetricsParser(
+                File.ReadAllText(Path.Combine(OpenSslMetricsParserTests.examplesDir, "OpenSSL-speed-multi-ecdhx448.txt")),
+                "speed -multi 16 -seconds 5 ecdhx448");
+
+            IEnumerable<Metric> metrics = parser.Parse();
+
+            Assert.IsNotNull(metrics);
+            Assert.AreEqual(2, metrics.Count());
+
+            OpenSslMetricsParserTests.AssertMetricsMatch("448 bits ecdh (X448)", metrics, new Dictionary<string, double>
+            {
+                { "448 bits ecdh (X448) op", 0 },
+                { "448 bits ecdh (X448) op/s", 42896.0 },
+            });
+        }
+
+        [Test]
         public void OpenSslParserParsesResultsCorrectly_AllCiphers_Scenario()
         {
             /* In this scenario, we are evaluating all ciphers as well as all byte buffer sizes.

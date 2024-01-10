@@ -1,0 +1,39 @@
+Forked child 0
+Forked child 1
+Forked child 2
+Forked child 3
+Forked child 4
+Forked child 5
+Forked child 6
+Forked child 7
+Forked child 8
+Forked child 9
+Forked child 10
+Forked child 11
+Forked child 12
+Forked child 13
+Forked child 14
+Forked child 15
+Got: +F5:23:448:2680.184985:0.000373 from 0
+Got: +F5:23:448:2676.941667:0.000374 from 1
+Got: +F5:23:448:2686.491667:0.000372 from 2
+Got: +F5:23:448:2679.958333:0.000373 from 3
+Got: +F5:23:448:2682.000000:0.000373 from 4
+Got: +F5:23:448:2678.875000:0.000373 from 5
+Got: +F5:23:448:2679.758333:0.000373 from 6
+Got: +F5:23:448:2686.466667:0.000372 from 7
+Got: +F5:23:448:2676.683333:0.000374 from 8
+Got: +F5:23:448:2681.883333:0.000373 from 9
+Got: +F5:23:448:2678.241667:0.000373 from 10
+Got: +F5:23:448:2676.475000:0.000374 from 11
+Got: +F5:23:448:2687.133333:0.000372 from 12
+Got: +F5:23:448:2677.341667:0.000374 from 13
+Got: +F5:23:448:2683.133333:0.000373 from 14
+Got: +F5:23:448:2684.383333:0.000373 from 15
+version: 3.0.0-beta3-dev
+built on: built on: Thu Aug  5 18:45:56 2021 UTC
+options:bn(64,64)
+compiler: gcc -fPIC -pthread -m64 -Wa,--noexecstack -Wall -O3 -DOPENSSL_USE_NODELETE -DL_ENDIAN -DOPENSSL_PIC -DOPENSSL_BUILDING_OPENSSL -DNDEBUG
+CPUINFO: OPENSSL_ia32cap=0xfffa32235f8bffff:0x415f46f1bf2fbb
+                          op      op/s
+448 bits ecdh (X448)   0.0000s  42896.0
