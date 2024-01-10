@@ -273,11 +273,13 @@ namespace VirtualClient.Actions.NetworkPerformance
                                 this.CleanupTasks.Add(() => process.SafeKill());
                                 await process.StartAndWaitAsync(cancellationToken, timeout);
 
-                                if (!cancellationToken.IsCancellationRequested)
+                                if (process.IsErrored())
                                 {
                                     await this.LogProcessDetailsAsync(process, telemetryContext, "CPS", logToFile: true);
-
                                     process.ThrowIfWorkloadFailed();
+                                }
+                                else
+                                {
                                     this.results = process.StandardOutput.ToString();
                                 }
                             }
