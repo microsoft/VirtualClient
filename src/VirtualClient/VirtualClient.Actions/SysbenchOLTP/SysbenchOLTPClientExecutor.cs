@@ -287,7 +287,7 @@ namespace VirtualClient.Actions
 
                         this.Logger.LogMetrics(
                             toolName: "MySQL-Sysbench",
-                            scenarioName: "OLTP " + this.Scenario,
+                            scenarioName: "OLTP " + this.MetricScenario ?? this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
