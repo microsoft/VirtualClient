@@ -46,11 +46,6 @@ idea. The name of the client must match the name of the system or the value of t
 }
 ```
 
-## Sysbench OLTP Workload Pointers
-There are a few limitations of note within Sysbench and MySQL. They include the following areas.
-
-* **Threads**: The Sysbench workload generator prepares a list of statements to run on MySQL. MySQL can only accept so many prepared statements. We already max out this variable in a scenario in the MySQLConfiguation dependency, but even when setting the max_prepared_stmt_count to a large number, Sysbench can throw a 'too many connections' error. This has shown to be the case even on VMs with high core counts and equipped with the ability for high thread counts. User caution is advised for thread counts > 176; the VC team has only successfully seen Sysbench run with thread counts less than that number.
-
 ## Balanced/In Memory Scenario Support
 In addition to the standard configuration, Virtual Client offers two tuned scenarios to run the SysbenchOLTP workload under: Balanced and In-Memory.
 
