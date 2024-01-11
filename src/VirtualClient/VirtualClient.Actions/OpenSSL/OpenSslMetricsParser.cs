@@ -54,6 +54,11 @@ namespace VirtualClient.Actions
         protected DataTable SignVerifyResults { get; private set; }
 
         /// <summary>
+        /// The parsed results of the ops performance output.
+        /// </summary>
+        protected DataTable OpsResults { get; private set; }
+
+        /// <summary>
         /// True if the results have been parsed.
         /// </summary>
         protected bool IsParsed
@@ -108,6 +113,7 @@ namespace VirtualClient.Actions
         {
             bool cipherResultsValid = false;
             bool signVerifyResultsValid = false;
+            bool opsResultsValid = false;
 
             IEnumerable<int> bufferByteSizes = this.GetCipherBufferByteSizes();
             if (this.TryParseCipherPerformanceResults(bufferByteSizes, out DataTable cipherResults))
@@ -122,7 +128,13 @@ namespace VirtualClient.Actions
                 this.SignVerifyResults = signVerifyResults;
             }
 
-            if (!cipherResultsValid && !signVerifyResultsValid)
+            if (!signVerifyResultsValid & this.TryParseOpsPerformanceResults(out DataTable opsResults))
+            {
+                opsResultsValid = true;
+                this.OpsResults = opsResults;
+            }
+
+            if (!cipherResultsValid && !signVerifyResultsValid && !opsResultsValid)
             {
                 throw new SchemaException(
                     $"Invalid results format. The results provided to the parser are not valid/complete OpenSSL speed workload results. Results: {Environment.NewLine}" +
@@ -155,6 +167,27 @@ namespace VirtualClient.Actions
             if (signVerifyResultsValid)
             {
                 foreach (DataRow row in this.SignVerifyResults.Rows)
+                {
+                    string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
+                    double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
+
+                    if (metricValue >= 0)
+                    {
+                        if (metricName.Contains("/"))
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, $"{row[OpenSslMetricsParser.ColumnUnit]}", MetricRelativity.HigherIsBetter));
+                        }
+                        else
+                        {
+                            metrics.Add(new Metric(metricName, metricValue, MetricUnit.Seconds, MetricRelativity.LowerIsBetter));
+                        }
+                    }
+                }
+            }
+
+            if (opsResultsValid)
+            {
+                foreach (DataRow row in this.OpsResults.Rows)
                 {
                     string metricName = $"{row[OpenSslMetricsParser.ColumnCipher]} {row[OpenSslMetricsParser.ColumnUnit]}";
                     double metricValue = (double)row[OpenSslMetricsParser.ColumnValue];
@@ -304,6 +337,7 @@ namespace VirtualClient.Actions
 
                 foreach (Match match in signVerifyPerformanceResults)
                 {
+                    // Match results for sign, verify, sign/s, verify/s
                     if (match.Groups.Count == 6
                         && match.Groups[2].Captures?.Any() == true)
                     {
@@ -327,6 +361,66 @@ namespace VirtualClient.Actions
                 if (parsedSuccessfully)
                 {
                     results = svResults;
+                }
+            }
+
+            return parsedSuccessfully;
+        }
+
+        private bool TryParseOpsPerformanceResults(out DataTable results)
+        {
+            results = null;
+            bool parsedSuccessfully = false;
+
+            IEnumerable<string> ecdhColumns = new List<string>()
+            {
+                "op",
+                "op/s"
+            };
+
+            // Example:
+            //                           op      op/s
+            // 448 bits ecdh(X448)   0.0000s  42896.0
+
+            MatchCollection opsPerformanceResults = Regex.Matches(this.RawText, $@"((?:\w *\(*)+(?:bits|\)))(\s*[0-9\.]+s)(\s*[0-9\.]+)", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+            if (opsPerformanceResults?.Any() == true)
+            {
+                // return datatable with rsa name, column, value per row
+                DataTable opsResults = new DataTable();
+                opsResults.Columns.AddRange(new DataColumn[]
+                {
+                    new DataColumn(OpenSslMetricsParser.ColumnCipher, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnUnit, typeof(string)),
+                    new DataColumn(OpenSslMetricsParser.ColumnValue, typeof(double)),
+                });
+
+                foreach (Match match in opsPerformanceResults)
+                {
+                    // Match results for op, op/s
+                    if (match.Groups.Count == 4
+                       && match.Groups[2].Captures?.Any() == true)
+                    {
+                        int typeIndex = 0;
+                        string opsAlgorithm = match.Groups[1].Value.Trim();
+                        for (int i = 2; i < 4; i++)
+                        {
+                            Match numericMatch = Regex.Match(match.Groups[i].Value, @"[-0-9\.]+", RegexOptions.IgnoreCase);
+                            if (numericMatch.Success)
+                            {
+                                parsedSuccessfully = true;
+                                double value = double.Parse(numericMatch.Value.Trim());
+                                opsResults.Rows.Add(opsAlgorithm, ecdhColumns.ElementAt(typeIndex), value);
+                            }
+
+                            typeIndex++;
+                        }
+                    }
+                }
+
+                if (parsedSuccessfully)
+                {
+                    results = opsResults;
                 }
             }
 
