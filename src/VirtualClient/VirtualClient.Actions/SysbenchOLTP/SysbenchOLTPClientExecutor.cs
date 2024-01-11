@@ -158,8 +158,6 @@ namespace VirtualClient.Actions
                     numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
                 }
 
-                numThreads = Math.Min(numThreads, 64);
-
                 return numThreads;
             }
         }
@@ -289,7 +287,7 @@ namespace VirtualClient.Actions
 
                         this.Logger.LogMetrics(
                             toolName: "MySQL-Sysbench",
-                            scenarioName: "OLTP " + this.Scenario,
+                            scenarioName: this.MetricScenario ?? this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
