@@ -127,6 +127,22 @@ namespace VirtualClient
         }
 
         /// <summary>
+        /// Get the logged In Username i.e, username of the user who invoked a command with elevated privileges using the "sudo" command in Unix operating system.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public string GetLoggedInUserName(CancellationToken cancellationToken)
+        {
+            string loggedInUserName = Environment.GetEnvironmentVariable("SUDO_USER");
+            if (string.IsNullOrEmpty(loggedInUserName))
+            {
+                loggedInUserName = Environment.UserName;
+            }
+
+            return loggedInUserName;
+        }
+
+        /// <summary>
         /// Returns information about the specific Linux distribution (e.g. Ubuntu, CentOS).
         /// </summary>
         public async Task<LinuxDistributionInfo> GetLinuxDistributionAsync(CancellationToken cancellationToken)
