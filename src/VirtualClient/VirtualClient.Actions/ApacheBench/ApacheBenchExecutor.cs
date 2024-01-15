@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.IO.Abstractions;
     using System.Threading;
     using System.Threading.Tasks;
@@ -115,21 +114,20 @@ namespace VirtualClient.Actions
             {
                 DependencyPath workloadPackagePath = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None)
                     .ConfigureAwait(false);
-                string apache24Directory = this.PlatformSpecifics.Combine(workloadPackagePath.Path + "\\Apache24");
-                string httpdConfFilePath = this.PlatformSpecifics.Combine(apache24Directory + "\\conf", "\\httpd.conf");
+                string apache24Directory = this.PlatformSpecifics.Combine(workloadPackagePath.Path, "Apache24");
+                string httpdConfFilePath = this.PlatformSpecifics.Combine(apache24Directory, "conf", "httpd.conf");
 
                 // Replacing the default path to the directory path.
                 await this.fileSystem.File.ReplaceInFileAsync(
                     httpdConfFilePath, "Define SRVROOT \"c:\\/Apache24\"", $"Define SRVROOT \"{apache24Directory}\"", cancellationToken);
 
-                string httpdExecutablePath = this.PlatformSpecifics.Combine(apache24Directory + "\\bin\\httpd.exe");
+                string httpdExecutablePath = this.PlatformSpecifics.Combine(apache24Directory, "bin", "httpd.exe");
                 if (!state.ApacheBenchStateInitialized)
                 {
                     await this.ExecuteCommandAsync(httpdExecutablePath, "-k install", $"{apache24Directory}\\bin", telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
                 }
 
-                // this.WorkloadExecutablePath = $"{apache24Directory}\\bin\\ab.exe";
-                this.WorkloadExecutablePath = this.PlatformSpecifics.Combine(apache24Directory + "\\bin\\ab.exe");
+                this.WorkloadExecutablePath = this.PlatformSpecifics.Combine(apache24Directory, "bin", "ab.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
@@ -187,20 +185,6 @@ namespace VirtualClient.Actions
                     }
                 }
             });
-        }
-
-        private static Task OpenFirewallPortsAsync(int port, IFirewallManager firewallManager, CancellationToken cancellationToken)
-        {
-            return firewallManager.EnableInboundConnectionsAsync(
-                new List<FirewallEntry>
-                {
-                    new FirewallEntry(
-                        "Apache http server: Allow Multiple Machines communications",
-                        "Allows individual machine instances to communicate with other machine in client-server scenario",
-                        "tcp",
-                        new List<int> { port })
-                },
-                cancellationToken);
         }
 
         private Task CaptureMetricsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
