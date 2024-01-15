@@ -25,7 +25,7 @@ ApacheBench is designed to be a very simple benchmarking tool. It produces the m
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**  
-  There are no parameters required for the workload. The command for the ab is "ab -k -n <no of req> -c <concurrency level> <url to make request>".
+  There are no parameters required for the workload. The command for the ab is "ab -k -n 50000 -c 10 http://localhost:80".
   By default 50000 request are made to apache http server in a batch of 10 and 50 in 2 scenarios respectively at a time.
 
   | Parameter                 | Purpose                                                                         | Default value |
