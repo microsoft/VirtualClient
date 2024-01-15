@@ -355,7 +355,7 @@ namespace VirtualClient.Actions
             {
                 try
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, username: this.SystemManagement.GetLoggedInUserName(cancellationToken)))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, username: this.Username))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
