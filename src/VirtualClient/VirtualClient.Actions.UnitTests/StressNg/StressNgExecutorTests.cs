@@ -26,9 +26,12 @@ namespace VirtualClient.Actions
         private MockFixture mockFixture;
 
         [Test]
-        public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux()
+        [TestCase("--timeout 90 --cpu 16", "--timeout 90 --cpu 16 --metrics")]
+        [TestCase("", "--cpu coreCount --timeout 60 --metrics")]
+        public async Task StressNgExecutorRunsTheExpectedWorkloadCommandInLinux(string inputCommandLineArgs, string expectedArgsInCommand)
         {
             this.SetupDefaultMockBehaviors(PlatformID.Unix);
+            this.mockFixture.Parameters[nameof(StressNgExecutor.CommandLine)] = inputCommandLineArgs;
 
             // Mocking 100GB of memory
             this.mockFixture.SystemManagement.Setup(mgr => mgr.GetMemoryInfoAsync(It.IsAny<CancellationToken>()))
@@ -36,7 +39,8 @@ namespace VirtualClient.Actions
 
             ProcessStartInfo expectedInfo = new ProcessStartInfo();
 
-            string expectedCommand = @$"sudo stress-ng --cpu {Environment.ProcessorCount} --timeout 321 --metrics --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
+            string expectedArgs = expectedArgsInCommand.Replace("coreCount", Environment.ProcessorCount.ToString());
+            string expectedCommand = @$"sudo stress-ng {expectedArgs} --yaml {this.mockFixture.GetPackagePath()}/stressNg/vcStressNg.yaml";
 
             bool commandExecuted = false;
             this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -67,6 +71,19 @@ namespace VirtualClient.Actions
             Assert.IsTrue(commandExecuted);
         }
 
+        [Test]
+        [TestCase(PlatformID.Unix)]
+        public void StressNgExecutorThrowsOnInvalidProfileDefinition(PlatformID platform)
+        {
+            this.SetupDefaultMockBehaviors(platform);
+
+            this.mockFixture.Parameters[nameof(StressNgExecutor.CommandLine)] = "--cpu 16 --yaml output.yaml";
+            using (TestStressNgExecutor executor = new TestStressNgExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                Assert.Throws<WorkloadException>(() => executor.Validate());
+            }
+        }
+
         private class TestStressNgExecutor : StressNgExecutor
         {
             public TestStressNgExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
@@ -77,6 +94,11 @@ namespace VirtualClient.Actions
             public new Task ExecuteAsync(EventContext context, CancellationToken cancellationToken)
             {
                 return base.ExecuteAsync(context, cancellationToken);
+            }
+
+            public new void Validate()
+            {
+                base.Validate();
             }
         }
 
@@ -102,7 +124,8 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(StressNgExecutor.DurationInSecond), 321 },
+                { nameof(StressNgExecutor.CommandLine), "--cpu 16 --yaml output.yaml" },
+                { nameof(StressNgExecutor.Scenario), "CaptureSystemThroughput" }
             };
         }
     }
