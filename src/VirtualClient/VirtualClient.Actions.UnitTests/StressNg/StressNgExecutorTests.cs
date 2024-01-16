@@ -124,7 +124,7 @@ namespace VirtualClient.Actions
 
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                { nameof(StressNgExecutor.CommandLine), "--cpu 16 --yaml output.yaml" },
+                { nameof(StressNgExecutor.CommandLine), "--cpu 16 --timeout 60" },
                 { nameof(StressNgExecutor.Scenario), "CaptureSystemThroughput" }
             };
         }

@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes the environment for execution of the Hpcg workload.
+        /// Initializes the environment for execution of the StressNg workload.
         /// </summary>
         protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
