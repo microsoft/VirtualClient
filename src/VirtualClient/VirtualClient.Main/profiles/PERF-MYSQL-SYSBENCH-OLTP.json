@@ -8,7 +8,8 @@
     },
     "Parameters": {
         "DatabaseName": "sbtest",
-        "DatabaseScenario": "Default",
+        "DatabaseScenario": "Balanced",
+        "Duration": "00:05:00"
     },
     "Actions": [
         {
@@ -22,14 +23,25 @@
         {
             "Type": "SysbenchOLTPClientExecutor",
             "Parameters": {
+                "Scenario": "Populate Database",
+                "PopulateDatabase": true,
+                "DatabaseName": "$.Parameters.DatabaseName",
+                "DatabaseScenario": "$.Parameters.DatabaseScenario",
+                "Workload": "oltp_common",
+                "PackageName": "sysbench",
+                "Role": "Client"
+            }
+        },
+        {
+            "Type": "SysbenchOLTPClientExecutor",
+            "Parameters": {
                 "Scenario": "oltp_read_write",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_read_write",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -38,11 +50,10 @@
                 "Scenario": "oltp_read_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_read_only",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -51,11 +62,10 @@
                 "Scenario": "oltp_write_only",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_write_only",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -64,11 +74,10 @@
                 "Scenario": "oltp_delete",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_delete",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -77,11 +86,10 @@
                 "Scenario": "oltp_insert",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_insert",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -90,11 +98,10 @@
                 "Scenario": "oltp_update_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_update_index",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -103,11 +110,10 @@
                 "Scenario": "oltp_update_non_index",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "oltp_update_non_index",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -116,11 +122,10 @@
                 "Scenario": "select_random_points",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "select_random_points",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         },
         {
@@ -129,11 +134,10 @@
                 "Scenario": "select_random_ranges",
                 "DatabaseName": "$.Parameters.DatabaseName",
                 "DatabaseScenario": "$.Parameters.DatabaseScenario",
-                "Role": "Client",
-                "Duration": "00:20:00",
-                "RecordCount": 10000,
+                "Duration": "$.Parameters.Duration",
                 "Workload": "select_random_ranges",
-                "PackageName": "sysbench"
+                "PackageName": "sysbench",
+                "Role": "Client"
             }
         }
     ],
