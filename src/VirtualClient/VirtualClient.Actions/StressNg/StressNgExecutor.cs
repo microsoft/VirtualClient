@@ -131,12 +131,12 @@ namespace VirtualClient.Actions
                     ErrorReason.InvalidProfileDefinition);
             }
 
-            if (this.CommandLine.Contains("--yaml"))
+            if (this.CommandLine.Contains("--yaml") || this.CommandLine.Contains("-Y "))
             {
                 throw new WorkloadException(
                     $"Unexpected profile definition.The action in the profile does not contain the " +
                     $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
-                    $"--yaml parameter. That is being appended programatically",
+                    $"--yaml or -Y parameter. That is being appended programatically",
                     ErrorReason.InvalidProfileDefinition);
             }
         }
@@ -183,12 +183,12 @@ namespace VirtualClient.Actions
         {
             string commandLineArgs = this.CommandLine;
 
-            if (!commandLineArgs.Contains("--cpu"))
+            if (!commandLineArgs.Contains("--cpu ") && !commandLineArgs.Contains("-c "))
             {
                 commandLineArgs += $" --cpu {Environment.ProcessorCount}";
             }
 
-            if (!commandLineArgs.Contains("--timeout"))
+            if (!commandLineArgs.Contains("--timeout") && !commandLineArgs.Contains("-t "))
             {
                 commandLineArgs += $" --timeout {DefaultRuntimeInSeconds}";
             }
