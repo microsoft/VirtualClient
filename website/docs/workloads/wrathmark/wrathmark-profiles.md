@@ -46,7 +46,7 @@ Runs the Wrathmark benchmark workload to assess the performance of a CPU.
 
   ``` bash
   # Execute the workload profile a single time
-  VirtualClient.exe --profile=PERF-CPU-WRATHMARK.json -i 1
+  VirtualClient.exe --profile=PERF-CPU-WRATHMARK.json --iterations=1
 
   # Override the profile default parameters to use a different .NET SDK version
   VirtualClient.exe --profile=PERF-CPU-WRATHMARK.json --parameters="TargetFramework=net6.0"
