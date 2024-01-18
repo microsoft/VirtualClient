@@ -26,6 +26,13 @@ Runs the Stress-ng workload in short but constant bursts to assess the performan
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
+* **Profile Parameters**
+  The following parameters can be optionally supplied on the command line to modify the behaviors of the workload.
+
+  | Parameter | Purpose | Default Value | Note |
+  |-----------|---------|---------------|------|
+  | CommandLine | The CommandLine Arguments to be provided to StressNg | "--timeout 60" | "The commandline parameter --yaml is programatically added, do not add it in profile. By default, --metrics flag is ON, --cpu is set to ProcessorCount and the default timeout is 60 seconds." |
+
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
   actions. These timings can be used to determine minimum required runtimes for the Virtual Client in order to get results. These are often estimates based on the
