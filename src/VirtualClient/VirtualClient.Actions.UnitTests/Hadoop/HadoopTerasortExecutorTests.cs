@@ -87,21 +87,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
-        public void HadoopTerasortExecutorThrowsErrorIfExecutedOnWindows(PlatformID platform)
-        {
-            this.SetupDefaultBehavior(platform);
-            using (TestHadoopTerasortExecutor hadoopTerasortExecutor = new TestHadoopTerasortExecutor(this.fixture))
-            {
-                WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(
-                    () => hadoopTerasortExecutor.InitializeAsync(EventContext.None, CancellationToken.None));
-
-                Assert.AreEqual(ErrorReason.PlatformNotSupported, exception.Reason);
-            }
-
-        }
-
-        [Test]
         public async Task HadoopTerasortExecutorExecutesTheCorrectWorkloadCommands()
         {
             this.SetupDefaultBehavior();

@@ -190,7 +190,10 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("bash", $"-c sbin/start-dfs.sh", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c sbin/start-yarn.sh", this.PackageDirectory, telemetryContext, cancellationToken);
                 this.state.HadoopExecutorServicesStarted = true;
-                await Task.Delay(30000); // Delay during the safe mode of the name node to verify the status of replicated nodes.
+                // Delay during the safe mode of the name node to verify the status of replicated nodes.
+                // For operations that includes executing tasks rapidly, encompassing swift initiation and termination, is crucial.
+                // A delay helps avoid potential failures in the process of loading data into the service.
+                // await Task.Delay(30000); 
             }
 
             await this.stateManager.SaveStateAsync<HadoopExecutorState>($"{nameof(HadoopExecutorState)}", this.state, cancellationToken);
@@ -204,7 +207,7 @@ namespace VirtualClient.Actions
         {
             bool isSupported = base.IsSupported()
                 && (this.Platform == PlatformID.Unix)
-                && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64);
+                && (this.CpuArchitecture == Architecture.X64);
 
             if (!isSupported)
             {
