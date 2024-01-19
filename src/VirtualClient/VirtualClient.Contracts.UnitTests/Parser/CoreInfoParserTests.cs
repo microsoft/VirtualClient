@@ -25,7 +25,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel64 Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
             Assert.AreEqual(4, info.LogicalProcessorCount);
-            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(0, info.NumaNodeCount);
@@ -53,7 +53,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel64 Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
             Assert.AreEqual(2, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(0, info.NumaNodeCount);
@@ -81,7 +81,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel64 Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
             Assert.AreEqual(8, info.LogicalProcessorCount);
-            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(4, info.PhysicalCoreCount);
             Assert.AreEqual(2, info.SocketCount);
             Assert.AreEqual(2, info.NumaNodeCount);
@@ -109,7 +109,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("AMD EPYC 7452 32-Core Processor", info.Name);
             Assert.AreEqual("AMD64 Family 23 Model 49 Stepping 0, AuthenticAMD", info.Description);
             Assert.AreEqual(2, info.LogicalProcessorCount);
-            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(1, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(0, info.NumaNodeCount);
@@ -127,6 +127,34 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void CoreInfoParserParsesTheExpectedResultsFromAMDSystems_Scenario2()
+        {
+            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_AMD_Milan.txt"));
+            CoreInfoParser parser = new CoreInfoParser(results);
+            CpuInfo info = parser.Parse();
+
+            Assert.IsNotNull(info);
+            Assert.AreEqual("AMD EPYC 7763 64-Core Processor", info.Name);
+            Assert.AreEqual("AMD64 Family 25 Model 1 Stepping 1, AuthenticAMD", info.Description);
+            Assert.AreEqual(128, info.LogicalProcessorCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
+            Assert.AreEqual(128, info.PhysicalCoreCount);
+            Assert.AreEqual(2, info.SocketCount);
+            Assert.AreEqual(2, info.NumaNodeCount);
+            Assert.IsFalse(info.IsHyperthreadingEnabled);
+
+            IConvertible cacheMemory = 0;
+            Assert.IsNotEmpty(info.Caches);
+
+            Assert.IsTrue(info.Caches.Count() == 5);
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1" && cache.SizeInBytes == 8388608));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1d" && cache.SizeInBytes == 4194304));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L1i" && cache.SizeInBytes == 4194304));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L2" && cache.SizeInBytes == 67108864));
+            Assert.IsTrue(info.Caches.Any(cache => cache.Name == "L3" && cache.SizeInBytes == 536870912));
+        }
+
+        [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromAmpereSystems_Scenario1()
         {
             string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Ampere.txt"));
@@ -137,7 +165,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Ampere(R) Altra(R) Processor", info.Name);
             Assert.AreEqual("ARMv8 (64-bit) Family 8 Model D0C Revision 301, Ampere(R)", info.Description);
             Assert.AreEqual(4, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(4, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -164,7 +192,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Ampere(R) Altra(R) Processor", info.Name);
             Assert.AreEqual("ARMv8 (64-bit) Family 8 Model D0C Revision 301, Ampere(R)", info.Description);
             Assert.AreEqual(16, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(16, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(0, info.NumaNodeCount);

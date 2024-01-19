@@ -4,15 +4,18 @@
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:05:00",
         "SupportedPlatforms": "linux-x64,linux-arm64",
-        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+        "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu",
+        "SpecialInstrucions":  "The commandline parameter --yaml is programatically added, do not add it in profile. By default, --metrics flag is ON, --cpu is set to ProcessorCount and the default timeout is 60 seconds."
     },
-    "Parameters": {},
+    "Parameters": {
+        "CommandLine": "--timeout 60"
+    },
     "Actions": [
         {
             "Type": "StressNgExecutor",
             "Parameters": {
                 "Scenario": "CaptureSystemThroughput",
-                "DurationInSecond": 60,
+                "CommandLine": "$.Parameters.CommandLine",
                 "Tags": "Stress"
             }
         }
