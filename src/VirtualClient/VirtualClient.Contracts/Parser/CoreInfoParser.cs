@@ -5,7 +5,6 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Text.RegularExpressions;
 
@@ -16,7 +15,6 @@ namespace VirtualClient.Contracts
     {
         private static readonly Regex AsteriskExpression = new Regex(@"\*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex CacheExpression = new Regex(@"(Data\s*Cache|Instruction\s*Cache|Unified\s*Cache)\s*\d+,\s*Level\s*([0-9]+),\s*([0-9]+\s*[a-z]+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex LogicalProcessorExpression = new Regex(@"\*+-*\s*Physical\s*Processor", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NoNumaNodeExpression = new Regex("No NUMA nodes", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex NumaNodeExpression = new Regex(@"NUMA\s+Node\s+\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex PhysicalProcessorExpression = new Regex(@"Physical\s+Processor\s+\d+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -48,8 +46,9 @@ namespace VirtualClient.Contracts
             // ****NUMA Node 0
             //
             // No NUMA nodes.
+            string logicalProcessorMapSection = CoreInfoParser.ParseLogicalToPhysicalProcessorSection(this.RawText);
 
-            MatchCollection logicalProcessors = CoreInfoParser.LogicalProcessorExpression.Matches(this.RawText);
+            MatchCollection logicalProcessors = CoreInfoParser.AsteriskExpression.Matches(logicalProcessorMapSection);
             MatchCollection physicalProcessors = CoreInfoParser.PhysicalProcessorExpression.Matches(this.RawText);
             MatchCollection sockets = CoreInfoParser.SocketExpression.Matches(this.RawText);
 
@@ -209,6 +208,55 @@ namespace VirtualClient.Contracts
             }
 
             return caches;
+        }
+
+        private static string ParseLogicalToPhysicalProcessorSection(string text)
+        {
+            // Depending upon the number of physical cores on the system, the output of Coreinfo is slightly
+            // different. To simplify the parsing of the logical cores, we use a sub-section of the entire output.
+            //
+            // e.g.
+            // 1) For a system with up to 64 physical cores, the section looks like this:
+            //
+            // Logical to Physical Processor Map:
+            // **------  Physical Processor 0 (Hyperthreaded)
+            // --**----  Physical Processor 1 (Hyperthreaded)
+            // ---- **-- Physical Processor 2 (Hyperthreaded)
+            // ------**  Physical Processor 3 (Hyperthreaded)
+            //
+            // Logical Processor to Socket Map:
+            //
+            // 2) For a system with greater than 64 physical cores, the section looks like this:
+            //
+            // Logical to Physical Processor Map:
+            // Physical Processor 0:
+            // *---------------------------------------------------------------
+            // ----------------------------------------------------------------
+            // Physical Processor 1:
+            // -*--------------------------------------------------------------
+            // ----------------------------------------------------------------
+            //
+            // ...
+            // Physical Processor 63:
+            // ---------------------------------------------------------------*
+            // ----------------------------------------------------------------
+            //
+            // Logical Processor to Socket Map:
+
+            string section = null;
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                int indexBegin = text.LastIndexOf("Logical to Physical Processor Map:", StringComparison.OrdinalIgnoreCase);
+                int indexEnd = text.IndexOf("Logical Processor to Socket Map:", StringComparison.OrdinalIgnoreCase);
+                int sectionLength = indexEnd - indexBegin;
+
+                if (indexBegin >= 0 && indexEnd >= 0 && sectionLength > 0)
+                {
+                    section = text.Substring(indexBegin, sectionLength)?.Trim();
+                }
+            }
+
+            return section;
         }
     }
 }
