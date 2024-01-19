@@ -92,7 +92,7 @@ namespace VirtualClient.Actions
                         $"bash -c sbin/start-dfs.sh",
                         $"bash -c sbin/start-yarn.sh",
                         $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen 100000 /inp-.+-.+\"",
-                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-.+-1 /out-.+-.+\"",
+                        $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar terasort /inp-.+-.+ /out-.+-.+\"",
                         $"bash -c sbin/stop-dfs.sh",
                         $"bash -c sbin/stop-yarn.sh"
                     };
