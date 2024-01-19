@@ -24,7 +24,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
             Assert.AreEqual(4, info.LogicalProcessorCount);
-            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -64,7 +64,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz Family 6 Model 106 Stepping 6, GenuineIntel", info.Description);
             Assert.AreEqual(2, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -104,7 +104,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Neoverse-N1", info.Name);
             Assert.AreEqual("Neoverse-N1 Model 1 Stepping r3p1, ARM", info.Description);
             Assert.AreEqual(2, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -143,7 +143,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Neoverse-N1", info.Name);
             Assert.AreEqual("Neoverse-N1 Model 1 Stepping r3p1, ARM", info.Description);
             Assert.AreEqual(64, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(64, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -182,7 +182,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Name);
             Assert.AreEqual("Model 1 Stepping r1p1, ARM", info.Description);
             Assert.AreEqual(2, info.LogicalProcessorCount);
-            Assert.AreEqual(1, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(1, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(2, info.PhysicalCoreCount);
             Assert.AreEqual(1, info.SocketCount);
             Assert.AreEqual(1, info.NumaNodeCount);
@@ -221,7 +221,7 @@ namespace VirtualClient.Contracts
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C", info.Name);
             Assert.AreEqual("Intel(R) Xeon(R) Platinum 8480C Family 6 Model 143 Stepping 8, GenuineIntel", info.Description);
             Assert.AreEqual(28, info.LogicalProcessorCount);
-            Assert.AreEqual(2, info.LogicalProcessorsPerCoreCount);
+            Assert.AreEqual(2, info.LogicalProcessorCountPerPhysicalCore);
             Assert.AreEqual(14, info.PhysicalCoreCount);
             Assert.AreEqual(2, info.SocketCount);
             Assert.AreEqual(2, info.NumaNodeCount);
