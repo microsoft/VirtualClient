@@ -71,7 +71,7 @@ namespace VirtualClient.Actions
         {
             List<string> commands = new List<string>
             {
-                $@"sudo stress-ng --cpu {Environment.ProcessorCount} --timeout 60 --metrics --yaml /home/user/tools/VirtualClient/packages/stressNg/vcStressNg.yaml"
+                $@"sudo stress-ng --timeout 60 --cpu {Environment.ProcessorCount} --metrics --yaml /home/user/tools/VirtualClient/packages/stressNg/vcStressNg.yaml"
             };
 
             return commands;
