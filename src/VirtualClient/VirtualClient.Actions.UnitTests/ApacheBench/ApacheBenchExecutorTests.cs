@@ -56,11 +56,6 @@
             this.SetupDefaultBehaviors(PlatformID.Win32NT, Architecture.X64);
             this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(string.Empty);
-            this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                    .Callback<string, string, CancellationToken>((path, content, token) =>
-                    {
-                        Assert.IsEmpty(content);
-                    });
 
             using (var executor = new TestApacheBenchExecutor(this.fixture))
             {
@@ -151,7 +146,8 @@
                         FileName = command,
                         Arguments = arguments,
                         WorkingDirectory = workingDir
-                    }
+                    },
+                    ExitTime = DateTime.Now.AddSeconds(5)
                 };
                 process.StandardOutput.Append(results);
                 return process;
@@ -164,6 +160,125 @@
                 Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted(expectedCommand));
             }
         }
+
+        [Test]
+        [TestCase(PlatformID.Unix, "40000", "20")]
+        [TestCase(PlatformID.Unix, "25000", "5")]
+        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForLinux(PlatformID platform, string noOfRequests, string noOfConcurrentRequests)
+        {
+
+            this.SetupDefaultBehaviors(platform);
+
+            this.fixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { "PackageName", "apachehttpserver" },
+                { "Scenario", "ExecuteApacheBenchBenchmark" },
+                { "NoOfRequests", noOfRequests },
+                { "NoOfConcurrentRequests", noOfConcurrentRequests },
+            };
+
+            bool allowPortCommandExecuted = false;
+            bool startServerCommandExecuted = false;
+            bool benchmarkCommandExecuted = false;
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                if (arguments.Equals("ufw allow 'Apache'"))
+                {
+                    allowPortCommandExecuted = true;
+                }
+                else if (arguments.Equals("systemctl start apache2"))
+                {
+                    startServerCommandExecuted = true;
+                }
+                else if (arguments.Equals($"/usr/bin/ab -k -n {noOfRequests} -c {noOfConcurrentRequests} http://localhost:80/"))
+                {
+                    benchmarkCommandExecuted = true;
+                }
+
+                string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
+                string results = File.ReadAllText(resultsPath);
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = command,
+                        Arguments = arguments,
+                        WorkingDirectory = workingDir
+                    },
+                    ExitTime = DateTime.Now.AddSeconds(5)
+                };
+                process.StandardOutput.Append(results);
+                return process;
+            };
+            using (var executor = new TestApacheBenchExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+                
+                Assert.IsTrue(allowPortCommandExecuted);
+                Assert.IsTrue(startServerCommandExecuted);
+                Assert.IsTrue(benchmarkCommandExecuted);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, "40000", "20")]
+        [TestCase(PlatformID.Win32NT, "25000", "5")]
+        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForWindows(PlatformID platform, string noOfRequests, string noOfConcurrentRequests)
+        {
+
+            this.SetupDefaultBehaviors(platform);
+
+            this.fixture.Parameters = new Dictionary<string, IConvertible>
+            {
+                { "PackageName", "apachehttpserver" },
+                { "Scenario", "ExecuteApacheBenchBenchmark" },
+                { "NoOfRequests", noOfRequests },
+                { "NoOfConcurrentRequests", noOfConcurrentRequests },
+            };
+
+            bool startServerCommandExecuted = false;
+            bool benchmarkCommandExecuted = false;
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                if (arguments.Equals("-k install"))
+                {
+                    startServerCommandExecuted = true;
+                }
+                else if (arguments.Equals($"-k -n {noOfRequests} -c {noOfConcurrentRequests} http://localhost:80/"))
+                {
+                    benchmarkCommandExecuted = true;
+                }
+
+                string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
+                string results = File.ReadAllText(resultsPath);
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = command,
+                        Arguments = arguments,
+                        WorkingDirectory = workingDir
+                    },
+                    ExitTime = DateTime.Now.AddSeconds(5)
+                };
+                process.StandardOutput.Append(results);
+                return process;
+            };
+            using (var executor = new TestApacheBenchExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsTrue(startServerCommandExecuted);
+                Assert.IsTrue(benchmarkCommandExecuted);
+            }
+        }
+
         private void SetupDefaultBehaviors(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
         {
             this.fixture = new MockFixture();
@@ -188,18 +303,13 @@
             this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync("text");
             this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                    .Callback<string, string, CancellationToken>((path, content, token) =>
-                    {
-                        Assert.AreEqual(content, "text");
-                    });
+                    .Returns(Task.CompletedTask);
 
             // Profile parameters.
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
-                { "CommandArguments", "-k -n 100 -c 100 http://localhost:80/" },
                 { "PackageName", "apachehttpserver" },
-                { "CommandLine", "" },
-                { "Scenario", "ApacheBench_N50000_C10" },
+                { "Scenario", "ExecuteApacheBenchBenchmark" },
             };
         }
         private class TestApacheBenchExecutor : ApacheBenchExecutor

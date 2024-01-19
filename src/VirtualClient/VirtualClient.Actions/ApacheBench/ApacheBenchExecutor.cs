@@ -6,11 +6,11 @@ namespace VirtualClient.Actions
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.IO.Abstractions;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -176,7 +176,7 @@ namespace VirtualClient.Actions
 
                 // Replacing the default path to the directory path.
                 await this.fileSystem.File.ReplaceInFileAsync(
-                    httpdConfFilePath, "Define SRVROOT \"c:\\/Apache24\"", $"Define SRVROOT \"{apache24Directory}\"", cancellationToken);
+                   httpdConfFilePath, "Define SRVROOT \"c:\\/Apache24\"", $"Define SRVROOT \"{apache24Directory}\"", cancellationToken);
 
                 string binPath = this.PlatformSpecifics.Combine(apache24Directory, "bin");
                 string httpdExecutablePath = this.PlatformSpecifics.Combine(binPath, "httpd.exe");
@@ -208,8 +208,8 @@ namespace VirtualClient.Actions
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
                             process.ThrowIfWorkloadFailed();
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
                         }
                     }
                 }
@@ -240,7 +240,7 @@ namespace VirtualClient.Actions
 
                 this.Logger.LogMetrics(
                     toolName: nameof(ApacheBenchExecutor),
-                    scenarioName: this.Scenario, 
+                    scenarioName: this.Scenario,
                     scenarioStartTime: process.StartTime,
                     scenarioEndTime: process.ExitTime,
                     metrics: workloadMetrics,
