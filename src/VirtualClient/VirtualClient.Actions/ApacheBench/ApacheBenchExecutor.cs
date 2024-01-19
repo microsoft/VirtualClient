@@ -5,14 +5,19 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO.Abstractions;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// Apache http server benchmarking workload executor
@@ -50,13 +55,43 @@ namespace VirtualClient.Actions
         {
             get
             {
-                string commandLine = this.Parameters.GetValue<string>(nameof(this.CommandLine));
-                if (string.IsNullOrWhiteSpace(commandLine))
+                return $"-k -n {this.NoOfRequests} -c {this.NoOfConcurrentRequests} http://localhost:80/";
+            }
+        }
+
+        /// <summary>
+        /// Allows overwrite to ApacheBench param for number of requests. 
+        /// </summary>
+        public int NoOfRequests
+        {
+            get
+            {
+                int noOfRequests = 50000;
+
+                if (this.Parameters.TryGetValue(nameof(this.NoOfRequests), out IConvertible value) && value != null)
                 {
-                    commandLine = "-k -n 50000 -c 10 http://localhost:80/";
+                    noOfRequests = value.ToInt32(CultureInfo.InvariantCulture);
                 }
 
-                return commandLine;
+                return noOfRequests;
+            }
+        }
+
+        /// <summary>
+        /// Allows overwrite to ApacheBench param for number of requests. 
+        /// </summary>
+        public int NoOfConcurrentRequests
+        {
+            get
+            {
+                int noOfConcurrentRequests = 50;
+
+                if (this.Parameters.TryGetValue(nameof(this.NoOfConcurrentRequests), out IConvertible value) && value != null)
+                {
+                    noOfConcurrentRequests = value.ToInt32(CultureInfo.InvariantCulture);
+                }
+
+                return noOfConcurrentRequests;
             }
         }
 
@@ -73,6 +108,25 @@ namespace VirtualClient.Actions
         protected string WorkloadExecutablePath { get; set; }
 
         /// <summary>
+        /// Returns true/false whether the component is supported on the current
+        /// OS platform and CPU architecture.
+        /// </summary>
+        protected override bool IsSupported()
+        {
+            bool isSupported = base.IsSupported()
+                &&
+                ((this.Platform == PlatformID.Win32NT && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64))
+                || (this.Platform == PlatformID.Unix && (this.CpuArchitecture == Architecture.X64 || this.CpuArchitecture == Architecture.Arm64)));
+
+            if (!isSupported)
+            {
+                this.Logger.LogNotSupported("ApacheBench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+            }
+
+            return isSupported;
+        }
+
+        /// <summary>
         /// Executes the workload.
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
@@ -81,23 +135,26 @@ namespace VirtualClient.Actions
         {
             try
             {
-                Task.Delay(3000);
-                DateTime startTime = DateTime.UtcNow;
-                string workloadResults = string.Empty;
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.WorkloadExecutablePath, this.CommandLine, string.Empty, telemetryContext, cancellationToken, runElevated: true))
                 {
-                    workloadResults = process.StandardOutput.ToString();
+                    process.ThrowIfWorkloadFailed();
+
+                    if (process.StandardError.Length > 0)
+                    {
+                        process.ThrowOnStandardError<WorkloadException>(
+                            errorReason: ErrorReason.WorkloadFailed);
+                    }
+
+                    string workloadResults = process.StandardOutput.ToString();
+
+                    await this.CaptureMetricsAsync(process, workloadResults, this.CommandLine, telemetryContext, cancellationToken)
+                        .ConfigureAwait(false);
                 }
-
-                DateTime finishTime = DateTime.UtcNow;
-
-                await this.CaptureMetricsAsync(workloadResults, this.CommandLine, startTime, finishTime, telemetryContext, cancellationToken)
-                    .ConfigureAwait(false);
             }
             catch (OperationCanceledException ex)
             {
                 telemetryContext.AddError(ex);
-                this.Logger.LogTraceMessage($"{nameof(ExampleWorkloadExecutor)}.Exception", telemetryContext);
+                this.Logger.LogErrorMessage(ex, telemetryContext, LogLevel.Warning);
             }
         }
 
@@ -106,7 +163,6 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            Task.Delay(3000);
             ApacheBenchState state = await this.stateManager.GetStateAsync<ApacheBenchState>($"{nameof(ApacheBenchState)}", cancellationToken)
                 ?? new ApacheBenchState();
 
@@ -114,6 +170,7 @@ namespace VirtualClient.Actions
             {
                 DependencyPath workloadPackagePath = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None)
                     .ConfigureAwait(false);
+
                 string apache24Directory = this.PlatformSpecifics.Combine(workloadPackagePath.Path, "Apache24");
                 string httpdConfFilePath = this.PlatformSpecifics.Combine(apache24Directory, "conf", "httpd.conf");
 
@@ -121,13 +178,21 @@ namespace VirtualClient.Actions
                 await this.fileSystem.File.ReplaceInFileAsync(
                     httpdConfFilePath, "Define SRVROOT \"c:\\/Apache24\"", $"Define SRVROOT \"{apache24Directory}\"", cancellationToken);
 
-                string httpdExecutablePath = this.PlatformSpecifics.Combine(apache24Directory, "bin", "httpd.exe");
+                string binPath = this.PlatformSpecifics.Combine(apache24Directory, "bin");
+                string httpdExecutablePath = this.PlatformSpecifics.Combine(binPath, "httpd.exe");
                 if (!state.ApacheBenchStateInitialized)
                 {
-                    await this.ExecuteCommandAsync(httpdExecutablePath, "-k install", $"{apache24Directory}\\bin", telemetryContext, cancellationToken, runElevated: true).ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(httpdExecutablePath, "-k install", binPath, telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
                 }
 
-                this.WorkloadExecutablePath = this.PlatformSpecifics.Combine(apache24Directory, "bin", "ab.exe");
+                this.WorkloadExecutablePath = this.PlatformSpecifics.Combine(binPath, "ab.exe");
             }
             else if (this.Platform == PlatformID.Unix)
             {
@@ -139,8 +204,14 @@ namespace VirtualClient.Actions
 
                 foreach (var command in executionCommands)
                 {
-                    await this.ExecuteCommandAsync(command, "/usr/sbin/", telemetryContext, cancellationToken, runElevated: true)
-                        .ConfigureAwait(false);
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, "/usr/sbin/", telemetryContext, cancellationToken, runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
                 }
 
                 this.WorkloadExecutablePath = "/usr/bin/ab";
@@ -150,60 +221,28 @@ namespace VirtualClient.Actions
             await this.stateManager.SaveStateAsync<ApacheBenchState>($"{nameof(ApacheBenchState)}", state, cancellationToken);
         }
 
-        private Task<string> ExecuteWorkloadAsync(string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
+        private Task CaptureMetricsAsync(IProcessProxy process, string results, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            EventContext relatedContext = telemetryContext.Clone()
-                .AddContext("packageName", this.PackageName)
-                .AddContext("command", this.WorkloadExecutablePath)
-                .AddContext("commandArguments", commandArguments);
+            process.ThrowIfNull(nameof(process));
+            results.ThrowIfNullOrWhiteSpace(nameof(results));
+            this.MetadataContract.AddForScenario(
+                "ApacheBench",
+                commandArguments,
+                null);
 
-            return this.Logger.LogMessageAsync($"{nameof(ApacheBenchExecutor)}.ExecuteWorkload", relatedContext, async () =>
-            {
-                using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
-                {
-                    using (IProcessProxy workloadProcess = this.processManager.CreateProcess(this.WorkloadExecutablePath, commandArguments))
-                    {
-                        this.CleanupTasks.Add(() => workloadProcess.SafeKill());
-                        await workloadProcess.StartAndWaitAsync(cancellationToken)
-                            .ConfigureAwait(false);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(workloadProcess, telemetryContext, nameof(ApacheBenchExecutor), logToFile: true)
-                                .ConfigureAwait(false);
-
-                            workloadProcess.ThrowIfErrored<WorkloadException>(ProcessProxy.DefaultSuccessCodes, errorReason: ErrorReason.WorkloadFailed);
-                            if (workloadProcess.StandardOutput.Length == 0)
-                            {
-                                throw new WorkloadException(
-                                    $"Unexpected workload results outcome. The workload did not produce any results to standard output.",
-                                    ErrorReason.WorkloadResultsNotFound);
-                            }
-                        }
-
-                        return workloadProcess.StandardOutput.ToString();
-                    }
-                }
-            });
-        }
-
-        private Task CaptureMetricsAsync(string results, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
-        {
             if (!cancellationToken.IsCancellationRequested)
             {
-                results.ThrowIfNullOrWhiteSpace(nameof(results));
-
                 this.Logger.LogMessage($"{nameof(ApacheBenchExecutor)}.CaptureMetrics", telemetryContext.Clone()
                     .AddContext("results", results));
 
-                ApacheBenchMetricsParser resultsParser = new ApacheBenchMetricsParser(results);
+                var resultsParser = new ApacheBenchMetricsParser(results);
                 IList<Metric> workloadMetrics = resultsParser.Parse();
 
                 this.Logger.LogMetrics(
                     toolName: nameof(ApacheBenchExecutor),
                     scenarioName: this.Scenario, 
-                    scenarioStartTime: startTime,
-                    scenarioEndTime: endTime,
+                    scenarioStartTime: process.StartTime,
+                    scenarioEndTime: process.ExitTime,
                     metrics: workloadMetrics,
                     metricCategorization: null,
                     scenarioArguments: commandArguments,
