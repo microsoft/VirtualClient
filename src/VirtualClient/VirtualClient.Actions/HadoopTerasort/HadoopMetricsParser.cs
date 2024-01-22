@@ -83,9 +83,21 @@ namespace VirtualClient.Actions
             this.Metrics =
             [
                 .. this.FileSystemCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.Undefined),
-                .. this.JobCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.LowerIsBetter),
-                .. this.MapReduceFrameworkCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.HigherIsBetter),
+                .. this.JobCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.Undefined),
+                .. this.MapReduceFrameworkCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.Undefined),
             ];
+
+            // Job Counters
+            this.ModifyProperty("Total time spent by all maps in occupied slots (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("Total time spent by all reduces in occupied slots (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("Total time spent by all map tasks (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("Total time spent by all reduce tasks (ms)", MetricRelativity.LowerIsBetter);
+
+            // Map-Reduce Framework
+            this.ModifyProperty("Spilled Records", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("Failed Shuffles", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("GC time elapsed (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyProperty("CPU time spent (ms)", MetricRelativity.LowerIsBetter);
 
             return this.Metrics;
         }
@@ -153,6 +165,15 @@ namespace VirtualClient.Actions
                 this.Sections[sectionName], HadoopMetricsParser.HadoopDataTableDelimiter, sectionName, this.columnNames);
             this.MapReduceFrameworkCounters.SplitDataColumn(columnIndex: 1, HadoopMetricsParser.ValueUnitSplitRegex, this.measurementSplitColumnNames);
             this.MapReduceFrameworkCounters.ReplaceEmptyCell("count");
+        }
+
+        private void ModifyProperty(string metricName, MetricRelativity relativity)
+        {
+            Metric metricToModify = this.Metrics.FirstOrDefault(m => m.Name == metricName);
+            if (metricToModify != null)
+            {
+                metricToModify.Relativity = relativity;
+            }
         }
     }
 }
