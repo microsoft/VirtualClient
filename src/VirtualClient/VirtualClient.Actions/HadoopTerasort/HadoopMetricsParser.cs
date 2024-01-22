@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Sectionize the text by one or more empty lines.
         /// </summary>
-        private static readonly Regex HadoopSectionDelimiter = new Regex(@"(\n)(\s)*(\n)", RegexOptions.ExplicitCapture);
+        private static readonly Regex HadoopSectionDelimiter = new Regex(@"(\r\n)(\s)*(\r\n)", RegexOptions.ExplicitCapture);
 
         /// <summary>
         /// Separate the column values using the equals to delimeter.
@@ -82,7 +82,7 @@ namespace VirtualClient.Actions
 
             this.Metrics =
             [
-                .. this.FileSystemCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.LowerIsBetter),
+                .. this.FileSystemCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.Undefined),
                 .. this.JobCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.LowerIsBetter),
                 .. this.MapReduceFrameworkCounters.GetMetrics(nameIndex: 0, unitIndex: 3, valueIndex: 2, metricRelativity: MetricRelativity.HigherIsBetter),
             ];
@@ -94,10 +94,13 @@ namespace VirtualClient.Actions
         protected override void Preprocess()
         {
             List<string> result = new List<string>();
+            this.PreprocessedText = Regex.Replace(this.RawText, "\r\n", "\n");
+            this.PreprocessedText = Regex.Replace(this.PreprocessedText, "\n", "\r\n");
+            this.PreprocessedText = this.PreprocessedText.Trim();
 
-            this.PreprocessedText = this.RawText.Replace("File System Counters", $"{Environment.NewLine}File System Counters");
-            this.PreprocessedText = this.PreprocessedText.Replace("Job Counters", $"{Environment.NewLine}Job Counters");
-            this.PreprocessedText = this.PreprocessedText.Replace("Map-Reduce Framework", $"{Environment.NewLine}Map-Reduce Framework");
+            this.PreprocessedText = this.PreprocessedText.Replace("File System Counters", $"\r\nFile System Counters");
+            this.PreprocessedText = this.PreprocessedText.Replace("Job Counters", $"\r\nJob Counters");
+            this.PreprocessedText = this.PreprocessedText.Replace("Map-Reduce Framework", $"\r\nMap-Reduce Framework");
 
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"org\.apache\.hadoop\.examples\.terasort\.TeraGen\$Counters[ \r]*\n", string.Empty);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"File Input Format Counters[ \r]*\n", string.Empty);
@@ -105,7 +108,7 @@ namespace VirtualClient.Actions
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @"Shuffle Errors[ \r]*\n", string.Empty);
             this.PreprocessedText = Regex.Replace(this.PreprocessedText, @".* INFO terasort\.TeraSort: done", string.Empty);
 
-            List<string> rows = this.PreprocessedText.Split("\n", StringSplitOptions.None).ToList();
+            List<string> rows = this.PreprocessedText.Split("\r\n", StringSplitOptions.None).ToList();
             foreach (string row in rows)
             {
                 string rownew = row;
@@ -122,7 +125,7 @@ namespace VirtualClient.Actions
                 result.Add(rownew);
             }
 
-            this.PreprocessedText = string.Join(Environment.NewLine, result);
+            this.PreprocessedText = string.Join("\r\n", result);
         }
 
         private void ParseFileSystemCounters()
