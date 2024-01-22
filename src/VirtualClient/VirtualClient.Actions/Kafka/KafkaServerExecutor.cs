@@ -377,6 +377,7 @@ namespace VirtualClient.Actions.Kafka
         {
             string logDir = "/tmp";
             this.fileSystem.Directory.DeleteAsync(logDir);
+            telemetryContext.AddContext("DeletedLogDirectory", logDir);
 
             for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
             {
@@ -407,6 +408,7 @@ namespace VirtualClient.Actions.Kafka
                         newServerProperties, @"controller.quorum.voters *= *[^\n]*", $"controller.quorum.voters={serverInstance}@localhost:{port + 1}", cancellationToken);
                 }
 
+                telemetryContext.AddContext(nameof(newServerProperties), newServerProperties);
             }
         }
 

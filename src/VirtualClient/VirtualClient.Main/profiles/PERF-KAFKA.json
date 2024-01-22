@@ -7,9 +7,7 @@
   },
   "Parameters": {
     "ServerPort": 9092,
-    "ServerInstances": 3,
-    "ClientInstances": 1,
-    "Duration": "00:02:00"
+    "ServerInstances": 3
   },
   "Actions": [
     {
