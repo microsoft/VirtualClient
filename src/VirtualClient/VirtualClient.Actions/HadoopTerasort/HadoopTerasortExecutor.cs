@@ -181,7 +181,7 @@ namespace VirtualClient.Actions
                 await this.ExecuteCommandAsync("bash", $"-c \"chmod 0600 ~/.ssh/authorized_keys\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"echo y | bin/hdfs namenode -format\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs dfs -mkdir /user\"", this.PackageDirectory, telemetryContext, cancellationToken);
-                await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs dfs -mkdir /user/azureuser\"", this.PackageDirectory, telemetryContext, cancellationToken);
+                await this.ExecuteCommandAsync("bash", $"-c \"bin/hdfs dfs -mkdir /user/{Environment.UserName}\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 this.state.HadoopExecutorStateInitialized = true;
             }
 

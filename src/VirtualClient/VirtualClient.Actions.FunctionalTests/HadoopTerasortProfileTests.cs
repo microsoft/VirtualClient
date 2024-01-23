@@ -88,7 +88,7 @@ namespace VirtualClient.Actions
                         $"bash -c \"chmod 0600 ~/.ssh/authorized_keys\"",
                         $"bash -c \"echo y | bin/hdfs namenode -format\"",
                         $"bash -c \"bin/hdfs dfs -mkdir /user\"",
-                        $"bash -c \"bin/hdfs dfs -mkdir /user/azureuser\"",
+                        $"bash -c \"bin/hdfs dfs -mkdir /user/{Environment.UserName}\"",
                         $"bash -c sbin/start-dfs.sh",
                         $"bash -c sbin/start-yarn.sh",
                         $"bash -c \"bin/hadoop jar share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.5.jar teragen 100000 /inp-.+-.+\"",
@@ -116,7 +116,12 @@ namespace VirtualClient.Actions
                     "linux-x64/sbin/stop-dfs.sh",
                     "linux-x64/bin/yarn",
                     "linux-x64/sbin/start-yarn.sh",
-                    "linux-x64/sbin/stop-yarn.sh"
+                    "linux-x64/sbin/stop-yarn.sh",
+                    "linux-x64/etc/hadoop/core-site.xml",
+                    "linux-x64/etc/hadoop/hdfs-site.xml",
+                    "linux-x64/etc/hadoop/mapred-site.xml",
+                    "linux-x64/etc/hadoop/yarn-site.xml",
+                    "linux-x64/etc/hadoop/hadoop-env.sh",
                 };
                 
                 this.fixture.SetupWorkloadPackage("hadoop-3.3.5", expectedFiles: paths);
