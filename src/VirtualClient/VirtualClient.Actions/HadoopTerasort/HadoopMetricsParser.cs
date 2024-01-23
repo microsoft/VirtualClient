@@ -88,16 +88,16 @@ namespace VirtualClient.Actions
             ];
 
             // Job Counters
-            this.ModifyProperty("Total time spent by all maps in occupied slots (ms)", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("Total time spent by all reduces in occupied slots (ms)", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("Total time spent by all map tasks (ms)", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("Total time spent by all reduce tasks (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Total time spent by all maps in occupied slots (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Total time spent by all reduces in occupied slots (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Total time spent by all map tasks (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Total time spent by all reduce tasks (ms)", MetricRelativity.LowerIsBetter);
 
             // Map-Reduce Framework
-            this.ModifyProperty("Spilled Records", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("Failed Shuffles", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("GC time elapsed (ms)", MetricRelativity.LowerIsBetter);
-            this.ModifyProperty("CPU time spent (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Spilled Records", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("Failed Shuffles", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("GC time elapsed (ms)", MetricRelativity.LowerIsBetter);
+            this.ModifyMetricRelativity("CPU time spent (ms)", MetricRelativity.LowerIsBetter);
 
             return this.Metrics;
         }
@@ -167,7 +167,7 @@ namespace VirtualClient.Actions
             this.MapReduceFrameworkCounters.ReplaceEmptyCell("count");
         }
 
-        private void ModifyProperty(string metricName, MetricRelativity relativity)
+        private void ModifyMetricRelativity(string metricName, MetricRelativity relativity)
         {
             Metric metricToModify = this.Metrics.FirstOrDefault(m => m.Name == metricName);
             if (metricToModify != null)

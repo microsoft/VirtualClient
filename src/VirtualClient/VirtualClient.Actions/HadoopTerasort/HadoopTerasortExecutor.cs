@@ -173,8 +173,8 @@ namespace VirtualClient.Actions
             {
                 this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, this.JavaPackageDirectory, EnvironmentVariableTarget.Process);
 
-                this.ConfigurationFilesAsync(telemetryContext, cancellationToken);
-                await this.ExecutableFilesAsync(telemetryContext, cancellationToken);
+                await this.ConfigurationFilesAsync(telemetryContext, cancellationToken);
+                await this.MakeFilesExecutableAsync(telemetryContext, cancellationToken);
 
                 await this.ExecuteCommandAsync("bash", $"-c \"echo y | ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa\"", this.PackageDirectory, telemetryContext, cancellationToken);
                 await this.ExecuteCommandAsync("bash", $"-c \"cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\"", this.PackageDirectory, telemetryContext, cancellationToken);
@@ -227,7 +227,7 @@ namespace VirtualClient.Actions
                 this.MetadataContract.AddForScenario(
                     toolName,
                     process.FullCommand(),
-                    toolVersion: "3.3.5");
+                    toolVersion: null);
 
                 this.MetadataContract.Apply(telemetryContext);
 
@@ -248,44 +248,44 @@ namespace VirtualClient.Actions
             }
         }
 
-        private void ConfigurationFilesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ConfigurationFilesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             IDictionary<string, string> coreSite = new Dictionary<string, string>
             {
                 { "fs.defaultFS", "hdfs://localhost:9000" }
             };
-            this.CreateHTMLValue("core-site.xml", coreSite, cancellationToken);
+            await this.CreateXMLValueAsync("core-site.xml", coreSite, cancellationToken);
 
             IDictionary<string, string> hdfsSite = new Dictionary<string, string>
             {
                 { "dfs.replication", "1" }
             };
-            this.CreateHTMLValue("hdfs-site.xml", hdfsSite, cancellationToken);
+            await this.CreateXMLValueAsync("hdfs-site.xml", hdfsSite, cancellationToken);
 
             IDictionary<string, string> mapredSite = new Dictionary<string, string>
             {
                 { "mapreduce.framework.name", "yarn" },
                 { "mapreduce.application.classpath", "$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/*:$HADOOP_MAPRED_HOME/share/hadoop/mapreduce/lib/*" }
             };
-            this.CreateHTMLValue("mapred-site.xml", mapredSite, cancellationToken);
+            await this.CreateXMLValueAsync("mapred-site.xml", mapredSite, cancellationToken);
 
             IDictionary<string, string> yarnSite = new Dictionary<string, string>
             {
                 { "yarn.nodemanager.aux-services", "mapreduce_shuffle" },
                 { "yarn.nodemanager.env-whitelist", "JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CLASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_HOME,PATH,LANG,TZ,HADOOP_MAPRED_HOME" }
             };
-            this.CreateHTMLValue("yarn-site.xml", yarnSite, cancellationToken);
+            await this.CreateXMLValueAsync("yarn-site.xml", yarnSite, cancellationToken);
 
             string makeFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "etc", "hadoop");
             string hadoopEnvFilePath = this.PlatformSpecifics.Combine(makeFilePath, "hadoop-env.sh");
 
-            this.fileSystem.File.ReplaceInFileAsync(
+            await this.fileSystem.File.ReplaceInFileAsync(
                         hadoopEnvFilePath, @"# export JAVA_HOME=", $"export JAVA_HOME={this.JavaPackageDirectory}", cancellationToken);
 
             telemetryContext.AddContext(nameof(this.ConfigurationFilesAsync), "Configuration process successful required to run terasort.");
         }
 
-        private void CreateHTMLValue(string fileName, IDictionary<string, string> value, CancellationToken cancellationToken)
+        private Task CreateXMLValueAsync(string fileName, IDictionary<string, string> value, CancellationToken cancellationToken)
         {
             string makeFilePath = this.PlatformSpecifics.Combine(this.PackageDirectory, "etc", "hadoop");
             string filePath = this.PlatformSpecifics.Combine(makeFilePath, fileName);
@@ -299,11 +299,11 @@ namespace VirtualClient.Actions
             }
 
             replacedStatement += "</configuration>";
-            this.fileSystem.File.ReplaceInFileAsync(
+            return this.fileSystem.File.ReplaceInFileAsync(
                     filePath, replaceStatement, replacedStatement, cancellationToken);
         }
 
-        private async Task ExecutableFilesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task MakeFilesExecutableAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
             await this.systemManagement.MakeFileExecutableAsync(this.JavaExecutablePath, this.Platform, cancellationToken);
@@ -324,7 +324,7 @@ namespace VirtualClient.Actions
                 await this.systemManagement.MakeFileExecutableAsync(fullPath, this.Platform, cancellationToken);
             }
 
-            telemetryContext.AddContext(nameof(this.ExecutableFilesAsync), "Execution permission successful to use the files.");
+            telemetryContext.AddContext(nameof(this.MakeFilesExecutableAsync), "Execution permission successful to use the files.");
         }
 
         private async Task RunSortingOperationsAsync(string command, string operation, EventContext telemetryContext, CancellationToken cancellationToken)

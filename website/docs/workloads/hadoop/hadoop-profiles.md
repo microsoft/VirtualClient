@@ -12,7 +12,6 @@ the performance of the CPU over various periods of time while also allowing the 
 
 * **Supported Platform/Architectures**
   * linux-x64
-  * linux-arm64
 
 * **Supports Disconnected Scenarios**  
   * Yes. When the TERASORT package is included in 'packages' directory of the Virtual Client.
