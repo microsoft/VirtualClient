@@ -2,12 +2,14 @@
 {
     using NUnit.Framework;
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
+    using VirtualClient.Contracts;
 
     public class ApacheBenchMetricsParserTests
     {
@@ -33,27 +35,27 @@
         [Test]
         public void ApacheBenchMetricsParserParsesInputAsExpected()
         {
-            this.testParser.Parse();
+            IList<Metric> metrics = this.testParser.Parse();
             string metricsInput = this.testParser.Sections["Metrics"];
             Assert.IsNotNull(metricsInput);
 
-            Assert.IsTrue(metricsInput.Contains("Total requests"));
-            Assert.IsTrue(metricsInput.Contains("Total time (seconds)"));
-            Assert.IsTrue(metricsInput.Contains("Total failed requests"));
-            Assert.IsTrue(metricsInput.Contains("Total requests (per second)"));
-            Assert.IsTrue(metricsInput.Contains("Total time (milliseconds) per request"));
-            Assert.IsTrue(metricsInput.Contains("Total data transferred (bytes)"));
-            Assert.IsTrue(metricsInput.Contains("Data transfer rate (kilo bytes per second)"));
+            MetricAssert.Exists(metrics, "Total requests", 100);
+            MetricAssert.Exists(metrics, "Total time", 0.578);
+            MetricAssert.Exists(metrics, "Total failed requests", 0);
+            MetricAssert.Exists(metrics, "Requests", 172.97);
+            MetricAssert.Exists(metrics, "Total time per request", 5.781);
+            MetricAssert.Exists(metrics, "Total data transferred", 65006);
+            MetricAssert.Exists(metrics, "Data transfer rate", 109.81);
         }
 
         [Test]
-        public void ApacheBenchResultsParserThrowsWhenInvalidResultsAreProvided()
+        public void ApacheBenchResultsParserReturnsEmptyResultWhenInvalidResultsAreProvided()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string outputPath = Path.Combine(workingDirectory, @"Examples\ApacheBench\ApacheBenchResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new ApacheBenchMetricsParser(this.rawText);
-            Assert.Throws<WorkloadException>(() => this.testParser.Parse());
+            Assert.IsEmpty(this.testParser.Parse());
         }
     }
 }

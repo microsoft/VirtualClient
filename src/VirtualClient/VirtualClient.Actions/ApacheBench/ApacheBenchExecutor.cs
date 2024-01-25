@@ -137,8 +137,6 @@ namespace VirtualClient.Actions
             {
                 using (IProcessProxy process = await this.ExecuteCommandAsync(this.WorkloadExecutablePath, this.CommandLine, string.Empty, telemetryContext, cancellationToken, runElevated: true))
                 {
-                    process.ThrowIfWorkloadFailed();
-
                     if (process.StandardError.Length > 0)
                     {
                         process.ThrowOnStandardError<WorkloadException>(
@@ -180,6 +178,7 @@ namespace VirtualClient.Actions
 
                 string binPath = this.PlatformSpecifics.Combine(apache24Directory, "bin");
                 string httpdExecutablePath = this.PlatformSpecifics.Combine(binPath, "httpd.exe");
+
                 if (!state.ApacheBenchStateInitialized)
                 {
                     using (IProcessProxy process = await this.ExecuteCommandAsync(httpdExecutablePath, "-k install", binPath, telemetryContext, cancellationToken, runElevated: true))
@@ -202,14 +201,17 @@ namespace VirtualClient.Actions
                     "systemctl start apache2"
                 };
 
-                foreach (var command in executionCommands)
+                if (!state.ApacheBenchStateInitialized)
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(command, "/usr/sbin/", telemetryContext, cancellationToken, runElevated: true))
+                    foreach (var command in executionCommands)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
+                        using (IProcessProxy process = await this.ExecuteCommandAsync(command, "/usr/sbin/", telemetryContext, cancellationToken, runElevated: true))
                         {
-                            process.ThrowIfWorkloadFailed();
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
+                            if (!cancellationToken.IsCancellationRequested)
+                            {
+                                process.ThrowIfWorkloadFailed();
+                                await this.LogProcessDetailsAsync(process, telemetryContext, "ApacheBench");
+                            }
                         }
                     }
                 }
@@ -225,6 +227,7 @@ namespace VirtualClient.Actions
         {
             process.ThrowIfNull(nameof(process));
             results.ThrowIfNullOrWhiteSpace(nameof(results));
+
             this.MetadataContract.AddForScenario(
                 "ApacheBench",
                 commandArguments,

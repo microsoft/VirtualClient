@@ -17,11 +17,11 @@ The following metrics are examples of those captured by the Virtual Client when 
 
 | Tool Name   | Metric Name                                | Example Value | Unit            |
 |-------------|--------------------------------------------|---------------|-----------------|
-| ApacheBench | Concurrency Level                          | 50            | bytes           |
+| ApacheBench | Concurrency Level                          | 50            | number          |
 | ApacheBench | Total requests                             | 50000         | number          |
-| ApacheBench | Total time(seconds)                        | 34.095        | seconds         |
-| ApacheBench | Total failed requests(per second)          | 0             | number/sec      |
-| ApacheBench | total requests(per second)                 | 1466.89       | number/sec      |
-| ApacheBench | Total time(milliseconds) per request       | 34.095        | milliseconds    |
-| ApacheBench | Total data transferred (bytes)             | 16329340      | bytes           |
-| ApacheBench | Data transfer rate (kilo bytes per second) | 467.72        | kilo bytes/secs |
+| ApacheBench | Total time			                       | 34.095        | seconds         |
+| ApacheBench | Total failed requests			           | 0             | number/sec      |
+| ApacheBench | Requests					               | 1466.89       | number/sec      |
+| ApacheBench | Time per request						   | 34.095        | milliseconds    |
+| ApacheBench | Total data transferred			           | 16329340      | bytes           |
+| ApacheBench | Data transfer rate						   | 467.72        | kilobytes/sec   |

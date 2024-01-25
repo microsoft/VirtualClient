@@ -4,7 +4,7 @@ The following profiles run customer-representative or benchmarking scenarios usi
 * [Workload Details](./apachebench.md)  
 
 ## PERF-APACHEBENCH.json
-ApacheBench is designed to be a very simple benchmarking tool. It produces the metrics for request latencies. It performs N number of requests to server and C number of requests at a time. Virtual client set total of 50000 requests in a batch of 10 concurrent requests in scenario1 and 50 concurrent requests in 2 scenarios respectively at a time, per iteration. Apache bench is an industry standard benchmarking toolset.
+ApacheBench is a benchmarking tool for apache http server. It produces the metrics for request latencies. It performs N number of requests to server and C number of requests at a time. Virtual client set total of 50000 requests in a batch of 50 concurrent requests at a time, per iteration. Apache bench is an industry standard benchmarking toolset.
 
 * [Workload Profile](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-APACHEBENCH.json) 
 
@@ -25,18 +25,18 @@ ApacheBench is designed to be a very simple benchmarking tool. It produces the m
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
 
 * **Profile Parameters**  
-  There are no parameters required for the workload. The command for the ab is "ab -k -n 50000 -c 10 http://localhost:80".
-  By default 50000 request are made to apache http server in a batch of 10 and 50 in 2 scenarios respectively at a time.
+  There are 2 parameters required for the workload. The command for the apache bench(ab) is "ab -k -n 50000 -c 50 http://localhost:80".
+  By default 50000 request are made to apache http server in a batch 50 in the mentioned scenario at a time.
 
   | Parameter                 | Purpose                                                                         | Default value |
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | NoOfRequests              | Total number of requests to be made to server.                                  | 50000         |
-  | NoOfConcurrentRequests    | Concurrency level, total number of parallel requests.                           | 10/50         |
+  | NoOfConcurrentRequests    | Concurrency level, total number of parallel requests.                           | 50         |
 
   The parameters are mapped as following with the profile parameters of workload :
   NoOfRequests           - n
   NoOfConcurrentRequests - c
-  For parameter details refer to workload details [document](./apachebench.md). The parameters above are default and cannot be overridden. 
+  For parameter details refer to workload details [document](./apachebench.md).
 
 
 * **Profile Runtimes**  

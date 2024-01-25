@@ -33,10 +33,11 @@
         private MockFixture fixture;
         private DependencyPath mockWorkloadPackage;
 
-        [Test]
-        public void ApacheBenchExecutorThrowsIfTheApacheHttpWorkloadPackageDoesNotExist()
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public void ApacheBenchExecutorThrowsIfTheApacheHttpWorkloadPackageDoesNotExist(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehaviors(PlatformID.Win32NT, Architecture.X64);
+            this.SetupDefaultBehaviors(platform, architecture);
 
             using (var executor = new TestApacheBenchExecutor(this.fixture))
             {
@@ -50,35 +51,50 @@
             }
         }
 
-        [Test]
-        public async Task ApacheBenchExecutorCreatesStateWhenStateDoesNotExist()
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task ApacheBenchExecutorCreatesStateWhenStateDoesNotExist(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehaviors(PlatformID.Win32NT, Architecture.X64);
+            this.SetupDefaultBehaviors(platform, architecture);
+
             this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync(string.Empty);
 
+            this.fixture.StateManager.OnSaveState()
+                .Callback<string, JObject, CancellationToken, IAsyncPolicy>((stateId, state, token, retryPolicy) =>
+                {
+                    Assert.IsNotNull(state);
+                    Assert.AreEqual("True", state.Properties().First().Value["ApacheBenchStateInitialized"].ToString());
+                });
+
             using (var executor = new TestApacheBenchExecutor(this.fixture))
             {
-                this.SetupDefaultBehaviors(PlatformID.Win32NT);
+                this.SetupDefaultBehaviors(platform);
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None);
             }
         }
 
-        [Test]
-        public async Task ApacheBenchExecutorExecutesInstallCommandWhenStateNotInitialized()
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task ApacheBenchExecutorExecutesInstallCommandWhenStateNotInitialized(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehaviors(PlatformID.Win32NT, Architecture.X64);
+            this.SetupDefaultBehaviors(platform, architecture);
             bool isCommandExecuted = false;
+
             this.fixture.StateManager.OnGetState()
                 .ReturnsAsync(JObject.FromObject(new ApacheBenchExecutor.ApacheBenchState()
                 {
                     ApacheBenchStateInitialized = false,
                 }));
+
             this.fixture.StateManager.OnSaveState()
                 .Callback<string, JObject, CancellationToken, IAsyncPolicy>((stateId, state, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(state);
                 });
+
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 isCommandExecuted = true;
@@ -89,28 +105,32 @@
 
             using (var executor = new TestApacheBenchExecutor(this.fixture))
             {
-                this.SetupDefaultBehaviors(PlatformID.Win32NT);
+                this.SetupDefaultBehaviors(platform);
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None);
             }
 
             Assert.IsTrue(isCommandExecuted);
         }
 
-        [Test]
-        public async Task ApacheBenchExecutorDoesNotExecuteInstallCommandWhenStateIsInitialized()
+        [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64)]
+        public async Task ApacheBenchExecutorDoesNotExecuteInstallCommandWhenStateIsInitialized(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultBehaviors(PlatformID.Win32NT, Architecture.X64);
+            this.SetupDefaultBehaviors(platform, architecture);
             bool isCommandExecuted = false;
+
             this.fixture.StateManager.OnGetState()
                 .ReturnsAsync(JObject.FromObject(new ApacheBenchExecutor.ApacheBenchState()
                 {
                     ApacheBenchStateInitialized = true,
                 }));
+
             this.fixture.StateManager.OnSaveState()
                 .Callback<string, JObject, CancellationToken, IAsyncPolicy>((stateId, state, token, retryPolicy) =>
                 {
                     Assert.IsNotNull(state);
                 });
+
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 isCommandExecuted = true;
@@ -121,24 +141,32 @@
 
             using (var executor = new TestApacheBenchExecutor(this.fixture))
             {
-                this.SetupDefaultBehaviors(PlatformID.Win32NT);
+                this.SetupDefaultBehaviors(platform);
                 await executor.InitializeAsync(EventContext.None, CancellationToken.None);
             }
 
             Assert.IsFalse(isCommandExecuted);
         }
 
-        [Test]
-        [TestCase(PlatformID.Unix, "ufw allow 'Apache'")]
-        public async Task ApacheBenchExecutorExecutesTheExpectedApacheBenchCommand(PlatformID platform, string expectedCommand)
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task ApacheBenchExecutorExecutesTheExpectedApacheBenchCommandWhenStateIsNotInitialized(PlatformID platform, Architecture architecture)
         {
+            string expectedCommand = "ufw allow 'Apache'";
+            this.SetupDefaultBehaviors(platform, architecture);
 
-            this.SetupDefaultBehaviors(platform);
+            this.fixture.StateManager.OnGetState()
+                .ReturnsAsync(JObject.FromObject(new ApacheBenchExecutor.ApacheBenchState()
+                {
+                    ApacheBenchStateInitialized = false,
+                }));
+
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
                 string results = File.ReadAllText(resultsPath);
+
                 IProcessProxy process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -149,6 +177,7 @@
                     },
                     ExitTime = DateTime.Now.AddSeconds(5)
                 };
+
                 process.StandardOutput.Append(results);
                 return process;
             };
@@ -161,13 +190,59 @@
             }
         }
 
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task ApacheBenchExecutorDoesNotExecutesTheApacheBenchCommandWhenStateIsInitialized(PlatformID platform, Architecture architecture)
+        {
+            string command1 = "ufw allow 'Apache'";
+            string command2 = "systemctl start apache2";
+            this.SetupDefaultBehaviors(platform, architecture);
+
+            this.fixture.StateManager.OnGetState()
+                .ReturnsAsync(JObject.FromObject(new ApacheBenchExecutor.ApacheBenchState()
+                {
+                    ApacheBenchStateInitialized = true,
+                }));
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
+                string results = File.ReadAllText(resultsPath);
+
+                IProcessProxy process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = command,
+                        Arguments = arguments,
+                        WorkingDirectory = workingDir
+                    },
+                    ExitTime = DateTime.Now.AddSeconds(5)
+                };
+
+                process.StandardOutput.Append(results);
+                return process;
+            };
+            using (var executor = new TestApacheBenchExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsFalse(this.fixture.ProcessManager.CommandsExecuted(command1));
+                Assert.IsFalse(this.fixture.ProcessManager.CommandsExecuted(command2));
+            }
+        }
+
         [Test]
-        [TestCase(PlatformID.Unix, "40000", "20")]
-        [TestCase(PlatformID.Unix, "25000", "5")]
-        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForLinux(PlatformID platform, string noOfRequests, string noOfConcurrentRequests)
+        [TestCase(PlatformID.Unix, Architecture.X64, "40000", "20")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "40000", "20")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "25000", "5")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "25000", "5")]
+        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForLinux(PlatformID platform, Architecture architecture, string noOfRequests, string noOfConcurrentRequests)
         {
 
-            this.SetupDefaultBehaviors(platform);
+            this.SetupDefaultBehaviors(platform, architecture);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
@@ -199,6 +274,7 @@
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
                 string results = File.ReadAllText(resultsPath);
+
                 IProcessProxy process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -209,6 +285,7 @@
                     },
                     ExitTime = DateTime.Now.AddSeconds(5)
                 };
+
                 process.StandardOutput.Append(results);
                 return process;
             };
@@ -224,12 +301,14 @@
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, "40000", "20")]
-        [TestCase(PlatformID.Win32NT, "25000", "5")]
-        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForWindows(PlatformID platform, string noOfRequests, string noOfConcurrentRequests)
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "40000", "20")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "40000", "20")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "25000", "5")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "25000", "5")]
+        public async Task ApacheBenchExecutorExecutesWorkloadForDifferentInputsAndGenerateMetricsForWindows(PlatformID platform, Architecture architecture, string noOfRequests, string noOfConcurrentRequests)
         {
 
-            this.SetupDefaultBehaviors(platform);
+            this.SetupDefaultBehaviors(platform, architecture);
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>
             {
@@ -256,6 +335,7 @@
                 string currentDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 string resultsPath = Path.Combine(currentDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
                 string results = File.ReadAllText(resultsPath);
+
                 IProcessProxy process = new InMemoryProcess
                 {
                     StartInfo = new ProcessStartInfo
@@ -266,6 +346,7 @@
                     },
                     ExitTime = DateTime.Now.AddSeconds(5)
                 };
+
                 process.StandardOutput.Append(results);
                 return process;
             };
@@ -285,23 +366,27 @@
             this.fixture.Setup(platform, architecture);
 
             string workloadName = "apachehttpserver";
+
             this.fixture.Parameters.AddRange(new Dictionary<string, IConvertible>
             {
-                { nameof(Example2WorkloadExecutor.PackageName), workloadName },
-                { nameof(Example2WorkloadExecutor.CommandLine), "Run" },
-                { nameof(Example2WorkloadExecutor.TestName), "ExampleTest" }
+                { nameof(ApacheBenchExecutor.PackageName), workloadName },
+                { nameof(ApacheBenchExecutor.CommandLine), "Run" },
             });
 
             this.mockWorkloadPackage = new DependencyPath(
                 workloadName,
                 this.fixture.PlatformSpecifics.GetPackagePath(workloadName));
+
             this.fixture.PackageManager.OnGetPackage()
                     .Callback<string, CancellationToken>((packageName, token) => Assert.AreEqual(packageName, "apachehttpserver"))
                     .ReturnsAsync(this.mockWorkloadPackage);
+
             this.fixture.File.Setup(file => file.Exists(It.IsAny<string>()))
                 .Returns(true);
+
             this.fixture.File.Setup(file => file.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .ReturnsAsync("text");
+
             this.fixture.File.Setup(file => file.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                     .Returns(Task.CompletedTask);
 
