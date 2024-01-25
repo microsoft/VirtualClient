@@ -117,6 +117,15 @@ namespace VirtualClient.Actions
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.SetupWorkloadPackage("apachehttpserver");
 
+            this.mockFixture
+                .SetupFile(this.mockFixture.PlatformSpecifics.Combine(
+                    this.mockFixture.PlatformSpecifics.PackagesDirectory,
+                    "apachehttpserver",
+                    $"win-{architecture.ToString().ToLower()}",
+                    "Apache24",
+                    "conf",
+                    "httpd.conf"));
+
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
             {
                 IProcessProxy process = this.mockFixture.CreateProcess(command, arguments, workingDir);

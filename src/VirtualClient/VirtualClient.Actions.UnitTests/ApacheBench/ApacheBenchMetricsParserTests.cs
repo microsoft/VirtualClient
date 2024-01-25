@@ -55,7 +55,7 @@
             string outputPath = Path.Combine(workingDirectory, @"Examples\ApacheBench\ApacheBenchResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new ApacheBenchMetricsParser(this.rawText);
-            Assert.IsEmpty(this.testParser.Parse());
+            Assert.Throws<WorkloadException>(() => this.testParser.Parse());
         }
     }
 }
