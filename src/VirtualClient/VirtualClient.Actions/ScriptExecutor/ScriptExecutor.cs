@@ -31,7 +31,6 @@ namespace VirtualClient.Actions
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
         private ISystemManagement systemManagement;
-        private List<int> successExitCodes;
 
         /// <summary>
         /// Constructor for <see cref="ScriptExecutor"/>
@@ -58,13 +57,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The relative Executable Path to be used to initiate the script
+        /// The relative Script Path to be used to initiate the script
         /// </summary>
-        public string Executable
+        public string ScriptPath
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.Executable));
+                return this.Parameters.GetValue<string>(nameof(this.ScriptPath));
             }
         }
 
@@ -76,17 +75,6 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.LogPaths));
-            }
-        }
-
-        /// <summary>
-        /// The parameter specifies whether to run in Elevated Mode
-        /// </summary>
-        public bool RunElevated
-        {
-            get
-            {
-                return this.Parameters.GetValue<bool>(nameof(this.RunElevated));
             }
         }
 
@@ -120,7 +108,7 @@ namespace VirtualClient.Actions
 
             this.WorkloadPackage = await this.GetPlatformSpecificPackageAsync(this.PackageName, cancellationToken);
 
-            this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, this.Executable);
+            this.ExecutablePath = this.Combine(this.WorkloadPackage.Path, this.ScriptPath);
 
             await this.systemManagement.MakeFileExecutableAsync(this.ExecutablePath, this.Platform, cancellationToken);
 
@@ -147,11 +135,11 @@ namespace VirtualClient.Actions
                     this.WorkloadPackage.Path,
                     telemetryContext,
                     cancellationToken,
-                    this.RunElevated))
+                    false))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, this.Scenario, logToFile: true);
+                        await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName, logToFile: true);
                         process.ThrowIfWorkloadFailed();
                         await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         await this.CaptureLogsAsync(cancellationToken);

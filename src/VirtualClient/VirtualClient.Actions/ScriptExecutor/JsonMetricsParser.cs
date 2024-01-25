@@ -43,15 +43,16 @@ namespace CRC.Toolkit.VirtualClient
                     {
                         metrics.Add(new Metric(keyValuePair.Name, value, MetricRelativity.Undefined));
                     }
-                    else
-                    {
-                        throw new WarningException($"The metric value for {keyValuePair.Name} couldn't be parsed, it should be of Double type.");
-                    }
+
+                    // else
+                    // {                        
+                    //     // throw new WarningException($"The metric value for {keyValuePair.Name} couldn't be parsed, it should be of Double type.");
+                    // }
                 }
             }
-            catch
+            catch (Exception e)
             {
-                throw new SchemaException("The log File has incorrect JSON format. The log file should have metric name as keys and metricValue as Value in JSON format");
+                throw new WarningException($"The log File has incorrect JSON format. The log file should have metric name as keys and metricValue as Value in JSON format. Exception: {e}");
             }
 
             return metrics;
