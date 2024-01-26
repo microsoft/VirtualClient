@@ -16,7 +16,7 @@
       "Type": "BlenderBenchmarkExecutor",
       "Parameters": {
         "Scenario": "BlenderCPUAndGPUPerformance",
-        "PackageName": "blenderbenchmarkcli",
+        "PackageName": "blenderbenchmark",
         "BlenderVersion": "$.Parameters.BlenderVersion",
         "Scenes": "$.Parameters.Scenes",
         "DeviceTypes": "$.Parameters.DeviceTypes"
