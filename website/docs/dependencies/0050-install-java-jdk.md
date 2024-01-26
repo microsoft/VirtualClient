@@ -32,11 +32,14 @@ The following section describes the parameters used by the individual component 
 
 | **Parameter** | **Required** | **Description**                                                                                                 |
 |---------------|--------------|-----------------------------------------------------------------------------------------------------------------|
+| BlobContainer | Yes          | The name of the Azure storage account blob container where the package exists (e.g. packages).                  |
+| BlobName      | Yes          | The name of the file/blob to download within the Azure storage account to download (e.g. microsoft-jdk-17.0.9.zip).    |
 | PackageName   | Yes          | The name/identifier used to reference the OpenJDK package downloaded during the preliminary dependency package installation step (e.g. 'javadevelopmentkit'...see example below). |
-| Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line).                                                      |
+| Scenario      | No           | A name/identifier for the specific component in the profile. This is used for telemetry purposes only with components in dependency sections of the profile (i.e. cannot be used with --scenarios option on the command line). |
+| Extract       | No           | Default = true. True to instruct the Virtual Client that the package is an archive (e.g. .zip, .tgz) and to extract it. False if the file is a standalone file and should be left exactly as-is after download. |
 
 ## Example
-The following section describes the parameters used by the individual component in the profile.
+The following section describes the parameters used by the component in the profile.
 
 * [Profile Example](https://github.com/microsoft/VirtualClient/blob/main/src/VirtualClient/VirtualClient.Main/profiles/PERF-SPECJVM.json)
 
