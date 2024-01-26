@@ -42,21 +42,14 @@ The following section describes the parameters used by the individual component 
 
 
   ```json
-  {
-      "Type": "DependencyPackageInstallation",
+    {
+      "Type": "JDKPackageDependencyInstallation",
       "Parameters": {
-          "Scenario": "InstallJavaSDKPackage",
-          "BlobContainer": "packages",
-          "BlobName": "microsoft-jdk-17.0.5.zip",
-          "PackageName": "javadevelopmentkit",
-          "Extract": true
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-17.0.9.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
       }
-  },
-  {
-      "Type": "JavaDevelopmentKitInstallation",
-      "Parameters": {
-          "Scenario": "InstallJavaSDK",
-          "PackageName": "javadevelopmentkit"
-      }
-  }
+    }
   ```
