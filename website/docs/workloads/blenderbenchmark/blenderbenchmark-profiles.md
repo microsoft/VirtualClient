@@ -17,6 +17,9 @@ Runs the Blender Workloads.
 * **Dependencies**  
   The dependencies defined in the 'Dependencies' section of the profile itself are required in order to run the workload operations effectively.
   * Internet connection.
+  * One of the Following AMD GPUs:
+    * Model = v620
+    * Model = mi25
 
   Additional information on components that exist within the 'Dependencies' section of the profile can be found in the following locations:
   * [Installing Dependencies](https://microsoft.github.io/VirtualClient/docs/category/dependencies/)
@@ -40,8 +43,8 @@ Runs the Blender Workloads.
 
   ``` bash
   # Execute the workload profile
-  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --pm="GpuModel=v620"
+  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --parameters="GpuModel=v620"
 
   # Override the profile default parameters to run different blender version
-  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --pm="GpuModel=v620,,,BlenderVersion=3.5.0"
+  VirtualClient.exe --profile=PERF-BLENDER-AMD.json --system=Demo --packageStore="{BlobConnectionString|SAS Uri}" --parameters="GpuModel=v620,,,BlenderVersion=3.5.0"
   ```

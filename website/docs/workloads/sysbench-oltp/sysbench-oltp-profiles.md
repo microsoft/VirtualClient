@@ -113,7 +113,7 @@ Runs a system-intensive workload using the Sysbench Benchmark to test the bandwi
   |---------------------------|-------------------------------------------------------------------------------------------------------------------------|-------------|
   | DatabaseName              | Not Required. Configure the name of database under test.                                                                |sbtest          |
   | DatabaseScenario              | Not Required. Configures the scenario in which to stress the database.                                      | Default          |
-  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8, max 64      |
+  | Threads              | Not Required. Number of threads to use during workload execution.                | vCPU * 8     |
   | RecordCount              | Not Required. Number of records per table in the database.                                                      | 10^(vCPU + 2)         |
   | NumTables             | Not Required. Number of tables created in the database.                         | 10              |
   | Duration              | Required. Timespan duration of the workload.                                                               | N/A          |

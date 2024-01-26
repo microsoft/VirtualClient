@@ -26,6 +26,12 @@ namespace VirtualClient.Actions
     public class SysbenchOLTPClientExecutor : SysbenchOLTPExecutor
     {
         private const string SysbenchFileName = "src/sysbench";
+        private static readonly string[] SingleTableWorkloads =
+        [
+            "select_random_points",
+            "select_random_ranges"
+        ];
+
         private readonly IPackageManager packageManager;
         private readonly IStateManager stateManager;
         private string sysbenchPrepareArguments;
@@ -51,12 +57,11 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The total time of execution option passed to Sysbench.
         /// </summary>
-        public string Duration
+        public TimeSpan Duration
         {
             get
             { 
-                string timeSpan = this.Parameters.GetValue<string>(nameof(SysbenchOLTPClientExecutor.Duration));
-                return TimeSpan.Parse(timeSpan).TotalSeconds.ToString();
+                return this.Parameters.GetTimeSpanValue(nameof(SysbenchOLTPClientExecutor.Duration), TimeSpan.FromMinutes(5));
             }
         }
 
@@ -90,24 +95,29 @@ namespace VirtualClient.Actions
             get
             {
                 int numTables = 10;
-                string[] oneTableWorkloads =
-                {
-                    "select_random_points",
-                    "select_random_ranges"
-                };
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumTables), out IConvertible recordCount)
-                    && this.DatabaseScenario != SysbenchOLTPScenario.Balanced)
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.NumTables), out IConvertible tables))
                 {
-                    numTables = recordCount.ToInt32(CultureInfo.InvariantCulture);
+                    numTables = tables.ToInt32(CultureInfo.InvariantCulture);
                 }
-
-                if (oneTableWorkloads.Contains(this.Workload))
+                
+                if (SysbenchOLTPClientExecutor.SingleTableWorkloads.Contains(this.Workload, StringComparer.OrdinalIgnoreCase))
                 {
                     numTables = 1;
                 }
 
                 return numTables;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool PopulateDatabase
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.PopulateDatabase), false);
             }
         }
 
@@ -118,21 +128,24 @@ namespace VirtualClient.Actions
         {
             get
             {
+                int numRecords = 1;
+
                 // default formulaic setup of the database
                 // records & threads depend on the core count
-
-                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-                int coreCount = cpuInfo.LogicalProcessorCount;
-
-                int recordCountExponent = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
-                    (int)Math.Log2(coreCount) : (int)Math.Log2(coreCount) + 2;
-
-                int numRecords = (int)Math.Pow(10, recordCountExponent);
-
-                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount)
-                    && this.DatabaseScenario != SysbenchOLTPScenario.Balanced)
+                if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.RecordCount), out IConvertible recordCount))
                 {
                     numRecords = recordCount.ToInt32(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    int coreCount = cpuInfo.LogicalProcessorCount;
+
+                    int recordCountExponent = this.DatabaseScenario == SysbenchOLTPScenario.Balanced 
+                        ? (int)Math.Log2(coreCount)
+                        : (int)Math.Log2(coreCount) + 2;
+
+                    numRecords = (int)Math.Pow(10, recordCountExponent);
                 }
 
                 return numRecords;
@@ -146,19 +159,19 @@ namespace VirtualClient.Actions
         {
             get
             {
+                // Sysbench default number of threads
+                int numThreads = 1;
+
                 // default formulaic setup of the database threads depend on the core count
-
-                CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
-
-                int numThreads = this.DatabaseScenario == SysbenchOLTPScenario.Balanced ? 
-                    1 : cpuInfo.LogicalProcessorCount * 8;
-
                 if (this.Parameters.TryGetValue(nameof(SysbenchOLTPClientExecutor.Threads), out IConvertible threads) && threads != null)
                 {
                     numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
                 }
-
-                numThreads = Math.Min(numThreads, 64);
+                else
+                {
+                    CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    return cpuInfo.LogicalProcessorCount;
+                }
 
                 return numThreads;
             }
@@ -180,9 +193,18 @@ namespace VirtualClient.Actions
         /// </summary>
         /// <param name="telemetryContext">Provides context information that will be captured with telemetry events.</param>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        protected override Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             List<Task> clientWorkloadTasks = new List<Task>();
+
+            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
+               ?? new SysbenchOLTPState();
+
+            if (!state.SysbenchInitialized)
+            {
+                // install sysbench using repo scripts
+                await this.InitializeSysbench(state, cancellationToken).ConfigureAwait(false);
+            }
 
             if (this.IsMultiRoleLayout())
             {
@@ -209,12 +231,20 @@ namespace VirtualClient.Actions
                                 .ConfigureAwait(false);
 
                             this.Logger.LogTraceMessage("Synchronization: Server online signal confirmed...");
-                            this.Logger.LogTraceMessage("Synchronization: Start client workload...");
 
                             // 3) Execute the client workload.
                             // ===========================================================================
-                            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
-                                .ConfigureAwait(false);
+                            if (this.PopulateDatabase)
+                            {
+                                this.Logger.LogTraceMessage("Synchronization: Populate database...");
+                                await this.PrepareMySQLDatabase(state, telemetryContext, cancellationToken);
+                            }
+                            else
+                            {
+                                this.Logger.LogTraceMessage("Synchronization: Start client workload...");
+                                await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken)
+                                    .ConfigureAwait(false);
+                            }
                         }
                     }));
                 }
@@ -225,12 +255,20 @@ namespace VirtualClient.Actions
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
+                        if (this.PopulateDatabase)
+                        {
+                            this.Logger.LogTraceMessage("Synchronization: Populate database...");
+                            await this.PrepareMySQLDatabase(state, telemetryContext, cancellationToken);
+                        }
+                        else
+                        {
+                            await this.ExecuteWorkloadAsync(telemetryContext, cancellationToken);
+                        }
                     }
                 }));
             }
 
-            return Task.WhenAll(clientWorkloadTasks);
+            await Task.WhenAll(clientWorkloadTasks);
         }
 
         /// <summary>
@@ -240,30 +278,13 @@ namespace VirtualClient.Actions
         {
             await base.InitializeAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
-            // get sysbench workload path
-
-            DependencyPath workloadPackage = await this.packageManager.GetPlatformSpecificPackageAsync(this.PackageName, this.Platform, this.CpuArchitecture, CancellationToken.None)
+            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, CancellationToken.None)
                 .ConfigureAwait(false);
 
             this.sysbenchDirectory = this.GetPackagePath(this.PackageName);
-
-            // store state with initialization status & record/table counts, if does not exist already
-
-            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
-                ?? new SysbenchOLTPState();
-
-            if (!state.SysbenchInitialized)
-            {
-                // install sysbench using repo scripts
-                await this.InstallSysbenchOLTPPackage(cancellationToken).ConfigureAwait(false);
-                state.SysbenchInitialized = true;
-
-                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
-            }
-
             this.sysbenchPrepareArguments = $@"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} --mysql-host={this.ServerIpAddress} prepare";
             this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={this.NumTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.Duration} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.Duration.TotalSeconds} ";
             this.sysbenchPath = this.PlatformSpecifics.Combine(this.sysbenchDirectory, SysbenchOLTPClientExecutor.SysbenchFileName);
         }
 
@@ -288,8 +309,8 @@ namespace VirtualClient.Actions
                         IList<Metric> metrics = parser.Parse();
 
                         this.Logger.LogMetrics(
-                            toolName: "MySQL-Sysbench",
-                            scenarioName: "OLTP " + this.Scenario,
+                            toolName: "Sysbench",
+                            scenarioName: this.MetricScenario ?? this.Scenario,
                             process.StartTime,
                             process.ExitTime,
                             metrics,
@@ -312,10 +333,6 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    // first, prepare database if needed; then run the sysbench command
-
-                    await this.PrepareMySQLDatabase(telemetryContext, cancellationToken);
-
                     using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.sysbenchDirectory, telemetryContext, cancellationToken, runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
@@ -328,7 +345,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private async Task InstallSysbenchOLTPPackage(CancellationToken cancellationToken) 
+        private async Task InitializeSysbench(SysbenchOLTPState state, CancellationToken cancellationToken)
         {
             const string autogenScriptCommand = "./autogen.sh";
             const string configureScriptCommand = "./configure";
@@ -347,12 +364,15 @@ namespace VirtualClient.Actions
 
             await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(makeInstallCommand, null, this.sysbenchDirectory, cancellationToken)
                 .ConfigureAwait(false);
+
+            state.SysbenchInitialized = true;
+            await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
         }
 
-        private async Task PrepareMySQLDatabase(EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task PrepareMySQLDatabase(SysbenchOLTPState state, EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            int numTables = -1;
-            int recordCount = -1;
+            // int numTables = -1;
+            // int recordCount = -1;
 
             // use mysql-client tool to get table/record counts from the mysql server
             // table count output is like so:
@@ -369,54 +389,57 @@ namespace VirtualClient.Actions
             // |        0 |
             // +----------+
 
-            string getMySQLTableCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SHOW tables; SELECT FOUND_ROWS();\"";
+            ////string getMySQLTableCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SHOW tables; SELECT FOUND_ROWS();\"";
 
-            // note that sysbench standardizes table names; database name is up to the user, but each table name will always be "sbtest1, sbtest2, ..."
-            // if at least one table exists, we can take a look at its record count to reliably obtain the record counts for all tables
-            string getMySQLRecordCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SELECT COUNT(*) FROM sbtest1;\"";
+            ////// note that sysbench standardizes table names; database name is up to the user, but each table name will always be "sbtest1, sbtest2, ..."
+            ////// if at least one table exists, we can take a look at its record count to reliably obtain the record counts for all tables
+            ////string getMySQLRecordCountCommand = $"mysql -u {this.DatabaseName} -h {this.ServerIpAddress} {this.DatabaseName} --execute=\"USE {this.DatabaseName}; SELECT COUNT(*) FROM sbtest1;\"";
 
-            string result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLTableCountCommand, null, Environment.CurrentDirectory, cancellationToken)
-                .ConfigureAwait(false);
+            ////string result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLTableCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+            ////    .ConfigureAwait(false);
 
-            Match match = Regex.Match(result, "[1-9][0-9]*");
+            ////Match match = Regex.Match(result, "[1-9][0-9]*");
 
-            if (match.Success)
+            ////if (match.Success)
+            ////{
+            ////    numTables = Convert.ToInt32(match.Value);
+
+            ////    result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLRecordCountCommand, null, Environment.CurrentDirectory, cancellationToken)
+            ////        .ConfigureAwait(false);
+
+            ////    match = Regex.Match(result, "[1-9][0-9]*|0");
+            ////    recordCount = match.Success ? Convert.ToInt32(match.Value) : -1;
+            ////}
+
+            if (this.PopulateDatabase && !state.DatabasePopulated)
             {
-                numTables = Convert.ToInt32(match.Value);
+                await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
+                {
+                    if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
+                    {
+                        if (string.IsNullOrWhiteSpace(state.DiskPathsArgument))
+                        {
+                            throw new WorkloadException(
+                                $"Database data disk paths not defined for MySQL server. In a 'Balanced' scenario, the database is distributed " +
+                                $"across a set of disks on the MySQL server system. The server is expected to provide the set of disk paths but did not.",
+                                ErrorReason.DependencyNotFound);
 
-                result = await this.ExecuteCommandAsync<SysbenchOLTPServerExecutor>(getMySQLRecordCountCommand, null, Environment.CurrentDirectory, cancellationToken)
-                    .ConfigureAwait(false);
+                        }
 
-                match = Regex.Match(result, "[1-9][0-9]*|0");
-                recordCount = match.Success ? Convert.ToInt32(match.Value) : -1;
-            }
+                        await this.PrepareBalancedScenarioAsync(state.DiskPathsArgument, telemetryContext, cancellationToken);
+                    }
+                    else
+                    {
+                        await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
+                            .ConfigureAwait(false);
 
-            if (this.NumTables > numTables || this.RecordCount > recordCount)
-            {
-                // only cleanup & prepare it if needed -- ie. if the state table/record counts are different than current
+                        await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
 
-                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchExecutionArguments + "cleanup", this.sysbenchDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-
-                await this.ExecuteCommandAsync<SysbenchOLTPClientExecutor>(this.sysbenchPath, this.sysbenchPrepareArguments, this.sysbenchDirectory, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-
-            if (this.DatabaseScenario == SysbenchOLTPScenario.Balanced)
-            {
-                // grab state stored by the server -- this has the list of disk paths
-
-                HttpResponseMessage response = await this.ServerApiClient.GetStateAsync(nameof(SysbenchOLTPState), cancellationToken)
-                    .ConfigureAwait(false);
-
-                string responseContent = await response.Content.ReadAsStringAsync()
-                    .ConfigureAwait(false);
-
-                SysbenchOLTPState serverState = responseContent.FromJson<SysbenchOLTPState>();
-
-                string diskPaths = serverState.DiskPathsArgument;
-
-                await this.PrepareBalancedScenarioAsync(diskPaths, telemetryContext, cancellationToken);
+                    state.DatabasePopulated = true;
+                    await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
+                });
             }
         }
 

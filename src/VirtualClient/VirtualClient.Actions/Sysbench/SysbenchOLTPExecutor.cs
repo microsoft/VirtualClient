@@ -299,6 +299,19 @@ namespace VirtualClient.Actions
                 }
             }
 
+            public bool DatabasePopulated
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabasePopulated), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(SysbenchOLTPState.DatabasePopulated)] = value;
+                }
+            }
+
             public string DiskPathsArgument
             {
                 get
