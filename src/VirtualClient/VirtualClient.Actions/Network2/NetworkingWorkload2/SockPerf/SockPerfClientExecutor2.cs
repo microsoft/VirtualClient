@@ -277,6 +277,9 @@ namespace VirtualClient.Actions
                 {
                     await this.DeleteResultsFileAsync().ConfigureAwait(false);
 
+                    await this.ResetServerAsync(telemetryContext, cancellationToken)
+                    .ConfigureAwait(false);
+
                     this.Logger.LogTraceMessage("Synchronization: Wait for server to stop workload...");
                     await this.ServerApiClient.PollForStateDeletedAsync(nameof(SockPerfWorkloadState), this.StateConfirmationPollingTimeout, cancellationToken);
                 }
