@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockKafkaPackage;
-
+         
         public void SetupTests(PlatformID platformID)
         {
             this.fixture = new MockFixture();
@@ -87,43 +87,43 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
-        // [TestCase(PlatformID.Unix)]
-        public async Task KafkaServerExecutorExecutesWorkloadAsExpected(PlatformID platformID)
+        [TestCase(PlatformID.Win32NT, 1)]
+        [TestCase(PlatformID.Win32NT, 2)]
+        [TestCase(PlatformID.Win32NT, 3)]
+        public async Task KafkaServerExecutorExecutesWorkloadAsExpectedForTwoInstances(PlatformID platformID, int serverInstances)
         {
             this.SetupTests(platformID);
             this.fixture.FileSystem.Setup(fe => fe.Directory.Delete(It.IsAny<string>()));
             this.fixture.FileSystem.Setup(fe => fe.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync("node.id");
             this.fixture.FileSystem.Setup(fe => fe.File.WriteAllTextAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()));
+
+            string kafkaStartBatFilePath = this.fixture.Combine(this.mockKafkaPackage.Path, "bin", "windows", "kafka-server-start.bat");
             string kafkaStorageBatFilePath = this.fixture.Combine(this.mockKafkaPackage.Path, "bin", "windows", "kafka-storage.bat");
+            string kafkaKraftDirectoryPath = this.fixture.Combine(this.mockKafkaPackage.Path, "config", "kraft");
+
             using (var executor = new TestKafkaServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
-                executor.Parameters[nameof(executor.ServerInstances)] = 1;
+                executor.Parameters[nameof(executor.ServerInstances)] = serverInstances;
 
-                
                 List<string> expectedCommands = new List<string>()
                 {
-                    // Make the Redis server toolset executable
-                    $"cmd /c {kafkaStorageBatFilePath} random-uuid",
-
-                    /*// Server instance #1 bound to core 0 and running on port 6379
-                    $"sudo bash -c \"numactl -C 0 {this.mockKafkaPackage.Path}/src/redis-server --port 6379 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\"",
-
-                    // Server instance #2 bound to core 1 and running on port 6380
-                    $"sudo bash -c \"numactl -C 1 {this.mockKafkaPackage.Path}/src/redis-server --port 6380 --protected-mode no --io-threads 4 --maxmemory-policy noeviction --ignore-warnings ARM64-COW-BUG --save --daemonize yes\""*/
-
-                    /*"/c C:\\users\\any\\tools\\VirtualClient\\packages\\kafka\\bin\\windows\\kafka-storage.bat format -t  -c C:\\users\\any\\tools\\VirtualClient\\packages\\kafka\\config\\kraft\\server-1.properties"
-
-"/c C:\\users\\any\\tools\\VirtualClient\\packages\\kafka\\bin\\windows\\kafka-server-start.bat C:\\users\\any\\tools\\VirtualClient\\packages\\kafka\\config\\kraft\\server-1.properties"*/
+                    // Command to create clusterId
+                    $"cmd /c {kafkaStorageBatFilePath} random-uuid"
                 };
+
+                for (int server = 0; server < serverInstances; server++)
+                {
+                    string serveFilePath = this.fixture.Combine(kafkaKraftDirectoryPath, $"server-{server+1}.properties");
+                    // Command to format server instance file
+                    expectedCommands.Add($"cmd /c {kafkaStorageBatFilePath} format -t  -c {serveFilePath}");
+                    // Start server instance
+                    expectedCommands.Add($"cmd /c {kafkaStartBatFilePath} {serveFilePath}");
+                }
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
-                    Console.WriteLine(exe);
-                    Console.WriteLine(arguments);
-                    string command = $"{exe} {arguments}";
-                    expectedCommands.Remove(command);
+                    expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
 

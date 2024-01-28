@@ -17,10 +17,24 @@ using VirtualClient.Contracts.Metadata;
 
 namespace VirtualClient.Actions.Kafka
 {
-    internal enum KafkaCommandType
+    /// <summary>
+    /// Kafka Command Type.
+    /// </summary>
+    public enum KafkaCommandType
     {
+        /// <summary>
+        /// Setup the server by creating kafka topics.
+        /// </summary>
         Setup,
+
+        /// <summary>
+        /// Run producer script.
+        /// </summary>
         ProducerTest,
+
+        /// <summary>
+        /// Run consumer script.
+        /// </summary>
         ConsumerTest
     }
 
@@ -63,7 +77,7 @@ namespace VirtualClient.Actions.Kafka
                 return this.Parameters.GetValue<int>(nameof(this.Port));
             }
         }
-
+        
         /// <summary>
         /// Parameter defines true/false whether the action is meant to warm up the server.
         /// </summary>
@@ -120,11 +134,11 @@ namespace VirtualClient.Actions.Kafka
         /// <summary>
         /// Parameter defines the kafka command type to decide which exe to run.
         /// </summary>
-        private string CommandType
+        protected KafkaCommandType CommandType
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.CommandType));
+                return this.Parameters.GetValue<KafkaCommandType>(nameof(this.CommandType));
             }
         }
 
@@ -161,14 +175,13 @@ namespace VirtualClient.Actions.Kafka
                 case PlatformID.Unix:
                     this.KafkaTopicScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-topics.sh");
                     this.KafkProducerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-producer-perf-test.sh");
-                    this.KafkaConsumerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "windows", "kafka-consumer-perf-test.bat");
+                    this.KafkaConsumerPerfScriptPath = this.Combine(this.KafkaPackagePath, "bin", "kafka-consumer-perf-test.sh");
                     break;
             }
 
             this.CommandLine = this.Parameters.GetValue<string>(nameof(this.CommandLine));
-            Enum.TryParse(this.CommandType, out KafkaCommandType kafkaCommandType);
 
-            switch (kafkaCommandType)
+            switch (this.CommandType)
             {
                 case KafkaCommandType.Setup:
                     this.KafkaCommandScriptPath = this.KafkaTopicScriptPath;
@@ -292,15 +305,13 @@ namespace VirtualClient.Actions.Kafka
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                ConsoleLogger.Default.LogMessage($"Kafka benchmark process exited (server port = {this.Port})...", telemetryContext);
-
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Kafka", logToFile: true);
                                 process.ThrowIfWorkloadFailed();
 
-                                if (this.CommandType != KafkaCommandType.Setup.ToString())
+                                if (this.CommandType != KafkaCommandType.Setup)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    telemetryContext.AddContext(this.CommandType, output);
+                                    telemetryContext.AddContext(this.CommandType.ToString(), output);
                                     this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
@@ -350,7 +361,7 @@ namespace VirtualClient.Actions.Kafka
                     lock (this.lockObject)
                     {
                         MetricsParser kafkaMetricsParser = new KafkaProducerMetricsParser(output);
-                        if (this.CommandType == KafkaCommandType.ConsumerTest.ToString())
+                        if (this.CommandType == KafkaCommandType.ConsumerTest)
                         {
                             kafkaMetricsParser = new KafkaConsumerMetricsParser(output);
                         }

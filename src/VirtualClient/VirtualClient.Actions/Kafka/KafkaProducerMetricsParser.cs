@@ -62,7 +62,7 @@ namespace VirtualClient.Actions
                             "Total_Records_Sent",
                             totalRecordsSent,
                             MetricUnit.Operations,
-                            relativity: MetricRelativity.Undefined,
+                            relativity: MetricRelativity.HigherIsBetter,
                             description: "Total records sent."));
                     }
 

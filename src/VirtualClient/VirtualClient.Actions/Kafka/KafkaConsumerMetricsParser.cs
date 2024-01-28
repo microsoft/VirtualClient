@@ -92,6 +92,16 @@
                             description: "Number of messages per second/ Throughput"));
                     }
 
+                    if (double.TryParse(values[7], out double fetchTimeInMilliSec))
+                    {
+                        metrics.Add(new Metric(
+                            "Fetch_Time_In_MilliSec",
+                            fetchTimeInMilliSec,
+                            MetricUnit.Milliseconds,
+                            relativity: MetricRelativity.LowerIsBetter,
+                            description: "Fetch time per milli seconds"));
+                    }
+
                     if (double.TryParse(values[8], out double fetchMbPerSec))
                     {
                         metrics.Add(new Metric(
