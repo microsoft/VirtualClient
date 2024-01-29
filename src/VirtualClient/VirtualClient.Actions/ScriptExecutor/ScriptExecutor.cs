@@ -11,7 +11,6 @@ namespace VirtualClient.Actions
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using CRC.Toolkit.VirtualClient;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -181,7 +180,7 @@ namespace VirtualClient.Actions
                 {
                     string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
-                    JsonMetricsParser parser = new JsonMetricsParser(results);
+                    JsonMetricsParser parser = new JsonMetricsParser(results, this.Logger, telemetryContext);
                     IList<Metric> workloadMetrics = parser.Parse();
 
                     this.Logger.LogMetrics(

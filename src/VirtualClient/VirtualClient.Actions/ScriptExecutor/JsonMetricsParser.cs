@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-namespace CRC.Toolkit.VirtualClient
+namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
@@ -11,21 +11,30 @@ namespace CRC.Toolkit.VirtualClient
     using global::VirtualClient;
     using global::VirtualClient.Actions;
     using global::VirtualClient.Contracts;
+    using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Telemetry;
 
     /// <summary>
     /// Generic parser for JSON results log.
     /// </summary>
     internal class JsonMetricsParser : MetricsParser
     {
+        private EventContext eventContext;
+        private ILogger logger;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="JsonMetricsParser"/> class.
         /// </summary>
         /// <param name="results">The generic script results in JSON format.</param>
-        public JsonMetricsParser(string results)
+        /// <param name="logger">ILogger for logging in parser.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the metric.</param>
+        public JsonMetricsParser(string results, ILogger logger, EventContext eventContext)
             : base(results)
         {
+            this.logger = logger;
+            this.eventContext = eventContext;
         }
 
         /// <summary>
@@ -43,16 +52,15 @@ namespace CRC.Toolkit.VirtualClient
                     {
                         metrics.Add(new Metric(keyValuePair.Name, value, MetricRelativity.Undefined));
                     }
-
-                    // else
-                    // {                        
-                    //     // throw new WarningException($"The metric value for {keyValuePair.Name} couldn't be parsed, it should be of Double type.");
-                    // }
+                    else
+                    {                        
+                        this.logger.LogWarning($"The metric value for {keyValuePair.Name} couldn't be parsed, it should be of Double type.", this.eventContext);
+                    }
                 }
             }
             catch (Exception e)
             {
-                throw new WarningException($"The log File has incorrect JSON format. The log file should have metric name as keys and metricValue as Value in JSON format. Exception: {e}");
+                this.logger.LogWarning($"The log File has incorrect JSON format. The log file should have metric name as keys and metricValue as Value in JSON format. Exception: {e}", this.eventContext);
             }
 
             return metrics;

@@ -9,7 +9,7 @@ using NUnit.Framework;
 using VirtualClient.Contracts;
 using VirtualClient.Common.Contracts;
 using VirtualClient.Actions;
-using CRC.Toolkit.VirtualClient;
+using VirtualClient.Common.Telemetry;
 
 namespace VirtualClient.Actions
 {
@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
         {
             string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "validExample.json");
             string rawText = File.ReadAllText(resultsPath);
-            this.testParser = new JsonMetricsParser(rawText);
+            this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(3, metrics.Count);
@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
         {
             string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "invalidExample.json");
             string rawText = File.ReadAllText(resultsPath);
-            this.testParser = new JsonMetricsParser(rawText);
+            this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
 
             Assert.AreEqual(2, metrics.Count);
