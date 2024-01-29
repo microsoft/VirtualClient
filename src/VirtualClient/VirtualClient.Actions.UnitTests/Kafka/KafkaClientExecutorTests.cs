@@ -92,7 +92,7 @@ namespace VirtualClient.Actions
         public async Task KafkaClientExecutorConfirmsTheExpectedKafkStartaScript(PlatformID platformID, KafkaCommandType kafkaCommandType, string commandScript)
         {
             this.SetupTests(platformID);
-            this.fixture.Parameters["CommandType"] = kafkaCommandType;
+            this.fixture.Parameters["CommandType"] = kafkaCommandType.ToString();
             using (var component = new TestKafkaClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 Assert.IsEmpty(component.TestKafkaCommandScriptPath);

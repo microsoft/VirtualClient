@@ -138,7 +138,7 @@ namespace VirtualClient.Actions.Kafka
         {
             get
             {
-                return this.Parameters.GetValue<KafkaCommandType>(nameof(this.CommandType));
+                return this.Parameters.GetEnumValue<KafkaCommandType>(nameof(this.CommandType));
             }
         }
 
