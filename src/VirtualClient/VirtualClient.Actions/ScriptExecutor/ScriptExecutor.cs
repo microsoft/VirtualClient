@@ -5,18 +5,13 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Text;
-    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using CRC.Toolkit.VirtualClient;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
@@ -26,7 +21,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts.Metadata;
 
     /// <summary>
-    /// The Generic Script executor for Python, Powershell, etc scripts.
+    /// The Generic Script executor for Powershell, Bash etc scripts.
     /// </summary>
     public class ScriptExecutor : VirtualClientComponent
     {
@@ -110,7 +105,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// The path to the workload package.
         /// </summary>
-        protected DependencyPath WorkloadPackage { get; private set; }
+        protected DependencyPath WorkloadPackage { get; set; }
 
         /// <summary>
         /// Initializes the environment for execution of the provided script.
@@ -165,12 +160,12 @@ namespace VirtualClient.Actions
                     }
                 }
             }
-        }        
+        }
 
         /// <summary>
         /// Captures the workload logs and the Workload metrics.
         /// </summary>
-        private async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
+        protected async Task CaptureMetricsAsync(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
@@ -207,7 +202,10 @@ namespace VirtualClient.Actions
             }
         }
 
-        private async Task CaptureLogsAsync(CancellationToken cancellationToken)
+        /// <summary>
+        /// Captures the workload logs based on LogFiles parameter of ScriptExecutor
+        /// </summary>
+        protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
         {
             string destinitionLogsDir = this.Combine(this.PlatformSpecifics.LogsDirectory, this.ToolName.ToLower(), $"{this.Scenario.ToLower()}_{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}");
             if (!this.fileSystem.Directory.Exists(destinitionLogsDir))
@@ -246,7 +244,10 @@ namespace VirtualClient.Actions
             }
         }
 
-        private Task UploadLogAsync(IBlobManager blobManager, string logPath, CancellationToken cancellationToken)
+        /// <summary>
+        /// Upload Logs to Blob Storage
+        /// </summary>
+        protected Task UploadLogAsync(IBlobManager blobManager, string logPath, CancellationToken cancellationToken)
         {
             FileUploadDescriptor descriptor = this.CreateFileUploadDescriptor(
                 new FileContext(
@@ -263,7 +264,10 @@ namespace VirtualClient.Actions
             return this.UploadFileAsync(blobManager, this.fileSystem, descriptor, cancellationToken, deleteFile: false);
         }
 
-        private void MoveFileToCentralLogsDirectory(string sourcePath, string destinitionDirectory)
+        /// <summary>
+        /// Move the log files to central logs directory
+        /// </summary>
+        protected void MoveFileToCentralLogsDirectory(string sourcePath, string destinitionDirectory)
         {
             string fileName = Path.GetFileName(sourcePath);
 
