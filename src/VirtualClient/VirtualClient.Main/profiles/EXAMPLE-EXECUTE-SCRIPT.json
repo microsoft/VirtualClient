@@ -20,7 +20,7 @@
                 "CommandLine": "$.Parameters.CommandLine",
                 "ScriptPath": "$.Parameters.ScriptPath",
                 "LogPaths": "$.Parameters.LogPaths",
-                "ToolName": "$.Parameter.ToolName",
+                "ToolName": "$.Parameters.ToolName",
                 "PackageName": "$.Parameters.PackageName",
                 "FailFast":  "$.Parameters.FailFast",
                 "Tags": "Test,VC,Script"

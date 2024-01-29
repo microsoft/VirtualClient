@@ -990,6 +990,18 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Extension logs the warning and context.
+        /// </summary>
+        /// <param name="logger">The logger instance.</param>
+        /// <param name="message">The message/event name to log.</param>
+        /// <param name="eventContext">Provided correlation identifiers and context properties for the event.</param>
+        public static void LogWarning(this ILogger logger, string message, EventContext eventContext)
+        {
+            logger.ThrowIfNull(nameof(logger));
+            VirtualClientLoggingExtensions.LogMessage(logger, message, LogLevel.Warning, LogType.Trace, eventContext);
+        }
+
+        /// <summary>
         /// Obscures any secrets in the parameter set.
         /// </summary>
         /// <param name="parameters">The parameters that may contain secrets to obscure.</param>
@@ -1099,6 +1111,6 @@ namespace VirtualClient.Contracts
                     metricCategorization,
                     toolVersion);
             }
-        }
+        }        
     }
 }

@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.IO;
     using System.IO.Abstractions;
     using System.Linq;
@@ -17,6 +18,7 @@ namespace VirtualClient.Actions
     using Microsoft.AspNetCore.Http;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
@@ -75,6 +77,17 @@ namespace VirtualClient.Actions
             get
             {
                 return this.Parameters.GetValue<string>(nameof(this.LogPaths));
+            }
+        }
+
+        /// <summary>
+        /// The type of script to be executed. Valid options: python, python3, bash, sh
+        /// </summary>
+        public string ScriptType
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(this.ScriptType));
             }
         }
 
@@ -141,6 +154,12 @@ namespace VirtualClient.Actions
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, this.ToolName, logToFile: true);
                         process.ThrowIfWorkloadFailed();
+
+                        if (!string.IsNullOrWhiteSpace(process.StandardError.ToString()))
+                        {
+                            this.Logger.LogWarning($"StandardError: {process.StandardError}", telemetryContext);
+                        }
+
                         await this.CaptureMetricsAsync(process, telemetryContext, cancellationToken);
                         await this.CaptureLogsAsync(cancellationToken);
                     }
@@ -162,27 +181,35 @@ namespace VirtualClient.Actions
                 this.MetadataContract.Apply(telemetryContext);
 
                 string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
-                string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
-                JsonMetricsParser parser = new JsonMetricsParser(results);
-                IList<Metric> workloadMetrics = parser.Parse();
+                if (this.fileSystem.File.Exists(metricsFilePath))
+                {
+                    string results = await this.fileSystem.File.ReadAllTextAsync(metricsFilePath);
 
-                this.Logger.LogMetrics(
-                    this.ToolName,
-                    this.Scenario,
-                    process.StartTime,
-                    process.ExitTime,
-                    workloadMetrics,
-                    null,
-                    process.FullCommand(),
-                    this.Tags,
-                    telemetryContext);
+                    JsonMetricsParser parser = new JsonMetricsParser(results);
+                    IList<Metric> workloadMetrics = parser.Parse();
+
+                    this.Logger.LogMetrics(
+                        this.ToolName,
+                        this.Scenario,
+                        process.StartTime,
+                        process.ExitTime,
+                        workloadMetrics,
+                        null,
+                        process.FullCommand(),
+                        this.Tags,
+                        telemetryContext);
+                }
+                else
+                {
+                    this.Logger.LogWarning($"The {metricsFilePath} was not found on the system. No parsed metrics captured for {this.ToolName}.", telemetryContext);
+                }
             }
         }
 
         private async Task CaptureLogsAsync(CancellationToken cancellationToken)
         {
-            string destinitionLogsDir = this.Combine(this.PlatformSpecifics.LogsDirectory, this.ToolName, $"{this.Scenario}_{DateTime.UtcNow.ToString()}");
+            string destinitionLogsDir = this.Combine(this.PlatformSpecifics.LogsDirectory, this.ToolName.ToLower(), $"{this.Scenario.ToLower()}_{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}");
             if (!this.fileSystem.Directory.Exists(destinitionLogsDir))
             {
                 this.fileSystem.Directory.CreateDirectory(destinitionLogsDir);
