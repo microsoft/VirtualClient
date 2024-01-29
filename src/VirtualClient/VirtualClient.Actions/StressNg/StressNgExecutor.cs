@@ -49,13 +49,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The name of the package where the SPECJbb package is downloaded.
+        /// The command line argument defined in the profile.
         /// </summary>
-        public int DurationInSecond
+        public string CommandLine
         {
             get
             {
-                 return this.Parameters.GetValue<int>(nameof(StressNgExecutor.DurationInSecond), DefaultRuntimeInSeconds);
+                return this.Parameters.GetValue<string>(nameof(StressNgExecutor.CommandLine));
             }
         }
 
@@ -85,7 +85,7 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Initializes the environment for execution of the Hpcg workload.
+        /// Initializes the environment for execution of the StressNg workload.
         /// </summary>
         protected override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
@@ -116,6 +116,29 @@ namespace VirtualClient.Actions
             }
 
             return isSupported;
+        }
+
+        /// <summary>
+        /// Validates the parameters provided to the profile.
+        /// </summary>
+        protected override void Validate()
+        {
+            if (string.IsNullOrWhiteSpace(this.Scenario))
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition. The action in the profile does not contain the " +
+                    $"required '{nameof(this.Scenario)}' arguments defined.",
+                    ErrorReason.InvalidProfileDefinition);
+            }
+
+            if (this.CommandLine.Contains("--yaml") || this.CommandLine.Contains("-Y "))
+            {
+                throw new WorkloadException(
+                    $"Unexpected profile definition.The action in the profile does not contain the " +
+                    $"required value for'{nameof(this.CommandLine)}' arguments defined. {nameof(this.CommandLine)} should not contain a custom log file, with " +
+                    $"--yaml or -Y parameter. That is being appended programatically",
+                    ErrorReason.InvalidProfileDefinition);
+            }
         }
 
         private async Task CaptureMetricsAsync(IProcessProxy process, string commandArguments, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -158,10 +181,27 @@ namespace VirtualClient.Actions
 
         private string GetCommandLineArguments()
         {
-            int coreCount = Environment.ProcessorCount;
+            string commandLineArgs = this.CommandLine;
 
-            // stress-ng --cpu 16 -vm 2 --timeout 60 --metrics --yaml vcStressNg.yaml
-            return @$"--cpu {coreCount} --timeout {this.DurationInSecond} --metrics --yaml {this.stressNgOutputFilePath}";
+            if (!commandLineArgs.Contains("--cpu ") && !commandLineArgs.Contains("-c "))
+            {
+                commandLineArgs += $" --cpu {Environment.ProcessorCount}";
+            }
+
+            if (!commandLineArgs.Contains("--timeout") && !commandLineArgs.Contains("-t "))
+            {
+                commandLineArgs += $" --timeout {DefaultRuntimeInSeconds}";
+            }
+
+            if (!commandLineArgs.Contains("--metrics"))
+            {
+                commandLineArgs += $" --metrics";
+            }
+
+            commandLineArgs += $" --yaml {this.stressNgOutputFilePath}";
+
+            // Example: stress-ng --cpu 16 --timeout 60 --metrics --yaml vcStressNg.yaml
+            return commandLineArgs.Trim();
         }
     }
 }
