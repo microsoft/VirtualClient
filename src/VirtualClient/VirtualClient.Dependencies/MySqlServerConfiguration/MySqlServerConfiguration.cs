@@ -437,30 +437,33 @@ namespace VirtualClient.Dependencies.MySqlServerConfiguration
             {
                 // server's job is to configure buffer size, in memory script updates the mysql config file
 
-                string inMemoryScript = "in-memory.sh";
-                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("mysqlserverconfiguration");
-
-                await this.SystemManager.MakeFilesExecutableAsync(
-                    scriptsDirectory,
-                    this.Platform,
-                    cancellationToken);
+                List<string> commands = new List<string>();
 
                 MemoryInfo memoryInfo = await this.SystemManager.GetMemoryInfoAsync(cancellationToken);
                 long totalMemoryKiloBytes = memoryInfo.TotalMemory;
                 int bufferSizeInMegaBytes = Convert.ToInt32(totalMemoryKiloBytes / 1024);
 
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    this.PlatformSpecifics.Combine(scriptsDirectory, inMemoryScript),
-                    $"{bufferSizeInMegaBytes}",
-                    scriptsDirectory,
+                if (this.Platform == PlatformID.Unix)
+                {
+                    commands.Add($"sed -i \"s|.*key_buffer_size.*|key_buffer_size = ${bufferSizeInMegaBytes}M|\" /etc/mysql/mysql.conf.d/mysqld.cnf");
+                    commands.Add($"systemctl restart mysql.service");
+                }
+
+                foreach (string command in commands) 
+                {
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    command,
+                    null,
+                    Environment.CurrentDirectory,
                     telemetryContext,
                     cancellationToken,
                     runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        await this.LogProcessDetailsAsync(process, telemetryContext);
-                        process.ThrowIfDependencyInstallationFailed();
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext);
+                            process.ThrowIfDependencyInstallationFailed();
+                        }
                     }
                 }
             }
