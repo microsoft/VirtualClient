@@ -439,7 +439,7 @@ namespace VirtualClient.Dependencies
             string[] expectedCommands =
             {
                 $"sudo chmod -R 2777 \"{this.mysqlScriptPath}\"",
-                $"sudo {this.mysqlScriptPath}/set-mysql-innodb-directories.sh /dev/sdd1 /dev/sde1 /dev/sdf1"
+                $"sudo {this.mysqlScriptPath}/set-mysql-innodb-directories.sh /dev/sdd1 /dev/sde1 /dev/sdf1",   
             };
 
             int commandNumber = 0;
@@ -494,8 +494,8 @@ namespace VirtualClient.Dependencies
 
             string[] expectedCommands =
             {
-                $"sudo chmod -R 2777 \"{this.mysqlScriptPath}\"",
-                $"sudo {this.mysqlScriptPath}/in-memory.sh 8192"
+                $"sudo sed -i \"s|.*key_buffer_size.*|key_buffer_size = 8192M|\" /etc/mysql/mysql.conf.d/mysqld.cnf",
+                $"sudo systemctl restart mysql.service"
             };
 
             int commandNumber = 0;

@@ -445,7 +445,7 @@ namespace VirtualClient.Dependencies.MySqlServerConfiguration
 
                 if (this.Platform == PlatformID.Unix)
                 {
-                    commands.Add($"sed -i \"s|.*key_buffer_size.*|key_buffer_size = ${bufferSizeInMegaBytes}M|\" /etc/mysql/mysql.conf.d/mysqld.cnf");
+                    commands.Add($"sed -i \"s|.*key_buffer_size.*|key_buffer_size = {bufferSizeInMegaBytes}M|\" /etc/mysql/mysql.conf.d/mysqld.cnf");
                     commands.Add($"systemctl restart mysql.service");
                 }
 
