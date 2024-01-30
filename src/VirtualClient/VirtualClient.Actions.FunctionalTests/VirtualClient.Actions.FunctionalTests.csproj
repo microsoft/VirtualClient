@@ -44,6 +44,9 @@
         <Content Include="..\TestResources\Results_Coremark.txt" Link="Resources\Results_Coremark.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\TestResources\Results_ApacheBench.txt" Link="Resources\Results_ApacheBench.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\TestResources\Results_CoremarkPro.txt" Link="Resources\Results_CoremarkPro.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -127,6 +130,9 @@
         <Content Include="..\VirtualClient.Main\profiles\MONITORS-NONE.json" Link="Profiles\MONITORS-NONE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-APACHEBENCH.json" Link="Profiles\PERF-APACHEBENCH.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-ASPNETBENCH.json" Link="Profiles\PERF-ASPNETBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
