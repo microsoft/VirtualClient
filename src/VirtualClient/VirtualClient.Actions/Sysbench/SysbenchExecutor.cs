@@ -5,6 +5,7 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
@@ -19,16 +20,16 @@ namespace VirtualClient.Actions
     /// <summary>
     /// The Sysbench workload executor.
     /// </summary>
-    public class SysbenchOLTPExecutor : VirtualClientComponent
+    public class SysbenchExecutor : VirtualClientComponent
     {
         private readonly IStateManager stateManager;
 
         /// <summary>
-        /// Constructor for <see cref="SysbenchOLTPExecutor"/>
+        /// Constructor for <see cref="SysbenchExecutor"/>
         /// </summary>
         /// <param name="dependencies">Provides required dependencies to the component.</param>
         /// <param name="parameters">Parameters defined in the profile or supplied on the command line.</param>
-        public SysbenchOLTPExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
+        public SysbenchExecutor(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
              : base(dependencies, parameters)
         {
             this.stateManager = this.SystemManager.StateManager;
@@ -48,7 +49,50 @@ namespace VirtualClient.Actions
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchOLTPScenario.Default);
+                return this.Parameters.GetValue<string>(nameof(this.DatabaseScenario), SysbenchScenario.Default);
+            }
+        }
+
+        /// <summary>
+        /// Number of records per table.
+        /// </summary>
+        public int RecordCount
+        {
+            get
+            {
+                int numRecords = 1;
+
+                // default formulaic setup of the database
+                // records & threads depend on the core count
+                if (this.Parameters.TryGetValue(nameof(SysbenchExecutor.RecordCount), out IConvertible recordCount)
+                    && this.DatabaseScenario == SysbenchScenario.Default)
+                {
+                    numRecords = recordCount.ToInt32(CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    CpuInfo cpuInfo = this.SystemManager.GetCpuInfoAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    int coreCount = cpuInfo.LogicalProcessorCount;
+
+                    int recordCountExponent = this.DatabaseScenario == SysbenchScenario.Balanced
+                        ? (int)Math.Log2(coreCount)
+                        : (int)Math.Log2(coreCount) + 2;
+
+                    numRecords = (int)Math.Pow(10, recordCountExponent);
+                }
+
+                return numRecords;
+            }
+        }
+
+        /// <summary>
+        /// The database name option passed to Sysbench.
+        /// </summary>
+        public string DatabaseName
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(SysbenchClientExecutor.DatabaseName), "sbtest");
             }
         }
 
@@ -74,6 +118,11 @@ namespace VirtualClient.Actions
         protected string ClientIpAddress { get; set; }
 
         /// <summary>
+        /// Sysbench package location
+        /// </summary>
+        protected string SysbenchPackagePath { get; set; }
+
+        /// <summary>
         /// An interface that can be used to communicate with the underlying system.
         /// </summary>
         protected ISystemManagement SystemManager => this.Dependencies.GetService<ISystemManagement>();
@@ -94,7 +143,8 @@ namespace VirtualClient.Actions
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
-            await this.InitializeExecutablesAsync(cancellationToken);
+            await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
+
             this.InitializeApiClients(telemetryContext, cancellationToken);
 
             if (this.IsMultiRoleLayout())
@@ -141,73 +191,48 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Initializes the workload executables on the system (e.g. attributes them as executable).
         /// </summary>
-        protected async Task InitializeExecutablesAsync(CancellationToken cancellationToken)
+        protected async Task InitializeExecutablesAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             // store state with initialization status & record/table counts, if does not exist already
 
-            SysbenchOLTPState state = await this.stateManager.GetStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), cancellationToken)
-                ?? new SysbenchOLTPState();
+            SysbenchState state = await this.stateManager.GetStateAsync<SysbenchState>(nameof(SysbenchState), cancellationToken)
+                ?? new SysbenchState();
 
-            if (!state.ExecutablesInitialized)
+            if (!state.SysbenchInitialized)
             {
-                // install sysbench using repo scripts
-                if (this.Platform == PlatformID.Unix && this.DatabaseScenario != SysbenchOLTPScenario.Default)
+                string sysbenchDirectory = this.GetPackagePath(this.PackageName);
+
+                List<string> sysbenchInitCommands = new List<string>()
                 {
-                    string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbencholtp");
+                    $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                    "./autogen.sh",
+                    "./configure",
+                    "make -j",
+                    "make install"
+                };
 
-                    await this.SystemManager.MakeFilesExecutableAsync(
-                        scriptsDirectory,
-                        this.Platform,
-                        cancellationToken);
-                }
-
-                state.ExecutablesInitialized = true;
-
-                await this.stateManager.SaveStateAsync<SysbenchOLTPState>(nameof(SysbenchOLTPState), state, cancellationToken);
-            }
-        }
-
-        /// <summary>
-        /// Executes the commands.
-        /// </summary>
-        /// <param name="pathToExe">Executable name</param>
-        /// <param name="command">Command that needs to be executed</param>
-        /// <param name="workingDirectory">The directory where we want to execute the command</param>
-        /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
-        /// <returns>String output of the command.</returns>
-        protected async Task<string> ExecuteCommandAsync<TExecutor>(string pathToExe, string command, string workingDirectory, CancellationToken cancellationToken)
-            where TExecutor : VirtualClientComponent
-        {
-            string output = string.Empty;
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                this.Logger.LogTraceMessage($"Executing process '{pathToExe}' '{command}'  at directory '{workingDirectory}'.");
-
-                EventContext telemetryContext = EventContext.Persisted()
-                    .AddContext("command", pathToExe)
-                    .AddContext("command", command);
-
-                await this.Logger.LogMessageAsync($"{typeof(TExecutor).Name}.ExecuteProcess", telemetryContext, async () =>
+                foreach (string command in sysbenchInitCommands)
                 {
-                    using (IProcessProxy process = this.SystemManager.ProcessManager.CreateElevatedProcess(this.Platform, pathToExe, command, workingDirectory))
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        command,
+                        null,
+                        Environment.CurrentDirectory,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
                     {
-                        this.CleanupTasks.Add(() => process.SafeKill());
-                        process.RedirectStandardOutput = true;
-                        await process.StartAndWaitAsync(cancellationToken).ConfigureAwait(false);
-
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext);
-                            process.ThrowIfErrored<WorkloadException>(errorReason: ErrorReason.WorkloadFailed);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                            process.ThrowIfDependencyInstallationFailed();
                         }
-
-                        output = process.StandardOutput.ToString();
                     }
+                }
 
-                }).ConfigureAwait(false);
+                state.SysbenchInitialized = true;
             }
-
-            return output;
+           
+            await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
         }
 
         /// <summary>
@@ -233,7 +258,7 @@ namespace VirtualClient.Actions
             if (this.Platform == PlatformID.Unix)
             {
                 var linuxDistributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
-                .ConfigureAwait(false);
+                    .ConfigureAwait(false);
 
                 if (!cancellationToken.IsCancellationRequested)
                 {
@@ -253,9 +278,9 @@ namespace VirtualClient.Actions
             }
         }
 
-        internal class SysbenchOLTPState : State
+        internal class SysbenchState : State
         {
-            public SysbenchOLTPState(IDictionary<string, IConvertible> properties = null)
+            public SysbenchState(IDictionary<string, IConvertible> properties = null)
                 : base(properties)
             {
             }
@@ -264,38 +289,12 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.SysbenchInitialized), false);
+                    return this.Properties.GetValue<bool>(nameof(SysbenchState.SysbenchInitialized), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(SysbenchOLTPState.SysbenchInitialized)] = value;
-                }
-            }
-
-            public bool ExecutablesInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.ExecutablesInitialized), false);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.ExecutablesInitialized)] = value;
-                }
-            }
-
-            public bool DatabaseScenarioInitialized
-            {
-                get
-                {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabaseScenarioInitialized), false);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.DatabaseScenarioInitialized)] = value;
+                    this.Properties[nameof(SysbenchState.SysbenchInitialized)] = value;
                 }
             }
 
@@ -303,25 +302,12 @@ namespace VirtualClient.Actions
             {
                 get
                 {
-                    return this.Properties.GetValue<bool>(nameof(SysbenchOLTPState.DatabasePopulated), false);
+                    return this.Properties.GetValue<bool>(nameof(SysbenchState.DatabasePopulated), false);
                 }
 
                 set
                 {
-                    this.Properties[nameof(SysbenchOLTPState.DatabasePopulated)] = value;
-                }
-            }
-
-            public string DiskPathsArgument
-            {
-                get
-                {
-                    return this.Properties.GetValue<string>(nameof(SysbenchOLTPState.DiskPathsArgument), string.Empty);
-                }
-
-                set
-                {
-                    this.Properties[nameof(SysbenchOLTPState.DiskPathsArgument)] = value;
+                    this.Properties[nameof(SysbenchState.DatabasePopulated)] = value;
                 }
             }
         }
@@ -329,7 +315,7 @@ namespace VirtualClient.Actions
         /// <summary>
         /// Defines the Sysbench OLTP benchmark scenario.
         /// </summary>
-        internal class SysbenchOLTPScenario
+        internal class SysbenchScenario
         {
             public const string Balanced = nameof(Balanced);
 

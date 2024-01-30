@@ -11,7 +11,7 @@ namespace VirtualClient.Actions
     /// <summary>
     /// Parser for SQLOLTPSysbench output document
     /// </summary>
-    public class SysbenchOLTPMetricsParser : MetricsParser
+    public class SysbenchMetricsParser : MetricsParser
     {
         private const string TransactionsPerSecond = "transactions/sec";
         private const string QueriesPerSecond = "queries/sec";
@@ -21,10 +21,10 @@ namespace VirtualClient.Actions
         private const string MilliSecond = "milliseconds";
 
         /// <summary>
-        /// Constructor for <see cref="SysbenchOLTPMetricsParser"/>
+        /// Constructor for <see cref="SysbenchMetricsParser"/>
         /// </summary>
         /// <param name="rawText">Raw text to parse.</param>
-        public SysbenchOLTPMetricsParser(string rawText)
+        public SysbenchMetricsParser(string rawText)
             : base(rawText)
         {
         }

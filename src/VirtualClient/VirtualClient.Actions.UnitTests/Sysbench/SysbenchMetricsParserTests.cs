@@ -16,15 +16,15 @@ namespace VirtualClient.Actions
 
     [TestFixture]
     [Category("Unit")]
-    public class SysbenchOLTPMetricsParserTests
+    public class SysbenchMetricsParserTests
     {
-        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "SysbenchOLTP");
+        private static string examplesDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Examples", "Sysbench");
 
         [Test]
-        public void OLTPSysbenchParserParsesCorrectly()
+        public void SysbenchParserParsesCorrectly()
         {
-            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "SysbenchOLTPExample.txt"));
-            SysbenchOLTPMetricsParser parser = new SysbenchOLTPMetricsParser(rawText);
+            string rawText = File.ReadAllText(Path.Combine(examplesDirectory, "SysbenchExample.txt"));
+            SysbenchMetricsParser parser = new SysbenchMetricsParser(rawText);
 
             IList<Metric> metrics = parser.Parse();
             Assert.AreEqual(17, metrics.Count);
