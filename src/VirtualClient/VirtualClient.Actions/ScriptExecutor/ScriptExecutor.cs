@@ -75,17 +75,6 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// The type of script to be executed. Valid options: python, python3, bash, sh
-        /// </summary>
-        public string ScriptType
-        {
-            get
-            {
-                return this.Parameters.GetValue<string>(nameof(this.ScriptType));
-            }
-        }
-
-        /// <summary>
         /// The ToolName for better logging and metadata
         /// </summary>
         public string ToolName
