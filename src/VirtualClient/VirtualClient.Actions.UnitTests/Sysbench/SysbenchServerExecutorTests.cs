@@ -28,40 +28,40 @@ namespace VirtualClient.Actions
     [Category("Unit")]
     public class SysbenchServerExecutorTests
     {
-        private MockFixture mockFixture;
+        private MockFixture fixture;
 
         [SetUp]
         public void SetupDefaultBehavior()
         {
-            this.mockFixture = new MockFixture();
-            this.mockFixture.Setup(PlatformID.Unix);
+            this.fixture = new MockFixture();
+            this.fixture.Setup(PlatformID.Unix);
 
-            this.mockFixture.Layout = new EnvironmentLayout(new List<ClientInstance>
+            this.fixture.Layout = new EnvironmentLayout(new List<ClientInstance>
             {
                 new ClientInstance($"{Environment.MachineName}-Server", "1.2.3.4", "Server"),
                 new ClientInstance($"{Environment.MachineName}-Client", "1.2.3.5", "Client")
             });
 
             string agentId = $"{Environment.MachineName}-Server";
-            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+            this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
-            this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
-            this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
+            this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.mockFixture.Parameters["PackageName"] = "sysbench";
+            this.fixture.Parameters["PackageName"] = "sysbench";
         }
 
         [Test]
         public async Task SysbenchOLTPServerExecutorSkipsSysbenchInitializationWhenInitialized()
         {
-            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
+            this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {
                 SysbenchInitialized = true
             }));
 
             int commandsExecuted = 0;
 
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
             {
                 commandsExecuted++;
 
@@ -84,7 +84,7 @@ namespace VirtualClient.Actions
             cancellationTokenSource.CancelAfter(1500);
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-            using (TestSysbenchServerExecutor SysbenchExecutor = new TestSysbenchServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            using (TestSysbenchServerExecutor SysbenchExecutor = new TestSysbenchServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 await SysbenchExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
             }
