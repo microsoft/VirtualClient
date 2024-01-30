@@ -1,0 +1,46 @@
+{
+  "Description": "Apache HTTP Server Benchmarking Workload",
+  "MinimumExecutionInterval": "00:01:00",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "01:00:00",
+    "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64",
+    "SupportedOperatingSystems": "Debian,Ubuntu,Windows"
+  },
+  "Parameters": {
+    "NoOfRequests": "50000",
+    "NoOfConcurrentRequests": "50"
+  },
+  "Actions": [
+    {
+      "Type": "ApacheBenchExecutor",
+      "Parameters": {
+        "Scenario": "ExecuteApacheBenchBenchmark",
+        "SupportedPlatforms": "win-x64, win-arm64, linux-x64, linux-arm64",
+        "PackageName": "apachehttpserver",
+        "NoOfRequests": "$.Parameters.NoOfRequests",
+        "NoOfConcurrentRequests": "$.Parameters.NoOfConcurrentRequests"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallHttpServerPackage",
+        "SupportedPlatforms": "win-x64, win-arm64",
+        "BlobContainer": "packages",
+        "BlobName": "apache-httpd-2.4.57.zip",
+        "PackageName": "apachehttpserver",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "LinuxPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallLinuxPackages",
+        "SupportedPlatforms": "linux-x64, linux-arm64",
+        "Packages-Apt": "apache2,unzip"
+      }
+    }
+  ]
+}
