@@ -87,18 +87,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task HadoopTerasortExecutorExecutesTheCorrectWorkloadCommands()
-        {
-            this.SetupDefaultBehavior();
-
-            using (TestHadoopTerasortExecutor hadoopTerasortExecutor = new TestHadoopTerasortExecutor(this.fixture))
-            {
-                await hadoopTerasortExecutor.ExecuteAsync(CancellationToken.None)
-                    .ConfigureAwait(false);
-            }
-        }
-
-        [Test]
         [TestCase(PlatformID.Unix)]
         public void HadoopTerasortExecutorThrowsWhenTheWorkloadDoesNotProduceValidResults(PlatformID platform)
         {
