@@ -204,7 +204,7 @@ namespace VirtualClient.Actions
 
                 List<string> sysbenchInitCommands = new List<string>()
                 {
-                    $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                    $"sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {sysbenchDirectory}/src/lua/oltp_common.lua",
                     "./autogen.sh",
                     "./configure",
                     "make -j",
@@ -216,14 +216,14 @@ namespace VirtualClient.Actions
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command,
                         null,
-                        Environment.CurrentDirectory,
+                        sysbenchDirectory,
                         telemetryContext,
                         cancellationToken,
                         runElevated: true))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "SysbenchExecutor", logToFile: true);
                             process.ThrowIfDependencyInstallationFailed();
                         }
                     }
@@ -247,7 +247,7 @@ namespace VirtualClient.Actions
 
             if (!isSupported)
             {
-                this.Logger.LogNotSupported("SysbenchOLTP", this.Platform, this.CpuArchitecture, EventContext.Persisted());
+                this.Logger.LogNotSupported("Sysbench", this.Platform, this.CpuArchitecture, EventContext.Persisted());
             }
 
             return isSupported;

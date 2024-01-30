@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
             {
                 int numTables = 10;
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.NumTables), out IConvertible tables)
+                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.NumTables), out IConvertible tables)
                     && this.DatabaseScenario != SysbenchScenario.Balanced)
                 {
                     numTables = tables.ToInt32(CultureInfo.InvariantCulture);
@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
             {
                 int numThreads = 1;
 
-                if (this.Parameters.TryGetValue(nameof(SysbenchClientExecutor.Threads), out IConvertible threads) && threads != null)
+                if (this.Parameters.TryGetValue(nameof(SysbenchConfiguration.Threads), out IConvertible threads) && threads != null)
                 {
                     numThreads = threads.ToInt32(CultureInfo.InvariantCulture);
                 }

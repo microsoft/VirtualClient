@@ -52,40 +52,49 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchOLTPServerExecutorInitializesScripts()
+        public async Task SysbenchOLTPServerExecutorSkipsSysbenchInitializationWhenInitialized()
         {
-            SetupDefaultBehavior();
-
-            bool commandExecuted = false;
-
-            using TestSysbenchOLTPServerExecutor executor = new TestSysbenchOLTPServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
-
-            string scriptPath = this.mockFixture.PlatformSpecifics.GetScriptPath("sysbench");
-
-            string expectedCommand = $"sudo chmod -R 2777 \"{scriptPath}\"";
-
-            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
+            this.mockFixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {
-                if (expectedCommand == $"{exe} {arguments}")
-                {
-                    commandExecuted = true;
-                }
+                SysbenchInitialized = true
+            }));
 
-                return this.mockFixture.Process;
+            int commandsExecuted = 0;
+
+            this.mockFixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
+            {
+                commandsExecuted++;
+
+                InMemoryProcess process = new InMemoryProcess
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = exe,
+                        Arguments = arguments
+                    },
+                    ExitCode = 0,
+                    OnStart = () => true,
+                    OnHasExited = () => true
+                };
+
+                return process;
             };
 
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.CancelAfter(1500);
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
-            await executor.ExecuteAsync(cancellationToken);
+            using (TestSysbenchServerExecutor SysbenchExecutor = new TestSysbenchServerExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await SysbenchExecutor.ExecuteAsync(cancellationToken).ConfigureAwait(false);
+            }
 
-            Assert.IsTrue(commandExecuted);
+            Assert.AreEqual(0, commandsExecuted);
         }
 
-        private class TestSysbenchOLTPServerExecutor : SysbenchServerExecutor
+        private class TestSysbenchServerExecutor : SysbenchServerExecutor
         {
-            public TestSysbenchOLTPServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
+            public TestSysbenchServerExecutor(IServiceCollection services, IDictionary<string, IConvertible> parameters = null)
                 : base(services, parameters)
             {
             }

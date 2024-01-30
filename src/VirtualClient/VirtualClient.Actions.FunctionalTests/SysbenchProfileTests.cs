@@ -144,14 +144,13 @@ namespace VirtualClient.Actions
                     $"sudo mysql --execute=\"GRANT ALL ON *.* TO 'sbtest'@'localhost'\"",
                     $"sudo {this.mysqlScriptPath}/set-mysql-innodb-directories.sh mountPoint0 mountPoint1 mountPoint2",
 
-                    $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                    $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.sysbenchPackagePath}/src/lua/oltp_common.lua",
                     "sudo ./autogen.sh",
                     "sudo ./configure",
                     "sudo make -j",
                     "sudo make install",
 
                     $"sudo chmod -R 2777 \"{this.sysbenchScriptPath}\"",
-
                     $"sudo {this.sysbenchScriptPath}/distribute-database.sh {this.sysbenchPackagePath} sbtest 10 99999 1 mountPoint0 mountPoint1 mountPoint2",
 
                     $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",

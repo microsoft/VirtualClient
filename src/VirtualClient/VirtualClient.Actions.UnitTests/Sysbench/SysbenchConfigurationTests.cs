@@ -85,6 +85,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
+                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
                 $"sudo {this.scriptPath}/distribute-database.sh {this.mockPackagePath} sbtest 10 99999 1 {this.mountPaths}",
             };
 
@@ -129,7 +130,8 @@ namespace VirtualClient.Actions
         {
             string[] expectedCommands =
             {
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
+                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -183,7 +185,8 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
+                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
@@ -237,7 +240,8 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" $sysbenchPath/src/lua/oltp_common.lua\r\n",
+                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
+                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
                 "sudo ./autogen.sh",
                 "sudo ./configure",
                 "sudo make -j",
