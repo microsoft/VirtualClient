@@ -46,8 +46,13 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            // Install JDK package
-            await base.ExecuteAsync(telemetryContext, cancellationToken);
+            // Download and Install JDK package from blob container
+            if (this.Parameters.ContainsKey(nameof(this.BlobName)) && 
+                this.Parameters.ContainsKey(nameof(this.BlobContainer)))
+            {
+                await base.ExecuteAsync(telemetryContext, cancellationToken);
+            }
+
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath jdkPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
                 .ConfigureAwait(false);
