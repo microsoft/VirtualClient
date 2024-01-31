@@ -59,8 +59,8 @@ namespace VirtualClient.Actions
 
             // Setup:
             // Single server instance running on port 9092
-            this.fixture.ApiClient.OnGetState(nameof(KafkaServerState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<KafkaServerState>(nameof(KafkaServerState), new KafkaServerState(new int[] { 6379 }))));
+            /*this.fixture.ApiClient.OnGetState(nameof(KafkaServerState))
+                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<KafkaServerState>(nameof(KafkaServerState), new KafkaServerState(new int[] { 6379 }))));*/
 
             this.fixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));

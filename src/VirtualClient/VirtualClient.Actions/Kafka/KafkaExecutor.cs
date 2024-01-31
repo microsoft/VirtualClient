@@ -160,7 +160,7 @@
             return commandArgs;
         }
 
-        internal class KafkaServerState : State
+        /*internal class KafkaServerState : State
         {
             [JsonConstructor]
             public KafkaServerState(IDictionary<string, IConvertible> properties = null)
@@ -188,6 +188,6 @@
                     return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
                 }
             }
-        }
+        }*/
     }
 }

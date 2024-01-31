@@ -51,12 +51,9 @@ namespace VirtualClient.Actions
 
             // Setup:
             // Server saves state once it is up and running.
-            this.fixture.ApiClient.OnUpdateState<ServerState>(nameof(ServerState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK));
-
-            this.fixture.ApiClient.Setup(client => client.UpdateStateAsync<KafkaServerState>(nameof(KafkaServerState), It.IsAny<Item<KafkaServerState>>(),
+            /*this.fixture.ApiClient.Setup(client => client.UpdateStateAsync<KafkaServerState>(nameof(KafkaServerState), It.IsAny<Item<KafkaServerState>>(),
                 It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK));*/
         }
 
         [Test]
