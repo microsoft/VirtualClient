@@ -1,7 +1,6 @@
-# TeraSort: Sorting at Scale
+# Hadoop TeraSort: Sorting at Scale
 
 ## Overview
-
 TeraSort is a benchmark used to evaluate the efficiency of distributed computing frameworks in sorting large datasets. The benchmark was introduced by the Apache Hadoop project, which is a popular open-source framework for distributed storage and processing of big data. TeraSort is designed to test the scalability and performance of distributed systems when sorting massive amounts of data.
 
 [Official Documentation](https://hadoop.apache.org/docs/r3.3.5/hadoop-project-dist/hadoop-common/SingleCluster.html)
@@ -41,6 +40,7 @@ Adding the reference of the documentation here: [Supported Java Versions for Had
 ## What is Being Measured?
 
 In TeraSort, the primary metric being measured is the efficiency and performance of a distributed computing framework when sorting a massive dataset.
+
 
 #### TeraGen Counters
 

@@ -29,7 +29,7 @@ the performance of the CPU over various periods of time while also allowing the 
 
   | Parameter | Purpose | Acceptable Range | Default Value |
   |-----------|---------|------------------|---------------|
-  | RowCount | Number of rows based on user choice | >0 | 100000 |
+  | RowCount | Number of records or data entries that the Teragen MapReduce job will generate| >0 | 100000 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
