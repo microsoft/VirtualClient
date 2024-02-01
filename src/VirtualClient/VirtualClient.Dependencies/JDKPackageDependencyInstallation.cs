@@ -12,22 +12,23 @@ namespace VirtualClient.Dependencies
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Dependencies.Packaging;
 
     /// <summary>
     /// Provides functionality for installing the JDK on the system.
     /// </summary>
-    public class JavaDevelopmentKitInstallation : VirtualClientComponent
+    public class JDKPackageDependencyInstallation : DependencyPackageInstallation
     {
         private ISystemManagement systemManager;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="JavaDevelopmentKitInstallation"/> class.
+        /// Initializes a new instance of the <see cref="JDKPackageDependencyInstallation"/> class.
         /// </summary>
         /// <param name="dependencies">Provides all of the required dependencies to the Virtual Client component.</param>
         /// <param name="parameters">
         /// Parameters defined in the execution profile or supplied to the Virtual Client on the command line.
         /// </param>
-        public JavaDevelopmentKitInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
+        public JDKPackageDependencyInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters = null)
             : base(dependencies, parameters)
         {
             this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
@@ -45,6 +46,13 @@ namespace VirtualClient.Dependencies
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
+            // Download and Install JDK package from blob container
+            if (this.Parameters.ContainsKey(nameof(this.BlobName)) && 
+                this.Parameters.ContainsKey(nameof(this.BlobContainer)))
+            {
+                await base.ExecuteAsync(telemetryContext, cancellationToken);
+            }
+
             IPackageManager packageManager = this.Dependencies.GetService<IPackageManager>();
             DependencyPath jdkPackage = await packageManager.GetPackageAsync(this.PackageName, cancellationToken)
                 .ConfigureAwait(false);
