@@ -194,9 +194,7 @@ namespace VirtualClient.Actions.Kafka
                     break;
             }
 
-            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaTopicScriptPath, this.Platform, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.KafkProducerPerfScriptPath, this.Platform, cancellationToken);
-            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaConsumerPerfScriptPath, this.Platform, cancellationToken);
+            await this.SystemManagement.MakeFileExecutableAsync(this.KafkaCommandScriptPath, this.Platform, cancellationToken);
         }
 
         /// <summary>

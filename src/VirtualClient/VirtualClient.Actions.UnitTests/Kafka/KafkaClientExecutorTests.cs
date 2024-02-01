@@ -57,11 +57,6 @@ namespace VirtualClient.Actions
             this.consumerResults = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, @"Examples\Kafka\KafkaConsumerResultExample.txt"));
             this.producerResults = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, @"Examples\Kafka\KafkaProducerResultExample.txt"));
 
-            // Setup:
-            // Single server instance running on port 9092
-            /*this.fixture.ApiClient.OnGetState(nameof(KafkaServerState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<KafkaServerState>(nameof(KafkaServerState), new KafkaServerState(new int[] { 6379 }))));*/
-
             this.fixture.ApiClient.Setup(client => client.GetHeartbeatAsync(It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
                 .ReturnsAsync(this.fixture.CreateHttpResponse(System.Net.HttpStatusCode.OK));
 
@@ -107,7 +102,7 @@ namespace VirtualClient.Actions
         {
             this.SetupTests(platformID);
             this.fixture.Parameters["CommandType"] = KafkaCommandType.Setup;
-            this.fixture.Parameters["CommandLine"] = "--topic sync-test-rep-one --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196";
+            this.fixture.Parameters["CommandLine"] = "--create --topic sync-test-rep-one --partitions 6 --replication-factor 1 --bootstrap-server {0}:{Port}";
             this.fixture.FileSystem.Setup(fe => fe.Directory.Delete(It.IsAny<string>()));
 
             string KafkaCommandScriptPath = this.fixture.Combine(this.mockKafkaPackage.Path, "bin", "windows", "kafka-topics.bat");
@@ -118,7 +113,7 @@ namespace VirtualClient.Actions
                 List<string> expectedCommands = new List<string>()
                 {
                     // Command to create topic
-                    $"cmd /c {KafkaCommandScriptPath} --topic sync-test-rep-one --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers=1.2.3.5:9092 buffer.memory=67108864 batch.size=8196"
+                    $"cmd /c {KafkaCommandScriptPath} --create --topic sync-test-rep-one --partitions 6 --replication-factor 1 --bootstrap-server 1.2.3.5:9092"
                 };
 
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>

@@ -48,12 +48,6 @@ namespace VirtualClient.Actions
             this.fixture.PackageManager.Setup(mgr => mgr.GetPackageAsync(this.mockKafkaPackage.Name, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockKafkaPackage);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-
-            // Setup:
-            // Server saves state once it is up and running.
-            /*this.fixture.ApiClient.Setup(client => client.UpdateStateAsync<KafkaServerState>(nameof(KafkaServerState), It.IsAny<Item<KafkaServerState>>(),
-                It.IsAny<CancellationToken>(), It.IsAny<IAsyncPolicy<HttpResponseMessage>>()))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK));*/
         }
 
         [Test]

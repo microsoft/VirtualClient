@@ -113,6 +113,12 @@
         <Content Include="..\TestResources\Results_SysbenchOLTP.txt" Link="Resources\Results_SysbenchOLTP.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\TestResources\Results_KafkaConsumer.txt" Link="Resources\Results_KafkaConsumer.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_KafkaProducer.txt" Link="Resources\Results_KafkaProducer.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
@@ -247,6 +253,9 @@
         <Content Include="..\VirtualClient.Main\profiles\POWER-SPEC70.json" Link="Profiles\POWER-SPEC70.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-KAFKA.json" Link="Profiles\PERF-KAFKA.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
     </ItemGroup>
 
     <ItemGroup>
