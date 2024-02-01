@@ -10,10 +10,8 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using VirtualClient.Common;
-    using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Generic Script executor for Python

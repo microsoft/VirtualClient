@@ -210,25 +210,22 @@ namespace VirtualClient.Actions
                 {
                     foreach (string logFilePath in this.fileSystem.Directory.GetFiles(fullLogPath, "*", SearchOption.AllDirectories))
                     {
-                        if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-                        {
-                            await this.UploadLogAsync(blobManager, logFilePath, cancellationToken);
-                        }
-
-                        this.MoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir);
+                        this.UploadAndMoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
                     }
                 }
 
                 // Check for Matching FileNames
                 foreach (string logFilePath in this.fileSystem.Directory.GetFiles(this.WorkloadPackage.Path, logPath, SearchOption.AllDirectories))
                 {
-                    if (this.TryGetContentStoreManager(out IBlobManager blobManager))
-                    {
-                        await this.UploadLogAsync(blobManager, logFilePath, cancellationToken);
-                    }
-
-                    this.MoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir);
+                    await this.UploadAndMoveFileToCentralLogsDirectory(logFilePath, destinitionLogsDir, cancellationToken);
                 }
+            }
+
+            // Move test-metrics.json file if that exists
+            string metricsFilePath = this.Combine(this.WorkloadPackage.Path, "test-metrics.json");
+            if (this.fileSystem.File.Exists(metricsFilePath))
+            {
+                await this.UploadAndMoveFileToCentralLogsDirectory(metricsFilePath, destinitionLogsDir, cancellationToken);
             }
         }
 
@@ -253,10 +250,15 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Move the log files to central logs directory
+        /// Move the log files to central logs directory and Upload to Content Store
         /// </summary>
-        protected void MoveFileToCentralLogsDirectory(string sourcePath, string destinitionDirectory)
+        protected async Task UploadAndMoveFileToCentralLogsDirectory(string sourcePath, string destinitionDirectory, CancellationToken cancellationToken)
         {
+            if (this.TryGetContentStoreManager(out IBlobManager blobManager))
+            {
+                await this.UploadLogAsync(blobManager, sourcePath, cancellationToken);
+            }
+
             string fileName = Path.GetFileName(sourcePath);
 
             string destinitionPath = this.Combine(destinitionDirectory, fileName);

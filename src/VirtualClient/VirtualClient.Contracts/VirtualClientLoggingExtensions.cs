@@ -1111,6 +1111,6 @@ namespace VirtualClient.Contracts
                     metricCategorization,
                     toolVersion);
             }
-        }        
+        }
     }
 }

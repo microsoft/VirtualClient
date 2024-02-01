@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(@"Examples\ScriptExecutor\validExample.json");
+            this.rawText = File.ReadAllText(@"Examples\ScriptExecutor\validJsonExample.json");
         }
 
         [Test]
@@ -108,6 +108,7 @@ namespace VirtualClient.Actions
             this.fixture.Setup(platform);
             this.mockPackage = new DependencyPath("workloadPackage", this.fixture.PlatformSpecifics.GetPackagePath("workloadPackage"));
             this.fixture.PackageManager.OnGetPackage("workloadPackage").ReturnsAsync(this.mockPackage);
+            this.fixture.Dependencies.RemoveAll<IEnumerable<IBlobManager>>();
 
             this.fixture.File.Reset();
             this.fixture.File.Setup(fe => fe.Exists(It.IsAny<string>()))

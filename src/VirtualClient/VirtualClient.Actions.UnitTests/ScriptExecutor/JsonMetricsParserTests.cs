@@ -29,7 +29,7 @@ namespace VirtualClient.Actions
         [Test]
         public void JsonMetricsParserVerifyMetricsForPassResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "validExample.json");
+            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "validJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();
@@ -43,7 +43,7 @@ namespace VirtualClient.Actions
         [Test]
         public void JsonMetricsParserVerifyMetricsForFailedResults()
         {
-            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "invalidExample.json");
+            string resultsPath = Path.Combine(this.workingDirectory, "Examples", "ScriptExecutor", "invalidJsonExample.json");
             string rawText = File.ReadAllText(resultsPath);
             this.testParser = new JsonMetricsParser(rawText, new InMemoryLogger(), EventContext.None);
             IList<Metric> metrics = this.testParser.Parse();

@@ -13,7 +13,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using VirtualClient.Contracts.Metadata;
 
     /// <summary>
     /// The Generic Script executor for Python

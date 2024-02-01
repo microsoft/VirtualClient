@@ -6,8 +6,8 @@
     },
     "Parameters": {
         "CommandLine": "",
-        "ScriptPath": "\\relativePath\\Executable",
-        "LogPaths":  "\\relativePath1\\file1;\\relativePath2\\subFolder2",
+        "ScriptPath": "relativePath\\script.sh",
+        "LogPaths":  "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
         "ToolName":  "",
         "PackageName":  "exampleWorkload",
         "FailFast":  false
