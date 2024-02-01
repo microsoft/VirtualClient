@@ -23,7 +23,7 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Setup-topic-replication-factor-1-sync",
+        "Scenario": "Setup-topic-replication-factor-[1]-sync",
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
         "WarmUp": true,
@@ -35,7 +35,7 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Setup-topic-replication-factor-3-sync",
+        "Scenario": "Setup-topic-replication-factor-[ServeInstances]-sync",
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
         "WarmUp": true,
@@ -86,7 +86,7 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Setup-topic-replication-factor-3-async",
+            "Scenario": "Setup-topic-replication-factor-[ServerInstances]-async",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
