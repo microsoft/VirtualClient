@@ -171,8 +171,6 @@ namespace VirtualClient.Actions
 
             if (!this.state.HadoopExecutorStateInitialized)
             {
-                this.SetEnvironmentVariable(EnvironmentVariable.JAVA_HOME, this.JavaPackageDirectory, EnvironmentVariableTarget.Process);
-
                 await this.ConfigurationFilesAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
                 await this.MakeFilesExecutableAsync(telemetryContext, cancellationToken).ConfigureAwait(false);
 
