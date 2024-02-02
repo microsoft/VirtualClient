@@ -26,8 +26,8 @@ namespace VirtualClient.Actions
         {
             var metrics = new List<Metric>();
             int index;
+            string name, metricName;
             double weight, fps;
-            string metricName;
             IDictionary<string, IConvertible> metadata;
 
             string[] lines = this.RawText.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -48,6 +48,7 @@ namespace VirtualClient.Actions
                     // composite rows will have invalid index -1 and weight 100%
                     index = -1;
                     weight = 100;
+                    name = string.Empty;
                     fps = double.Parse(parts[1]);
                     metricName = "compositeScore";
                 }
@@ -56,6 +57,7 @@ namespace VirtualClient.Actions
                 else if (parts.Length == 5)
                 {
                     index = int.Parse(parts[1]);
+                    name = parts[2];
                     weight = double.Parse(parts[3]);
                     fps = double.Parse(parts[4]);
                     metricName = "individualScore";
@@ -65,7 +67,7 @@ namespace VirtualClient.Actions
                     throw new WorkloadException($"Exceptions occurred when trying to parse the workload result of 'SPEcviewperf'.", ErrorReason.WorkloadFailed);
                 }
 
-                metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index } };
+                metadata = new Dictionary<string, IConvertible> { { "weight", weight }, { "index", index }, { "name", name } };
                 metrics.Add(new Metric(metricName, value: fps, unit: "fps", metadata: metadata));
             }
 

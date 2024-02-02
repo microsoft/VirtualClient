@@ -184,7 +184,7 @@ namespace VirtualClient.Dependencies
                     await this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync(telemetryContext, cancellationToken)
                                .ConfigureAwait(false);
 
-                    await this.stateManager.SaveStateAsync(nameof(this.CudaAndNvidiaGPUDriverInstallationOnWindowsAsync), new State(), cancellationToken)
+                    await this.stateManager.SaveStateAsync(nameof(CudaAndNvidiaGPUDriverInstallation), new State(), cancellationToken)
                         .ConfigureAwait(false);
                 }
 
