@@ -284,8 +284,6 @@ namespace VirtualClient.Actions.Kafka
                             "Kafka",
                             addCleanupTasks: false));
                     }
-
-                    // await Task.Delay(10000);
                 }
                 catch (OperationCanceledException)
                 {
