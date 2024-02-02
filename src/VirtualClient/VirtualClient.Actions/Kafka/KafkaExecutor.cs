@@ -49,7 +49,7 @@
         protected IApiClient ServerApiClient { get; set; }
 
         /// <summary>
-        /// Server IpAddress on which Redis Server runs.
+        /// Server IpAddress on which Kafka Server runs.
         /// </summary>
         protected string ServerIpAddress { get; set; }
 
@@ -84,7 +84,7 @@
         }
 
         /// <summary>
-        /// Initializes the environment and dependencies for running the Redis Memtier workload.
+        /// Initializes the environment and dependencies for running the Kafka workload.
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {

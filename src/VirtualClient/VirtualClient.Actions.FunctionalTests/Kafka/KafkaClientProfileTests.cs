@@ -17,7 +17,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Functional")]

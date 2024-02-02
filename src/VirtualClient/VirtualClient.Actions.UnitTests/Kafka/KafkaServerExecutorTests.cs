@@ -20,7 +20,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
     using static VirtualClient.KafkaExecutor;
 
     [TestFixture]

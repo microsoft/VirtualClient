@@ -23,7 +23,6 @@ namespace VirtualClient.Actions
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
     using static VirtualClient.KafkaExecutor;
 
     [TestFixture]
@@ -43,7 +42,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
-                ["Scenario"] = "Redis_Scenario",
+                ["Scenario"] = "Kafka_Client_Scenario",
                 ["Port"] = 9092,
                 ["PackageName"] = this.mockKafkaPackage.Name,
                 ["CommandLine"] = "--create --topic sync-test-rep-one --partitions 6 --replication-factor 1 --bootstrap-server {0}:{Port}",
