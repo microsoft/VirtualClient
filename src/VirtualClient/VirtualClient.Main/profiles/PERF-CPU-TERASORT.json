@@ -31,20 +31,13 @@
       }
     },
     {
-      "Type": "DependencyPackageInstallation",
+      "Type": "JDKPackageDependencyInstallation",
       "Parameters": {
-        "Scenario": "InstallJavaSDKPackage",
+        "Scenario": "InstallJDKPackage",
         "BlobContainer": "packages",
         "BlobName": "microsoft-jdk-11.0.19.zip",
         "PackageName": "javadevelopmentkit",
         "Extract": true
-      }
-    },
-    {
-      "Type": "JavaDevelopmentKitInstallation",
-      "Parameters": {
-        "Scenario": "InstallJDK",
-        "PackageName": "javadevelopmentkit"
       }
     }
   ]
