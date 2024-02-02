@@ -298,7 +298,6 @@ namespace VirtualClient.Actions.Kafka
         {
             try
             {
-                DateTime startTime = DateTime.UtcNow;
                 string clusterIdCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, "random-uuid");
                 telemetryContext.AddContext(nameof(clusterIdCmdArgs), clusterIdCmdArgs);
                 string output;
