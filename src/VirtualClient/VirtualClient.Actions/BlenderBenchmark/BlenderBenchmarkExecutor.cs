@@ -183,7 +183,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
-                        "BlenderBenchmark",
+                        this.PackageName,
                         scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,
