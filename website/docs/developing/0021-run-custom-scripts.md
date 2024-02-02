@@ -81,7 +81,7 @@ with Virtual Client.
             "Parameters": {
                 "Scenario": "Name_Of_Scenario",
                 "CommandLine": "argument1 argument2",
-                "ScriptPath": "script.sh",
+                "ScriptPath": "script.ps1",
                 "LogPaths":  "*.log;*.txt;logSubFolder\\",
                 "ToolName":  "Name_Of_Tool",
                 "PackageName":  "exampleWorkload",
@@ -94,7 +94,8 @@ with Virtual Client.
 
   * **PythonExecutor**
     This Action can be used to execute Python Scripts in Windows and Linux. The Dependency Components in Virtual Client can be used to 
-    install python on the system.
+    install python on the system. The following example shows the dependency components for Linux and Windows, one of them can be used 
+    as per the platform.
     ``` json
     Example:
     "Actions": [
@@ -103,13 +104,43 @@ with Virtual Client.
             "Parameters": {
                 "Scenario": "Name_Of_Scenario",
                 "CommandLine": "argument1 argument2",
-                "ScriptPath": "script.sh",
+                "ScriptPath": "script.py",
                 "LogPaths":  "*.log;*.txt;logSubFolder\\",
                 "ToolName":  "Name_Of_Tool",
                 "PackageName":  "exampleWorkload",
                 "UsePython3": true,
                 "FailFast":  false,
                 "Tags": "Test,VC,Script"
+            }
+        }
+    ]
+    
+    Python installation in Linux:
+    "Dependencies": [
+        {
+            "Type": "LinuxPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallLinuxPackages",
+                "Packages": "python3,python3-pip"
+            }
+        }
+    ]
+    
+    Python Installation in Windows using chocolatey
+    "Dependencies": [
+        {
+            "Type": "ChocolateyInstallation",
+            "Parameters": {
+                "Scenario": "InstallChocolatey",
+                "PackageName": "chocolatey"
+            }
+        },
+        {
+            "Type": "ChocolateyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallCygwin",
+                "PackageName": "chocolatey",
+                "Packages": "python3"
             }
         }
     ]
@@ -133,18 +164,18 @@ The following parameters are supported by the Executor Classes that can be modif
 ## Logging and Metrics
 
   * ### Logging
-  The “LogPaths” parameter of the generic executor determines the semicolon ";" separated logs sub-folders and log files. 
+    The “LogPaths” parameter of the generic executor determines the semicolon ";" separated logs sub-folders and log files. 
   
-    * For the sub-folder, the relative path to the sub-folder within the package directory needs to be provided. 
-      Then all files within the directory will be swept, and they will be uploaded to content store (if the contentstore --cs parameter
-      is provided in Virtual Client) and will be moved to the central logs directory in Virtual Client.
-
-    * For the filePaths, each relative file path can be a pattern that will be matched within the workload Package directory. For example,
-      a pattern of *.txt will cover all txt files within the workload package directory and they will be swept, uploaded to content
-      store (if contentStore --cs parameter is provided) and will be moved to central logs directory.
- 
-    Example Central Logs Directory (for a win-x64 system):
-      (VirtualClient root folder) > content > win-x64 > logs > toolName > scenarioName_TIMESTAMP 
+      * For the sub-folder, the relative path to the sub-folder within the package directory needs to be provided. 
+        Then all files within the directory will be swept, and they will be uploaded to content store (if the contentstore --cs parameter
+        is provided in Virtual Client) and will be moved to the central logs directory in Virtual Client.
+      
+      * For the filePaths, each relative file path can be a pattern that will be matched within the workload Package directory. For example,
+        a pattern of *.txt will cover all txt files within the workload package directory and they will be swept, uploaded to content
+        store (if contentStore --cs parameter is provided) and will be moved to central logs directory.
+      
+      Example Central Logs Directory (for a win-x64 system):
+        (VirtualClient root folder) > content > win-x64 > logs > toolName > scenarioName_TIMESTAMP 
 
   * ### Metrics
     The metrics capturing for the script/test-suite by Virtual Client would depend on the metric Parsing requirement. The script/test-suite

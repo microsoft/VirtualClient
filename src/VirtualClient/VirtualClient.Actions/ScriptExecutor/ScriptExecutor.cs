@@ -191,7 +191,10 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// Captures the workload logs based on LogFiles parameter of ScriptExecutor
+        /// Captures the workload logs based on LogFiles parameter of ScriptExecutor.
+        /// All the files inmatching sub-folders and all the matching files along with metrics file will be moved to the 
+        /// central Virtual Client logs directory. If the cintent store (--cs) argument is used with Virtual Client, then
+        /// the captured logs will also be uploaded to blob content store.
         /// </summary>
         protected async Task CaptureLogsAsync(CancellationToken cancellationToken)
         {

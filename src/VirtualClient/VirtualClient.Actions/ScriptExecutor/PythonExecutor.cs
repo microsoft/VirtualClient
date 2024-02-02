@@ -48,16 +48,16 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string pythonVersion = "python";
+            string pythonVerb = "python";
             if (this.UsePython3)
             {
-                pythonVersion = "python3";
+                pythonVerb = "python3";
             }
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    pythonVersion,
+                    pythonVerb,
                     $"{this.ExecutablePath} {this.CommandLine}",
                     this.WorkloadPackage.Path,
                     telemetryContext,

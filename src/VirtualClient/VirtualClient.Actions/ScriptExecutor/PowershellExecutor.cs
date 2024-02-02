@@ -14,7 +14,7 @@ namespace VirtualClient.Actions
     using VirtualClient.Contracts;
 
     /// <summary>
-    /// The Generic Script executor for Python
+    /// The Generic Script executor for Powershell
     /// </summary>
     public class PowershellExecutor : ScriptExecutor
     {
@@ -37,7 +37,7 @@ namespace VirtualClient.Actions
             {
                 using (IProcessProxy process = await this.ExecuteCommandAsync(
                     "powershell",
-                    $"-NoProfile -Command \"cd '{this.WorkloadPackage.Path}';{this.ExecutablePath} {this.CommandLine}\"",
+                    $"-ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{this.WorkloadPackage.Path}';{this.ExecutablePath} {this.CommandLine}\"",
                     this.WorkloadPackage.Path,
                     telemetryContext,
                     cancellationToken,
