@@ -247,16 +247,11 @@ namespace VirtualClient.Actions.Kafka
             {
                 try
                 {
-                    List<string> commands = new List<string>();
-
                     relatedContext.AddContext("command", this.PlatformSpecificCommandType);
-                    relatedContext.AddContext("commandArguments", commands);
                     relatedContext.AddContext("workingDir", this.KafkaPackagePath);
 
                     // Get Cluster Id
-                    string clusterIdCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, "random-uuid");
-                    commands.Add(clusterIdCmdArgs);
-                    string clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, clusterIdCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
+                    string clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, this.KafkaPackagePath, relatedContext, cancellationToken);
                     clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
 
                     // Start kafka servers once zookeeper server is started.
@@ -267,13 +262,11 @@ namespace VirtualClient.Actions.Kafka
                         // Format log directories
                         string formatLogDirCmdArgs = $"format -t {clusterId} -c {propertiesFilePath}";
                         formatLogDirCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, formatLogDirCmdArgs);
-                        commands.Add(formatLogDirCmdArgs);
                         await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
 
                         // Start kafka servers
                         int port = this.Port + i;
                         string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaStartScriptPath, propertiesFilePath);
-                        commands.Add(commandArguments);
                         this.serverProcesses.Add(this.StartServerAndWaitForExitAsync(
                             $"Kafka server process exited (port = {port})...",
                             this.PlatformSpecificCommandType,
@@ -301,13 +294,15 @@ namespace VirtualClient.Actions.Kafka
             });
         }
 
-        private async Task<string> GetClusterId(string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task<string> GetClusterId(string command, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
                 DateTime startTime = DateTime.UtcNow;
+                string clusterIdCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, "random-uuid");
+                telemetryContext.AddContext(nameof(clusterIdCmdArgs), clusterIdCmdArgs);
                 string output;
-                using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
+                using (IProcessProxy process = await this.ExecuteCommandAsync(command, clusterIdCmdArgs, workingDirectory, telemetryContext, cancellationToken, runElevated: true, timeout: TimeSpan.FromMinutes(5)))
                 {
                     if (!cancellationToken.IsCancellationRequested)
                     {
@@ -316,7 +311,7 @@ namespace VirtualClient.Actions.Kafka
                     }
 
                     output = process.StandardOutput.ToString();
-                    ConsoleLogger.Default.LogMessage($"Cluster Id - {output}", telemetryContext);
+                    telemetryContext.AddContext("Cluster Id", output);
                 }
 
                 return output;
@@ -343,6 +338,7 @@ namespace VirtualClient.Actions.Kafka
             {
                 try
                 {
+                    telemetryContext.AddContext(nameof(commandArguments), commandArguments);
                     using (IProcessProxy process = await this.ExecuteCommandAsync(command, commandArguments, workingDirectory, telemetryContext, cancellationToken, runElevated: true, addCleanupTasks: addCleanupTasks))
                     {
                         if (!cancellationToken.IsCancellationRequested)
@@ -360,7 +356,7 @@ namespace VirtualClient.Actions.Kafka
                 catch (Exception exc)
                 {
                     this.Logger.LogMessage(
-                        $"{this.TypeName}.RunCommandError",
+                        $"{this.TypeName}.StartServerAndWaitForExitAsyncError",
                         LogLevel.Error,
                         telemetryContext.Clone().AddError(exc));
 
