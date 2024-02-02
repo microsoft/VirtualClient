@@ -357,9 +357,31 @@ namespace VirtualClient.Actions
             {
             }
 
-            public bool HadoopExecutorStateInitialized { get; set; } = false;
+            public bool HadoopExecutorStateInitialized
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(HadoopExecutorState.HadoopExecutorStateInitialized), false);
+                }
 
-            public bool HadoopExecutorServicesStarted { get; set; } = false;
+                set
+                {
+                    this.Properties[nameof(HadoopExecutorState.HadoopExecutorStateInitialized)] = value;
+                }
+            }
+
+            public bool HadoopExecutorServicesStarted
+            {
+                get
+                {
+                    return this.Properties.GetValue<bool>(nameof(HadoopExecutorState.HadoopExecutorServicesStarted), false);
+                }
+
+                set
+                {
+                    this.Properties[nameof(HadoopExecutorState.HadoopExecutorServicesStarted)] = value;
+                }
+            }
         }
     }
 }
