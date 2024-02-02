@@ -254,7 +254,7 @@ namespace VirtualClient.Actions.Kafka
                     string clusterId = await this.GetClusterId(this.PlatformSpecificCommandType, this.KafkaPackagePath, relatedContext, cancellationToken);
                     clusterId = Regex.Replace(clusterId, $"(\n\r)|(\r\n)", " ");
 
-                    // Start kafka servers once zookeeper server is started.
+                    // Start kafka servers based on server instances provided
                     for (int i = 0; i < this.ServerInstances; i++)
                     {
                         string propertiesFilePath = this.PlatformSpecifics.Combine(this.KafkaKraftDirectoryPath, $"server-{i + 1}.properties");
@@ -264,8 +264,8 @@ namespace VirtualClient.Actions.Kafka
                         formatLogDirCmdArgs = this.GetPlatformFormattedCommandArguement(this.KafkaStorageScriptPath, formatLogDirCmdArgs);
                         await this.StartServerAndWaitForExitAsync("Format Directory: Complete", this.PlatformSpecificCommandType, formatLogDirCmdArgs, this.KafkaPackagePath, relatedContext, cancellationToken);
 
-                        // Start kafka servers
-                        int port = this.Port + i;
+                        // Start kafka server
+                        int port = this.Port + ((i - 1) * 2);
                         string commandArguments = this.GetPlatformFormattedCommandArguement(this.KafkaStartScriptPath, propertiesFilePath);
                         this.serverProcesses.Add(this.StartServerAndWaitForExitAsync(
                             $"Kafka server process exited (port = {port})...",
