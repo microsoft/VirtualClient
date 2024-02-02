@@ -164,13 +164,11 @@ namespace VirtualClient.Actions.Kafka
 
                     if (this.ResetServer(telemetryContext))
                     {
-                        // await this.DeleteStateAsync(telemetryContext, cancellationToken);
                         await this.KillServerInstancesAsync(cancellationToken);
                         await this.ConfigurePropertiesFileAsync(telemetryContext, cancellationToken);
                         await this.StartServerInstancesAsync(telemetryContext, cancellationToken);
                     }
 
-                    // await this.SaveStateAsync(telemetryContext, cancellationToken);
                     this.SetServerOnline(true);
 
                     if (this.IsMultiRoleLayout())
@@ -287,7 +285,7 @@ namespace VirtualClient.Actions.Kafka
                             addCleanupTasks: false));
                     }
 
-                    await Task.Delay(10000);
+                    // await Task.Delay(10000);
                 }
                 catch (OperationCanceledException)
                 {
@@ -412,22 +410,6 @@ namespace VirtualClient.Actions.Kafka
             }
         }
 
-        // private Task DeleteStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        // {
-        //     EventContext relatedContext = telemetryContext.Clone();
-        //     return this.Logger.LogMessageAsync($"{this.TypeName}.DeleteState", relatedContext, async () =>
-        //     {
-        //         using (HttpResponseMessage response = await this.ApiClient.DeleteStateAsync(nameof(KafkaServerState), cancellationToken))
-        //         {
-        //             relatedContext.AddResponseContext(response);
-        //             if (response.StatusCode != HttpStatusCode.NoContent)
-        //             {
-        //                 response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
-        //             }
-        //         }
-        //     });
-        // }
-
         private Task KillServerInstancesAsync(CancellationToken cancellationToken)
         {
             this.Logger.LogTraceMessage($"{this.TypeName}.KillServerInstances");
@@ -486,32 +468,6 @@ namespace VirtualClient.Actions.Kafka
 
             return shouldReset;
         }
-
-        /* private Task SaveStateAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            EventContext relatedContext = telemetryContext.Clone();
-            return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
-            {
-                List<int> ports = new List<int>();
-                for (int serverInstance = 1; serverInstance <= this.ServerInstances; serverInstance++)
-                {
-                    int port = this.Port + ((serverInstance - 1) * 2);
-                    ports.Add(port);
-                    ports.Add(port + 1);
-                }
-
-                var state = new Item<KafkaServerState>(nameof(KafkaServerState), new KafkaServerState(new Dictionary<string, IConvertible>
-                {
-                    [nameof(KafkaServerState.Ports)] = string.Join(",", ports)
-                }));
-
-                using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(KafkaServerState), state, cancellationToken))
-                {
-                    relatedContext.AddResponseContext(response);
-                    response.ThrowOnError<WorkloadException>(ErrorReason.HttpNonSuccessResponse);
-                }
-            });
-        }*/
 
         private void OpenKafkaPorts(CancellationToken cancellationToken)
         {
