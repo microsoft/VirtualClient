@@ -22,16 +22,5 @@ namespace VirtualClient.Contracts
             : base(rawText)
         {
         }
-
-        /// <summary>
-        /// Constructor for <see cref="MetricsParser"/>
-        /// </summary>
-        /// <param name="rawText">Text to be parsed.</param>
-        /// <param name="logger">ILogger for logging in parser.</param>
-        /// <param name="eventContext">Provided correlation identifiers and context properties for the metric.</param>
-        public MetricsParser(string rawText, ILogger logger, EventContext eventContext)
-            : base(rawText)
-        {
-        }
     }
 }

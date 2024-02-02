@@ -59,7 +59,7 @@ namespace VirtualClient.Actions
             using (TestPowershellExecutor executor = new TestPowershellExecutor(this.fixture))
             {
                 bool commandExecuted = false;
-                string expectedCommand = $"powershell -NoProfile -Command \"cd '{workingDirectory}';{fullCommand}\"";
+                string expectedCommand = $"powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -WindowStyle Hidden -Command \"cd '{workingDirectory}';{fullCommand}\"";
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     if(expectedCommand == $"{exe} {arguments}")
