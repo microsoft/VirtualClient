@@ -150,8 +150,7 @@ namespace VirtualClient.Actions
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     this.fixture.Process.StandardOutput.Append(this.producerResults);
-                    string command = $"{exe} {arguments}";
-                    expectedCommands.Remove(command);
+                    expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
 
@@ -183,8 +182,7 @@ namespace VirtualClient.Actions
                 this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDirectory) =>
                 {
                     this.fixture.Process.StandardOutput.Append(this.consumerResults);
-                    string command = $"{exe} {arguments}";
-                    expectedCommands.Remove(command);
+                    expectedCommands.Remove($"{exe} {arguments}");
                     return this.fixture.Process;
                 };
 

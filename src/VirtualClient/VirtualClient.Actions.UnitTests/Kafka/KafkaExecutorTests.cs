@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
                 ["Scenario"] = "Kafka_Scenario",
                 ["PackageName"] = "kafka",
                 ["ServerInstances"] = 1,
-                ["Port"] = 6379
+                ["Port"] = 9092
             };
 
             this.fixture.FileSystem.Setup(fe => fe.Directory.Exists(It.IsAny<string>())).Returns(true);
