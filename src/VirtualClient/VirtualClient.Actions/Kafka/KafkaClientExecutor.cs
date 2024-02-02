@@ -66,17 +66,6 @@ namespace VirtualClient.Actions.Kafka
         /// Parameter defines the kafka command line to execute.
         /// </summary>
         public string CommandLine { get; set; }
-
-        /// <summary>
-        /// Port on which server runs.
-        /// </summary>
-        public int Port
-        {
-            get
-            {
-                return this.Parameters.GetValue<int>(nameof(this.Port));
-            }
-        }
         
         /// <summary>
         /// Parameter defines true/false whether the action is meant to warm up the server.
@@ -95,7 +84,7 @@ namespace VirtualClient.Actions.Kafka
         protected IAsyncPolicy ClientFlowRetryPolicy { get; set; }
 
         /// <summary>
-        /// The retry policy to apply to each Memtier workload instance when trying to startup
+        /// The retry policy to apply to each Kafka benchmark instance when trying to startup
         /// against a target server.
         /// </summary>
         protected IAsyncPolicy ClientRetryPolicy { get; set; }
