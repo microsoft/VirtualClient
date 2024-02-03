@@ -1,4 +1,4 @@
-name: PR build check for Docusaurus site
+name: PR Build check for Docusaurus site
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ defaults:
 
 jobs:
   deploy:
-    name: Deploy to GitHub Pages
+    name: Document Website Build Check
     runs-on: ubuntu-latest
 
     steps:

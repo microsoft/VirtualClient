@@ -1,4 +1,4 @@
-﻿# 3DMark TimeSpy Benchmark
+﻿# 3DMark TimeSpy
 3DMark TimeSpy is a proprietary industry-standard graphics and gaming performance benchmark. This benchmark needs a GPU-enabled machine to run.
 
 
