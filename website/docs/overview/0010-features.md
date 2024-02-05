@@ -106,7 +106,7 @@ Examples of monitoring requirements supported by the platform include:
 * System profiling/callstack information (e.g. Azure Profiler).
 
 ### Workload/Dependency Package Facilities
-A final important fundamental of the Virtual Client platform is that is defines a common model/standard for defining workload and dependency packages. Every workload had a different
+A final important fundamental of the Virtual Client platform is that it defines a common model/standard for defining workload and dependency packages. Every workload had a different
 set of files and dependencies associated. This helps simplify the deployment of the Virtual client into most environments where an internet connection is available. Virtual Client can
 simply download the dependencies it needs at runtime. However, this also enables Virtual Client to support "disconnected" scenarios where the systems under test do not have an internet
 connection.

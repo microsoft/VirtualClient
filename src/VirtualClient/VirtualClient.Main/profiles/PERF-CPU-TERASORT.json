@@ -1,0 +1,44 @@
+{
+  "Description": "Hadoop Terasort Benchmark",
+  "Metadata": {
+    "RecommendedMinimumExecutionTime": "00:05:00",
+    "SupportedPlatforms": "linux-x64",
+    "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu"
+  },
+  "Parameters": {
+    "RowCount": 100000
+  },
+  "Actions": [
+    {
+      "Type": "HadoopTerasortExecutor",
+      "Parameters": {
+        "Scenario": "HadoopTerasortWorkload",
+        "PackageName": "hadoop-3.3.5",
+        "JdkPackageName": "javadevelopmentkit",
+        "RowCount": "$.Parameters.RowCount"
+      }
+    }
+  ],
+  "Dependencies": [
+    {
+      "Type": "DependencyPackageInstallation",
+      "Parameters": {
+        "Scenario": "InstallHadoopPackage",
+        "BlobContainer": "packages",
+        "BlobName": "hadoop-3.3.5.zip",
+        "PackageName": "hadoop-3.3.5",
+        "Extract": true
+      }
+    },
+    {
+      "Type": "JDKPackageDependencyInstallation",
+      "Parameters": {
+        "Scenario": "InstallJDKPackage",
+        "BlobContainer": "packages",
+        "BlobName": "microsoft-jdk-11.0.19.zip",
+        "PackageName": "javadevelopmentkit",
+        "Extract": true
+      }
+    }
+  ]
+}
