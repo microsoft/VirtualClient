@@ -7,6 +7,7 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
     using Moq;
@@ -100,6 +101,41 @@ namespace VirtualClient.Actions
                 this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
 
                 Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, @"\win-x64\")]
+        [TestCase(PlatformID.Unix, @"/linux-x64/")]
+        public void ScriptExecutorMovesTheLogFilesToCorrectDirectory(PlatformID platform, string platformSpecificPath)
+        {
+            this.SetupDefaultBehavior(platform);
+
+            bool destinitionPathCorrect = false;
+            string logsDir = this.fixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
+
+            this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+                .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
+                {
+                    string sourceFileName = Path.GetFileName(sourcePath);
+                    if (Regex.IsMatch(
+                        destinitionPath, 
+                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}_.*{sourceFileName}"))
+                    {
+                        destinitionPathCorrect = true;
+                    }
+                    else
+                    {
+                        destinitionPathCorrect = false;
+                    }
+                });
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(destinitionPathCorrect, true);
             }
         }
 

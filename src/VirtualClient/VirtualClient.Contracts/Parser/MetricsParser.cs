@@ -5,8 +5,6 @@ namespace VirtualClient.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using Microsoft.Extensions.Logging;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
 
     /// <summary>
