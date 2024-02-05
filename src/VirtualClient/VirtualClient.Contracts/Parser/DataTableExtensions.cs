@@ -273,7 +273,7 @@ namespace VirtualClient.Contracts
             for (int rowCount = 0; rowCount < dataTable.Rows.Count; rowCount++)
             {
                 List<string> splitResult = Regex.Split((string)dataTable.Rows[rowCount][columnIndex], splitRegex.ToString(), splitRegex.Options).ToList();
-                for (int columnCount = 0; columnCount < columnNames.Count; columnCount++)
+                for (int columnCount = 0; columnCount < columnNames.Count && columnCount < splitResult.Count; columnCount++)
                 {
                     dataTable.Rows[rowCount][columnIndex + columnCount + 1] = splitResult[columnCount] ?? string.Empty;
                 }
