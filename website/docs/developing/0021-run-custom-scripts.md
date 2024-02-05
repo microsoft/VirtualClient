@@ -72,7 +72,8 @@ with Virtual Client.
     ```
 
   * **PowershellExecutor**
-    This Action can be used to execute Powershell Scripts in Windows.
+    This Action can be used to execute Powershell Scripts in Windows. 
+  * Please note Virtual Client should be run in elevated mode when using this component, as it sets the execution Policy to be bypass.
     ``` json
     Example:
     "Actions": [
