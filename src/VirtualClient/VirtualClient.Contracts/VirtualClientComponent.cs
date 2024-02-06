@@ -179,7 +179,18 @@ namespace VirtualClient.Contracts
         /// True if VC should exit/crash on first/any error(s) regardless of 
         /// their severity. Default = false.
         /// </summary>
-        public bool FailFast { get; set; }
+        public bool FailFast 
+        {            
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.FailFast), this.FailFast);
+            }
+
+            set
+            {
+                this.Parameters[nameof(this.FailFast)] = value;
+            }
+        }
 
         /// <summary>
         /// The client environment/topology layout provided to the Virtual Client application.

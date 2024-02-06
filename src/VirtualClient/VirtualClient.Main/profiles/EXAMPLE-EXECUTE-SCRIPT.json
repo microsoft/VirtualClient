@@ -1,0 +1,42 @@
+{
+    "Description": "Example Script Executor",
+    "MinimumExecutionInterval": "00:10:00",
+    "Metadata": {
+        "SupportedPlatforms": "linux-x64,linux-arm64,win-x64,win-arm64"
+    },
+    "Parameters": {
+        "CommandLine": "",
+        "ScriptPath": "relativePath\\script.sh",
+        "LogPaths":  "relativePath1\\file1;relativePath2\\subFolder1;*.txt",
+        "ToolName":  "",
+        "PackageName":  "exampleWorkload",
+        "FailFast":  false
+    },
+    "Actions": [
+        {
+            "Type": "ScriptExecutor",
+            "Parameters": {
+                "Scenario": "ScenarioName",
+                "CommandLine": "$.Parameters.CommandLine",
+                "ScriptPath": "$.Parameters.ScriptPath",
+                "LogPaths": "$.Parameters.LogPaths",
+                "ToolName": "$.Parameters.ToolName",
+                "PackageName": "$.Parameters.PackageName",
+                "FailFast":  "$.Parameters.FailFast",
+                "Tags": "Test,VC,Script"
+            }
+        }
+    ],
+    "Dependencies": [
+        {
+            "Type": "DependencyPackageInstallation",
+            "Parameters": {
+                "Scenario": "InstallWorkloadPackage",
+                "BlobContainer": "packages",
+                "BlobName": "exampleworkload.1.1.0.zip",
+                "PackageName": "$.Parameters.PackageName",
+                "Extract": true
+            }
+        }
+    ]
+}

@@ -116,6 +116,12 @@
         <Content Include="..\TestResources\Results_SysbenchOLTP.txt" Link="Resources\Results_SysbenchOLTP.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <Content Include="..\TestResources\Results_HadoopTeragen.txt" Link="Resources\Results_HadoopTeragen.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="..\TestResources\Results_HadoopTerasort.txt" Link="Resources\Results_HadoopTerasort.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\TestResources\Results_KafkaConsumer.txt" Link="Resources\Results_KafkaConsumer.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -136,9 +142,9 @@
         <Content Include="..\VirtualClient.Main\profiles\MONITORS-NONE.json" Link="Profiles\MONITORS-NONE.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-		<Content Include="..\VirtualClient.Main\profiles\PERF-APACHEBENCH.json" Link="Profiles\PERF-APACHEBENCH.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-APACHEBENCH.json" Link="Profiles\PERF-APACHEBENCH.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-ASPNETBENCH.json" Link="Profiles\PERF-ASPNETBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -215,8 +221,8 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-MYSQL-SYSBENCH-OLTP.json" Link="Profiles\PERF-MYSQL-SYSBENCH-OLTP.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	   </Content>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-NETWORK-DEATHSTARBENCH.json" Link="Profiles\PERF-NETWORK-DEATHSTARBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -262,6 +268,9 @@
 		<Content Include="..\VirtualClient.Main\profiles\PERF-KAFKA.json" Link="Profiles\PERF-KAFKA.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+        <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-TERASORT.json" Link="Profiles\PERF-CPU-TERASORT.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>

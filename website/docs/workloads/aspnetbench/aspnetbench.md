@@ -18,7 +18,7 @@ The following metrics are examples of those captured during the operations of th
 |--------------------------|--------------------|-------------|----------------------------------------|
 | Latency Max               | 178703                | microsecond | ASP.NET Web Request latency (max) |
 | Latency Average           | 8270.807963429836  | microsecond | ASP.NET Web Request latency (avg) |
-| Latency Stddev           | 6124.356473307014  | microsecond | ASP.NET Web Request latency (stv) |
+| Latency Stddev           | 6124.356473307014  | microsecond | ASP.NET Web Request latency (standard deviation) |
 | Latency P50               | 6058                | microsecond | ASP.NET Web Request latency (P50) |
 | Latency P75                  | 10913                | microsecond | ASP.NET Web Request latency (P75) |
 | Latency P90                  | 17949                | microsecond | ASP.NET Web Request latency (P90) |
@@ -26,7 +26,7 @@ The following metrics are examples of those captured during the operations of th
 | Latency P99               | 35856                | microsecond | ASP.NET Web Request latency (P99) |
 | RequestPerSecond Max     | 61221.282458945345 | Reqs/sec      | ASP.NET Web Request per second (max) |
 | RequestPerSecond Average | 31211.609987720527 | Reqs/sec    | ASP.NET Web Request per second (avg) |
-| RequestPerSecond Stddev  | 6446.822354105378  | Reqs/sec    | ASP.NET Web Request per second (stv) |
+| RequestPerSecond Stddev  | 6446.822354105378  | Reqs/sec    | ASP.NET Web Request per second (standard deviation) |
 | RequestPerSecond P50     | 31049.462844       | Reqs/sec    | ASP.NET Web Request per second (P50) |
 | RequestPerSecond P75     | 35597.436614       | Reqs/sec    | ASP.NET Web Request per second (P75) |
 | RequestPerSecond P90     | 39826.205746       | Reqs/sec    | ASP.NET Web Request per second (P90) |
@@ -36,7 +36,7 @@ The following metrics are examples of those captured during the operations of th
 ## Packaging and Setup
 The following section covers how to create the custom Virtual Client dependency packages required to execute the workload and toolset(s). This section
 is meant to provide guidance for users that would like to create their own packages with the software for use with the Virtual Client. For example, users
-may want to bring in new versions of the software. See the documentation on '[Dependency Packages](https://microsoft.github.io/VirtualClient/docs/developing/0040-dependency-packages/)' 
+may want to bring in new versions of the software. See the documentation on '[Dependency Packages](https://microsoft.github.io/VirtualClient/docs/developing/0040-vc-packages/)' 
 for more information on the concepts.
 
 1. VC installs dotnet SDK
