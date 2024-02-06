@@ -9,7 +9,7 @@ For Kafka benchmarking we use load generation tools that ship with Kafka
 * kafka-consumer-perf-test
 
 ## What is Being Measured?
-These Kafka-*-perf-test tools can be used to generate load for measuring read and/or write latency, stress testing the nodes on specific parameter such as message/record size.
+These kafka-*-perf-test tools can be used to generate load for measuring read and/or write latency, stress testing the nodes on specific parameter such as message/record size.
 
 ## Workload Metrics
 The following metrics are examples of those captured by the Virtual Client when running the Kafka workload.
