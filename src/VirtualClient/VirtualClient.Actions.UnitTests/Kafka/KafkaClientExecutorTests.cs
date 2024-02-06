@@ -132,7 +132,9 @@ namespace VirtualClient.Actions
         {
             this.SetupTests(platformID);
             this.fixture.Parameters["CommandType"] = KafkaCommandType.ProducerTest;
-            this.fixture.Parameters["CommandLine"] = "--topic sync-test-rep-one --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196";
+            this.fixture.Parameters["RecordSize"] = 100;
+            this.fixture.Parameters["NumberOfRecords"] = 5000000;
+            this.fixture.Parameters["CommandLine"] = "--topic sync-test-rep-one --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196";
             this.fixture.FileSystem.Setup(fe => fe.Directory.Delete(It.IsAny<string>()));
 
             string KafkaCommandScriptPath = this.fixture.Combine(this.mockKafkaPackage.Path, "bin", "windows", "kafka-producer-perf-test.bat");
@@ -164,7 +166,8 @@ namespace VirtualClient.Actions
         {
             this.SetupTests(platformID);
             this.fixture.Parameters["CommandType"] = KafkaCommandType.ConsumerTest;
-            this.fixture.Parameters["CommandLine"] = "--topic sync-test-rep-one --messages 5000000 --bootstrap-server {0}:{Port}";
+            this.fixture.Parameters["Messages"] = 5000000;
+            this.fixture.Parameters["CommandLine"] = "--topic sync-test-rep-one --messages {Messages} --bootstrap-server {0}:{Port}";
             this.fixture.FileSystem.Setup(fe => fe.Directory.Delete(It.IsAny<string>()));
 
             string KafkaCommandScriptPath = this.fixture.Combine(this.mockKafkaPackage.Path, "bin", "windows", "kafka-consumer-perf-test.bat");

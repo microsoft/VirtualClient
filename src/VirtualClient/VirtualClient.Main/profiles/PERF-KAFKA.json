@@ -2,12 +2,14 @@
   "Description": "Kafka Benchmark",
   "Metadata": {
     "RecommendedMinimumExecutionTime": "02:00:00",
-    "SupportedPlatforms": "linux-x64,win-x64",
-    "SupportedOperatingSystems": "Ubuntu, Windows"
+    "SupportedPlatforms": "win-arm64,win-x64",
+    "SupportedOperatingSystems": "Windows"
   },
   "Parameters": {
     "ServerPort": 9092,
-    "ServerInstances": 3
+    "ServerInstances": 3,
+    "RecordSize": 100,
+    "NumberOfRecords": 5000000
   },
   "Actions": [
     {
@@ -48,11 +50,14 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Producer-numOfRec-5000000-recordSize-100-batchSize-8196-sync",
+        "Scenario": "Producer-batchSize-8196-sync",
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
         "WarmUp": true,
-        "CommandLine": "--topic sync-test-rep-one --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "RecordSize": "$.Parameters.RecordSize",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-one --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
         "Role": "Client",
         "CommandType": "ProducerTest"
       }
@@ -60,11 +65,14 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Producer-numOfRec-5000000-recordSize-100-batchSize-64000-sync",
+        "Scenario": "Producer-batchSize-64000-sync",
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
         "WarmUp": true,
-        "CommandLine": "--topic sync-test-rep-three --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=64000",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "RecordSize": "$.Parameters.RecordSize",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-{ServerInstances} --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=64000",
         "Role": "Client",
         "CommandType": "ProducerTest"
       }
@@ -72,10 +80,12 @@
     {
       "Type": "KafkaClientExecutor",
       "Parameters": {
-        "Scenario": "Consumer-messages-5000000-sync",
+        "Scenario": "Consumer-sync",
         "PackageName": "kafka",
         "Port": "$.Parameters.ServerPort",
-        "CommandLine": "--topic sync-test-rep-one --messages 5000000 --bootstrap-server {0}:{Port}",
+        "ServerInstances": "$.Parameters.ServerInstances",
+        "NumberOfRecords": "$.Parameters.NumberOfRecords",
+        "CommandLine": "--topic sync-test-rep-one --messages {NumberOfRecords} --bootstrap-server {0}:{Port}",
         "Role": "Client",
         "CommandType": "ConsumerTest"
       }
@@ -86,7 +96,7 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Setup-topic-replication-factor-[ServerInstances]-async",
+            "Scenario": "Setup-topic-replication-factor-ServerInstances-async",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
@@ -99,11 +109,14 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Producer-numOfRec-5000000-recordSize-100-batchSize-8196-async",
+            "Scenario": "Producer-batchSize-8196-async",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
-            "CommandLine": "--topic async-test-rep-three --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "RecordSize": "$.Parameters.RecordSize",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
             "Role": "Client",
             "CommandType": "ProducerTest"
           }
@@ -116,11 +129,14 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Producer-numOfRec-5000000-recordSize-100-async-batchSize-8196-1",
+            "Scenario": "Producer-async-batchSize-8196-1",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
-            "CommandLine": "--topic async-test-rep-three --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "RecordSize": "$.Parameters.RecordSize",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
             "Role": "Client",
             "CommandType": "ProducerTest"
           }
@@ -128,11 +144,14 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Producer-numOfRec-5000000-recordSize-100-batchSize-8196-async-2",
+            "Scenario": "Producer-batchSize-8196-async-2",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
-            "CommandLine": "--topic async-test-rep-three --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "RecordSize": "$.Parameters.RecordSize",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
             "Role": "Client",
             "CommandType": "ProducerTest"
           }
@@ -140,11 +159,14 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Producer-numOfRec-5000000-recordSize-100-batchSize-8196-async-3",
+            "Scenario": "Producer-batchSize-8196-async-3",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
-            "CommandLine": "--topic async-test-rep-three --num-records 5000000 --record-size 100 --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "RecordSize": "$.Parameters.RecordSize",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --num-records {NumberOfRecords} --record-size {RecordSize} --throughput -1 --producer-props acks=1 bootstrap.servers={0}:{Port} buffer.memory=67108864 batch.size=8196",
             "Role": "Client",
             "CommandType": "ProducerTest"
           }
@@ -157,10 +179,12 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Consumer-messages-5000000-async-1",
+            "Scenario": "Consumer-async-1",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
-            "CommandLine": "--topic async-test-rep-three --messages 5000000 --bootstrap-server {0}:{Port}",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --messages {NumberOfRecords} --bootstrap-server {0}:{Port}",
             "Role": "Client",
             "CommandType": "ConsumerTest"
           }
@@ -168,10 +192,12 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Consumer-messages-5000000-async-2",
+            "Scenario": "Consumer-async-2",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
-            "CommandLine": "--topic async-test-rep-three --messages 5000000 --bootstrap-server {0}:{Port}",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --messages {NumberOfRecords} --bootstrap-server {0}:{Port}",
             "Role": "Client",
             "CommandType": "ConsumerTest"
           }
@@ -179,10 +205,12 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Consumer-messages-5000000-async-3",
+            "Scenario": "Consumer-async-3",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
-            "CommandLine": "--topic async-test-rep-three --messages 5000000 --bootstrap-server {0}:{Port}",
+            "ServerInstances": "$.Parameters.ServerInstances",
+            "NumberOfRecords": "$.Parameters.NumberOfRecords",
+            "CommandLine": "--topic async-test-rep-{ServerInstances} --messages {NumberOfRecords} --bootstrap-server {0}:{Port}",
             "Role": "Client",
             "CommandType": "ConsumerTest"
           }
