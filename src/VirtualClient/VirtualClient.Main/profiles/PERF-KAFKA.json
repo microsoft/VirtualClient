@@ -129,7 +129,7 @@
         {
           "Type": "KafkaClientExecutor",
           "Parameters": {
-            "Scenario": "Producer-async-batchSize-8196-1",
+            "Scenario": "Producer-batchSize-8196-async-1",
             "PackageName": "kafka",
             "Port": "$.Parameters.ServerPort",
             "WarmUp": true,
