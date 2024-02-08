@@ -24,6 +24,12 @@ GPU components for which the MLPerf workload is designed to test.
   * A100-PCIex8 (80GB variant)
   * A2x2
   * A30x8
+  * H100-SXM-80GBx8 (NVIDIA DGX H100)
+  * H100-PCIe-80GBx8
+  * H100-SXM-80GBx1 (NVIDIA DGX H100)
+  * H100-PCIe-80GBx1
+  * GH200-GraceHopper-Superchip (NVIDIA DGX GH200)
+  * L4x1
 
 * **Edge Systems MLPerf Inference**
   * A100-SXM-80GBx1
@@ -32,6 +38,9 @@ GPU components for which the MLPerf workload is designed to test.
   * A2x1
   * Orin
   * Xavier NX
+  * L4x1
+  * Orin-AGX
+  * Orin-NX
 
 * **Supported Config Files for MlPerf Bert Training (config_\{nodes}x\{gpus per node}x\{local batch size}x\{gradien accumulation}.sh)**
   * config_A30_1x2x224x14.sh
@@ -70,9 +79,11 @@ GPU performance across a wide range of inference models. Work is planned for int
   * rnnt
   * ssd-mobilenet
   * ssd-resnet34
-  * ~~resnet50 (not supported yet)~~
-  * ~~DLRM (not supported yet)~~
-  * ~~3D UNET (not supported yet)~~
+  * retinanet
+  * resnet50 (Dataset to be downloaded by user manually*)
+  * dlrm (Dataset to be downloaded by user manually*)
+  * 3d-unet (Dataset to be downloaded by user manually*)
+
 
 ## Workload Metrics MLPerf Inference
 
@@ -125,3 +136,6 @@ The following metrics are examples of those captured by the Virtual Client when 
 | training-mlperf-bert-batchsize-45-gpu-8 | training_sequences_per_second	 | 2288.463615          | 2300.463615         | 2295.463615         |      |
 | training-mlperf-bert-batchsize-45-gpu-8 | final_loss	                   | 0	                  | 0                   | 0                   |      |
 | training-mlperf-bert-batchsize-45-gpu-8 | raw_train_time	               | 1053.982237          | 1070.982237	        | 1063.982237         | s    |
+
+
+*: [Refer Link](https://github.com/mlcommons/inference_results_v3.1/tree/main/closed/NVIDIA)

@@ -56,13 +56,7 @@ namespace VirtualClient.Actions
             this.fileSystem = this.systemManager.FileSystem;
             this.diskManager = this.systemManager.DiskManager;
 
-            this.benchmarks = new List<string>
-            {
-                "bert",
-                "rnnt",
-                "ssd-mobilenet",
-                "ssd-resnet34"
-            };
+            this.benchmarks = new List<string>(this.Benchmarks.Split(','));            
 
             if (string.IsNullOrEmpty(this.DiskFilter))
             {
@@ -129,6 +123,17 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// Benchmarks that will be run as part of current profile
+        /// </summary>
+        public string Benchmarks
+        {
+            get
+            {
+                return this.Parameters.GetValue<string>(nameof(MLPerfExecutor.Benchmarks), "bert,rnnt,ssd-mobilenet,ssd-resnet34");
+            }
+        }
+
+        /// <summary>
         /// The MLPerf Nvidia code directory.
         /// </summary>
         protected string NvidiaDirectory
@@ -161,6 +166,8 @@ namespace VirtualClient.Actions
         protected override async Task ExecuteAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
             this.PrepareBenchmarkConfigsAndScenarios();
+
+            this.SetDefaultBenchmarkConfigsAndScenarios();
 
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
@@ -551,6 +558,24 @@ namespace VirtualClient.Actions
             }
         }
 
+        private void SetDefaultBenchmarkConfigsAndScenarios()
+        {
+            List<string> defaultConfigs = new List<string>()
+            {
+                "default"
+            };
+
+            if (!this.scenarios.ContainsKey(this.Model))
+            {
+                this.scenarios.Add(this.Model, "Offline"); 
+            }
+
+            if (!this.benchmarkConfigs.ContainsKey(this.Model))
+            {
+                this.benchmarkConfigs.Add(this.Model, defaultConfigs);
+            }
+        }
+
         private void PrepareBenchmarkConfigsAndScenarios()
         {
             this.scenarios = new Dictionary<string, string>();
@@ -559,6 +584,7 @@ namespace VirtualClient.Actions
             this.scenarios.Add("rnnt", "Offline,Server,SingleStream");
             this.scenarios.Add("ssd-mobilenet", "Offline,MultiStream,SingleStream");
             this.scenarios.Add("ssd-resnet34", "Offline,Server,SingleStream,MultiStream");
+            this.scenarios.Add("retinanet", "Offline,Server,SingleStream,MultiStream");
 
             List<string> bertConfigs = new List<string>()
             {
@@ -579,12 +605,18 @@ namespace VirtualClient.Actions
                 "triton"
             };
 
+            List<string> retinanetConfigs = new List<string>()
+            {
+                "default"
+            };
+
             this.benchmarkConfigs = new Dictionary<string, List<string>>();
 
             this.benchmarkConfigs.Add("bert", bertConfigs);
             this.benchmarkConfigs.Add("rnnt", rnntConfigs);
             this.benchmarkConfigs.Add("ssd-mobilenet", ssdConfigs);
             this.benchmarkConfigs.Add("ssd-resnet34", ssdConfigs);
+            this.benchmarkConfigs.Add("retinanet", retinanetConfigs);
         }
 
         private IEnumerable<Disk> GetFilteredDisks(IEnumerable<Disk> disks, string diskFilter)

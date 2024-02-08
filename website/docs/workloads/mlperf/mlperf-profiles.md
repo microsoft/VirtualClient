@@ -38,6 +38,7 @@ Runs the MLPerf benchmark workload to test GPU performance.
   | LinuxDriverVersion     | Optional. Version of GPU driver that needs to be installed. | 510  |
   | LinuxLocalRunFile     | Optional. Link to download specified CUDA and GPU driver versions. | https://developer.download.nvidia.com/compute/cuda/12.0.0/local_installers/cuda_12.0.0_525.60.13_linux.run  |
   | RequireCustomSystemSupport | Optional. This enables additional A100_PCIe_80GBx4 system support that was not supported by github repo of MLPerf. Ones that are supported by github repo of MLPerf are still supported. | true |
+* | Benchmarks | Optional. List of benchmarks that needs to be run as part of profile | bert,rnnt,ssd-mobilenet,ssd-resnet34 |
 
 * **Profile Runtimes**  
   See the 'Metadata' section of the profile for estimated runtimes. These timings represent the length of time required to run a single round of profile 
