@@ -51,6 +51,12 @@ namespace VirtualClient
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // e.g.
+        // {Platform}
+        private static readonly Regex PlatformExpression = new Regex(
+            @"\{Platform\}",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // e.g.
         // {LogicalCoreCount}
         private static readonly Regex LogicalCoreCountExpression = new Regex(
             @"\{LogicalCoreCount\}",
@@ -113,6 +119,35 @@ namespace VirtualClient
                         }
 
                         evaluatedExpression = Regex.Replace(evaluatedExpression, match.Value, scriptFolderPath);
+                    }
+                }
+
+                return Task.FromResult(new EvaluationResult
+                {
+                    IsMatched = isMatched,
+                    Outcome = evaluatedExpression
+                });
+            }),
+            // Expression: {Platform}
+            // Resolves to the current platform-architecture for the system (e.g. linux-arm64, linux-x64, win-arm64, win-x64).
+            new Func<IServiceCollection, IDictionary<string, IConvertible>, string, Task<EvaluationResult>>((dependencies, parameters, expression) =>
+            {
+                bool isMatched = false;
+                string evaluatedExpression = expression;
+                MatchCollection matches = ProfileExpressionEvaluator.PlatformExpression.Matches(expression);
+
+                if (matches?.Any() == true)
+                {
+                    isMatched = true;
+                    ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
+                    PlatformSpecifics platformSpecifics = systemManagement.PlatformSpecifics;
+
+                    foreach (Match match in matches)
+                    {
+                        evaluatedExpression = Regex.Replace(
+                            evaluatedExpression,
+                            match.Value,
+                            platformSpecifics.PlatformArchitectureName);
                     }
                 }
 
