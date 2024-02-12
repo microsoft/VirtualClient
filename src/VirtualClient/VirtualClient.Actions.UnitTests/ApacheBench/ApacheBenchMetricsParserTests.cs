@@ -11,6 +11,8 @@
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
 
+    [TestFixture]
+    [Category("Unit")]
     public class ApacheBenchMetricsParserTests
     {
         private string rawText;

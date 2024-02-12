@@ -14,6 +14,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Polly;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -282,9 +283,13 @@ namespace VirtualClient.Actions
             EventContext relatedContext = telemetryContext.Clone();
             return this.Logger.LogMessageAsync($"{this.TypeName}.SaveState", relatedContext, async () =>
             {
-                var state = new Item<ServerState>(nameof(ServerState), new ServerState(new Dictionary<string, IConvertible>
+                var state = new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
                 {
-                    [nameof(ServerState.Ports)] = this.Port
+                    new PortDescription
+                    {
+                        CpuAffinity = this.BindToCores ? string.Join(",", Enumerable.Range(0, Environment.ProcessorCount)) : null,
+                        Port = this.Port
+                    }
                 }));
 
                 using (HttpResponseMessage response = await this.ApiClient.UpdateStateAsync(nameof(ServerState), state, cancellationToken))

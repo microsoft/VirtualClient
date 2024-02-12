@@ -8,16 +8,12 @@ namespace VirtualClient.Actions
     using System.Linq;
     using System.Net;
     using System.Runtime.InteropServices;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.CodeAnalysis.Differencing;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
-    using VirtualClient.Common.Contracts;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Functional")]
@@ -105,9 +101,18 @@ namespace VirtualClient.Actions
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
 
-            var state = new ServerState(new Dictionary<string, IConvertible>
+            ServerState state = new ServerState(new List<PortDescription>
             {
-                [nameof(ServerState.Ports)] = 6379
+                new PortDescription
+                {
+                    CpuAffinity = "0",
+                    Port = 6379
+                },
+                new PortDescription
+                {
+                    CpuAffinity = "1",
+                    Port = 6380
+                }
             });
 
             apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None)

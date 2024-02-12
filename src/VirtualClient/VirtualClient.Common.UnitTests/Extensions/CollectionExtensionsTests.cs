@@ -5,6 +5,7 @@ namespace VirtualClient.Common.Extensions
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using NUnit.Framework;
 
     [TestFixture]
@@ -307,6 +308,96 @@ namespace VirtualClient.Common.Extensions
             };
 
             Assert.Throws<FormatException>(() => dictionary.GetTimeSpanValue("Setting"));
+        }
+
+        [Test]
+        public void TryGetCollectionExtensionHandlesConvertibleDataTypes()
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>
+            {
+                [nameof(Char)] = "A,B,C",
+                [nameof(String)] = "String1,String2,String3",
+                [nameof(Byte)] = "10,20,30",
+                [nameof(Int16)] = "-22,-33,-44",
+                [nameof(Int32)] = "-1000000,-2000000,-3000000",
+                [nameof(Int64)] = "-100000000000,-200000000000,-300000000000",
+                [nameof(UInt16)] = "22,33,44",
+                [nameof(UInt32)] = "1000000,2000000,3000000",
+                [nameof(UInt64)] = "100000000000,200000000000,300000000000",
+                [nameof(Single)] = $"{float.MinValue},{float.MaxValue}",
+                [nameof(Double)] = $"{double.MinValue},{double.MaxValue}",
+                [nameof(Decimal)] = $"{decimal.MinValue},{decimal.MaxValue}",
+                [nameof(Boolean)] = "true,false",
+            };
+
+            // Char conversions
+            Assert.IsTrue(dictionary.TryGetCollection<char>(nameof(Char), out IEnumerable<char> charValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Char)].ToString().Split(",").Select(i => Convert.ToChar(i)), charValues);
+
+            // String conversions
+            Assert.IsTrue(dictionary.TryGetCollection<string>(nameof(String), out IEnumerable<string> stringValues));
+            CollectionAssert.AreEqual(dictionary[nameof(String)].ToString().Split(","), stringValues);
+
+            // Byte conversions
+            Assert.IsTrue(dictionary.TryGetCollection<byte>(nameof(Byte), out IEnumerable<byte> byteValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Byte)].ToString().Split(",").Select(i => Convert.ToByte(i)), byteValues);
+
+            // Int16/short conversions
+            Assert.IsTrue(dictionary.TryGetCollection<short>(nameof(Int16), out IEnumerable<short> shortValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Int16)].ToString().Split(",").Select(i => Convert.ToInt16(i)), shortValues);
+
+            // Int32/int conversions
+            Assert.IsTrue(dictionary.TryGetCollection<int>(nameof(Int32), out IEnumerable<int> intValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Int32)].ToString().Split(",").Select(i => Convert.ToInt32(i)), intValues);
+
+            // Int64/long conversions
+            Assert.IsTrue(dictionary.TryGetCollection<long>(nameof(Int64), out IEnumerable<long> longValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Int64)].ToString().Split(",").Select(i => Convert.ToInt64(i)), longValues);
+
+            // UInt16/ushort conversions
+            Assert.IsTrue(dictionary.TryGetCollection<ushort>(nameof(UInt16), out IEnumerable<ushort> ushortValues));
+            CollectionAssert.AreEqual(dictionary[nameof(UInt16)].ToString().Split(",").Select(i => Convert.ToUInt16(i)), ushortValues);
+
+            // UInt32/uint conversions
+            Assert.IsTrue(dictionary.TryGetCollection<uint>(nameof(UInt32), out IEnumerable<uint> uintValues));
+            CollectionAssert.AreEqual(dictionary[nameof(UInt32)].ToString().Split(",").Select(i => Convert.ToUInt32(i)), uintValues);
+
+            // UInt64/ulong conversions
+            Assert.IsTrue(dictionary.TryGetCollection<ulong>(nameof(UInt64), out IEnumerable<ulong> ulongValues));
+            CollectionAssert.AreEqual(dictionary[nameof(UInt64)].ToString().Split(",").Select(i => Convert.ToUInt64(i)), ulongValues);
+
+            // Float conversions
+            Assert.IsTrue(dictionary.TryGetCollection<float>(nameof(Single), out IEnumerable<float> floatValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Single)].ToString().Split(",").Select(i => Convert.ToSingle(i)), floatValues);
+
+            // Double Float conversions
+            Assert.IsTrue(dictionary.TryGetCollection<double>(nameof(Double), out IEnumerable<double> doubleValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Double)].ToString().Split(",").Select(i => Convert.ToDouble(i)), doubleValues);
+
+            // Decimal conversions
+            Assert.IsTrue(dictionary.TryGetCollection<decimal>(nameof(Decimal), out IEnumerable<decimal> decimalValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Decimal)].ToString().Split(",").Select(i => Convert.ToDecimal(i)), decimalValues);
+
+            // Boolean conversions
+            Assert.IsTrue(dictionary.TryGetCollection<bool>(nameof(Boolean), out IEnumerable<bool> booleanValues));
+            CollectionAssert.AreEqual(dictionary[nameof(Boolean)].ToString().Split(",").Select(i => Convert.ToBoolean(i)), booleanValues);
+        }
+
+        [Test]
+        [TestCase("|")]
+        [TestCase(",,,")]
+        [TestCase(";;;")]
+        [TestCase("&&")]
+        public void TryGetCollectionExtensionSupportsNonStandardDelimitersWhenSpecified(string nonStandardDelimiter)
+        {
+            IDictionary<string, IConvertible> dictionary = new Dictionary<string, IConvertible>
+            {
+                ["Collection"] = $"String1{nonStandardDelimiter}String2{nonStandardDelimiter}String3",
+            };
+
+            // String conversions
+            Assert.IsTrue(dictionary.TryGetCollection<string>("Collection", nonStandardDelimiter.AsArray(), out IEnumerable<string> stringValues));
+            CollectionAssert.AreEqual(dictionary["Collection"].ToString().Split(nonStandardDelimiter), stringValues);
         }
     }
 }

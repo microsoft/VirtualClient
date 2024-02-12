@@ -5,7 +5,6 @@ namespace VirtualClient.Actions
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net;
     using System.Threading;
@@ -14,6 +13,7 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.Logging;
     using Polly;
     using VirtualClient;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -211,25 +211,32 @@ namespace VirtualClient.Actions
             this.InitializeApiClients();
         }
 
-        private void CaptureMetrics(string output, string commandArguments, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(string output, string commandArguments, string cpuAffinity, DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    this.MetadataContract.AddForScenario(
-                        "Redis-Benchmark",
-                        commandArguments,
-                        toolVersion: null);
-
-                    this.MetadataContract.Apply(telemetryContext);
-
                     // The Redis workloads run multi-threaded. The lock is meant to ensure we do not have
                     // race conditions that affect the parsing of the results.
                     lock (this.lockObject)
                     {
+                        this.MetadataContract.AddForScenario(
+                            "Redis-Benchmark",
+                            commandArguments,
+                            toolVersion: null);
+
+                        this.MetadataContract.Apply(telemetryContext);
+
                         RedisBenchmarkMetricsParser redisBenchmarkMetricsParser = new RedisBenchmarkMetricsParser(output);
                         IList<Metric> workloadMetrics = redisBenchmarkMetricsParser.Parse();
+
+                        var metadata = new Dictionary<string, IConvertible>
+                        {
+                            ["cpuAffinity"] = cpuAffinity
+                        };
+
+                        workloadMetrics.ToList().ForEach(m => m.Metadata.AddRange(metadata));
 
                         this.Logger.LogMetrics(
                             "Redis-Benchmark",
@@ -269,15 +276,16 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("workingDirectory", workingDirectory);
 
                     List<Task> workloadProcesses = new List<Task>();
-                    foreach (int serverPort in serverState.Ports)
+                    foreach (PortDescription serverPort in serverState.Ports)
                     {
                         for (int i = 0; i < this.ClientInstances; i++)
                         {
                             // e.g.
                             // sudo bash -c "/home/user/virtualclient/linux-x64/src/redis-benchmark -h 1.2.3.5 -p 6379 -c 2 -n 10000 -P 32 -q --csv"
-                            string commandArguments = $"-c \"{this.RedisExecutablePath} -h {serverIPAddress} -p {serverPort} {this.CommandLine}\"";
+                            string commandArguments = $"-c \"{this.RedisExecutablePath} -h {serverIPAddress} -p {serverPort.Port} {this.CommandLine}\"";
                             commands.Add($"{command} {commandArguments}");
 
+                            int cpuAffinity = i;
                             workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
 
                             if (this.WarmUp)
@@ -293,7 +301,7 @@ namespace VirtualClient.Actions
             });
         }
 
-        private async Task ExecuteWorkloadAsync(int serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(PortDescription serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -306,15 +314,13 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                ConsoleLogger.Default.LogMessage($"Redis benchmark process exited (server port = {serverPort})...", telemetryContext);
-
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Redis-Benchmark", logToFile: true);
                                 process.ThrowIfWorkloadFailed();
 
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    this.CaptureMetrics(output, process.FullCommand(), startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
+                                    this.CaptureMetrics(output, process.FullCommand(), serverPort.CpuAffinity, startTime, DateTime.UtcNow, telemetryContext, cancellationToken);
                                 }
                             }
                         }

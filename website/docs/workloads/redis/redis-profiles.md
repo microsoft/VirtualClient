@@ -78,11 +78,12 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   |---------------------------|---------------------------------------------------------------------------------|---------------|
   | Duration                  | Optional. Defines the length of time to execute the Memtier benchmark operations against the Redis servers for each scenario in the profile. | 2 mins |
   | ClientInstances           | Optional. Defines the number of distinct client instances that to execute requests against each Redis server concurrently. | 1 |
+  | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
+  | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option.. | true |
   | ServerInstances           | Optional. Defines the number of distinct Redis server instances to run concurrently. This allows the user to adjust alongside the number of client instances for higher scale situations.   | # logical processors |
   | ServerThreadCount         | Optional. The number of threads to use by the Redis server to handle operations.  | 4 |
   | ServerPort                | Optional. The initial port on which the Redis servers will listen for traffic. Additional ports will be used for each 1 server instance defined in a sequential manner (e.g. 6379, 6380, 6381) | 6379 |
   | IsTLSEnabled              | Optional. It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
-  | PerProcessMetric          | Optional. "True" if we want to emit telemtry metrics for each client server combination.Aggregated metrics are always collected.| false |
 
 * **Component Parameters**  
   The following parameters describe the parameters within the profile components.
@@ -105,10 +106,11 @@ We have two profiles for Redis.One supports redis with TLS and one without TLS.
   | Scenario                  | Scenario use to define the purpose of the action in the profile. This can be used to specify exact actions to run or exclude from the profile. | |
   | ClientInstances           | Defines the number of concurrent Memtier processes to start for execution of requests against the Memcached server. Note that each client instance will open 1 connection against the server for each --thread and --clients definition (e.g. --threads 16 --clients 16 == 256 connections). Ensure the Memcached server OS limits exceed this number of connections (e.g. ulimit -Sn on Linux).  | 8 |
   | CommandLine               | The command line to use for executing the Memtier workload against the Memcached server. Note that the --port and --server options will be added automatically by the executor. For the --key-pattern option, 'S' means sequential distribution, 'R' means uniform random distribution and 'G' means Gaussian distribution of object. | |
+  | EmitAggregateMetrics      | Optional. "True" to emit aggregate/rollup metrics from all individual Memtier client/Redis server request streams. The profile executes a Redis server per logical processor on the system and can thus emit a lot of metrics. As such emitting the metrics as aggregates of all Redis server processes may be desirable. | false |
+  | EmitRawMetrics            | Optional. "True" to emit the raw metrics from each individual Memtier client/Redis server request stream. This is the default option. | true |
   | PackageName               | The name of the package that contains the Memtier benchmark binaries/scripts.  | |
   | WarmUp                    | True if the component/action is meant to be used to warmup the Memcached server. Metrics will not be captured in warmup steps. | false |
   | IsTLSEnabled              | It defines if Redis server runs with TLS or not. "yes" for TLS, "no" for no TLS| no |
-  | PerProcessMetric          | Optional. "True" if we want to emit telemtry metrics for each client server combination.Aggregated metrics are always collected.| false |
 
 
 * **Profile Runtimes**  

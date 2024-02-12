@@ -11,8 +11,10 @@ namespace VirtualClient.Actions
     using System.Text.RegularExpressions;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.CodeAnalysis;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
@@ -34,11 +36,9 @@ namespace VirtualClient.Actions
             new Regex(@"connection\s+refused", RegexOptions.IgnoreCase | RegexOptions.Compiled)
         };
 
-        private List<Metric> aggregatedMetrics;
-        private List<string> perProcessOutputList;
-        private List<string> perProcessCommandList;
-        private string commonAggregateMetricCommandArguments;
-        private int startingServerPort;
+        // private List<Metric> aggregatedMetrics;
+        private List<ProcessOutputDescription> processOutputDescriptions;
+        // private int startingServerPort;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierBenchmarkClientExecutor"/> class.
@@ -59,9 +59,7 @@ namespace VirtualClient.Actions
             // Ensure the duration is in integer (seconds) form.
             int duration = this.Duration;
             this.Parameters[nameof(this.Duration)] = duration;
-            this.aggregatedMetrics = new List<Metric>();
-            this.perProcessOutputList = new List<string>();
-            this.perProcessCommandList = new List<string>();
+            this.processOutputDescriptions = new List<ProcessOutputDescription>();
         }
 
         /// <summary>
@@ -102,6 +100,30 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
+        /// True/false whether the Memtier benchmark should emit metric aggregations (e.g. min, max, avg)
+        /// for the metrics captured. Default = false.
+        /// </summary>
+        public bool EmitAggregateMetrics
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.EmitAggregateMetrics), false);
+            }
+        }
+
+        /// <summary>
+        /// True/false whether the Memtier benchmark should emit raw metric values parsed
+        /// from the workload output. Default = true.
+        /// </summary>
+        public bool EmitRawMetrics
+        {
+            get
+            {
+                return this.Parameters.GetValue<bool>(nameof(this.EmitRawMetrics), true);
+            }
+        }
+
+        /// <summary>
         /// Parameter defines true/false whether the action is meant to warm up the server.
         /// We do not capture metrics on warm up operations.
         /// </summary>
@@ -126,13 +148,13 @@ namespace VirtualClient.Actions
         }
 
         /// <summary>
-        /// yes if TLS is enabled.
+        /// True/false whether TLS should be enabled. Default = false.
         /// </summary>
-        public string IsTLSEnabled
+        public bool IsTLSEnabled
         {
             get
             {
-                return this.Parameters.GetValue<string>(nameof(this.IsTLSEnabled), "no");
+                return this.Parameters.GetValue<bool>(nameof(this.IsTLSEnabled), false);
             }
         }
 
@@ -281,7 +303,7 @@ namespace VirtualClient.Actions
                 this.Benchmark = "Redis";
             }
 
-            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+            if (this.IsTLSEnabled)
             {
                 DependencyPath redisResourcesPath = await this.GetPackageAsync(this.RedisResourcesPackageName, cancellationToken);
                 this.RedisResourcesPath = redisResourcesPath.Path;
@@ -333,9 +355,9 @@ namespace VirtualClient.Actions
             
         }
 
-        private void CaptureMetrics(DateTime startTime, DateTime endTime, EventContext telemetryContext, CancellationToken cancellationToken)
+        private void CaptureMetrics(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (!cancellationToken.IsCancellationRequested)
+            if (!cancellationToken.IsCancellationRequested && this.processOutputDescriptions?.Any() == true)
             {
                 try
                 {
@@ -345,27 +367,61 @@ namespace VirtualClient.Actions
                         toolVersion: null);
 
                     this.MetadataContract.Apply(telemetryContext);
+                    List<Metric> allMetrics = new List<Metric>();
 
-                    MemtierMetricsParser memtierMetricsAggregateParser = new MemtierMetricsParser(this.PerProcessMetric, this.perProcessOutputList, this.perProcessCommandList);
-                    IList<Metric> metrics = memtierMetricsAggregateParser.Parse();
-
-                    string commandline = "commandline";
-
-                    foreach (Metric metric in metrics)
+                    foreach (ProcessOutputDescription processInfo in this.processOutputDescriptions)
                     {
-                        this.Logger.LogMetrics(
-                            $"Memtier-{this.Benchmark}",
-                            this.Scenario,
-                            startTime,
-                            endTime,
-                            metric.Name,
-                            metric.Value,
-                            metric.Unit,
-                            null,
-                            metric.Metadata.ContainsKey(commandline) ? (string)metric.Metadata[commandline] : this.commonAggregateMetricCommandArguments,
-                            this.Tags,
-                            telemetryContext,
-                            metric.Relativity);
+                        MemtierMetricsParser memtierMetricsAggregateParser = new MemtierMetricsParser(processInfo.Output);
+                        IList<Metric> metrics = memtierMetricsAggregateParser.Parse();
+                        allMetrics.AddRange(metrics);
+
+                        if (this.EmitRawMetrics)
+                        {
+                            IDictionary<string, IConvertible> metadata = MemtierMetricsParser.ParseMetadata(processInfo.Command, processInfo.CpuAffinity);
+
+                            foreach (Metric metric in metrics)
+                            {
+                                this.Logger.LogMetrics(
+                                    $"Memtier-{this.Benchmark}",
+                                    this.Scenario,
+                                    processInfo.StartTime,
+                                    processInfo.EndTime,
+                                    metric.Name,
+                                    metric.Value,
+                                    metric.Unit,
+                                    null,
+                                    processInfo.Command,
+                                    this.Tags,
+                                    telemetryContext,
+                                    metric.Relativity,
+                                    metricMetadata: metadata);
+                            }
+                        }
+                    }
+
+                    if (this.EmitAggregateMetrics)
+                    {
+                        ProcessOutputDescription processReference = this.processOutputDescriptions.First();
+                        IList<Metric> aggregateMetrics = MemtierMetricsParser.Aggregate(allMetrics);
+                        IDictionary<string, IConvertible> metadata = MemtierMetricsParser.ParseMetadata(processReference.Command);
+
+                        foreach (Metric metric in aggregateMetrics)
+                        {
+                            this.Logger.LogMetrics(
+                                $"Memtier-{this.Benchmark}",
+                                this.Scenario,
+                                processReference.StartTime,
+                                processReference.EndTime,
+                                metric.Name,
+                                metric.Value,
+                                metric.Unit,
+                                null,
+                                processReference.Command,
+                                this.Tags,
+                                telemetryContext,
+                                metric.Relativity,
+                                metricMetadata: metadata);
+                        }
                     }
                 }
                 catch (SchemaException exc)
@@ -395,18 +451,19 @@ namespace VirtualClient.Actions
                     relatedContext.AddContext("workingDirectory", workingDirectory);
 
                     List<Task> workloadProcesses = new List<Task>();
-
                     DateTime startTime = DateTime.UtcNow;
 
-                    this.startingServerPort = serverState.Ports.First();
-                    foreach (int serverPort in serverState.Ports)
-                    { 
-                        for (int i = 0; i < this.ClientInstances; i++)
+                    for (int i = 0; i < serverState.Ports.Count(); i++)
+                    {
+                        PortDescription portDescription = serverState.Ports.ElementAt(i);
+                        int serverPort = portDescription.Port;
+
+                        for (int instances = 0; instances < this.ClientInstances; instances++)
                         {
                             // memtier_benchmark Documentation:
                             // https://github.com/RedisLabs/memtier_benchmark
 
-                            if (string.Equals(this.IsTLSEnabled, "yes", StringComparison.OrdinalIgnoreCase))
+                            if (this.IsTLSEnabled)
                             {
                                 commandArguments = $"--server {serverIPAddress} --port {serverPort} --tls --cert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.crt")}  --key {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "redis.key")} --cacert {this.PlatformSpecifics.Combine(this.RedisResourcesPath, "ca.crt")} {this.CommandLine}";
                             }
@@ -416,7 +473,7 @@ namespace VirtualClient.Actions
                             }
 
                             commands.Add(commandArguments);
-                            workloadProcesses.Add(this.ExecuteWorkloadAsync(serverPort, command, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
+                            workloadProcesses.Add(this.ExecuteWorkloadAsync(portDescription, command, commandArguments, workingDirectory, relatedContext.Clone(), cancellationToken));
 
                             if (this.WarmUp)
                             {
@@ -427,17 +484,16 @@ namespace VirtualClient.Actions
                     }
 
                     await Task.WhenAll(workloadProcesses);
-                    DateTime endTime = DateTime.UtcNow;
 
                     if (!this.WarmUp)
                     {
-                        this.CaptureMetrics(startTime, endTime, telemetryContext, cancellationToken);
+                        this.CaptureMetrics(telemetryContext, cancellationToken);
                     }
                 }
             });
         }
 
-        private async Task ExecuteWorkloadAsync(int serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
+        private async Task ExecuteWorkloadAsync(PortDescription serverPort, string command, string commandArguments, string workingDirectory, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             try
             {
@@ -450,8 +506,6 @@ namespace VirtualClient.Actions
                         {
                             if (!cancellationToken.IsCancellationRequested)
                             {
-                                ConsoleLogger.Default.LogMessage($"Memtier benchmark process exited (server port = {serverPort})...", telemetryContext);
-
                                 await this.LogProcessDetailsAsync(process, telemetryContext, "Memtier", logToFile: true);
                                 process.ThrowIfWorkloadFailed(MemcachedExecutor.SuccessExitCodes);
 
@@ -470,10 +524,14 @@ namespace VirtualClient.Actions
                                 if (!this.WarmUp)
                                 {
                                     string output = process.StandardOutput.ToString();
-                                    this.commonAggregateMetricCommandArguments = this.ParseCommand(process.FullCommand());
-                                    string parsedCommandArguments = (this.commonAggregateMetricCommandArguments + @$" --VCpuID {serverPort - this.startingServerPort}").Trim();
-                                    this.perProcessOutputList.Add(output);
-                                    this.perProcessCommandList.Add(parsedCommandArguments);
+                                    this.processOutputDescriptions.Add(new ProcessOutputDescription
+                                    {
+                                        Command = this.ParseCommand(process.FullCommand()),
+                                        CpuAffinity = serverPort.CpuAffinity,
+                                        EndTime = DateTime.UtcNow,
+                                        Output = output,
+                                        StartTime = startTime
+                                    });
                                 }
                             }
                         }
@@ -542,6 +600,37 @@ namespace VirtualClient.Actions
             command = Regex.Replace(command, @"\s+", " "); // Removes extra spaces
 
             return command.Trim();
+        }
+
+        private class ProcessOutputDescription
+        {
+            /// <summary>
+            /// The Memtier command line used to start the process.
+            /// </summary>
+            public string Command { get; set; }
+
+            /// <summary>
+            /// The CPU affinity provided to the client by the server. Redis servers
+            /// for example will be often bound to a single logical processor instance and Memcached
+            /// to all logical processors.
+            /// </summary>
+            public string CpuAffinity { get; set; }
+
+            /// <summary>
+            /// The time at which the Memtier workload completed execution.
+            /// </summary>
+            public DateTime EndTime { get; set; }
+
+            /// <summary>
+            /// The standard output of the Memtier workload from which metrics will
+            /// be parsed.
+            /// </summary>
+            public string Output { get; set; }
+
+            /// <summary>
+            /// The time at which the Memtier workload began execution.
+            /// </summary>
+            public DateTime StartTime { get; set; }
         }
     }
 }

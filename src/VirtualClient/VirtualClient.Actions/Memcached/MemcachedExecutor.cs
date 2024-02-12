@@ -12,9 +12,6 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Newtonsoft.Json;
-    using VirtualClient.Actions.NetworkPerformance;
     using VirtualClient.Common;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Platform;
@@ -267,36 +264,6 @@ namespace VirtualClient.Actions
                             $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.X64)}, " +
                             $"{PlatformSpecifics.GetPlatformArchitectureName(PlatformID.Unix, Architecture.Arm64)}",
                             ErrorReason.PlatformNotSupported);
-                }
-            }
-        }
-
-        internal class ServerState : State
-        {
-            [JsonConstructor]
-            public ServerState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
-
-            internal ServerState(IEnumerable<int> ports)
-              : base()
-            {
-                if (ports?.Any() == true)
-                {
-                    this[nameof(this.Ports)] = string.Join(",", ports);
-                }
-            }
-
-            /// <summary>
-            /// The set of ports on which the Memcached servers are running.
-            /// </summary>
-            public IEnumerable<int> Ports
-            {
-                get
-                {
-                    this.Properties.TryGetValue(nameof(this.Ports), out IConvertible ports);
-                    return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
                 }
             }
         }

@@ -6,6 +6,7 @@ namespace VirtualClient
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
@@ -40,6 +41,14 @@ namespace VirtualClient
         public IEnumerable<Tuple<LogLevel, EventId, object, Exception>> MessagesLogged(string message, LogLevel? level = null)
         {
             return this.Where(entry => entry.Item2.Name == message && (level == null || entry.Item1 == level));
+        }
+
+        /// <summary>
+        /// Returns true if an event was logged whose event name/message matches.
+        /// </summary>
+        public IEnumerable<Tuple<LogLevel, EventId, object, Exception>> MessagesLogged(Regex message, LogLevel? level = null)
+        {
+            return this.Where(entry => message.IsMatch(entry.Item2.Name) && (level == null || entry.Item1 == level));
         }
 
         /// <summary>

@@ -7,10 +7,10 @@ namespace VirtualClient.Actions
     using System.Collections.Generic;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using System.Threading;
+    using MathNet.Numerics.Statistics;
     using VirtualClient;
-    using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
+    using VirtualClient.Contracts.Parser;
 
     /// <summary>
     /// Parser for Redis Memtier benchmark output.
@@ -18,7 +18,6 @@ namespace VirtualClient.Actions
     public class MemtierMetricsParser : MetricsParser
     {
         private const string SplitAtSpace = @"\s{1,}";
-        private const string ProcessResultSectionDelimiter = @"^\*{6}$";
 
         // ============================================================================================================================================================
         // Type Ops/sec Hits/sec Misses/sec Avg.Latency     p50 Latency     p90 Latency     p95 Latency     p99 Latency   p99.9 Latency KB/sec
@@ -27,21 +26,164 @@ namespace VirtualClient.Actions
         // Sets         4827.17          ---          ---         2.64323         2.83100         3.93500         4.47900         7.45500        29.56700       329.45
         // Waits           0.00          ---          ---             ---             ---             ---             ---             ---             ---          ---
         // Totals      48271.29     43444.12         0.00         2.62213         2.75100         3.90300         4.41500         7.42300        29.31100      4053.46
-        private static readonly Regex GetsExpression = new Regex(@"(?<=Gets).*(?=\n)", RegexOptions.IgnoreCase);
-        private static readonly Regex SetsExpression = new Regex(@"(?<=Sets).*(?=\n)", RegexOptions.IgnoreCase);
-        private static readonly Regex TotalsExpression = new Regex(@"(?<=Totals).*", RegexOptions.IgnoreCase);
-
-        private bool perProcessMetric = false;
-        private List<string> memtierCommandLines = new List<string>();
+        
+        private static readonly Regex BandwidthExpression = new Regex(@"Bandwidth|Throughput", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex GetsExpression = new Regex(@"(?<=Gets).*(?=\n)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex GetLatencyP80Expression = new Regex(@"(?<=GET)\s+([0-9\.]+)\s+.*80[\.0]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SetLatencyP80Expression = new Regex(@"(?<=SET)\s+([0-9\.]+)\s+.*80[\.0]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SetsExpression = new Regex(@"(?<=Sets).*(?=\n)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex TotalsExpression = new Regex(@"(?<=Totals).*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemtierMetricsParser"/> class.
         /// </summary>
-        public MemtierMetricsParser(bool perProcessMetric, List<string> rawTextList, List<string> commandLines = null)
-            : base(string.Join(ProcessResultSectionDelimiter, rawTextList))
+        public MemtierMetricsParser(string rawText)
+            : base(rawText)
         {
-            this.perProcessMetric = perProcessMetric;
-            this.memtierCommandLines = commandLines;
+        }
+
+        /// <summary>
+        /// Assembles the metrics into a set of aggregates (e.g. Avg, Min, Max, Stdev).
+        /// </summary>
+        /// <param name="metrics">The set of metrics to aggregate.</param>
+        /// <returns>
+        /// A set of metrics that is an aggregate of the raw metrics provided.
+        /// </returns>
+        public static IList<Metric> Aggregate(IEnumerable<Metric> metrics)
+        {
+            // Setup the metrics so that we can calculate the aggregates (e.g. Avg, Min, Max)
+            IDictionary<string, MetricAggregate> aggregations = new Dictionary<string, MetricAggregate>(StringComparer.OrdinalIgnoreCase);
+            foreach (var metric in metrics)
+            {
+                MetricAggregate aggregate;
+                if (!aggregations.TryGetValue(metric.Name, out aggregate))
+                {
+                    aggregate = new MetricAggregate(metric.Name, metric.Unit, metric.Relativity, description: metric.Description);
+                    aggregations.Add(metric.Name, aggregate);
+                }
+
+                aggregate.Add(metric.Value);
+            }
+
+            // Create the set of metric aggregates.
+            //
+            // e.g.
+            // GET_Bandwidth -> GET_Bandwidth-Avg
+            //               -> GET_Bandwidth-Min
+            //               -> GET_Bandwidth-Max
+            //               -> GET_Bandwidth-Stddev
+            //               -> GET_Bandwidth-P80
+            //               -> GET_Bandwidth-Total
+            List<Metric> metricAggregates = new List<Metric>();
+            foreach (MetricAggregate aggregate in aggregations.Values)
+            {
+                metricAggregates.Add(new Metric($"{aggregate.Name}-Avg", aggregate.Average(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name}-Min", aggregate.Min(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name}-Max", aggregate.Max(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                metricAggregates.Add(new Metric($"{aggregate.Name}-Stddev", aggregate.StandardDeviation(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+
+                if (MemtierMetricsParser.BandwidthExpression.IsMatch(aggregate.Name))
+                {
+                    // e.g.
+                    // GET_Bandwidth-P80
+                    // GET_Bandwidth-Total
+                    // GET_Throughput-P80
+                    // GET_Throughput-Total
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P50", aggregate.Percentile(50), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P80", aggregate.Percentile(80), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P90", aggregate.Percentile(90), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P95", aggregate.Percentile(95), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P99", aggregate.Percentile(99), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-P99.9", ArrayStatistics.QuantileInplace(aggregate.ToArray(), 0.999d), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                    metricAggregates.Add(new Metric($"{aggregate.Name}-Total", aggregate.Sum(), aggregate.Unit, aggregate.Relativity, description: aggregate.Description));
+                }
+            }
+
+            return metricAggregates;
+        }
+
+        /// <summary>
+        /// Parses metadata properties out of the command line that can be used to associate with
+        /// a set of related metrics.
+        /// </summary>
+        /// <param name="commandLine">The Memtier command line from which to parse the metadata properties.</param>
+        /// <param name="cpuAffinity">The relative CPU number for which the target server (e.g. Redis, Memcached) has affinity.</param>
+        /// <returns>A set of metadata properties that can be included with the metrics.</returns>
+        public static IDictionary<string, IConvertible> ParseMetadata(string commandLine, string cpuAffinity = null)
+        {
+            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+
+            if (cpuAffinity != null)
+            {
+                metadata["cpuAffinity"] = cpuAffinity;
+            }
+
+            if (!string.IsNullOrWhiteSpace(commandLine))
+            {
+                metadata["commandline"] = commandLine;
+            }
+
+            Match protocol = Regex.Match(commandLine, @"--protocol\s*=*([a-z0-9_-]+)", RegexOptions.IgnoreCase);
+            if (protocol.Success)
+            {
+                metadata["protocol"] = protocol.Groups[1].Value;
+            }
+
+            Match port = Regex.Match(commandLine, @"--port\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (port.Success)
+            {
+                metadata["port"] = port.Groups[1].Value;
+            }
+
+            Match threads = Regex.Match(commandLine, @"--threads\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (threads.Success)
+            {
+                metadata["threads"] = int.Parse(threads.Groups[1].Value);
+            }
+
+            Match clients = Regex.Match(commandLine, @"--clients\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (clients.Success)
+            {
+                metadata["clientsPerThread"] = int.Parse(clients.Groups[1].Value);
+            }
+
+            Match ratio = Regex.Match(commandLine, @"--ratio\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (ratio.Success)
+            {
+                metadata["ratio"] = ratio.Groups[1].Value;
+            }
+
+            Match dataSize = Regex.Match(commandLine, @"--data-size\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (dataSize.Success)
+            {
+                metadata["dataSize"] = int.Parse(dataSize.Groups[1].Value);
+            }
+
+            Match pipeline = Regex.Match(commandLine, @"--pipeline\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (pipeline.Success)
+            {
+                metadata["pipeline"] = int.Parse(pipeline.Groups[1].Value);
+            }
+
+            Match keyMinimum = Regex.Match(commandLine, @"--key-minimum\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (keyMinimum.Success)
+            {
+                metadata["keyMinimum"] = int.Parse(keyMinimum.Groups[1].Value);
+            }
+
+            Match keyMaximum = Regex.Match(commandLine, @"--key-maximum\s*=*([0-9]+)", RegexOptions.IgnoreCase);
+            if (keyMaximum.Success)
+            {
+                metadata["keyMaximum"] = int.Parse(keyMaximum.Groups[1].Value);
+            }
+
+            Match keyPattern = Regex.Match(commandLine, @"--key-pattern\s*=*([a-z\:]+)", RegexOptions.IgnoreCase);
+            if (keyPattern.Success)
+            {
+                metadata["keyPattern"] = keyPattern.Groups[1].Value;
+            }
+
+            return metadata;
         }
 
         /// <inheritdoc/>
@@ -50,52 +192,32 @@ namespace VirtualClient.Actions
             try
             {
                 this.ThrowIfInvalidOutputFormat();
-                List<Metric> aggregateMetrics = new List<Metric>();
-                List<Metric> combinedMetrics = new List<Metric>();
-                List<string> rawTextList = this.RawText.Split(ProcessResultSectionDelimiter).Select(s => s.Trim()).ToList();
 
-                for (int i = 0; i < rawTextList.Count; i++)
-                {
-                    string rawText = rawTextList[i];
-                    // Example Format:
-                    //
-                    // ALL STATS
-                    // ============================================================================================================================================================
-                    // Type         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p90 Latency     p95 Latency     p99 Latency   p99.9 Latency       KB/sec
-                    // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-                    // Sets         4827.17          ---          ---         2.64323         2.83100         3.93500         4.47900         7.45500        29.56700       329.45
-                    // Gets        43444.12     43444.12         0.00         2.61979         2.73500         3.88700         4.41500         7.42300        29.31100      3724.01
-                    // Waits           0.00          ---          ---             ---             ---             ---             ---             ---             ---          ---
-                    // Totals      48271.29     43444.12         0.00         2.62213         2.75100         3.90300         4.41500         7.42300        29.31100      4053.46
+                // Example Format:
+                //
+                // ALL STATS
+                // ============================================================================================================================================================
+                // Type         Ops/sec     Hits/sec   Misses/sec    Avg. Latency     p50 Latency     p90 Latency     p95 Latency     p99 Latency   p99.9 Latency       KB/sec
+                // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+                // Sets         4827.17          ---          ---         2.64323         2.83100         3.93500         4.47900         7.45500        29.56700       329.45
+                // Gets        43444.12     43444.12         0.00         2.61979         2.73500         3.88700         4.41500         7.42300        29.31100      3724.01
+                // Waits           0.00          ---          ---             ---             ---             ---             ---             ---             ---          ---
+                // Totals      48271.29     43444.12         0.00         2.62213         2.75100         3.90300         4.41500         7.42300        29.31100      4053.46
 
-                    List<Metric> perProcessMetrics = new List<Metric>();
+                List<Metric> metrics = new List<Metric>();
 
-                    var totals = MemtierMetricsParser.TotalsExpression.Matches(rawText);
-                    MemtierMetricsParser.AddMetrics(perProcessMetrics, totals);
+                var totals = MemtierMetricsParser.TotalsExpression.Matches(this.RawText);
+                MemtierMetricsParser.AddMetrics(metrics, totals);
 
-                    var getsResults = MemtierMetricsParser.GetsExpression.Matches(rawText);
-                    MemtierMetricsParser.AddMetrics(perProcessMetrics, getsResults, "GET");
+                var getsResults = MemtierMetricsParser.GetsExpression.Matches(this.RawText);
+                MemtierMetricsParser.AddMetrics(metrics, getsResults, "GET");
 
-                    var setsResults = MemtierMetricsParser.SetsExpression.Matches(rawText);
-                    MemtierMetricsParser.AddMetrics(perProcessMetrics, setsResults, "SET");
+                var setsResults = MemtierMetricsParser.SetsExpression.Matches(this.RawText);
+                MemtierMetricsParser.AddMetrics(metrics, setsResults, "SET");
 
-                    if (this.memtierCommandLines != null)
-                    {
-                        string memtiercommandLine = this.memtierCommandLines[i];
-                        perProcessMetrics.AddMetadata(MemtierMetricsParser.GetMetadata(memtiercommandLine));
-                    }
+                MemtierMetricsParser.AddAdditionalLatencyPercentileMetrics(this.RawText, metrics);
 
-                    combinedMetrics.AddRange(perProcessMetrics);
-
-                    if (this.perProcessMetric)
-                    {
-                        aggregateMetrics.AddRange(perProcessMetrics);
-                    }
-                }
-
-                aggregateMetrics.AddRange(MemtierMetricsParser.AggregateMetrics(combinedMetrics));
-
-                return aggregateMetrics;
+                return metrics;
             }
             catch (Exception exc)
             {
@@ -280,123 +402,44 @@ namespace VirtualClient.Actions
             };
         }
 
-        private static IDictionary<string, IConvertible> GetMetadata(string commandLine)
+        private static void AddAdditionalLatencyPercentileMetrics(string output, List<Metric> metrics)
         {
-            IDictionary<string, IConvertible> metadata = new Dictionary<string, IConvertible>();
+            double p80LatencyOnGet = 0.0;
+            double p80LatencyOnSet = 0.0;
 
-            if (!string.IsNullOrWhiteSpace(commandLine))
+            Match getLatencyP80 = MemtierMetricsParser.GetLatencyP80Expression.Match(output);
+
+            if (getLatencyP80.Success)
             {
-                metadata["commandline"] = commandLine;
+                p80LatencyOnGet = double.Parse(getLatencyP80.Groups[1].Value);
+
+                metrics.Add(new Metric(
+                    "GET_Latency-P80",
+                    p80LatencyOnGet,
+                    MetricUnit.Milliseconds,
+                    MetricRelativity.LowerIsBetter,
+                    description: "The latency for 80% of all requests was at or under this value."));
             }
 
-            Match protocol = Regex.Match(commandLine, @"--protocol\s*=*([a-z0-9_-]+)", RegexOptions.IgnoreCase);
-            if (protocol.Success)
+            Match setLatencyP80 = MemtierMetricsParser.SetLatencyP80Expression.Match(output);
+            if (setLatencyP80.Success)
             {
-                metadata["protocol"] = protocol.Groups[1].Value;
+                p80LatencyOnSet = double.Parse(setLatencyP80.Groups[1].Value);
+
+                metrics.Add(new Metric(
+                    "SET_Latency-P80",
+                    p80LatencyOnSet,
+                    MetricUnit.Milliseconds,
+                    MetricRelativity.LowerIsBetter,
+                    description: "The latency for 80% of all requests was at or under this value."));
             }
 
-            Match threads = Regex.Match(commandLine, @"--threads\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (threads.Success)
-            {
-                metadata["threads"] = int.Parse(threads.Groups[1].Value);
-            }
-
-            Match clients = Regex.Match(commandLine, @"--clients\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (clients.Success)
-            {
-                metadata["clientsPerThread"] = int.Parse(clients.Groups[1].Value);
-            }
-
-            Match ratio = Regex.Match(commandLine, @"--ratio\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (ratio.Success)
-            {
-                metadata["ratio"] = ratio.Groups[1].Value;
-            }
-
-            Match dataSize = Regex.Match(commandLine, @"--data-size\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (dataSize.Success)
-            {
-                metadata["dataSize"] = int.Parse(dataSize.Groups[1].Value);
-            }
-
-            Match pipeline = Regex.Match(commandLine, @"--pipeline\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (pipeline.Success)
-            {
-                metadata["pipeline"] = int.Parse(pipeline.Groups[1].Value);
-            }
-
-            Match keyMinimum = Regex.Match(commandLine, @"--key-minimum\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (keyMinimum.Success)
-            {
-                metadata["keyMinimum"] = int.Parse(keyMinimum.Groups[1].Value);
-            }
-
-            Match keyMaximum = Regex.Match(commandLine, @"--key-maximum\s*=*([0-9]+)", RegexOptions.IgnoreCase);
-            if (keyMaximum.Success)
-            {
-                metadata["keyMaximum"] = int.Parse(keyMaximum.Groups[1].Value);
-            }
-
-            Match keyPattern = Regex.Match(commandLine, @"--key-pattern\s*=*([a-z\:]+)", RegexOptions.IgnoreCase);
-            if (keyPattern.Success)
-            {
-                metadata["keyPattern"] = keyPattern.Groups[1].Value;
-            }
-
-            return metadata;
-        }
-
-        private static List<Metric> AggregateMetrics(List<Metric> combinedMetrics)
-        {
-            Dictionary<string, List<double>> metricNameValueListDict = new Dictionary<string, List<double>>();
-            Dictionary<string, List<Metric>> metricNameMetricsListDict = new Dictionary<string, List<Metric>>();
-
-            foreach (var metric in combinedMetrics)
-            {
-                if (metricNameMetricsListDict.ContainsKey(metric.Name))
-                {
-                    metricNameValueListDict[metric.Name].Add(metric.Value);
-                }
-                else
-                {
-                    metricNameValueListDict.Add(metric.Name, new List<double>() { metric.Value });
-                }
-
-                if (metricNameMetricsListDict.ContainsKey(metric.Name))
-                {
-                    metricNameMetricsListDict[metric.Name].Add(metric);
-                }
-                else
-                {
-                    metricNameMetricsListDict.Add(metric.Name, new List<Metric>() { metric });
-                }
-            }
-
-            List<Metric> newAggregateListOfMetrics = new List<Metric>();
-
-            foreach (var metricKeyValuePair in metricNameValueListDict)
-            {
-                double avgValue = metricKeyValuePair.Value.Average();
-                double minValue = metricKeyValuePair.Value.Min();
-                double maxValue = metricKeyValuePair.Value.Max();
-                double stdevValue = Math.Sqrt(metricKeyValuePair.Value.Select(x => Math.Pow(x - avgValue, 2)).Average());
-                List<double> sortedValues = metricKeyValuePair.Value.OrderBy(x => x).ToList();
-                double p80Value = sortedValues[(int)Math.Ceiling(sortedValues.Count * 0.8) - 1];
-
-                newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Avg", avgValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Min", minValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Max", maxValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Stdev", stdevValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_P80", p80Value, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                if (metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit != MetricUnit.Milliseconds)
-                {
-                    // For throughput and bandwidth related metrics only.
-                    double sumValue = metricKeyValuePair.Value.Sum();
-                    newAggregateListOfMetrics.Add(new Metric($"{metricKeyValuePair.Key}_Sum", sumValue, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Unit, metricNameMetricsListDict[metricKeyValuePair.Key].ElementAt(0).Relativity));
-                }
-            }
-
-            return newAggregateListOfMetrics;
+            metrics.Add(new Metric(
+                "Latency-P80",
+                (p80LatencyOnGet + p80LatencyOnSet) / 2,
+                MetricUnit.Milliseconds,
+                MetricRelativity.LowerIsBetter,
+                description: "The latency for 80% of all requests was at or under this value."));
         }
 
         private void ThrowIfInvalidOutputFormat()

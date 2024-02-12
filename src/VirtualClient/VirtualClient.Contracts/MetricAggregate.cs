@@ -89,7 +89,7 @@ namespace VirtualClient.Contracts
         /// <summary>
         /// The capture strategy to use over time while capturing performance values.
         /// </summary>
-        public MetricAggregateType AggregateType { get; }
+        public MetricAggregateType AggregateType { get; set; }
 
         /// <summary>
         /// Defines how the metric value relates to the preferred outcome 
@@ -102,13 +102,21 @@ namespace VirtualClient.Contracts
         /// </summary>
         public Metric ToMetric()
         {
+            return this.ToMetric(this.AggregateType);
+        }
+
+        /// <summary>
+        /// Creates a metric from the aggregate of values/samples.
+        /// </summary>
+        public Metric ToMetric(MetricAggregateType aggregateType)
+        {
             if (!this.Any())
             {
                 return Metric.None;
             }
 
             double value = 0;
-            switch (this.AggregateType)
+            switch (aggregateType)
             {
                 case MetricAggregateType.Average:
                     double sum = this.Sum();
@@ -138,7 +146,7 @@ namespace VirtualClient.Contracts
                 default:
                     throw new MonitorException(
                         $"Unsupported metric aggregate type '{this.AggregateType}' provided.",
-                        ErrorReason.MonitorUnexpectedAnomaly);
+                        ErrorReason.WorkloadUnexpectedAnomaly);
             }
 
             return new Metric(this.Name, value, unit: this.Unit, relativity: this.Relativity, description: this.Description);

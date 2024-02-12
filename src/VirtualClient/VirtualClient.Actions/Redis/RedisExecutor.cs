@@ -226,35 +226,5 @@ namespace VirtualClient.Actions
                         ErrorReason.PlatformNotSupported);
             }
         }
-
-        internal class ServerState : State
-        {
-            [JsonConstructor]
-            public ServerState(IDictionary<string, IConvertible> properties = null)
-                : base(properties)
-            {
-            }
-
-            internal ServerState(IEnumerable<int> ports)
-               : base()
-            {
-                if (ports?.Any() == true)
-                {
-                    this[nameof(this.Ports)] = string.Join(",", ports);
-                }
-            }
-
-            /// <summary>
-            /// The set of ports on which the Redis servers are running.
-            /// </summary>
-            public IEnumerable<int> Ports
-            {
-                get
-                {
-                    this.Properties.TryGetValue(nameof(this.Ports), out IConvertible ports);
-                    return ports?.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries).Select(i => int.Parse(i.Trim()));
-                }
-            }
-        }
     }
 }
