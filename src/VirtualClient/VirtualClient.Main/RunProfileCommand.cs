@@ -27,6 +27,9 @@ namespace VirtualClient
     using VirtualClient.Contracts.Metadata;
     using VirtualClient.Contracts.Validation;
     using VirtualClient.Metadata;
+    using YamlDotNet.Core;
+    using YamlDotNet.Serialization.NamingConventions;
+    using YamlDotNet.Serialization;
 
     /// <summary>
     /// Command executes the operations of the Virtual Client workload profile. This is the
@@ -429,8 +432,8 @@ namespace VirtualClient
         /// </summary>
         protected async Task<IEnumerable<string>> InitializeProfilesAsync(IServiceCollection dependencies, CancellationToken cancellationToken, bool pathsOnly = false)
         {
-            ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-            IFileSystem fileSystem = systemManagement.FileSystem;
+            PlatformSpecifics platformSpecifics = dependencies.GetService<PlatformSpecifics>();
+            IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
 
             List<string> effectiveProfiles = new List<string>();
             foreach (string path in this.Profiles)
@@ -450,7 +453,7 @@ namespace VirtualClient
                         // The profile downloaded from internet will live in /profiles/downloaded/ directory and not interfere with the ones in the repo.
                         var profileUri = new Uri(path);
                         string profileName = Path.GetFileName(profileUri.AbsolutePath);
-                        profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath("downloaded", profileName);
+                        profileFullPath = platformSpecifics.GetProfilePath("downloaded", profileName);
 
                         string downloadDirectory = Path.GetDirectoryName(profileFullPath);
                         if (!fileSystem.Directory.Exists(downloadDirectory))
@@ -469,13 +472,13 @@ namespace VirtualClient
                                     {
                                         await response.Content.CopyToAsync(fs);
                                     }
-                                }).ConfigureAwait(false);
+                                });
                             }
                         }
                     }
                     else
                     {
-                        profileFullPath = systemManagement.PlatformSpecifics.StandardizePath(path);
+                        profileFullPath = platformSpecifics.StandardizePath(path);
 
                         if (BackwardsCompatibility.TryMapProfile(profileFullPath, out string remappedProfile))
                         {
@@ -487,7 +490,8 @@ namespace VirtualClient
                             // If the profile defined is not a full path to a profile located on the system, then we
                             // fallback to looking for the profile in the 'profiles' directory within the Virtual Client
                             // parent directory itself.
-                            profileFullPath = systemManagement.PlatformSpecifics.GetProfilePath(path);
+                            profileFullPath = platformSpecifics.GetProfilePath(path);
+
                             if (!pathsOnly && !fileSystem.File.Exists(profileFullPath))
                             {
                                 throw new DependencyException($"Profile does not exist at the path '{path}'.", ErrorReason.ProfileNotFound);
@@ -546,14 +550,29 @@ namespace VirtualClient
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                ISystemManagement systemManagement = dependencies.GetService<ISystemManagement>();
-                IFileSystem fileSystem = systemManagement.FileSystem;
+                IFileSystem fileSystem = dependencies.GetService<IFileSystem>();
                 ILogger logger = dependencies.GetService<ILogger>();
                 
                 logger.LogTraceMessage($"Execution Profile: {Path.GetFileNameWithoutExtension(path)}");
 
-                string profileContent = await fileSystem.File.ReadAllTextAsync(path);
-                profile = JsonConvert.DeserializeObject<ExecutionProfile>(profileContent);
+                string profileContent = (await fileSystem.File.ReadAllTextAsync(path)).Trim();
+
+                // JSON profile content will always start with a '{' character
+                if (profileContent.StartsWith("{", StringComparison.OrdinalIgnoreCase))
+                {
+                    profile = JsonConvert.DeserializeObject<ExecutionProfile>(profileContent);
+                    profile.ProfileFormat = "JSON";
+                }
+                else
+                {
+                    var yamlSerializer = new YamlDotNet.Serialization.DeserializerBuilder()
+                        .WithTypeConverter(new YamlParameterDictionaryTypeConverter())
+                        .Build();
+
+                    ExecutionProfileYamlShim profileShim = yamlSerializer.Deserialize<ExecutionProfileYamlShim>(profileContent);
+                    profile = new ExecutionProfile(profileShim);
+                    profile.ProfileFormat = "YAML";
+                }
             }
 
             return profile;
@@ -773,12 +792,12 @@ namespace VirtualClient
             ExecutionProfile profile = await this.InitializeProfileAsync(profiles, dependencies, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (this.Timeout?.Duration != null)
+            if (this.Timeout?.Duration != null && profile.Metadata?.TryGetValue("MinimumRequiredExecutionTime", out IConvertible minimumExecutionTime) == true)
             {
-                if (profile.MinimumRequiredExecutionTime != null && profile.MinimumRequiredExecutionTime > this.Timeout.Duration)
+                if (TimeSpan.TryParse(minimumExecutionTime.ToString(), out TimeSpan minimumTime) && minimumTime > this.Timeout.Duration)
                 {
                     throw new StartupException(
-                        $"The profile(s) supplied has actions/workloads or monitors that require a minimum required execution time of '{profile.MinimumRequiredExecutionTime}' " +
+                        $"The profile(s) supplied has actions/workloads or monitors that require a minimum required execution time of '{minimumTime}' " +
                         $"which is longer than the duration/timeout supplied on the command line '{this.Timeout.Duration}'. Increase the duration/timeout of the command line to " +
                         $"a length of time that is longer than the minimum required execution time.");
                 }

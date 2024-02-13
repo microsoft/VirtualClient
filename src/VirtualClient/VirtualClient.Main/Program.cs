@@ -331,9 +331,25 @@ namespace VirtualClient
             runResetCommand.AddAlias("clean");
             runResetCommand.Handler = CommandHandler.Create<ResetCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
 
+            Command convertCommand = new Command(
+                "convert",
+                "Converts execution profiles from JSON to YAML format and vice-versa.")
+            {
+                // Required
+                // -------------------------------------------------------------------
+                // --profile
+                OptionFactory.CreateProfileOption(required: true),
+
+                // --output-path
+                OptionFactory.CreateOutputDirectoryOption(required: true)
+            };
+
+            convertCommand.Handler = CommandHandler.Create<ConvertCommand>(cmd => cmd.ExecuteAsync(args, cancellationTokenSource));
+
             rootCommand.AddCommand(runApiCommand);
             rootCommand.AddCommand(runBootstrapCommand);
             rootCommand.AddCommand(runResetCommand);
+            rootCommand.AddCommand(convertCommand);
 
             return new CommandLineBuilder(rootCommand).WithDefaults();
         }

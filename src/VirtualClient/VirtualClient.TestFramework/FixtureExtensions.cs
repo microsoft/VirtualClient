@@ -234,9 +234,7 @@ namespace VirtualClient
         {
             return new ExecutionProfile(
                 $"mock execution profile{(randomization ? randomGen.Next().ToString() : string.Empty)}",
-                1,
                 TimeSpan.FromMinutes(1),
-                TimeSpan.FromMinutes(2),
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },
                 new List<ExecutionProfileElement>() { FixtureExtensions.CreateExecutionProfileElement(randomization) },

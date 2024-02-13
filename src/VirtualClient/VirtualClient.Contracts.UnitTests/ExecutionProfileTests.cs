@@ -41,9 +41,7 @@ namespace VirtualClient.Contracts
             ExecutionProfile validComponent = this.mockFixture.Create<ExecutionProfile>();
             Assert.Throws<ArgumentException>(() => new ExecutionProfile(
                 invalidParameter,
-                validComponent.Iterations,
                 validComponent.MinimumExecutionInterval,
-                validComponent.MinimumRequiredExecutionTime,
                 validComponent.Actions,
                 validComponent.Dependencies,
                 validComponent.Monitors,

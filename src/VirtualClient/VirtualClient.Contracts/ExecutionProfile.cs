@@ -30,9 +30,7 @@ namespace VirtualClient.Contracts
         [JsonConstructor]
         public ExecutionProfile(
             string description, 
-            int? iterations, 
-            TimeSpan? minimumExecutionInterval, 
-            TimeSpan? minimumRequiredExecutionTime, 
+            TimeSpan? minimumExecutionInterval,  
             IEnumerable<ExecutionProfileElement> actions,
             IEnumerable<ExecutionProfileElement> dependencies,
             IEnumerable<ExecutionProfileElement> monitors,
@@ -42,9 +40,7 @@ namespace VirtualClient.Contracts
             description.ThrowIfNullOrWhiteSpace(nameof(description));
 
             this.Description = description;
-            this.Iterations = iterations;
             this.MinimumExecutionInterval = minimumExecutionInterval;
-            this.MinimumRequiredExecutionTime = minimumRequiredExecutionTime;
 
             this.Actions = actions != null
                 ? new List<ExecutionProfileElement>(actions)
@@ -74,10 +70,8 @@ namespace VirtualClient.Contracts
         /// <param name="other">The instance to create the new instance from.</param>
         public ExecutionProfile(ExecutionProfile other)
             : this(
-                  other?.Description, 
-                  other?.Iterations, 
+                  other?.Description,  
                   other.MinimumExecutionInterval, 
-                  other?.MinimumRequiredExecutionTime,
                   other?.Actions, 
                   other?.Dependencies, 
                   other?.Monitors, 
@@ -87,29 +81,32 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionProfile"/> class.
+        /// </summary>
+        /// <param name="other">The instance to create the new instance from.</param>
+        public ExecutionProfile(ExecutionProfileYamlShim other)
+            : this(
+                  other?.Description,
+                  other.MinimumExecutionInterval,
+                  other?.Actions?.Select(a => new ExecutionProfileElement(a)),
+                  other?.Dependencies?.Select(d => new ExecutionProfileElement(d)),
+                  other?.Monitors?.Select(m => new ExecutionProfileElement(m)),
+                  other?.Metadata,
+                  other?.Parameters)
+        {
+        }
+
+        /// <summary>
         /// Workload profile description.
         /// </summary>
         [JsonProperty(PropertyName = "Description", Required = Required.Always, Order = 10)]
         public string Description { get; }
 
         /// <summary>
-        /// The number of iterations the profile should be ran (e.g. set to 1 to indicate the
-        /// profile actions should be ran only once). The default is to run on a non-stop loop.
-        /// </summary>
-        [JsonProperty(PropertyName = "Iterations", Required = Required.Default, Order = 20)]
-        public int? Iterations { get; set; }
-
-        /// <summary>
         /// The minimum amount of time between executing actions
         /// </summary>
         [JsonProperty(PropertyName = "MinimumExecutionInterval", Required = Required.Default, Order = 30)]
         public TimeSpan? MinimumExecutionInterval { get; }
-
-        /// <summary>
-        /// The minimum amount of time for profile to execute.
-        /// </summary>
-        [JsonProperty(PropertyName = "MinimumRequiredExecutionTime", Required = Required.Default, Order = 40)]
-        public TimeSpan? MinimumRequiredExecutionTime { get; }
 
         /// <summary>
         /// The set of supported platform/architectures for the profile.
@@ -154,6 +151,12 @@ namespace VirtualClient.Contracts
         /// </summary>
         [JsonProperty(PropertyName = "Monitors", Required = Required.Default, Order = 100)]
         public List<ExecutionProfileElement> Monitors { get; }
+
+        /// <summary>
+        /// The format of the profile file/source (e.g. JSON, YAML).
+        /// </summary>
+        [JsonIgnore]
+        public string ProfileFormat { get; internal set; }
 
         /// <summary>
         /// Reads the profile from the file system.
@@ -217,9 +220,7 @@ namespace VirtualClient.Contracts
         {
             return new StringBuilder()
                 .Append(this.Description)
-                .Append(this.Iterations)
                 .Append(this.MinimumExecutionInterval)
-                .Append(this.MinimumRequiredExecutionTime)
                 .AppendJoin(";", this.Parameters.Select(p => $"{p.Key};{p.Value}"))
                 .AppendJoin(";", this.Metadata.Select(m => $"{m.Key};{m.Value}"))
                 .AppendJoin(";", this.Actions)

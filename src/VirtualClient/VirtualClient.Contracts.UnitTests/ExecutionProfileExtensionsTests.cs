@@ -294,9 +294,7 @@ namespace VirtualClient.Contracts
             ExecutionProfile mergedProfile = originalProfile.MergeWith(otherProfile);
 
             Assert.AreEqual(originalProfile.Description, mergedProfile.Description);
-            Assert.AreEqual(originalProfile.Iterations, mergedProfile.Iterations);
             Assert.AreEqual(originalProfile.MinimumExecutionInterval, mergedProfile.MinimumExecutionInterval);
-            Assert.AreEqual(originalProfile.MinimumRequiredExecutionTime, mergedProfile.MinimumRequiredExecutionTime);
         }
     }
 }

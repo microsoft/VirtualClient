@@ -53,6 +53,15 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionProfileElement"/> class.
+        /// </summary>
+        /// <param name="other">The instance to create a new object from.</param>
+        public ExecutionProfileElement(ExecutionProfileElementYamlShim other)
+            : this(other?.Type, other?.Parameters, other?.Metadata, other?.Components?.Select(c => new ExecutionProfileElement(c)))
+        {
+        }
+
+        /// <summary>
         /// The name of this element
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Always, Order = 10)]
