@@ -2,24 +2,6 @@
 
 ExitCode=0
 
-if [ "${1,,}" == "/?" ] || [ "${1,,}" == "-?" ] || [ "${1,,}" == "--help" ]; then
-    Usage
-fi
-
-echo ""
-echo "[Running Tests]"
-echo "--------------------------------------------------"
-
-for file in $(find "$(dirname "$0")/src" -type f -name "*Tests.csproj"); do
-    dotnet test -c Release "$file" --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal"
-    result=$?
-    if [ $result -ne 0 ]; then
-        Error
-    fi
-done
-
-End
-
 Usage() {
     echo ""
     echo "Usage:"
@@ -41,3 +23,21 @@ End() {
 Finish() {
     exit $ExitCode
 }
+
+if [ "${1,,}" == "/?" ] || [ "${1,,}" == "-?" ] || [ "${1,,}" == "--help" ]; then
+    Usage
+fi
+
+echo ""
+echo "[Running Tests]"
+echo "--------------------------------------------------"
+
+for file in $(find "$(dirname "$0")/src" -type f -name "*Tests.csproj"); do
+    dotnet test -c Release "$file" --no-restore --no-build --filter "(Category=Unit|Category=Functional)" --logger "console;verbosity=normal"
+    result=$?
+    if [ $result -ne 0 ]; then
+        Error
+    fi
+done
+
+End
