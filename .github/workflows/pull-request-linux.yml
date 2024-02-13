@@ -34,7 +34,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Restore dependencies
-      run: ./build-restore.cmd
+      run: ./build-restore.sh
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
@@ -51,7 +51,7 @@ jobs:
       run: ./build.sh
 
     - name: Test
-      run: ./build-test.cmd
+      run: ./build-test.sh
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
