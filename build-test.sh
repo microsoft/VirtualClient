@@ -11,7 +11,7 @@ Usage() {
 }
 
 Error() {
-    ExitCode=$?
+    ExitCode=1
     End
 }
 
