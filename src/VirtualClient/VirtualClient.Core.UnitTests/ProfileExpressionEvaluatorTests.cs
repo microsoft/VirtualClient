@@ -387,6 +387,108 @@ namespace VirtualClient
         }
 
         [Test]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
+        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
+        public async Task ProfileExpressionEvaluatorSupportsPlatformReferencesOnUnixSystems(PlatformID platform, Architecture architecture, string expectedValue)
+        {
+            this.SetupDefaults(platform, architecture);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{Platform}", expectedValue },
+                { "--any-platform={Platform}", $"--any-platform={expectedValue}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
+        public async Task ProfileExpressionEvaluatorSupportsPlatformReferencesOnWindowsSystems(PlatformID platform, Architecture architecture, string expectedValue)
+        {
+            this.SetupDefaults(platform, architecture);
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                { "{Platform}", expectedValue },
+                { "--any-platform={Platform}", $"--any-platform={expectedValue}" }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorHandlesCasesWherePlatformSpecificPackagePathAndPlatformAreUsedTogether()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
+            string packagePath = this.mockFixture.GetPackagePath("anyPackage");
+            string platform = "linux-arm64";
+            string platformSpecificPackagePath = this.mockFixture.Combine(packagePath, platform);
+
+            // The package MUST be actually registered with VC.
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                {
+                    "{PackagePath/Platform:anyPackage}/configure&&{PackagePath/Platform:anyPackage}/build.sh&&{PackagePath/Platform:anyPackage}/build.sh install {Platform}",
+                    $"{platformSpecificPackagePath}/configure&&{platformSpecificPackagePath}/build.sh&&{platformSpecificPackagePath}/build.sh install {platform}"
+                },
+                {
+                    "powershell -C \"{PackagePath/Platform:anyPackage}/any.folder.1.2.3/execute {Platform}\"",
+                    $"powershell -C \"{platformSpecificPackagePath}/any.folder.1.2.3/execute {platform}\""
+                }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
+        public async Task ProfileExpressionEvaluatorHandlesCasesWherePackagePathAndPlatformAreUsedTogether_AdvancedScenario()
+        {
+            this.SetupDefaults(PlatformID.Unix, Architecture.Arm64);
+            string packagePath = this.mockFixture.GetPackagePath("anypackage.linux-arm64");
+
+            // The package MUST be actually registered with VC.
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(new DependencyPath("anyPackage", packagePath));
+
+            Dictionary<string, string> expressions = new Dictionary<string, string>
+            {
+                {
+                    "{PackagePath:anyPackage.{Platform}}/install-toolset.sh",
+                    $"{packagePath}/install-toolset.sh"
+                },
+                {
+                    "{PackagePath/Platform:anyPackage.{Platform}}/install-toolset.sh",
+                    $"{packagePath}/linux-arm64/install-toolset.sh"
+                }
+            };
+
+            foreach (var entry in expressions)
+            {
+                string expectedExpression = entry.Value;
+                string actualExpression = await ProfileExpressionEvaluator.Instance.EvaluateAsync(this.mockFixture.Dependencies, entry.Key);
+                Assert.AreEqual(expectedExpression, actualExpression);
+            }
+        }
+
+        [Test]
         public void ProfileExpressionEvaluatorThrowsOnEvaluationOfPlatformSpecificPackagePathsWhenThePackageDoesNotExist()
         {
             this.SetupDefaults(PlatformID.Win32NT);
