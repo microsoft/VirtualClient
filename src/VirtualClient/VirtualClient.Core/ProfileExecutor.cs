@@ -723,6 +723,11 @@ namespace VirtualClient
 
                         if (executeComponent)
                         {
+                            if (component.Extensions?.Any() == true)
+                            {
+                                runtimeComponent.Extensions.AddRange(component.Extensions, withReplace: true);
+                            }
+
                             components.Add(runtimeComponent);
                             this.ComponentCreated?.Invoke(this, new ComponentEventArgs(runtimeComponent));
                         }
