@@ -73,8 +73,8 @@ namespace VirtualClient.Actions
             this.mockFixture.Directory.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            this.mockResults = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"PostgreSQL", "PostgresqlresultsExample.txt"));
-            this.tclFileContents = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "PostgreSQL", "runTransactions.tcl"));
+            this.mockResults = File.ReadAllText(MockFixture.GetDirectory(typeof(PostgreSQLClientExecutorTests), "Examples", @"PostgreSQL", "PostgresqlresultsExample.txt"));
+            this.tclFileContents = File.ReadAllText(MockFixture.GetDirectory(typeof(PostgreSQLClientExecutorTests), "Examples", "PostgreSQL", "runTransactions.tcl"));
 
             this.mockFixture.ProcessManager.OnProcessCreated = (process) =>
             {
@@ -136,7 +136,7 @@ namespace VirtualClient.Actions
             this.SetupDefaults(PlatformID.Unix);
 
             // Example contents of the runTransactions.tcl file.
-            string tclFileContent = await File.ReadAllTextAsync(Path.Combine(MockFixture.ExamplesDirectory, "PostgreSQL", "runTransactions.tcl"));
+            string tclFileContent = await File.ReadAllTextAsync(MockFixture.GetDirectory(typeof(PostgreSQLClientExecutorTests), "Examples", "PostgreSQL", "runTransactions.tcl"));
 
             // Reading the contexts of the runTransactions.tcl file
             this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("/linux-x64/runTransactions.tcl")), It.IsAny<CancellationToken>()))
@@ -185,7 +185,7 @@ namespace VirtualClient.Actions
             this.SetupDefaults(PlatformID.Win32NT);
 
             // Example contents of the runTransactions.tcl file.
-            string tclFileContent = await File.ReadAllTextAsync(Path.Combine(MockFixture.ExamplesDirectory, "PostgreSQL", "runTransactions.tcl"));
+            string tclFileContent = await File.ReadAllTextAsync(MockFixture.GetDirectory(typeof(PostgreSQLClientExecutorTests), "Examples", "PostgreSQL", "runTransactions.tcl"));
 
             // Reading the contexts of the runTransactions.tcl file
             this.mockFixture.File.Setup(file => file.ReadAllTextAsync(It.Is<string>(path => path.EndsWith("\\win-x64\\runTransactions.tcl")), It.IsAny<CancellationToken>()))

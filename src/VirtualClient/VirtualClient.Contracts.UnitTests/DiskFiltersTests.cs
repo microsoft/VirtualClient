@@ -291,7 +291,7 @@ namespace VirtualClient.Contracts
             // Scenario:
             // We found an anomaly on one of the Linux systems that had 32 disks where they were not
             // identified properly.
-            string rawText = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "lshw", "lshw_disk_storage_results_anomaly.xml"));
+            string rawText = File.ReadAllText(MockFixture.GetDirectory(typeof(DiskFiltersTests), "Examples", "lshw", "lshw_disk_storage_results_anomaly.xml"));
             LshwDiskParser parser = new LshwDiskParser(rawText);
 
             IEnumerable<Disk> disks = parser.Parse();

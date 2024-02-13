@@ -17,7 +17,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromIntelSystems_Scenario1()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Intel.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_Intel.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -45,7 +45,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromIntelSystems_Scenario2()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Intel_2.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_Intel_2.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -73,7 +73,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromIntelSystems_Scenario3()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Intel_3.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_Intel_3.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -101,7 +101,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromAMDSystems_Scenario1()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_AMD.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_AMD.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -129,7 +129,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromAMDSystems_Scenario2()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_AMD_Milan.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_AMD_Milan.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -157,7 +157,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromAmpereSystems_Scenario1()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Ampere.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_Ampere.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
@@ -184,7 +184,7 @@ namespace VirtualClient.Contracts
         [Test]
         public void CoreInfoParserParsesTheExpectedResultsFromAmpereSystems_Scenario2()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "CoreInfo", "CoreInfo_Results_Ampere_2.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(CoreInfoParserTests), "Examples", "CoreInfo", "CoreInfo_Results_Ampere_2.txt"));
             CoreInfoParser parser = new CoreInfoParser(results);
             CpuInfo info = parser.Parse();
 
