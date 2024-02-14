@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Dependencies
+namespace VirtualClient.Dependencies
 {
     using System;
     using System.Collections.Generic;
