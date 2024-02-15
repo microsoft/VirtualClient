@@ -45,10 +45,9 @@ namespace VirtualClient
                 throw new FileNotFoundException("Could not locate profiles.");
             }
 
-            // Set the path to the directory where you want to change file encodings
-            string directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
 
-            // Get the first two .cs files with UTF-8 BOM in the specified directory and its subdirectories
+            // *.cs files
+            string directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
             var fileList = new DirectoryInfo(directoryPath)
                 .GetFiles("*.cs", SearchOption.AllDirectories)
                 .Where(file =>
@@ -68,7 +67,55 @@ namespace VirtualClient
                     }
                 }).ToList();
 
-            Assert.AreEqual(0, fileList.Count, $"You have files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
+            Assert.AreEqual(0, fileList.Count, $"You have *.cs files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
+                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
+
+            // *.json files
+            directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
+            fileList = new DirectoryInfo(directoryPath)
+                .GetFiles("*.json", SearchOption.AllDirectories)
+                .Where(file =>
+                {
+                    using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                    {
+                        if (fileStream.Length >= 3)
+                        {
+                            byte[] buffer = new byte[3];
+                            fileStream.Read(buffer, 0, 3);
+
+                            // Check if the first three bytes match the UTF-8 BOM
+                            return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
+                        }
+
+                        return false;
+                    }
+                }).ToList();
+
+            Assert.AreEqual(0, fileList.Count, $"You have *.json files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
+                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
+
+            // *.md files
+            directoryPath = Path.Combine(currentDirectory.FullName);
+            fileList = new DirectoryInfo(directoryPath)
+                .GetFiles("*.md", SearchOption.AllDirectories)
+                .Where(file =>
+                {
+                    using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                    {
+                        if (fileStream.Length >= 3)
+                        {
+                            byte[] buffer = new byte[3];
+                            fileStream.Read(buffer, 0, 3);
+
+                            // Check if the first three bytes match the UTF-8 BOM
+                            return (buffer[0] == 0xEF && buffer[1] == 0xBB && buffer[2] == 0xBF);
+                        }
+
+                        return false;
+                    }
+                }).ToList();
+
+            Assert.AreEqual(0, fileList.Count, $"You have *.md files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
                 $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
         }
     }

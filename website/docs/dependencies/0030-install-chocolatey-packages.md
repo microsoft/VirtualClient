@@ -1,4 +1,4 @@
-﻿# Installation Chocolatey Packages
+# Installation Chocolatey Packages
 Install packages available in Chocolatey Package in Windows.
 
 - [Chocolatey Official Page](https://chocolatey.org/)

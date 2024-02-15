@@ -1,4 +1,4 @@
-﻿# ApacheBench Workload Profiles
+# ApacheBench Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the ApacheBench workload.  
 
 * [Workload Details](./apachebench.md)  

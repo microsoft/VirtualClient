@@ -1,4 +1,4 @@
-﻿# OpenSSL Workload Profiles
+# OpenSSL Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the OpenSSL speed workload.  
 
 * [Workload Details](./openssl.md)  

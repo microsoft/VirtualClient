@@ -1,4 +1,4 @@
-﻿# LAPACK Workload Profiles
+# LAPACK Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the LAPACK workload.  
 
 * [Workload Details](./lapack.md)  

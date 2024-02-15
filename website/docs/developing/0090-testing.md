@@ -1,4 +1,4 @@
-﻿# Testing Practices
+# Testing Practices
 The following standards and practices that the Virtual Client team employs when adding new features to the platform. It is expected that developers
 adding features to the application are also adding programmatic tests at the same time. This enables a rapid inner development process at the same time
 as it helps the team to preserve the quality of the application over time as the codebase grows.

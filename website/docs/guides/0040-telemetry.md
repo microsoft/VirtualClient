@@ -1,4 +1,4 @@
-﻿# Data/Telemetry Support
+# Data/Telemetry Support
 The Virtual Client emits a range of different types of data/telemetry as part of the execution of workload and monitoring
 profiles. This data/telemetry might for example include measurements/metrics emitted by a particular workload, performance counters
 or just common tracing/logging output. This data is useful for using the Virtual Client as a platform for evaluating performance
