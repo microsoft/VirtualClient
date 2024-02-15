@@ -1,4 +1,4 @@
-﻿# Azure Storage Account Integration
+# Azure Storage Account Integration
 Virtual Client supports a few different types of Azure Blob stores that can be used as part of a workload profile execution. This documentation
 covers how to supply those blob stores to the Virtual Client on the command line as well as how to use them in Virtual Client codebase.
   

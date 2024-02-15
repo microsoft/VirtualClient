@@ -1,4 +1,4 @@
-﻿# Install Java JDK
+# Install Java JDK
 The Java JDK Virtual Client uses is [Microsoft Build of OpenJDK](https://docs.microsoft.com/en-us/java/openjdk/download).
 
 :::info

@@ -1,4 +1,4 @@
-﻿# LMbench
+# LMbench
 LMbench (version 3) is a suite of simple, portable benchmarks ANSI/C microbenchmarks for UNIX/POSIX. In general, it measures two key 
 features: component bandwidth and latency. LMbench is intended to provide system developers insights into basic performance and costs 
 of key system operations.

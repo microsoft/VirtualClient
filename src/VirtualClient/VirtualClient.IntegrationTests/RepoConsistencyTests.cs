@@ -30,7 +30,6 @@ namespace VirtualClient
             // Set the path to the directory where you want to change file encodings
             string directoryPath = @"E:\Source\Github\VirtualClient\src\VirtualClient";
 
-            // Get the first two .cs files with UTF-8 BOM in the specified directory and its subdirectories
             var fileList = new DirectoryInfo(directoryPath)
                 .GetFiles("*.json", SearchOption.AllDirectories)
                 .Where(file =>

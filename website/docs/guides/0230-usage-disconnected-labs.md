@@ -1,3 +1,3 @@
-﻿# Disconnected Scenarios Support
+# Disconnected Scenarios Support
 
 Comming Soon

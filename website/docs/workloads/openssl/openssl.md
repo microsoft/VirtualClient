@@ -1,4 +1,4 @@
-﻿# OpenSSL
+# OpenSSL
 OpenSSL 3.0 is an open-source industry standard transport layer security (TLS, SSL) toolset. The OpenSSL toolset includes a feature/command (openssl speed) that enables measuring
 the performance of the CPU in processing operations associated with various cryptography/encryption algorithms supported by the toolset (e.g. md5, sha1, sha256, aes-256-cbc).
 
