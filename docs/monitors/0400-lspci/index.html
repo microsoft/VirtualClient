@@ -9,7 +9,7 @@
 
 
 <link rel="search" type="application/opensearchdescription+xml" title="Virtual Client Platform" href="/VirtualClient/opensearch.xml"><link rel="stylesheet" href="/VirtualClient/assets/css/styles.9af2558c.css">
-<script src="/VirtualClient/assets/js/runtime~main.3a428399.js" defer="defer"></script>
+<script src="/VirtualClient/assets/js/runtime~main.4411aeb7.js" defer="defer"></script>
 <script src="/VirtualClient/assets/js/main.5ee6f4a4.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
@@ -34,7 +34,7 @@ configuration registers and several utilities based on this library.</p>
 <h2 id="lspci-output-description">lspci Output Description</h2>
 <p>The following section describes the various counters/metrics that are available with the lspci toolset.</p>
 <p>The command we are using is <code>lspci -vvv</code>. The data structure of the lspci output is not a straightforward dicctionary.
-The data structure is parsed according to the contract at <a target="_blank" href="/VirtualClient/assets/files/PciDevice-28b998461800228f096c80fc2fb2d794.cs">PciDevice.cs</a>.</p>
+The data structure is parsed according to the contract at <a target="_blank" href="/VirtualClient/assets/files/PciDevice-ba08be1dc159cbe061efdc1bfd4ae48b.cs">PciDevice.cs</a>.</p>
 <p>For each PCI device, we are parsing the name, address, various properties and capabilities.</p>
 <h3 id="example">Example</h3>
 <p>This is an example of the minimum profile to run LspciMonitor. The PCI devices is not expected to change often, so the monitor frequency could be set very low.</p>
