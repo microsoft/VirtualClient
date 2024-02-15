@@ -18,21 +18,39 @@ namespace VirtualClient
     using VirtualClient.Contracts;
 
     [TestFixture]
-    [Category("Integration")]
+    [Category("UnitTests")]
     public class RepoConsistencyTests
     {
         /// <summary>
-        /// This test converts files with utf-8-bom to utf-8. Modify to convert from any encoding to any other encoding.
+        /// This test detects 
         /// </summary>
         [Test]
-        public void ChangeFilesToUtf8()
+        public void DetectUtf8EncodingInCSharp()
         {
+            DirectoryInfo currentDirectory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            bool repoRootFound = false;
+            while (currentDirectory != null)
+            {
+                if (currentDirectory.GetDirectories(".git")?.Any() == true)
+                {
+                    repoRootFound = true;
+                    break;
+                }
+
+                currentDirectory = currentDirectory.Parent;
+            }
+
+            if (!repoRootFound)
+            {
+                throw new FileNotFoundException("Could not locate profiles.");
+            }
+
             // Set the path to the directory where you want to change file encodings
-            string directoryPath = @"E:\Source\Github\VirtualClient\src\VirtualClient";
+            string directoryPath = Path.Combine(currentDirectory.FullName, "src", "VirtualClient");
 
             // Get the first two .cs files with UTF-8 BOM in the specified directory and its subdirectories
             var fileList = new DirectoryInfo(directoryPath)
-                .GetFiles("*.json", SearchOption.AllDirectories)
+                .GetFiles("*.cs", SearchOption.AllDirectories)
                 .Where(file =>
                 {
                     using (FileStream fileStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
@@ -50,16 +68,8 @@ namespace VirtualClient
                     }
                 }).ToList();
 
-            // Change the encoding of each file from UTF-8 BOM to UTF-8
-            foreach (var file in fileList)
-            {
-                string content = File.ReadAllText(file.FullName);
-                
-                File.WriteAllText(file.FullName, content, new UTF8Encoding(false));
-                Console.WriteLine($"Converted {file.FullName} to UTF-8");
-            }
-
-            Console.WriteLine("Encoding conversion completed.");
+            Assert.AreEqual(0, fileList.Count, $"You have files in encoding utf-8 with BOM: {string.Join(',', fileList)}. " +
+                $"You could manually convert them or use the integrationtests in VirtualClient.IntegrationTests.RepoConsistencyTests");
         }
     }
 }
