@@ -28,8 +28,8 @@ namespace VirtualClient.Actions
     public class MetaseqExecutor : VirtualClientComponent
     {
         private const string RunScript = "run_training.sh";
-        private string apptainerImageName;
-        private string hostFileName;
+        private const string HostFileName = "hostfile.txt";
+        private string apptainerImageName;        
 
         private IFileSystem fileSystem;
         private IPackageManager packageManager;
@@ -48,6 +48,8 @@ namespace VirtualClient.Actions
             this.packageManager = this.systemManager.PackageManager;
             this.stateManager = this.systemManager.StateManager;
             this.fileSystem = this.systemManager.FileSystem;
+
+            this.apptainerImageName = $"metaseq_{this.ApptainerImageVersion}.sif";
         }
 
         /// <summary>
@@ -114,7 +116,7 @@ namespace VirtualClient.Actions
             using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
             {
                 string apptainerImagePath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, this.apptainerImageName);
-                string hostFilePath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, this.hostFileName);
+                string hostFilePath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, MetaseqExecutor.HostFileName);
                 string runScriptPath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, MetaseqExecutor.RunScript);
 
                 string commandArguments = $"{apptainerImagePath} {hostFilePath} {this.TrainingScript}";
@@ -140,11 +142,7 @@ namespace VirtualClient.Actions
         /// </summary>
         protected override async Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            this.apptainerImageName = $"metaseq_{this.ApptainerImageVersion}.sif";
-            this.hostFileName = "hostfile.txt";
-
             await this.ValidateHostnames(telemetryContext, cancellationToken);
-            await this.PrepareHostFile();
 
             MetaseqState state = await this.stateManager.GetStateAsync<MetaseqState>($"{nameof(MetaseqState)}", cancellationToken)
                 ?? new MetaseqState();
@@ -189,12 +187,14 @@ namespace VirtualClient.Actions
 
         private async Task ValidateHostnames(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(this.Hostnames))
+            string lineSeparatedHosts = this.Hostnames.Replace(',', '\n');
+            string hostFilePath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, MetaseqExecutor.HostFileName);
+            List<string> hostList = this.Hostnames.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            if (hostList.Count == 0)
             {
                 throw new WorkloadException($"Hostnames can not be empty. Currently it is: {this.Hostnames}");
-            }
-
-            List<string> hostList = this.Hostnames.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            }            
 
             foreach (string host in hostList)
             {
@@ -207,20 +207,8 @@ namespace VirtualClient.Actions
                     process.ThrowIfWorkloadFailed($"Host - {host} is not reachable.");
                 }
             }
-        }
 
-        private async Task PrepareHostFile()
-        {
-            List<string> hostList = this.Hostnames.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-            string hostFilePath = this.PlatformSpecifics.Combine(this.MetaseqDirectory, this.hostFileName);
-
-            using (StreamWriter writer = new StreamWriter(hostFilePath))
-            {
-                foreach (string host in hostList)
-                {
-                    await writer.WriteLineAsync(host);
-                }
-            }
+            await this.fileSystem.File.WriteAllTextAsync(hostFilePath, lineSeparatedHosts);
         }
 
         private async Task ConfigureNVMeDisksForLogs(EventContext telemetryContext, CancellationToken cancellationToken)
@@ -248,7 +236,7 @@ namespace VirtualClient.Actions
             await this.WrapExecuteCommandAsync("mount", "/dev/md128 /mnt/resource_nvme", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
-            await this.WrapExecuteCommandAsync("chmod", "777", Environment.CurrentDirectory, telemetryContext, cancellationToken)
+            await this.WrapExecuteCommandAsync("chmod", "777 /mnt/resource_nvme", Environment.CurrentDirectory, telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
         }
 
