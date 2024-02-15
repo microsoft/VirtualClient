@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Proxy
+namespace VirtualClient.Proxy
 {
     using System.Collections.Generic;
     using System.Linq;

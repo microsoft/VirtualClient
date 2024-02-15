@@ -1,3 +1,3 @@
-﻿using VirtualClient.Contracts;
+using VirtualClient.Contracts;
 
 [assembly: VirtualClientComponentAssembly]

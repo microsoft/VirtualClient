@@ -1,4 +1,4 @@
-﻿{
+{
     "Description": "OpenFOAM CPU Performance workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "02:00:00",

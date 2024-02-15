@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 // in opensoruce to download redis from apt package manager. 
 namespace VirtualClient.Dependencies

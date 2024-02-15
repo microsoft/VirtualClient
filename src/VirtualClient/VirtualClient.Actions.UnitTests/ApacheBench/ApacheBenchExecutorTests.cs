@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Actions.ApacheBench
+namespace VirtualClient.Actions.ApacheBench
 {
     using Microsoft.Extensions.Logging;
     using Moq;
