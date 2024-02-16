@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Graph500\Graph500ResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "Graph500", "Graph500ResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new Graph500MetricsParser(this.rawText);
         }
@@ -104,7 +104,7 @@ namespace VirtualClient.Actions
         public void Graph500ParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectGraph500outputPath = Path.Combine(workingDirectory, @"Examples\Graph500\Graph500IncorrectResultsExample.txt");
+            string IncorrectGraph500outputPath = Path.Combine(workingDirectory, "Examples", "Graph500", "Graph500IncorrectResultsExample.txt");
             this.rawText = File.ReadAllText(IncorrectGraph500outputPath);
             this.testParser = new Graph500MetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());

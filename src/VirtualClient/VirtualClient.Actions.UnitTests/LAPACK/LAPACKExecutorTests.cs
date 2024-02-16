@@ -155,7 +155,7 @@ namespace VirtualClient.Actions
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\LAPACK\LAPACKResultsExample.txt");
+            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "LAPACK", "LAPACKResultsExample.txt");
             this.rawString = File.ReadAllText(resultsPath);
 
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

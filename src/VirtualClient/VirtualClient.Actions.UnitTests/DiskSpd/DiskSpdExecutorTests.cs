@@ -46,7 +46,7 @@ namespace VirtualClient.Actions.DiskPerformance
             };
 
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-ReadWrite.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt");
             this.output = File.ReadAllText(outputPath);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

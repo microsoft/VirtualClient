@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(@"Examples\ScriptExecutor\validJsonExample.json");
+            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
         }
 
         [Test]

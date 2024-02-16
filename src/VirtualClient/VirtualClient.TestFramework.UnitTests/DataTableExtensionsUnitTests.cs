@@ -18,7 +18,7 @@ namespace VirtualClient
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string gbOutputPath = Path.Combine(workingDirectory, @"Examples\DiskSpdExample.txt");
+            string gbOutputPath = Path.Combine(workingDirectory, "Examples", "DiskSpdExample.txt");
             this.diskSpdResultRawText = File.ReadAllText(gbOutputPath);
         }
 

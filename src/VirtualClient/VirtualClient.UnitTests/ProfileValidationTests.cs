@@ -75,7 +75,7 @@ namespace VirtualClient.UnitTests
                 throw new FileNotFoundException("Could not locate profiles.");
             }
 
-            string pathToProfiles = Path.Combine(currentDirectory.FullName, @"src\VirtualClient\VirtualClient.Main\profiles");
+            string pathToProfiles = Path.Combine(currentDirectory.FullName, "src", "VirtualClient", "VirtualClient.Main", "profiles");
             IEnumerable<string> files = Directory.GetFiles(pathToProfiles, "*.json");
 
             foreach (string file in Directory.GetFiles(pathToProfiles, "*.json"))
