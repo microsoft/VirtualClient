@@ -3,6 +3,7 @@
 
 namespace VirtualClient.Actions
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -31,6 +32,13 @@ namespace VirtualClient.Actions
             {
                 Assert.Fail($"One or more of the expected OpenSSL results file examples is missing. {exc.Message}");
             }
+        }
+
+        [Test]
+        public void TestTest()
+        {
+            Console.WriteLine(Path.GetDirectoryName(@"C:\1\2\3.txt"));
+            Console.WriteLine(Path.GetDirectoryName(@"/abc/a/b/c.txt"));
         }
 
         [Test]
