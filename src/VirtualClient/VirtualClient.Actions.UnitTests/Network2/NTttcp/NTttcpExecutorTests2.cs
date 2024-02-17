@@ -76,13 +76,24 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void NTttcpExecutorThrowsOnInitializationWhenProtocolIsInvalid_Unix(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.Parameters["Protocol"] = ProtocolType.Unspecified;
+
+            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            Assert.ThrowsAsync<NotSupportedException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void NTttcpExecutorThrowsOnInitializationWhenProtocolIsInvalid(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorThrowsOnInitializationWhenProtocolIsInvalid_Win(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             this.mockFixture.Parameters["Protocol"] = ProtocolType.Unspecified;
@@ -94,33 +105,41 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void NTttcpExecutorThrowsOnInitializationWhenScenarioIsEmpty(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorThrowsOnInitializationWhenScenarioIsEmpty_Unix(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = "";
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
             using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
         }
 
-        
         [Test]
-        [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
-        [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task NTttcpExecutorInitializesItsDependencyPackageAsExpected(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorThrowsOnInitializationWhenScenarioIsEmpty_Win(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
+
+            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
+        public async Task NTttcpExecutorInitializesItsDependencyPackageAsExpected_Win(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string expectedPackage = "Networking";
@@ -140,13 +159,32 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task NTttcpExecutorInitializesItsDependencyPackageAsExpected_Unix(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            string expectedPackage = "Networking";
+            this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
+                .Callback<string, CancellationToken>((actualPackage, token) =>
+                {
+                    Assert.AreEqual(expectedPackage, actualPackage);
+                })
+                .ReturnsAsync(this.mockPath);
+
+            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await component.InitializeAsync(EventContext.None, CancellationToken.None);
+
+            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
+        public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Win(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             using TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
@@ -155,7 +193,7 @@ namespace VirtualClient.Actions
             ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
             IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
 
-            if(role == ClientRole.Client)
+            if (role == ClientRole.Client)
             {
                 Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
                 Assert.AreEqual(this.ipAddress, serverIPAddress);
@@ -170,13 +208,51 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task NTttcpExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Unix(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            using TestNTttcpExecutor executor = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+            if (role == ClientRole.Client)
+            {
+                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                Assert.AreEqual(this.ipAddress, serverIPAddress);
+            }
+            else
+            {
+                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void NTttcpExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Win(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+
+            using TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+        }
+
+        [Test]
+        [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void NTttcpExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Unix(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);

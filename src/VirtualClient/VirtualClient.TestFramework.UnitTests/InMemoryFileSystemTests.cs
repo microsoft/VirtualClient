@@ -433,6 +433,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileSystemGetsTheExpectedFileByPathOnWindowsSystems()
         {
             InMemoryFileSystem fileSystem = new InMemoryFileSystem(new TestPlatformSpecifics(PlatformID.Win32NT, @"C:\any\directory"));
@@ -445,6 +446,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileSystemGetsTheExpectedFilesByPathOnWindowsSystems_RecursiveSearch()
         {
             InMemoryFileSystem fileSystem = new InMemoryFileSystem(new TestPlatformSpecifics(PlatformID.Win32NT, @"C:\any\directory"));
@@ -465,6 +467,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileSystemGetsTheExpectedFilesByPathOnWindowsSystems_RecursiveSearch_2()
         {
             InMemoryFileSystem fileSystem = new InMemoryFileSystem(new TestPlatformSpecifics(PlatformID.Win32NT, @"C:\any\directory"));
@@ -486,6 +489,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileSystemGetsTheExpectedFilesByPathOnWindowsSystems_TopDirectoryOnly()
         {
             InMemoryFileSystem fileSystem = new InMemoryFileSystem(new TestPlatformSpecifics(PlatformID.Win32NT, @"C:\any\directory"));
@@ -506,6 +510,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileSystemGetsTheExpectedFilesByPathOnWindowsSystems_TopDirectoryOnly_2()
         {
             InMemoryFileSystem fileSystem = new InMemoryFileSystem(new TestPlatformSpecifics(PlatformID.Win32NT, @"C:\any\directory"));

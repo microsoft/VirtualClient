@@ -104,7 +104,7 @@ namespace VirtualClient
             IEnumerable<string> actualDirectories = this.fileSystem.Directory.GetDirectories(@"C:\any\directory");
 
             Assert.IsNotNull(actualDirectories);
-            Assert.IsTrue(actualDirectories.Count() == 2);
+            Assert.AreEqual(2, actualDirectories.Count());
             CollectionAssert.AreEquivalent(expectedDirectories.Take(2), actualDirectories);
         }
 
@@ -283,7 +283,7 @@ namespace VirtualClient
             IEnumerable<string> actualFiles = this.fileSystem.Directory.GetFiles(@"C:\any\directory\with", "*", SearchOption.AllDirectories);
 
             Assert.IsNotNull(actualFiles);
-            Assert.IsTrue(actualFiles.Count() == 6);
+            Assert.AreEqual(6, actualFiles.Count());
             CollectionAssert.AreEquivalent(expectedFiles, actualFiles);
         }
 
@@ -310,7 +310,7 @@ namespace VirtualClient
             IEnumerable<string> actualFiles = this.fileSystem.Directory.GetFiles("/any/directory/with", "*", SearchOption.AllDirectories);
 
             Assert.IsNotNull(actualFiles);
-            Assert.IsTrue(actualFiles.Count() == 6);
+            Assert.AreEqual(6, actualFiles.Count());
             CollectionAssert.AreEquivalent(expectedFiles, actualFiles);
         }
 
@@ -337,7 +337,7 @@ namespace VirtualClient
             IEnumerable<string> actualFiles = this.fileSystem.Directory.GetFiles(@"C:\any\directory\with", "*.dll", SearchOption.AllDirectories);
 
             Assert.IsNotNull(actualFiles);
-            Assert.IsTrue(actualFiles.Count() == 4);
+            Assert.AreEqual(4, actualFiles.Count());
             CollectionAssert.AreEquivalent(expectedFiles.Skip(1).Take(2).Union(expectedFiles.Skip(4)), actualFiles);
         }
 
