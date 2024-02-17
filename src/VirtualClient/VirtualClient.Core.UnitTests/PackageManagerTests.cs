@@ -63,6 +63,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversExtensionsThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";
@@ -84,6 +85,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversExtensionsThatExistInTheDefaultPackagesDirectory()
         {
             string expectedPackageName = "package_123";
@@ -113,8 +115,8 @@ namespace VirtualClient
             Assert.IsEmpty(packages);
         }
 
-
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerSearchesForExtensionsDuringDiscoveryUsingTheExpectedSearchPriority()
         {
             // Packages that exist in the user-defined location are selected first.

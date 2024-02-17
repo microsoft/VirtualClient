@@ -16,6 +16,7 @@ namespace VirtualClient
         private InMemoryFileSystem fileSystem;
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationCreatesDirectoriesAsExpectedOnWindowsSystems()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -52,6 +53,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationDeletesDirectoriesAsExpectedOnWindowsSystems()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -84,6 +86,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationGetsTheExpectedMatchingDirectoriesOnWindowsSystems_Default()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -134,6 +137,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationGetsTheExpectedMatchingDirectoriesOnWindowsSystems_RecursiveSearch()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -184,6 +188,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationGetsTheExpectedMatchingDirectoriesOnWindowsSystems_RecursiveSearch_WithSearchPattern()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -261,6 +266,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationGetsTheExpectedMatchingFilesOnWindowsSystems_RecursiveSearch()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -315,6 +321,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryDirectoryIntegrationGetsTheExpectedMatchingFilesOnWindowsSystems_RecursiveSearch_WithSearchPattern()
         {
             this.SetupFileSystem(PlatformID.Win32NT);

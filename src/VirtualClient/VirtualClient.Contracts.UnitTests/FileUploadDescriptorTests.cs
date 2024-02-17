@@ -119,11 +119,22 @@ namespace VirtualClient.Contracts
         [Test]
         [TestCase("any/blob/path/file.txt")]
         [TestCase("/any/blob/path/file.txt")]
+        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators_2_Linux(string blobPath)
+        {
+            FileUploadDescriptor descriptor = new FileUploadDescriptor(blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
+            Assert.AreEqual("file.txt", descriptor.BlobName);
+            Assert.AreEqual("/any/blob/path/file.txt", descriptor.BlobPath);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase("any/blob/path/file.txt")]
+        [TestCase("/any/blob/path/file.txt")]
         [TestCase("any\\blob\\path\\file.txt")]
         [TestCase("\\any\\blob\\path\\file.txt")]
         [TestCase("any/blob/path\\file.txt")]
         [TestCase("\\any/blob/path\\file.txt")]
-        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators_2(string blobPath)
+        public void FileUploadDescriptorConstructorsHandleBlobPathsWithVariousPathSeparators_2_Windows(string blobPath)
         {
             FileUploadDescriptor descriptor = new FileUploadDescriptor(blobPath, "container", "utf-8", "text/plain", "/any/path/to/file.txt");
             Assert.AreEqual("file.txt", descriptor.BlobName);

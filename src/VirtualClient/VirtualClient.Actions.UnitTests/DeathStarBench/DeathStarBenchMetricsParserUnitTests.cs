@@ -56,7 +56,7 @@ namespace VirtualClient.Actions
         public void DeathStarBenchMetricsParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string incorrectDeathBenchoutputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarbenchIncorrectOutputExample.txt");
+            string incorrectDeathBenchoutputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarBenchIncorrectOutputExample.txt");
 
             this.rawText = File.ReadAllText(incorrectDeathBenchoutputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);

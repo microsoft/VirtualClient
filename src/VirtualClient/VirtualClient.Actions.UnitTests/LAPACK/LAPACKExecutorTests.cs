@@ -41,9 +41,31 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
+        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected_Linux(PlatformID platform, Architecture architecture, string binaryPath)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    return this.fixture.Process;
+                };
+
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                string expectedScriptFilePath = this.fixture.PlatformSpecifics.Combine(
+                    this.mockPath.Path, binaryPath);
+
+                Assert.AreEqual(expectedScriptFilePath, executor.ScriptFilePath);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64\\LapackTestScript.sh")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64\\LapackTestScript.sh")]
-        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected_Windows(PlatformID platform, Architecture architecture, string binaryPath)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
