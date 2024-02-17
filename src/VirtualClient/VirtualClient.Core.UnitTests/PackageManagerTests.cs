@@ -144,6 +144,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversPackagesThatExistInAUserDefinedLocation()
         {
             string expectedPackageName = "package_123";
@@ -181,6 +182,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerSearchesForPackagesDuringDiscoveryUsingTheExpectedSearchPriority()
         {
             // Packages that exist in the user-defined location are selected first.
@@ -220,6 +222,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerCanFindPackagesThatAreAlreadyRegistered()
         {
             string expectedPackageName = "package_987";
@@ -326,6 +329,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsDependencyPackagesToTheExpectedLocation_CustomInstallationPathProvided()
         {
             this.SetupDependencyPackageInstallationDefaultMockBehaviors();

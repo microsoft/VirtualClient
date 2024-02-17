@@ -334,10 +334,25 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheServerRole_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+
+            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.IsTrue(!component.IsNTttcpClientExecuted);
+                Assert.IsTrue(component.IsNetworkingWorkloadServerExecuted);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheServerRole(PlatformID platformID, Architecture architecture, string role)
+        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheServerRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 
@@ -352,10 +367,23 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
+        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheClientRole_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+
+            TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsTrue(component.IsNTttcpClientExecuted);
+            Assert.IsTrue(!component.IsNetworkingWorkloadServerExecuted);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
-        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheClientRole(PlatformID platformID, Architecture architecture, string role)
+        public async Task NTttcpExecutorExecutesTheExpectedLogicForTheClientRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 

@@ -23,19 +23,42 @@ namespace VirtualClient.Actions
         private string validResults;
 
         [Test]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeWorkload.exe")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeTool1.exe")]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeTool2.exe")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeWorkload.exe")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeTool1.exe")]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeTool2.exe")]
         [TestCase(PlatformID.Unix, Architecture.X64, "SomeWorkload")]
         [TestCase(PlatformID.Unix, Architecture.X64, "SomeTool1")]
         [TestCase(PlatformID.Unix, Architecture.X64, "SomeTool2")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "SomeWorkload")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "SomeTool1")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "SomeTool2")]
-        public async Task ExampleWorkloadExecutorVerifiesTheExpectedWorkloadPackageBinaryDependencies(PlatformID platform, Architecture architecture, string expectedBinary)
+        public async Task ExampleWorkloadExecutorVerifiesTheExpectedWorkloadPackageBinaryDependencies_Linux(PlatformID platform, Architecture architecture, string expectedBinary)
+        {
+            this.SetupDefaultBehaviors(platform, architecture);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                // The expected workload files are verified to exist in the package
+                // on the file system. Similarly to the Moq/mock framework we use, we enable a set of 
+                // delegates/actions that can be setup and invoked to confirm certain behaviors.
+                HashSet<string> filesConfirmed = new HashSet<string>();
+                this.fixture.FileSystem.OnFileExists = (filePath) => filesConfirmed.Add(filePath);
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                DependencyPath platformSpecificWorkloadPath = this.fixture.ToPlatformSpecificPath(this.workloadPackage);
+                string expectedBinaryPath = this.fixture.Combine(platformSpecificWorkloadPath.Path, expectedBinary);
+
+                CollectionAssert.Contains(filesConfirmed, expectedBinaryPath);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeWorkload.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeTool1.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "SomeTool2.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeWorkload.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeTool1.exe")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "SomeTool2.exe")]
+        public async Task ExampleWorkloadExecutorVerifiesTheExpectedWorkloadPackageBinaryDependencies_Windows(PlatformID platform, Architecture architecture, string expectedBinary)
         {
             this.SetupDefaultBehaviors(platform, architecture);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -79,9 +102,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
         [TestCase(PlatformID.Unix)]
-        public void ExampleWorkloadExecutorThrowsIfTheWorkoadPackageDoesNotExist(PlatformID platform)
+        public void ExampleWorkloadExecutorThrowsIfTheWorkoadPackageDoesNotExist_Linux(PlatformID platform)
         {
             this.SetupDefaultBehaviors(platform);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -95,9 +117,24 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, "configureSystem.exe")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT)]
+        public void ExampleWorkloadExecutorThrowsIfTheWorkoadPackageDoesNotExist_Windows(PlatformID platform)
+        {
+            this.SetupDefaultBehaviors(platform);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                // Ensure there are no workload packages registered/existing on the system.
+                this.fixture.PackageManager.Clear();
+
+                DependencyException exc = Assert.ThrowsAsync<DependencyException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exc.Reason);
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix, "sudo configureSystem")]
-        public async Task ExampleWorkloadExecutorAppliesExpectedSystemSettingsOnFirstRun(PlatformID platform, string expectedCommand)
+        public async Task ExampleWorkloadExecutorAppliesExpectedSystemSettingsOnFirstRun_Linux(PlatformID platform, string expectedCommand)
         {
             this.SetupDefaultBehaviors(platform);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -115,9 +152,28 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT, "SomeWorkload.exe Run")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, "configureSystem.exe")]
+        public async Task ExampleWorkloadExecutorAppliesExpectedSystemSettingsOnFirstRun_Windows(PlatformID platform, string expectedCommand)
+        {
+            this.SetupDefaultBehaviors(platform);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                // Setup the scenario where a state object indicating the executor has run before
+                // a first time does not exist. This is how the executor determines that it has not
+                // performed a first run and thus that it needs to apply the system settings.
+                this.fixture.StateManager.Clear();
+
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsNotNull(this.fixture.ProcessManager.CommandsExecuted(expectedCommand));
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix, "SomeWorkload Run")]
-        public async Task ExampleWorkloadExecutorExecutesTheExpectedWorkloadCommand(PlatformID platform, string expectedExecutable)
+        public async Task ExampleWorkloadExecutorExecutesTheExpectedWorkloadCommand_Linux(PlatformID platform, string expectedExecutable)
         {
             this.SetupDefaultBehaviors(platform);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -130,9 +186,23 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(PlatformID.Win32NT)]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, "SomeWorkload.exe Run")]
+        public async Task ExampleWorkloadExecutorExecutesTheExpectedWorkloadCommand_Windows(PlatformID platform, string expectedExecutable)
+        {
+            this.SetupDefaultBehaviors(platform);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsNotNull(this.fixture.ProcessManager.CommandsExecuted(expectedExecutable));
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix)]
-        public void ExampleWorkloadExecutorThrowsIfTheWorkloadCommandFails(PlatformID platform)
+        public void ExampleWorkloadExecutorThrowsIfTheWorkloadCommandFails_Linux(PlatformID platform)
         {
             this.SetupDefaultBehaviors(platform);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -155,9 +225,33 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT)]
+        public void ExampleWorkloadExecutorThrowsIfTheWorkloadCommandFails_Windows(PlatformID platform)
+        {
+            this.SetupDefaultBehaviors(platform);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+                {
+                    InMemoryProcess workloadProcess = this.fixture.CreateProcess(command, arguments, workingDir);
+                    if (command.Contains("SomeWorkload"))
+                    {
+                        workloadProcess.ExitCode = 123;
+                        workloadProcess.StandardError.Append("Workload process failed");
+                    }
+
+                    return workloadProcess;
+                };
+
+                WorkloadException error = Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.WorkloadFailed, error.Reason);
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix)]
-        public void ExampleWorkloadExecutorLogsWorkloadCommandOutput(PlatformID platform)
+        public void ExampleWorkloadExecutorLogsWorkloadCommandOutput_Linux(PlatformID platform)
         {
             this.SetupDefaultBehaviors(platform);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
@@ -180,9 +274,72 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT)]
+        public void ExampleWorkloadExecutorLogsWorkloadCommandOutput_Windows(PlatformID platform)
+        {
+            this.SetupDefaultBehaviors(platform);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+                {
+                    InMemoryProcess workloadProcess = this.fixture.CreateProcess(command, arguments, workingDir);
+                    if (command.Contains("SomeWorkload"))
+                    {
+                        workloadProcess.ExitCode = 123;
+                        workloadProcess.StandardError.Append("Workload process failed");
+                    }
+
+                    return workloadProcess;
+                };
+
+                Assert.ThrowsAsync<WorkloadException>(() => executor.ExecuteAsync(CancellationToken.None));
+                var metricsLogged = this.fixture.Logger.MessagesLogged($"{nameof(ExampleWorkloadExecutor)}.WorkloadOutput");
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix)]
-        public async Task ExampleWorkloadExecutorCapturesTheExpectedWorkloadMetrics(PlatformID platform)
+        public async Task ExampleWorkloadExecutorCapturesTheExpectedWorkloadMetrics_Linux(PlatformID platform)
+        {
+            this.SetupDefaultBehaviors(platform, Architecture.X64);
+            using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                var metricsLogged = this.fixture.Logger.MessagesLogged("SomeWorkload.ScenarioResult");
+                Assert.IsNotEmpty(metricsLogged);
+                Assert.IsTrue(metricsLogged.Count() == 3);
+                Assert.IsTrue(metricsLogged.All(msg => msg.Item3 is EventContext));
+
+                IEnumerable<EventContext> metricsInfo = metricsLogged.Select(msg => msg.Item3 as EventContext);
+                
+                Assert.IsTrue(metricsInfo.Count() == 3);
+                Assert.IsTrue(metricsInfo.ElementAt(0).AreMetricsCaptured(
+                    scenarioName: "ExampleTest",
+                    metricName: "calculations/sec",
+                    toolName: "SomeWorkload",
+                    metricCategorization: string.Empty));
+
+                Assert.IsTrue(metricsInfo.ElementAt(1).AreMetricsCaptured(
+                   scenarioName: "ExampleTest",
+                   metricName: "avg. latency",
+                   toolName: "SomeWorkload",
+                   metricCategorization: string.Empty));
+
+                Assert.IsTrue(metricsInfo.ElementAt(2).AreMetricsCaptured(
+                   scenarioName: "ExampleTest",
+                   metricName: "score",
+                   toolName: "SomeWorkload",
+                   metricCategorization: string.Empty));
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT)]
+        public async Task ExampleWorkloadExecutorCapturesTheExpectedWorkloadMetrics_Windows(PlatformID platform)
         {
             this.SetupDefaultBehaviors(platform, Architecture.X64);
             using (TestExample2WorkloadExecutor executor = new TestExample2WorkloadExecutor(this.fixture))

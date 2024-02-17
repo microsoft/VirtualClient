@@ -66,9 +66,71 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
+        public async Task LAPACKExecutorExecutesWorkloadAsExpected_Linux(PlatformID platform, Architecture architecture, string binaryPath)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            {
+                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, binaryPath);
+                int executed = 0;
+
+                if(platform == PlatformID.Unix)
+                {
+                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                    {
+                        if (arguments == "make")
+                        {
+                            executed++;
+                        }
+                        else if (arguments == "bash " + expectedFilePath)
+                        {
+                            executed++;
+                            executor.ResultsFilePath = resultsPath;
+                        }
+                        return this.fixture.Process;
+                    };
+
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                }
+                else if(platform == PlatformID.Win32NT)
+                {
+                    string expectedCommand = this.fixture.PlatformSpecifics.Combine("C:", "cygwin64", "bin", "bash");
+                    string packageDir = Regex.Replace(expectedFilePath, @"\\", "/");
+                    packageDir = Regex.Replace(packageDir, @":", string.Empty);
+
+                    string expectedmakeCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./cmakescript.sh'";
+                    string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./LapackTestScript.sh'";
+
+                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                    {
+                        if (arguments == expectedmakeCommandArguments)
+                        {
+                            executed++;
+                        }
+                        else if (arguments == executeScriptCommandArguments)
+                        {
+                            executed++;
+                            executor.ResultsFilePath = resultsPath;
+                        }
+                        return this.fixture.Process;
+                    };
+
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                }
+
+                Assert.AreEqual(2, executed);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
-        public async Task LAPACKExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        public async Task LAPACKExecutorExecutesWorkloadAsExpected_Windows(PlatformID platform, Architecture architecture, string binaryPath)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
