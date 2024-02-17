@@ -64,6 +64,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task LatteServerExecutorExecutesAsExpected()
         {
             NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor networkingWorkloadExecutor = new NetworkingWorkloadExecutorTests.TestNetworkingWorkloadExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);

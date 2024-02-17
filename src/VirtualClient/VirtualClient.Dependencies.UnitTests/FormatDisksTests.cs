@@ -199,6 +199,7 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task FormatDisksWillAttemptToFormatOnlyDisksThatHaveNotAlreadyBeenFormatted()
         {
             this.SetupDefaultMockBehaviors();

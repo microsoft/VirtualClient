@@ -166,6 +166,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerDiscoversPackagesThatExistInTheDefaultPackagesDirectory()
         {
             string expectedPackageName = "package_123";
@@ -567,6 +568,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsProfileExtensionsToTheExpectedLocation()
         {
             string profileExtensionsPath = this.mockFixture.Combine(
@@ -591,6 +593,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task PackageManagerInstallsBinaryExtensionsToTheExpectedLocation()
         {
             string binaryExtensionsPath = this.mockFixture.ToPlatformSpecificPath(
