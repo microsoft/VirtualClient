@@ -20,6 +20,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
     [TestFixture]
     [Category("Unit")]
+    [Platform(Exclude = "Unix,Linux,MacOsX")]
     public class DiskSpdExecutorTests
     {
         private DependencyFixture fixture;

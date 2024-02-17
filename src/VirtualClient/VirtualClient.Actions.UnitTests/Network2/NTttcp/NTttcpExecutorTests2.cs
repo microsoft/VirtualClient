@@ -265,13 +265,28 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void NTttcpExecutorThrowsIfAnUnsupportedRoleIsSupplied_Unix(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            string agentId = $"{Environment.MachineName}-Other";
+            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+
+            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void NTttcpExecutorThrowsIfAnUnsupportedRoleIsSupplied(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorThrowsIfAnUnsupportedRoleIsSupplied_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
@@ -287,13 +302,26 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void NTttcpExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined_Unix(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            using (TestNTttcpExecutor component = new TestNTttcpExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void NTttcpExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined(PlatformID platformID, Architecture architecture, string role)
+        public void NTttcpExecutorExecutesTheExpectedLogicWhenASpecificRoleIsNotDefined_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();

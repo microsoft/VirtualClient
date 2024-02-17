@@ -36,6 +36,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(null)]
         [TestCase("")]
         [TestCase("  ")]
@@ -49,6 +50,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void FileUploadDescriptorConstructorsSetPropertiesToExpectedValues()
         {
             string expectedBlobName = "file.log";
@@ -129,6 +131,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void FileUploadDescriptorObjectsAreJsonSerializable()
         {
             FileUploadDescriptor instance2 = new FileUploadDescriptor("Path", "Container", "utf-8", "text/plain", "C:\\any\\file.log");
@@ -136,6 +139,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void FileUploadDescriptorObjectsAreJsonSerializable_WithManifest()
         {
             IDictionary<string, IConvertible> manifest = new Dictionary<string, IConvertible>
@@ -243,6 +247,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void ToBlobDescriptorCreatesTheExpectedDescriptor_1()
         {
             string expectedBlobPath = "/any/path/to/blob/file.log";
@@ -261,6 +266,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase("any/blob/path/file.txt")]
         [TestCase("/any/blob/path/file.txt")]
         [TestCase("any\\blob\\path\\file.txt")]
@@ -285,6 +291,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase("blob01")]
         [TestCase("/blob01")]
         [TestCase("blob01/")]
@@ -310,6 +317,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void ToBlobManifestDescriptorCreatesTheExpectedManifestDescriptor_1()
         {
             string blobPath = "/any/path/to/blob/file.log";
@@ -350,6 +358,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase("any/blob/path/file.txt")]
         [TestCase("/any/blob/path/file.txt")]
         [TestCase("any\\blob\\path\\file.txt")]
@@ -395,6 +404,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase("blob01")]
         [TestCase("/blob01")]
         [TestCase("blob01/")]

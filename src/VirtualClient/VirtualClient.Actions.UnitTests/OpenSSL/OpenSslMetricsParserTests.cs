@@ -35,13 +35,6 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public void TestTest()
-        {
-            Console.WriteLine(Path.GetDirectoryName(@"C:\1\2\3.txt"));
-            Console.WriteLine(Path.GetDirectoryName(@"/abc/a/b/c.txt"));
-        }
-
-        [Test]
         public void OpenSslParserParsesResultsCorrectly_SingleCipher_Scenario()
         {
             /* In this scenario, we are evaluating a single cipher as well as all byte buffer sizes.
