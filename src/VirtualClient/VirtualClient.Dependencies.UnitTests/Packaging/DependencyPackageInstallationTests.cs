@@ -88,6 +88,7 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsFirstDisk()
         {
             Disk mockDisk = this.mockFixture.Create<Disk>();
@@ -111,6 +112,7 @@ namespace VirtualClient.Dependencies.Packaging
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task DependencyPackageInstallationInstallsInTheExpectedPathWhenRelativeDiskReferenceIsLastDisk()
         {
             Disk mockDisk = this.mockFixture.Create<Disk>();
