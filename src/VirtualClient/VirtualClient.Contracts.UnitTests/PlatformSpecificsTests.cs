@@ -16,6 +16,7 @@ namespace VirtualClient.Contracts
         private static Assembly dllAssembly = Assembly.GetAssembly(typeof(DependencyPathTests));
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void FundamentalPathsMatchExpectedPaths()
         {
             PlatformSpecifics platformSpecifics = new PlatformSpecifics(PlatformID.Win32NT, Architecture.X64);

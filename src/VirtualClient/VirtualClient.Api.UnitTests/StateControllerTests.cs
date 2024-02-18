@@ -57,6 +57,7 @@ namespace VirtualClient.Api
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task StateControllerCreatesTheExpectedStateInstance()
         {
             string expectedStateId = "teststate";

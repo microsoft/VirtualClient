@@ -27,8 +27,29 @@ namespace VirtualClient.Actions.CpuPerformance
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/bin/openssl")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/bin/openssl")]
+        public async Task OpenSslExecutorInitializesDependenciesAsExpected_Linux(PlatformID platform, Architecture architecture, string binaryPath)
+        {
+            this.SetupDefaultBehaviors(platform, architecture);
+
+            using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
+            {
+                Assert.IsNull(executor.ExecutablePath);
+
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                DependencyPath expectedWorkloadPackage = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platform, architecture);
+                Assert.IsTrue(expectedWorkloadPackage.Equals(executor.Package));
+
+                string expectedWorkloadExecutablePath = Path.Combine(this.mockPackage.Path, binaryPath);
+                Assert.IsTrue(PlatformAgnosticPathComparer.Instance.Equals(expectedWorkloadExecutablePath, executor.ExecutablePath));
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64\\bin\\openssl.exe")]
-        public async Task OpenSslExecutorInitializesDependenciesAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        public async Task OpenSslExecutorInitializesDependenciesAsExpected_Windows(PlatformID platform, Architecture architecture, string binaryPath)
         {
             this.SetupDefaultBehaviors(platform, architecture);
 
@@ -100,9 +121,25 @@ namespace VirtualClient.Actions.CpuPerformance
 
         [Test]
         [TestCase(PlatformID.Unix, "openssl speed -multi [0-9]+ -elapsed -seconds 100 aes-256-cbc")]
+
+        public async Task OpenSslExecutorExecutesTheExpectedOpenSslCommand_Linux(PlatformID platform, string expectedCommand)
+        {
+            this.SetupDefaultBehaviors(platform);
+
+            using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                Assert.IsTrue(this.fixture.ProcessManager.CommandsExecuted(expectedCommand));
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, "openssl.exe speed -elapsed -seconds 100 aes-256-cbc")]
 
-        public async Task OpenSslExecutorExecutesTheExpectedOpenSslCommand(PlatformID platform, string expectedCommand)
+        public async Task OpenSslExecutorExecutesTheExpectedOpenSslCommand_Win(PlatformID platform, string expectedCommand)
         {
             this.SetupDefaultBehaviors(platform);
 
@@ -118,8 +155,48 @@ namespace VirtualClient.Actions.CpuPerformance
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64)]
         [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public async Task OpenSslExecutorSetsExpectedEnvironmentVariablesRequiredToExecuteTheWorkloadBinary_Linux(PlatformID platform, Architecture architecture)
+        {
+            this.SetupDefaultBehaviors(platform, architecture);
+
+            using (TestOpenSslExecutor executor = new TestOpenSslExecutor(this.fixture))
+            {
+                await executor.ExecuteAsync(CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                DependencyPath expectedPackagePath = this.fixture.PlatformSpecifics.ToPlatformSpecificPath(this.mockPackage, platform, architecture);
+                IProcessProxy workloadProcess = this.fixture.ProcessManager.Processes.Last();
+
+                bool environmentVariablesSet = false;
+                if (platform == PlatformID.Unix)
+                {
+                    // On Linux systems, the OpenSSL toolset needs to know where to find the engine
+                    // libraries. The LD_LIBRARY_PATH environment variable provides the location.
+                    Assert.IsTrue(workloadProcess.EnvironmentVariables.ContainsKey("LD_LIBRARY_PATH"));
+                    Assert.AreEqual(this.fixture.PlatformSpecifics.Combine(expectedPackagePath.Path, "lib64"), workloadProcess.EnvironmentVariables["LD_LIBRARY_PATH"]);
+
+                    environmentVariablesSet = true;
+                }
+                else if (platform == PlatformID.Win32NT)
+                {
+                    // The OpenSSL toolset used was compiled using the Visual Studio C++ compiler. The binary
+                    // produced has a dependency on the Visual Studio C++ runtime. The binaries required are
+                    // in the OpenSSL package. We reference them by adding an entry to the Windows 'Path'
+                    // environment variable.
+                    Assert.IsTrue(workloadProcess.EnvironmentVariables.ContainsKey("Path"));
+                    Assert.IsTrue(workloadProcess.EnvironmentVariables["Path"].EndsWith(this.fixture.PlatformSpecifics.Combine(expectedPackagePath.Path, "vcruntime")));
+
+                    environmentVariablesSet = true;
+                }
+
+                Assert.IsTrue(environmentVariablesSet);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
-        public async Task OpenSslExecutorSetsExpectedEnvironmentVariablesRequiredToExecuteTheWorkloadBinary(PlatformID platform, Architecture architecture)
+        public async Task OpenSslExecutorSetsExpectedEnvironmentVariablesRequiredToExecuteTheWorkloadBinary_Windows(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultBehaviors(platform, architecture);
 

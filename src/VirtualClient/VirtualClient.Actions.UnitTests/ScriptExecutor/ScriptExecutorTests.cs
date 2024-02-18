@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(@"Examples\ScriptExecutor\validJsonExample.json");
+            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
         }
 
         [Test]
@@ -106,8 +106,42 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Win32NT, @"\win-x64\")]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        public void ScriptExecutorMovesTheLogFilesToCorrectDirectory_Win(PlatformID platform, string platformSpecificPath)
+        {
+            this.SetupDefaultBehavior(platform);
+
+            bool destinitionPathCorrect = false;
+            string logsDir = this.fixture.PlatformSpecifics.LogsDirectory.Replace(@"\", @"\\");
+
+            this.fixture.File.Setup(fe => fe.Move(It.IsAny<string>(), It.IsAny<string>(), true))
+                .Callback<string, string, bool>((sourcePath, destinitionPath, overwrite) =>
+                {
+                    string sourceFileName = Path.GetFileName(sourcePath);
+                    if (Regex.IsMatch(
+                        destinitionPath, 
+                        $"{logsDir}.{this.fixture.Parameters["ToolName"].ToString().ToLower()}.{this.fixture.Parameters["Scenario"].ToString().ToLower()}_.*{sourceFileName}"))
+                    {
+                        destinitionPathCorrect = true;
+                    }
+                    else
+                    {
+                        destinitionPathCorrect = false;
+                    }
+                });
+
+            using (TestScriptExecutor executor = new TestScriptExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, directory) => this.fixture.Process;
+
+                Assert.DoesNotThrowAsync(() => executor.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(destinitionPathCorrect, true);
+            }
+        }
+
+        [Test]
         [TestCase(PlatformID.Unix, @"/linux-x64/")]
-        public void ScriptExecutorMovesTheLogFilesToCorrectDirectory(PlatformID platform, string platformSpecificPath)
+        public void ScriptExecutorMovesTheLogFilesToCorrectDirectory_Unix(PlatformID platform, string platformSpecificPath)
         {
             this.SetupDefaultBehavior(platform);
 

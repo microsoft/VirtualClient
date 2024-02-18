@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\Compressor7zip\Compressor7zipResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "Compressor7zip", "Compressor7zipResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new Compression7zipMetricsParser(this.rawText);
         }
@@ -52,8 +52,8 @@ namespace VirtualClient.Actions
         public void Compressor7zipResultsParserThrowsWhenInvalidResultsAreProvided()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectCompressor7zipoutputPath = Path.Combine(workingDirectory, @"Examples\Compressor7zip\Compressor7zipResultsInvalidExample.txt");
-            this.rawText = File.ReadAllText(IncorrectCompressor7zipoutputPath);
+            string incorrectCompressor7zipoutputPath = Path.Combine(workingDirectory, "Examples", "Compressor7zip", "Compressor7zipResultsInvalidExample.txt");
+            this.rawText = File.ReadAllText(incorrectCompressor7zipoutputPath);
             this.testParser = new Compression7zipMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
             StringAssert.Contains("The Compressor7zip results file has incorrect data for parsing", exception.Message);

@@ -169,6 +169,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void TryMapProfileHandlesProfilesInPathsOnWindowsPlatforms()
         {
             this.fixture.Setup(PlatformID.Win32NT);

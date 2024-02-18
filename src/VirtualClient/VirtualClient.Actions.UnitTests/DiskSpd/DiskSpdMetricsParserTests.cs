@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
         public void DiskSpdParserVerifyReadWrite()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-ReadWrite.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DiskSpdMetricsParser(this.rawText);
 
@@ -133,7 +133,7 @@ namespace VirtualClient.Actions
         public void DiskSpdParserVerifyWriteOnly()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-WriteOnly.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "DiskSpdExample-WriteOnly.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DiskSpdMetricsParser(this.rawText);
 
@@ -221,7 +221,7 @@ namespace VirtualClient.Actions
         public void DiskSpdParserVerifyForCoreCountGreaterThan64WhichAddsProcessorGrouping()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\Read8k.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "Read8k.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DiskSpdMetricsParser(this.rawText);
 

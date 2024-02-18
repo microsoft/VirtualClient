@@ -97,7 +97,7 @@ namespace VirtualClient.Actions
             };
 
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\MLPerfTraining\Example_bert_real_output.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "MLPerfTraining", "Example_bert_real_output.txt");
             this.output = File.ReadAllText(outputPath);
 
             this.mockFixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

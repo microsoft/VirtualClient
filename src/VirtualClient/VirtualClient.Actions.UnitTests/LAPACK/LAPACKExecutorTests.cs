@@ -41,9 +41,31 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
+        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected_Linux(PlatformID platform, Architecture architecture, string binaryPath)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            {
+                this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                {
+                    return this.fixture.Process;
+                };
+
+                await executor.InitializeAsync(EventContext.None, CancellationToken.None)
+                    .ConfigureAwait(false);
+
+                string expectedScriptFilePath = this.fixture.PlatformSpecifics.Combine(
+                    this.mockPath.Path, binaryPath);
+
+                Assert.AreEqual(expectedScriptFilePath, executor.ScriptFilePath);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64\\LapackTestScript.sh")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64\\LapackTestScript.sh")]
-        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        public async Task LAPACKExecutorInitializesItsDependenciesAsExpected_Windows(PlatformID platform, Architecture architecture, string binaryPath)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
@@ -66,9 +88,71 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64/LapackTestScript.sh")]
         [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64/LapackTestScript.sh")]
+        public async Task LAPACKExecutorExecutesWorkloadAsExpected_Linux(PlatformID platform, Architecture architecture, string binaryPath)
+        {
+            this.SetupDefaultMockBehavior(platform, architecture);
+            using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
+            {
+                string expectedFilePath = this.fixture.PlatformSpecifics.Combine(this.mockPath.Path, binaryPath);
+                int executed = 0;
+
+                if(platform == PlatformID.Unix)
+                {
+                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                    {
+                        if (arguments == "make")
+                        {
+                            executed++;
+                        }
+                        else if (arguments == "bash " + expectedFilePath)
+                        {
+                            executed++;
+                            executor.ResultsFilePath = resultsPath;
+                        }
+                        return this.fixture.Process;
+                    };
+
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                }
+                else if(platform == PlatformID.Win32NT)
+                {
+                    string expectedCommand = this.fixture.PlatformSpecifics.Combine("C:", "cygwin64", "bin", "bash");
+                    string packageDir = Regex.Replace(expectedFilePath, @"\\", "/");
+                    packageDir = Regex.Replace(packageDir, @":", string.Empty);
+
+                    string expectedmakeCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./cmakescript.sh'";
+                    string executeScriptCommandArguments = @$"--login -c 'cd /cygdrive/{packageDir}; ./LapackTestScript.sh'";
+
+                    this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDirectory) =>
+                    {
+                        if (arguments == expectedmakeCommandArguments)
+                        {
+                            executed++;
+                        }
+                        else if (arguments == executeScriptCommandArguments)
+                        {
+                            executed++;
+                            executor.ResultsFilePath = resultsPath;
+                        }
+                        return this.fixture.Process;
+                    };
+
+                    await executor.ExecuteAsync(EventContext.None, CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                }
+
+                Assert.AreEqual(2, executed);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
-        public async Task LAPACKExecutorExecutesWorkloadAsExpected(PlatformID platform, Architecture architecture, string binaryPath)
+        public async Task LAPACKExecutorExecutesWorkloadAsExpected_Windows(PlatformID platform, Architecture architecture, string binaryPath)
         {
             this.SetupDefaultMockBehavior(platform, architecture);
             using (TestLAPACKExecutor executor = new TestLAPACKExecutor(this.fixture))
@@ -155,7 +239,7 @@ namespace VirtualClient.Actions
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(null)).Returns(false);
 
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\LAPACK\LAPACKResultsExample.txt");
+            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "LAPACK", "LAPACKResultsExample.txt");
             this.rawString = File.ReadAllText(resultsPath);
 
             this.fixture.FileSystem.Setup(rt => rt.File.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))

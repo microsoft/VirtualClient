@@ -15,6 +15,7 @@ namespace VirtualClient.Common
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void WindowsProcessManagerCreatesTheExpectedProcess_1()
         {
             string command = @"C:\users\any\temp\command.exe";
@@ -31,6 +32,7 @@ namespace VirtualClient.Common
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void WindowsProcessManagerCreatesTheExpectedProcess_2()
         {
             string command = @"C:\users\any\temp\command.exe";

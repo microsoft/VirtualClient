@@ -33,8 +33,8 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.teragenRawText = File.ReadAllText(@"Examples\Hadoop\HadoopTeragenExample.txt");
-            this.terasortRawText = File.ReadAllText(@"Examples\Hadoop\HadoopTerasortExample.txt");
+            this.teragenRawText = File.ReadAllText(Path.Combine("Examples", "Hadoop", "HadoopTeragenExample.txt"));
+            this.terasortRawText = File.ReadAllText(Path.Combine("Examples", "Hadoop", "HadoopTerasortExample.txt"));
         }
 
         [Test]

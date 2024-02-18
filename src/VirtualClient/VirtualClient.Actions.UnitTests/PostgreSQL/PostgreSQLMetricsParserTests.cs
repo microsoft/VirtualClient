@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\PostgreSQL\PostgresqlresultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "PostgreSQL", "PostgresqlresultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new PostgreSQLMetricsParser(this.rawText);
         }
@@ -47,8 +47,8 @@ namespace VirtualClient.Actions
         public void PostgreSQLParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectPostgreSQLoutputPath = Path.Combine(workingDirectory, @"Examples\PostgreSQL\PostgresqlIncorrectResultsExample.txt");
-            this.rawText = File.ReadAllText(IncorrectPostgreSQLoutputPath);
+            string incorrectPostgreSQLoutputPath = Path.Combine(workingDirectory, "Examples", "PostgreSQL", "PostgresqlIncorrectResultsExample.txt");
+            this.rawText = File.ReadAllText(incorrectPostgreSQLoutputPath);
             this.testParser = new PostgreSQLMetricsParser(this.rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());

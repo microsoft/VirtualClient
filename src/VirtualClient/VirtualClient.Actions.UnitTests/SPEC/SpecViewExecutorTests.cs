@@ -74,6 +74,7 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Win32NT, Architecture.X64)]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task SpecViewExecutorRenamedResultsDirAsExpected(PlatformID platform, Architecture architecture)
         {
             this.SetupDefaultMockBehavior(platform, architecture);

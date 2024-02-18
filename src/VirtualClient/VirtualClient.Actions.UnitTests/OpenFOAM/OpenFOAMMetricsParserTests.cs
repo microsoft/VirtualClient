@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\OpenFOAM\OpenFOAMResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "OpenFOAM", "OpenFOAMResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new OpenFOAMMetricsParser(this.rawText);
         }
@@ -51,9 +51,9 @@ namespace VirtualClient.Actions
         public void OpenFOAMResultsParserThrowsWhenInvalidResultsAreProvided()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectOpenFOAMoutputPath = Path.Combine(workingDirectory, @"Examples\OpenFOAM\OpenFOAMResultsInvalidExample.txt");
+            string incorrectOpenFOAMoutputPath = Path.Combine(workingDirectory, "Examples", "OpenFOAM", "OpenFOAMResultsInvalidExample.txt");
 
-            this.rawText = File.ReadAllText(IncorrectOpenFOAMoutputPath);
+            this.rawText = File.ReadAllText(incorrectOpenFOAMoutputPath);
             this.testParser = new OpenFOAMMetricsParser(this.rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());

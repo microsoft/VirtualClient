@@ -75,6 +75,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -89,6 +90,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -96,15 +98,15 @@ namespace VirtualClient.Actions
         public void LatteExecutorThrowsOnInitializationWhenScenarioIsEmpty(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = "";
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
             using TestLatteExecutor component = new TestLatteExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
         }
 
-        
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -127,6 +129,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -153,6 +156,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -168,6 +172,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -186,6 +191,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
@@ -202,6 +208,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         public async Task LatteExecutorExecutesTheExpectedLogicForTheServerRole(PlatformID platformID, Architecture architecture, string role)
@@ -218,6 +225,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         public async Task LatteExecutorExecutesTheExpectedLogicForTheClientRole(PlatformID platformID, Architecture architecture, string role)

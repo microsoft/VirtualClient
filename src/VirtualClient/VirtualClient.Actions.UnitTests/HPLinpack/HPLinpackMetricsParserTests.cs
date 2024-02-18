@@ -24,7 +24,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\HPLinpack\HPLResults.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLResults.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
         }
@@ -49,13 +49,14 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase(@"Examples\HPLinpack\HPLIncorrectResults.txt", @"The HPLinpack output file has incorrect format for parsing")]
-        public void HPLParserThrowIfInvalidOutput(string IncorrectHPLoutputPath, string exceptionMessage)
+        public void HPLParserThrowIfInvalidOutput()
         {
-            this.rawText = File.ReadAllText(IncorrectHPLoutputPath);
+            string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string outputPath = Path.Combine(workingDirectory, "Examples", "HPLinpack", "HPLIncorrectResults.txt");
+            this.rawText = File.ReadAllText(outputPath);
             this.testParser = new HPLinpackMetricsParser(this.rawText);
             SchemaException exception = Assert.Throws<SchemaException>(() => this.testParser.Parse());
-            StringAssert.Contains(exceptionMessage, exception.Message);
+            StringAssert.Contains("The HPLinpack output file has incorrect format for parsing", exception.Message);
         }
     }
 }

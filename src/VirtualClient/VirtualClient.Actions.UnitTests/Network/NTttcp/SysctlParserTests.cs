@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
         private static readonly string ExamplesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(SysctlParserTests)).Location),
             "Examples",
-            "Ntttcp");
+            "NTttcp");
 
         [Test]
         public void SysctlResultsParserReadsTheExpectedResultsFromParsedOutput()

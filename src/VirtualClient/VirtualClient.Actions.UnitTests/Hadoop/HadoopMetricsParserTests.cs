@@ -26,8 +26,8 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string teragenOutputPath = Path.Combine(workingDirectory, @"Examples\Hadoop\HadoopTeragenExample.txt");
-            string terasortOutputPath = Path.Combine(workingDirectory, @"Examples\Hadoop\HadoopTerasortExample.txt");
+            string teragenOutputPath = Path.Combine(workingDirectory, "Examples", "Hadoop", "HadoopTeragenExample.txt");
+            string terasortOutputPath = Path.Combine(workingDirectory, "Examples", "Hadoop", "HadoopTerasortExample.txt");
 
             this.teragentResultRawText = File.ReadAllText(teragenOutputPath);
             this.terasortResultRawText = File.ReadAllText(terasortOutputPath);
