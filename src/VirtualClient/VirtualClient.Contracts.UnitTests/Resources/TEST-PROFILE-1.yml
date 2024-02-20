@@ -1,0 +1,42 @@
+description: Test Profile Executor
+
+# The minimum interval of time for each action. If any actions
+# complete before this time interval, the runtime will wait until
+# the interval completes.
+minimum_execution_interval: 00:01:00 
+
+metadata:
+  # platform-architectures on which this profile runs.
+  supportedPlatforms: linux-x64,linux-arm64,win-x64,win-arm64
+
+parameters:
+  profilingEnabled: false
+  profilingMode: None
+
+actions:
+- type: ExampleWorkloadExecutor
+  metadata:
+    exampleMetadata1: Value1
+    exampleMetadata2: true
+  parameters:
+    scenario: Scenario1
+    commandLine: Workload --duration=00:00:15
+    exampleParameter1: AnyValue1
+    exampleParameter2: 4567
+    exampleParameter3: 789.123
+    packageName: exampleworkload
+    profilingScenario: Scenario1
+    profilingEnabled: $.Parameters.ProfilingEnabled
+    profilingMode: $.Parameters.ProfilingMode
+    profilingPeriod: 00:00:30
+    profilingWarmUpPeriod: 00:00:05
+    tags: Test,VC
+
+dependencies:
+- type: DependencyPackageInstallation
+  parameters:
+    scenario: InstallExampleWorkloadPackage
+    blobContainer: packages
+    blobName: exampleworkload.1.1.0.zip
+    packageName: exampleworkload
+    extract: true

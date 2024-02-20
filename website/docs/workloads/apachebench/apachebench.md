@@ -1,4 +1,4 @@
-﻿# ApacheBench
+# ApacheBench
 Apache Bench (ab) is a tool for benchmarking Apache Hypertext Transfer Protocol (HTTP) server. This especially shows you how many requests per second your Apache installation is capable of serving.
 
 * [Apache Bench Documentation](https://httpd.apache.org/docs/2.4/programs/ab.html)

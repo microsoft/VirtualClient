@@ -1,4 +1,4 @@
-﻿# HPLINPACK
+# HPLINPACK
 HPL stands for High Performance Linpack, is a software package that solves a (random) dense linear system in double precision (64 bits) arithmetic on distributed-memory computers. It can thus be regarded as a portable as well as freely available implementation of the High Performance Computing Linpack Benchmark. 
 
 * [HPLINPACK Offical Website](https://netlib.org/benchmark/hpl/)

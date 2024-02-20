@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Actions.ApacheBench
+namespace VirtualClient.Actions.ApacheBench
 {
     using NUnit.Framework;
     using System;
@@ -11,6 +11,8 @@
     using System.Threading.Tasks;
     using VirtualClient.Contracts;
 
+    [TestFixture]
+    [Category("Unit")]
     public class ApacheBenchMetricsParserTests
     {
         private string rawText;
@@ -20,7 +22,7 @@
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\ApacheBench\ApacheBenchResultsExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "ApacheBench", "ApacheBenchResultsExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new ApacheBenchMetricsParser(this.rawText);
         }
@@ -52,7 +54,7 @@
         public void ApacheBenchResultsParserReturnsEmptyResultWhenInvalidResultsAreProvided()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\ApacheBench\ApacheBenchResultsInvalidExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "ApacheBench", "ApacheBenchResultsInvalidExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new ApacheBenchMetricsParser(this.rawText);
             Assert.Throws<WorkloadException>(() => this.testParser.Parse());

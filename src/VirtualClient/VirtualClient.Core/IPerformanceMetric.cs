@@ -1,4 +1,4 @@
-﻿using VirtualClient.Contracts;
+using VirtualClient.Contracts;
 
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.

@@ -1,4 +1,4 @@
-﻿# Azure Event Hub Integration
+# Azure Event Hub Integration
 Azure Event Hubs is a highly scalable Azure cloud messaging hub/proxy that has out-of-the-box integration with a number of other Azure data/data 
 pipeline resources (e.g. Azure Data Explorer/Kusto, Azure Storage Account). Virtual Client allows the user to supply a connection string to an Event Hubs namespace on the command line. The remainder of this document 
 covers the requirements for using an Event Hub including the setup.

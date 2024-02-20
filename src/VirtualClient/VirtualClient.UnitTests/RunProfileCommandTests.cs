@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -38,6 +38,8 @@ namespace VirtualClient
             // directory with that name. We have to set the current working directory to ensure that relative paths
             // work as expected.
             IFileSystem fileSystem = new FileSystem();
+            this.mockFixture.Dependencies.RemoveAll<IFileSystem>();
+            this.mockFixture.Dependencies.AddSingleton<IFileSystem>(fileSystem);
             this.mockFixture.SystemManagement.SetupGet(sm => sm.FileSystem).Returns(fileSystem);
             this.mockFixture.SystemManagement.SetupGet(sm => sm.PlatformSpecifics).Returns(new TestPlatformSpecifics(
                 Environment.OSVersion.Platform,

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -15,6 +15,7 @@ namespace VirtualClient
         private InMemoryFileSystem fileSystem;
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileIntegrationCreatesFilesAsExpectedOnWindowsSystems()
         {
             this.SetupFileSystem(PlatformID.Win32NT);
@@ -53,6 +54,7 @@ namespace VirtualClient
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public void InMemoryFileIntegrationDeletesFilesAsExpectedOnWindowsSystems()
         {
             this.SetupFileSystem(PlatformID.Win32NT);

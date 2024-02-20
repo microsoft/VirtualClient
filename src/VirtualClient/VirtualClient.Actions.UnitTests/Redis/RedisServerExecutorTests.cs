@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -11,9 +11,9 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -38,7 +38,7 @@ namespace VirtualClient.Actions
                 ["Port"] = 6379,
                 ["ServerInstances"] = 1,
                 ["ServerThreadCount"] = 4,
-                ["IsTLSEnabled"] = "no"
+                ["IsTLSEnabled"] = false
             };
 
             string agentId = $"{Environment.MachineName}-Server";

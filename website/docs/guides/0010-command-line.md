@@ -1,4 +1,4 @@
-﻿# Command Line Options
+# Command Line Options
 The following sections describe the command line options available on the Virtual Client application.
 
 ## Default Command Options

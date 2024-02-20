@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -12,9 +12,9 @@ namespace VirtualClient.Actions
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
     using NUnit.Framework;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.MemcachedExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -57,7 +57,7 @@ namespace VirtualClient.Actions
 
 
         [Test]
-        public async Task MemcachedMemtierServerExecutorOnInitializationGetsExpectedPackagesLocationOnServerRole()
+        public async Task MemcachedServerExecutorOnInitializationGetsExpectedPackagesLocationOnServerRole()
         {
             using (var component = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
@@ -72,7 +72,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task MemcachedMemtierServerExecutorExecutesExpectedProcessWhenBindingToCores()
+        public async Task MemcachedServerExecutorExecutesExpectedProcessWhenBindingToCores()
         {
             using (var executor = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
@@ -98,7 +98,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task MemcachedMemtierServerExecutorExecutesExpectedProcessWhenNotBindingToCores()
+        public async Task MemcachedServerExecutorExecutesExpectedProcessWhenNotBindingToCores()
         {
             using (var executor = new TestMemcachedMemtierServerExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -232,7 +232,7 @@ namespace VirtualClient.Actions
         private static string GetFileContents(string fileName)
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @$"Examples\NTttcp\{fileName}");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "NTttcp", fileName);
             return File.ReadAllText(outputPath);
         }
     }

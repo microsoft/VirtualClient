@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -63,7 +63,7 @@ namespace VirtualClient.Actions
             this.mockFixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.mockFixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
-            this.mockResults = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"CtsTraffic", "CtsTrafficResultsExample.csv"));
+            this.mockResults = File.ReadAllText(MockFixture.GetDirectory(typeof(CtsTrafficServerExecutorTests), "Examples", @"CtsTraffic", "CtsTrafficResultsExample.csv"));
 
             this.mockFixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.mockResults);

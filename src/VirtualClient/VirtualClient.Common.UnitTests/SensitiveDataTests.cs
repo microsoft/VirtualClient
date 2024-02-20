@@ -1,4 +1,4 @@
-﻿namespace VirtualClient.Common
+namespace VirtualClient.Common
 {
     using System;
     using System.Collections.Generic;

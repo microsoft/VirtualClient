@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient
@@ -445,6 +445,26 @@ namespace VirtualClient
                 Name = "Name",
                 Description = "The logical name of a package as it should be registered on the system (e.g. anypackage.1.0.0.zip -> anypackage).",
                 ArgumentHelpName = "name",
+                AllowMultipleArgumentsPerToken = false
+            };
+
+            OptionFactory.SetOptionRequirements(option, required, defaultValue);
+
+            return option;
+        }
+
+        /// <summary>
+        /// Command line option defines the directory to which file output should be written.
+        /// </summary>
+        /// <param name="required">Sets this option as required.</param>
+        /// <param name="defaultValue">Sets the default value when none is provided.</param>
+        public static Option CreateOutputDirectoryOption(bool required = false, object defaultValue = null)
+        {
+            Option<string> option = new Option<string>(new string[] { "--output-path", "--output", "--path" })
+            {
+                Name = "OutputPath",
+                Description = "The directory to which file output should be written.",
+                ArgumentHelpName = "path",
                 AllowMultipleArgumentsPerToken = false
             };
 

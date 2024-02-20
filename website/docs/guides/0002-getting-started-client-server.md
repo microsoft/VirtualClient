@@ -1,4 +1,4 @@
-﻿# Getting Started (Client/Server)
+# Getting Started (Client/Server)
 The sections below provide an example for how to run a client/server workload. For this example, the Memtier + Redis workload will be used. It supports 2 roles (Client and Server), 
 and the roles are executed on separate systems. The following links provide more information on support for client/server workloads.
 

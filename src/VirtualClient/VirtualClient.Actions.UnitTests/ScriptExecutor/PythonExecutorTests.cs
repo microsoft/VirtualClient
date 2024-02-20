@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -26,7 +26,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(@"Examples\ScriptExecutor\validJsonExample.json");
+            this.rawText = File.ReadAllText(Path.Combine("Examples", "ScriptExecutor", "validJsonExample.json"));
         }
 
         [Test]

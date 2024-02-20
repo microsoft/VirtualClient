@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -13,6 +13,8 @@ namespace VirtualClient.Contracts
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
+    using Newtonsoft.Json.Linq;
+    using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Extensions;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts.Metadata;
@@ -73,6 +75,7 @@ namespace VirtualClient.Contracts
             this.Platform = this.systemInfo.Platform;
             this.SupportingExecutables = new List<string>();
             this.CleanupTasks = new List<Action>();
+            this.Extensions = new Dictionary<string, JToken>();
 
             if (VirtualClientRuntime.Metadata?.Any() == true)
             {
@@ -176,11 +179,16 @@ namespace VirtualClient.Contracts
         public string ExperimentId { get; }
 
         /// <summary>
+        /// Extensions defined in the profile component.
+        /// </summary>
+        public IDictionary<string, JToken> Extensions { get; }
+
+        /// <summary>
         /// True if VC should exit/crash on first/any error(s) regardless of 
         /// their severity. Default = false.
         /// </summary>
         public bool FailFast 
-        {            
+        {
             get
             {
                 return this.Parameters.GetValue<bool>(nameof(this.FailFast), this.FailFast);
@@ -276,6 +284,28 @@ namespace VirtualClient.Contracts
         }
 
         /// <summary>
+        /// Any parameters necessary for this workload action
+        /// </summary>
+        public IDictionary<string, IConvertible> Parameters { get; internal set; }
+
+        /// <summary>
+        /// True/false whether the parameters have been evaluated. Parameter evaluation allows
+        /// placeholders and well-known terms to be replaced in the values of the parameters before
+        /// execution of workloads, monitors or dependencies.
+        /// </summary>
+        public bool ParametersEvaluated { get; internal set; }
+
+        /// <summary>
+        /// The OS/system platform (e.g. Windows, Unix).
+        /// </summary>
+        public PlatformID Platform { get; }
+
+        /// <summary>
+        /// Provides OS/system platform specific information.
+        /// </summary>
+        public PlatformSpecifics PlatformSpecifics { get; }
+
+        /// <summary>
         /// Cycle/Iteration number for whole profile.
         /// </summary>
         public int ProfileIteration
@@ -298,28 +328,6 @@ namespace VirtualClient.Contracts
                 return profileIterationStartTime != null ? profileIterationStartTime.ToString() : string.Empty;
             }
         }
-
-        /// <summary>
-        /// Any parameters necessary for this workload action
-        /// </summary>
-        public IDictionary<string, IConvertible> Parameters { get; internal set; }
-
-        /// <summary>
-        /// True/false whether the parameters have been evaluated. Parameter evaluation allows
-        /// placeholders and well-known terms to be replaced in the values of the parameters before
-        /// execution of workloads, monitors or dependencies.
-        /// </summary>
-        public bool ParametersEvaluated { get; internal set; }
-
-        /// <summary>
-        /// The OS/system platform (e.g. Windows, Unix).
-        /// </summary>
-        public PlatformID Platform { get; }
-
-        /// <summary>
-        /// Provides OS/system platform specific information.
-        /// </summary>
-        public PlatformSpecifics PlatformSpecifics { get; }
 
         /// <summary>
         /// Defines true/false whether profiling is enabled.
@@ -579,6 +587,20 @@ namespace VirtualClient.Contracts
                             this.Parameters.Keys.ToDictionary(key => key, entry => this.Parameters[entry] as object).ObscureSecrets(),
                             MetadataContractCategory.Scenario,
                             replace: true);
+                    }
+
+                    // Extensions allow profile authors/developers to add extensions to components in the profile.
+                    // These extensions may be purely informational or may allow the developer to define objects that
+                    // can be deserialized into usable objects at runtime within the component logic.
+                    if (this.Extensions?.Any() == true)
+                    {
+                        foreach (var entry in this.Extensions)
+                        {
+                            this.MetadataContract.Add(
+                                this.Extensions.Keys.ToDictionary(key => key, entry => this.Extensions[entry] as object),
+                                MetadataContractCategory.ScenarioExtensions,
+                                replace: true);
+                        }
                     }
 
                     this.MetadataContract.Apply(telemetryContext);

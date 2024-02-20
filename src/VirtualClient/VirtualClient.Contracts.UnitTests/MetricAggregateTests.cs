@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -57,7 +57,7 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
-        public void MetricAggregateCalculatesAggregateValuesAsExpected_Averages()
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_Averages_1()
         {
             MetricAggregate metricAggregate = new MetricAggregate("AnyMetric", MetricAggregateType.Average)
             {
@@ -65,6 +65,19 @@ namespace VirtualClient.Contracts
             };
 
             Metric metric = metricAggregate.ToMetric();
+
+            Assert.AreEqual(500, metric.Value);
+        }
+
+        [Test]
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_Averages_2()
+        {
+            MetricAggregate metricAggregate = new MetricAggregate("AnyMetric")
+            {
+                0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000
+            };
+
+            Metric metric = metricAggregate.ToMetric(MetricAggregateType.Average);
 
             Assert.AreEqual(500, metric.Value);
         }
@@ -96,6 +109,19 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_Mins_3()
+        {
+            MetricAggregate metricAggregate = new MetricAggregate("AnyMetric")
+            {
+                2000, 1000, 100, 100, 100, 400, 500, 600, 700, 800, 900, 1000
+            };
+
+            Metric metric = metricAggregate.ToMetric(MetricAggregateType.Min);
+
+            Assert.AreEqual(100, metric.Value);
+        }
+
+        [Test]
         public void MetricAggregateCalculatesAggregateValuesAsExpected_Max_1()
         {
             MetricAggregate metricAggregate = new MetricAggregate("AnyMetric", MetricAggregateType.Max)
@@ -117,6 +143,19 @@ namespace VirtualClient.Contracts
             };
 
             Metric metric = metricAggregate.ToMetric();
+
+            Assert.AreEqual(1001, metric.Value);
+        }
+
+        [Test]
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_Max_3()
+        {
+            MetricAggregate metricAggregate = new MetricAggregate("AnyMetric")
+            {
+                1000, 100, 200, 300, 400, 1001, 1001, 1001, 600, 700, 800, 900, 1000
+            };
+
+            Metric metric = metricAggregate.ToMetric(MetricAggregateType.Max);
 
             Assert.AreEqual(1001, metric.Value);
         }
@@ -148,6 +187,19 @@ namespace VirtualClient.Contracts
         }
 
         [Test]
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_Median_3()
+        {
+            MetricAggregate metricAggregate = new MetricAggregate("AnyMetric")
+            {
+                100, 200, 300, 400, 500, 600, 700, 800
+            };
+
+            Metric metric = metricAggregate.ToMetric(MetricAggregateType.Median);
+
+            Assert.AreEqual(450, metric.Value);
+        }
+
+        [Test]
         public void MetricAggregateCalculatesAggregateValuesAsExpected_RawValue_1()
         {
             MetricAggregate metricAggregate = new MetricAggregate("AnyMetric", MetricAggregateType.Raw)
@@ -169,6 +221,20 @@ namespace VirtualClient.Contracts
             metricAggregate.Add(300);
 
             Metric metric = metricAggregate.ToMetric();
+
+            // Latest value
+            Assert.AreEqual(300, metric.Value);
+        }
+
+        [Test]
+        public void MetricAggregateCalculatesAggregateValuesAsExpected_RawValue_3()
+        {
+            MetricAggregate metricAggregate = new MetricAggregate("AnyMetric");
+            metricAggregate.Add(100);
+            metricAggregate.Add(200);
+            metricAggregate.Add(300);
+
+            Metric metric = metricAggregate.ToMetric(MetricAggregateType.Raw);
 
             // Latest value
             Assert.AreEqual(300, metric.Value);

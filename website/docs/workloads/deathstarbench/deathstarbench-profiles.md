@@ -1,4 +1,4 @@
-﻿# DeathStarBench Workload Profiles
+# DeathStarBench Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the DeathStarBench workload.  
 
 * [Workload Details](./deathstarbench.md)  

@@ -1,4 +1,4 @@
-﻿# Hadoop Terasort Workload Profiles
+# Hadoop Terasort Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the
  Hadoop Terasort workload.
 

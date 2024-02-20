@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -316,7 +316,7 @@ namespace VirtualClient.Dependencies
         public async Task NetworkConfigurationSetsTheExpectedSettingsInTheSystemConfigFile_UnixSystems()
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            string systemConf = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "example-system.conf"));
+            string systemConf = File.ReadAllText(MockFixture.GetDirectory(typeof(NetworkConfigurationSetupTests), "Examples", "example-system.conf"));
 
             using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
             {
@@ -343,7 +343,7 @@ namespace VirtualClient.Dependencies
         public async Task NetworkConfigurationSetsTheExpectedSettingsInTheUserConfigFile_UnixSystems()
         {
             this.mockFixture.Setup(PlatformID.Unix);
-            string systemConf = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, "example-system.conf"));
+            string systemConf = File.ReadAllText(MockFixture.GetDirectory(typeof(NetworkConfigurationSetupTests), "Examples", "example-system.conf"));
 
             using (TestNetworkConfigurationSetup setup = new TestNetworkConfigurationSetup(this.mockFixture))
             {

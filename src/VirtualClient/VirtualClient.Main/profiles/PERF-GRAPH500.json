@@ -1,4 +1,4 @@
-﻿{
+{
     "Description": "Graph500 Performance workload",
     "Metadata": {
         "RecommendedMinimumExecutionTime": "00:05:00",

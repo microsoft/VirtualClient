@@ -1,4 +1,4 @@
-﻿# Compression
+# Compression
 This represents a suite of workloads that focus on compression and decompression, algorithms often used in media and streaming
 applications. The following list of compression/decompression software toolsets are incorporated:
 

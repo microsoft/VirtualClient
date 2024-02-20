@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -50,6 +50,15 @@ namespace VirtualClient.Contracts
         public ExecutionProfileElement(ExecutionProfileElement other)
             : this(other?.Type, other?.Parameters, other?.Metadata, other?.Components)
         { 
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExecutionProfileElement"/> class.
+        /// </summary>
+        /// <param name="other">The instance to create a new object from.</param>
+        public ExecutionProfileElement(ExecutionProfileElementYamlShim other)
+            : this(other?.Type, other?.Parameters, other?.Metadata, other?.Components?.Select(c => new ExecutionProfileElement(c)))
+        {
         }
 
         /// <summary>

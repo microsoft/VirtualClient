@@ -159,7 +159,7 @@
         <System_Security_Principal_Windows_PackageVersion>5.0.0</System_Security_Principal_Windows_PackageVersion>
 
         <!-- YamlDotNet -->
-        <YamlDotNet_PackageVersion>13.3.1</YamlDotNet_PackageVersion>
+        <YamlDotNet_PackageVersion>15.1.1</YamlDotNet_PackageVersion>
 
     </PropertyGroup>
 

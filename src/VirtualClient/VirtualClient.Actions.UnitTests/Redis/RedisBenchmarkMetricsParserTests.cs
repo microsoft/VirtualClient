@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -17,7 +17,7 @@ namespace VirtualClient.Actions
         [Test]
         public void RedisBenchmarkMetricsParserParsesTheExpectedMetricsFromResultsCorrectly_1()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(RedisBenchmarkMetricsParserTests), "Examples", @"Redis\RedisBenchmarkResults.txt"));
             var parser = new RedisBenchmarkMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -187,7 +187,7 @@ namespace VirtualClient.Actions
         [Test]
         public void RedisBenchmarkMetricsParserParsesTheExpectedMetricsFromResultsCorrectly_2()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults_2.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(RedisBenchmarkMetricsParserTests), "Examples", @"Redis\RedisBenchmarkResults_2.txt"));
             var parser = new RedisBenchmarkMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -213,7 +213,7 @@ namespace VirtualClient.Actions
         [Test]
         public void RedisBenchmarkMetricsParserAssociatesTheCorrectRelativityToTheMetrics()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(RedisBenchmarkMetricsParserTests), "Examples", @"Redis\RedisBenchmarkResults.txt"));
             var parser = new RedisBenchmarkMetricsParser(results);
 
             IList<Metric> metrics = parser.Parse();
@@ -230,7 +230,7 @@ namespace VirtualClient.Actions
         [Test]
         public void RedisBenchmarkMetricsParserThrowIfInvalidOutputFormat_1()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt")).Substring(0, 100); // invalid results
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(RedisBenchmarkMetricsParserTests), "Examples", @"Redis\RedisBenchmarkResults.txt")).Substring(0, 100); // invalid results
             var parser = new RedisBenchmarkMetricsParser(results);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => parser.Parse());
@@ -240,7 +240,7 @@ namespace VirtualClient.Actions
         [Test]
         public void RedisBenchmarkMetricsParserThrowIfInvalidOutputFormat_2()
         {
-            string results = File.ReadAllText(Path.Combine(MockFixture.ExamplesDirectory, @"Redis\RedisBenchmarkResults.txt"));
+            string results = File.ReadAllText(MockFixture.GetDirectory(typeof(RedisBenchmarkMetricsParserTests), "Examples", @"Redis\RedisBenchmarkResults.txt"));
             var parser = new RedisBenchmarkMetricsParser(string.Join(Environment.NewLine, results.Split(Environment.NewLine).Take(1))); // headers exist but no measurements within.
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => parser.Parse());

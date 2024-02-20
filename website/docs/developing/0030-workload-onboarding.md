@@ -1,4 +1,4 @@
-﻿# Workload Onboarding Process
+# Workload Onboarding Process
 The following documentation provides guidance on the steps that the Virtual Client requires to onboard workloads to platform. The steps
 defined are not exactly the same every time; however, this gives a developer the general idea of what to expect.
 
