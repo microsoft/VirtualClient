@@ -104,6 +104,12 @@
         <Content Include="..\TestResources\Results_Hpcg.txt" Link="Resources\Results_Hpcg.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\TestResources\Results_HadoopTeragen.txt" Link="Resources\Results_HadoopTeragen.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\TestResources\Results_HadoopTeragen.txt" Link="Resources\Results_HadoopTerasort.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\TestResources\Results_StressNg.txt" Link="Resources\Results_StressNg.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -160,6 +166,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-CPU-PRIME95.json" Link="Profiles\PERF-CPU-PRIME95.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-CPU-TERASORT.json" Link="Profiles\PERF-CPU-TERASORT.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-HPC-NASPARALLELBENCH.json" Link="Profiles\PERF-HPC-NASPARALLELBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>

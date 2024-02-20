@@ -27,7 +27,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json")]
+        [TestCase("PERF-CPU-TERASORT.json")]
         public void ApacheBenchWorkloadProfileParametersAreInlinedCorrectly(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
@@ -39,7 +39,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json")]
+        [TestCase("PERF-CPU-TERASORT.json")]
         public async Task ApacheBenchWorkloadProfileInstallsTheExpectedDependenciesOnLinuxPlatform(string profile)
         {
             this.mockFixture.Setup(PlatformID.Unix);
@@ -53,7 +53,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json")]
+        [TestCase("PERF-CPU-TERASORT.json")]
         public async Task ApacheBenchWorkloadProfileInstallsTheExpectedDependenciesOnWindowsPlatform(string profile)
         {
             this.mockFixture.Setup(PlatformID.Win32NT);
@@ -66,8 +66,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json", PlatformID.Unix, Architecture.X64)]
-        [TestCase("PERF-APACHEBENCH.json", PlatformID.Unix, Architecture.Arm64)]
+        [TestCase("PERF-CPU-TERASORT.json", PlatformID.Unix, Architecture.X64)]
+        [TestCase("PERF-CPU-TERASORT.json", PlatformID.Unix, Architecture.Arm64)]
         public async Task ApacheBenchWorkloadProfileExecutesTheExpectedWorkloadsOnUnixPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             IEnumerable<string> expectedCommands = new List<string>
@@ -102,8 +102,8 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json", PlatformID.Win32NT, Architecture.X64)]
-        [TestCase("PERF-APACHEBENCH.json", PlatformID.Win32NT, Architecture.Arm64)]
+        [TestCase("PERF-CPU-TERASORT.json", PlatformID.Win32NT, Architecture.X64)]
+        [TestCase("PERF-CPU-TERASORT.json", PlatformID.Win32NT, Architecture.Arm64)]
         public async Task ApacheBenchWorkloadProfileExecutesTheExpectedWorkloadsOnWindowsPlatform(string profile, PlatformID platform, Architecture architecture)
         {
             IEnumerable<string> expectedCommands = new List<string>
@@ -146,7 +146,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        [TestCase("PERF-APACHEBENCH.json", PlatformID.Win32NT)]
+        [TestCase("PERF-CPU-TERASORT.json", PlatformID.Win32NT)]
         public void ApacheBenchWorkloadProfileActionsWillNotBeExecutedIfTheWorkloadPackageDoesNotExist(string profile, PlatformID platform)
         {
             this.mockFixture.Setup(platform);
