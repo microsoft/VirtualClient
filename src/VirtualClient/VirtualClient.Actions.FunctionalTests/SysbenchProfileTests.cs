@@ -14,7 +14,6 @@ namespace VirtualClient.Actions
     using NUnit.Framework;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using VirtualClient.Dependencies.MySqlServerConfiguration;
 
     [TestFixture]
     [Category("Functional")]
@@ -23,9 +22,8 @@ namespace VirtualClient.Actions
         private DependencyFixture fixture;
         private string clientAgentId;
         private string serverAgentId;
-        private string sysbenchScriptPath;
-        private string mysqlScriptPath;
         private string sysbenchPackagePath;
+        private string mySQLPackagePath;
 
         [OneTimeSetUp]
         public void SetupFixture()
@@ -73,6 +71,10 @@ namespace VirtualClient.Actions
 
             this.SetupApiClient(this.serverAgentId, serverIPAddress: "1.2.3.5");
 
+            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
+            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupDirectory(this.sysbenchPackagePath);
+
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: false);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
@@ -100,14 +102,28 @@ namespace VirtualClient.Actions
             this.fixture.Setup(platform);
             this.fixture.SetupDisks(withUnformatted: true);
 
-            this.sysbenchScriptPath = this.fixture.PlatformSpecifics.GetScriptPath("sysbench");
-            this.mysqlScriptPath = this.fixture.PlatformSpecifics.GetScriptPath("mysqlserverconfiguration");
-            this.sysbenchPackagePath = this.fixture.GetPackagePath("sysbench");
+            this.sysbenchPackagePath = this.fixture.PlatformSpecifics.GetPackagePath("sysbench");
+            DependencyPath mySqlPackage = new DependencyPath("mysql-server", this.fixture.GetPackagePath("mysql-server"));
+            this.mySQLPackagePath = this.fixture.ToPlatformSpecificPath(mySqlPackage, PlatformID.Unix, Architecture.X64).Path;
 
-            this.fixture.SetupDirectory(this.sysbenchScriptPath);
-            this.fixture.SetupDirectory(this.mysqlScriptPath);
+            this.fixture.SetupWorkloadPackage("sysbench");
+            this.fixture.SetupWorkloadPackage("mysql-server");
+
+            this.fixture.SetupDirectory(this.sysbenchPackagePath);
+            this.fixture.SetupDirectory(this.mySQLPackagePath);
 
             IEnumerable<string> expectedCommands = this.GetProfileExpectedCommands(singleVM: true);
+
+            this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>
+            {
+                IProcessProxy process = this.fixture.CreateProcess(command, arguments, workingDir);
+                if (arguments.Contains("run", StringComparison.OrdinalIgnoreCase))
+                {
+                    process.StandardOutput.Append(TestDependencies.GetResourceFileContents("Results_Sysbench.txt"));
+                }
+
+                return process;
+            };
 
             using (ProfileExecutor executor = TestDependencies.CreateProfileExecutor(profile, this.fixture.Dependencies))
             {
@@ -128,30 +144,17 @@ namespace VirtualClient.Actions
             {
                 return new List<string>()
                 {
-                    "sudo apt update",
-                    "apt install make  automake  libtool  pkg-config libaio-dev  libmysqlclient-dev  libssl-dev --yes --quiet",
+                    "apt install python3 --yes --quiet",
 
-                    "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
+                    $"python3 {this.mySQLPackagePath}/install.py --distro Ubuntu",
+                    $"python3 {this.mySQLPackagePath}/configure.py --serverIp 127.0.0.1 --innoDbDirs \"mountPoint0;mountPoint1;mountPoint2;\"",
+                    $"python3 {this.mySQLPackagePath}/setup-database.py --dbName sbtest",
 
-                    "sudo systemctl start mysql.service",
-                    $"sudo mysql --execute=\"DROP DATABASE IF EXISTS sbtest;\"",
-                    $"sudo mysql --execute=\"CREATE DATABASE sbtest;\"",
-                    $"sudo mysql --execute=\"SET GLOBAL MAX_PREPARED_STMT_COUNT=100000;\"",
-                    $"sudo mysql --execute=\"SET GLOBAL MAX_CONNECTIONS=1024;\"",
-                    $"sudo chmod -R 2777 \"{this.mysqlScriptPath}\"",
-                    $"sudo mysql --execute=\"DROP USER IF EXISTS 'sbtest'@'localhost'\"",
-                    $"sudo mysql --execute=\"CREATE USER 'sbtest'@'localhost'\"",
-                    $"sudo mysql --execute=\"GRANT ALL ON *.* TO 'sbtest'@'localhost'\"",
-                    $"sudo {this.mysqlScriptPath}/set-mysql-innodb-directories.sh mountPoint0 mountPoint1 mountPoint2",
+                    $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.sysbenchPackagePath}",
 
-                    $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.sysbenchPackagePath}/src/lua/oltp_common.lua",
-                    "sudo ./autogen.sh",
-                    "sudo ./configure",
-                    "sudo make -j",
-                    "sudo make install",
-
-                    $"sudo chmod -R 2777 \"{this.sysbenchScriptPath}\"",
-                    $"sudo {this.sysbenchScriptPath}/distribute-database.sh {this.sysbenchPackagePath} sbtest 10 99999 1 mountPoint0 mountPoint1 mountPoint2",
+                    $"sudo {this.sysbenchPackagePath}/src/sysbench oltp_common --tables=10 --table-size=1 --threads=1 --mysql-db=sbtest prepare",
+                    $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --tableCount 10 --directories \"mountPoint0;mountPoint1;mountPoint2;\"",
+                    $"sudo {this.sysbenchPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
 
                     $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
                     $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
@@ -167,12 +170,9 @@ namespace VirtualClient.Actions
             { 
                 return new List<string>()
                 {
-                    "git clone https://github.com/akopytov/sysbench.git /home/user/tools/VirtualClient/packages/sysbench",
+                    "apt install python3 --yes --quiet",
 
-                    "sudo ./autogen.sh",
-                    "sudo ./configure",
-                    "sudo make -j",
-                    "sudo make install",
+                    $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.sysbenchPackagePath}",
 
                     $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
                     $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",

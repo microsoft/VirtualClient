@@ -110,114 +110,40 @@ namespace VirtualClient.Actions
             }
         }
 
-        /// <summary>
-        /// Initializes the environment for execution of the Sysbench server side.
-        /// </summary>
-        protected async override Task InitializeAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            if (this.Platform == PlatformID.Unix)
-            {
-                string scriptsDirectory = this.PlatformSpecifics.GetScriptPath("sysbench");
-
-                await this.SystemManager.MakeFilesExecutableAsync(
-                    scriptsDirectory,
-                    this.Platform,
-                    cancellationToken);
-            }
-
-            await base.InitializeAsync(telemetryContext, cancellationToken);
-            return;
-        }
-
         private async Task PrepareMySQLDatabase(SysbenchState state, EventContext telemetryContext, CancellationToken cancellationToken)
         {
             if (!state.DatabasePopulated)
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
-                    await this.PopulateDatabaseAsync(telemetryContext, cancellationToken)
-                        .ConfigureAwait(false);
+                    string command = $"{this.SysbenchPackagePath}/src/sysbench";
 
-                    state.DatabasePopulated = true;
-                    await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+                    string arguments = $"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} " +
+                        $"--threads={this.Threads} --mysql-db={this.DatabaseName} prepare";
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        command,
+                        arguments,
+                        this.SysbenchPackagePath,
+                        telemetryContext,
+                        cancellationToken,
+                        runElevated: true))
+                    {
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
+                            process.ThrowIfWorkloadFailed();
+                        }
+                    }
+
+                    if (this.RecordCount > 1)
+                    {
+                        state.DatabasePopulated = true;
+                        await this.stateManager.SaveStateAsync<SysbenchState>(nameof(SysbenchState), state, cancellationToken);
+                    }
                 });
             }
 
-        }
-
-        private async Task PopulateDatabaseAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            // includes copying all tables from OS disk to data disk,
-            // dropping old tables & renaming them
-
-            string balancedScript = "distribute-database.sh";
-            string scriptsDirectory = this.PlatformSpecifics.GetScriptPath(this.PackageName);
-            this.SysbenchPackagePath = this.GetPackagePath(this.PackageName);
-
-            string diskPaths = await this.GetDiskPathsAsync(telemetryContext, cancellationToken);
-
-            string arguments = $"{this.SysbenchPackagePath} {this.DatabaseName} {this.NumTables} {this.RecordCount - 1} {this.Threads} {diskPaths}";
-
-            using (IProcessProxy process = await this.ExecuteCommandAsync(
-                this.PlatformSpecifics.Combine(scriptsDirectory, balancedScript),
-                arguments,
-                scriptsDirectory,
-                telemetryContext,
-                cancellationToken,
-                runElevated: true))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                    process.ThrowIfWorkloadFailed();
-                }
-            }
-        }
-
-        private async Task<string> GetDiskPathsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string diskPaths = string.Empty;
-
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                string diskFilter = "osdisk:false";
-
-                if (!string.IsNullOrEmpty(this.DiskFilter))
-                {
-                    diskFilter += string.Concat("&", this.DiskFilter);
-                }
-
-                IEnumerable<Disk> disks = await this.SystemManager.DiskManager.GetDisksAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                if (disks?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Unexpected scenario. The disks defined for the system could not be properly enumerated.",
-                        ErrorReason.WorkloadUnexpectedAnomaly);
-                }
-
-                IEnumerable<Disk> disksToTest = DiskFilters.FilterDisks(disks, diskFilter, this.Platform).ToList();
-
-                if (disksToTest?.Any() != true)
-                {
-                    throw new WorkloadException(
-                        "Expected disks to test not found. Given the parameters defined for the profile action/step or those passed " +
-                        "in on the command line, the requisite disks do not exist on the system or could not be identified based on the properties " +
-                        "of the existing disks.",
-                        ErrorReason.DependencyNotFound);
-                }
-
-                foreach (Disk disk in disksToTest)
-                {
-                    if (disk.GetPreferredAccessPath(this.Platform) != "/mnt")
-                    {
-                        diskPaths += $"{disk.GetPreferredAccessPath(this.Platform)} ";
-                    }
-                }
-            }
-
-            return diskPaths;
         }
     }
 }

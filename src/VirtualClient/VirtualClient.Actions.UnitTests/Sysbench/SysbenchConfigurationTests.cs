@@ -31,10 +31,7 @@ namespace VirtualClient.Actions
     {
         private MockFixture fixture;
         private DependencyPath mockPackage;
-        private IEnumerable<Disk> disks;
-        private string scriptPath;
         private string mockPackagePath;
-        private string mountPaths;
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -47,7 +44,6 @@ namespace VirtualClient.Actions
 
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.mockPackagePath = this.mockPackage.Path;
-            this.scriptPath = this.fixture.PlatformSpecifics.GetScriptPath("sysbench");
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -58,13 +54,6 @@ namespace VirtualClient.Actions
 
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
-
-            this.fixture.SystemManagement.Setup(mgr => mgr.GetCpuInfoAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CpuInfo("cpu", "description", 4, 8, 4, 4, false));
-
-            this.disks = this.fixture.CreateDisks(PlatformID.Unix, true);
-            this.fixture.DiskManager.Setup(mgr => mgr.GetDisksAsync(It.IsAny<CancellationToken>())).ReturnsAsync(() => this.disks);
-            this.mountPaths = "/dev/sdd1 /dev/sde1 /dev/sdf1";
         }
 
         [Test]
@@ -85,8 +74,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
-                $"sudo {this.scriptPath}/distribute-database.sh {this.mockPackagePath} sbtest 10 99999 1 {this.mountPaths}",
+                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
             };
 
             int commandNumber = 0;
@@ -130,13 +118,8 @@ namespace VirtualClient.Actions
         {
             string[] expectedCommands =
             {
-                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
-                "sudo ./autogen.sh",
-                "sudo ./configure",
-                "sudo make -j",
-                "sudo make install",
-                $"sudo {this.scriptPath}/distribute-database.sh {this.mockPackagePath} sbtest 10 99999 1 {this.mountPaths}",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
+                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
             };
 
             int commandNumber = 0;
@@ -185,13 +168,8 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
-                "sudo ./autogen.sh",
-                "sudo ./configure",
-                "sudo make -j",
-                "sudo make install",
-                $"sudo {this.scriptPath}/distribute-database.sh {this.mockPackagePath} sbtest 40 999 8 {this.mountPaths}",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
+                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=40 --table-size=1000 --threads=8 --mysql-db=sbtest prepare",
             };
 
             int commandNumber = 0;
@@ -231,7 +209,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchOLTPClientExecutorSkipsDatabasePopulationWhenInitialized()
+        public async Task SysbenchConfigurationSkipsDatabasePopulationWhenInitialized()
         {
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {
@@ -240,12 +218,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo chmod -R 2777 \"{this.scriptPath}\"",
-                $"sudo sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {this.mockPackagePath}/src/lua/oltp_common.lua",
-                "sudo ./autogen.sh",
-                "sudo ./configure",
-                "sudo make -j",
-                "sudo make install",
+                $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
             };
 
             int commandNumber = 0;

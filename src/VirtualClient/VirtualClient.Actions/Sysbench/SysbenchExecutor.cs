@@ -143,6 +143,12 @@ namespace VirtualClient.Actions
             await this.CheckDistroSupportAsync(telemetryContext, cancellationToken)
                 .ConfigureAwait(false);
 
+            DependencyPath workloadPackage = await this.GetPackageAsync(this.PackageName, cancellationToken).ConfigureAwait(false);
+            workloadPackage.ThrowIfNull(this.PackageName);
+
+            DependencyPath package = await this.GetPackageAsync(this.PackageName, cancellationToken);
+            this.SysbenchPackagePath = package.Path;
+
             await this.InitializeExecutablesAsync(telemetryContext, cancellationToken);
 
             this.InitializeApiClients(telemetryContext, cancellationToken);
@@ -200,32 +206,23 @@ namespace VirtualClient.Actions
 
             if (!state.SysbenchInitialized)
             {
-                string sysbenchDirectory = this.GetPackagePath(this.PackageName);
+                LinuxDistributionInfo distributionInfo = await this.SystemManager.GetLinuxDistributionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                string distribution = distributionInfo.LinuxDistribution.ToString();
 
-                List<string> sysbenchInitCommands = new List<string>()
-                {
-                    $"sed -i \"s/CREATE TABLE/CREATE TABLE IF NOT EXISTS/g\" {sysbenchDirectory}/src/lua/oltp_common.lua",
-                    "./autogen.sh",
-                    "./configure",
-                    "make -j",
-                    "make install"
-                };
+                string arguments = $"{this.SysbenchPackagePath}/configure-workload-generator.py --distro {distribution} --packagePath {this.SysbenchPackagePath}";
 
-                foreach (string command in sysbenchInitCommands)
+                using (IProcessProxy process = await this.ExecuteCommandAsync(
+                    "python3",
+                    arguments,
+                    this.SysbenchPackagePath,
+                    telemetryContext,
+                    cancellationToken))
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(
-                        command,
-                        null,
-                        sysbenchDirectory,
-                        telemetryContext,
-                        cancellationToken,
-                        runElevated: true))
+                    if (!cancellationToken.IsCancellationRequested)
                     {
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            await this.LogProcessDetailsAsync(process, telemetryContext, "SysbenchExecutor", logToFile: true);
-                            process.ThrowIfDependencyInstallationFailed();
-                        }
+                        await this.LogProcessDetailsAsync(process, telemetryContext, "SysbenchExecutor", logToFile: true);
+                        process.ThrowIfDependencyInstallationFailed();
                     }
                 }
 

@@ -29,6 +29,7 @@ namespace VirtualClient.Actions
     public class SysbenchServerExecutorTests
     {
         private MockFixture fixture;
+        private DependencyPath mockPackage;
 
         [SetUp]
         public void SetupDefaultBehavior()
@@ -45,6 +46,9 @@ namespace VirtualClient.Actions
             string agentId = $"{Environment.MachineName}-Server";
             this.fixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
 
+            this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
+            this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
+
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>())).Returns(true);
             this.fixture.Directory.Setup(d => d.Exists(It.IsAny<string>())).Returns(true);
 
@@ -52,7 +56,7 @@ namespace VirtualClient.Actions
         }
 
         [Test]
-        public async Task SysbenchOLTPServerExecutorSkipsSysbenchInitializationWhenInitialized()
+        public async Task SysbenchServerExecutorSkipsSysbenchInitializationWhenInitialized()
         {
             this.fixture.StateManager.OnGetState().ReturnsAsync(JObject.FromObject(new SysbenchExecutor.SysbenchState()
             {

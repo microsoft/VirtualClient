@@ -208,10 +208,9 @@ namespace VirtualClient.Actions
                 numTables = 10;
             }
 
-            this.SysbenchPackagePath = this.GetPackagePath(this.PackageName);
             this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={numTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
             this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.Duration.TotalSeconds} ";
-            this.sysbenchPath = this.PlatformSpecifics.Combine(this.SysbenchPackagePath, "src/sysbench");
+            this.sysbenchPath = $"{this.SysbenchPackagePath}/src/sysbench";
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
