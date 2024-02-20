@@ -1,4 +1,4 @@
-﻿# Versioning
+# Versioning
 The following sections describe the versioning process for projects/libraries within the Virtual Client platform/core repo.
 
 Projects versioned using the version defined by the Official build pipeline. This version is defined in the in the [OneBranch.Official.yml](https://github.com/Azure/AzureVirtualClient/blob/main/.pipelines/OneBranch.Official.yml)

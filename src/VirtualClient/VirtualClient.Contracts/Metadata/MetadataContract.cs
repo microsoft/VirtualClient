@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts.Metadata
@@ -22,6 +22,7 @@ namespace VirtualClient.Contracts.Metadata
         internal const string CategoryHost = "metadata_host";
         internal const string CategoryRuntime = "metadata_runtime";
         internal const string CategoryScenario = "metadata_scenario";
+        internal const string CategoryScenarioExtensions = "metadata_scenario_ext";
 
         /// <summary>
         /// Metadata properties available during the lifetime of a single VC execution.
@@ -349,12 +350,16 @@ namespace VirtualClient.Contracts.Metadata
                     categoryName = MetadataContract.CategoryHost;
                     break;
 
+                case MetadataContractCategory.Runtime:
+                    categoryName = MetadataContract.CategoryRuntime;
+                    break;
+
                 case MetadataContractCategory.Scenario:
                     categoryName = MetadataContract.CategoryScenario;
                     break;
 
-                case MetadataContractCategory.Runtime:
-                    categoryName = MetadataContract.CategoryRuntime;
+                case MetadataContractCategory.ScenarioExtensions:
+                    categoryName = MetadataContract.CategoryScenarioExtensions;
                     break;
 
                 default:

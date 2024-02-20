@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -12,13 +12,12 @@ namespace VirtualClient.Actions
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Moq;
-    using Newtonsoft.Json.Linq;
     using NUnit.Framework;
     using Polly;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common.Contracts;
     using VirtualClient.Common.Telemetry;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.RedisExecutor;
 
     [TestFixture]
     [Category("Unit")]
@@ -50,15 +49,24 @@ namespace VirtualClient.Actions
                 .ReturnsAsync(this.mockPackage);
 
             this.fixture.FileSystem.Setup(fe => fe.File.Exists(It.IsAny<string>())).Returns(true);
-            this.results = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, @"Examples\Redis\RedisBenchmarkResults.txt"));
+            this.results = File.ReadAllText(Path.Combine(MockFixture.TestAssemblyDirectory, "Examples", "Redis", "RedisBenchmarkResults.txt"));
 
             this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(this.results);
 
             // Setup:
-            // Single server instance running on port 6379
+            // Single server instance running on port 6379 with affinity to a single logical processor
             this.fixture.ApiClient.OnGetState(nameof(ServerState))
-                .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), new ServerState(new int[] { 6379 }))));
+                .ReturnsAsync(this.fixture.CreateHttpResponse(
+                    HttpStatusCode.OK,
+                    new Item<ServerState>(nameof(ServerState), new ServerState(new List<PortDescription>
+                    {
+                        new PortDescription
+                        {
+                            CpuAffinity = "0",
+                            Port = 6379
+                        }
+                    }))));
 
             this.fixture.ApiClientManager.Setup(mgr => mgr.GetOrCreateApiClient(It.IsAny<string>(), It.IsAny<ClientInstance>()))
                 .Returns<string, ClientInstance>((id, instance) =>
@@ -118,7 +126,14 @@ namespace VirtualClient.Actions
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // 1 set of client instances run on each port reported by the server
-                ServerState serverState = new ServerState(new int[] { 1234 });
+                ServerState serverState = new ServerState(new List<PortDescription>
+                {
+                    new PortDescription
+                    {
+                        CpuAffinity = "0",
+                        Port = 1234
+                    }
+                });
 
                 this.fixture.ApiClient.OnGetState(nameof(ServerState))
                     .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
@@ -148,7 +163,19 @@ namespace VirtualClient.Actions
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // 1 set of client instances run on each port reported by the server
-                ServerState serverState = new ServerState(new int[] { 1234, 5678 });
+                ServerState serverState = new ServerState(new List<PortDescription>
+                {
+                    new PortDescription
+                    {
+                        CpuAffinity = "0",
+                        Port = 1234
+                    },
+                    new PortDescription
+                    {
+                        CpuAffinity = "1",
+                        Port = 5678
+                    }
+                });
 
                 this.fixture.ApiClient.OnGetState(nameof(ServerState))
                     .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
@@ -181,7 +208,29 @@ namespace VirtualClient.Actions
             using (var executor = new TestRedisBenchmarkClientExecutor(this.fixture.Dependencies, this.fixture.Parameters))
             {
                 // 1 set of client instances run on each port reported by the server
-                ServerState serverState = new ServerState(new int[] { 1234, 5678, 1111, 2222 });
+                ServerState serverState = new ServerState(new List<PortDescription>
+                {
+                    new PortDescription
+                    {
+                        CpuAffinity = "0",
+                        Port = 1234
+                    },
+                    new PortDescription
+                    {
+                        CpuAffinity = "1",
+                        Port = 5678
+                    },
+                    new PortDescription
+                    {
+                        CpuAffinity = "2",
+                        Port = 1111
+                    },
+                    new PortDescription
+                    {
+                        CpuAffinity = "3",
+                        Port = 2222
+                    }
+                });
 
                 this.fixture.ApiClient.OnGetState(nameof(ServerState))
                     .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));
@@ -251,7 +300,19 @@ namespace VirtualClient.Actions
                 executor.Parameters["ClientInstances"] = 2;
 
                 // 1 set of client instances run on each port reported by the server
-                ServerState serverState = new ServerState(new int[] { 1234, 5678 });
+                ServerState serverState = new ServerState(new List<PortDescription>
+                {
+                    new PortDescription
+                    {
+                        CpuAffinity = "0",
+                        Port = 1234
+                    },
+                    new PortDescription
+                    {
+                        CpuAffinity = "1",
+                        Port = 5678
+                    }
+                });
 
                 this.fixture.ApiClient.OnGetState(nameof(ServerState))
                     .ReturnsAsync(this.fixture.CreateHttpResponse(HttpStatusCode.OK, new Item<ServerState>(nameof(ServerState), serverState)));

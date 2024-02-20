@@ -1,4 +1,4 @@
-# SPECviewperf Benchmark
+# SPECviewperf
 The SPECviewperf® 2020 v3.1 benchmark, released on August 4, 2022, is the worldwide standard for measuring graphics performance based on professional applications. The benchmark measures the 3D graphics performance of systems running under the OpenGL and DirectX application programming interfaces. The benchmark workloads are called viewsets, and represent graphics content and behavior from actual workstation-class applications, without the need to install the applications themselves. 
 
 Applications represented by viewsets in SPECviewperf 2020 include Autodesk 3ds Max and Maya for media and entertainment; Dassault Systèmes Catia and Solidworks, PTC Creo, and Siemens NX for CAD/CAM; and two datasets representing professional energy and medical applications.

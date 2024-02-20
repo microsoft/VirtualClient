@@ -1,4 +1,4 @@
-﻿# Lspci
+# Lspci
 The PCI Utilities package contains a library for portable access to PCI bus
 configuration registers and several utilities based on this library.
 

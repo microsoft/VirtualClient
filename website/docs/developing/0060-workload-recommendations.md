@@ -1,4 +1,4 @@
-﻿# Workload Selection Recommendations
+# Workload Selection Recommendations
 The following documentation provides guidance on the practices and fundamentals to consider when selecting (or creating) workload software
 for the purpose of qualifying hardware systems. Good workloads are easier to onboard into the Virtual Client platform and offer better return
 on investment for the work involved. There are thousands of options available, but not all of them are as well-designed. This simple guide will help.

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -183,7 +183,7 @@ namespace VirtualClient.Actions
                     this.MetadataContract.Apply(telemetryContext);
 
                     this.Logger.LogMetrics(
-                        "BlenderBenchmark",
+                        this.PackageName,
                         scenario,
                         workloadProcess.StartTime,
                         workloadProcess.ExitTime,

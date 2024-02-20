@@ -22,7 +22,7 @@ namespace VirtualClient.Actions
         public void LMbenchParserVerifyMetricsX64()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\LMbenchX64Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "LMbenchX64Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LMbenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -76,7 +76,7 @@ namespace VirtualClient.Actions
         public void LMbenchParserVerifyMetricsARM64()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\LMbenchARM64Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "LMbenchARM64Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LMbenchMetricsParser(this.rawText);
             IList<Metric> metrics = this.testParser.Parse();
@@ -159,7 +159,7 @@ namespace VirtualClient.Actions
         public void LMbenchParserVerifyMetricsWhenMhzReturnsNegative()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\LMbenchX64Example.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "LMbenchX64Example.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new LMbenchMetricsParser(this.rawText.Replace("1344", "  -1"));
             IList<Metric> metrics = this.testParser.Parse();

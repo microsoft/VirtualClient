@@ -1,4 +1,4 @@
-﻿# Stress-ng Workload Profiles
+# Stress-ng Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the StressNg workload.
 
 * [Workload Details](./stress-ng.md)  

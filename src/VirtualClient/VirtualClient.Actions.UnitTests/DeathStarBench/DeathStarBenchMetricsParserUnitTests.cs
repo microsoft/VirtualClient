@@ -1,4 +1,4 @@
-﻿using VirtualClient.Common.Contracts;
+using VirtualClient.Common.Contracts;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ namespace VirtualClient.Actions
         public void Setup()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DeathStarBench\DeathStarBenchOutputExample.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarBenchOutputExample.txt");
             this.rawText = File.ReadAllText(outputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);
         }
@@ -56,9 +56,9 @@ namespace VirtualClient.Actions
         public void DeathStarBenchMetricsParserThrowIfInvalidOutputFormat()
         {
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string IncorrectDeathBenchoutputPath = Path.Combine(workingDirectory, @"Examples\DeathStarbench\DeathStarbenchIncorrectOutputExample.txt");
+            string incorrectDeathBenchoutputPath = Path.Combine(workingDirectory, "Examples", "DeathStarBench", "DeathStarBenchIncorrectOutputExample.txt");
 
-            this.rawText = File.ReadAllText(IncorrectDeathBenchoutputPath);
+            this.rawText = File.ReadAllText(incorrectDeathBenchoutputPath);
             this.testParser = new DeathStarBenchMetricsParser(this.rawText);
 
             WorkloadResultsException exception = Assert.Throws<WorkloadResultsException>(() => this.testParser.Parse());

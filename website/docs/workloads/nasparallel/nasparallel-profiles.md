@@ -1,4 +1,4 @@
-﻿# NAS Parallel Workload Profiles
+# NAS Parallel Workload Profiles
 The following profiles run customer-representative or benchmarking scenarios using the NAS Parallel toolset.
 
 * [Workload Details](./nasparallel.md)

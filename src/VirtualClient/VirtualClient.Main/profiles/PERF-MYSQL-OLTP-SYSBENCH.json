@@ -1,4 +1,4 @@
-﻿{
+{
     "Description": "Sysbench OLTP MySQL Database Server Performance Workload",
     "MinimumExecutionInterval": "00:01:00",
     "Metadata": {

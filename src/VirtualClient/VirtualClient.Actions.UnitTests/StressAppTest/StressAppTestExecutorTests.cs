@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -31,7 +31,7 @@ namespace VirtualClient.Actions
         public void SetUpFixture()
         {
             this.fixture = new MockFixture();
-            this.rawText = File.ReadAllText(@"Examples\StressAppTest\stressAppTestLog_pass.txt");
+            this.rawText = File.ReadAllText(Path.Combine("Examples", "StressAppTest", "stressAppTestLog_pass.txt"));
         }
 
         [Test]

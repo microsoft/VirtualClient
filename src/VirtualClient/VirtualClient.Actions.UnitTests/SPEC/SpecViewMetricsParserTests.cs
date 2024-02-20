@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -82,20 +82,20 @@ namespace VirtualClient.Actions
             IList<Dictionary<string, IConvertible>> expectedMetadataList = new List<Dictionary<string, IConvertible>>();
 
             // composites
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 100 }, { "index", -1 } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 100 }, { "index", -1 }, { "name", string.Empty} });
 
             // individuals
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 1 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 2 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 3 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 4 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 5 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 6 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 7 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 8 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 9 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 10 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 4.8 }, { "index", 11 } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 1 }, { "name", "3dsmax_Arch_Shaded" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 2 }, { "name", "3dsmax_Arch_Graphite" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 3 }, { "name", "3dsmax_Space_Wireframe" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 4 }, { "name", "3dsmax_Space_Clay" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 5 }, { "name", "3dsmax_ProjectSoane_Shaded" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 6 }, { "name", "3dsmax_ProjectSoane_Wireframe" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 7 }, { "name", "3dsmax_HugeFish_Wireframe" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 8 }, { "name", "3dsmax_HugeFish_Shaded" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 9 }, { "name", "3dsmax_Office_Realistic" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 9.52 }, { "index", 10 }, { "name", "3dsmax_Office_Shaded" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 4.8 }, { "index", 11 }, { "name", "3dsmax_Office_RealisticMats" } });
 
             for (int i = 0; i<metrics.Count; i++)
             {
@@ -114,20 +114,20 @@ namespace VirtualClient.Actions
             IList<Dictionary<string, IConvertible>> expectedMetadataList = new List<Dictionary<string, IConvertible>>();
 
             // composites
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 100 }, { "index", -1 } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 100 }, { "index", -1 }, { "name", string.Empty} });
             // inviduals
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 1 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 2 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 0 }, { "index", 3 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 4 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 5 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 6 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 7 } });
-            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 8 } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 1 }, { "name", "catiaV5test1" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 2 }, { "name", "catiaV5test2" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 0 }, { "index", 3 }, { "name", "catiaV5test3" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.28 }, { "index", 4 }, { "name", "catiaV5test4" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 5 }, { "name", "CATIA_3DX_repEngine" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 6 }, { "name", "CATIA_3DX_loftJet" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 7 }, { "name", "CATIA_3DX_car" } });
+            expectedMetadataList.Add(new Dictionary<string, IConvertible> { { "weight", 14.29 }, { "index", 8 }, { "name", "CATIA_3DX_Multi_car" } });
 
             for (int i = 0; i<metrics.Count; i++)
             {
-                Assert.AreEqual(metrics[i].Metadata, expectedMetadataList[i]);
+                Assert.AreEqual(expectedMetadataList[i], metrics[i].Metadata);
             }
         }
 

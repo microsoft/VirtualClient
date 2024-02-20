@@ -1,4 +1,4 @@
-﻿# Client/Server Support
+# Client/Server Support
 The Virtual Client supports workloads that run across more than 1 systems. These are often called "client/server" workloads. For example the networking
 workload suite requires 2 systems in order to operate the workload. One system performs the role of the "Client" and one the role of the "Server". The Client
 issues calls to the Server and both sides measure various aspects of network performance. The systems required to conduct client/server workloads cannot be easily 

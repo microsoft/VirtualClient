@@ -1,4 +1,4 @@
-﻿# SPECjbb
+# SPECjbb
 The SPECjbb® 2015 benchmark has been developed from the ground up to measure performance based on the latest Java application features. 
 It is relevant to all audiences who are interested in Java server performance, including JVM vendors, hardware developers, 
 Java application developers, researchers and members of the academic community.

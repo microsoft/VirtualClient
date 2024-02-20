@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Contracts
@@ -92,7 +92,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("scenarioStartTime")
                     && context.Properties.ContainsKey("scenarioEndTime")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["scenarioName"].ToString() == "PerformanceCounter"
@@ -104,7 +104,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricDescription"].ToString() == "Metric 1 description"
                     && context.Properties["metricRelativity"].ToString() == MetricRelativity.HigherIsBetter.ToString()
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"] == expectedCounters[0].Metadata as object),
+                    && context.Properties["metadata_metrics"] == expectedCounters[0].Metadata as object),
                 null,
                 null));
         }
@@ -231,7 +231,7 @@ namespace VirtualClient.Contracts
                     && context.Properties.ContainsKey("toolVersion")
                     && context.Properties.ContainsKey("toolResults")
                     && context.Properties.ContainsKey("tags")
-                    && context.Properties.ContainsKey("metricMetadata")
+                    && context.Properties.ContainsKey("metadata_metrics")
                     && context.Properties["scenarioName"].ToString() == expectedScenarioName
                     && context.Properties["scenarioStartTime"].ToString() == expectedStartTime.ToString()
                     && context.Properties["scenarioEndTime"].ToString() == expectedEndTime.ToString()
@@ -243,7 +243,7 @@ namespace VirtualClient.Contracts
                     && context.Properties["metricRelativity"].ToString() == expectedRelativity.ToString()
                     && context.Properties["toolName"].ToString() == expectedToolName
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)
-                    && context.Properties["metricMetadata"] == expectedMetadata as Object
+                    && context.Properties["metadata_metrics"] == expectedMetadata as Object
                     && context.Properties["toolVersion"].ToString() == expectedToolVersion
                     && context.Properties["toolResults"].ToString() == expectedToolResults
                     && context.Properties["tags"].ToString() == string.Join(",", expectedTags)),

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -45,7 +45,7 @@ namespace VirtualClient.Actions
 
             this.fixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string lmbenchOutput = File.ReadAllText(@"Examples\LMbench\LMbenchExample.txt");
+                string lmbenchOutput = File.ReadAllText(Path.Combine("Examples", "LMbench", "LMbenchExample.txt"));
                 process.StandardOutput.Append(lmbenchOutput);
             };
         }
@@ -55,7 +55,7 @@ namespace VirtualClient.Actions
         {
             this.fixture.ProcessManager.OnProcessCreated = (process) =>
             {
-                string lmbenchOutput = File.ReadAllText(@"Examples\LMbench\LMbenchExample.txt");
+                string lmbenchOutput = File.ReadAllText(Path.Combine("Examples", "LMbench", "LMbenchExample.txt"));
                 process.StandardOutput.Append(lmbenchOutput);
             };
 

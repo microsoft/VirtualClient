@@ -1,4 +1,4 @@
-﻿# Stress-ng
+# Stress-ng
 Stress-ng is designed to exercise various physical subsystems of a computer as well as the various operating system kernel interfaces. The workload was originally intended to make 
 a machine work hard and trip hardware issues such as thermal overruns as well as operating system bugs that only occur when a system is being "thrashed" hard.
 

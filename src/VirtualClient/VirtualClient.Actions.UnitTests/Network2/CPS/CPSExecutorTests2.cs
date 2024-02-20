@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -75,33 +75,63 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64,ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void CPSExecutorThrowsOnInitializationWhenScenarioIsEmpty(PlatformID platformID, Architecture architecture, string role)
+        public void CPSExecutorThrowsOnInitializationWhenScenarioIsEmpty_Linux(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
-            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = "";
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
 
             using TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
             WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
             Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
         }
 
-        
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
+        public void CPSExecutorThrowsOnInitializationWhenScenarioIsEmpty_Windows(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.Parameters[nameof(VirtualClientComponent.Scenario)] = string.Empty;
+
+            using TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            WorkloadException exception = Assert.ThrowsAsync<WorkloadException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            Assert.AreEqual(ErrorReason.InvalidProfileDefinition, exception.Reason);
+        }
+
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task CPSExecutorInitializesItsDependencyPackageAsExpected_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            string expectedPackage = "Networking";
+            this.mockFixture.PackageManager.OnGetPackage(expectedPackage)
+                .Callback<string, CancellationToken>((actualPackage, token) =>
+                {
+                    Assert.AreEqual(expectedPackage, actualPackage);
+                })
+                .ReturnsAsync(this.mockPath);
+
+            using TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await component.InitializeAsync(EventContext.None, CancellationToken.None);
+
+            this.mockFixture.PackageManager.Verify(d => d.GetPackageAsync(expectedPackage, It.IsAny<CancellationToken>()), Times.Once());
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task CPSExecutorInitializesItsDependencyPackageAsExpected(PlatformID platformID, Architecture architecture, string role)
+        public async Task CPSExecutorInitializesItsDependencyPackageAsExpected_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string expectedPackage = "Networking";
@@ -121,13 +151,36 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task CPSExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            using TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await executor.InitializeAsync(EventContext.None, CancellationToken.None);
+
+            ClientInstance serverInstance = executor.GetLayoutClientInstances(ClientRole.Server).First();
+            IPAddress.TryParse(serverInstance.IPAddress, out IPAddress serverIPAddress);
+
+            if(role == ClientRole.Client)
+            {
+                Assert.IsTrue(this.apiClientId.Equals(serverIPAddress.ToString()));
+                Assert.AreEqual(this.ipAddress, serverIPAddress);
+            }
+            else
+            {
+                Assert.IsTrue(this.apiClientId.Equals(IPAddress.Loopback.ToString()));
+                Assert.AreEqual(this.ipAddress, IPAddress.Loopback);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task CPSExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup(PlatformID platformID, Architecture architecture, string role)
+        public async Task CPSExecutorIntializeServerAPIClientForClientRoleOnMultiVMSetup_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             using TestCPSExecutor executor = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
@@ -151,13 +204,25 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void CPSExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
+
+            using TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            DependencyException exception = Assert.ThrowsAsync<DependencyException>(() => component.InitializeAsync(EventContext.None, CancellationToken.None));
+            Assert.AreEqual(ErrorReason.WorkloadDependencyMissing, exception.Reason);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void CPSExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound(PlatformID platformID, Architecture architecture, string role)
+        public void CPSExecutorThrowsOnInitializationWhenTheWorkloadPackageIsNotFound_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             this.mockFixture.PackageManager.OnGetPackage().ReturnsAsync(null as DependencyPath);
@@ -170,13 +235,28 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void CPSExecutorThrowsIfAnUnsupportedRoleIsSupplied_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            string agentId = $"{Environment.MachineName}-Other";
+            this.mockFixture.SystemManagement.SetupGet(obj => obj.AgentId).Returns(agentId);
+
+            using (TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.EnvironmentLayoutClientInstancesNotFound, exception.Reason);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void CPSExecutorThrowsIfAnUnsupportedRoleIsSupplied(PlatformID platformID, Architecture architecture, string role)
+        public void CPSExecutorThrowsIfAnUnsupportedRoleIsSupplied_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             string agentId = $"{Environment.MachineName}-Other";
@@ -192,13 +272,26 @@ namespace VirtualClient.Actions
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public void CPSExecutorThrowsWhenASpecificRoleIsNotDefined_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+            this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
+            using (TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                var exception = Assert.ThrowsAsync<DependencyException>(() => component.ExecuteAsync(CancellationToken.None));
+                Assert.AreEqual(ErrorReason.EnvironmentLayoutNotDefined, exception.Reason);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public void CPSExecutorThrowsWhenASpecificRoleIsNotDefined(PlatformID platformID, Architecture architecture, string role)
+        public void CPSExecutorThrowsWhenASpecificRoleIsNotDefined_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
             this.mockFixture.Dependencies.RemoveAll<EnvironmentLayout>();
@@ -211,10 +304,25 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Server)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Server)]
+        public async Task CPSExecutorExecutesTheExpectedLogicForTheServerRole_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+
+            using (TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters))
+            {
+                await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+                Assert.IsTrue(!component.IsCPSClientExecuted);
+                Assert.IsTrue(component.IsNetworkingWorkloadServerExecuted);
+            }
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Server)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Server)]
-        public async Task CPSExecutorExecutesTheExpectedLogicForTheServerRole(PlatformID platformID, Architecture architecture, string role)
+        public async Task CPSExecutorExecutesTheExpectedLogicForTheServerRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 
@@ -229,10 +337,23 @@ namespace VirtualClient.Actions
 
         [Test]
         [TestCase(PlatformID.Unix, Architecture.X64, ClientRole.Client)]
-        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Unix, Architecture.Arm64, ClientRole.Client)]
+        public async Task CPSExecutorExecutesTheExpectedLogicForTheClientRole_Linux(PlatformID platformID, Architecture architecture, string role)
+        {
+            this.SetupDefaultMockBehavior(platformID, architecture, role);
+
+            TestCPSExecutor component = new TestCPSExecutor(this.mockFixture.Dependencies, this.mockFixture.Parameters);
+            await component.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
+
+            Assert.IsTrue(component.IsCPSClientExecuted);
+            Assert.IsTrue(!component.IsNetworkingWorkloadServerExecuted);
+        }
+
+        [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, ClientRole.Client)]
         [TestCase(PlatformID.Win32NT, Architecture.Arm64, ClientRole.Client)]
-        public async Task CPSExecutorExecutesTheExpectedLogicForTheClientRole(PlatformID platformID, Architecture architecture, string role)
+        public async Task CPSExecutorExecutesTheExpectedLogicForTheClientRole_Windows(PlatformID platformID, Architecture architecture, string role)
         {
             this.SetupDefaultMockBehavior(platformID, architecture, role);
 

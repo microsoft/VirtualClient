@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Api
@@ -57,6 +57,7 @@ namespace VirtualClient.Api
         }
 
         [Test]
+        [Platform(Exclude = "Unix,Linux,MacOsX")]
         public async Task StateControllerCreatesTheExpectedStateInstance()
         {
             string expectedStateId = "teststate";

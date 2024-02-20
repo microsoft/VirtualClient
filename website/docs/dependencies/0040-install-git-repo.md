@@ -1,4 +1,4 @@
-﻿# Install/Clone a Git Repo
+# Install/Clone a Git Repo
 Virtual Client git clones a public repository into VC `packages` directory.
 
 :::info

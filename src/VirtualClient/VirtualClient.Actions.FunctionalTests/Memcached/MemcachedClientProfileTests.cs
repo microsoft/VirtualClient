@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -11,9 +11,9 @@ namespace VirtualClient.Actions
     using System.Threading;
     using System.Threading.Tasks;
     using NUnit.Framework;
+    using VirtualClient.Actions.Memtier;
     using VirtualClient.Common;
     using VirtualClient.Contracts;
-    using static VirtualClient.Actions.MemcachedExecutor;
 
     [TestFixture]
     [Category("Functional")]
@@ -107,9 +107,13 @@ namespace VirtualClient.Actions
             IPAddress.TryParse(serverIPAddress, out IPAddress ipAddress);
             IApiClient apiClient = this.mockFixture.ApiClientManager.GetOrCreateApiClient(serverName, ipAddress);
 
-            ServerState state = new ServerState(new Dictionary<string, IConvertible>
+            ServerState state = new ServerState(new List<PortDescription>
             {
-                [nameof(ServerState.Ports)] = 6379
+                new PortDescription
+                {
+                    CpuAffinity = "0,1,2,3",
+                    Port = 6379
+                }
             });
 
             apiClient.CreateStateAsync(nameof(ServerState), state, CancellationToken.None)

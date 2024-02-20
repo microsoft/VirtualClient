@@ -1,4 +1,4 @@
-﻿# MLPerf Trainging Bert Preprocessing Data
+# MLPerf Trainging Bert Preprocessing Data
 The following document will show steps ran for Downloading,Preprocessing and Packaging the training data used in Bert training.
 
 ## VM Configuration used

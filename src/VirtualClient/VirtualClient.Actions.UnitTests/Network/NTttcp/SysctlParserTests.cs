@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -20,7 +20,7 @@ namespace VirtualClient.Actions
         private static readonly string ExamplesDirectory = Path.Combine(
             Path.GetDirectoryName(Assembly.GetAssembly(typeof(SysctlParserTests)).Location),
             "Examples",
-            "Ntttcp");
+            "NTttcp");
 
         [Test]
         public void SysctlResultsParserReadsTheExpectedResultsFromParsedOutput()

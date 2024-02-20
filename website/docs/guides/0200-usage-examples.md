@@ -1,4 +1,4 @@
-﻿# Usage: Command Line Examples
+# Usage: Command Line Examples
 The following documentation covers a range of usage scenarios that apply to the Virtual Client. The sections that follow are meant
 to illustrate how to use Virtual Client within these various scenarios as well as what to expect.
 

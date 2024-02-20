@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions.DiskPerformance
@@ -20,6 +20,7 @@ namespace VirtualClient.Actions.DiskPerformance
 
     [TestFixture]
     [Category("Unit")]
+    [Platform(Exclude = "Unix,Linux,MacOsX")]
     public class DiskSpdExecutorTests
     {
         private DependencyFixture fixture;
@@ -46,7 +47,7 @@ namespace VirtualClient.Actions.DiskPerformance
             };
 
             string workingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string outputPath = Path.Combine(workingDirectory, @"Examples\DiskSpd\DiskSpdExample-ReadWrite.txt");
+            string outputPath = Path.Combine(workingDirectory, "Examples", "DiskSpd", "DiskSpdExample-ReadWrite.txt");
             this.output = File.ReadAllText(outputPath);
 
             this.fixture.ProcessManager.OnCreateProcess = (command, arguments, workingDir) =>

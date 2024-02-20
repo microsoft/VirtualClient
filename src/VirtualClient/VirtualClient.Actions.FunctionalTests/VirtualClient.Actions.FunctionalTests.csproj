@@ -263,6 +263,10 @@
         <ProjectReference Include="..\VirtualClient.TestExtensions\VirtualClient.TestExtensions.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="SysbenchOLTP\" />
+    </ItemGroup>
+
     <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Module.props))\Module.props" />
 
 </Project>

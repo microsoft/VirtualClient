@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Actions
@@ -31,8 +31,6 @@ namespace VirtualClient.Actions
         private DependencyPath currentDirectoryPath;
         private string apiClientId;
         private IPAddress ipAddress;
-
-        private string resultsPath;
         private string rawString;
 
         [SetUp]
@@ -237,7 +235,7 @@ namespace VirtualClient.Actions
             this.fixture.File.Setup(f => f.Exists(It.IsAny<string>()))
                 .Returns(true);
 
-            resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, @"Examples\DeathStarBench\DeathStarBenchOutputExample.txt");
+            string resultsPath = this.fixture.PlatformSpecifics.Combine(this.currentDirectoryPath.Path, "Examples", "DeathStarBench", "DeathStarBenchOutputExample.txt");
 
             this.rawString = File.ReadAllText(resultsPath);
             this.fixture.File.Setup(f => f.ReadAllTextAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
