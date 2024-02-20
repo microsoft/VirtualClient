@@ -33,7 +33,6 @@ namespace VirtualClient.Actions
 
         private string sysbenchExecutionArguments;
         private string sysbenchLoggingArguments;
-        private string sysbenchPath;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SysbenchClientExecutor"/> class.
@@ -208,9 +207,8 @@ namespace VirtualClient.Actions
                 numTables = 10;
             }
 
-            this.sysbenchLoggingArguments = $"{this.Workload} --threads={this.Threads} --tables={numTables} --table-size={this.RecordCount} --mysql-db={this.DatabaseName} ";
-            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--mysql-host={this.ServerIpAddress} --time={this.Duration.TotalSeconds} ";
-            this.sysbenchPath = $"{this.SysbenchPackagePath}/src/sysbench";
+            this.sysbenchLoggingArguments = $"--dbName {this.DatabaseName} --workload {this.Workload} --threadCount {this.Threads} --tableCount {numTables} --recordCount {this.RecordCount} ";
+            this.sysbenchExecutionArguments = this.sysbenchLoggingArguments + $"--hostIpAddress {this.ServerIpAddress} --durationSecs {this.Duration.TotalSeconds}";
         }
 
         private void CaptureMetrics(IProcessProxy process, EventContext telemetryContext, CancellationToken cancellationToken)
@@ -258,7 +256,15 @@ namespace VirtualClient.Actions
             {
                 using (BackgroundOperations profiling = BackgroundOperations.BeginProfiling(this, cancellationToken))
                 {
-                    using (IProcessProxy process = await this.ExecuteCommandAsync(this.sysbenchPath, this.sysbenchExecutionArguments + "run", this.SysbenchPackagePath, telemetryContext, cancellationToken, runElevated: true))
+                    string command = "python3";
+                    string script = $"{this.SysbenchPackagePath}/run-workload.py ";
+
+                    using (IProcessProxy process = await this.ExecuteCommandAsync(
+                        command, 
+                        script + this.sysbenchExecutionArguments, 
+                        this.SysbenchPackagePath, 
+                        telemetryContext, 
+                        cancellationToken))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

@@ -74,7 +74,7 @@ namespace VirtualClient.Actions
 
             string[] expectedCommands =
             {
-                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 1",
             };
 
             int commandNumber = 0;
@@ -119,7 +119,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 1",
             };
 
             int commandNumber = 0;
@@ -169,7 +169,7 @@ namespace VirtualClient.Actions
             string[] expectedCommands =
             {
                 $"python3 {this.mockPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.mockPackagePath}",
-                $"sudo {this.mockPackagePath}/src/sysbench oltp_common --tables=40 --table-size=1000 --threads=8 --mysql-db=sbtest prepare",
+                $"python3 {this.mockPackagePath}/populate-database.py --dbName sbtest --tableCount 40 --recordCount 1000 --threadCount 8",
             };
 
             int commandNumber = 0;

@@ -116,18 +116,17 @@ namespace VirtualClient.Actions
             {
                 await this.Logger.LogMessageAsync($"{this.TypeName}.PopulateDatabase", telemetryContext.Clone(), async () =>
                 {
-                    string command = $"{this.SysbenchPackagePath}/src/sysbench";
+                    string command = $"python3";
 
-                    string arguments = $"oltp_common --tables={this.NumTables} --table-size={this.RecordCount} " +
-                        $"--threads={this.Threads} --mysql-db={this.DatabaseName} prepare";
+                    string arguments = $"{this.SysbenchPackagePath}/populate-database.py --dbName {this.DatabaseName} " +
+                        $"--tableCount {this.NumTables} --recordCount {this.RecordCount} --threadCount {this.Threads}";
 
                     using (IProcessProxy process = await this.ExecuteCommandAsync(
                         command,
                         arguments,
                         this.SysbenchPackagePath,
                         telemetryContext,
-                        cancellationToken,
-                        runElevated: true))
+                        cancellationToken))
                     {
                         if (!cancellationToken.IsCancellationRequested)
                         {

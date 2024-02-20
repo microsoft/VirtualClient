@@ -33,7 +33,6 @@ namespace VirtualClient.Actions
         private DependencyPath mockPackage;
         private string apiClientId;
         private ClientInstance clientInstance;
-        private string scriptPath;
         private string mockPackagePath;
 
         [SetUp]
@@ -44,7 +43,6 @@ namespace VirtualClient.Actions
             this.mockPackage = new DependencyPath("sysbench", this.fixture.PlatformSpecifics.GetPackagePath("sysbench"));
             this.fixture.PackageManager.OnGetPackage().ReturnsAsync(this.mockPackage);
             this.mockPackagePath = this.mockPackage.Path;
-            this.scriptPath = this.fixture.PlatformSpecifics.GetScriptPath("sysbench");
 
             this.fixture.Parameters = new Dictionary<string, IConvertible>()
             {
@@ -89,7 +87,7 @@ namespace VirtualClient.Actions
         {
             SetupDefaultBehavior();
 
-            string expectedCommand = $"sudo {this.mockPackagePath}/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -134,7 +132,7 @@ namespace VirtualClient.Actions
             this.fixture.Parameters[nameof(SysbenchClientExecutor.RecordCount)] = "1000";
             this.fixture.Parameters[nameof(SysbenchClientExecutor.NumTables)] = "40";
 
-            string expectedCommand = $"sudo {this.mockPackagePath}/src/sysbench oltp_read_write --threads=64 --tables=40 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 64 --tableCount 40 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -177,7 +175,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "Balanced";
 
-            string expectedCommand = $"sudo {this.mockPackagePath}/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=1000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 1000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>
@@ -220,7 +218,7 @@ namespace VirtualClient.Actions
 
             this.fixture.Parameters[nameof(SysbenchClientExecutor.DatabaseScenario)] = "InMemory";
 
-            string expectedCommand = $"sudo {this.mockPackagePath}/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=10 run";
+            string expectedCommand = $"python3 {this.mockPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 10";
             bool commandExecuted = false;
 
             this.fixture.ProcessManager.OnCreateProcess = (exe, arguments, workingDir) =>

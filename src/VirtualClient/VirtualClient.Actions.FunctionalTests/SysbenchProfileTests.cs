@@ -152,18 +152,18 @@ namespace VirtualClient.Actions
 
                     $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.sysbenchPackagePath}",
 
-                    $"sudo {this.sysbenchPackagePath}/src/sysbench oltp_common --tables=10 --table-size=1 --threads=1 --mysql-db=sbtest prepare",
+                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 1 --threadCount 1",
                     $"python3 {this.mySQLPackagePath}/distribute-database.py --dbName sbtest --tableCount 10 --directories \"mountPoint0;mountPoint1;mountPoint2;\"",
-                    $"sudo {this.sysbenchPackagePath}/src/sysbench oltp_common --tables=10 --table-size=100000 --threads=1 --mysql-db=sbtest prepare",
+                    $"python3 {this.sysbenchPackagePath}/populate-database.py --dbName sbtest --tableCount 10 --recordCount 100000 --threadCount 1",
 
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=8 --tables=1 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=8 --tables=1 --table-size=100000 --mysql-db=sbtest --mysql-host=127.0.0.1 --time=300 run"
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 100000 --hostIpAddress 127.0.0.1 --durationSecs 300"
                 };
             }
             else 
@@ -174,14 +174,14 @@ namespace VirtualClient.Actions
 
                     $"python3 {this.sysbenchPackagePath}/configure-workload-generator.py --distro Ubuntu --packagePath {this.sysbenchPackagePath}",
 
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_write --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_read_only --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_delete --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_insert --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_index --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench oltp_update_non_index --threads=8 --tables=10 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_points --threads=8 --tables=1 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run",
-                    $"sudo /home/user/tools/VirtualClient/packages/sysbench/src/sysbench select_random_ranges --threads=8 --tables=1 --table-size=100000 --mysql-db=sbtest --mysql-host=1.2.3.5 --time=300 run"
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_write --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_read_only --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_delete --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_insert --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_update_index --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload oltp_update_non_index --threadCount 8 --tableCount 10 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload select_random_points --threadCount 8 --tableCount 1 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300",
+                    $"python3 {this.sysbenchPackagePath}/run-workload.py --dbName sbtest --workload select_random_ranges --threadCount 8 --tableCount 1 --recordCount 100000 --hostIpAddress 1.2.3.5 --durationSecs 300"
                 };
             }
         }
