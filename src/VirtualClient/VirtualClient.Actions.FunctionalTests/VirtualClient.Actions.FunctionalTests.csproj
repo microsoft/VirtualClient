@@ -116,6 +116,9 @@
         <Content Include="..\TestResources\Results_AspNetBench.txt" Link="Resources\Results_AspNetBench.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\TestResources\Results_ApacheBench.txt" Link="Resources\Results_ApacheBench.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\TestResources\Results_Sysbench.txt" Link="Resources\Results_Sysbench.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
@@ -136,6 +139,9 @@
         <Content Include="..\VirtualClient.Main\profiles\PERF-ASPNETBENCH.json" Link="Profiles\PERF-ASPNETBENCH.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+		<Content Include="..\VirtualClient.Main\profiles\PERF-APACHEBENCH.json" Link="Profiles\PERF-APACHEBENCH.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
         <Content Include="..\VirtualClient.Main\profiles\PERF-COMPRESSION.json" Link="Profiles\PERF-COMPRESSION.json">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
