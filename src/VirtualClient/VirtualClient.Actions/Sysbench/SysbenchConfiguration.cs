@@ -131,7 +131,7 @@ namespace VirtualClient.Actions
                         if (!cancellationToken.IsCancellationRequested)
                         {
                             await this.LogProcessDetailsAsync(process, telemetryContext, "Sysbench", logToFile: true);
-                            process.ThrowIfWorkloadFailed();
+                            process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                         }
                     }
 

@@ -222,7 +222,7 @@ namespace VirtualClient.Actions
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, telemetryContext, "SysbenchExecutor", logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
+                        process.ThrowIfErrored<WorkloadException>(process.StandardError.ToString(), ErrorReason.WorkloadUnexpectedAnomaly);
                     }
                 }
 

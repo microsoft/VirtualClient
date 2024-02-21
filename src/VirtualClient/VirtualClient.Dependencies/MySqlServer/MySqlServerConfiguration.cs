@@ -194,7 +194,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed();
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
@@ -219,7 +219,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed();
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
@@ -238,7 +238,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed();
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
@@ -259,7 +259,7 @@ namespace VirtualClient.Dependencies.MySqlServer
                 if (!cancellationToken.IsCancellationRequested)
                 {
                     await this.LogProcessDetailsAsync(process, telemetryContext, "MySQLServerConfiguration", logToFile: true);
-                    process.ThrowIfDependencyInstallationFailed();
+                    process.ThrowIfDependencyInstallationFailed(process.StandardError.ToString());
                 }
             }
         }
