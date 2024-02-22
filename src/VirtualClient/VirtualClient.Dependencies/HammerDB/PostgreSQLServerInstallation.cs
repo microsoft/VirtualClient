@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 namespace VirtualClient.Dependencies
@@ -7,6 +7,7 @@ namespace VirtualClient.Dependencies
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using MathNet.Numerics.Distributions;
     using Microsoft.Extensions.DependencyInjection;
     using Newtonsoft.Json;
     using Polly;
@@ -22,7 +23,7 @@ namespace VirtualClient.Dependencies
     /// </summary>
     [UnixCompatible]
     [WindowsCompatible]
-    public class PostgreSQLInstallation : VirtualClientComponent
+    public class PostgreSQLInstallation : ExecuteCommand
     {
         private ISystemManagement systemManager;
         private IPackageManager packageManager;
@@ -36,8 +37,8 @@ namespace VirtualClient.Dependencies
         public PostgreSQLInstallation(IServiceCollection dependencies, IDictionary<string, IConvertible> parameters)
             : base(dependencies, parameters)
         {
-            this.RetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(5, (retries) => TimeSpan.FromSeconds(retries + 1));
             this.systemManager = dependencies.GetService<ISystemManagement>();
+            this.systemManager.ThrowIfNull(nameof(this.systemManager));
             this.packageManager = this.systemManager.PackageManager;
             this.stateManager = this.systemManager.StateManager;
         }
@@ -54,12 +55,6 @@ namespace VirtualClient.Dependencies
                 return password?.ToString();
             }
         }
-
-        /// <summary>
-        /// A policy that defines how the component will retry when
-        /// it experiences transient issues.
-        /// </summary>
-        public IAsyncPolicy RetryPolicy { get; set; }
 
         /// <summary>
         /// The path to the PostgreSQL package for installation.
@@ -116,29 +111,7 @@ namespace VirtualClient.Dependencies
 
             if (state == null)
             {
-                this.SuperuserPassword = this.Password;
-                if (string.IsNullOrWhiteSpace(this.SuperuserPassword))
-                {
-                    // Use the default that is defined within the PostgreSQL package.
-                    this.SuperuserPassword = await this.GetServerCredentialAsync(cancellationToken);
-                }
-
-                if (this.Platform == PlatformID.Unix)
-                {
-                    LinuxDistributionInfo distroInfo = await this.systemManager.GetLinuxDistributionAsync(cancellationToken);
-
-                    switch (distroInfo.LinuxDistribution)
-                    {
-                        case LinuxDistribution.Ubuntu:
-                        case LinuxDistribution.Debian:
-                            await this.InstallOnUbuntuOrDebianAsync(telemetryContext, cancellationToken);
-                            break;
-                    }
-                }
-                else if (this.Platform == PlatformID.Win32NT)
-                {
-                    await this.InstallOnWindowsAsync(telemetryContext, cancellationToken);
-                }
+                await this.InstallServerAsync(telemetryContext, cancellationToken);
 
                 await this.stateManager.SaveStateAsync(
                     nameof(PostgreSQLInstallation),
@@ -147,28 +120,13 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private async Task<string> GetServerCredentialAsync(CancellationToken cancellationToken)
+        private async Task InstallServerAsync(EventContext telemetryContext, CancellationToken cancellationToken)
         {
-            string fileName = "superuser.txt";
-            string path = this.Combine(this.PackagePath, fileName);
-            if (!this.systemManager.FileSystem.File.Exists(path))
-            {
-                throw new DependencyException(
-                    $"Required file '{fileName}' missing in package '{this.PackagePath}'. The PostgreSQL server cannot be initialized. " +
-                    $"As an alternative, you can supply the '{nameof(this.Password)}' parameter on the command line.",
-                    ErrorReason.DependencyNotFound);
-            }
+            string installationScript = this.Combine(this.PackagePath, "installServer.py");
 
-            return (await this.systemManager.FileSystem.File.ReadAllTextAsync(path, cancellationToken)).Trim();
-        }
-
-        private async Task InstallOnUbuntuOrDebianAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string installationScript = this.Combine(this.PackagePath, "ubuntu", "install.sh");
-
-            string command = "bash";
-            string commandArguments = $"-c \"{EnvironmentVariable.VC_PASSWORD}={this.SuperuserPassword} sh {installationScript}\"";
-            string workingDirectory = this.Combine(this.PackagePath, "ubuntu");
+            string command = "python3";
+            string commandArguments = installationScript;
+            string workingDirectory = this.Combine(this.PackagePath);
 
             EventContext relatedContext = telemetryContext.Clone()
                 .AddContext("command", command)
@@ -184,30 +142,6 @@ namespace VirtualClient.Dependencies
                     if (!cancellationToken.IsCancellationRequested)
                     {
                         await this.LogProcessDetailsAsync(process, relatedContext, logToFile: true);
-                        process.ThrowIfDependencyInstallationFailed();
-                    }
-                }
-            });
-        }
-
-        private Task InstallOnWindowsAsync(EventContext telemetryContext, CancellationToken cancellationToken)
-        {
-            string installerPath = this.Combine(this.PackagePath, $"postgresql.exe");
-            telemetryContext.AddContext(nameof(installerPath), installerPath);
-
-            return this.RetryPolicy.ExecuteAsync(async () =>
-            {
-                using (IProcessProxy process = await this.ExecuteCommandAsync(
-                    installerPath,
-                    $@"--mode ""unattended"" --serverport ""5432"" --superpassword ""{this.SuperuserPassword}""",
-                    this.PackagePath,
-                    telemetryContext,
-                    cancellationToken,
-                    runElevated: true))
-                {
-                    if (!cancellationToken.IsCancellationRequested)
-                    {
-                        await this.LogProcessDetailsAsync(process, telemetryContext, logToFile: true);
                         process.ThrowIfDependencyInstallationFailed();
                     }
                 }
