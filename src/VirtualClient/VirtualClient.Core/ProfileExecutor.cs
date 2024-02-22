@@ -49,6 +49,7 @@ namespace VirtualClient
             this.Logger = logger ?? NullLogger.Instance;
 
             this.metadataContact = new MetadataContract();
+            this.ExecutionMinimumInterval = profile.MinimumExecutionInterval;
         }
 
         /// <summary>
