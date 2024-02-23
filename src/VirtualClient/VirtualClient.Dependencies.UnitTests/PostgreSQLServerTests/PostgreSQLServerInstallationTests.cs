@@ -10,6 +10,7 @@ namespace VirtualClient.Dependencies
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
     using Moq;
     using NUnit.Framework;
     using VirtualClient.Common.Telemetry;
@@ -22,16 +23,12 @@ namespace VirtualClient.Dependencies
         private MockFixture mockFixture;
         private DependencyPath mockPackage;
 
-        [SetUp]
-        public void SetupTest()
-        {
-            this.mockFixture = new MockFixture();
-        }
-
         [Test]
-        public void PostgreSQLInstallationThrowsIfDistroNotSupportedForLinux()
+        [TestCase(PlatformID.Unix, Architecture.X64)]
+        [TestCase(PlatformID.Unix, Architecture.Arm64)]
+        public void PostgreSQLInstallationThrowsIfDistroNotSupportedForLinux(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultMockBehavior();
+            this.SetupDefaultMockBehavior(platform, architecture);
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
                 OperationSystemFullName = "TestUbuntu",
@@ -49,55 +46,44 @@ namespace VirtualClient.Dependencies
         }
 
         [Test]
-        [TestCase(Architecture.X64, "linux-x64")]
-        [TestCase(Architecture.Arm64, "linux-arm64")]
-        public async Task PostgreSQLInstallationExecutesExpectedInstallationCommandsOnUbuntu(Architecture architecture, string platformArchitecture)
+        [TestCase(PlatformID.Unix, Architecture.X64, "linux-x64")]
+        [TestCase(PlatformID.Unix, Architecture.Arm64, "linux-arm64")]
+        [TestCase(PlatformID.Win32NT, Architecture.X64, "win-x64")]
+        [TestCase(PlatformID.Win32NT, Architecture.Arm64, "win-arm64")]
+        public async Task PostgreSQLInstallationExecutesExpectedInstallationCommands(PlatformID platform, Architecture architecture, string platformArchitecture)
         {
-            this.SetupDefaultMockBehavior(PlatformID.Unix, architecture);
+            this.SetupDefaultMockBehavior(platform, architecture);
 
-            LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+            if (platform == PlatformID.Unix)
             {
-                OperationSystemFullName = "TestUbuntu",
-                LinuxDistribution = LinuxDistribution.Ubuntu
-            };
+                LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
+                {
+                    OperationSystemFullName = "TestUbuntu",
+                    LinuxDistribution = LinuxDistribution.Ubuntu
+                };
 
-            this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(mockInfo);
+                this.mockFixture.SystemManagement.Setup(sm => sm.GetLinuxDistributionAsync(It.IsAny<CancellationToken>()))
+    .ReturnsAsync(mockInfo);
+            }
 
             using (TestPostgreSQLInstallation installation = new TestPostgreSQLInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
             {
                 await installation.ExecuteAsync(CancellationToken.None);
 
-                string installScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "ubuntu", "install.sh");
+                string installScriptPath = this.mockFixture.Combine(this.mockPackage.Path, platformArchitecture, "installServer.py");
 
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"sudo chmod +x \"{installScriptPath}\""));
-                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"sudo bash -c \"VC_PASSWORD={installation.SuperuserPassword} sh {installScriptPath}\""));
+                Assert.IsTrue(this.mockFixture.ProcessManager.CommandsExecuted($"python3 \"{installScriptPath}\""));
             }
         }
 
         [Test]
+        [TestCase(Architecture.X64, "linux-x64")]
+        [TestCase(Architecture.Arm64, "linux-arm64")]
         [TestCase(Architecture.X64, "win-x64")]
         [TestCase(Architecture.Arm64, "win-arm64")]
-        public async Task PostgreSQLInstallationExecutesExpectedInstallationCommandsOnWindows(Architecture architecture, string platformArchitecture)
+        public async Task PostgreSQLInstallationUsesTheDefaultCredentialWhenTheServerPasswordIsNotDefinedByTheUser(PlatformID platform, Architecture architecture)
         {
-            this.SetupDefaultMockBehavior(PlatformID.Win32NT, architecture);
-
-            using (TestPostgreSQLInstallation testPostgresqlInstallation = new TestPostgreSQLInstallation(this.mockFixture.Dependencies, this.mockFixture.Parameters))
-            {
-                testPostgresqlInstallation.Parameters[nameof(PostgreSQLInstallation.Password)] = "postgres";
-                await testPostgresqlInstallation.ExecuteAsync(CancellationToken.None).ConfigureAwait(false);
-            }
-
-            Assert.IsTrue(this.mockFixture.ProcessManager.Commands.Contains(
-                $"{this.mockPackage.Path}\\{platformArchitecture}\\postgresql.exe --mode \"unattended\" --serverport \"5432\" --superpassword \"postgres\""));
-        }
-
-        [Test]
-        [TestCase(PlatformID.Unix)]
-        [TestCase(PlatformID.Win32NT)]
-        public async Task PostgreSQLInstallationUsesTheDefaultCredentialWhenTheServerPasswordIsNotDefinedByTheUser(PlatformID platform)
-        {
-            this.SetupDefaultMockBehavior(platform, Architecture.X64);
+            this.SetupDefaultMockBehavior(platform, architecture);
 
             LinuxDistributionInfo mockInfo = new LinuxDistributionInfo()
             {
@@ -123,8 +109,9 @@ namespace VirtualClient.Dependencies
             }
         }
 
-        private void SetupDefaultMockBehavior(PlatformID platform = PlatformID.Unix, Architecture architecture = Architecture.X64)
+        private void SetupDefaultMockBehavior(PlatformID platform, Architecture architecture)
         {
+            this.mockFixture = new MockFixture();
             this.mockFixture.Setup(platform, architecture);
             this.mockFixture.Parameters = new Dictionary<string, IConvertible>()
             {
